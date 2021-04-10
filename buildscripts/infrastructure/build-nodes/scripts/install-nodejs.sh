@@ -6,12 +6,6 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-centos-6)
-    echo "Installing for CentOS 6"
-    curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-    yum -y install nodejs
-    exit 0
-    ;;
 centos-7 | centos-8)
     echo "Installing for CentOS 7, 8"
     curl -sL https://rpm.nodesource.com/setup_12.x | bash -

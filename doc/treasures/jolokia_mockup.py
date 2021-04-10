@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,17 +7,16 @@
 # small mock server simulating a jolokia server. Not very sophisticated
 # but enough to get several checks to display something
 
-from __future__ import print_function
-import SocketServer
-import SimpleHTTPServer
-import urlparse
+import socketserver
+import http.server
+from urllib.parse import urlparse
 
 PORT = 8080
 
 
-class FakeHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class FakeHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        parsedParams = urlparse.urlparse(self.path)
+        parsedParams = urlparse(self.path)
         params = [par for par in parsedParams.path.split('/') if par]
 
         print(params)
@@ -27,15 +26,16 @@ class FakeHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.end_headers()
 
         if len(params) > 1:
-            self.wfile.write('{"value": 1}')
+            self.wfile.write(b'{"value": 1}')
         else:
-            self.wfile.write('{"value": {"info":'\
-                 '{"version": "1.0", "product": "Fake_Product"}, "agent": "Fake_Agent"}}')
+            self.wfile.write(
+                b'{"value": {"info": {"version": "1.0", "product": "Fake_Product"}, "agent": "Fake_Agent"}}'
+            )
 
         self.wfile.close()
 
 
-class FakeTCPServer(SocketServer.TCPServer):
+class FakeTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
 

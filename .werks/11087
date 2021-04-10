@@ -1,0 +1,15 @@
+Title: mkeventd_status: Check was showing wrong list of active rule limits
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1594283124
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The check was showing "rule event limit active" for rules which have not
+reached the rule event limit. This happened for rules that had a rule
+individual limit configured because the check was only respecting the global
+rule event limits.

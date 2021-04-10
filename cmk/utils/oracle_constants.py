@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -10,7 +10,7 @@
 # | Copyright Mathias Kettner 2020             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
-# This file is part of Check_MK.
+# This file is part of Checkmk.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 #
 # check_mk is free software;  you can redistribute it and/or modify it

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -28,7 +28,6 @@ def test_registered_snapins():
         'hosts',
         'master_control',
         'mkeventd_performance',
-        'nagios_legacy',
         'nagvis_maps',
         'performance',
         'problem_hosts',
@@ -42,7 +41,6 @@ def test_registered_snapins():
         'views',
         'wato_folders',
         'wato_foldertree',
-        'wiki',
     ]
 
     if not cmk_version.is_raw_edition():

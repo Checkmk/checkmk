@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 //
 // check_mk_service.h : The file contains ONLY 'main' function and "root
@@ -15,6 +16,9 @@ namespace cma::cmdline {
 // Command Line parameters for service
 
 constexpr int kParamShift = 10;
+
+constexpr std::string_view kUpdaterParam = "updater";  // run cmk_update_plugin
+constexpr std::string_view kCmkUpdaterParam = "cmk_update_agent";  // -/-/-/-/-
 
 constexpr std::string_view kRestoreParam = "restore";
 

@@ -7,6 +7,7 @@
 #define mk_inventory_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <ctime>
 #include <string>
 

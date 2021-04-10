@@ -7,6 +7,7 @@
 #define test_utilities_h
 
 #include <vector>
+
 #include "MonitoringCore.h"
 #include "nagios.h"
 

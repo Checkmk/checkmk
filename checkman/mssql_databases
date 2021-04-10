@@ -21,3 +21,8 @@ item:
 inventory:
  One service is created for each database.
 
+cluster:
+ On a cluster all databases found on the nodes are checked. Note one nodes
+ data may overwrite another ones, if the item is the same. In this case you
+ will be monitoring only the node that occures latest in the list of clustered
+ nodes.

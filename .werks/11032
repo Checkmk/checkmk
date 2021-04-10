@@ -1,0 +1,19 @@
+Title: Fixed consideration of local 'old style' perfometer customizations
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1590416990
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If a perfometer definition like:
+
+<b>perfometers["check_mk-mem.linux"] = my_perfometer</b>
+
+is set in '~/local/share/check_mk/web/plugins/perfometer" and the
+key is already present within the builtin perfometers, the local definition had
+no effect.
+
+From now on, such local customizations are taken into account.

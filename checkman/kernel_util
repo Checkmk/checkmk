@@ -1,0 +1,20 @@
+title: CPU Utilization
+agents: linux
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors both the total CPU utilization and the utilization of single cores.
+ The total utilization is further split into utilization by the system, by the user and
+ disk (IO) wait.
+
+ By default, the check is always {OK}. This behavior can be changed using the rule "CPU
+ utilization on Linux/UNIX". Here, you can set levels on the total utilization, on the IO
+ wait and also on the single-core utilization.
+
+ Furthermore, this rule also allows for configuring the check to monitor the averaged CPU
+ utilization (both for the total and single-core utilizations). The time range over which
+ the average is calculated can be set by the user.
+
+inventory:
+ One service is created if the agent contains a {kernel} section with CPU information.

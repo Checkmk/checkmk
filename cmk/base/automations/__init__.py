@@ -6,11 +6,8 @@
 
 import abc
 import signal
-import sys
-from types import FrameType  # pylint: disable=unused-import
-from typing import NoReturn, Dict, Any, List, Optional  # pylint: disable=unused-import
-
-import six
+from types import FrameType
+from typing import NoReturn, Dict, Any, List, Optional
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout
@@ -30,21 +27,17 @@ class MKAutomationError(MKException):
     pass
 
 
-class Automations(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self):
-        # type: () -> None
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Automations, self).__init__()  # pylint: disable=bad-super-call
-        self._automations = {}  # type: Dict[str, Automation]
+class Automations:
+    def __init__(self) -> None:
+        super(Automations, self).__init__()
+        self._automations: Dict[str, Automation] = {}
 
-    def register(self, automation):
-        # type: (Automation) -> None
+    def register(self, automation: 'Automation') -> None:
         if automation.cmd is None:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    def execute(self, cmd, args):
-        # type: (str, List[str]) -> Any
+    def execute(self, cmd: str, args: List[str]) -> Any:
         self._handle_generic_arguments(args)
 
         try:
@@ -54,7 +47,7 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                config.load_all_checks(check_api.get_check_api_context)
+                config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
             if automation.needs_config:
                 config.load(validate_hosts=False)
@@ -81,8 +74,7 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
 
         return 0
 
-    def _handle_generic_arguments(self, args):
-        # type: (List[str]) -> None
+    def _handle_generic_arguments(self, args: List[str]) -> None:
         """Handle generic arguments (currently only the optional timeout argument)"""
         if len(args) > 1 and args[0] == "--timeout":
             args.pop(0)
@@ -92,19 +84,17 @@ class Automations(object):  # pylint: disable=useless-object-inheritance
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
-    def _raise_automation_timeout(self, signum, stackframe):
-        # type: (int, Optional[FrameType]) -> NoReturn
+    def _raise_automation_timeout(self, signum: int, stackframe: Optional[FrameType]) -> NoReturn:
         raise MKTimeout("Action timed out.")
 
 
-class Automation(six.with_metaclass(abc.ABCMeta, object)):
-    cmd = None  # type: Optional[str]
+class Automation(metaclass=abc.ABCMeta):
+    cmd: Optional[str] = None
     needs_checks = False
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args):
-        # type: (List[str]) -> Any
+    def execute(self, args: List[str]) -> Any:
         raise NotImplementedError()
 
 

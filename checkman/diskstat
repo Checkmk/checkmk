@@ -54,3 +54,8 @@ inventory:
   If set to {"legacy"} then two services one for read and one for write
   is created (deprecated).
   The inventory is configured via {diskstat_inventory_mode}.
+
+cluster:
+  If configured for clustering, every service will sum up the measurements
+  for disks with the same name.
+

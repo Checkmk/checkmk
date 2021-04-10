@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.plugins.watolib.utils import (
@@ -13,18 +13,24 @@ from cmk.gui.plugins.watolib.utils import (
 )
 
 
-def load_configuration_settings(site_specific=False, custom_site_path=None):
+def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
-        if site_specific:
+        if full_config:
+            settings.update(domain().load_full_config())
+        elif site_specific:
             settings.update(domain().load_site_globals(custom_site_path=custom_site_path))
         else:
             settings.update(domain().load())
     return settings
 
 
+def rulebased_notifications_enabled() -> bool:
+    return load_configuration_settings().get("enable_rulebased_notifications", False)
+
+
 def save_global_settings(vars_, site_specific=False, custom_site_path=None):
-    per_domain = {}  # type: Dict[str, Dict[Any, Any]]
+    per_domain: Dict[str, Dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()
@@ -32,22 +38,28 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
         varname = config_variable.ident()
         if varname not in vars_:
             continue
-        per_domain.setdefault(domain.ident, {})[varname] = vars_[varname]
+        per_domain.setdefault(domain().ident(), {})[varname] = vars_[varname]
 
-    # The global setting wato_enabled is not registered in the configuration domains
-    # since the user must not change it directly. It is set by D-WATO on slave sites.
-    if "wato_enabled" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars_["wato_enabled"]
-    if "userdb_automatic_sync" in vars_:
-        per_domain.setdefault(ConfigDomainGUI.ident,
-                              {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
+    # Some settings are handed over from the central site but are not registered in the
+    # configuration domains since the user must not change it directly.
+    for varname in [
+            "wato_enabled",
+            "userdb_automatic_sync",
+            "user_login",
+    ]:
+        if varname in vars_:
+            per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
-        domain_config = per_domain.get(domain.ident, {})
+        domain_config = per_domain.get(domain().ident(), {})
         if site_specific:
             domain().save_site_globals(domain_config, custom_site_path=custom_site_path)
         else:
             domain().save(domain_config, custom_site_path=custom_site_path)
+
+
+def load_site_global_settings(custom_site_path=None):
+    return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
 def save_site_global_settings(settings, custom_site_path=None):

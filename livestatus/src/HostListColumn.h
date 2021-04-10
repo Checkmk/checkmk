@@ -7,24 +7,26 @@
 #define HostListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <string>
 #include <utility>
 #include <vector>
-#include "Column.h"
+
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 enum class HostState;
 class MonitoringCore;
 class Row;
 class RowRenderer;
 
-class HostListColumn : public ListColumn {
+class HostListColumn : public deprecated::ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   const Column::Offsets &offsets, MonitoringCore *mc,
+                   const ColumnOffsets &offsets, MonitoringCore *mc,
                    bool show_state)
-        : ListColumn(name, description, offsets)
+        : deprecated::ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}
 

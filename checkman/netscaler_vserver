@@ -12,13 +12,20 @@ description:
  state CRIT when the VServer is in the state {DOWN}. It is in the state WARN in
  all other cases.
 
- For loadbalancing entities is also shows the health state. The check goes WARN if
- the health is below 100 percent and CRIT when the health drops to zero.
-
- This check is also cluster aware, behaviour can be set in WATO.
+ For loadbalancing entities, the check also shows the health state. It goes WARN
+ and CRIT if the health drops below configurable levels (WATO rule "Netscaler VServer
+ States"). The default levels are 100% and 0.1%.
 
 inventory:
  One service is created for each VServer.
 
 item:
  The name of the VServer.
+
+cluster:
+ On a cluster, by default, the check reports the best state across all cluster nodes.
+ The check can also be configured to report the individual states of the nodes, s.t.
+ the overall state corresponds to the worst individual state. Furthermore, the check
+ reports the highest request rate and the highest received and transmitted byte rates
+ across all nodes. Finally, if the first node is a loadbalancing entity, the check
+ also monitors the health state of this entity.

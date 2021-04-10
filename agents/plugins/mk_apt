@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
 # Check for APT updates (Debian, Ubuntu)
 # TODO:
 # Einstellungen:
@@ -21,7 +29,7 @@ UPGRADE=upgrade
 DO_UPDATE=yes
 
 
-function check_apt_update {
+check_apt_update() {
     if [ "$DO_UPDATE" = yes ] ; then
         # NOTE: Even with -qq, apt-get update can output several lines to
         # stderr, e.g.:

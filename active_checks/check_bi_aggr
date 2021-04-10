@@ -216,7 +216,7 @@ if len(obj) == 1:
                      aggr_name)
     sys.exit(3)
 
-if not isinstance(obj, list):
+if not (isinstance(obj, list) and isinstance(obj[0], list) and isinstance(obj[1], list)):
     sys.stdout.write('ERROR: Invalid response: %s\n' % (raw_response.replace("\n", "")))
     sys.exit(3)
 

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef EventLogBase_h
 #define EventLogBase_h
@@ -52,7 +53,7 @@ public:
         strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
         // source is the application that produced the event
-        std::string source_name = wtools::ConvertToUTF8(source());
+        std::string source_name = wtools::ToUtf8(source());
         std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
         return fmt::format("{} {} {}.{} {} {}\n",
@@ -61,7 +62,7 @@ public:
                            eventQualifiers(),  //
                            eventId(),          //
                            source_name,        //
-                           wtools::ConvertToUTF8(makeMessage()));
+                           wtools::ToUtf8(makeMessage()));
     }
 
     // for output in port

@@ -1,0 +1,18 @@
+Title: Bring back Agent/SNMP info in `cmk --list-checks`
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1607510012
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The in Checkmk versions 2.0.0i1 and 2.0.0b1 the TCP/SNMP information had been
+dropped from the output of <tt>cmk --list-checks</tt>.
+
+This was due to the fact that check plugins are now neither purely one or the other.
+We now write "agent" if the check plugin requires an agent data source (e.g. the
+ regular Checkmk linux agent), "snmp" if it reguires an SNMP data source,
+and "agent/snmp" if it can be discovered with either of the data source types.

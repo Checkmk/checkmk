@@ -6,37 +6,49 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 var g_num_replsites = 0;
+var g_back_url = "";
 var profile_replication_progress = {};
 
-export function prepare(num) {
+export function prepare(num, back_url) {
     g_num_replsites = num;
+    g_back_url = back_url;
 }
 
 export function start(siteid, est, progress_text) {
     ajax.call_ajax("wato_ajax_profile_repl.py", {
-        response_handler : function (handler_data, response_json) {
+        response_handler: function (handler_data, response_json) {
             var response = JSON.parse(response_json);
             var success = response.result_code === 0;
             var msg = response.result;
 
             set_result(handler_data["site_id"], success, msg);
         },
-        error_handler    : function (handler_data, status_code, error_msg) {
-            set_result(handler_data["site_id"], false,
-                "Failed to perform profile replication [" + status_code + "]: " + error_msg);
+        error_handler: function (handler_data, status_code, error_msg) {
+            set_result(
+                handler_data["site_id"],
+                false,
+                "Failed to perform profile replication [" + status_code + "]: " + error_msg
+            );
         },
-        method           : "POST",
-        post_data        : "request=" + encodeURIComponent(JSON.stringify({
-            "site": siteid
-        })),
-        handler_data     : {
-            "site_id": siteid
+        method: "POST",
+        post_data:
+            "request=" +
+            encodeURIComponent(
+                JSON.stringify({
+                    site: siteid,
+                })
+            ),
+        handler_data: {
+            site_id: siteid,
         },
-        add_ajax_id      : false
+        add_ajax_id: false,
     });
 
     profile_replication_progress[siteid] = 20; // 10 of 10 10ths
-    setTimeout("cmk.profile_replication.step('"+siteid+"', "+est+", '"+progress_text+"');", est/20);
+    setTimeout(
+        "cmk.profile_replication.step('" + siteid + "', " + est + ", '" + progress_text + "');",
+        est / 20
+    );
 }
 
 function set_status(siteid, image, text) {
@@ -48,18 +60,17 @@ function set_status(siteid, image, text) {
 export function step(siteid, est, progress_text) {
     if (profile_replication_progress[siteid] > 0) {
         profile_replication_progress[siteid]--;
-        var perc = (20.0 - profile_replication_progress[siteid]) * 100 / 20;
+        var perc = ((20.0 - profile_replication_progress[siteid]) * 100) / 20;
         var img;
-        if (perc >= 75)
-            img = "repl_75";
-        else if (perc >= 50)
-            img = "repl_50";
-        else if (perc >= 25)
-            img = "repl_25";
-        else
-            img = "repl_pending";
+        if (perc >= 75) img = "repl_75";
+        else if (perc >= 50) img = "repl_50";
+        else if (perc >= 25) img = "repl_25";
+        else img = "repl_pending";
         set_status(siteid, img, progress_text);
-        setTimeout("cmk.profile_replication.step('"+siteid+"',"+est+", '"+progress_text+"');", est/20);
+        setTimeout(
+            "cmk.profile_replication.step('" + siteid + "'," + est + ", '" + progress_text + "');",
+            est / 20
+        );
     }
 }
 
@@ -77,7 +88,5 @@ function set_result(site_id, success, msg) {
 }
 
 function finish() {
-    // check if we have a sidebar-main frame setup
-    if (this.parent && parent && parent.frames[0] == this)
-        utils.reload_sidebar();
+    utils.reload_whole_page(g_back_url);
 }

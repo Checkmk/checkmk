@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1569321689
 
 The ruleset conversion from 1.5 and earlier versions to 1.6 randomly failed.

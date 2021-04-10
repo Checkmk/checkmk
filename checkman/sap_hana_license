@@ -26,3 +26,7 @@ item:
 
 inventory:
  One service is created for each instance.
+
+cluster:
+  On a cluster the first dataset of a node that is encountered
+  is evaluated.

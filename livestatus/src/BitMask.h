@@ -7,6 +7,7 @@
 #define BitMask_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <type_traits>
 
 namespace mk {
@@ -24,6 +25,7 @@ struct is_bit_mask {
 };
 
 // A helper macro to make the use sites of the marker trait less verbose
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define IS_BIT_MASK(ENUM)               \
     namespace mk {                      \
     template <>                         \

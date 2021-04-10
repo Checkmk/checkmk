@@ -1,0 +1,13 @@
+Title: <tt>cmk_site_statistics</tt>: Fix exception "StopIteration()" triggered by timeouts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615281931
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+This werk fixes a bug in the parsing of the agent section <tt>cmk_site_statistics</tt>.
+Before this werk, the corresponding parse function was not able to handle timeouts
+in the Checkmk Linux agent which produces the section.

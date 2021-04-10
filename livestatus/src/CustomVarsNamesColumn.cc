@@ -4,9 +4,11 @@
 // source code package.
 
 #include "CustomVarsNamesColumn.h"
+
 #include <algorithm>
 #include <iterator>
 #include <unordered_map>
+
 #include "MonitoringCore.h"
 #include "Row.h"
 
@@ -19,7 +21,7 @@ std::vector<std::string> CustomVarsNamesColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> names;
-    if (auto p = columnData<void>(row)) {
+    if (const auto *p = columnData<void>(row)) {
         auto attrs = _mc->customAttributes(p, _kind);
         std::transform(attrs.begin(), attrs.end(), std::back_inserter(names),
                        [](const auto &entry) { return entry.first; });

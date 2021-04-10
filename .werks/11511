@@ -1,0 +1,15 @@
+Title: Host label dependent services are now discovered automatically
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1602589173
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+A service discovery had to be executed twice in order to detect new services
+based on host labels. The first execution found new host labels, the second one
+found new services based on the previously found host labels.
+These two steps are merged into one and services based on host labels are
+discovered on-the-fly.

@@ -4,14 +4,17 @@
 // source code package.
 
 #include "opids.h"
+
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+
 #include "RegExp.h"
 
 namespace {
-std::unordered_map<std::string, RelationalOperator> fl_from_string = {
+const std::unordered_map<std::string, RelationalOperator> fl_from_string = {
     {"=", RelationalOperator::equal},
     {"!=", RelationalOperator::not_equal},
     {"~", RelationalOperator::matches},

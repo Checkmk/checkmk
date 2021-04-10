@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -24,7 +24,7 @@ class CustomLinks(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Custom Links")
+        return _("Custom links")
 
     @classmethod
     def description(cls):
@@ -51,7 +51,8 @@ class CustomLinks(SidebarSnapin):
                         html.begin_foldable_container("customlinks",
                                                       id_,
                                                       isopen=entry[1],
-                                                      title=entry[0])
+                                                      title=entry[0],
+                                                      icon="foldable_sidebar")
                         render_list(idss, entry[2])
                         html.end_foldable_container()
                     elif isinstance(entry[1], str):
@@ -61,7 +62,7 @@ class CustomLinks(SidebarSnapin):
                             icon_file = entry[2]
 
                             # Old configs used files named "link_<name>.gif". Those .gif files have
-                            # been removed from Check_MK. Replacing such images with the default icon
+                            # been removed from Checkmk. Replacing such images with the default icon
                             if icon_file.endswith(".gif"):
                                 icon_name = "link"
                             else:

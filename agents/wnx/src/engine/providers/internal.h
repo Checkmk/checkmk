@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -22,27 +23,30 @@ namespace cma::srv {
 class ServiceProcessor;
 }
 
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 // simple creator valid state name
-// gtest [+]
-inline std::string MakeStateFileName(const std::string& Name,
-                                     const std::string& Ext,
-                                     const std::string& Ip = "") {
-    if (Name.empty() || Ext.empty()) {
-        XLOG::l("Invalid parameters to MakeStateFileName '{}' '{}'", Name, Ext);
+inline std::string MakeStateFileName(const std::string& name,
+                                     const std::string& extension,
+                                     const std::string& ip_address) {
+    if (name.empty() || extension.empty()) {
+        XLOG::l("Invalid parameters to MakeStateFileName '{}' '{}'", name,
+                extension);
         return {};
     }
 
-    std::string ip = Ip.empty() ? "" : " " + Ip;
+    std::string ip = ip_address.empty() ? "" : " " + ip_address;
     std::transform(ip.cbegin(), ip.cend(), ip.begin(),
                    [](char c) { return std::isalnum(c) ? c : L'_'; });
 
-    auto out = Name + ip + Ext;
+    auto out = name + ip + extension;
 
     return out;
+}
+
+inline std::string MakeStateFileName(const std::string& name,
+                                     const std::string& extension) {
+    return MakeStateFileName(name, extension, "");
 }
 
 class Basic {
@@ -58,16 +62,16 @@ public:
     }
     virtual ~Basic() {}
 
-    virtual bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
+    virtual bool startExecution(
+        const std::string& internal_port,  // format "type:value", where type:
         // mail - for mail slot
         // asio - for TCP
         // grpc - for GRPC
         // rest - for Rest
-        const std::string& CommandLine,  // anything here
-        std::chrono::milliseconds Period = std::chrono::milliseconds{0}) = 0;
+        const std::string& command_line  // anything here
+        ) = 0;
 
-    virtual bool stop(bool Wait = true) = 0;
+    virtual bool stop(bool Wait) = 0;
 
     std::string getUniqName() const { return uniq_name_; }
     const std::string ip() const { return ip_; }
@@ -75,8 +79,8 @@ public:
     // implemented only for very special providers which has to change
     // itself during generation of output(like plugins)
     virtual void updateSectionStatus() {}
-    std::string generateContent(const std::string_view& SectionName,
-                                bool ForceGeneration);
+    std::string generateContent(const std::string_view& section_name,
+                                bool force_generation);
     std::string generateContent() {
         return generateContent(section::kUseEmbeddedName, false);
     }
@@ -92,11 +96,11 @@ public:
     void loadStandardConfig();
     virtual void loadConfig() {}
     int timeout() const { return timeout_; }
-    virtual void registerCommandLine(const std::string& CmdLine);
+    virtual void registerCommandLine(const std::string& command_line);
 
     void registerOwner(cma::srv::ServiceProcessor* sp);
 
-    virtual void preStart() noexcept {}
+    virtual void preStart() {}
     uint64_t errorCount() const { return error_count_; }
     uint64_t resetError() { return error_count_.exchange(0); }
 
@@ -116,12 +120,13 @@ protected:
     // usually related to the openhardware monitor
     void disableSectionTemporary();
 
-    bool sendGatheredData(const std::string& CommandLine);
-    virtual std::string makeHeader(const std::string_view SectionName) const {
-        return section::MakeHeader(SectionName == cma::section::kUseEmbeddedName
-                                       ? std::string_view(uniq_name_)
-                                       : SectionName,
-                                   separator_);
+    bool sendGatheredData(const std::string& command_line);
+    virtual std::string makeHeader(const std::string_view section_name) const {
+        return section::MakeHeader(
+            section_name == cma::section::kUseEmbeddedName
+                ? std::string_view(uniq_name_)
+                : section_name,
+            separator_);
     }
     virtual std::string makeBody() = 0;
 
@@ -151,7 +156,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, WmiAll);
+    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
     FRIEND_TEST(WmiProviderTest, BasicWmi);
     FRIEND_TEST(WmiProviderTest, BasicWmiDefaultsAndError);
 
@@ -164,19 +169,16 @@ private:
 // use as a parent
 class Synchronous : public Basic {
 public:
-    Synchronous(const std::string_view& Name, char Separator = 0)
-        : Basic(Name, Separator) {}
-    virtual ~Synchronous() {}
+    Synchronous(const std::string_view& name) : Basic(name, 0) {}
+    Synchronous(const std::string_view& name, char separator)
+        : Basic(name, separator) {}
+    virtual ~Synchronous() = default;
 
-    bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine,  // format "id name whatever"
-        std::chrono::milliseconds Period = std::chrono::milliseconds{0});
-    virtual bool stop(bool Wait = true) { return true; }  // rather not possible
+    bool startExecution(
+        const std::string& internal_port,  // format "type:value
+        const std::string& command_line    // format "id name whatever"
+        ) override;
+    bool stop(bool wait) override { return true; }
 };
 
 // Reference *ASYNC* Class for internal Sections
@@ -184,38 +186,23 @@ public:
 // When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    Asynchronous(const std::string_view& Name, char Separator = 0)
-        : Basic(Name, Separator) {}
-    virtual ~Asynchronous() {}
+    Asynchronous(const std::string_view& name) : Basic(name, 0) {}
+    Asynchronous(const std::string_view& name, char separator)
+        : Basic(name, separator) {}
+    virtual ~Asynchronous() = default;
 
-    // #TODO remove: this function is obsolete - no need be to more async
-    virtual bool startAsynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine,  // anything here
-        bool Detached,                   // no waiting
-        std::chrono::milliseconds Period = std::chrono::milliseconds{0});
+    bool startExecution(
+        const std::string& internal_port,  // format "type:value"
+        const std::string& command_line    // format "id name whatever"
+        ) override;
 
-    // use this function when switch between sync async is possible
-    virtual bool startSynchronous(
-        const std::string& InternalPort,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string& CommandLine,
-        std::chrono::milliseconds Period = std::chrono::milliseconds{0});
-
-    bool stop(bool Wait = true);
+    bool stop(bool wait) override;
 
 protected:
     // ASYNCHRONOUS PART:
-    void threadProc(const std::string& InternalPort,
-                    const std::string& CommandLine,
-                    std::chrono::milliseconds Period) noexcept;
+    void threadProc(const std::string& internal_port,
+                    const std::string& command_line,
+                    std::chrono::milliseconds period);
 
     // thread
     std::thread thread_;
@@ -226,8 +213,6 @@ protected:
     bool stop_requested_ = false;
 };
 
-}  // namespace provider
-
-};  // namespace cma
+}  // namespace cma::provider
 
 #endif  // p_internal_h__

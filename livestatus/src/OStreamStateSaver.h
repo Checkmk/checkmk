@@ -7,6 +7,7 @@
 #define OStreamStateSaver_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <iostream>
 
 class OStreamStateSaver {

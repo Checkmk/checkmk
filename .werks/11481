@@ -1,0 +1,19 @@
+Title: LDAP: Fix AttributeError if attribute "Disable Notifications" is used
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1600846990
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If you used the option "LDAP attribute to sync" for "Disable Notifications" in
+a LDAP connection, the Users page crashes with "AttributeError ('unicode'
+object has no attribute 'get')".
+
+The reason is, that the attribute from the LDAP sync is a boolean, that returns
+"TRUE" or "FALSE" in unicode.
+
+From now on, the GUI can handle this kind of format.

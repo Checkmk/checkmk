@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,6 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
+    Checkbox,
     Dictionary,
     ListOf,
     TextAscii,
@@ -15,7 +16,9 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
 
@@ -65,4 +68,34 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_snapvault,
         title=lambda: _("NetApp Snapvaults / Snapmirror Lag Time"),
+    ))
+
+
+def _discovery_valuespec_snapvault():
+    return Dictionary(
+        elements=[
+            (
+                "exclude_destination_vserver",
+                Checkbox(
+                    title=_("Exclude destination vserver"),
+                    help=_("Only applicable to clustermode installations. "
+                           "The service description of snapvault services is composed of the "
+                           "destination vserver (SVM) and the destination volume by default. Check "
+                           "this box if you would like to use the destination volume as the "
+                           "service description on its own. "
+                           "Please be advised that this may lead to a service description that is "
+                           "not unique, resulting in some services, which are not shown!"),
+                ),
+            ),
+        ],
+        title=_('NetApp snapvault discovery'),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="list",
+        name="discovery_snapvault",
+        valuespec=_discovery_valuespec_snapvault,
     ))

@@ -65,6 +65,6 @@ check_info['mongodb_connections'] = {
     "check_function": check_mongodb_connections,
     "inventory_function": inventory_mongodb_connections,
     "default_levels_variable": "mongodb_connections_default_levels",
-    "group": "db_connections",
+    "group": "db_connections_mongodb",
     "has_perfdata": True,
 }

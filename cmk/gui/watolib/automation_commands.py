@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,25 +6,20 @@
 """Managing the available automation calls"""
 
 import abc
-from typing import (  # pylint: disable=unused-import
-    Dict, Type, Any, Text, Union,
-)
-import six
+from typing import Dict, Type, Any
 
 import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
 
 
-class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
+class AutomationCommand(metaclass=abc.ABCMeta):
     """Abstract base class for all automation commands"""
     @abc.abstractmethod
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_request(self):
-        # type: () -> Any
+    def get_request(self) -> Any:
         """Get request variables from environment
 
         In case an automation command needs to read variables from the HTTP request this has to be done
@@ -32,19 +27,13 @@ class AutomationCommand(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, request):
-        # type: (Any) -> Any
+    def execute(self, request: Any) -> Any:
         raise NotImplementedError()
 
 
-class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        # type: () -> Type[AutomationCommand]
-        return AutomationCommand
-
-    def plugin_name(self, plugin_class):
-        # type: (Type[AutomationCommand]) -> str
-        return plugin_class().command_name()
+class AutomationCommandRegistry(cmk.utils.plugin_registry.Registry[Type[AutomationCommand]]):
+    def plugin_name(self, instance: Type[AutomationCommand]) -> str:
+        return instance().command_name()
 
 
 automation_command_registry = AutomationCommandRegistry()
@@ -52,16 +41,13 @@ automation_command_registry = AutomationCommandRegistry()
 
 @automation_command_registry.register
 class AutomationPing(AutomationCommand):
-    def command_name(self):
-        # type: () -> str
+    def command_name(self) -> str:
         return "ping"
 
-    def get_request(self):
-        # type: () -> None
+    def get_request(self) -> None:
         return None
 
-    def execute(self, _unused_request):
-        # type: (None) -> Dict[str, Union[str, Text]]
+    def execute(self, _unused_request: None) -> Dict[str, str]:
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition_short(),

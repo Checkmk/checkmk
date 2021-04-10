@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Sets/Removes downtimes via Check_MK Multisite Webservice
+# Sets/Removes downtimes via Checkmk Multisite Webservice
 # Before you can use this script, please read:
 # http://mathias-kettner.de/checkmk_multisite_automation.html
 # And create an automation user - best with the name 'automation'
@@ -20,7 +20,7 @@
 #    implement the "Remove all downtimes" button in a normal hosts/
 #    services views.
 
-import os, sys, getopt, time, urllib
+import os, sys, getopt, urllib, re
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -165,8 +165,8 @@ def set_downtime(variables, add_vars):
             for line in lines:
                 verbose("OUTPUT: %s" % line.rstrip())
         for line in lines:
-            if line.startswith('<div class=error>'):
-                bail_out(line[17:].split('<')[0])
+            for error in re.findall('<div class="error">([^<]+)', line):
+                bail_out(error)
     except Exception as e:
         bail_out("Cannot call Multisite URL: %s" % e)
 

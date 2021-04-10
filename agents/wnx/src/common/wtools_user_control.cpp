@@ -5,8 +5,8 @@
 
 // WINDOWS STUFF
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-
+#include <minwindef.h>
+//
 #include <lmaccess.h>
 #include <lmapibuf.h>
 #include <lmerr.h>
@@ -22,7 +22,7 @@ namespace wtools {
 namespace uc {
 
 Status LdapControl::userAdd(std::wstring_view user_name,
-                            std::wstring_view pwd_string) {
+                            std::wstring_view pwd_string) noexcept {
     USER_INFO_1 user_info;
     // Set up the USER_INFO_1 structure.
     user_info.usri1_name = const_cast<wchar_t*>(user_name.data());
@@ -82,7 +82,7 @@ bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
     return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 1u);
 }
 
-Status LdapControl::userDel(std::wstring_view user_name) {
+Status LdapControl::userDel(std::wstring_view user_name) noexcept {
     auto err =
         ::NetUserDel(primary_dc_name_,                         // PDC name
                      const_cast<wchar_t*>(user_name.data()));  // user name
@@ -101,7 +101,7 @@ Status LdapControl::userDel(std::wstring_view user_name) {
     }
 }
 
-static bool CheckGroupIsForbidden(std::wstring_view group_name) {
+static bool CheckGroupIsForbidden(std::wstring_view group_name) noexcept {
     using namespace std::literals::string_literals;
     static const std::wstring PredefinedeGroupsForbiddentoDelete[] = {
         L"Access Control Assistance Operators"s,
@@ -135,7 +135,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
                                   std::wstring_view group_comment) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 
@@ -166,7 +166,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
 Status LdapControl::localGroupDel(std::wstring_view group_name) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 

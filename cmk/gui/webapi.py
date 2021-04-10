@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,7 @@ import traceback
 import json
 import pprint
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Callable, Dict, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
@@ -25,7 +25,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     MKUserError,
@@ -49,7 +49,7 @@ from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unuse
     validate_host_attributes,
 )
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
 def load_plugins(force):
@@ -65,34 +65,20 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-@permission_registry.register
-class PermissionWATOAllowedAPI(Permission):
-    @property
-    def section(self):
-        return PermissionSectionWATO
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="api_allowed",
+        title=_l("Access to Web-API"),
+        description=_l("This permissions specifies if the role "
+                       "is able to use Web-API functions. It is only available "
+                       "for automation users."),
+        defaults=config.builtin_role_ids,
+    ))
 
-    @property
-    def permission_name(self):
-        return "api_allowed"
+Formatter = Callable[[Dict[str, Any]], str]
 
-    @property
-    def title(self):
-        return _("Access to Web-API")
-
-    @property
-    def description(self):
-        return _("This permissions specifies if the role "
-                 "is able to use Web-API functions. It is only available "
-                 "for automation users.")
-
-    @property
-    def defaults(self):
-        return config.builtin_role_ids
-
-
-Formatter = Callable[[Dict[str, Any]], Text]
-
-_FORMATTERS = {
+_FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
     "json":
         (json.dumps,
          lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
@@ -100,7 +86,7 @@ _FORMATTERS = {
     "xml":
         (dicttoxml.dicttoxml,
          lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
-}  # type: Dict[str, Tuple[Formatter, Formatter]]
+}
 
 
 @cmk.gui.pages.register("webapi")
@@ -135,8 +121,8 @@ def page_api():
             "result": _("Authorization Error. Insufficent permissions for '%s'") % e
         }
     except MKException as e:
-        response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
-    except Exception as e:
+        response = {"result_code": 1, "result": _("Checkmk exception: %s") % e}
+    except Exception:
         if config.debug:
             raise
         logger.exception("error handling web API call")

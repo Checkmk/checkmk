@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
+
 METRIC_PULSE_SECURE_LOG = 'log_file_utilization'
 
 
@@ -20,7 +22,7 @@ def check_pulse_secure_log_util(item, params, parsed):
 
 
 check_info["pulse_secure_log_util"] = {
-    "parse_function": lambda info: parse_pulse_secure(info, METRIC_PULSE_SECURE_LOG),
+    "parse_function": lambda info: pulse_secure.parse_pulse_secure(info, METRIC_PULSE_SECURE_LOG),
     "inventory_function": discover_single,
     "check_function": check_pulse_secure_log_util,
     "service_description": "Pulse Secure log file utilization",
@@ -30,6 +32,5 @@ check_info["pulse_secure_log_util"] = {
         [
             "1",  # logFullPercent
         ]),
-    "snmp_scan_function": scan_pulse_secure,
-    "includes": ["pulse_secure.include"],
+    "snmp_scan_function": pulse_secure.scan_pulse_secure,
 }

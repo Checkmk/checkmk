@@ -1,0 +1,18 @@
+Title: watchdog_sensors: not possible to apply different rules to dew point and temperature
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614944598
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+It was not possible to apply different thresholds to different services
+monitored by the watchdog_sensors check. This was due to the fact that all
+sensors are mapped to the same sensor ID, and it was therefore not possible to
+match different rulesets to the different services. This has been fixed, so
+that the full service description and sensor ID can be used for ruleset
+matching.
+If this fix is required, please rediscover the services of the affected hosts.

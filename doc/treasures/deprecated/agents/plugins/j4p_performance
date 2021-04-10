@@ -57,7 +57,7 @@ import socket
 socket.setdefaulttimeout(1.0)
 
 # Convert servlet config definitions and append it to the vars definitions
-for app, servlets in servlets.iteritems():
+for app, servlets in servlets.items():
     # Add application specific vars
     for var in app_vars:
         vars.append(((app, None), var[0] % {'app': app}, var[1]))

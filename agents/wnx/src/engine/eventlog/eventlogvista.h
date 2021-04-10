@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef EventLogVista_h
 #define EventLogVista_h
@@ -9,12 +10,15 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 #include <winsock2.h>
+
 #include <windows.h>
 #include <winevt.h>
+
 #include <exception>
 #include <functional>
 #include <string>
 #include <vector>
+
 #include "EventLogBase.h"
 
 namespace cma::evl {
@@ -25,7 +29,7 @@ public:
     explicit EvtFunctionMap();
     ~EvtFunctionMap();
 
-    HMODULE module() { return module_handle_; }
+    HMODULE theModule() { return module_handle_; }
 
     decltype(&EvtOpenLog) openLog;
     decltype(&EvtQuery) query;

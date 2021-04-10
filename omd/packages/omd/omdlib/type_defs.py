@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Dict, Optional  # pylint: disable=unused-import
+from typing import Dict, Optional
 
 Config = Dict[str, str]
 Replacements = Dict[str, str]

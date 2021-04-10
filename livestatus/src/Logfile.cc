@@ -4,12 +4,15 @@
 // source code package.
 
 #include "Logfile.h"
+
 #include <fcntl.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <sstream>
 #include <utility>
 #include <vector>
+
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logger.h"

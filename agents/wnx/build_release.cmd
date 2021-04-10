@@ -60,6 +60,8 @@ set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
 set SKIP_MINOR_BINARIES=YES
 
+set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
+
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 
@@ -133,5 +135,4 @@ copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y
 
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
-!make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && echo set && exit /b 37
 

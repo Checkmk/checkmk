@@ -1,43 +1,76 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
-from __future__ import division
 
-from collections import OrderedDict
 import colorsys
 import random
+import re
 import shlex
-from typing import (  # pylint: disable=unused-import
-    Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Text, Tuple, Union,
+from collections import OrderedDict
+from itertools import chain
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
 )
 
-import six
+from six import ensure_binary, ensure_str
+
+import livestatus
 
 import cmk.utils.regex
-from cmk.utils.memoize import MemoizeCache
-from cmk.utils.werks import parse_check_mk_version
 import cmk.utils.version as cmk_version
+from cmk.utils.memoize import MemoizeCache
+from cmk.utils.prediction import livestatus_lql
+from cmk.utils.type_defs import (
+    HostName,
+    MetricName as _MetricName,
+    ServiceName,
+)
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.gui.config as config
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.globals import g, html
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.type_defs import Choices, RenderableRecipe, Row
+from cmk.gui.valuespec import (
+    DropdownChoiceValue,
+    DropdownChoiceWithHostAndServiceHints,
+    TextAsciiAutocomplete,
+)
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
 TranslatedMetrics = Dict[str, Dict[str, Any]]
+Atom = TypeVar('Atom')
+TransformedAtom = TypeVar('TransformedAtom')
+StackElement = Union[Atom, TransformedAtom]
+GraphTemplate = Dict[str, Any]
+GraphRecipe = Dict[str, Any]
 
 
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
     def __init__(self, list_identifier=None, start_index=None):
-        OrderedDict.__init__(self)
+        super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
@@ -47,18 +80,13 @@ class AutomaticDict(OrderedDict):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info = {}  # type: Dict[str, Any]
-metric_info = {}  # type: Dict[str, Dict[str, Any]]
-check_metrics = {}  # type: Dict[str, Dict[str, Any]]
-perfometer_info = []  # type: List[Union[LegacyPerfometer, Perfometer]]
+unit_info: Dict[str, Any] = {}
+metric_info: Dict[str, Dict[str, Any]] = {}
+check_metrics: Dict[str, Dict[str, Any]] = {}
+perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info = AutomaticDict("manual_graph_template")
-
-scalar_colors = {
-    "warn": "#ffff00",
-    "crit": "#ff0000",
-}
+graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -160,7 +188,7 @@ def indexed_color(idx, total):
     red = int(base_color in [0, 3, 4, 6])
     green = int(base_color in [1, 3, 5, 6])
     blue = int(base_color in [2, 4, 5, 6])
-    return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+    return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -196,8 +224,7 @@ def split_unit(value_text):
     return None, unit_name
 
 
-def parse_perf_data(perf_data_string, check_command=None):
-    # type: (str, Optional[str]) -> Tuple[List, str]
+def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) -> Tuple[List, str]:
     """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
@@ -208,14 +235,13 @@ def parse_perf_data(perf_data_string, check_command=None):
     # Split the perf data string into parts. Preserve quoted strings!
     parts = _split_perf_data(perf_data_string)
 
-    if not parts:
-        return [], check_command
-
     # Try if check command is appended to performance data
     # in a PNP like style
-    if parts[-1].startswith("[") and parts[-1].endswith("]"):
+    if parts and parts[-1].startswith("[") and parts[-1].endswith("]"):
         check_command = parts[-1][1:-1]
         del parts[-1]
+
+    check_command = check_command.replace(".", "_")  # see function maincheckify
 
     # Parse performance data, at least try
     perf_data = []
@@ -253,13 +279,12 @@ def _float_or_int(val):
 
 
 # TODO: Slightly funny typing, fix this when we use Python 3.
-def _split_perf_data(perf_data_string):
-    # type: (AnyStr) -> List[AnyStr]
+def _split_perf_data(perf_data_string: AnyStr) -> List[AnyStr]:
     "Split the perf data string into parts. Preserve quoted strings!"
-    parts = shlex.split(six.ensure_str(perf_data_string))
-    if isinstance(perf_data_string, six.binary_type):
-        return [six.ensure_binary(s) for s in parts]
-    return [six.ensure_text(s) for s in parts]
+    parts = shlex.split(ensure_str(perf_data_string))
+    if isinstance(perf_data_string, bytes):
+        return [ensure_binary(s) for s in parts]
+    return [ensure_str(s) for s in parts]
 
 
 def perfvar_translation(perfvar_name, check_command):
@@ -313,21 +338,21 @@ def get_metric_info(metric_name, color_index):
 
     if metric_name not in metric_info:
         color_index += 1
-        palette_color = get_palette_color_by_index(color_index)
         mi = {
             "title": metric_name.title(),
             "unit": "",
-            "color": parse_color_into_hexrgb(palette_color),
+            "color": get_palette_color_by_index(color_index),
         }
     else:
         mi = metric_info[metric_name].copy()
-        mi["color"] = parse_color_into_hexrgb(mi["color"])
+
+    mi["unit"] = unit_info[mi["unit"]]
+    mi["color"] = parse_color_into_hexrgb(mi["color"])
 
     return mi, color_index
 
 
-def translate_metrics(perf_data, check_command):
-    # type: (List[Tuple], str) -> TranslatedMetrics
+def translate_metrics(perf_data: List[Tuple], check_command: str) -> TranslatedMetrics:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -335,7 +360,7 @@ def translate_metrics(perf_data, check_command):
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics = {}  # type: Dict[str, Dict[str, Any]]
+    translated_metrics: Dict[str, Dict[str, Any]] = {}
     color_index = 0
     for entry in perf_data:
 
@@ -344,14 +369,65 @@ def translate_metrics(perf_data, check_command):
         mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
 
-        new_entry["unit"] = unit_info[new_entry["unit"]]
-
         if metric_name in translated_metrics:
             translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
             translated_metrics[metric_name]["scale"].extend(new_entry["scale"])
         else:
             translated_metrics[metric_name] = new_entry
     return translated_metrics
+
+
+def perf_data_string_from_metric_names(metric_names):
+    parts = []
+    for var_name in metric_names:
+        # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
+        # of the metric system. They are used as separators for the single parts of the expression and
+        # since the var_names are used as part of the expressions, they should better not be processed
+        # even when reported by the core.
+        if "," in var_name:
+            continue
+
+        if " " in var_name:
+            parts.append("\"%s\"=1" % var_name)
+        else:
+            parts.append("%s=1" % var_name)
+    return " ".join(parts)
+
+
+def available_metrics_translated(
+    perf_data_string: str,
+    rrd_metrics: List[_MetricName],
+    check_command: str,
+) -> TranslatedMetrics:
+    # If we have no RRD files then we cannot paint any graph :-(
+    if not rrd_metrics:
+        return {}
+
+    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+
+    rrd_perf_data_string = perf_data_string_from_metric_names(rrd_metrics)
+    rrd_perf_data, check_command = parse_perf_data(rrd_perf_data_string, check_command)
+    if not rrd_perf_data + perf_data:
+        return {}
+
+    if not perf_data:
+        perf_data = rrd_perf_data
+
+    else:
+        current_variables = [x[0] for x in perf_data]
+        for entry in rrd_perf_data:
+            if entry[0] not in current_variables:
+                perf_data.append(entry)
+
+    return translate_metrics(perf_data, check_command)
+
+
+def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
+    what = "service" if "service_check_command" in row else "host"
+    perf_data_string = row[what + "_perf_data"]
+    rrd_metrics = row[what + "_metrics"]
+    check_command = row[what + "_check_command"]
+    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
 #.
@@ -368,8 +444,7 @@ def translate_metrics(perf_data, check_command):
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression):
-    # type: (str) -> Tuple[str, Optional[str], Optional[str]]
+def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -408,28 +483,33 @@ def evaluate(expression, translated_metrics):
     return value, unit, color
 
 
-def _evaluate_rpn(expression, translated_metrics):
-    # type: (str, Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
-    parts = expression.split(",")
+def _evaluate_rpn(
+        expression: str,
+        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
     # stack of (value, unit, color)
-    stack = []  # type: List[Tuple[float, Dict[str, Any], Optional[str]]]
-    while parts:
-        operator_name = parts[0]
-        parts = parts[1:]
-        if operator_name in rpn_operators:
+    return stack_resolver(expression.split(","), lambda x: x in rpn_operators,
+                          lambda op, a, b: rpn_operators[op](a, b),
+                          lambda x: _evaluate_literal(x, translated_metrics))
+
+
+def stack_resolver(elements: List[Atom], is_operator: Callable[[Atom], bool],
+                   apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
+                   apply_element: Callable[[Atom], StackElement]) -> StackElement:
+    stack: List[StackElement] = []
+    for element in elements:
+        if is_operator(element):
             if len(stack) < 2:
                 raise MKGeneralException("Syntax error in expression '%s': too few operands" %
-                                         expression)
-            op1 = stack[-2]
-            op2 = stack[-1]
-            result = rpn_operators[operator_name](op1, op2)
-            stack = stack[:-2] + [result]
+                                         ", ".join(map(str, elements)))
+            op2 = stack.pop()
+            op1 = stack.pop()
+            stack.append(apply_operator(element, op1, op2))
         else:
-            stack.append(_evaluate_literal(operator_name, translated_metrics))
+            stack.append(apply_element(element))
 
     if len(stack) != 1:
         raise MKGeneralException("Syntax error in expression '%s': too many operands left" %
-                                 expression)
+                                 ", ".join(map(str, elements)))
 
     return stack[0]
 
@@ -439,7 +519,9 @@ rpn_operators = {
     "+": lambda a, b: ((a[0] + b[0]), _unit_mult(a[1], b[1]), _choose_operator_color(a[2], b[2])),
     "-": lambda a, b: ((a[0] - b[0]), _unit_sub(a[1], b[1]), _choose_operator_color(a[2], b[2])),
     "*": lambda a, b: ((a[0] * b[0]), _unit_add(a[1], b[1]), _choose_operator_color(a[2], b[2])),
-    "/": lambda a, b: ((a[0] / b[0]), _unit_div(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    # Handle zero division by always adding a tiny bit to the divisor
+    "/": lambda a, b: ((a[0] /
+                        (b[0] + 1e-16)), _unit_div(a[1], b[1]), _choose_operator_color(a[2], b[2])),
     ">": lambda a, b: ((a[0] > b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
     "<": lambda a, b: ((a[0] < b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
     ">=": lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
@@ -450,14 +532,13 @@ rpn_operators = {
 
 
 # TODO: real unit computation!
-def _unit_mult(u1, u2):
-    # type: (Dict[str, Any], Dict[str, Any]) -> Dict[str, Any]
+def _unit_mult(u1: Dict[str, Any], u2: Dict[str, Any]) -> Dict[str, Any]:
     return u2 if u1 in (unit_info[''], unit_info['count']) else u1
 
 
-_unit_div = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
-_unit_add = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
-_unit_sub = _unit_mult  # type: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]]
+_unit_div: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
+_unit_add: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
+_unit_sub: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
 
 
 def _choose_operator_color(a, b):
@@ -488,8 +569,9 @@ def _operator_minmax(a, b, func):
     return v, unit, winner[2] or loser[2]
 
 
-def _evaluate_literal(expression, translated_metrics):
-    # type: (Union[float, str], Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]
+def _evaluate_literal(
+        expression: Union[int, float, str],
+        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], None
 
@@ -499,25 +581,19 @@ def _evaluate_literal(expression, translated_metrics):
     if expression[0].isdigit() or expression[0] == '-':
         return float(expression), unit_info[""], None
 
-    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
-        expression = expression.rsplit(".", 1)[0]
+    varname = drop_metric_consolidation_advice(expression)
 
-    color = None
+    percent = varname.endswith("(%)")
+    if percent:
+        varname = varname[:-3]
 
-    # TODO: Error handling with useful exceptions
-    if expression.endswith("(%)"):
-        percent = True
-        expression = expression[:-3]
-    else:
-        percent = False
-
-    if ":" in expression:
-        varname, scalarname = expression.split(":")
+    if ":" in varname:
+        varname, scalarname = varname.split(":")
         value = translated_metrics[varname]["scalar"].get(scalarname)
-        color = scalar_colors.get(scalarname)
+        color = scalar_colors.get(scalarname, "#808080")
     else:
-        varname = expression
         value = translated_metrics[varname]["value"]
+        color = translated_metrics[varname]["color"]
 
     if percent:
         maxvalue = translated_metrics[varname]["scalar"]["max"]
@@ -526,15 +602,9 @@ def _evaluate_literal(expression, translated_metrics):
         else:
             value = 0.0
         unit = unit_info["%"]
-
     else:
         unit = translated_metrics[varname]["unit"]
 
-    if color is None:
-        if varname in metric_info:
-            color = parse_color_into_hexrgb(metric_info[varname]["color"])
-        else:
-            color = "#808080"
     return value, unit, color
 
 
@@ -588,10 +658,10 @@ def get_graph_template(template_id):
         return generic_graph_template(template_id[7:])
     if template_id in graph_info:
         return graph_info[template_id]
-    raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
+    raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def generic_graph_template(metric_name):
+def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
         "metrics": [(metric_name, "area"),],
@@ -602,111 +672,166 @@ def generic_graph_template(metric_name):
     }
 
 
-def get_graph_templates(translated_metrics):
+def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
     if not translated_metrics:
-        return []
+        yield from ()
+        return
 
     explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
-    already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = list(
-        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
-    return explicit_templates + implicit_templates
+    yield from explicit_templates
+    yield from _get_implicit_graph_templates(
+        translated_metrics,
+        _get_graphed_metrics(explicit_templates),
+    )
 
 
-def _get_explicit_graph_templates(translated_metrics):
+def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
-        if _graph_possible(graph_template, translated_metrics):
-            yield graph_template
-        elif _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-            yield _graph_without_missing_optional_metrics(graph_template, translated_metrics)
+        template = graph_template_for_metrics(graph_template, translated_metrics)
+        if template:
+            yield template
 
 
-def _get_graphed_metrics(graph_templates):
-    # type: (List) -> Set
-    graphed_metrics = set()  # type: Set
-    for graph_template in graph_templates:
-        graphed_metrics.update(_metrics_used_by_graph(graph_template))
-    return graphed_metrics
+def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> Set[str]:
+    return set(chain.from_iterable(map(_metrics_used_by_graph, graph_templates)))
 
 
-def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
+def _get_implicit_graph_templates(
+    translated_metrics: TranslatedMetrics,
+    already_graphed_metrics: Container[str],
+) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
             yield generic_graph_template(metric_name)
 
 
-def _metrics_used_by_graph(graph_template):
-    # type: (Any) -> Iterator
+def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
     for metric_definition in graph_template["metrics"]:
-        for metric in _metrics_used_in_definition(metric_definition[0]):
-            yield metric
+        yield from metrics_used_in_expression(metric_definition[0])
 
 
-def _metrics_used_in_definition(metric_definition):
-    without_color = metric_definition.split("#")[0]
-    parts = without_color.split(",")
-    for part in parts:
-        # drop .min, .max, .average
-        if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
-            metric_name = part.rsplit(".", 1)[0]
+def metrics_used_in_expression(metric_expression: str) -> Iterator[str]:
+    for part in split_expression(metric_expression)[0].split(","):
+        metric_name = drop_metric_consolidation_advice(part)
+        if metric_name not in rpn_operators:
+            yield metric_name
+
+
+def drop_metric_consolidation_advice(expression: str) -> str:
+    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
+        return expression.rsplit(".", 1)[0]
+    return expression
+
+
+def graph_template_for_metrics(
+    graph_template: GraphTemplate,
+    translated_metrics: TranslatedMetrics,
+) -> GraphTemplate:
+    # Skip early on conflicting_metrics
+    for var in graph_template.get("conflicting_metrics", []):
+        if var in translated_metrics:
+            return {}
+
+    try:
+        reduced_metrics = list(
+            _filter_renderable_graph_metrics(graph_template['metrics'], translated_metrics,
+                                             graph_template.get('optional_metrics', [])))
+    except KeyError:
+        return {}
+
+    if reduced_metrics:
+        reduced_graph_template = graph_template.copy()
+        reduced_graph_template["metrics"] = reduced_metrics
+        return reduced_graph_template
+
+    return {}
+
+
+def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, optional_metrics):
+    for metric_definition in metric_definitions:
+        try:
+            evaluate(metric_definition[0], translated_metrics)
+            yield metric_definition
+        except KeyError as err:  # because can't find necessary metric_name in translated_metrics
+            metric_name = err.args[0]
+            if metric_name in optional_metrics:
+                continue
+            raise err
+
+
+def get_graph_data_from_livestatus(only_sites, host_name, service_description):
+    columns = [u'perf_data', u'metrics', u'check_command']
+    query = livestatus_lql([host_name], columns, service_description)
+    what = 'host' if service_description == "_HOST_" else 'service'
+    labels = [u"site"] + [u"%s_%s" % (what, col) for col in columns]
+
+    with sites.only_sites(only_sites), sites.prepend_site():
+        info = dict(zip(labels, sites.live().query_row(query)))
+
+    info['host_name'] = host_name
+    if what == 'service':
+        info['service_description'] = service_description
+
+    return info
+
+
+def metric_title(metric_name: _MetricName) -> str:
+    return metric_info.get(metric_name, {}).get("title", metric_name.title())
+
+
+def metric_recipe_and_unit(
+    host_name: HostName,
+    service_description: ServiceName,
+    metric_name: _MetricName,
+    consolidation_function: str,
+    line_type: str = "stack",
+    visible: bool = True,
+) -> Tuple[RenderableRecipe, str]:
+    mi = metric_info.get(metric_name, {})
+    return (
+        RenderableRecipe(
+            title=metric_title(metric_name),
+            expression=("rrd", host_name, service_description, metric_name, consolidation_function),
+            color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
+            line_type=line_type,
+            visible=visible,
+        ),
+        mi.get("unit", ""),
+    )
+
+
+def horizontal_rules_from_thresholds(
+    thresholds: Iterable[Union[str, Tuple[str, str]]],
+    translated_metrics: TranslatedMetrics,
+):
+    horizontal_rules = []
+    for entry in thresholds:
+        if isinstance(entry, tuple):
+            expression, title = entry
         else:
-            metric_name = part
+            expression = entry
+            if expression.endswith(":warn"):
+                title = _("Warning")
+            elif expression.endswith(":crit"):
+                title = _("Critical")
+            else:
+                title = expression
 
-        if metric_name in rpn_operators:
-            continue
-
-        yield metric_name
-
-
-def _graph_possible(graph_template, translated_metrics):
-    for metric_definition in graph_template["metrics"]:
         try:
-            evaluate(metric_definition[0], translated_metrics)
-        except Exception:
-            return False
-
-    # Allow graphs to be disabled if certain (better) metrics
-    # are available
-    if "conflicting_metrics" in graph_template:
-        for var in graph_template["conflicting_metrics"]:
-            if var in translated_metrics:
-                return False
-
-    return True
-
-
-def _graph_possible_without_optional_metrics(graph_template, translated_metrics):
-    if "optional_metrics" in graph_template:
-        return _graph_possible(
-            graph_template, _add_fake_metrics(translated_metrics,
-                                              graph_template["optional_metrics"]))
-
-
-def _graph_without_missing_optional_metrics(graph_template, translated_metrics):
-    working_metrics = []
-
-    for metric_definition in graph_template["metrics"]:
-        try:
-            evaluate(metric_definition[0], translated_metrics)
-            working_metrics.append(metric_definition)
+            value, unit, color = evaluate(expression, translated_metrics)
+            if value:
+                horizontal_rules.append((
+                    value,
+                    unit["render"](value),
+                    color,
+                    title,
+                ))
+        # Scalar value like min and max are always optional. This makes configuration
+        # of graphs easier.
         except Exception:
             pass
 
-    reduced_graph_template = graph_template.copy()
-    reduced_graph_template["metrics"] = working_metrics
-    return reduced_graph_template
-
-
-def _add_fake_metrics(translated_metrics, metric_names):
-    with_fake = translated_metrics.copy()
-    for metric_name in metric_names:
-        with_fake[metric_name] = {
-            "value": 1.0,
-            "scale": 1.0,
-            "unit": unit_info[""],
-            "color": "#888888",
-        }
-    return with_fake
+    return horizontal_rules
 
 
 #.
@@ -777,6 +902,34 @@ _cmk_color_palette = {
 }
 
 
+def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
+    return "#%02x%02x%02x" % (red, green, blue)
+
+
+def hex_color_to_rgb_color(color: str) -> Tuple[int, int, int]:
+    """Convert '#112233' to (17, 34, 51)"""
+    try:
+        return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+    except Exception:
+        raise MKGeneralException(_("Invalid color specification '%s'") % color)
+
+
+# These colors are also used in the CSS stylesheets, do not change one without changing the other.
+MONITORING_STATUS_COLORS = {
+    "critical/down": rgb_color_to_hex_color(255, 50, 50),
+    "unknown/unreachable": rgb_color_to_hex_color(255, 136, 0),
+    "warning": rgb_color_to_hex_color(255, 208, 0),
+    "in_downtime": rgb_color_to_hex_color(60, 194, 255),
+    "on_down_host": rgb_color_to_hex_color(16, 99, 176),
+    "ok/up": rgb_color_to_hex_color(19, 211, 137),
+}
+
+scalar_colors = {
+    "warn": MONITORING_STATUS_COLORS["warning"],
+    "crit": MONITORING_STATUS_COLORS["critical/down"],
+}
+
+
 def get_palette_color_by_index(i, shading='a'):
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return "%s/%s" % (color_key, shading)
@@ -793,13 +946,12 @@ def get_next_random_palette_color():
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 
-def get_n_different_colors(n):
-    # type: (int) -> List[str]
+def get_n_different_colors(n: int) -> List[str]:
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
     total_weight = sum([x[1] for x in _hsv_color_distribution])
 
-    colors = []  # type: List[str]
+    colors: List[str] = []
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
@@ -807,8 +959,7 @@ def get_n_different_colors(n):
     return colors
 
 
-def _get_hue_by_weight_index(weight_index):
-    # type: (float) -> float
+def _get_hue_by_weight_index(weight_index: float) -> float:
     section_begin = 0.0
     for section_end, section_weight in _hsv_color_distribution:
         if weight_index < section_weight:
@@ -843,36 +994,28 @@ def parse_color_into_hexrgb(color_string):
     return "#808080"
 
 
-def _pointwise_multiplication(c1, c2):
-    # type: (Tuple[float, float, float], Tuple[float, float, float]) -> Tuple[float, float, float]
+def _pointwise_multiplication(c1: Tuple[float, float, float],
+                              c2: Tuple[float, float, float]) -> Tuple[float, float, float]:
     components = list(x * y for x, y in zip(c1, c2))
     return components[0], components[1], components[2]
 
 
-def hsv_to_hexrgb(hsv):
-    # type: (Tuple[float, float, float]) -> str
+def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
-def render_color(color_rgb):
-    # type: (Tuple[float, float, float]) -> str
-    return "#%02x%02x%02x" % (
+def render_color(color_rgb: Tuple[float, float, float]) -> str:
+    return rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
         int(color_rgb[2] * 255),
     )
 
 
-# "#ff0080" -> (1.0, 0.0, 0.5)
-def parse_color(color):
-    # type: (str) -> Tuple[float, float, float]
-    def _hex_to_float(a):
-        return int(color[a:a + 2], 16) / 255.0
-
-    try:
-        return _hex_to_float(1), _hex_to_float(3), _hex_to_float(5)
-    except Exception:
-        raise MKGeneralException(_("Invalid color specification '%s'") % color)
+def parse_color(color: str) -> Tuple[float, float, float]:
+    """Convert '#ff0080' to (1.5, 0.0, 0.5)"""
+    rgb = hex_color_to_rgb_color(color)
+    return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0
 
 
 def fade_color(rgb, v):
@@ -887,7 +1030,7 @@ def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
 
-    return tuple([darken(x, v) for x in rgb])
+    return tuple(darken(x, v) for x in rgb)
 
 
 def lighten_color(rgb, v):
@@ -895,7 +1038,7 @@ def lighten_color(rgb, v):
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 
-    return tuple([lighten(x, v) for x in rgb])
+    return tuple(lighten(x, v) for x in rgb)
 
 
 def _rgb_to_gray(rgb):
@@ -904,52 +1047,135 @@ def _rgb_to_gray(rgb):
 
 
 def _mix_colors(a, b):
-    return tuple([(ca + cb) / 2.0 for (ca, cb) in zip(a, b)])
+    return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
 
 
 def render_color_icon(color):
-    return html.render_div('', class_="color", style="background-color: %s" % color)
+    return html.render_div(
+        '',
+        class_="color",
+        # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)
+        style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;" %
+        (*hex_color_to_rgb_color(color), color))
 
 
 @MemoizeCache
-def reverse_translate_metric_name(canonical_name):
+def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]]:
     "Return all known perf data names that are translated into canonical_name with corresponding scaling"
-    # We should get all metrics unified before Cmk 2.0
-    # 1.7 is version where metric migration started to happen
-    migration_end_version = parse_check_mk_version('2.0.0')
     current_version = parse_check_mk_version(cmk_version.__version__)
-
     possible_translations = []
+
     for trans in check_metrics.values():
         for metric, options in trans.items():
-            if "deprecated" in options:
-                migration_end = parse_check_mk_version(options["deprecated"])
-            else:
-                migration_end = migration_end_version
+            if options.get('name', '') == canonical_name:
+                if "deprecated" in options:
+                    # From version check used unified metric, and thus deprecates old translation
+                    # added a complete stable release, that gives the customer about a year of data
+                    # under the appropriate metric name.
+                    # We should however get all metrics unified before Cmk 2.1
+                    migration_end = parse_check_mk_version(options["deprecated"]) + 10000000
+                else:
+                    migration_end = current_version
 
-            if (options.get('name', '') == canonical_name and migration_end >= current_version):
-                possible_translations.append((metric, options.get('scale', 1)))
+                if migration_end >= current_version:
+                    possible_translations.append((metric, options.get('scale', 1.0)))
 
-    return [(canonical_name, 1)] + sorted(set(possible_translations))
+    return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def MetricName():
+def find_host_services(host_name: str,
+                       service_description: str = "") -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
+    if not host_name and not service_description:  # optimization: avoid query with empty result
+        return
+    # TODO: site hint!
+
+    # Also fetch host data with the *same* query. This saves one round trip. And head
+    # host has at least one service
+    query = "GET services\n" \
+            "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
+
+    if host_name:
+        query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
+
+    if service_description:
+        query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
+
+    host_check_command, host_metrics = None, None
+    for svc_desc, check_command, perf_data, rrd_metrics, \
+        host_check_command, host_metrics in sites.live().query(query):
+        parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
+        known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
+        yield svc_desc, check_command, tuple(known_metrics)
+
+    if host_check_command:
+        yield "_HOST_", host_check_command, tuple(host_metrics)
+
+
+def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tuple[str, str]]:
+    for perfvar in perfvars:
+        translated = perfvar_translation(perfvar, check_command)
+        name = translated["name"]
+        mi = metric_info.get(name, {})
+        yield name, mi.get("title", name.title())
+
+
+class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
-    def _require_metric(value, varprefix):
-        if value is None:
-            raise MKUserError(varprefix, _("You need to select a metric"))
+    def __init__(self, **kwargs: Any):
+        # Customer's metrics from local checks or other custom plugins will now appear as metric
+        # options extending the registered metric names on the system. Thus assuming the user
+        # only selects from available options we skip the input validation(invalid_choice=None)
+        # Since it is not possible anymore on the backend to collect the host & service hints
+        kwargs_with_defaults: Mapping[str, Any] = {
+            "css_spec": "metric-selector",
+            "hint_label": _("metric"),
+            "choices": [(None, _("Select metric"))],
+            "title": _("Metric"),
+            "encode_value": False,
+            "sorted": True,
+            "no_preselect": True,
+            **kwargs,
+        }
+        super().__init__(**kwargs_with_defaults)
+        self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
+        self._regex_error = _("Metric names must only consist of letters, digits and "
+                              "underscores and they must start with a letter.")
 
-    choices = [(None, "")]  # type: List[Tuple[Any, Text]]
-    choices += [
-        (metric_id, metric_detail['title']) for metric_id, metric_detail in metric_info.items()
-    ]
-    return DropdownChoice(
-        title=_("Metric"),
-        sorted=True,
-        default_value=None,
-        validate=_require_metric,
-        choices=choices,
-    )
+    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
+        if value is not None and not self._regex.match(ensure_str(value)):
+            raise MKUserError(varprefix, self._regex_error)
+
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+        if value is None:
+            return self.choices()
+        # Need to create an on the fly metric option
+        return [
+            next(((metric_id, metric_detail['title'])
+                  for metric_id, metric_detail in metric_info.items()
+                  if metric_id == value), (value, value.title()))
+        ]
+
+
+class MonitoredMetrics(TextAsciiAutocomplete):
+    ident = "monitored_metrics"
+
+    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        def metrics():
+            options = set(find_host_services(params.get("host", ""), params.get("service", "")))
+            for _, check_command, metrics in options:
+                yield from metric_choices(check_command, metrics)
+
+        if not params.get("host") and not params.get("service"):
+            choices: Choices = [(metric_id, metric_detail['title'])
+                                for metric_id, metric_detail in metric_info.items()]
+        else:
+            choices = list(set(metrics()))
+
+        return sorted(v for v in choices if value.lower() in v[1].lower())
 
 
 #.

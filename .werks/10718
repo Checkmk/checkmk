@@ -6,7 +6,7 @@ Date: 1580467929
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Introducing separate oracle uptime service as a subcheck of the oracle_instance check.
 

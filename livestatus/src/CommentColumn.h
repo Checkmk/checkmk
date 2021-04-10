@@ -7,9 +7,12 @@
 #define CommentColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <string>
+#include <utility>
 #include <vector>
+
 #include "Column.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
@@ -18,16 +21,17 @@ class MonitoringCore;
 class RowRenderer;
 class Row;
 
-class CommentColumn : public ListColumn {
+class CommentColumn : public deprecated::ListColumn {
 public:
+    enum class verbosity { none, info, extra_info };
+
     CommentColumn(const std::string &name, const std::string &description,
-                  Offsets offsets, MonitoringCore *mc, bool is_service,
-                  bool with_info, bool with_extra_info)
-        : ListColumn(name, description, offsets)
+                  ColumnOffsets offsets, MonitoringCore *mc, bool is_service,
+                  verbosity v)
+        : deprecated::ListColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _is_service(is_service)
-        , _with_info(with_info)
-        , _with_extra_info(with_extra_info) {}
+        , _verbosity(v) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -39,8 +43,7 @@ public:
 private:
     MonitoringCore *_mc;
     bool _is_service;
-    bool _with_info;
-    bool _with_extra_info;
+    verbosity _verbosity;
 
     [[nodiscard]] std::vector<CommentData> comments_for_row(Row row) const;
 };

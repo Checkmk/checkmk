@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -21,5 +21,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         item_spec=lambda: TextAscii(title=_("Node name"), allow_empty=False),
         parameter_valuespec=fortigate_sessions_element,
-        title=lambda: _("Fortigate Active Sessions"),
+        title=lambda: _("Fortigate Cluster Active Sessions"),
     ))

@@ -10,8 +10,11 @@
 #include "logger.h"
 
 namespace cma::yml {
+// NOTE: Extreme defensive programming to prevent a crash and deliver data in
+// log. Format string may be invalidated with easy during refactoring and it may
+// be not found during testing. Also with easy.
 void LogException(const std::string& format, std::string_view group,
-                  std::string_view name, const std::exception& e) noexcept {
+                  std::string_view name, const std::exception& e) {
     try {
         XLOG::l(format, group, name, e.what());
     } catch (const std::exception& e) {
@@ -23,8 +26,9 @@ void LogException(const std::string& format, std::string_view group,
     }
 }
 
+// NOTE: Extreme defensive programming to prevent a crash(see above)
 void LogException(const std::string& format, std::string_view name,
-                  const std::exception& e) noexcept {
+                  const std::exception& e) {
     try {
         XLOG::l(format, name, e.what());
     } catch (const std::exception& e) {

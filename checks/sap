@@ -18,6 +18,8 @@
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Standardized Response Time/ResponseTime(StandardTran.)   7   msec
 # sap_XYZ    1    50 SAP CCMS Monitor Templates/Dialog Overview/Users Logged On/UsersLoggedIn    97  -
 
+import typing  # no from import allowed :-(
+
 # This map converts between the SAP color codes (key values) and the
 # nagios state codes
 sap_nagios_state_map = [
@@ -118,28 +120,21 @@ def inventory_sap_value(info):
 def sap_value_path_matches(path, pattern):
     if pattern is None:
         return True
-    elif pattern[0] != '~' and path == pattern:
-        # exact path match
-        return True
-    elif pattern[0] == '~':
-        # regex matching
-        pattern = pattern[1:]
-        reg = regex(pattern)
-        matchobject = reg.match(path)
-        if matchobject:
-            return True
-    return False
+
+    if pattern.startswith('~'):  # regex matching
+        reg = regex(pattern[1:])
+        return bool(reg.match(path))
+
+    return path == pattern
 
 
 def check_sap_value(item, params, info):
     status = None
     perfdata = []
+    limit = params.get('limit_item_levels')
 
     for line in info:
-        if params.get('limit_item_levels'):
-            this_path = '/'.join(line[3].split('/')[-params.get('limit_item_levels'):])
-        else:
-            this_path = line[3]
+        this_path = '/'.join(line[3].split('/')[-limit:]) if limit else line[3]
 
         if line[0] + ' ' + this_path == item:
             status = sap_nagios_state_map[int(line[1])]
@@ -167,55 +162,68 @@ check_info['sap.value'] = {
     "has_perfdata": True,
 }
 
-
-def sap_value_groups_precompile(hostname, item, _unused):
-    return host_extra_conf(hostname, sap_value_groups)
-
-
-def sap_groups_of_value(value_name, patterns=False):
-    groups = []
-    if not patterns:
-        patterns = host_extra_conf(host_name(), sap_value_groups)
-
-    for line in patterns:
-        for group_name, pattern in line:
-            no_match = False
-            inclusion, exclusion = pattern
-            # Exclude:
-            if exclusion:
-                reg = regex(exclusion)
-                if reg.match(value_name):
-                    no_match = True
-                    break
-            #no match for this group, go on with the next group
-            if no_match:
-                break
-
-            # Include
-            reg = regex(inclusion)
-            if reg.match(value_name):
-                groups.append(group_name)
-    return groups
+GroupPatterns = typing.List[typing.Tuple[str, str]]
+SAPRules = typing.List[typing.List[typing.Tuple[str, typing.Tuple[str, str]]]]
 
 
-def inventory_sap_value_groups(info):
-    inventory = []
-    found_groups = []
+def _patterns_match(name, exclusion, inclusion):
+    if exclusion and regex(exclusion).match(name):
+        return False
+    return regex(inclusion).match(name)
+
+
+def sap_groups_of_value(
+    value_name: str,
+    patterns: SAPRules,
+) -> typing.Set[str]:
+    return {
+        group_name for line in patterns for group_name, (inclusion, exclusion) in line
+        if _patterns_match(value_name, exclusion, inclusion)
+    }
+
+
+def get_patterns_by_group_name(params: SAPRules) -> typing.Dict[str, GroupPatterns]:
+    rules_by_group: typing.Dict[str, GroupPatterns] = {}
+    for rule in params:
+        for group_name, patterns in rule:
+            rules_by_group.setdefault(group_name, []).append(patterns)
+    return rules_by_group
+
+
+def discover_sap_value_groups(info):
+    # TODO: this becomes a proper argument in the new API
+    params = host_extra_conf(host_name(), sap_value_groups)
+
+    inventory = set()
+
     for line in info:
         path = line[3]
-        for group in sap_groups_of_value(path):
-            if group not in found_groups:
-                inventory.append((group, None))
-                found_groups.append(group)
-    return inventory
+        inventory.update(sap_groups_of_value(path, params))
+
+    if not inventory:
+        return
+
+    patterns_by_group = get_patterns_by_group_name(params)
+    for item in inventory:
+        yield (item, {'_group_relevant_patterns': patterns_by_group[item]})
 
 
-def check_sap_value_groups(item, params, info, deprecated=False):
+def check_sap_value_groups(item, params, info):
+
+    try:
+        patterns: GroupPatterns = params['_group_relevant_patterns']
+    except KeyError:
+        yield 3, "Rules not found. Please rediscover the services of this host"
+        return
+
+    # this fake rules instance already only contains relevant patterns
+    precompiled_rule: SAPRules = [[(item, pattern) for pattern in patterns]]
+
     non_ok_results, all_results = [], []
     count_ok, count_crit = 0, 0
     for line in info:
         path = line[3]
-        if item in sap_groups_of_value(path, params):
+        if item in sap_groups_of_value(path, precompiled_rule):
             status = sap_nagios_state_map[int(line[1])]
             output = ''
             if line[4] == '-':
@@ -236,26 +244,12 @@ def check_sap_value_groups(item, params, info, deprecated=False):
     for result in non_ok_results:
         yield result
 
-    if deprecated:
-        yield 1, "This service uses a deprecated check. Please rediscover the services "\
-              "of this host to get this fixed automatically"
-
     for state, text in all_results:
         yield state, "\n%s" % text
 
 
-# Deprecated with 1.4.0i1. Remove some versions after!
-check_info['sap.value-groups'] = {
-    'check_function'      : lambda item_params_info: \
-                                check_sap_value_groups(item_params_info[0], item_params_info[1], item_params_info[2], deprecated=True),
-    'inventory_function'  : lambda info: [],
-    'service_description' : "%s",
-}
-precompile_params['sap.value-groups'] = sap_value_groups_precompile
-
 check_info['sap.value_groups'] = {
     'check_function': check_sap_value_groups,
-    'inventory_function': inventory_sap_value_groups,
+    'inventory_function': discover_sap_value_groups,
     'service_description': "%s",
 }
-precompile_params['sap.value_groups'] = sap_value_groups_precompile

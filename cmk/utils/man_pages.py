@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,31 +9,26 @@ used as base for the list of supported checks and catalogs of checks.
 
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
-from __future__ import division, print_function, unicode_literals
 
+from io import StringIO
 import os
 import re
 import sys
-from io import StringIO
+from pathlib import Path
 import subprocess
-from typing import Text, Any, Dict, List, Optional, Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Tuple
 
-import six  # pylint: disable=unused-import
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
+from six import ensure_str
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-ManPage = Dict[six.text_type, Any]
+ManPage = Dict[str, Any]
 ManPageCatalogPath = Tuple[str, ...]
 
 catalog_titles = {
@@ -69,6 +64,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
             "tinkerforge"  : "Tinkerforge",
+            "vutlan"       : "Vutlan EMS",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
         "time"        : "Clock Devices",
@@ -205,6 +201,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
+        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
@@ -273,29 +270,27 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+_manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
 
 
-def man_page_exists(name):
-    # type: (str) -> bool
+def man_page_exists(name: str) -> bool:
     return man_page_path(name) is not None
 
 
-def man_page_path(name):
-    # type: (str) -> Optional[Path]
+def man_page_path(name: str) -> Optional[Path]:
     if name[0] != "." and name[-1] != "~":
         for basedir in [
                 cmk.utils.paths.local_check_manpages_dir,
                 Path(cmk.utils.paths.check_manpages_dir)
         ]:
-            p = basedir / name
+            # check plugins pre 1.7 could have dots in them. be nice and find those.
+            p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
             if p.exists():
                 return p
     return None
 
 
-def all_man_pages():
-    # type: () -> Dict[str, str]
+def all_man_pages() -> Dict[str, str]:
     manuals = {}
     for basedir in [
             Path(cmk.utils.paths.check_manpages_dir),  #
@@ -308,21 +303,19 @@ def all_man_pages():
     return manuals
 
 
-def print_man_page_table():
-    # type: () -> None
+def print_man_page_table() -> None:
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append([name, six.ensure_str(get_title_from_man_page(Path(path)))])
+            table.append([name, ensure_str(get_title_from_man_page(Path(path)))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
     tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
 
 
-def get_title_from_man_page(path):
-    # type: (Path) -> Text
-    with path.open(encoding=six.ensure_str("utf-8")) as fp:
+def get_title_from_man_page(path: Path) -> str:
+    with path.open(encoding="utf-8") as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()
@@ -333,9 +326,8 @@ def man_page_catalog_titles():
     return catalog_titles
 
 
-def load_man_page_catalog():
-    # type: () -> Dict[ManPageCatalogPath, List[Dict]]
-    catalog = {}  # type: Dict[ManPageCatalogPath, List[Dict]]
+def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
+    catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -476,26 +468,23 @@ def _parse_man_page_header(name, path):
         "path": str(path),
     }
     key = ""
-    lineno = 0
     with path.open(encoding="utf-8") as fp:
-        for line in fp:
+        for lineno, line in enumerate(fp, start=1):
             line = line.rstrip()
-            lineno += 1
-            try:
-                if not line:
-                    parsed[key] += "\n\n"
-                elif line[0] == ' ':
-                    parsed[key] += "\n" + line.lstrip()
-                elif line[0] == '[':
-                    break  # End of header
-                else:
-                    key, rest = line.split(":", 1)
-                    parsed[key] = rest.lstrip()
-            except Exception:
+            if not line:
+                parsed[key] += "\n\n"
+            elif line[0] == ' ':
+                parsed[key] += "\n" + line.lstrip()
+            elif line[0] == '[':
+                break  # End of header
+            elif ':' in line:
+                key, rest = line.split(":", 1)
+                parsed[key] = rest.lstrip()
+            else:
+                msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
                 if cmk.utils.debug.enabled():
-                    raise
-                sys.stderr.write(
-                    str("ERROR: Invalid line %d in man page %s\n%s") % (lineno, path, line))
+                    raise ValueError(msg)
+                sys.stderr.write("%s\n" % msg)
                 break
 
     # verify mandatory keys. FIXME: This list may be incomplete
@@ -517,14 +506,13 @@ def _parse_man_page_header(name, path):
     return parsed
 
 
-def load_man_page(name):
-    # type: (str) -> Optional[ManPage]
+def load_man_page(name: str) -> Optional[ManPage]:
     path = man_page_path(name)
     if path is None:
         return None
 
-    man_page = {}  # type: ManPage
-    current_section = []  # type: List[Tuple[str, str]]
+    man_page: ManPage = {}
+    current_section: List[Tuple[str, str]] = []
     current_variable = None
     man_page['header'] = current_section
     empty_line_count = 0
@@ -565,19 +553,19 @@ def load_man_page(name):
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header = {}  # type: Dict[six.text_type, Any]
+    header: Dict[str, Any] = {}
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = ['unsorted']
+        header['catalog'] = 'unsorted'
     man_page['header'] = header
 
     return man_page
 
 
-class ManPageRenderer(object):
+class ManPageRenderer:
     def __init__(self, name):
         self.name = name
         man_page = load_man_page(name)
@@ -810,7 +798,7 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_header(self):
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
-        # of the man page here. More useful would be the Check_MK version where
+        # of the man page here. More useful would be the Checkmk version where
         # the plugin first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")

@@ -24,6 +24,7 @@ export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
 # manual testing, the plugins may behave differently depending on the
 # localization of the user's environment variables. This can lead to confusion
 # during tests.
+unset LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION
 INSTALLED_LOCALES=$(locale -a)
 for i in "C.UTF-8" "C.utf8" "en_US.utf8" "C"; do
     if echo $INSTALLED_LOCALES | grep -q -w -F "$i"; then

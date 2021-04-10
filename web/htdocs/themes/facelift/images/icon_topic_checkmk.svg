@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 17 20" style="enable-background:new 0 0 17 20;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#13D389;stroke-width:1.4;stroke-linejoin:round;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#13D389;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Master">
+	<g id="Menu-Monitoring" transform="translate(-271.000000, -398.000000)">
+		<g id="System" transform="translate(272.000000, 399.000000)">
+			<polygon id="Fill-3" class="st0" points="7.5,0 15,4.4 15,13.1 7.5,17.5 0,13.1 0,4.4 			"/>
+			<g id="statistics" transform="translate(3.300000, 5.400000)">
+				<path id="Rectangle" class="st1" d="M0.2,2.2h1.4c0.1,0,0.2,0.1,0.2,0.2v3.9c0,0.1-0.1,0.2-0.2,0.2H0.2C0.1,6.5,0,6.4,0,6.3V2.4
+					C0,2.3,0.1,2.2,0.2,2.2z"/>
+				<path id="Rectangle_1_" class="st1" d="M3.2,1.1h1.4c0.1,0,0.2,0.1,0.2,0.2v5c0,0.1-0.1,0.2-0.2,0.2H3.2C3.1,6.5,3,6.4,3,6.3v-5
+					C3,1.2,3.1,1.1,3.2,1.1z"/>
+				<path id="Rectangle_2_" class="st1" d="M6.3,0h1.4c0.1,0,0.2,0.1,0.2,0.2v6.1c0,0.1-0.1,0.2-0.2,0.2H6.3c-0.1,0-0.2-0.1-0.2-0.2
+					V0.2C6.1,0.1,6.2,0,6.3,0z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

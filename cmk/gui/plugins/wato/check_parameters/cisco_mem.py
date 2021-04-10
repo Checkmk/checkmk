@@ -1,14 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List  # pylint: disable=unused-import
+from typing import List
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    Alternative, Dictionary, DictionaryEntry, Integer, Percentage, TextAscii, Transform, Tuple,
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    DictionaryEntry,
+    Integer,
+    Percentage,
+    TextAscii,
+    Transform,
+    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -21,7 +28,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _parameter_valuespec_cisco_mem():
-    elements = [
+    elements: List[DictionaryEntry] = [
         ("levels",
          Alternative(
              title=_("Levels for memory usage"),
@@ -46,7 +53,7 @@ def _parameter_valuespec_cisco_mem():
                  ),
              ],
          )),
-    ]  # type: List[DictionaryEntry]
+    ]
     return Transform(
         Dictionary(elements=elements + size_trend_elements),
         forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},

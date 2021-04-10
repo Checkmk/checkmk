@@ -6,7 +6,7 @@ Date: 1577726512
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Improve the usability of dashboard and report creation. The first step when
 creating such a new object is to select whether or not it should show the

@@ -1,0 +1,20 @@
+Title: Fixed NoneType error in case of missing permissions
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1591179437
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If the user, used for login, has to few permissions in servicenow, the
+notification could fail with:
+
+ "TypeError: 'NoneType' object has no attribute '__getitem__'".
+
+From now on, a better error message will be shown.
+
+Details about the needed permissions where added to the help text
+of the notification plugin and werk #7201.

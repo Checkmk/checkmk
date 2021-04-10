@@ -1,0 +1,14 @@
+title: HPE StoreOnce REST API 4.x: Alerts
+agents: storeonce4x
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This checks shows all not cleared alarms of a HP storeonce system. The service gets CRIT in case
+ a critical alarm is found.
+
+item:
+ The fixed statement {{Alerts}}.
+
+inventory:
+ One service is created.

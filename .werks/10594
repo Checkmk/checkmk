@@ -6,7 +6,7 @@ Date: 1580293316
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Aggregations in downtime did not automatically put the host into downtime.
 

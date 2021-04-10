@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -69,7 +69,8 @@ def _get_test_file(fname):
     # we want to check that files are present
     # This check is mostly required to keep the test with BUILD in sync: scm checkout valid dirs,
     # directory tree, etc.
-    root_path = Path("../agents/wnx/test_files/msibuild/msi")
+    root_path = Path(__file__).parent.joinpath(
+        "../../../../agents/wnx/test_files/msibuild/msi").resolve()
     assert root_path.exists(), "test dir is absent, work dir is '{}'".format(os.getcwd())
     src = root_path / fname
     assert src.exists(), "test file '{}' is absent, work dir is '{}'".format(src, os.getcwd())
@@ -148,8 +149,30 @@ def test_patch_package_code_with_state(conf_dir):
     assert _id == ""
 
 
-def check_content(new_content, base_content, pos, uuid, marker):
-    # type: (bytes, bytes, int, str, bytes) -> None
+def test_patch_version(tmpdir):
+    """Tests version patching using the test file from test directory"""
+
+    # base data
+    fname = u"test_msi_patch_version.tst"
+    result = b"( VersionNT >= 602 )"
+
+    # copy
+    src = _get_test_file(fname=fname)
+    dst = Path(tmpdir) / fname
+    shutil.copy(src, dst)
+
+    # testing
+    assert not msi_patch.patch_windows_version(dst / "xx", new_version="602")  # no file
+    assert not msi_patch.patch_windows_version(dst, new_version="6")  # bad version
+    assert not msi_patch.patch_windows_version(dst, new_version="6020")  # bad version
+    assert msi_patch.patch_windows_version(dst, new_version="602")  # valid call -> success
+    assert not msi_patch.patch_windows_version(dst, new_version="602")  # no matrix -> fail
+    assert dst.stat().st_size == src.stat().st_size
+    assert dst.read_bytes().find(result) != -1
+
+
+def check_content(new_content: bytes, base_content: bytes, pos: int, uuid: str,
+                  marker: bytes) -> None:
     assert new_content.find(marker) == -1
     new_pos = new_content.decode('utf-8').find(uuid)
     assert new_pos == pos

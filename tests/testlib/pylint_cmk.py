@@ -1,16 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-# Library for pylint checks of Check_MK
-
-from __future__ import print_function
+# Library for pylint checks of Checkmk
 
 import os
-import sys
 import getpass
 import glob
 import time
@@ -80,7 +77,7 @@ def num_jobs_to_use():
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
     if getpass.getuser() == "jenkins":
-        return int(multiprocessing.cpu_count() / 8.0)
+        return int(multiprocessing.cpu_count() / 8.0) + 3
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
@@ -100,7 +97,7 @@ def get_pylint_files(base_path, file_pattern):
 
 def is_python_file(path, shebang_name=None):
     if shebang_name is None:
-        shebang_name = "python3" if sys.version_info[0] >= 3 else "python"
+        shebang_name = "python3"
 
     if not os.path.isfile(path) or os.path.islink(path):
         return False
@@ -113,14 +110,14 @@ def is_python_file(path, shebang_name=None):
     return False
 
 
-# Check_MK currently uses a packed version of it's files to
+# Checkmk currently uses a packed version of it's files to
 # run the pylint tests because it's not well structured in
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
 # python sources
 # TODO: This can be dropped once we have refactored checks/inventory/bakery plugins
 # to real modules
-class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKFixFileMixin:
     def handle_message(self, msg):
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
@@ -153,7 +150,7 @@ class CMKFixFileMixin(object):  # pylint: disable=useless-object-inheritance
         return orig_file, (None if orig_file is None else went_back)
 
 
-class CMKOutputScanTimesMixin(object):  # pylint: disable=useless-object-inheritance
+class CMKOutputScanTimesMixin:
     """Prints out the files being checked and the time needed
 
     Can be useful to track down pylint performance issues. Simply make the

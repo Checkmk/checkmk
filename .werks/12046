@@ -1,0 +1,12 @@
+Title: SLA: Fix "unmonitored" rendering in timeline
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612952153
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

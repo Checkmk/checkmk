@@ -18,24 +18,13 @@ fi
 
 echo "Update site $SITE..."
 
-PYTHON2_PATHS=(
-    cee
-    gui
-    __init__.py
-    update_config.py
-    utils
-    ec/__init__.py
-    ec/export.py
-    ec/rule_packs.py
-    ec/settings.py
-    ec/defaults.py
-)
-
 PYTHON3_PATHS=(
     gui
+    snmplib
     utils
     ec
     notification_plugins
+    special_agents/utils
     special_agents/__init__.py
     special_agents/agent_3par.py
     special_agents/agent_activemq.py
@@ -63,7 +52,7 @@ PYTHON3_PATHS=(
     special_agents/agent_netapp.py
     special_agents/agent_prism.py
     special_agents/agent_prometheus.py
-    special_agents/agent_proxmox.py
+    special_agents/agent_proxmox_ve.py
     special_agents/agent_rabbitmq.py
     special_agents/agent_random.py
     special_agents/agent_ruckus_spot.py
@@ -76,24 +65,15 @@ PYTHON3_PATHS=(
     special_agents/agent_vnx_quotas.py
     special_agents/agent_vsphere.py
     special_agents/agent_zerto.py
-    special_agents/utils.py
+    special_agents/agent_cisco_prime.py
     update_rrd_fs_names.py
+    update_config.py
 )
 
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
-    --exclude=cee \
-    --exclude=cee.py \
-    --exclude=cme \
-    --exclude=cme.py \
-    -aR \
-    "${PYTHON2_PATHS[@]}" \
-    $ROOT/lib/python/cmk/
-
-# TODO: Enable python3 compatible parts step by step
-sudo rsync \
-    --exclude="*.pyc" \
+    --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme \
@@ -107,14 +87,7 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/__init__.py" \
     "$ROOT/lib/python3/cmk/__init__.pyc"
 
-# Temporary fix until integration tests have been migrated to python3: remove
-# python3 only files that are installed to python 2 paths (by our packaging mechanism).
-for PY3_SA in special_agents/agent_{aws,couchbase,elasticsearch,graylog,jenkins,jira,kubernetes,prometheus,proxmox,rabbitmq,splunk,vsphere}.py; do
-    sudo rm -f $ROOT/lib/python/cmk/$PY3_SA
-done
-
 # Restore site version after .f12
-sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/utils/version.py
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python3/cmk/utils/version.py
 
 # Also deploy all other directories of same type
@@ -131,16 +104,12 @@ fi
 
 if [ -z "$ONLY_COPY" ]; then
     (
-        cd $ROOT/lib/python/cmk
-        sudo $ROOT/bin/python -m compileall -qq "${PYTHON2_PATHS[@]}"
-    )
-    (
         cd $ROOT/lib/python3/cmk
         sudo $ROOT/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
     )
 fi
 
 (
-    cd fetchers
+    cd core_helpers
     bash .f12
 )

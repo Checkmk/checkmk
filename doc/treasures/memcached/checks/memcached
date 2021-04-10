@@ -198,9 +198,9 @@ memcached_traits = [("System Information", {
 
 memcached_factory_settings = {}
 for group, values in memcached_traits:
-    for key, traits in values.iteritems():
+    for key, traits in values.items():
         bounds = [
-            trait for trait_key, trait in traits.iteritems()
+            trait for trait_key, trait in traits.items()
             if trait_key in ['fixed', 'upper_bounds', 'lower_bounds']
         ]
         if bounds and bounds[0] is not None:
@@ -261,7 +261,7 @@ def check_memcached(item, params, parsed):
         for group, checks in memcached_traits:
             fails = False
             count = 0
-            for key, traits in checks.iteritems():
+            for key, traits in checks.items():
                 if key not in readings:
                     # stat missing in output
                     continue

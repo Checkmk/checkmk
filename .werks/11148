@@ -1,0 +1,13 @@
+Title: agent_prometheus: correct handling of cAdvisor pod memory
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1595230251
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In the previous version, the cAdvisor pod memory did not allow the handling
+of multiple machine instances. This version now correctly processes the
+information for both machine memory and memory limits.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 There were some very specific cases which could result in services being
 created with empty service descriptions. This could never be activated,

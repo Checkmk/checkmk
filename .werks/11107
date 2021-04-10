@@ -1,0 +1,13 @@
+Title: mgmt_fsc_sc2_cpu_status: Typo in service description
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1590496424
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+There was a typo in the service description of mgmt_fsc_sc2_cpu_status. It read "Inferface" instead
+of "Interface".
+The affected services need to be rediscovered.

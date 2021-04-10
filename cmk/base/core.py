@@ -5,32 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
-import fcntl
 import os
 import subprocess
-import sys
-import errno
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional, Iterator
+import enum
+from contextlib import contextmanager
 
 import cmk.utils.paths
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
-from cmk.utils.log import console
-from cmk.utils.type_defs import TimeperiodName  # pylint: disable=unused-import
+import cmk.utils.store as store
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
+from cmk.utils.type_defs import TimeperiodName
 
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.caching import config_cache as _config_cache
-import cmk.base.cleanup
-from cmk.base.core_config import MonitoringCore  # pylint: disable=unused-import
+from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
 import livestatus
-
-_restart_lock_fd = None
 
 #.
 #   .--Control-------------------------------------------------------------.
@@ -45,109 +42,67 @@ _restart_lock_fd = None
 #   '----------------------------------------------------------------------'
 
 
-def do_reload(core):
-    # type: (MonitoringCore) -> None
-    do_restart(core, only_reload=True)
+class CoreAction(enum.Enum):
+    START = "start"
+    RESTART = "restart"
+    RELOAD = "reload"
+    STOP = "stop"
 
 
-# TODO: Cleanup duplicate code with automation_restart()
-def do_restart(core, only_reload=False):
-    # type: (MonitoringCore, bool) -> None
+def do_reload(core: MonitoringCore) -> None:
+    do_restart(core, action=CoreAction.RELOAD)
+
+
+def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
     try:
-        backup_path = None
-
-        if try_get_activation_lock():
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Other restart currently in progress. Aborting.\n")
-            sys.exit(1)
-
-        # Save current configuration
-        if os.path.exists(cmk.utils.paths.nagios_objects_file):
-            backup_path = cmk.utils.paths.nagios_objects_file + ".save"
-            console.verbose("Renaming %s to %s\n",
-                            cmk.utils.paths.nagios_objects_file,
-                            backup_path,
-                            stream=sys.stderr)
-            os.rename(cmk.utils.paths.nagios_objects_file, backup_path)
-        else:
-            backup_path = None
-
-        try:
-            core_config.do_create_config(core, with_agents=True)
-        except Exception as e:
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Error creating configuration: %s\n" % e)
-            if backup_path:
-                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
-            if cmk.utils.debug.enabled():
-                raise
-            sys.exit(1)
-
-        if config.monitoring_core == "cmc" or cmk.base.nagios_utils.do_check_nagiosconfig():
-            if backup_path:
-                os.remove(backup_path)
-
-            core.precompile()
-
-            do_core_action(only_reload and "reload" or "restart")
-        else:
-            # TODO: Replace by MKBailOut()/MKTerminate()?
-            console.error("Configuration for monitoring core is invalid. Rolling back.\n")
-
-            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            open(broken_config_path, "w").write(open(cmk.utils.paths.nagios_objects_file).read())
-            console.error("The broken file has been copied to \"%s\" for analysis.\n" %
-                          broken_config_path)
-
-            if backup_path:
-                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
-            else:
-                os.remove(cmk.utils.paths.nagios_objects_file)
-            sys.exit(1)
+        with activation_lock(mode=config.restart_locking):
+            core_config.do_create_config(core)
+            do_core_action(action)
 
     except Exception as e:
-        if backup_path:
-            try:
-                os.remove(backup_path)
-            except OSError as oe:
-                if oe.errno != errno.ENOENT:
-                    raise
         if cmk.utils.debug.enabled():
             raise
-        # TODO: Replace by MKBailOut()/MKTerminate()?
-        console.error("An error occurred: %s\n" % e)
-        sys.exit(1)
+        raise MKBailOut("An error occurred: %s" % e)
 
 
-def try_get_activation_lock():
-    # type: () -> bool
-    global _restart_lock_fd
-    # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
-    if config.restart_locking and _restart_lock_fd is None:
-        lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
-        _restart_lock_fd = os.open(lock_file, os.O_RDONLY)
-        # Make sure that open file is not inherited to monitoring core!
-        fcntl.fcntl(_restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
-        try:
-            console.verbose("Waiting for exclusive lock on %s.\n" % lock_file, stream=sys.stderr)
-            fcntl.flock(_restart_lock_fd,
-                        fcntl.LOCK_EX | (config.restart_locking == "abort" and fcntl.LOCK_NB or 0))
-        except Exception:
-            return True
-    return False
+# TODO: The store.lock_checkmk_configuration is doing something similar. It looks like we
+# should unify these both locks. But: The lock_checkmk_configuration is currently acquired by the
+# GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
+# processes. We'll have to check whether or not we can move the locking.
+@contextmanager
+def activation_lock(mode: Optional[str]) -> Iterator[None]:
+    """Try to acquire the activation lock and raise exception in case it was not possible"""
+    if mode is None:
+        # TODO: We really should purge this strange case from being configurable
+        yield None  # No locking at all
+        return
+
+    lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
+
+    if mode == "abort":
+        with store.try_locked(lock_file) as result:
+            if result is False:
+                raise MKBailOut("Other restart currently in progress. Aborting.")
+            yield None
+        return
+
+    if mode == "wait":
+        with store.locked(lock_file):
+            yield None
+        return
+
+    raise ValueError(f"Invalid lock mode: {mode}")
 
 
-# Action can be restart, reload, start or stop
-def do_core_action(action, quiet=False):
-    # type: (str, bool) -> None
+def do_core_action(action: CoreAction, quiet: bool = False) -> None:
     if not quiet:
-        out.output("%sing monitoring core..." % action.title())
+        out.output("%sing monitoring core..." % action.value.title())
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action]
+        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action.value]
     else:
-        command = ["omd", action, "cmc"]
+        command = ["omd", action.value, "cmc"]
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     result = p.wait()
@@ -156,7 +111,7 @@ def do_core_action(action, quiet=False):
         output = p.stdout.read()
         if not quiet:
             out.output("ERROR: %r\n" % output)
-        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action, output))
+        raise MKGeneralException("Cannot %s the monitoring core: %r" % (action.value, output))
     if not quiet:
         out.output(tty.ok + "\n")
 
@@ -174,8 +129,7 @@ def do_core_action(action, quiet=False):
 #   '----------------------------------------------------------------------'
 
 
-def check_timeperiod(timeperiod):
-    # type: (TimeperiodName) -> bool
+def check_timeperiod(timeperiod: TimeperiodName) -> bool:
     """Check if a timeperiod is currently active. We have no other way than
     doing a Livestatus query. This is not really nice, but if you have a better
     idea, please tell me..."""
@@ -194,11 +148,10 @@ def check_timeperiod(timeperiod):
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
+    return _config_cache.get("timeperiods_cache").get(timeperiod, True)
 
 
-def timeperiod_active(timeperiod):
-    # type: (TimeperiodName) -> Optional[bool]
+def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
     """Returns
     True : active
     False: inactive
@@ -207,14 +160,13 @@ def timeperiod_active(timeperiod):
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    return _config_cache.get("timeperiods_cache").get(timeperiod)
 
 
-def update_timeperiods_cache():
-    # type: () -> None
+def update_timeperiods_cache() -> None:
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.get_dict("timeperiods_cache")
+    tp_cache = _config_cache.get("timeperiods_cache")
 
     if not tp_cache:
         response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
@@ -222,9 +174,8 @@ def update_timeperiods_cache():
             tp_cache[tp_name] = bool(tp_active)
 
 
-def cleanup_timeperiod_caches():
-    # type: () -> None
-    _config_cache.get_dict("timeperiods_cache").clear()
+def cleanup_timeperiod_caches() -> None:
+    _config_cache.get("timeperiods_cache").clear()
 
 
-cmk.base.cleanup.register_cleanup(cleanup_timeperiod_caches)
+cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

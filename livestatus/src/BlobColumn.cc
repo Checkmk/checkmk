@@ -4,7 +4,9 @@
 // source code package.
 
 #include "BlobColumn.h"
+
 #include <stdexcept>
+
 #include "Renderer.h"
 #include "Row.h"
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,16 +7,12 @@
 import errno
 import glob
 import os
-import sys
-import six
+from pathlib import Path
+import subprocess
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from six import ensure_str
 
 import cmk.utils
-import cmk.utils.cmk_subprocess as subprocess
 
 import cmk.gui.config as config
 from cmk.gui.globals import g
@@ -51,7 +47,7 @@ def do_git_commit():
         _git_add_files()
         _git_command([
             "commit", "--untracked-files=no", "--author", author, "-m",
-            _("Initialized GIT for Check_MK")
+            _("Initialized GIT for Checkmk")
         ])
 
     if _git_has_pending_changes():
@@ -79,7 +75,7 @@ def _git_add_files():
 
 
 def _git_command(args):
-    command = ["git"] + [six.ensure_str(a) for a in args]
+    command = ["git"] + [ensure_str(a) for a in args]
     logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
                  subprocess.list2cmdline(command))
     try:
@@ -97,7 +93,7 @@ def _git_command(args):
 
     status = p.wait()
     if status != 0:
-        out = u"" if p.stdout is None else six.ensure_text(p.stdout.read())
+        out = u"" if p.stdout is None else ensure_str(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
             (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))
@@ -125,7 +121,7 @@ def _write_gitignore_files():
     config_dir = Path(cmk.utils.paths.default_config_dir)
 
     with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-        f.write("# This file is under control of Check_MK. Please don't modify it.\n"
+        f.write("# This file is under control of Checkmk. Please don't modify it.\n"
                 "# Your changes will be overwritten.\n"
                 "\n"
                 "*\n"

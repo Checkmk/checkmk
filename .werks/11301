@@ -1,0 +1,16 @@
+Title: agent_aws: refresh cache immediately when it contains previous day's data
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1595522529
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+
+For AWS services that deliver data at a daily interval (Costs & Usage, Glacier,
+S3), the data cache of the AWS agent used to be valid for 24 hours from the
+time the first request was made to the AWS API. We have made the caching
+functionality dynamic such that the cache loses its validity if it does not
+contain today's data, and a new request is made to the API.

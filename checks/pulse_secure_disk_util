@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
+
 factory_settings["pulse_secure_disk_util_def_levels"] = {"upper_levels": (80., 90.)}
 
 METRIC_PULSE_SECURE_DISK = 'disk_utilization'
@@ -22,7 +24,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
 
 
 check_info["pulse_secure_disk_util"] = {
-    "parse_function": lambda info: parse_pulse_secure(info, METRIC_PULSE_SECURE_DISK),
+    "parse_function": lambda info: pulse_secure.parse_pulse_secure(info, METRIC_PULSE_SECURE_DISK),
     "inventory_function": discover_single,
     "check_function": check_pulse_secure_disk_util,
     "service_description": "Pulse Secure disk utilization",
@@ -32,8 +34,7 @@ check_info["pulse_secure_disk_util"] = {
         [
             "25",  # diskFullPercent
         ]),
-    "snmp_scan_function": scan_pulse_secure,
+    "snmp_scan_function": pulse_secure.scan_pulse_secure,
     "group": "pulse_secure_disk_util",
-    "includes": ["pulse_secure.include"],
     "default_levels_variable": "pulse_secure_disk_util_def_levels",
 }

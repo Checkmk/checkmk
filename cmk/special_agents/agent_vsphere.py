@@ -9,13 +9,13 @@ import argparse
 import collections
 import datetime
 import errno
-import functools
+import json
 from pathlib import Path
 import re
 import socket
 import sys
 import time
-from typing import Any, Counter, Dict, Iterable, List, Set  # pylint: disable=unused-import
+from typing import Any, Counter, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
@@ -39,10 +39,8 @@ from cmk.special_agents.utils import vcrtrace
 AGENT_TMP_PATH = Path(cmk.utils.paths.tmp_dir, "agents/agent_vsphere")
 
 REQUESTED_COUNTERS_KEYS = (
-    'cpu.ready',
-    'cpu.costop',
-    'disk.numberRead',
-    'disk.numberWrite',
+    'disk.numberReadAveraged',
+    'disk.numberWriteAveraged',
     'disk.read',
     'disk.write',
     'disk.deviceLatency',
@@ -101,7 +99,8 @@ class SoapTemplates:
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
         '    <ns1:propSet>'
-        '      <ns1:type>HostSystem</ns1:type><ns1:pathSet>name</ns1:pathSet>'
+        '      <ns1:type>HostSystem</ns1:type>'
+        '      <ns1:pathSet>name</ns1:pathSet>'
         '    </ns1:propSet>'
         '    <ns1:objectSet>'
         '      <ns1:obj type="Folder">%(rootFolder)s</ns1:obj>'
@@ -169,7 +168,8 @@ class SoapTemplates:
         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
         '  <ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this>'
         '  <ns1:specSet>'
-        '    <ns1:propSet><ns1:type>Datastore</ns1:type>'
+        '    <ns1:propSet>'
+        '      <ns1:type>Datastore</ns1:type>'
         '      <ns1:pathSet>name</ns1:pathSet>'
         '      <ns1:pathSet>summary.freeSpace</ns1:pathSet>'
         '      <ns1:pathSet>summary.capacity</ns1:pathSet>'
@@ -403,6 +403,7 @@ class SoapTemplates:
         '  <ns1:specSet>'
         '    <ns1:propSet>'
         '      <ns1:type>VirtualMachine</ns1:type>'
+        '      <ns1:pathSet>summary.config.ftInfo.role</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet>'
         '      <ns1:pathSet>config.hardware.numCPU</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet>'
@@ -424,6 +425,9 @@ class SoapTemplates:
         '      <ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'
         '      <ns1:pathSet>name</ns1:pathSet>'
         '      <ns1:pathSet>summary.guest.hostName</ns1:pathSet>'
+        '      <ns1:pathSet>config.guestFullName</ns1:pathSet>'  # Guest OS
+        '      <ns1:pathSet>config.version</ns1:pathSet>'  # Compatibility
+        '      <ns1:pathSet>config.uuid</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'
         '      <ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'
@@ -881,7 +885,7 @@ class SoapTemplates:
         self.esxhostsofcluster = SoapTemplates.ESXHOSTSOFCLUSTER % system_fields
 
 
-#.
+# .
 #   .--args----------------------------------------------------------------.
 #   |                                                                      |
 #   |                          __ _ _ __ __ _ ___                          |
@@ -909,13 +913,6 @@ def parse_arguments(argv):
         help="""Assume a directly queried host system (no vCenter). In this we expect data about
         only one HostSystem to be found and do not create piggy host data for that host.""")
     parser.add_argument(
-        "-a",
-        "--agent",
-        action="store_true",
-        help="""Also retrieve data from the normal Check_MK Agent. This makes sense if you query
-        a vCenter that is installed on a Windows host that you also want to monitor with
-        Check_MK.""")
-    parser.add_argument(
         "-P",
         "--skip-placeholder-vm",
         action="store_true",
@@ -931,10 +928,8 @@ def parse_arguments(argv):
         "--timeout",
         type=int,
         default=60,
-        help="""Set the network timeout to vSphere to SECS seconds. This is also used when
-        connecting the agent (option -a). Default is 60 seconds.
-        Note: the timeout is not only applied to the connection, but also to each individual
-        subquery.""")
+        help="""Set the network timeout to vSphere to SECS seconds. The timeout is not only
+        applied to the connection, but also to each individual subquery.""")
     parser.add_argument(
         "-p",
         "--port",
@@ -973,15 +968,13 @@ def parse_arguments(argv):
         choices=('vm', 'esxhost'),
         default=None,
         help="""Specifies where the ESX hosts power state should be shown. Default (no option)
-        is on the queried vCenter or ESX-Host. Possible WHERE options: esxhost - show on ESX host,
+        is on the queried vCenter or ESX-Host. Possible options: esxhost - show on ESX host,
         vm - show on virtual machine.""")
     parser.add_argument(
-        "--snapshot_display",
-        choices=('vCenter', 'esxhost'),
-        default=None,
-        help="""Specifies where the virtual machines snapshots should be shown. Default (no
-        option) is on the VM. Possible WHERE options: esxhost - show on ESX host, vCenter -
-        show on vCenter.""")
+        "--snapshots-on-host",
+        action="store_true",
+        help="""If provided, virtual machine snapshots summary service will be generated on the ESX
+        host. By default, it will only be created for the vCenter.""")
     parser.add_argument(
         "-H",
         "--hostname",
@@ -1062,8 +1055,8 @@ class ESXConnection:
     @staticmethod
     def filter_request(request):
         """Used for VCR. Filter password"""
-        if '<ns1:password>' in request.body:
-            request.body = "login request filtered out"
+        if b'<ns1:password>' in request.body:
+            request.body = b"login request filtered out"
         return request
 
     @staticmethod
@@ -1169,9 +1162,13 @@ class ESXConnection:
 
         server_cookie = response.headers.get("set-cookie")
 
-        if response.status_code != 200 or not server_cookie:
+        if response.status_code != 200:
+
             raise SystemExit("Cannot login to vSphere Server (reason: [%s] %s). Please check the "
                              "credentials." % (response.status_code, response.reason))
+
+        if not server_cookie:
+            return
 
         with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
             f_handle.write(server_cookie)
@@ -1198,8 +1195,8 @@ class ESXConnection:
 #   '----------------------------------------------------------------------'
 
 
-def fetch_available_counters(connection, hostsystems):
-    counters_available_by_host = {}  # type: Dict[str, Dict[str, List[str]]]
+def fetch_available_counters(connection, hostsystems) -> Dict[str, Dict[str, List[str]]]:
+    counters_available_by_host: Dict[str, Dict[str, List[str]]] = {}
     for host in hostsystems:
         counter_avail_response = connection.query_server('perfcounteravail', esxhost=host)
         elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)",
@@ -1260,7 +1257,7 @@ def fetch_extra_interface_counters(connection, opt):
 
 
 def fetch_counters(connection, host, counters_selected):
-    counter_data = []  # type: List[str]
+    counter_data: List[str] = []
     for entry, instances in counters_selected:
         counter_data.extend(
             "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance>"
@@ -1291,9 +1288,12 @@ def fetch_counters(connection, host, counters_selected):
 def get_section_counters(connection, hostsystems, datastores, opt):
     section_lines = []
     counters_available_by_host = fetch_available_counters(connection, hostsystems)
-    counters_available_all = functools.reduce(lambda x, y: x.union(y),
-                                              counters_available_by_host.values(),
-                                              set())  # type: Set[str]
+    counters_available_all = {
+        counter  #
+        for by_host in counters_available_by_host.values()  #
+        for counter in by_host.keys()
+    }
+
     net_extra_info = fetch_extra_interface_counters(connection, opt)
     counters_description = fetch_counters_syntax(connection, counters_available_all)
 
@@ -1366,8 +1366,8 @@ def eval_hardwarestatus_info(_hostname, _current_propname, propset):
 
 def eval_multipath_info(_hostname, current_propname, multipath_propset):
     multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)", multipath_propset)
-    properties = {}  # type: Dict[str, List[str]]
-    sensors = {}  # type: Dict
+    properties: Dict[str, List[str]] = {}
+    sensors: Dict = {}
     for vml_id, xml_paths in multipath_infos:
         # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
         lun_id = vml_id[10:-12]
@@ -1379,7 +1379,7 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
 
 
 def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
-    properties = {}  # type: Dict[str, List[str]]
+    properties: Dict[str, List[str]] = {}
     for entries in _iter_dicts(elements, propset):
         for key, value in entries.items():
             properties.setdefault("%s.%s.%s" % (current_propname, key, entries[id_key]),
@@ -1401,7 +1401,7 @@ def eval_pci_device(hostname, current_propname, pci_propset):
 def eval_systeminfo_other(_hostname, _current_propname, propset):
     data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", propset)
 
-    keys_counter = collections.Counter()  # type: Counter[str]
+    keys_counter: Counter[str] = collections.Counter()
     properties = {}
     for value, key in data:
         idx = keys_counter[key]
@@ -1426,8 +1426,8 @@ def fetch_hostsystem_data(connection):
     esxhostdetails_response = connection.query_server('esxhostdetails')
     hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
 
-    hostsystems_properties = {}  # type: Dict[str, Dict[Any, Any]]
-    hostsystems_sensors = {}  # type: Dict[str, Dict[Any, Any]]
+    hostsystems_properties: Dict[str, Dict[Any, Any]] = {}
+    hostsystems_sensors: Dict[str, Dict[Any, Any]] = {}
     for entry in hostsystems_objects:
         hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
         hostsystems_properties[hostname] = {}
@@ -1485,7 +1485,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 
 def get_vm_power_states(vms, hostsystems, opt):
-    piggy_data = {}  # type: Dict[str, List[Any]]
+    piggy_data: Dict[str, List[Any]] = {}
     for used_hostname, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
@@ -1502,7 +1502,7 @@ def get_vm_power_states(vms, hostsystems, opt):
 
 
 def _get_vms_by_hostsystem(vms, hostsystems):
-    vms_by_hostsys = {}  # type: Dict[str, List[Any]]
+    vms_by_hostsys: Dict[str, List[Any]] = {}
     for vm_name, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
@@ -1517,7 +1517,7 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
     if opt.hostname and opt.direct and opt.host_pwr_display != "vm":
         override_hostname = opt.hostname
 
-    piggy_data = {}  # type: Dict[str, List[str]]
+    piggy_data: Dict[str, List[str]] = {}
     for data in hostsystems_properties.values():
         orig_hostname = data["name"][0]
         used_hostname = override_hostname or convert_hostname(orig_hostname, opt)
@@ -1558,70 +1558,24 @@ def convert_hostname(hostname, opt):
     return hostname.replace(" ", "_")
 
 
-def write_output(lines, opt):
-    # type: (Iterable[str], argparse.Namespace) -> None
-    if opt.agent:
-        for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
-            sys.stdout.write(chunk)
-        sys.stdout.write("\n")
-
-    sys.stdout.writelines("%s\n" % line for line in lines)
-    sys.stdout.flush()
-
-
-def get_agent_info_tcp(address, timeout, debug):
-    try:
-        # TODO: gethostbyname() automatically detects IP addresses and does
-        # *not* contact any nameserver in that case. So the following two
-        # lines of code should not be neccessary:
-        if address[0] in "123456789":
-            ipaddress = address
-        else:
-            ipaddress = socket.gethostbyname(address)
-        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            soc.settimeout(timeout)
-        except AttributeError:
-            pass  # some old Python versions lack settimeout(). Better ignore than fail
-        soc.connect((ipaddress, 6556))
-        try:
-            soc.setblocking(True)
-        except AttributeError:
-            pass
-        while True:
-            received = soc.recv(4096, socket.MSG_WAITALL)
-            if not received:
-                break
-            yield received
-        soc.close()
-    except Exception:
-        if debug:
-            raise
-
-
 def get_pattern(pattern, line):
     return re.findall(pattern, line, re.DOTALL) if line else []
 
 
-def get_sections_aggregated_snapshots(vms, hostsystems):
-
-    aggregated = {}  # type: Dict[str, List[Any]]
-    for data in vms.values():
-        if hostsystems is not None:
-            running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-        else:
-            running_on = ''
-        snapshots = data.get("snapshot.rootSnapshotList")
-        if snapshots is not None:
-            aggregated.setdefault(running_on, []).append(snapshots)
-
-    section_lines = []
-    for piggytarget, sn_list in aggregated.items():
-        section_lines += [
-            '<<<<%s>>>>' % piggytarget, '<<<esx_vsphere_vm>>>',
-            'snapshot.rootSnapshotList %s' % '|'.join(sn_list), '<<<<>>>>'
-        ]
-    return section_lines
+# snapshot.rootSnapshotList.summary 871 1605626114 poweredOn SnapshotName| 834 1605632160 poweredOff Snapshotname2
+def get_section_snapshot_summary(vms):
+    snapshots = [
+        vm.get("snapshot.rootSnapshotList").split(' ')
+        for vm in vms.values()
+        if vm.get("snapshot.rootSnapshotList")
+    ]
+    return ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"] + [
+        json.dumps({
+            "time": int(snapshot[1]),
+            "state": snapshot[2],
+            "name": snapshot[3],
+        }) for snapshot in snapshots
+    ]
 
 
 def get_section_systemtime(connection, opt):
@@ -1632,7 +1586,7 @@ def get_section_systemtime(connection, opt):
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
             utc = naive.replace(tzinfo=tz.tzutc())
             localtime = utc.astimezone(tz.tzlocal())
-            return ["<<<systemtime>>>", localtime.strftime("%s")]
+            return ["<<<systemtime>>>", localtime.strftime("%s") + " " + str(time.time())]
     except Exception:
         if opt.debug:
             raise
@@ -1661,8 +1615,8 @@ def eval_virtual_device(info, _datastores):
             device_info = get_pattern(search_pattern, virtual_device)[0]
         except IndexError:
             continue
-        device_pairs = zip(device_info[0::2], device_info[1::2])
-        device_txt = "|".join("%s %s" % p for p in device_pairs)
+        device_txt = "|".join("%s %s" % p  #
+                              for p in zip(device_info[0::2], device_info[1::2]))
         response.append("virtualDeviceType %s|%s" % (type_info, device_txt))
 
     return "@@".join(response)
@@ -1724,7 +1678,7 @@ def fetch_datastores(connection):
     datastores_response = connection.query_server('datastores')
     elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                            datastores_response)
-    datastores = {}  # type: Dict[str, Dict[str, Any]]
+    datastores: Dict[str, Dict[str, Any]] = {}
     for datastore, content in elements:
         entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
         datastores[datastore] = {}
@@ -1735,8 +1689,7 @@ def fetch_datastores(connection):
 
 def get_section_datastores(datastores):
     section_lines = ["<<<esx_vsphere_datastores:sep(9)>>>"]
-    for key in sorted(datastores.keys()):
-        data = datastores[key]
+    for _key, data in sorted(datastores.items()):
         section_lines.append("[%s]" % data.get("name"))
         for ds_key in sorted(data.keys()):
             if ds_key == "name":
@@ -1762,7 +1715,7 @@ def get_section_licenses(connection):
 
 def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     vms = {}
-    vm_esx_host = {}  # type: Dict[str, List[Any]]
+    vm_esx_host: Dict[str, List[Any]] = {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
     vmdetails_response = connection.query_server('vmdetails')
@@ -1772,6 +1725,9 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
         vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
         if opt.skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
             continue
+
+        if vm_data.get("summary.config.ftInfo.role") == '2':
+            continue  # This response coming from the passive fault-tolerance node
 
         if "runtime.host" in vm_data:
             vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"],
@@ -1797,12 +1753,32 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     return vms, vm_esx_host
 
 
-def get_section_vm(vms):
+def get_section_vm(vms, time_reference):
     section_lines = []
     for vm_name, vm_data in sorted(vms.items()):
         if vm_data.get("name"):
-            section_lines += ["<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>"]
+            section_lines += [
+                "<<<<%s>>>>" % vm_name, "<<<esx_vsphere_vm>>>",
+                'time_reference %d' % time_reference
+            ]
             section_lines.extend("%s %s" % entry for entry in sorted(vm_data.items()))
+    section_lines += ["<<<<>>>>"]
+    return section_lines
+
+
+def get_section_virtual_machines(vms):
+    section_lines = ["<<<esx_vsphere_virtual_machines:sep(0)>>>"]
+    section_lines.extend(
+        json.dumps(
+            {
+                "vm_name": vm_name,
+                'hostsystem': vm_data.get('runtime.host', ''),
+                'powerstate': vm_data.get('runtime.powerState', ''),
+                'guest_os': vm_data.get('config.guestFullName', ''),
+                'compatibility': vm_data.get('config.version', ''),
+                'uuid': vm_data.get('config.uuid', ''),
+            },
+            separators=(',', ':')) for vm_name, vm_data in sorted(vms.items()))
     return section_lines
 
 
@@ -1832,6 +1808,13 @@ def get_sections_clusters(connection, vm_esx_host, opt):
             ]
 
     return section_lines
+
+
+def _retrieve_system_time(connection):
+    response = connection.query_server('systemtime')
+    elements = get_pattern('<returnval>(.*)</returnval>', response)
+    return (int(datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ").timestamp())
+            if elements else 0)
 
 
 def fetch_data(connection, opt):
@@ -1876,11 +1859,13 @@ def fetch_data(connection, opt):
     # Virtual machines
     ###########################
     if "virtualmachine" in opt.modules:
+        time_reference = _retrieve_system_time(connection)
         vms, vm_esx_host = fetch_virtual_machines(connection, hostsystems, datastores, opt)
-        output += get_section_vm(vms)
+        output += get_section_vm(vms, time_reference)
+        output += get_section_virtual_machines(vms)
 
-        used_hostsystems = hostsystems if opt.snapshot_display == 'esxhost' else None
-        output += get_sections_aggregated_snapshots(vms, used_hostsystems)
+        if not opt.direct or opt.snapshots_on_host:
+            output += get_section_snapshot_summary(vms)
     else:
         vms, vm_esx_host = {}, {}
 
@@ -1936,7 +1921,7 @@ def main(argv=None):
         sys.stderr.write("%s\n" % exc)
         return 0 if opt.agent else 1
 
-    write_output(vsphere_output, opt)
+    sys.stdout.writelines("%s\n" % line for line in vsphere_output)
 
     return 0
 

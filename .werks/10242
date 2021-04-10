@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Authenticated users that are allowed to configure and share custom snapins
 could inject arbitrary JS code to all users which are permitted to view this

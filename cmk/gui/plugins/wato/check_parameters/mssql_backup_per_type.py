@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -24,11 +24,20 @@ def _parameter_valuespec_mssql_backup_per_type():
     ],)
 
 
+def _item_spec() -> TextAscii:
+    return TextAscii(
+        title=_("Instance, tablespace & backup type"),
+        help=_("The MSSQL instance name, the tablespace name and the backup type, each separated "
+               "by a space."),
+        allow_empty=False,
+    )
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup_per_type",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Backup name"), allow_empty=False),
+        item_spec=_item_spec,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_backup_per_type,
         title=lambda: _("MSSQL Backup"),

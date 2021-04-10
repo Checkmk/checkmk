@@ -4,31 +4,34 @@
 // source code package.
 
 #include "TableEventConsoleHistory.h"
-#include <memory>
+
 #include "Column.h"
+#include "IntLambdaColumn.h"
 #include "Row.h"
+#include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
+#include "TimeColumn.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(std::make_unique<IntEventConsoleColumn>(
+    ColumnOffsets offsets{};
+    addColumn(ECRow::makeIntColumn(
         "history_line", "The line number of the event in the history file",
-        Column::Offsets{}));
-    addColumn(std::make_unique<TimeEventConsoleColumn>(
+        offsets));
+    addColumn(ECRow::makeTimeColumn(
         "history_time",
         "Time when the event was written into the history file (Unix timestamp)",
-        Column::Offsets{}));
-    addColumn(std::make_unique<StringEventConsoleColumn>(
+        offsets));
+    addColumn(ECRow::makeStringColumn(
         "history_what",
         "What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)",
-        Column::Offsets{}));
-    addColumn(std::make_unique<StringEventConsoleColumn>(
-        "history_who", "The user who triggered the command",
-        Column::Offsets{}));
-    addColumn(std::make_unique<StringEventConsoleColumn>(
+        offsets));
+    addColumn(ECRow::makeStringColumn(
+        "history_who", "The user who triggered the command", offsets));
+    addColumn(ECRow::makeStringColumn(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID",
-        Column::Offsets{}));
+        offsets));
     TableEventConsoleEvents::addColumns(this);
 }
 

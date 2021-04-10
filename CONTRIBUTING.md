@@ -134,7 +134,9 @@ Once done, you are ready for the next chapter.
 
 1. Create your feature branch
 
-    The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
+    The number one rule is to *put each piece of work on its own branch*. Please note that in
+    general, we only accept changes which are based on the *master* branch. There is one (rare)
+    exception, namely bugfixes which *only* affect older branches. So lets start like this:
 
     ```console
     $ git checkout master
@@ -230,12 +232,8 @@ the project base directory:
 $ make -C tests test-pylint
 $ make -C tests test-bandit
 $ make -C tests test-unit
-$ make -C tests test-python-futurize
 $ make -C tests test-format-python
-
-$ make -C tests-py3 test-pylint
-$ make -C tests-py3 test-unit
-$ make -C tests-py3 test-mypy-raw
+$ make -C tests test-mypy-raw
 ```
 
 Some of these commands take several minutes, for example the command
@@ -280,39 +278,52 @@ content changes.
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python. At the moment the most of the code base is
-using Python 2.7. We are already preparing to change to Python 3, but this will
-take some time. We plan to finish this until 2020. For the moment Python 2.7 is
-the language to use.
+using Python 3.8.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
 ### Agent plugins: Supported Python versions
 
-The agent plugins need to be executed on older Linux systems which may
-have very old Python versions available. For this reason we need to use
-the old Python 2.5 compatible syntax here.
+The agent plugins are also written for Python 3, but have to be compatible with
+Python 3.4 or newer. Since they are executed in various Python environments on
+the monitored hosts, they should have as small dependencies as possible. Best is
+to only rely on vanilla Python without 3rd party modules.
 
-On the monitored host we use Python for some popular agent plugins (like
-`mk_logwatch`).  These are currently built to support Python 2.5 to Python 2.7.
+Use `#!/usr/bin/env python3` as shebang.
 
-Python plugins that are incompatible to 2.5, for example because some 3rd party
-library is not available with 2.5, need to be syntax compatible with 2.5 for
-the moment, but are allowed to terminate with a helpful error message about
-this incompatibility.
+Besides the Python 3 variant, the agent plugins are also available for Python 2.
+These Python 2 variants (`_2.py` ending in `agents/plugins`) are generated
+automatically from the Python 3 scripts while packaging Checkmk. So no Python 2
+script needs to be programmed. The Python 2 files are named `[plugin]_2.py`.
+Have a look at `agents/plugins/Makefile` to see how we generate them.
 
-Use `#!/usr/bin/env python` as shebang.
+The agent is automatically dealing with Python 2 and 3 plugins and environments
+if possible.  If a `.py` file is found and a `python3` greater than or equal to
+Python 3.4 is in the `PATH`, then this plugin is used.  If `_2.py` file is found
+and there is a `python2` or `python` in the `PATH`, then this is used. It is
+ensured that no plugin is executed in two versions.
 
-Completely new plugins should be written to be compatible with Python 2.7 and
-Python 3.
+Agent plugins are executed on monitored systems. Here we can not rely on the
+presence of certain modules. The agent plugin + Check-Plugin must transport a
+clean message to the user in the GUI, if a dependency is missing (see e.g.
+Docker plugin).
 
-In case you want to explicitly create a Python 3 agent plugin, use
-`#!/usr/bin/env python3` as shebang.
+For new plugins it is okay to use special dependencies, e.g. API bindings.  But
+we have to take older Python versions and incompatibilities into account and
+produce error agent sections + error messages that tell the user about this
+issue.
+
+---
+**Known issues regarding 3to2 conversion**
+- `f-strings`: Currently 3to2  cannot convert `f-strings` into `python2`
+  compatible syntax. So use `format()` instead.
+---
 
 ### Imports
 
-Don't use star import like `from module import *`. They make it hard to understand which
-names are really available and needed in the current namespace.
+Don't use star import like `from module import *`. They make it hard to
+understand which names are really available and needed in the current namespace.
 
 ### Exception handling
 
@@ -343,12 +354,7 @@ names are really available and needed in the current namespace.
 
 ### Paths and files
 
-* Use `pathlib2` / `pathlib` (in Python 3). To be more future-proof, import like this:
-
-  ```python
-  from pathlib2 import Path
-  ```
-
+* Use `pathlib`.
 * Use context-managers (the `with` keyword) to open files.
 * You are welcome to refactor old style file IO to pathlib (with tests :-))
 
@@ -372,8 +378,8 @@ names are really available and needed in the current namespace.
 
 ### Argument parsing
 
-* Use `argparse`. In Checkmk where we have Python 2.7. In agent plugins, which
-  have to support Python <2.5, use `optparse`.
+* Use `argparse`. In agent plugins, which have to support Python <2.5, use
+  `optparse`.
 
 ### Logging
 
@@ -485,7 +491,7 @@ names are really available and needed in the current namespace.
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
-a virtualenv managed by pipenv in `check_mk/virtual-envs/2.7/.venv`, you can run it with
+a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
 `make format-python` or `scripts/run-pipenv run yapf`.
 
 #### Manual invocation: Single file
@@ -532,7 +538,7 @@ Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every
 
 ```vim
 let g:ale_fixers = {'python': ['isort', 'yapf']}
-let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/virtual-envs/3.7/.venv/bin/yapf'
+let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/.venv/bin/yapf'
 let g:ale_fix_on_save = 1
 ```
 
@@ -540,7 +546,7 @@ let g:ale_fix_on_save = 1
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests-py3 test-mypy`.
+Code can be checked manually with `make -C tests test-mypy`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the
 Checkmk repository. For info about how to type hint refer to
@@ -999,12 +1005,16 @@ counter-balanced via explanatory comments.
 
 ## Localization
 
-The User interface of Checkmk can be localized. Currently we maintain a German
-localization of Checkmk for all users. We are open to support other languages
-when the localization is in a good state and nearly complete.
+The user interface of Checkmk can be localized using [Weblate](https://translate.checkmk.com/).
+We are very happy about any contributions to the localization of Checkmk. To
+contribute, please first register an account at our Weblate server. Afterwards,
+you can iterate through untranslated source strings and localize them. See this
+[forum post](https://forum.checkmk.com/t/about-the-localization-category/21578)
+for further information.
 
-If you are interested: We can use [POEditor.com](https://poeditor.com) for
-upstream localizations. Please contact us at info@checkmk.com if you are interested.
+Please note that any PRs which directly edit the PO-files will be disregarded,
+since the localization should be done exclusively via Weblate to avoid merge
+conflicts.
 
 ### Translation of technical terms
 
@@ -1029,7 +1039,14 @@ one name for one thing and use it consistently in all translations.
 ## Copyright and Licensing
 
 The open source part of Checkmk is licensed under the terms of the [GNU GPLv2
-License](COPYING). Any code brought in must be compatible with those terms.
+License](COPYING). Any new code must be compatible with those terms.
 
-You need to make sure that the code you send us in your pull request is GPLv2
-compatible.
+To ensure that, please always add our current licensing information to any new
+files you want to contribute. The licensing information can be found at the beginning
+of already existing files and looks something like
+
+```python
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+```

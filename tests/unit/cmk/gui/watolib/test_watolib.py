@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -63,6 +63,7 @@ def test_registered_automation_commands():
         'service-discovery-job',
         'checkmk-remote-automation-start',
         'checkmk-remote-automation-get-status',
+        'discovered-host-label-sync',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -86,7 +87,6 @@ def test_registered_configvars():
         'bulk_discovery_default_settings',
         'check_mk_perfdata_with_times',
         'cluster_max_cachefile_age',
-        'context_buttons_to_show',
         'crash_report_target',
         'crash_report_url',
         'custom_service_attributes',
@@ -110,7 +110,6 @@ def test_registered_configvars():
         'housekeeping_interval',
         'http_proxies',
         'inventory_check_autotrigger',
-        'inventory_check_do_scan',
         'inventory_check_interval',
         'inventory_check_severity',
         'lock_on_logon_failures',
@@ -138,7 +137,6 @@ def test_registered_configvars():
         'profile',
         'quicksearch_dropdown_limit',
         'quicksearch_search_order',
-        'record_inline_snmp_stats',
         'remote_status',
         'replication',
         'reschedule_timeout',
@@ -146,12 +144,11 @@ def test_registered_configvars():
         'retention_interval',
         'rrdcached_tuning',
         'rule_optimizer',
-        'save_user_access_times',
         'selection_livetime',
         'service_view_grouping',
         'show_livestatus_errors',
+        'show_mode',
         'sidebar_notify_interval',
-        'sidebar_show_version_in_sidebar',
         'sidebar_update_interval',
         'simulation_mode',
         'single_user_session',
@@ -160,6 +157,7 @@ def test_registered_configvars():
         'site_livestatus_tcp',
         'site_mkeventd',
         'site_nsca',
+        'slow_views_duration_threshold',
         'snmp_credentials',
         'socket_queue_len',
         'soft_query_limit',
@@ -168,11 +166,11 @@ def test_registered_configvars():
         'statistics_interval',
         'table_row_limit',
         'tcp_connect_timeout',
-        'topology_default_filter_group',
         'translate_snmptraps',
         'trusted_certificate_authorities',
         'ui_theme',
         'use_dns_cache',
+        'snmp_backend_default',
         'use_inline_snmp',
         'use_new_descriptions_for',
         'user_downtime_timeranges',
@@ -183,13 +181,13 @@ def test_registered_configvars():
         'virtual_host_trees',
         'wato_activation_method',
         'wato_activate_changes_concurrency',
+        'wato_activate_changes_comment_mode',
         'wato_hide_filenames',
         'wato_hide_folders_without_read_permissions',
         'wato_hide_help_in_lists',
         'wato_hide_hosttags',
         'wato_hide_varnames',
         'wato_icon_categories',
-        'wato_legacy_eval',
         'wato_max_snapshots',
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',
@@ -214,6 +212,9 @@ def test_registered_configvars():
             'cmc_config_multiprocessing',
             'cmc_debug_notifications',
             'cmc_dump_core',
+            "cmc_enable_fetchers",
+            "cmc_fetcher_helpers",
+            "cmc_checker_helpers",
             'cmc_flap_settings',
             'cmc_graphite',
             'cmc_import_nagios_state',
@@ -235,12 +236,12 @@ def test_registered_configvars():
             'cmc_state_retention_interval',
             'cmc_statehist_cache',
             'cmc_timeperiod_horizon',
-            'config',
             'dcd_log_levels',
             'dcd_web_api_connection',
             'liveproxyd_default_connection_params',
             'liveproxyd_log_levels',
             'mknotifyd_insecure_message_format',
+            'notification_spooler_config',
             'notification_spooling',
             'reporting_date_format',
             'reporting_email_options',
@@ -258,11 +259,7 @@ def test_registered_configvars():
             'reporting_use',
             'reporting_view_limit',
             'site_liveproxyd',
-        ]
-
-    if cmk_version.is_managed_edition():
-        expected_vars += [
-            "color_set",
+            'ntop_connection',
         ]
 
     registered = sorted(config_variable_registry.keys())
@@ -291,6 +288,7 @@ def test_registered_configvar_groups():
         u'Site Management',
         u'User Interface',
         u'User Management',
+        'Support',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -301,6 +299,7 @@ def test_registered_configvar_groups():
             u'Livestatus Proxy',
             u'Reporting',
             u'Monitoring Core',
+            u'Ntopng (chargeable add-on)',
         ]
 
     registered = sorted(config_variable_group_registry.keys())

@@ -24,7 +24,11 @@ import requests
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.utils import (
+    DataCache,
+    vcrtrace,
+    get_seconds_since_midnight,
+)
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
@@ -93,7 +97,7 @@ def parse_arguments(argv):
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -122,18 +126,18 @@ def parse_arguments(argv):
         args.sequential = True
 
     # LOGGING
-    if args.verbose >= 3:
+    if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
-    elif args.verbose == 2:
+    elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
         fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
-    elif args.verbose == 1:
+    elif args.verbose:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
@@ -158,9 +162,7 @@ class ApiErrorMissingData(ApiError):
     pass
 
 
-class BaseApiClient:
-    __METACLASS__ = abc.ABCMeta
-
+class BaseApiClient(metaclass=abc.ABCMeta):
     AUTHORITY = 'https://login.microsoftonline.com'
 
     def __init__(self, base_url):
@@ -194,14 +196,33 @@ class BaseApiClient:
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        request_url = self._base_url + uri_end
-        response = requests.get(request_url, params=params, headers=self._headers)
-        self._update_ratelimit(response)
-        json_data = response.json()
-        LOGGER.debug('response: %r', json_data)
+        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
 
         if key is None:
             return json_data
+
+        data = self._lookup(json_data, key)
+
+        # The API will not send more than 1000 recources at once.
+        # See if we must fetch another page:
+        next_link = json_data.get('nextLink')
+        while next_link is not None:
+            json_data = self._get_json_from_url(next_link)
+            # we only know of lists. Let exception happen otherwise
+            data += self._lookup(json_data, key)
+            next_link = json_data.get('nextLink')
+
+        return data
+
+    def _get_json_from_url(self, url, *, params=None):
+        response = requests.get(url, params=params, headers=self._headers)
+        self._update_ratelimit(response)
+        json_data = response.json()
+        LOGGER.debug('response: %r', json_data)
+        return json_data
+
+    @staticmethod
+    def _lookup(json_data, key):
         try:
             return json_data[key]
         except KeyError:
@@ -410,7 +431,7 @@ class Section:
         self._piggytargets = list(piggytargets)
         self._cont = []
         section_options = ':'.join(['sep(%d)' % separator] + options)
-        self._title = '<<<%s:%s>>>\n' % (name, section_options)
+        self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -429,7 +450,7 @@ class Section:
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write(f'<<<<{piggytarget}>>>>\n')
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')
@@ -545,7 +566,7 @@ class AzureResource:
 
     def dumpinfo(self):
         # TODO: Hmmm, should the variable-length tuples actually be lists?
-        lines = [("Resource",), (json.dumps(self.info),)]  # type: List[Tuple]
+        lines: List[Tuple] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -587,16 +608,13 @@ class MetricCache(DataCache):
         return AZURE_CACHE_FILE_PATH / subdir
 
     @property
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         mgmt_client, resource_id, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
@@ -638,14 +656,12 @@ class UsageClient(DataCache):
         self._client = client
 
     @property
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
-        cache_interval = (NOW - utc_today_start).seconds
+        cache_interval = int(get_seconds_since_midnight(NOW))
         LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
@@ -653,12 +669,10 @@ class UsageClient(DataCache):
     def offerid_has_no_consuption_api(cls, errmsg):
         return any(s in errmsg for s in cls.NO_CONSUPTION_API)
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, *args):
-        # type: (Any) -> Any
+    def get_live_data(self, *args: Any) -> Any:
         LOGGER.debug("UsageClient: get live data")
 
         try:
@@ -822,7 +836,7 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()  # type: Queue[Tuple[Any, bool, Any]]
+        queue: Queue[Tuple[Any, bool, Any]] = Queue()
         jobs = {}
 
         def produce(id_, args):
@@ -854,10 +868,10 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
+def main_graph_client(args, secret):
     graph_client = GraphApiClient()
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        graph_client.login(args.tenant, args.client, secret)
         write_section_ad(graph_client)
     except Exception as exc:
         if args.debug:
@@ -865,10 +879,11 @@ def main_graph_client(args):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def main_subscription(args, selector, subscription):
+def main_subscription(args, secret, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
+
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(args.tenant, args.client, secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
@@ -902,10 +917,19 @@ def main(argv=None):
         return
     LOGGER.debug("%s", selector)
 
-    main_graph_client(args)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
+
+    if not secret:
+        raise RuntimeError('secret is not set')
+
+    main_graph_client(args, secret)
 
     for subscription in args.subscriptions:
-        main_subscription(args, selector, subscription)
+        main_subscription(args, secret, selector, subscription)
 
 
 if __name__ == "__main__":

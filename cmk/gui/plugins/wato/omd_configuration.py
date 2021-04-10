@@ -1,25 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import os
+from pathlib import Path
+import subprocess
 import traceback
-from typing import (  # pylint: disable=unused-import
-    Dict, Any,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, Any
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.cmk_subprocess as subprocess
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -49,6 +42,8 @@ from cmk.gui.plugins.wato import (
     ReplicationPath,
     wato_fileheader,
 )
+
+from cmk.gui.type_defs import ConfigDomainName
 
 
 @config_variable_group_registry.register
@@ -116,7 +111,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def _monitoring_core_choices(self):
         cores = []
         if not cmk_version.is_raw_edition():
-            cores.append(("cmc", _("Check_MK Micro Core")))
+            cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
             ("nagios", _("Nagios 3")),
@@ -230,8 +225,11 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "diskspace"
     diskspace_config = cmk.utils.paths.omd_root + '/etc/diskspace.conf'
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "diskspace"
 
     def activate(self):
         pass
@@ -284,7 +282,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         store.save_file(self.diskspace_config, output)
 
     def default_globals(self):
-        diskspace_context = {}  # type: Dict[str, Any]
+        diskspace_context: Dict[str, Any] = {}
         filename = Path(cmk.utils.paths.omd_root, 'bin', 'diskspace')
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), 'exec')
@@ -402,7 +400,10 @@ add_replication_paths([
 class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "apache"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "apache"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
@@ -521,7 +522,10 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "rrdcached"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "rrdcached"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"

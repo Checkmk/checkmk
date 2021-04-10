@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,19 +14,19 @@
 # authCommunity execute public
 # traphandle default /path/to/this/script
 
-# Define the Hostname patterns here:
-hostname_patterns = ['SMI::enterprises.2349.2.2.2.5 = "(.*)"']
-
 import time
 import sys
 import re
+
+# Define the Hostname patterns here:
+hostname_patterns = ['SMI::enterprises.2349.2.2.2.5 = "(.*)"']
 
 # Insert here the name of your omd site
 site_name = "TESTSITE"
 deamon_path = "/omd/sites/%s/tmp/run/mkeventd/events" % site_name
 
 data = []
-match_host = False
+match_host = ""
 for line in sys.stdin:
     line = line.strip()
     if hostname_patterns:
@@ -37,7 +37,8 @@ for line in sys.stdin:
     data.append(line)
 
 msg = " ".join(data[2:])
-host, ip = data[:2]
+host = data[0]
+ip = data[1]
 if match_host:
     host = match_host.strip()
 

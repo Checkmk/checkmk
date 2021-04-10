@@ -7,9 +7,11 @@
 #define TableStateHistory_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <map>
 #include <memory>
 #include <string>
+
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"

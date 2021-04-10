@@ -1,0 +1,20 @@
+Title: AWS EC2 Limits
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1591121466
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk fixes some small bugs in the monitoring of AWS EC2 limits (check
+aws_ec2_limits). Before this werk, depending on the configuration, the
+corresponding service might have been discovered for both the host running
+the special agent and for one of the EC2 instances. Now, the service is
+only discovered for the host running the special agent and all limits are
+consistently reported there. Also, some default upper levels have been
+adjusted to the latest AWS defaults.
+
+This werk is incompatible. Users have to re-discover the services of affected
+hosts.

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.config import theme_choices
+from cmk.gui.config import theme_choices, show_mode_choices
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
@@ -107,7 +107,6 @@ class StartURLUserAttribute(UserAttribute):
         return Transform(
             Alternative(
                 title=_("Start URL to display in main frame"),
-                style="dropdown",
                 orientation="horizontal",
                 elements=[
                     FixedValue(
@@ -143,12 +142,11 @@ class UIThemeUserAttribute(UserAttribute):
         return "ui_theme"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return Alternative(
             title=_("User interface theme"),
-            style="dropdown",
             orientation="horizontal",
             elements=[
                 FixedValue(
@@ -159,6 +157,106 @@ class UIThemeUserAttribute(UserAttribute):
                 DropdownChoice(
                     title=_("Set custom theme"),
                     choices=theme_choices(),
+                ),
+            ],
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UISidebarPosition(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_sidebar_position"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Sidebar position"),
+            choices=[(None, _("Right")), ("left", _("Left"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIIconTitle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "nav_hide_icons_title"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Navigation bar icons"),
+            help=_("With this option you can define if icons in the navigation "
+                   "bar should show a title or not. This gives you the possibility "
+                   "to save some space in the UI."),
+            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            no_preselect_value=False,
+        )
+
+
+@user_attribute_registry.register
+class UIIconPlacement(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "icons_per_item"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Mega menu icons"),
+            help=_("In the mega menus you can select between two options: "
+                   "Have a green icon only for the headlines – the 'topics' – "
+                   "for lean design. Or have a colored icon for every entry so that "
+                   "over time you can zoom in more quickly to a specific entry."),
+            choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIBasicAdvancedToggle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "show_mode"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return Alternative(
+            title=_("Show more / Show less"),
+            orientation="horizontal",
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use the default show mode"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom show mode"),
+                    choices=show_mode_choices(),
                 ),
             ],
         )

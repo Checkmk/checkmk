@@ -6,7 +6,7 @@ Date: 1586873952
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The vanilla agent RPM packages shipped with Checkmk (e.g.
 check-mk-agent-1.7.0i1-1.noarch.rpm) are now signed during

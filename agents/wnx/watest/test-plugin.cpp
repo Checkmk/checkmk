@@ -8,6 +8,7 @@
 #include <chrono>
 #include <filesystem>
 #include <future>
+#include <regex>
 #include <string_view>
 
 #include "cfg.h"
@@ -19,33 +20,36 @@
 #include "service_processor.h"
 #include "test_tools.h"
 
+namespace fs = std::filesystem;
+using namespace std::chrono_literals;
+
 namespace cma {  // to become friendly for wtools classes
 constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
 constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
-
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
-                               std::string Name) {
-    std::ofstream ofs(Path.u8string());
+namespace {
+void CreatePluginInTemp(const std::filesystem::path& filename, int timeout,
+                        std::string_view plugin_name) {
+    std::ofstream ofs(filename.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", filename, GetLastError());
         return;
     }
 
     ofs << "@echo off\n"
         //<< "timeout /T " << Timeout << " /NOBREAK > nul\n"
-        << "powershell Start-Sleep " << Timeout << " \n"
-        << "@echo ^<^<^<" << Name << "^>^>^>\n"
+        << "powershell Start-Sleep " << timeout << " \n"
+        << "@echo ^<^<^<" << plugin_name << "^>^>^>\n"
         << "@echo " << SecondLine << "\n";
 }
 
-static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
-                                  std::string Name) {
+void CreateVbsPluginInTemp(const std::filesystem::path& Path,
+                           std::string Name) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -58,12 +62,12 @@ static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
                "45678912345678912345678912345678912345678912345678912345678912345aa\"\n";
 }
 
-static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
-                                          std::string Name) {
+void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
+                                   std::string Name) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -78,13 +82,13 @@ static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
         << "@echo " << SecondLine << "\n";
 }
 
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
-                               std::string Name, std::string_view code,
-                               cma::provider::PluginType type) {
+void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
+                        std::string Name, std::string_view code,
+                        cma::provider::PluginType type) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -96,7 +100,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     ofs << code << "\n";
 }
 
-static void RemoveFolder(const std::filesystem::path& Path) {
+void RemoveFolder(const std::filesystem::path& Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
     fs::path dir_path;
@@ -122,8 +126,8 @@ static void RemoveFolder(const std::filesystem::path& Path) {
 
 // because PluginMap is relative complicated(PluginEntry is not trivial)
 // we will use special method to insert artificial data in map
-static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
-                        bool async, int cache_age) {
+void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
+                 bool async, int cache_age) {
     namespace fs = std::filesystem;
     fs::path p = name;
     pm.emplace(std::make_pair(name, p));
@@ -136,6 +140,7 @@ static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
         it->second.applyConfigUnit(e, false);
     }
 }
+}  // namespace
 
 TEST(PluginTest, Entry) {
     PluginMap pm;
@@ -243,43 +248,23 @@ TEST(PluginTest, TimeoutCalc) {
     }
 }
 
-TEST(PluginTest, JobStartSTop) {
-    namespace fs = std::filesystem;
+TEST(PluginTest, JobStartStopIntegration) {
+    tst::TempDirPair dirs{test_info_->name()};
+    fs::path temp_folder = dirs.in();
 
-    fs::path temp_folder = cma::cfg::GetTempDir();
-
-    CreatePluginInTemp(temp_folder / "a.cmd", 120, "a");
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    CreatePluginInTemp(temp_folder / "a.cmd", 20, "a");
 
     auto [pid, job, process] =
-        cma::tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
-    ::Sleep(1000);
-    TerminateJobObject(job, 21);
-    if (job) CloseHandle(job);
-    if (process) CloseHandle(process);
-    /*
-
-        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        PROCESSENTRY32 process;
-        ZeroMemory(&process, sizeof(process));
-        process.dwSize = sizeof(process);
-        Process32First(snapshot, &process);
-        do {
-            // process.th32ProcessId is the PID.
-            if (process.th32ParentProcessID == pid) {
-                cma::tools::win::KillProcess(process.th32ProcessID);
-            }
-
-        } while (Process32Next(snapshot, &process));
-
-        CloseHandle(job);
-    cma::tools::win::KillProcess(pid);
-    */
+        tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
+    ASSERT_NE(pid, 0);
+    ASSERT_NE(job, nullptr);
+    tools::sleep(200ms);
+    ::TerminateJobObject(job, 21);
+    ::CloseHandle(job);
+    ::CloseHandle(process);
 }
 
 TEST(PluginTest, Extensions) {
-    using namespace std;
-
     auto pshell = MakePowershellWrapper();
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
@@ -327,35 +312,35 @@ TEST(PluginTest, ConfigFolders) {
         std::string s(yml_var::kCore);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kBuiltinPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetSystemPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetSystemPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kUserPlugins);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserPluginsDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserPluginsDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kAgent);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetUserDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetUserDir()) + "\\");
     }
 
     {
         std::string s(yml_var::kLocal);
         s += "\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);
-        EXPECT_EQ(result, ConvertToUTF8(GetLocalDir()) + "\\");
+        EXPECT_EQ(result, ToUtf8(GetLocalDir()) + "\\");
     }
 
     {
@@ -474,7 +459,7 @@ static void CreateFileInTemp(const std::filesystem::path& Path) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", Path, GetLastError());
         return;
     }
 
@@ -509,7 +494,7 @@ static void MakeFolderStructure(cma::PathVector Paths) {
         std::error_code ec;
         fs::create_directory(dir, ec);
         if (ec.value() != 0) {
-            XLOG::l(XLOG::kStdio)("Can't create a folder {}", dir.u8string());
+            XLOG::l(XLOG::kStdio)("Can't create a folder {}", dir);
             continue;
         }
 
@@ -701,7 +686,21 @@ TEST(PluginTest, HackPluginWithPiggyBack) {
     }
 }
 
-TEST(PluginTest, FilesAndFolders) {
+TEST(PluginTest, RemoveForbiddenNames) {
+    PathVector files;
+
+    auto forbidden_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.EXE"};
+    auto good_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.PY"};
+    auto ok_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.checkmk.py"};
+    files.emplace_back(forbidden_file);
+    files.emplace_back(good_file);
+    files.emplace_back(ok_file);
+    EXPECT_TRUE(std::ranges::find(files, forbidden_file) != files.end());
+    cma::RemoveForbiddenNames(files);
+    EXPECT_TRUE(std::ranges::find(files, forbidden_file) == files.end());
+}
+
+TEST(PluginTest, FilesAndFoldersIntegration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -718,8 +717,8 @@ TEST(PluginTest, FilesAndFolders) {
             auto f = groups::plugins.folders();
             XLOG::l(XLOG::kStdio | XLOG::kInfo)(
                 "\n\nTEST IS SKIPPED> YOU HAVE NO PLUGINS {} {} {} {}\n\n\n ",
-                wtools::ConvertToUTF8(f[0]), wtools::ConvertToUTF8(f[1]),
-                wtools::ConvertToUTF8(f[2]), wtools::ConvertToUTF8(f[3]));
+                wtools::ToUtf8(f[0]), wtools::ToUtf8(f[1]),
+                wtools::ToUtf8(f[2]), wtools::ToUtf8(f[3]));
             return;
         }
 
@@ -735,7 +734,7 @@ TEST(PluginTest, FilesAndFolders) {
             cma::cfg::groups::kPlugins, cma::cfg::vars::kPluginsExecution);
         std::vector<Plugins::ExeUnit> exe_units;
         cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-        ASSERT_EQ(exe_units.size(), 3);
+        ASSERT_EQ(exe_units.size(), 4);
 
         EXPECT_EQ(exe_units[2].async(), false);
         EXPECT_EQ(exe_units[2].cacheAge(), 0);
@@ -1512,10 +1511,12 @@ TEST(PluginTest, AsyncStartSimulation_0) {
         PluginMap pm;  // load from the groups::plugin
         UpdatePluginMap(pm, false, as_vp, exe_units_async_0, false);
         // async_0 means sync
-        EXPECT_EQ(cma::provider::config::G_AsyncPluginWithoutCacheAge_RunAsync,
-                  cma::provider::config::IsRunAsync(pm.at(as_vp_0)));
-        EXPECT_EQ(cma::provider::config::G_AsyncPluginWithoutCacheAge_RunAsync,
-                  cma::provider::config::IsRunAsync(pm.at(as_vp_1)));
+        EXPECT_EQ(
+            cma::provider::config::g_async_plugin_without_cache_age_run_async,
+            cma::provider::config::IsRunAsync(pm.at(as_vp_0)));
+        EXPECT_EQ(
+            cma::provider::config::g_async_plugin_without_cache_age_run_async,
+            cma::provider::config::IsRunAsync(pm.at(as_vp_1)));
 
         UpdatePluginMap(pm, false, as_vp, exe_units_valid_SYNC, false);
         EXPECT_FALSE(cma::provider::config::IsRunAsync(pm.at(as_vp_0)));
@@ -1799,7 +1800,7 @@ bool WaitForSuccess(std::chrono::duration<T, B> allowed_wait,
                     std::function<bool()> func) {
     using namespace std::chrono;
 
-    constexpr auto grane = 500ms;
+    constexpr auto grane = 50ms;
     auto wait_time = allowed_wait;
 
     while (wait_time >= 0ms) {
@@ -2199,14 +2200,14 @@ TEST(PluginTest, EmptyPlugins) {
     // new behavior
     {
         using namespace cma::provider;
-        bool no_send_if_empty_body = config::G_LocalNoSendIfEmptyBody;
-        bool send_empty_end = config::G_LocalSendEmptyAtEnd;
-        ON_OUT_OF_SCOPE(config::G_LocalNoSendIfEmptyBody =
+        bool no_send_if_empty_body = config::g_local_no_send_if_empty_body;
+        bool send_empty_end = config::g_local_send_empty_at_end;
+        ON_OUT_OF_SCOPE(config::g_local_no_send_if_empty_body =
                             no_send_if_empty_body;
-                        config::G_LocalSendEmptyAtEnd = send_empty_end;)
+                        config::g_local_send_empty_at_end = send_empty_end;)
 
-        config::G_LocalNoSendIfEmptyBody = false;
-        config::G_LocalSendEmptyAtEnd = true;
+        config::g_local_no_send_if_empty_body = false;
+        config::g_local_send_empty_at_end = true;
         cma::provider::LocalProvider plugins;
         auto yaml = GetLoadedConfig();
         yaml[groups::kGlobal][vars::kSectionsEnabled] = YAML::Load("[local]");
@@ -2217,6 +2218,54 @@ TEST(PluginTest, EmptyPlugins) {
         ASSERT_FALSE(result.empty());
         EXPECT_EQ(result, "<<<local:sep(0)>>>\n<<<>>>\n");
     }
+}
+
+class PluginCmkUpdateAgentIgnoreFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        temp_fs = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+
+        ASSERT_TRUE(
+            temp_fs->createDataFile(fs::path{"plugins"} / "1.cmd", "@echo 1"));
+        ASSERT_TRUE(
+            temp_fs->createDataFile(fs::path{"plugins"} / "2.cmd", "@echo 2"));
+        fs::copy_file(
+            fs::path{"c:\\Windows\\system32\\whoami.exe"},
+            fs::path{cfg::GetUserPluginsDir()} / "cmk-update-agent.exe");
+    }
+
+    std::string runPlugins() {
+        provider::PluginsProvider plugins;
+
+        plugins.loadConfig();
+        plugins.updateSectionStatus();
+        return plugins.generateContent(section::kPlugins);
+    }
+
+    tst::TempCfgFs::ptr temp_fs;
+};
+
+TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
+    // check soft prevention(as is)
+    EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
+
+    // check hard prevention:
+    // User allows execution of the cmk-update-agent.exe. But we prevent it!
+    ASSERT_TRUE(temp_fs->loadContent(
+        "global:\n"
+        "  enabled: yes\n"
+        "  install: yes\n"
+        "  execute: [exe, bat, vbs, cmd, ps1]\n"
+        "plugins:\n"
+        "  enabled: yes\n"
+        "  folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]\n"
+        "  execution:\n"
+        "    - pattern : '*'\n"
+        "    - run     : yes\n")
+
+    );
+    EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
 }
 
 TEST(PluginTest, SyncStartSimulation_Long) {
@@ -2324,8 +2373,8 @@ TEST(CmaMain, Config) {
     std::filesystem::path path = ".";
 
     EXPECT_EQ(TheMiniBox::StartMode::updater,
-              GetStartMode(path / cfg::files::kAgentUpdater));
-    auto str = (path / cfg::files::kAgentUpdater).wstring();
+              GetStartMode(path / cma::cfg::files::kAgentUpdaterPython));
+    auto str = (path / cma::cfg::files::kAgentUpdaterPython).wstring();
     cma::tools::WideUpper(str);
 
     EXPECT_EQ(TheMiniBox::StartMode::updater, GetStartMode(str));
@@ -2481,7 +2530,7 @@ TEST(PluginTest, CheckRules) {
         fs::path root = tst::very_temp;
         std::error_code ec;
         fs::create_directory(root, ec);
-        tst::ConstructFile(root / cma::cfg::files::kDefaultMainConfig,
+        tst::CreateTextFile(root / cma::cfg::files::kDefaultMainConfig,
                            s_user_config);
         cma::tools::win::WithEnv we(std::wstring(kTemporaryRoot),
                                     root.wstring());
@@ -2611,7 +2660,8 @@ TEST(PluginTest, ModulesCmdLine) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    cma::OnStartTest();
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
     std::vector<Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd",
@@ -2631,8 +2681,6 @@ TEST(PluginTest, ModulesCmdLine) {
     CreatePluginInTemp(vp[0], 5, "a");
     CreatePluginInTemp(vp[1], 0, "b");
 
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, false, vp, exe_units, false);
     ASSERT_EQ(pm.size(), 2);
@@ -2645,6 +2693,7 @@ TEST(PluginTest, ModulesCmdLine) {
     mc.LoadDefault();
     ASSERT_TRUE(mc.isModuleScript("this.py"))
         << "we should have configured python module";
+
     PluginsProvider::UpdatePluginMapCmdLine(pm, &sp);
 
     for (auto& [name, entry] : pm) {
@@ -2656,7 +2705,7 @@ TEST(PluginTest, AllowedExtensions) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    cma::OnStartTest();
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto yaml = cma::cfg::GetLoadedConfig();
     yaml = YAML::Load(
         "global:\n"
@@ -2670,8 +2719,6 @@ TEST(PluginTest, AllowedExtensions) {
         "      exec: zzz\n"
 
     );
-
-    ON_OUT_OF_SCOPE(OnStartTest());
 
     cma::srv::ServiceProcessor sp;
     auto& mc = sp.getModuleCommander();

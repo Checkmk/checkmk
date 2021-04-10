@@ -6,7 +6,7 @@ Date: 1578665470
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Several Memory check plugins have been unified with respect to their service
 description, which is now simply "Memory" or "Memory $ITEM$".

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List  # pylint: disable=unused-import
-
-import six
+from typing import Any, Dict, List
+import urllib.parse
 
 import cmk.utils.store as store
 
@@ -40,6 +39,10 @@ from cmk.gui.plugins.sidebar import (
 class BookmarkList(pagetypes.Overridable):
     @classmethod
     def type_name(cls):
+        return "bookmark_list"
+
+    @classmethod
+    def type_icon(cls):
         return "bookmark_list"
 
     @classmethod
@@ -103,7 +106,7 @@ class BookmarkList(pagetypes.Overridable):
                                         allow_empty=False,
                                         validate=cls.validate_url,
                                     )),
-                                    (IconSelector(title=_("Icon"),)),
+                                    (IconSelector(title=_("Icon"), with_emblem=False)),
                                     (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
@@ -139,7 +142,6 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
-            style="dropdown",
             orientation="horizontal",
         )
 
@@ -157,7 +159,7 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def validate_url(cls, value, varprefix):
-        parsed = six.moves.urllib.parse.urlparse(value)
+        parsed = urllib.parse.urlparse(value)
 
         # Absolute URLs are allowed, but limit it to http/https
         if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
@@ -218,9 +220,10 @@ class BookmarkList(pagetypes.Overridable):
         return self._["default_topic"]
 
     def bookmarks_by_topic(self):
-        topics = {}  # type: Dict[str, List[Dict[str, Any]]]
+        topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
@@ -248,12 +251,19 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            html.begin_foldable_container(
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
+            )
 
             for bookmark in bookmarks:
                 icon = bookmark["icon"]
                 if not icon:
-                    icon = "kdict"
+                    icon = "bookmark_list"
 
                 iconlink(bookmark["title"], bookmark["url"], icon)
 
@@ -265,7 +275,7 @@ class Bookmarks(SidebarSnapin):
         end_footnote_links()
 
     def _get_bookmarks_by_topic(self):
-        topics = {}  # type: Dict[Any, List[Any]]
+        topics: Dict[Any, List[Any]] = {}
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \
@@ -302,8 +312,8 @@ class Bookmarks(SidebarSnapin):
     def _try_shorten_url(self, url):
         referer = html.request.referer
         if referer:
-            ref_p = six.moves.urllib.parse.urlsplit(referer)
-            url_p = six.moves.urllib.parse.urlsplit(url)
+            ref_p = urllib.parse.urlsplit(referer)
+            url_p = urllib.parse.urlsplit(url)
 
             # If http/https or user, pw, host, port differ, don't try to shorten
             # the URL to be linked. Simply use the full URI

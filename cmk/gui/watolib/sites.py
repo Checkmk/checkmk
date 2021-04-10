@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,24 +7,20 @@
 import os
 import re
 import time
-import sys
-from typing import (  # pylint: disable=unused-import
-    NamedTuple, Type,
-)
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-import six
+from typing import NamedTuple, Type, Any
+from pathlib import Path
+
+from six import ensure_binary
+
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.sites
-from cmk.gui.sites import SiteConfigurations  # pylint: disable=unused-import
+from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -58,25 +54,12 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
-from cmk.gui.watolib.utils import (
-    default_site,
-    multisite_dir,
-)
+from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 
 
-class SiteManagementFactory(object):
-    @staticmethod
-    def factory():
-        # type: () -> SiteManagement
-        if cmk_version.is_raw_edition():
-            cls = CRESiteManagement  # type: Type[SiteManagement]
-        else:
-            cls = CEESiteManagement
-
-        return cls()
-
-
-class SiteManagement(object):
+class SiteManagement:
     @classmethod
     def connection_method_valuespec(cls):
         return CascadingDropdown(
@@ -190,7 +173,7 @@ class SiteManagement(object):
         )
 
     @classmethod
-    def user_sync_valuespec(cls):
+    def user_sync_valuespec(cls, site_id):
         return CascadingDropdown(
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
@@ -199,10 +182,11 @@ class SiteManagement(object):
                 ("all", _("Sync users with all connections")),
                 ("list", _("Sync with the following LDAP connections"),
                  ListChoice(
-                     choices=userdb.connection_choices,
+                     choices=userdb_utils.connection_choices,
                      allow_empty=False,
                  )),
             ],
+            default_value="all" if config.site_is_local(site_id) else None,
             help=_(
                 'By default the users are synchronized automatically in the interval configured '
                 'in the connection. For example the LDAP connector synchronizes the users every '
@@ -279,12 +263,11 @@ class SiteManagement(object):
                                   _("You cannot do replication with the local site."))
 
         # User synchronization
-        user_sync_valuespec = cls.user_sync_valuespec()
+        user_sync_valuespec = cls.user_sync_valuespec(site_id)
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
-    def load_sites(cls):
-        # type: () -> SiteConfigurations
+    def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
@@ -356,7 +339,7 @@ class SiteManagement(object):
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
-                                           sites=[default_site()])
+                                           sites=[config.omd_site()])
 
     @classmethod
     def _affected_config_domains(cls):
@@ -365,6 +348,17 @@ class SiteManagement(object):
     @classmethod
     def transform_old_connection_params(cls, value):
         return value
+
+
+class SiteManagementFactory:
+    @staticmethod
+    def factory() -> SiteManagement:
+        if cmk_version.is_raw_edition():
+            cls: Type[SiteManagement] = CRESiteManagement
+        else:
+            cls = CEESiteManagement
+
+        return cls()
 
 
 class CRESiteManagement(SiteManagement):
@@ -380,7 +374,6 @@ class CEESiteManagement(SiteManagement):
     def livestatus_proxy_valuespec(cls):
         return Alternative(
             title=_("Use Livestatus Proxy Daemon"),
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -396,7 +389,6 @@ class CEESiteManagement(SiteManagement):
                             ("params",
                              Alternative(
                                  title=_("Parameters"),
-                                 style="dropdown",
                                  elements=[
                                      FixedValue(
                                          None,
@@ -435,7 +427,7 @@ class CEESiteManagement(SiteManagement):
     @classmethod
     def _transform_old_socket_spec(cls, sock_spec):
         """Transforms pre 1.6 socket configs"""
-        if isinstance(sock_spec, six.string_types):
+        if isinstance(sock_spec, str):
             return "unix", {
                 "path": sock_spec,
             }
@@ -672,9 +664,22 @@ def _update_distributed_wato_file(sites):
         _delete_distributed_wato_file()
 
 
-def is_livestatus_encrypted(site):
+def is_livestatus_encrypted(site) -> bool:
     family_spec, address_spec = site["socket"]
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+
+
+def site_globals_editable(site_id, site) -> bool:
+    # Site is a remote site of another site. Allow to edit probably pushed site
+    # specific globals when remote WATO is enabled
+    if config.is_wato_slave_site():
+        return True
+
+    # Local site: Don't enable site specific locals when no remote sites configured
+    if not config.has_wato_slave_sites():
+        return False
+
+    return site["replication"] or config.site_is_local(site_id)
 
 
 def _delete_distributed_wato_file():
@@ -688,7 +693,7 @@ def _delete_distributed_wato_file():
 
 PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
     ("site_id", str),
-    ("tar_content", six.binary_type),
+    ("tar_content", bytes),
 ])
 
 
@@ -702,8 +707,7 @@ class AutomationPushSnapshot(AutomationCommand):
     def command_name(self):
         return "push-snapshot"
 
-    def get_request(self):
-        # type: () -> PushSnapshotRequest
+    def get_request(self) -> PushSnapshotRequest:
         site_id = html.request.get_ascii_input_mandatory("siteid")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
@@ -711,11 +715,29 @@ class AutomationPushSnapshot(AutomationCommand):
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
-        return PushSnapshotRequest(site_id=site_id, tar_content=six.ensure_binary(snapshot[2]))
+        return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request):
-        # type: (PushSnapshotRequest) -> bool
+    def execute(self, request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())
+
+
+def get_effective_global_setting(site_id: SiteId, is_wato_slave_site: bool, varname: str) -> Any:
+    global_settings = load_configuration_settings()
+    default_values = ABCConfigDomain.get_all_default_globals()
+
+    if is_wato_slave_site:
+        current_settings = load_configuration_settings(site_specific=True)
+    else:
+        sites = SiteManagementFactory.factory().load_sites()
+        current_settings = sites[site_id].get("globals", {})
+
+    if varname in current_settings:
+        return current_settings[varname]
+
+    if varname in global_settings:
+        return global_settings[varname]
+
+    return default_values[varname]

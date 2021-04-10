@@ -7,15 +7,17 @@
 #define ServiceGroupMembersColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include "Column.h"
+
 #include "Filter.h"
 #include "ListColumn.h"
 #include "opids.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 class RowRenderer;
@@ -27,13 +29,13 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-class ServiceGroupMembersColumn : public ListColumn {
+class ServiceGroupMembersColumn : public deprecated::ListColumn {
 public:
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
-                              const Column::Offsets &offsets,
-                              MonitoringCore *mc, bool show_state)
-        : ListColumn(name, description, offsets)
+                              const ColumnOffsets &offsets, MonitoringCore *mc,
+                              bool show_state)
+        : deprecated::ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}
 

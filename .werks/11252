@@ -1,0 +1,11 @@
+Title: Fix reflected XSS using icon selector
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1595841912
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+

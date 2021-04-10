@@ -4,22 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import math
-from typing import List, Optional  # pylint: disable=unused-import
+from typing import List, Optional
 
 import cmk.utils.debug
-from cmk.utils.type_defs import RawAgentData  # pylint: disable=unused-import
+from cmk.utils.type_defs import AgentRawData
 
 
-def our_uptime():
-    # type: () -> float
+def our_uptime() -> float:
     return float((open("/proc/uptime").read().split()[0]))
 
 
 # replace simulator tags in output
-def process(output):
-    # type: (RawAgentData) -> RawAgentData
+def process(output: AgentRawData) -> AgentRawData:
     try:
         while True:
             i = output.find(b'%{')
@@ -30,7 +27,7 @@ def process(output):
                 break
             simfunc = output[i + 2:e]
             replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
-            output = output[:i] + replacement + output[e + 1:]
+            output = AgentRawData(output[:i] + replacement + output[e + 1:])
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
@@ -38,8 +35,8 @@ def process(output):
     return output
 
 
-def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
-    # type: (float, Optional[float]) -> int
+def agentsim_uptime(rate: float = 1.0,
+                    period: Optional[float] = None) -> int:  # period = sinus wave
     if period is None:
         return int(our_uptime() * rate)
 
@@ -48,13 +45,11 @@ def agentsim_uptime(rate=1.0, period=None):  # period = sinus wave
     return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))  # fixed: true-division
 
 
-def agentsim_enum(values, period=1):  # period is in seconds
-    # type: (List[bytes], int) -> bytes
+def agentsim_enum(values: List[bytes], period: int = 1) -> bytes:  # period is in seconds
     hit = int(our_uptime() / period % len(values))  # fixed: true-division
     return values[hit]
 
 
-def agentsim_sinus(base=50, amplitude=50, period=300):
-    # type: (int, int, int) -> int
+def agentsim_sinus(base: int = 50, amplitude: int = 50, period: int = 300) -> int:
     return int(math.sin(our_uptime() * math.pi * 2.0 / period) * amplitude +
                base)  # fixed: true-division

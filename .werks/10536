@@ -6,7 +6,7 @@ Date: 1583144666
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions the <tt>filesystem grouping patterns</tt> only matched the mount point.
 This update allows the matching of "volume name and mount point", which can be configured in

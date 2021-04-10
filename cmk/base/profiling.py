@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from pathlib import Path
 
 import cmk.base.obsolete_output as out
 from cmk.utils.log import console
@@ -18,8 +14,7 @@ _profile = None
 _profile_path = Path("profile.out")
 
 
-def enable():
-    # type: () -> None
+def enable() -> None:
     global _profile
     import cProfile  # pylint: disable=import-outside-toplevel
     _profile = cProfile.Profile()
@@ -27,13 +22,11 @@ def enable():
     console.verbose("Enabled profiling.\n")
 
 
-def enabled():
-    # type: () -> bool
+def enabled() -> bool:
     return _profile is not None
 
 
-def output_profile():
-    # type: () -> None
+def output_profile() -> None:
     if not _profile:
         return
 

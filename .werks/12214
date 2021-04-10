@@ -1,0 +1,15 @@
+Title: Fix adding label conditions in rulesets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614170161
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you used the option "Add label condition" in rulesets and entered a
+key:value pair, a new input field for another label appeared. After filling in
+the next key:value pair, an error "Only one tag allowed" was shown.
+
+This has been fixed, no new input field will be added now.

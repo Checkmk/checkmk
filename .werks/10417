@@ -6,7 +6,7 @@ Date: 1576590802
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 AWS EC2 Limits check plugins had default values for the instance limits on
 each instance type. If user configures an specific instance with different

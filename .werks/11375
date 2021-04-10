@@ -1,0 +1,29 @@
+Title: oracle_performance: Optionally new statistics for IO and system wait
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1603356453
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+With this change, new statistics for IO and system waits are added
+optionally. These statistics need to be activated through the rule "Oracle
+performance discovery". They are not automatically available since the
+activation of these statistics may produce a lot of additional metric data. So
+this data will created only, if you decide so.
+
+To use the feature, you need to replace the agent plugin with the newest
+version and activate the new services through the mentioned ruleset above. You
+will be able to add up to three new services:
+
+LI:oracle_performance.iostat_ios: IO statistics displayed as raw IOs.
+LI:oracle_performance.iostat_bytes: IO statistics displayed in bytes.
+LI:oracle_performance.waitclasses: Details about the reasons the DB spends time waiting.
+
+<b>Important</b>: As fetching statistics about IOs may take a long time in some
+configurations, these data is fetched through the agent plugin asynchronously by default with
+section name iostats. If you change this section to synchronously, which
+is recommended in most cases, please check if you are able to optimize you
+indexing if needed to avoid such problems.

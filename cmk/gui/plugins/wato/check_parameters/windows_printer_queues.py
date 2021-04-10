@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -24,10 +24,10 @@ from cmk.gui.plugins.wato import (
 
 
 def windows_printer_queues_forth(old):
-    default = {
+    default: Dict[str, Any] = {
         "warn_states": [8, 11],
         "crit_states": [9, 10],
-    }  # type: Dict[str, Any]
+    }
     if isinstance(old, tuple):
         default['levels'] = old
     if isinstance(old, dict):
@@ -102,5 +102,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersPrinters,
         item_spec=lambda: TextAscii(title=_("Printer Name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_windows_printer_queues,
-        title=lambda: _("Number of open jobs of a printer on windows"),
+        title=lambda: _("Windows printers: number of open jobs"),
     ))

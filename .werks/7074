@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 For consistency with the GUI graphs the "first value" column has
 been removed from the PDF graphs legend.

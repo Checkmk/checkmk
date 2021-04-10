@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -225,6 +225,12 @@ metric_info["battery_temp"] = {
     "color": "#ffb030",
 }
 
+metric_info["battery_seconds_remaining"] = {
+    "title": _("Battery time remaining"),
+    "unit": "s",
+    "color": "11/c",
+}
+
 metric_info["o2_percentage"] = {
     "title": _("Current O2 percentage"),
     "unit": "%",
@@ -295,6 +301,7 @@ graph_info["battery_currents"] = {
 }
 
 graph_info["battery_capacity"] = {
+    "title": _("Battery capacity"),
     "metrics": [("battery_capacity", "area"),],
     "range": (0, 100),
 }

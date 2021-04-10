@@ -1,0 +1,16 @@
+Title: Use new filter search form on all pages with tables
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1612876283
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+To stay consistent, the new filter search form was added to all pages
+containing tables. Pages with already included filter options, e.g. views, were
+excluded.
+
+The search can be found in the page menu bar and replaces the old inpage
+search, placed in the table actions.

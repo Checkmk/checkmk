@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # The etherbox supports the following sensor types on each port
 # sensor types
 # 0 = no sensor
@@ -49,11 +59,20 @@ def etherbox_get_sensor(item, item_type, info):
 
 
 def etherbox_scan(oid):
+    # 2015:
     # Older firmware version of Etherbox do not answer on
     # .1.3.6.1.2.1. (sysDescr). Yurks. We need to fetch
     # a vendor specific OID here and wait until all old devices
     # have vanished.
     return oid(".1.3.6.1.4.1.14848.2.1.1.1.0", "").startswith("Version")
+    # 2021:
+    # Have they yet? How do we know? Anyway: better would be the following,
+    # but we need to known what's in the sysDescr in the good case.
+    #return (
+    #    "etherbox" in oid(".1.3.6.1.2.1.1.1.0").lower() or  # TODO: "etherbox" is a wild guess
+    #    (not oid(".1.3.6.1.2.1.1.1.0") and
+    #     oid(".1.3.6.1.4.1.14848.2.1.1.1.0", "").startswith("Version"))
+    #)
 
 
 etherbox_info = [
@@ -78,7 +97,7 @@ def check_etherbox_temp(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "1", info)
     except Exception as error:
-        return 3, error.message
+        return 3, str(error)
 
     uom = {"0": "c", "1": "f", "2": "k"}[info[0][0][0]]
     temp = int(value) / 10.0
@@ -94,7 +113,6 @@ check_info["etherbox.temp"] = {
     "group": "temperature",
     "snmp_scan_function": etherbox_scan,
     "snmp_info": etherbox_info,
-    "includes": ["temperature.include"],
 }
 
 #.
@@ -112,7 +130,7 @@ def check_etherbox_humidity(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "3", info)
     except Exception as error:
-        return 3, error.message
+        return 3, str(error)
 
     state, infotext, perfdata = check_humidity(int(value) / 10.0, params)
     return state, "[%s] %s" % (name, infotext), perfdata
@@ -126,7 +144,6 @@ check_info["etherbox.humidity"] = {
     "group": "humidity",
     "snmp_scan_function": etherbox_scan,
     "snmp_info": etherbox_info,
-    "includes": ["humidity.include"],
 }
 
 #.
@@ -144,7 +161,7 @@ def check_etherbox_switch_contact(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "4", info)
     except Exception as error:
-        return 3, error.message
+        return 3, str(error)
 
     state = 0
     perfdata = [("switch_contact", value)]
@@ -186,7 +203,7 @@ def check_etherbox_smoke(item, no_params, info):
     try:
         name, value = etherbox_get_sensor(item, "6", info)
     except Exception as error:
-        return 3, error.message
+        return 3, str(error)
 
     state = 0
     perfdata = [("smoke", value)]

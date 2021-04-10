@@ -1,17 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 import time
-import sys
-from typing import Union  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Union
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -33,17 +28,15 @@ from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
 
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
-def _lock_file():
-    # type: () -> Path
+def _lock_file() -> Path:
     return Path(cmk.utils.paths.tmp_dir) / "cron.lastrun"
 
 
 # Load all view plugins
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -60,8 +53,7 @@ def load_plugins(force):
 # There is no output written to the user in regular cases. Exceptions
 # are written to the web log.
 @cmk.gui.pages.register("noauth:run_cron")
-def page_run_cron():
-    # type: () -> None
+def page_run_cron() -> None:
 
     lock_file = _lock_file()
 

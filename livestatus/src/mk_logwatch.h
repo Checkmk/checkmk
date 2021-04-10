@@ -7,6 +7,7 @@
 #define mk_logwatch_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <filesystem>
 #include <string>
 class Logger;

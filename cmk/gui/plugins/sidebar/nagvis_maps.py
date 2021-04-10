@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -22,7 +22,7 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("NagVis Maps")
+        return _("NagVis maps")
 
     @classmethod
     def description(cls):
@@ -134,7 +134,8 @@ class NagVisMaps(SidebarSnapin):
                                               title=map_cfg["alias"],
                                               title_url=map_cfg["url"],
                                               title_target="main",
-                                              indent=False)
+                                              indent=False,
+                                              icon="foldable_sidebar")
                 self._show_tree_nodes(children[map_name], children)
                 html.end_foldable_container()
             else:

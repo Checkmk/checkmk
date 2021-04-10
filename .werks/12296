@@ -1,0 +1,13 @@
+Title: Fix IPv6 handling in dual stack
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614679369
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Selecting IPv6 as the default of a dual stack configuration would break
+the communication with the host with the following error: "Communication
+failed: [Errno -9] Address family for hostname not supported".

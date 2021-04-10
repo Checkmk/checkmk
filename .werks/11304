@@ -1,0 +1,15 @@
+Title: mysql.connections: extended plugin to show currently open connections in addition to maximum parallel connections
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1597840833
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The plugin mysql.connections shows the maximum number of parallel connections
+since the server was started in relation to the maximum number of parallel
+connections allowed. We have extended this plugin to include the number of
+currently open connections to the server. This value is shown by the MySQL
+status variable 'Threads_connected'.

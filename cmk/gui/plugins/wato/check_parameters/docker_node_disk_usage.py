@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,9 +7,9 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    DropdownChoice,
     Filesize,
     Integer,
-    TextAscii,
     Tuple,
 )
 
@@ -21,11 +21,14 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_docker_node_disk_usage():
-    return TextAscii(
-        title=_("Type"),
-        help=_("Either Containers, Images, Local Volumes or Build Cache"),
-        allow_empty=True,
-    )
+    return DropdownChoice(title=_("Type"),
+                          help=_("Either Containers, Images, Local Volumes or Build Cache"),
+                          choices=[
+                              ("buildcache", _("Build Cache")),
+                              ("containers", _("Containers")),
+                              ("images", _("Images")),
+                              ("volumes", _("Local Volumes")),
+                          ])
 
 
 def _parameter_valuespec_docker_node_disk_usage():

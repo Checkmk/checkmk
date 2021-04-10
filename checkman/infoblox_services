@@ -11,10 +11,11 @@ description:
  if it is warning, and reports CRIT, if it fails. Otherwise the
  check goes UNKNOWN.
 
- If the service is clustered the best status of all nodes is shown.
-
 item:
  The service name.
 
 inventory:
  One service is created for each device service.
+
+cluster:
+ The best status of all nodes for a given item is shown.

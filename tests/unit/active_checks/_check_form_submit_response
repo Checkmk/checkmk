@@ -1,0 +1,284 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Connection: [close]
+      Host: [localhost]
+      User-Agent: [Python-urllib/2.7]
+    method: GET
+    uri: http://localhost/heute
+  response:
+    body: {string: !!python/unicode '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+
+        <html><head>
+
+        <title>302 Found</title>
+
+        </head><body>
+
+        <h1>Found</h1>
+
+        <p>The document has moved <a href="http://127.0.0.1:5002/heute/check_mk/">here</a>.</p>
+
+        </body></html>
+
+'}
+    headers:
+      connection: [close]
+      content-length: ['221']
+      content-security-policy: ['img-src ''self'' data: https://*.tile.openstreetmap.org/,
+          connect-src ''self'' https://crash.checkmk.com, frame-ancestors ''self'',
+          base-uri ''self'', form-action ''self'' javascript: ''unsafe-inline'', object-src
+          ''self''']
+      content-type: [text/html; charset=iso-8859-1]
+      date: ['Wed, 02 Oct 2019 11:40:05 GMT']
+      location: ['http://localhost/heute/check_mk/']
+      server: [Apache]
+    status: {code: 302, message: Found}
+- request:
+    body: null
+    headers:
+      Connection: [close]
+      Host: [localhost]
+      User-Agent: [Python-urllib/2.7]
+    method: GET
+    uri: http://localhost/heute/check_mk/
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      cache-control: [no-cache]
+      connection: [close]
+      content-length: ['0']
+      content-security-policy: ['img-src ''self'' data: https://*.tile.openstreetmap.org/,
+          connect-src ''self'' https://crash.checkmk.com, frame-ancestors ''self'',
+          base-uri ''self'', form-action ''self'' javascript: ''unsafe-inline'', object-src
+          ''self''']
+      content-type: [text/html; charset=UTF-8]
+      date: ['Wed, 02 Oct 2019 11:40:05 GMT']
+      location: ['/heute/check_mk/login.py?_origtarget=index.py']
+      server: [Apache]
+      vary: [Cookie]
+    status: {code: 302, message: FOUND}
+- request:
+    body: null
+    headers:
+      Connection: [close]
+      Host: [localhost]
+      User-Agent: [Python-urllib/2.7]
+    method: GET
+    uri: http://localhost/heute/check_mk/login.py?_origtarget=index.py
+  response:
+    body: {string: !!python/unicode "<!DOCTYPE HTML>\n<html><head><meta content=\"text/html;
+        charset=utf-8\" http-equiv=\"Content-Type\" /><meta content=\"IE=edge\" http-equiv=\"X-UA-Compatible\"
+        /><link type=\"image/ico\" href=\"themes/facelift/images/favicon.ico\" rel=\"shortcut
+        icon\" /><title>Checkmk Der Master</title><link type=\"text/css\" href=\"themes/facelift/theme-2019.10.01.css\"
+        rel=\"stylesheet\" /><script src=\"js/main_min-2019.10.01.js\" type=\"text/javascript\"></script></head><body
+        class=\"main login\"><script type=\"text/javascript\">\nif(top != self) {\n
+        \   window.top.location.href = location;\n}\n</script>\n<div id=\"login\"><div
+        id=\"login_window\"><div id=\"version\">2019.10.01</div><form id=\"form_login\"
+        name=\"login\" class=\"login\" action=\"login.py\" method=\"POST\" enctype=\"multipart/form-data\"><input
+        name=\"filled_in\" value=\"login\" autocomplete=\"off\" type=\"hidden\" /><input
+        name=\"_login\" value=\"1\" autocomplete=\"off\" type=\"hidden\" /><input
+        name=\"_origtarget\" value=\"index.py\" autocomplete=\"off\" type=\"hidden\"
+        /><label id=\"label_user\" class=\"legend\" for=\"_username\">Benutzer:</label><br/><input
+        name=\"_username\" id=\"input_user\" type=\"text\" class=\"text\" value=''
+        /><label id=\"label_pass\" class=\"legend\" for=\"_password\">Passwort:</label><br/><input
+        name=\"_password\" id=\"input_pass\" type=\"password\" class=\"text\" value=''
+        /><div id=\"button_text\"><input id=\"_login\" name=\"_login\" value=\"Login\"
+        type=\"submit\" class=\"button\" /></div></div><div id=\"foot\">Version: 2019.10.01
+        - &copy; <a href=\"https://checkmk.com\" target=\"_blank\">tribe29 GmbH</a></div></form></div><script
+        type=\"text/javascript\">\n<!--\nvar focus_obj = document.login._username;\nif
+        (focus_obj) {\n    focus_obj.focus();\n    if (focus_obj.select)\n        focus_obj.select();\n}\n//
+        -->\n\n</script>\n<script type=\"text/javascript\">\ncmk.visibility_detection.initialize();\n</script>\n</body></html>"}
+    headers:
+      cache-control: [no-cache]
+      connection: [close]
+      content-length: ['1798']
+      content-security-policy: ['img-src ''self'' data: https://*.tile.openstreetmap.org/,
+          connect-src ''self'' https://crash.checkmk.com, frame-ancestors ''self'',
+          base-uri ''self'', form-action ''self'' javascript: ''unsafe-inline'', object-src
+          ''self''']
+      content-type: [text/html; charset=UTF-8]
+      date: ['Wed, 02 Oct 2019 11:40:05 GMT']
+      server: [Apache]
+      vary: ['Cookie,Accept-Encoding']
+    status: {code: 200, message: OK}
+- request:
+    body: !!python/unicode _origtarget=wato.py&_username=cmkadmin&filled_in=login&_login=Login&_password=cmk
+    headers:
+      Connection: [close]
+      Content-Length: ['81']
+      Content-Type: [application/x-www-form-urlencoded]
+      Host: [!!python/unicode localhost]
+      User-Agent: [Python-urllib/2.7]
+    method: POST
+    uri: http://localhost/heute/check_mk/login.py
+  response:
+    body: {string: !!python/unicode ''}
+    headers:
+      cache-control: [no-cache]
+      connection: [close]
+      content-length: ['0']
+      content-security-policy: ['img-src ''self'' data: https://*.tile.openstreetmap.org/,
+          connect-src ''self'' https://crash.checkmk.com, frame-ancestors ''self'',
+          base-uri ''self'', form-action ''self'' javascript: ''unsafe-inline'', object-src
+          ''self''']
+      content-type: [text/html; charset=UTF-8]
+      date: ['Wed, 02 Oct 2019 11:40:05 GMT']
+      location: [wato.py]
+      server: [Apache]
+      set-cookie: ['auth_heute=cmkadmin:1570016405.69:4b029fbc2a6080e2360f5cdad0e0ef99;
+          HttpOnly; Path=/']
+      vary: [Cookie]
+    status: {code: 302, message: FOUND}
+- request:
+    body: null
+    headers:
+      Connection: [close]
+      Cookie: ['auth_heute=cmkadmin:1570016405.69:4b029fbc2a6080e2360f5cdad0e0ef99']
+      Host: [!!python/unicode localhost]
+      User-Agent: [Python-urllib/2.7]
+    method: GET
+    uri: http://localhost/heute/check_mk/wato.py
+  response:
+    body: {string: !!python/unicode '<!DOCTYPE HTML>
+
+        <html><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"
+        /><meta content="IE=edge" http-equiv="X-UA-Compatible" /><link type="image/ico"
+        href="themes/facelift/images/favicon.ico" rel="shortcut icon" /><title>WATO
+        - Check_MK&#x27;s Web Administration Tool</title><link type="text/css" href="themes/facelift/theme-2019.10.01.css"
+        rel="stylesheet" /><script src="js/main_min-2019.10.01.js" type="text/javascript"></script></head><body
+        class="main"><table class="header"><tr><td width="*" class="heading"><a onfocus="if
+        (this.blur) this.blur();" href="#" onclick="this.innerHTML=&#x27;Reloading...&#x27;;
+        document.location.reload();">WATO - Check_MK&#x27;s Web Administration Tool</a></td><td
+        style="min-width:240px" class=right><span id=headinfo></span><b>cmkadmin</b>
+        (admin) &nbsp;  <b id=headertime></b><a style="display:none" title="Toggle
+        context help texts" id="helpbutton" href="javascript:void(0)" onclick="cmk.help.toggle()"
+        onfocus="if (this.blur) this.blur();" class="passive" target=''''><img src="themes/facelift/images/icon_help.png"
+        align="absmiddle" class="icon iconbutton" /></a><a href="https://checkmk.com"
+        target="_blank" class="head_logo"><img src="themes/facelift/images/logo_cmk_small.png"
+        /></a></td></tr></table><hr class="header" /><div class="wato"><div class="contextlinks"><div
+        style="display:block;" class="contextlink"><a href="wato.py?folder=&amp;mode=changelog"><img
+        src="themes/facelift/images/icon_wato_nochanges.png" class="icon inline" title=''''
+        /><span>No changes</span></a></div><div class="end"></div></div><div class="mainmenu"><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=agents"><img
+        src="themes/facelift/images/icon_agents.png" align="absmiddle" title="Monitoring
+        Agents" class="icon" /><div class="title">Monitoring Agents</div><div class="subtitle">Package
+        customized monitoring agents for Windows, Linux and other OSes</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=folder"><img
+        src="themes/facelift/images/icon_folder.png" align="absmiddle" title="Hosts"
+        class="icon" /><div class="title">Hosts</div><div class="subtitle">Manage
+        monitored hosts and services and the hosts&#x27; folder structure.</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=tags"><img
+        src="themes/facelift/images/icon_tag.png" align="absmiddle" title="Tags" class="icon"
+        /><div class="title">Tags</div><div class="subtitle">Tags can be used to classify
+        hosts and services in a flexible way.</div></a><a onfocus="if (this.blur)
+        this.blur();" href="wato.py?folder=&amp;mode=globalvars"><img src="themes/facelift/images/icon_configuration.png"
+        align="absmiddle" title="Global Settings" class="icon" /><div class="title">Global
+        Settings</div><div class="subtitle">Global settings for Check_MK, Multisite
+        and the monitoring core.</div></a><a onfocus="if (this.blur) this.blur();"
+        href="wato.py?folder=&amp;mode=ruleeditor"><img src="themes/facelift/images/icon_rulesets.png"
+        align="absmiddle" title="Host &amp; Service Parameters" class="icon" /><div
+        class="title">Host &amp; Service Parameters</div><div class="subtitle">Check
+        parameters and other configuration variables on hosts and services</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=static_checks"><img
+        src="themes/facelift/images/icon_static_checks.png" align="absmiddle" title="Manual
+        Checks" class="icon" /><div class="title">Manual Checks</div><div class="subtitle">Configure
+        fixed checks without using service discovery</div></a><a onfocus="if (this.blur)
+        this.blur();" href="wato.py?folder=&amp;mode=check_plugins"><img src="themes/facelift/images/icon_check_plugins.png"
+        align="absmiddle" title="Check Plugins" class="icon" /><div class="title">Check
+        Plugins</div><div class="subtitle">Browse the catalog of all check plugins,
+        create static checks</div></a><a onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=host_groups"><img
+        src="themes/facelift/images/icon_hostgroups.png" align="absmiddle" title="Host
+        &amp; Service Groups" class="icon" /><div class="title">Host &amp; Service
+        Groups</div><div class="subtitle">Organize your hosts and services in groups
+        independent of the tree structure.</div></a><a onfocus="if (this.blur) this.blur();"
+        href="wato.py?folder=&amp;mode=users"><img src="themes/facelift/images/icon_users.png"
+        align="absmiddle" title="Users" class="icon" /><div class="title">Users</div><div
+        class="subtitle">Manage users of the monitoring system.</div></a><a onfocus="if
+        (this.blur) this.blur();" href="wato.py?folder=&amp;mode=roles"><img src="themes/facelift/images/icon_roles.png"
+        align="absmiddle" title="Roles &amp; Permissions" class="icon" /><div class="title">Roles
+        &amp; Permissions</div><div class="subtitle">User roles are configurable sets
+        of permissions.</div></a><a onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=contact_groups"><img
+        src="themes/facelift/images/icon_contactgroups.png" align="absmiddle" title="Contact
+        Groups" class="icon" /><div class="title">Contact Groups</div><div class="subtitle">Contact
+        groups are used to assign persons to hosts and services</div></a><a onfocus="if
+        (this.blur) this.blur();" href="wato.py?folder=&amp;mode=notifications"><img
+        src="themes/facelift/images/icon_notifications.png" align="absmiddle" title="Notifications"
+        class="icon" /><div class="title">Notifications</div><div class="subtitle">Rules
+        for the notification of contacts about host and service problems</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=timeperiods"><img
+        src="themes/facelift/images/icon_timeperiods.png" align="absmiddle" title="Time
+        Periods" class="icon" /><div class="title">Time Periods</div><div class="subtitle">Timeperiods
+        restrict notifications and other things to certain periods of the day.</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=mkeventd_rule_packs"><img
+        src="themes/facelift/images/icon_mkeventd.png" align="absmiddle" title="Event
+        Console" class="icon" /><div class="title">Event Console</div><div class="subtitle">Manage
+        event classification and correlation rules for the Event Console</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=bi_packs"><img
+        src="themes/facelift/images/icon_aggr.svg" align="absmiddle" title="Business
+        Intelligence" class="icon" /><div class="title">Business Intelligence</div><div
+        class="subtitle">Configuration of Check_MK&#x27;s Business Intelligence component.</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=sites"><img
+        src="themes/facelift/images/icon_sites.png" align="absmiddle" title="Distributed
+        Monitoring" class="icon" /><div class="title">Distributed Monitoring</div><div
+        class="subtitle">Distributed monitoring using multiple Check_MK sites</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=backup"><img
+        src="themes/facelift/images/icon_backup.png" align="absmiddle" title="Backup"
+        class="icon" /><div class="title">Backup</div><div class="subtitle">Make backups
+        of your whole site and restore previous backups.</div></a><a onfocus="if (this.blur)
+        this.blur();" href="wato.py?folder=&amp;mode=passwords"><img src="themes/facelift/images/icon_passwords.png"
+        align="absmiddle" title="Passwords" class="icon" /><div class="title">Passwords</div><div
+        class="subtitle">Store and share passwords for later use in checks.</div></a><a
+        onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=alert_handlers"><img
+        src="themes/facelift/images/icon_alert_handlers.png" align="absmiddle" title="Alert
+        Handlers" class="icon" /><div class="title">Alert Handlers</div><div class="subtitle">Rules
+        for automatic execution of scripts upon alerts</div></a><a onfocus="if (this.blur)
+        this.blur();" href="wato.py?folder=&amp;mode=analyze_config"><img src="themes/facelift/images/icon_analyze_config.png"
+        align="absmiddle" title="Analyze configuration" class="icon" /><div class="title">Analyze
+        configuration</div><div class="subtitle">See hints how to improve your Check_MK
+        installation</div></a><a onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=background_jobs_overview"><img
+        src="themes/facelift/images/icon_background_jobs.png" align="absmiddle" title="Background
+        jobs" class="icon" /><div class="title">Background jobs</div><div class="subtitle">Manage
+        longer running tasks in the Check_MK GUI</div></a><a onfocus="if (this.blur)
+        this.blur();" href="wato.py?folder=&amp;mode=mkps"><img src="themes/facelift/images/icon_mkps.png"
+        align="absmiddle" title="Extension Packages" class="icon" /><div class="title">Extension
+        Packages</div><div class="subtitle">Manage and create Check_MK extension packages
+        (MKPs).</div></a><a onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=pattern_editor"><img
+        src="themes/facelift/images/icon_analyze.png" align="absmiddle" title="Logfile
+        Pattern Analyzer" class="icon" /><div class="title">Logfile Pattern Analyzer</div><div
+        class="subtitle">Analyze logfile pattern rules and validate logfile patterns
+        against custom text.</div></a><a onfocus="if (this.blur) this.blur();" href="wato.py?folder=&amp;mode=icons"><img
+        src="themes/facelift/images/icon_icons.png" align="absmiddle" title="Custom
+        Icons" class="icon" /><div class="title">Custom Icons</div><div class="subtitle">Upload
+        your own icons that can be used in views or custom actions</div></a></div></div><table
+        class="footer"><tr><td class="left"><a target="_top" title="URL to this frame"
+        href="wato.py" onfocus="if (this.blur) this.blur();" class="inline"><img src="themes/facelift/images/icon_frameurl.png"
+        align="absmiddle" class="icon iconbutton" /></a><a target="_top" title="URL
+        to this page including sidebar" href="index.py?start_url=wato.py" onfocus="if
+        (this.blur) this.blur();" class="inline"><img src="themes/facelift/images/icon_pageurl.png"
+        align="absmiddle" class="icon iconbutton" /></a></td><td class="middle"></td><td
+        class="right"><div id="foot_refresh" style="display:none;">refresh: <div id="foot_refresh_time"></div>
+        secs</div></td></tr></table><script type="text/javascript">
+
+        cmk.visibility_detection.initialize();
+
+        </script>
+
+        </body></html>'}
+    headers:
+      cache-control: [no-cache]
+      connection: [close]
+      content-length: ['10244']
+      content-security-policy: ['img-src ''self'' data: https://*.tile.openstreetmap.org/,
+          connect-src ''self'' https://crash.checkmk.com, frame-ancestors ''self'',
+          base-uri ''self'', form-action ''self'' javascript: ''unsafe-inline'', object-src
+          ''self''']
+      content-type: [text/html; charset=UTF-8]
+      date: ['Wed, 02 Oct 2019 11:40:05 GMT']
+      server: [Apache]
+      set-cookie: ['auth_heute=cmkadmin:1570016405.74:0358329028f9a904482c945122505908;
+          HttpOnly; Path=/']
+      vary: ['Cookie,Accept-Encoding']
+    status: {code: 200, message: OK}
+version: 1

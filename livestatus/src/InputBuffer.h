@@ -7,6 +7,7 @@
 #define InputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
 #include <iosfwd>

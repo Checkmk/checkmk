@@ -1,0 +1,14 @@
+Title: Check for unique keys of host labels in ruleset conditions
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1598877496
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If you used host labels like "my_key:my_value" and "my_key:my_next_value" in
+ruleset conditions, the rule was saved with the last "key:value" pair. From now
+on you will be warned, if you try to configure the same key for different host
+labels.

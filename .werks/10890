@@ -6,7 +6,7 @@ Date: 1582012817
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk adds very basic support for Proxmox installations. Currently only the version of the installation and the subscription status of each managed node is being returned by a special agent called 'agent_proxmox' and checked against by the provided check plugins 'proxmox_version' and 'proxmox_subscription'. The agent can be configured via a WATO rule, initial manpages are provided.
 

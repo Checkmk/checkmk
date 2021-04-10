@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,18 +6,17 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
-from typing import Dict, List, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Dict, List, Tuple, Union
 
 from cmk.utils.i18n import _
 
-# TODO: Investigate Check_MK code for more defines and other places
+# TODO: Investigate Checkmk code for more defines and other places
 #       where similar strucures are defined and use the things from
 #       here or move new stuff to this module.
 
 
 # TODO: Rename to service_state_names()
-def core_state_names():
-    # type: () -> Dict[int, Text]
+def core_state_names() -> Dict[int, str]:
     return {
         -1: _("NODATA"),
         0: _("OK"),
@@ -27,13 +26,11 @@ def core_state_names():
     }
 
 
-def service_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+def service_state_name(state_num: int, deflt: str = u"") -> str:
     return core_state_names().get(state_num, deflt)
 
 
-def short_service_state_names():
-    # type: () -> Dict[int, Text]
+def short_service_state_names() -> Dict[int, str]:
     return {
         -1: _("PEND"),
         0: _("OK"),
@@ -43,13 +40,11 @@ def short_service_state_names():
     }
 
 
-def short_service_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+def short_service_state_name(state_num: int, deflt: str = u"") -> str:
     return short_service_state_names().get(state_num, deflt)
 
 
-def host_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+def host_state_name(state_num: int, deflt: str = u"") -> str:
     states = {
         0: _("UP"),
         1: _("DOWN"),
@@ -58,26 +53,22 @@ def host_state_name(state_num, deflt=u""):
     return states.get(state_num, deflt)
 
 
-def short_host_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+def short_host_state_name(state_num: int, deflt: str = u"") -> str:
     states = {0: _("UP"), 1: _("DOWN"), 2: _("UNREACH")}
     return states.get(state_num, deflt)
 
 
-def weekday_name(day_num):
-    # type: (int) -> Text
+def weekday_name(day_num: int) -> str:
     """Returns the human readable day name of a given weekday number (starting with 0 at Monday)"""
     return weekdays()[day_num]
 
 
-def weekday_ids():
-    # type: () -> List[str]
+def weekday_ids() -> List[str]:
     """Returns a list of the internal week day names"""
     return [d[0] for d in weekdays_by_name()]
 
 
-def weekdays():
-    # type: () -> Dict[int, Text]
+def weekdays() -> Dict[int, str]:
     """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
         0: _("Monday"),
@@ -90,8 +81,7 @@ def weekdays():
     }
 
 
-def weekdays_by_name():
-    # type: () -> List[Tuple[str, Text]]
+def weekdays_by_name() -> List[Tuple[str, str]]:
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
         ("monday", _("Monday")),
@@ -104,8 +94,7 @@ def weekdays_by_name():
     ]
 
 
-def month_name(month_num):
-    # type: (int) -> Text
+def month_name(month_num: int) -> str:
     """Returns the human readable month name of a given month number
     (starting with 0 = January)"""
     return [
@@ -124,15 +113,13 @@ def month_name(month_num):
     ][month_num]
 
 
-def interface_oper_state_name(state_num, deflt=u""):
-    # type: (int, Text) -> Text
+def interface_oper_state_name(state_num: int, deflt: str = u"") -> str:
     return interface_oper_states().get(state_num, deflt)
 
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
-def interface_oper_states():
-    # type: () -> Dict[Union[Text, str, int], Text]
+def interface_oper_states() -> Dict[Union[str, int], str]:
     return {
         1: _("up"),
         2: _("down"),
@@ -142,14 +129,12 @@ def interface_oper_states():
         6: _("not present"),
         7: _("lower layer down"),
         8: _("degraded"),  # artificial, not official
-        9: _("admin down"),  # artificial, not official
     }
 
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
-def interface_port_types():
-    # type: () -> Dict[Union[Text, str, int], Text]
+def interface_port_types() -> Dict[Union[str, int], str]:
     return {
         1: u"other",
         2: u"regular1822",

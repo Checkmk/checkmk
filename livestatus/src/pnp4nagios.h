@@ -7,6 +7,7 @@
 #define pnp4nagios_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
 #ifndef CMC
 class MonitoringCore;

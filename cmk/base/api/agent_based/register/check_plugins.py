@@ -5,97 +5,64 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
-from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Generator, List, Optional, Type, TypeVar, Union)
-import sys
 import functools
-import inspect
-import itertools
+from typing import Any, Callable, Dict, Generator, List, Optional
 
-if sys.version_info[0] >= 3:
-    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
-else:
-    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.checking_types import (  # pylint: disable=unused-import
-    management_board, CheckPlugin, Service, Result, Metric, IgnoreResults)
+from cmk.base.api.agent_based.checking_classes import (
+    CheckFunction,
+    CheckPlugin,
+    DiscoveryFunction,
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.api.agent_based.register.utils import (
+    create_subscribed_sections,
+    ITEM_VARIABLE,
+    RuleSetType,
+    validate_function_arguments,
+    validate_default_parameters,
+    validate_ruleset_type,
+)
 
-ITEM_VARIABLE = "%s"
+MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
 
-def _validate_service_name(plugin_name, service_name):
-    # type: (str, str) -> None
+def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> None:
     if not isinstance(service_name, str):
-        raise TypeError("[%s]: service_name must be str, got %r" % (plugin_name, service_name))
+        raise TypeError("service_name must be str, got %r" % (service_name,))
     if not service_name:
-        raise ValueError("[%s]: service_name must not be empty" % plugin_name)
+        raise ValueError("service_name must not be empty")
     if service_name.count(ITEM_VARIABLE) not in (0, 1):
-        raise ValueError("[%s]: service_name must contain %r at most once" %
-                         (plugin_name, ITEM_VARIABLE))
+        raise ValueError("service_name must contain %r at most once" % ITEM_VARIABLE)
+
+    if plugin_name.is_management_name() is not service_name.startswith(MANAGEMENT_DESCR_PREFIX):
+        raise ValueError(
+            "service name and description inconsistency: Please neither have your plugins "
+            "name start with %r, nor the description with %r. In the rare case that you want to "
+            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            " you must do both of the above." %
+            (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX))
 
 
-def _requires_item(service_name):
-    # type: (str) -> bool
+def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
-    return ITEM_VARIABLE in service_name
-
-
-def _validate_management_board_option(plugin_name, management_board_option):
-    # type: (str, Optional[management_board]) -> None
-    if management_board_option is None:
-        return
-    if not isinstance(management_board_option, management_board):
-        raise TypeError("[%s]: 'management_board' must be one of %s" %
-                        (plugin_name, ', '.join(str(i) for i in management_board)))
-
-
-def _create_sections(sections, plugin_name):
-    # type: (Optional[List[str]], PluginName) -> List[PluginName]
-    if sections is None:
-        return [plugin_name]
-    if not isinstance(sections, list):
-        raise TypeError("[%s]: 'sections' must be a list of str, got %r" % (plugin_name, sections))
-    if not sections:
-        raise ValueError("[%s]: 'sections' must not be empty" % plugin_name)
-    return [PluginName(n) for n in sections]
-
-
-def _validate_function_args(plugin_name, func_type, function, has_item, has_params, sections):
-    # type: (str, str, Callable, bool, bool, List[PluginName]) -> None
-    """Validate the functions signature and type"""
-
-    if not inspect.isgeneratorfunction(function):
-        raise TypeError("[%s]: %s function must be a generator function" % (plugin_name, func_type))
-
-    parameters = enumerate(signature(function).parameters, 1)
-    if has_item:
-        pos, name = next(parameters)
-        if name != "item":
-            raise TypeError("[%s]: %s function must have 'item' as %d. argument, got %s" %
-                            (plugin_name, func_type, pos, name))
-    if has_params:
-        pos, name = next(parameters)
-        if name != "params":
-            raise TypeError("[%s]: %s function must have 'params' as %d. argument, got %s" %
-                            (plugin_name, func_type, pos, name))
-
-    if len(sections) == 1:
-        pos, name = next(parameters)
-        if name != 'section':
-            raise TypeError("[%s]: %s function must have 'section' as %d. argument, got %r" %
-                            (plugin_name, func_type, pos, name))
-    else:
-        for (pos, name), section in itertools.zip_longest(parameters, sections):
-            if name != "section_%s" % section:
-                raise TypeError("[%s]: %s function must have 'section_%s' as %d. argument, got %r" %
-                                (plugin_name, func_type, section, pos, name))
+    try:
+        return ITEM_VARIABLE in service_name
+    except TypeError:
+        # _validate_service_name will fail with a better message
+        return False
 
 
 def _filter_discovery(
-        generator,  # type: Callable[..., Generator[Any, None, None]]
-):
-    # type: (...) -> Callable[..., Generator[Service, None, None]]
+    generator: Callable[..., Generator[Any, None, None]],
+    requires_item: bool,
+    validate_item: bool,
+) -> DiscoveryFunction:
     """Only let Services through
 
     This allows for better typing in base code.
@@ -105,15 +72,14 @@ def _filter_discovery(
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
+            if validate_item and requires_item is (element.item is None):
+                raise TypeError("unexpected type of item discovered: %r" % type(element.item))
             yield element
 
     return filtered_generator
 
 
-def _filter_check(
-        generator,  # type: Callable[..., Generator[Any, None, None]]
-):
-    # type: (...) -> Callable[..., Generator[Union[Result, Metric, IgnoreResults], None, None]]
+def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> CheckFunction:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.
@@ -128,139 +94,157 @@ def _filter_check(
     return filtered_generator
 
 
-def _validate_default_parameters(plugin_name, params_type, ruleset_name, default_parameters):
-    # type: (str, str, Optional[str], Optional[Dict]) -> None
-    if default_parameters is None:
-        if ruleset_name is None:
-            return
-        raise TypeError("[%s]: missing default %s parameters for ruleset %s" %
-                        (plugin_name, params_type, ruleset_name))
+def _validate_kwargs(
+    *,
+    plugin_name: CheckPluginName,
+    subscribed_sections: List[ParsedSectionName],
+    service_name: str,
+    requires_item: bool,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[Dict],
+    discovery_ruleset_name: Optional[str],
+    discovery_ruleset_type: RuleSetType,
+    check_function: Callable,
+    check_default_parameters: Optional[Dict],
+    check_ruleset_name: Optional[str],
+    cluster_check_function: Optional[Callable],
+) -> None:
+    _validate_service_name(plugin_name, service_name)
 
-    if not isinstance(default_parameters, dict):
-        raise TypeError("[%s]: default %s parameters must be dict" % (plugin_name, params_type))
+    # validate discovery arguments
+    validate_default_parameters(
+        "discovery",
+        discovery_ruleset_name,
+        discovery_default_parameters,
+    )
+    validate_ruleset_type(discovery_ruleset_type)
+    validate_function_arguments(
+        type_label="discovery",
+        function=discovery_function,
+        has_item=False,
+        default_params=discovery_default_parameters,
+        sections=subscribed_sections,
+    )
+    # validate check arguments
+    validate_default_parameters(
+        "check",
+        check_ruleset_name,
+        check_default_parameters,
+    )
+    validate_function_arguments(
+        type_label="check",
+        function=check_function,
+        has_item=requires_item,
+        default_params=check_default_parameters,
+        sections=subscribed_sections,
+    )
 
-    if ruleset_name is None:
-        raise TypeError("[%s]: missing ruleset name for default %s parameters" %
-                        (plugin_name, params_type))
-
-
-def _validate_discovery_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
-    if ruleset_name is None:
+    if cluster_check_function is None:
         return
 
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
+    validate_function_arguments(
+        type_label="cluster_check",
+        function=cluster_check_function,
+        has_item=requires_item,
+        default_params=check_default_parameters,
+        sections=subscribed_sections,
+    )
 
 
-def _validate_check_ruleset(ruleset_name, default_parameters):
-    # type: (Optional[str], Optional[dict]) -> None
-    if ruleset_name is None:
-        return
+def unfit_for_clustering_wrapper(check_function):
+    """Return a cluster_check_function that displays a generic warning"""
+    # copy signature of check_function
+    @functools.wraps(check_function, ("__attributes__",))
+    def unfit_for_clustering(*args, **kwargs):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=("This service is not ready to handle clustered data. "
+                     "Please change your configuration."),
+        )
 
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
+    return unfit_for_clustering
 
 
 def create_check_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        sections=None,  # type: Optional[List[str]]
-        service_name=None,  # type: Optional[str]
-        management_board_option=None,  # type: Optional[management_board]
-        discovery_function=None,  # type: Callable
-        discovery_default_parameters=None,  # type: Optional[Dict]
-        discovery_ruleset_name=None,  # type: Optional[str]
-        check_function=None,  # type: Callable
-        check_default_parameters=None,  # type: Optional[Dict]
-        check_ruleset_name=None,  # type: Optional[str]
-        cluster_check_function=None,  # type:  Optional[Callable]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
-):
-    # type: (...) -> CheckPlugin
+    *,
+    name: str,
+    sections: Optional[List[str]] = None,
+    service_name: str,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[Dict] = None,
+    discovery_ruleset_name: Optional[str] = None,
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
+    check_function: Callable,
+    check_default_parameters: Optional[Dict] = None,
+    check_ruleset_name: Optional[str] = None,
+    cluster_check_function: Optional[Callable] = None,
+    module: Optional[str] = None,
+    validate_item: bool = True,
+    validate_kwargs: bool = True,
+) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): unhack this CMK-3983
-    if (name is None or service_name is None or discovery_function is None or
-            check_function is None or forbidden_names is None or cluster_check_function is None):
-        raise TypeError()
+    plugin_name = CheckPluginName(name)
 
-    plugin_name = PluginName(name, forbidden_names)
+    subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
-    subscribed_sections = _create_sections(sections, plugin_name)
-
-    _validate_service_name(name, service_name)
     requires_item = _requires_item(service_name)
 
-    _validate_management_board_option(name, management_board_option)
+    if validate_kwargs:
+        _validate_kwargs(
+            plugin_name=plugin_name,
+            subscribed_sections=subscribed_sections,
+            service_name=service_name,
+            requires_item=requires_item,
+            discovery_function=discovery_function,
+            discovery_default_parameters=discovery_default_parameters,
+            discovery_ruleset_name=discovery_ruleset_name,
+            discovery_ruleset_type=discovery_ruleset_type,
+            check_function=check_function,
+            check_default_parameters=check_default_parameters,
+            check_ruleset_name=check_ruleset_name,
+            cluster_check_function=cluster_check_function,
+        )
 
-    # validate discovery arguments
-    _validate_default_parameters(
-        name,
-        "discovery",
-        discovery_ruleset_name,
-        discovery_default_parameters,
-    )
-    _validate_discovery_ruleset(
-        discovery_ruleset_name,
-        discovery_default_parameters,
-    )
-    _validate_function_args(
-        name,
-        "discovery",
-        discovery_function,
-        False,  # no item
-        discovery_ruleset_name is not None,
-        subscribed_sections,
-    )
+    disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
+    disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
-    # validate check arguments
-    _validate_default_parameters(
-        name,
-        "check",
-        check_ruleset_name,
-        check_default_parameters,
-    )
-    _validate_check_ruleset(
-        check_ruleset_name,
-        check_default_parameters,
-    )
-    _validate_function_args(
-        name,
-        "check",
-        check_function,
-        requires_item,
-        check_ruleset_name is not None,
-        subscribed_sections,
-    )
-    _validate_function_args(
-        name,
-        "cluster check",
-        cluster_check_function,
-        requires_item,
-        check_ruleset_name is not None,
-        subscribed_sections,
-    )
+    cluster_check_function = (unfit_for_clustering_wrapper(check_function)
+                              if cluster_check_function is None else
+                              _filter_check(cluster_check_function))
 
     return CheckPlugin(
-        plugin_name,
-        subscribed_sections,
-        service_name,
-        management_board_option,
-        _filter_discovery(discovery_function),
-        discovery_default_parameters,
-        None if discovery_ruleset_name is None else PluginName(discovery_ruleset_name),
-        _filter_check(check_function),
-        check_default_parameters,
-        None if check_ruleset_name is None else PluginName(check_ruleset_name),
-        _filter_check(cluster_check_function),
+        name=plugin_name,
+        sections=subscribed_sections,
+        service_name=service_name,
+        discovery_function=disco_func,
+        discovery_default_parameters=discovery_default_parameters,
+        discovery_ruleset_name=disco_ruleset_name,
+        discovery_ruleset_type=("merged"
+                                if discovery_ruleset_type is RuleSetType.MERGED else "all"),
+        check_function=_filter_check(check_function),
+        check_default_parameters=check_default_parameters,
+        check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
+        cluster_check_function=cluster_check_function,
+        module=module,
+    )
+
+
+def management_plugin_factory(original_plugin: CheckPlugin) -> CheckPlugin:
+    return CheckPlugin(
+        original_plugin.name.create_management_name(),
+        original_plugin.sections,
+        "%s%s" % (MANAGEMENT_DESCR_PREFIX, original_plugin.service_name),
+        original_plugin.discovery_function,
+        original_plugin.discovery_default_parameters,
+        original_plugin.discovery_ruleset_name,
+        original_plugin.discovery_ruleset_type,
+        original_plugin.check_function,
+        original_plugin.check_default_parameters,
+        original_plugin.check_ruleset_name,
+        original_plugin.cluster_check_function,
+        original_plugin.module,
     )

@@ -1,23 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 import cmk.gui.plugins.visuals.filters
-from cmk.gui.type_defs import Visual  # pylint: disable=unused-import
+from cmk.gui.type_defs import Visual
 
 
 def test_get_filter():
@@ -49,7 +48,6 @@ def _expected_visual_types():
         'ident_attr': 'name',
         'multicontext_links': False,
         'plural_title': u'dashboards',
-        'popup_add_handler': 'popup_list_dashboards',
         'show_url': 'dashboard.py',
         'title': u'dashboard',
     },
@@ -58,7 +56,6 @@ def _expected_visual_types():
         'ident_attr': 'view_name',
         'multicontext_links': False,
         'plural_title': u'views',
-        'popup_add_handler': None,
         'show_url': 'view.py',
         'title': u'view',
     },
@@ -71,7 +68,6 @@ def _expected_visual_types():
         'ident_attr': 'name',
         'multicontext_links': True,
         'plural_title': u'reports',
-        'popup_add_handler': 'popup_list_reports',
         'show_url': 'report.py',
         'title': u'report',
         },
@@ -93,7 +89,6 @@ def test_registered_visual_type_attributes():
 
         # TODO: Add tests for the results of these functions
         #assert plugin.add_visual_handler == spec["add_visual_handler"]
-        #assert plugin.popup_add_handler == spec["popup_add_handler"]
         assert plugin.ident_attr == spec["ident_attr"]
         assert plugin.multicontext_links == spec["multicontext_links"]
         assert plugin.plural_title == spec["plural_title"]
@@ -101,7 +96,7 @@ def test_registered_visual_type_attributes():
         assert plugin.title == spec["title"]
 
 
-expected_filters = {
+expected_filters: Dict[str, Dict[str, Any]] = {
     'address_families': {
         'comment': None,
         'filter_class': 'FilterAddressFamilies',
@@ -970,6 +965,23 @@ expected_filters = {
         'link_columns': [],
         'sort_index': 102,
         'title': u'Empty Hostgroup Visibilitiy'
+    },
+    'hostsgroups_having_problems': {
+        'comment': u'Selection of multiple host groups',
+        'filter_class': 'FilterHostgroupProblems',
+        'htmlvars': [
+            'hostgroups_having_hosts_down',
+            'hostgroups_having_hosts_pending',
+            'hostgroups_having_hosts_unreach',
+            'hostgroups_having_services__warn',
+            'hostgroups_having_services_crit',
+            'hostgroups_having_services_pending',
+            'hostgroups_having_services_unknown'
+            ],
+        'info': 'hostgroup',
+        'link_columns': [],
+        'sort_index': 103,
+        'title': u'Hostgroups having certain problems'
     },
     'hostnameoralias': {
         'column': ['host_alias', 'host_name'],
@@ -3461,7 +3473,7 @@ expected_filters = {
         'sort_index': 10,
         'title': u'WATO Folder'
     },
-}  # type: Dict[str, Dict[str, Any]]
+}
 
 
 # These tests make adding new elements needlessly painful.
@@ -3471,8 +3483,7 @@ def test_registered_filters(load_plugins):
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
-    for filter_class in cmk.gui.plugins.visuals.utils.filter_registry.values():
-        filt = filter_class()
+    for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]
@@ -3482,12 +3493,14 @@ def test_registered_filters(load_plugins):
         assert sorted(filt.link_columns) == sorted(spec["link_columns"])
         assert sorted(filt.htmlvars) == sorted(spec["htmlvars"])
         if "column" in spec:
-            assert filt.column == spec["column"]
+            # FIXME: ugly getattr so that mypy doesn't complain about missing attribute column
+            column = getattr(filt, "column")
+            assert column == spec["column"]
 
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
 
-expected_infos = {
+expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {
         'single_spec': [('aggr_name', 'TextUnicode')],
         'title': u'BI Aggregation',
@@ -3662,7 +3675,7 @@ expected_infos = {
         'title': u'Service Group',
         'title_plural': u'Service Groups'
     },
-}  # type: Dict[str, Dict[str, Any]]
+}
 
 
 # These tests make adding new elements needlessly painful.
@@ -3695,51 +3708,51 @@ def test_registered_info_attributes():
         assert info.single_site == spec.get("single_site", True)
 
 
-@pytest.mark.parametrize("visual,only_count,expected_vars", [
+@pytest.mark.parametrize("visual,expected_vars", [
     # No single context, no filter
-    ({"single_infos": [], "context": {}}, False, []),
+    ({"single_infos": [], "context": {}}, []),
     # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, False, []),
+    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
     # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
     # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
     # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, False, [("host", "abc")]),
+    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
     # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, False, [('blub', 'ble'), ('host', 'abc')]),
+    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
     # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, False, []),
+    ({"single_infos": ["host"], "context": {}}, []),
     # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}}, False,
+    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", "äää")]),
 ])
-def test_add_context_to_uri_vars(register_builtin_html, visual, only_count, expected_vars):
+def test_add_context_to_uri_vars(register_builtin_html, visual, expected_vars):
     with html.stashed_vars():
-        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"], only_count)
+        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"])
         assert sorted(list(html.request.itervars())) == sorted(expected_vars)
 
 
-@pytest.mark.parametrize("visual,only_count,expected_vars", [
+@pytest.mark.parametrize("visual,expected_vars", [
     # No single context, no filter
-    ({"single_infos": [], "context": {}}, False, []),
+    ({"single_infos": [], "context": {}}, []),
     # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, False, []),
+    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
     # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
     # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, False, [('filter_var', 'eee')]),
+    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
     # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, False, [("host", "abc")]),
+    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
     # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, False, [('blub', 'ble'), ('host', 'abc')]),
+    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
     # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, False, []),
+    ({"single_infos": ["host"], "context": {}}, []),
     # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}}, False,
+    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", u"äää")]),
 ])
-def test_get_context_uri_vars(register_builtin_html, visual, only_count, expected_vars):
+def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
     context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -3749,10 +3762,14 @@ def test_get_context_uri_vars(register_builtin_html, visual, only_count, expecte
     (["host"], [], [("abc", "dingeling")], {}),
     # Single host context
     (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    # Single host context with site hint
+    # -> add site and siteopt (Why? Was like this in 1.6...)
+    (["host"], ["host"], [("host", "aaa"),("site", "abc")], {"host": "aaa", "site": {"site": "abc"},
+        "siteopt": {"site": "abc"}}),
     # Single host context -> not set
     (["host"], ["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {"host": ""}),
+    (["host"], ["host"], [("host", "")], {}),
     # Single host context with non-ascii char
     (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
     # Single host context, multiple services
@@ -3798,19 +3815,16 @@ def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_co
     assert context == expected_context
 
 
-def test_verify_single_infos_has_context():
-    visual = {"single_infos": ["host"], "context": {"host": "abc"},}  # type: Visual
-    visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_has_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
 
 
-def test_verify_single_infos_missing_context():
-    visual = {"single_infos": ["host"], "context": {},}  # type: Visual
-    with pytest.raises(MKUserError, match="Missing context information"):
-        visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_missing_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
 def test_context_uri_vars(register_builtin_html):
-    visual = {
+    visual: Visual = {
         "single_infos": ["host"],
         "context": {
             "host": "abc",
@@ -3818,14 +3832,14 @@ def test_context_uri_vars(register_builtin_html):
                 "ag": "1"
             },
         },
-    }  # type: Visual
+    }
 
-    visual2 = {
+    visual2: Visual = {
         "single_infos": [],
         "context": {
             "hu_filter": {"hu": "hu"},
         },
-    }  # type: Visual
+    }
 
     html.request.set_var("bla", "blub")
     assert html.request.var("bla") == "blub"

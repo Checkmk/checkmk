@@ -7,7 +7,9 @@
 #define TableCrashReports_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Table.h"
 
 class MonitoringCore;
@@ -18,7 +20,7 @@ public:
     explicit TableCrashReports(MonitoringCore *mc);
     [[nodiscard]] std::string name() const final;
     [[nodiscard]] std::string namePrefix() const final;
-    void answerQuery(Query *) final;
+    void answerQuery(Query *query) final;
 };
 
 #endif  // TableCrashReports_h

@@ -1,0 +1,13 @@
+Title: Icon upload: Add missing transaction validation
+Class: security
+Compatible: compat
+Component: wato
+Date: 1593760460
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The transaction IDs (CSRF tokens) were not validated while processing the upload of icons.
+This alone is not a security hole, rather a lack of validation of this call.

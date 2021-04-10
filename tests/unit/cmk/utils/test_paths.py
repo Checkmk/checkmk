@@ -1,21 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error,unused-import
+from pathlib import Path
 
 from testlib import repo_path, import_module
 
 pathlib_paths = [
-    "core_discovered_host_labels_dir",
+    "core_helper_config_dir",
     "base_discovered_host_labels_dir",
     "discovered_host_labels_dir",
     "piggyback_dir",
@@ -27,6 +22,7 @@ pathlib_paths = [
     "mib_dir",
     "crash_dir",
     "optional_packages_dir",
+    "disabled_packages_dir",
     "local_share_dir",
     "local_checks_dir",
     "local_notifications_dir",
@@ -44,12 +40,20 @@ pathlib_paths = [
     "local_agent_based_plugins_dir",
     "diagnostics_dir",
     "site_config_dir",
+    "license_usage_dir",
 ]
 
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
-        if not var.startswith("_") and var not in ('Path', 'os', 'sys', 'Union'):
+        if not var.startswith("_") and not var.startswith("make_") and var not in (
+                'ConfigSerial',
+                'Path',
+                'OptionalConfigSerial',
+                'os',
+                'sys',
+                'Union',
+        ):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)

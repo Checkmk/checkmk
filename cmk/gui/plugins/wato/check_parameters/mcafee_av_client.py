@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,6 +7,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
+    Dictionary,
+    Transform,
     Tuple,
 )
 
@@ -17,13 +19,28 @@ from cmk.gui.plugins.wato import (
 )
 
 
+def _transform_mcafee_av_client(params):
+    if isinstance(params, dict):
+        return params
+    return {'signature_age': params}
+
+
 def _parameter_valuespec_mcafee_av_client():
-    return Tuple(
-        title=_('Time Settings for Signature'),
-        elements=[
-            Age(title=_("Warning at"), default_value=86400),
-            Age(title=_("Critical at"), default_value=7 * 86400),
-        ],
+    return Transform(
+        Dictionary(
+            elements=[
+                ('signature_age',
+                 Tuple(
+                     title=_('Time Settings for Signature'),
+                     elements=[
+                         Age(title=_("Warning at"), default_value=86400),
+                         Age(title=_("Critical at"), default_value=7 * 86400),
+                     ],
+                 )),
+            ],
+            optional_keys=[],
+        ),
+        forth=_transform_mcafee_av_client,
     )
 
 

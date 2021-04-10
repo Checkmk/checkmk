@@ -26,7 +26,10 @@ description:
  approximately reflects the reality.
 
  You can also enable performance data for the traffic and latency
- for specific protocols (global, nfs, cifs, san, fcp, iscsi) via the parameters
+ for specific protocols (global, nfs, cifs, san, fcp, iscsi) via the rule "NetApp Volumes".
+
+ This check also supports the grouping of volumes into one combined volume. This can be
+ configured via the rule "Filesystem grouping patterns".
 
 item:
  Name of the volume as defined in the system

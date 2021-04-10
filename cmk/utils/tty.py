@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,7 +14,7 @@ import struct
 import sys
 import termios
 
-from typing import Dict, Iterable, List, Tuple  # pylint: disable=unused-import
+from typing import Dict, Iterable, List, Tuple
 
 # TODO: Implementing the colors below as simple global variables is a bad idea,
 # because their actual values depend on sys.stdout at *import* time! sys.stdout
@@ -47,7 +47,7 @@ normal = ''
 ok = ''
 warn = ''
 error = ''
-states = {}  # type: Dict[int, str]
+states: Dict[int, str] = {}
 
 
 def reinit():
@@ -102,8 +102,7 @@ TableRow = List[str]
 TableColors = TableRow
 
 
-def colorset(fg=-1, bg=-1, attr=-1):
-    # type: (int, int, int) -> str
+def colorset(fg: int = -1, bg: int = -1, attr: int = -1) -> str:
     if not sys.stdout.isatty():
         return ""
     if attr >= 0:
@@ -115,8 +114,7 @@ def colorset(fg=-1, bg=-1, attr=-1):
     return normal
 
 
-def get_size():
-    # type: () -> Tuple[int, int]
+def get_size() -> Tuple[int, int]:
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         # TODO: Use the following instead?
@@ -140,8 +138,10 @@ def get_size():
     return (24, 80)
 
 
-def print_table(headers, colors, rows, indent=""):
-    # type: (TableRow, TableColors, Iterable[TableRow], str) -> None
+def print_table(headers: TableRow,
+                colors: TableColors,
+                rows: Iterable[TableRow],
+                indent: str = "") -> None:
     num_columns = len(headers)
     lengths = _column_lengths(headers, rows, num_columns)
     dashes = ["-" * l for l in lengths]
@@ -150,8 +150,7 @@ def print_table(headers, colors, rows, indent=""):
         sys.stdout.write(fmt % tuple(row[:num_columns]))
 
 
-def _column_lengths(headers, rows, num_columns):
-    # type: (TableRow, Iterable[TableRow], int) -> List[int]
+def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: int) -> List[int]:
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
@@ -159,8 +158,7 @@ def _column_lengths(headers, rows, num_columns):
     return lengths
 
 
-def _row_template(lengths, colors, indent):
-    # type: (List[int], TableColors, str) -> str
+def _row_template(lengths: List[int], colors: TableColors, indent: str) -> str:
     fmt = indent
     sep = ""
     for l, c in zip(lengths, colors):

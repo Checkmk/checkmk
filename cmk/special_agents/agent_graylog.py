@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Text
+from typing import NamedTuple
 import argparse
 import time
 import json
@@ -17,8 +17,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
 GraylogSection = NamedTuple("GraylogSection", [
-    ("name", Text),
-    ("uri", Text),
+    ("name", str),
+    ("uri", str),
 ])
 
 

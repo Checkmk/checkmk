@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 
 sap_hana_connect_state_map = {
     "Worker: OK": {
@@ -23,7 +24,7 @@ sap_hana_connect_state_map = {
 def parse_sap_hana_connect(info):
 
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         inst = parsed.setdefault(
             sid_instance, {
                 "server_node": "not found",
@@ -34,13 +35,13 @@ def parse_sap_hana_connect(info):
             })
         for elem in lines[0]:
             if "retcode" in elem:
-                retcode = elem.split(":")[1].replace(" ", "")
+                retcode = elem.split(":")[1].lstrip()
                 for k, v in sap_hana_connect_state_map.items():
                     if v["fun"](retcode):
                         inst["cmk_state"] = v["cmk_state"]
                         inst["message"] = k
             if "Driver version" in elem:
-                inst["driver_version"] = elem.split("HDB")[1].lstrip()
+                inst["driver_version"] = elem.split("Driver version")[1].lstrip()
             if "Connect string:" in elem:
                 inst["server_node"] = re.search('SERVERNODE=(.*),SERVERDB', elem).group(1)
             if "Select now()" in elem:
@@ -63,5 +64,4 @@ check_info['sap_hana_connect'] = {
     'inventory_function': discover(),
     'check_function': check_sap_hana_connect,
     'service_description': 'SAP HANA CONNECT %s',
-    'includes': ['sap_hana.include'],
 }

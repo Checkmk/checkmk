@@ -4,13 +4,14 @@
 // source code package.
 
 #include "CustomVarsDictFilter.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+
 #include "CustomVarsDictColumn.h"
-#include "Filter.h"
 #include "RegExp.h"
 #include "Row.h"
 
@@ -61,7 +62,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(Kind kind,
                                            const CustomVarsDictColumn &column,
                                            RelationalOperator relOp,
                                            const std::string &value)
-    : ColumnFilter(kind, column, relOp, value), _column(column) {
+    : ColumnFilter(kind, column.name(), relOp, value), _column(column) {
     std::string rest;
     auto [starts_with_quote1, pos1] = skip_whitespace(value);
     std::tie(_ref_varname, rest) = starts_with_quote1

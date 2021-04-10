@@ -7,18 +7,18 @@
 #define OringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
-#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+
 #include "Filter.h"
 #include "contact_fwd.h"
-class Column;
 class Row;
 
 class OringFilter : public Filter {
@@ -28,8 +28,8 @@ public:
     static std::unique_ptr<Filter> make(Kind kind, const Filters &subfilters);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const Column &)> predicate) const override;
+    [[nodiscard]] std::unique_ptr<Filter> partialFilter(
+        columnNamePredicate predicate) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
     [[nodiscard]] std::optional<int32_t> greatestLowerBoundFor(

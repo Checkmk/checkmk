@@ -1,0 +1,17 @@
+Title: Remove "show more" as default on visual creation and add new topic
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1612786825
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+New visuals like e.g. dashboards where created with default option "Show more",
+so in show_mode "Show less" this visuals could not be found in the "Monitor"
+menu, unless you used the "show more" button.
+
+This default option was removed on creation. Furthermore, we created a new topic
+"My workplace" where you can place your new visuals in the mentioned menu.
+This topic is only visible after adding the first visual.

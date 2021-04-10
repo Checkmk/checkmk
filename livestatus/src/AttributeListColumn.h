@@ -7,23 +7,25 @@
 #define AttributeListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "AttributeListAsIntColumn.h"
-#include "Column.h"
 #include "Filter.h"
 #include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class ColumnOffsets;
 class Row;
 
-class AttributeListColumn : public ListColumn {
+class AttributeListColumn : public deprecated::ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        const Column::Offsets &offsets)
-        : ListColumn(name, description, offsets)
+                        const ColumnOffsets &offsets)
+        : deprecated::ListColumn(name, description, offsets)
         , _int_view_column(name, description, offsets) {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

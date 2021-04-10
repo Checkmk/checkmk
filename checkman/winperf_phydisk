@@ -42,3 +42,7 @@ inventory:
 
  The inventory is configured via {diskstat_inventory_mode}.
 
+cluster:
+  On a cluster the check is run on the aggregated data.
+  WATCH OUT: Disk names that are present on more than one node potentialy
+  shadow each others results.

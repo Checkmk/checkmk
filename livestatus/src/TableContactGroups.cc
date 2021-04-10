@@ -4,27 +4,39 @@
 // source code package.
 
 #include "TableContactGroups.h"
+
 #include <memory>
+#include <vector>
+
 #include "Column.h"
-#include "ContactGroupsMemberColumn.h"
+#include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetStringColumn.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
+#include "StringColumn.h"
 #include "nagios.h"
 
-extern contactgroup *contactgroup_list;
-
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
-    addColumn(std::make_unique<OffsetStringColumn>(
-        "name", "The name of the contactgroup",
-        Column::Offsets{-1, -1, -1,
-                        DANGEROUS_OFFSETOF(contactgroup, group_name)}));
-    addColumn(std::make_unique<OffsetStringColumn>(
-        "alias", "The alias of the contactgroup",
-        Column::Offsets{-1, -1, -1, DANGEROUS_OFFSETOF(contactgroup, alias)}));
-    addColumn(std::make_unique<ContactGroupsMemberColumn>(
-        "members", "A list of all members of this contactgroup",
-        Column::Offsets{}));
+    ColumnOffsets offsets{};
+    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
+        "name", "The name of the contactgroup", offsets,
+        [](const contactgroup &r) {
+            return r.group_name == nullptr ? "" : r.group_name;
+        }));
+    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
+        "alias", "The alias of the contactgroup", offsets,
+        [](const contactgroup &r) {
+            return r.alias == nullptr ? "" : r.alias;
+        }));
+    addColumn(std::make_unique<ListColumn::Callback<contactgroup>>(
+        "members", "A list of all members of this contactgroup", offsets,
+        [](const contactgroup &r) {
+            std::vector<std::string> names;
+            for (const auto *cm = r.members; cm != nullptr; cm = cm->next) {
+                names.emplace_back(cm->contact_ptr->name);
+            }
+            return names;
+        }));
 }
 
 std::string TableContactGroups::name() const { return "contactgroups"; }
@@ -32,15 +44,15 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query *query) {
-    for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
-        if (!query->processDataset(Row(cg))) {
+    for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
+        const contactgroup *r = cg;
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }
 }
 
-Row TableContactGroups::findObject(const std::string &objectspec) const {
-    // TODO(sp): Remove ugly cast.
-    return Row(reinterpret_cast<contactgroup *>(
-        core()->find_contactgroup(objectspec)));
+Row TableContactGroups::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(core()->find_contactgroup(primary_key));
 }

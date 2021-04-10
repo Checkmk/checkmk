@@ -7,6 +7,7 @@
 #define Filter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -16,12 +17,13 @@
 #include <optional>
 #include <string>
 #include <vector>
+
 #include "contact_fwd.h"
-class Column;
 class Filter;
 class Row;
 
 using Filters = std::vector<std::unique_ptr<Filter>>;
+using columnNamePredicate = std::function<bool(const std::string &)>;
 
 /// A propositional formula over column value relations, kept in negation normal
 /// form.
@@ -34,8 +36,8 @@ public:
     [[nodiscard]] Kind kind() const { return _kind; }
     virtual bool accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const = 0;
-    virtual std::unique_ptr<Filter> partialFilter(
-        std::function<bool(const Column &)> predicate) const = 0;
+    [[nodiscard]] virtual std::unique_ptr<Filter> partialFilter(
+        columnNamePredicate predicate) const = 0;
 
     // TODO(sp) We might be able to unify all the methods below if we make the
     // underlying lattice structure explicit, i.e. provide a set type and

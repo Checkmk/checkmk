@@ -7,22 +7,25 @@
 #define StringFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
 class Row;
-class StringColumn;
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(Kind kind, const StringColumn &column,
-                 RelationalOperator relOp, const std::string &value);
+    StringFilter(Kind kind, std::string columnName,
+                 std::function<std::string(Row)>, RelationalOperator relOp,
+                 const std::string &value);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
     [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
@@ -31,7 +34,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const StringColumn &_column;
+    const std::function<std::string(Row)> _getValue;
     std::shared_ptr<RegExp> _regExp;
 };
 

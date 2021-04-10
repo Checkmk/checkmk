@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,13 +6,9 @@
 
 import math
 import time
-from typing import (  # pylint: disable=unused-import
-    List, Tuple, Union, Optional, Callable, Iterable, Text,
-)
+from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
-
-import six
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import cmk.utils.render
 
@@ -70,9 +66,9 @@ def get_default_graph_render_options():
 def _graph_colors(theme_id):
     return {
         "modern-dark": {
-            "background_color": "#282828",
+            "background_color": None,
             "foreground_color": "#ffffff",
-            "canvas_color": "#282828",
+            "canvas_color": None,
         },
         "pdf": {
             "background_color": "#f8f4f0",
@@ -80,9 +76,9 @@ def _graph_colors(theme_id):
             "canvas_color": "#ffffff",
         },
     }.get(theme_id, {
-        "background_color": "#f0f2f4",
+        "background_color": None,
         "foreground_color": "#000000",
-        "canvas_color": "#ffffff",
+        "canvas_color": None,
     })
 
 
@@ -121,15 +117,19 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
 def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
     graph_render_options = add_default_render_options(graph_render_options)
 
-    start_time, end_time, step, curves = compute_graph_artwork_curves(graph_recipe,
-                                                                      graph_data_range)
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     pin_time = load_graph_pin()
-    _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
+    _compute_scalars(graph_recipe, curves, pin_time)
 
     layouted_curves, mirrored = layout_graph_curves(curves)  # do stacking, mirroring
 
     width, height = graph_render_options["size"]
+
+    try:
+        start_time, end_time, step = curves[0]['rrddata'].twindow
+    except IndexError:  # Empty graph
+        (start_time, end_time), step = graph_data_range["time_range"], 60
 
     return {
         # Labelling, size, layout
@@ -181,7 +181,7 @@ def layout_graph_curves(curves):
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks = [None, None]  # type: List[Optional[List]]
+    stacks: List[Optional[List]] = [None, None]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
@@ -262,15 +262,11 @@ def compute_graph_artwork_curves(graph_recipe, graph_data_range):
     rrd_data = rrd_fetch.fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
     curves = timeseries.compute_graph_curves(graph_recipe["metrics"], rrd_data)
-    try:
-        start_time, end_time, step = curves[0]['rrddata'].twindow
-    except (AttributeError, IndexError):
-        start_time, end_time, step = rrd_data['__range']
 
     if graph_recipe.get("omit_zero_metrics"):
         curves = [curve for curve in curves if any(curve["rrddata"])]
 
-    return start_time, end_time, step, curves
+    return curves
 
 
 # Result is a list with len(rrddata)*2 + 1 vertical values
@@ -309,7 +305,7 @@ def halfstep_interpolation(rrddata):
 #   '----------------------------------------------------------------------'
 
 
-def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time):
+def _compute_scalars(graph_recipe, curves, pin_time):
     unit = unit_info[graph_recipe["unit"]]
 
     for curve in curves:
@@ -320,7 +316,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
 
         pin = None
         if pin_time is not None:
-            pin = _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata)
+            pin = _get_value_at_timestamp(pin_time, rrddata)
 
         rrddata = timeseries.clean_time_series_point(rrddata)
         if rrddata:
@@ -340,8 +336,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
             curve["scalars"][key] = _render_scalar_value(value, unit)
 
 
-def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_time, end_time,
-                                       step):
+def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
     unit = unit_info[graph_recipe["unit"]]
 
     curve_values = []
@@ -351,7 +346,7 @@ def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_t
 
         rrddata = curve["rrddata"]
 
-        value = _get_value_at_timestamp(start_time, end_time, step, hover_time, rrddata)
+        value = _get_value_at_timestamp(hover_time, rrddata)
 
         curve_values.append({
             "title": curve["title"],
@@ -368,7 +363,8 @@ def _render_scalar_value(value, unit):
     return value, unit["render"](value)
 
 
-def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
+def _get_value_at_timestamp(pin_time, rrddata):
+    start_time, _, step = rrddata.twindow
     nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
@@ -429,12 +425,12 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     if stepping == "binary":
         base = 16
-        steps = [
+        steps: List[Tuple[float, float]] = [
             (2, 0.5),
             (4, 1),
             (8, 2),
             (16, 4),
-        ]  # type: List[Tuple[float, float]]
+        ]
 
     elif stepping == "time":
         if max_value > 3600 * 24:
@@ -635,7 +631,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
                 line_width = 2
             else:
                 label_value = None
-                line_width = 1
+                line_width = 0
 
             label_specs.append((pos, label_value, line_width))
             if len(label_specs) > 1000:
@@ -678,7 +674,7 @@ def render_labels_with_graph_unit(label_specs, unit):
 
 def render_labels(label_specs, render_func=None):
     max_label_length = 0
-    rendered_labels = []  # type: List[Label]
+    rendered_labels: List[Label] = []
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -747,17 +743,17 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     label_shift = 0  # shift seconds to future in order to center it
     label_distance_at_least = 0
     if start_date == end_date:
-        title_label = six.text_type(cmk.utils.render.date(start_time))
+        title_label = str(cmk.utils.render.date(start_time))
     else:
         title_label = u"%s \u2014 %s" % (
-            six.text_type(cmk.utils.render.date(start_time)),
-            six.text_type(cmk.utils.render.date(end_time)),
+            str(cmk.utils.render.date(start_time)),
+            str(cmk.utils.render.date(end_time)),
         )
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling = "%H:%M"  # type: Union[str, Text, Callable]
-        label_size = 5  # type: Union[int, float]
+        labelling: Union[str, Callable] = "%H:%M"
+        label_size: Union[int, float] = 5
 
     # Less than one week
     elif time_range_days < 7:
@@ -781,7 +777,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
     # might even not be equal in size (like months!)
-    num_t_labels = int((width - 7) / label_size)
+    num_t_labels = max(int((width - 7) / label_size), 2)
     label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
 
     # Get a distribution function. The function is called with start_time end
@@ -795,9 +791,11 @@ def compute_graph_t_axis(start_time, end_time, width, step):
                                       (720, 120), (1440, 360), (2880, 480), (4320, 720),
                                       (5760, 720)]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function = partial(
-                dist_equal, distance=dist_minutes * 60, subdivision=subdivision *
-                60)  # type: Callable[[int, int], Iterable[Tuple[int, int, bool]]]
+            dist_function: Callable[[int, int],
+                                    Iterable[Tuple[int, int,
+                                                   bool]]] = partial(dist_equal,
+                                                                     distance=dist_minutes * 60,
+                                                                     subdivision=subdivision * 60)
             break
 
     else:
@@ -817,12 +815,12 @@ def compute_graph_t_axis(start_time, end_time, width, step):
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels = []  # type: List[Label]
+    labels: List[Label] = []
     seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
-            if isinstance(labelling, six.string_types):
-                label = time.strftime(str(labelling), time.localtime(pos))  # type: Optional[str]
+            if isinstance(labelling, str):
+                label: Optional[str] = time.strftime(str(labelling), time.localtime(pos))
             else:
                 label = labelling(pos)
         else:
@@ -922,13 +920,7 @@ def dist_month(start_time, end_time, months):
                     broken_tm_yday,
                     broken_tm_isdst,
                 ))
-                yield pos, 1, False
-
-    # Add weeks if months are low
-    if months <= 2:
-        for pos, line_width, _has_label in dist_week(start_time, end_time):
-            if line_width == 2:
-                yield pos, 1, False
+                yield pos, 0, False
 
 
 # These distance functions yield a sequence of useful
@@ -962,7 +954,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
         if f <= 0.0000001 or f >= 0.9999999:
             yield (pos, 2, True)
         else:
-            yield (pos, 1, False)
+            yield (pos, 0, False)
         pos += subdivision
 
 
@@ -984,8 +976,7 @@ def load_graph_pin():
     return config.user.load_file("graph_pin", None)
 
 
-def save_graph_pin():
-    # type: () -> None
+def save_graph_pin() -> None:
     try:
         pin_timestamp = html.request.get_integer_input("pin")
     except ValueError:

@@ -1,12 +1,31 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+__version__ = "2.1.0i1"
+
+import io
 import os
 import socket
 import sys
+
+# For Python 3 sys.stdout creates \r\n as newline for Windows.
+# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
+# If you want to use the old behaviour just use old_stdout.
+if sys.version_info[0] >= 3:
+    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
+                                  newline='\n',
+                                  encoding=sys.stdout.encoding,
+                                  errors=sys.stdout.errors)
+    old_stdout, sys.stdout = sys.stdout, new_stdout
+
+# Continue if typing cannot be imported, e.g. for running unit tests
+try:
+    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
+except ImportError:
+    pass
 
 if sys.version_info[0] >= 3:
     from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
@@ -48,7 +67,7 @@ MBEAN_SECTIONS = {
     'jvm_runtime': ("java.lang:type=Runtime/Uptime,Name",),
     'jvm_garbagecollectors':
         ("java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name",),
-}
+}  # type: Dict[str, Tuple[str, ...]]
 
 MBEAN_SECTIONS_SPECIFIC = {
     'tomcat': {
@@ -98,7 +117,7 @@ QUERY_SPECS_LEGACY = [
      "", [], True),
     ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
      [], True),
-]
+]  # type: List[Tuple[str, str, str, List, bool]]
 
 QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
@@ -151,7 +170,7 @@ DEFAULT_CONFIG_TUPLES = (
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
     ("instances", [{}]),
-)
+)  # type: Tuple[Tuple[Union[Optional[str], float, List[Any]], ...], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -163,7 +182,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return dict(tup[:2] for tup in DEFAULT_CONFIG_TUPLES)
+    return {elem[0]: elem[1] for elem in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):
@@ -173,7 +192,7 @@ def write_section(name, iterable):
 
 
 def cached(function):
-    cache = {}
+    cache = {}  # type: Dict[str, Callable]
 
     def cached_function(*args):
         key = repr(args)
@@ -185,7 +204,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):
+class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {'filter_headers': [('authorization', '****')]}
 
@@ -278,7 +297,7 @@ class JolokiaInstance(object):
         session.verify = self._config["verify"]
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-        session.timeout = self._config["timeout"]
+        session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -415,7 +434,7 @@ def extract_item(key, itemspec):
     components = path.split(",")
     comp_dict = dict(c.split('=') for c in components if c.count('=') == 1)
 
-    item = ()
+    item = ()  # type: Tuple[Any, ...]
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
@@ -500,10 +519,10 @@ def query_instance(inst):
     write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_LEGACY))
 
     sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
-    for section_name, mbeans in sections_specific.iteritems():
+    for section_name, mbeans in sections_specific.items():
         write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
-    for section_name, mbeans in MBEAN_SECTIONS.iteritems():
-        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
+    for section_name, mbeans_tups in MBEAN_SECTIONS.items():
+        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans_tups))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 
@@ -558,13 +577,7 @@ def generate_json(inst, mbeans):
 
 
 def yield_configured_instances(custom_config=None):
-
-    if custom_config is None:
-        custom_config = get_default_config_dict()
-
-    conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
-    if os.path.exists(conffile):
-        exec(open(conffile).read(), {}, custom_config)
+    custom_config = load_config(custom_config)
 
     # Generate list of instances to monitor. If the user has defined
     # instances in his configuration, we will use this (a list of dicts).
@@ -575,6 +588,16 @@ def yield_configured_instances(custom_config=None):
         if VERBOSE:
             sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
         yield conf_dict
+
+
+def load_config(custom_config):
+    if custom_config is None:
+        custom_config = get_default_config_dict()
+
+    conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
+    if os.path.exists(conffile):
+        exec(open(conffile).read(), {}, custom_config)
+    return custom_config
 
 
 def main(configs_iterable=None):

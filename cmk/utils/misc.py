@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,35 +8,28 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import os
+import inspect
 import itertools
+import os
 import sys
 import time
 from contextlib import contextmanager
-from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union  # pylint: disable=unused-import
+from pathlib import Path
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-if sys.version_info[0] >= 3:
-    from inspect import getfullargspec as _getargspec  # pylint: disable=no-name-in-module
-else:
-    from inspect import getargspec as _getargspec  # pylint: disable=no-name-in-module
+from six import ensure_str
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostAddress
 
 
-def quote_shell_string(s):
-    # type: (str) -> str
+def quote_shell_string(s: str) -> str:
     """Quote string for use as arguments on the shell"""
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 # TODO: Change to better name like: quote_pnp_string()
-def pnp_cleanup(s):
-    # type: (str) -> str
+def pnp_cleanup(s: str) -> str:
     """Quote a string (host name or service description) in PNP4Nagios format
 
     Because it is used as path element, this needs to be handled as "str" in Python 2 and 3
@@ -48,8 +41,7 @@ def pnp_cleanup(s):
         .replace('\\', '_')
 
 
-def key_config_paths(a):
-    # type: (Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]
+def key_config_paths(a: Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]:
     """Key function for Check_MK configuration file paths
 
     Helper functions that determines the sort order of the
@@ -66,8 +58,7 @@ def key_config_paths(a):
     return pa[:-1], len(pa), pa
 
 
-def total_size(o, handlers=None):
-    #type: (Any, Optional[Dict]) -> int
+def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     """ Returns the approximate memory footprint an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
@@ -90,11 +81,10 @@ def total_size(o, handlers=None):
         frozenset: iter,
     }
     all_handlers.update(handlers)  # user handlers take precedence
-    seen = set()  # type: Set[int]
+    seen: Set[int] = set()
     default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
 
-    def sizeof(o):
-        # type: (Any) -> int
+    def sizeof(o: Any) -> int:
         if id(o) in seen:  # do not double count the same object
             return 0
         seen.add(id(o))
@@ -109,22 +99,19 @@ def total_size(o, handlers=None):
     return sizeof(o)
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def is_daily_build_version(v):
-    # type: (str) -> bool
+# Works with Checkmk version (without tailing .cee and/or .demo)
+def is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or '-' in v
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
-def branch_of_daily_build(v):
-    # type: (str) -> str
+# Works with Checkmk version (without tailing .cee and/or .demo)
+def branch_of_daily_build(v: str) -> str:
     if len(v) == 10:
         return "master"
     return v.split('-')[0]
 
 
-def cachefile_age(path):
-    # type: (Union[Path, str]) -> float
+def cachefile_age(path: Union[Path, str]) -> float:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -134,14 +121,11 @@ def cachefile_age(path):
         raise MKGeneralException("Cannot determine age of cache file %s: %s" % (path, e))
 
 
-def getfuncargs(func):
-    # type: (Callable) -> List[str]
-    # pylint is too dumb to see that we do NOT use the deprecated variant. :-P
-    return _getargspec(func).args  # pylint: disable=deprecated-method
+def getfuncargs(func: Callable) -> List[str]:
+    return list(inspect.signature(func).parameters)
 
 
-def make_kwargs_for(function, **kwargs):
-    # type: (Callable, **Any) -> Dict[str, Any]
+def make_kwargs_for(function: Callable, **kwargs: Any) -> Dict[str, Any]:
     return {
         arg_indicator: arg  #
         for arg_name in getfuncargs(function)
@@ -150,12 +134,9 @@ def make_kwargs_for(function, **kwargs):
     }
 
 
-def with_umask(mask):
-    # type: (int) -> Callable
-    def umask_wrapper(fun):
-        # type: (Callable) -> Callable
-        def fun_wrapper(*args, **kwargs):
-            # type: (Any, Any) -> Any
+def with_umask(mask: int) -> Callable:
+    def umask_wrapper(fun: Callable) -> Callable:
+        def fun_wrapper(*args: Any, **kwargs: Any) -> Any:
             with umask(mask):
                 return fun(*args, **kwargs)
 
@@ -165,10 +146,28 @@ def with_umask(mask):
 
 
 @contextmanager
-def umask(mask):
-    # type: (int) -> Iterator[None]
+def umask(mask: int) -> Iterator[None]:
     old_mask = os.umask(mask)
     try:
         yield None
     finally:
         os.umask(old_mask)
+
+
+def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if not isinstance(ip_addresses, list):
+        ip_addresses = ip_addresses.split()
+
+    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
+    expanded = [word for word in decoded_ip_addresses if '{' not in word]
+    for word in decoded_ip_addresses:
+        if word in expanded:
+            continue
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+            expanded.extend(prefix + i + suffix for i in curly.split(','))
+        except Exception:
+            raise MKGeneralException("could not expand %r" % word)
+    return expanded

@@ -6,6 +6,6 @@ Date: 1585748322
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Checkmk uses a tmpfs internally. This can grow over time. To prevent running out-of-memory on this filesystem, checkmk's tmpfs is automatically added to the monitoring after site creation.

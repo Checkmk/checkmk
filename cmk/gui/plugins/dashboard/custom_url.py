@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -68,6 +68,6 @@ class URLDashlet(IFrameDashlet):
         # need to calculate an own dynamic function you will have to subclass
         # this dashlet and implement your own _get_iframe_url() method
         if "url" not in self._dashlet_spec:
-            raise MKUserError(None, _("You need to specify a URL in the dashlet properties"))
+            raise MKUserError(None, _("You need to specify a URL in the element properties"))
 
         return self._dashlet_spec['url']

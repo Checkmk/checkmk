@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Tuple
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
 from cmk.utils.exceptions import MKException
+from cmk.special_agents.utils import vcrtrace
 
 ElementAttributes = Dict[str, str]
 
@@ -96,6 +97,7 @@ B_SERIES_ENTITIES = [
         ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
     ]),
 ]
+B_SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst"]
 
 # Cisco UCS C-Series Rack Servers
 C_SERIES_ENTITIES = [
@@ -175,7 +177,25 @@ C_SERIES_ENTITIES = [
             "ioUtilization",
         ]),
     ]),
+    ("ucs_c_rack_server_led", [
+        ("equipmentIndicatorLed", [
+            "dn",
+            "name",
+            "color",
+            "operState",
+        ]),
+    ]),
+    ("ucs_c_rack_server_faultinst", [
+        ("faultInst", [
+            "severity",
+            "cause",
+            "code",
+            "descr",
+            "affectedDN",
+        ]),
+    ]),
 ]
+C_SERIES_NECESSARY_SECTIONS = ["ucs_c_rack_server_faultinst"]
 
 #.
 #   .--connection----------------------------------------------------------.
@@ -203,10 +223,10 @@ class Server:
 
     def login(self):
         logging.debug("Server.login: Login")
-        attributes = {
+        attributes: ElementAttributes = {
             'inName': self._username,
             'inPassword': self._password,
-        }  # type: ElementAttributes
+        }
 
         root = self._communicate(ET.Element('aaaLogin', attrib=attributes))
         cookie = root.attrib.get('outCookie')
@@ -214,9 +234,15 @@ class Server:
             logging.debug("Server.login: Found cookie")
             self._cookie = cookie
 
+    @staticmethod
+    def filter_credentials(request):
+        if b'inPassword=' in request.body:
+            request.body = b"login request filtered out"
+        return request
+
     def logout(self):
         logging.debug("Server.logout: Logout")
-        attributes = {}  # type: ElementAttributes
+        attributes: ElementAttributes = {}
         if self._cookie:
             attributes.update({'inCookie': self._cookie})
         self._communicate(ET.Element('aaaLogout', attrib=attributes))
@@ -232,7 +258,7 @@ class Server:
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
-        data = {}  # type: Dict[str, List[Tuple[Any, Any]]]
+        data: Dict[str, List[Tuple[Any, Any]]] = {}
         for header, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
@@ -279,10 +305,10 @@ class Server:
         """
         Returns list of XML trees for class_id or empty list in case no entries are found.
         """
-        attributes = {
+        attributes: ElementAttributes = {
             'classId': class_id,
             'inHierarchical': 'false',
-        }  # type: ElementAttributes
+        }
         if self._cookie:
             attributes.update({'cookie': self._cookie})
         root = self._communicate(ET.Element('configResolveClass', attrib=attributes))
@@ -360,6 +386,10 @@ def debug():
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        "--vcrtrace",
+        action=vcrtrace(before_record_request=Server.filter_credentials),
+    )
     parser.add_argument("--no-cert-check",
                         action="store_true",
                         help="Disables the checking of the servers ssl certificate.")
@@ -411,9 +441,11 @@ def main(args=None):
     if "ucsc-c" in model_info.lower():
         logging.debug("Using UCS C-Series Rack Server entities")
         entities = C_SERIES_ENTITIES
+        necessary_sections = C_SERIES_NECESSARY_SECTIONS
     else:
         logging.debug("Using UCS B-Series Blade Server entities")
         entities = B_SERIES_ENTITIES
+        necessary_sections = B_SERIES_NECESSARY_SECTIONS
 
     try:
         data = handle.get_data_from_entities(entities)
@@ -426,13 +458,12 @@ def main(args=None):
         handle.logout()
         return 1
 
-    # "ucs_bladecenter_faultinst" should always be in agent output, even no
-    # data is present
-    section_needed = "ucs_bladecenter_faultinst"
-    if entities == B_SERIES_ENTITIES and section_needed not in data:
-        sys.stdout.write("<<<%s:sep(9)>>>\n" % section_needed)
+    # some sections should always be in agent output, even if there is no data from the server
+    for section in necessary_sections:
+        if section not in data:
+            sys.stdout.write("<<<%s:sep(9)>>>\n" % section)
 
-    for header, class_data in data.iteritems():
+    for header, class_data in data.items():
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
         for class_id, values in class_data:
             values_str = "\t".join(["%s %s" % v for v in values])
@@ -440,3 +471,7 @@ def main(args=None):
 
     handle.logout()
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

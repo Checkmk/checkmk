@@ -1,0 +1,52 @@
+Title: AWS S3
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1589290065
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk fixes multiple issues with the AWS S3 monitoring, i.e.:
+
+- As a follow-up for werk #11092, where one service per monitored
+  region for the monitoring of AWS limits was introduced, the
+  corresponding service for S3 is now always discovered as
+  'AWS/S3 Limits Global'. This is because there are no per-region
+  limits for S3, only global account-wide limits. Users have to
+  re-discover this service and potentially adjust any related rules
+  for this to come into effect.
+
+- The regions set when configuring the AWS special are now properly
+  taken into account when monitoring S3 buckets (note that they are
+  deliberately ignored for the limits). This means that buckets
+  residing in regions which are not monitored are not discovered any
+  more and do not contribute to the S3 summary service. Users have to
+  re-discover the S3 services for this to come into effect.
+
+- AWS S3 CloudWatch metrics are now fetched properly. Previously, only
+  the non-request metrics for buckets in the region us-east-1 worked,
+  such that for example bucket sizes for buckets outside us-east-1
+  were wrong.
+
+- A couple of metrics and some units were fixed.
+
+- The rule "AWS/S3 HTTP Errors" for the check aws_s3_requests.http_errors
+  has been added.
+
+- The levels for the check aws_s3_requests.latency (rule
+  "AWS/S3 Latency") are now specified in ms, before, the smallest
+  possible level was 1 s. After installing the werk, users have to
+  re-define this rule.
+
+- Rules configured for the check aws_s3_requests ("AWS/S3 Bucket Requests")
+  now have an effect, previously, they were ignored.
+
+- Services based on S3 CloudWatch metrics now go stale instead of UNKN
+  if AWS stops delivering data, for example in the case where requests
+  to an S3 buckets stop.
+
+- Names and tags set when configuring the AWS special agent are now
+  handled correctly and excluded buckets are not fetched any more (but
+  they are still counted for the limits).

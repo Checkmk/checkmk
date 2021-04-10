@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -10,7 +10,7 @@
 # | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
-# This file is part of Check_MK.
+# This file is part of Checkmk.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 #
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -118,7 +118,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
         valuespec=_valuespec_discovery_oracle_performance,
-        title=lambda: _("Oracle Performance Discovery"),
+        title=lambda: _("Oracle performance discovery"),
     ))
 
 
@@ -132,7 +132,7 @@ def _parameter_valuespec_oracle_performance():
                      ])
 
     # memory
-    memory_choices = []  # type: list
+    memory_choices: list = []
     for ga in oracle_sga_fields + oracle_pga_fields:
         memory_choices.append((
             ga.metric,
@@ -141,8 +141,8 @@ def _parameter_valuespec_oracle_performance():
         ))
 
     # iostat_bytes + iostat_ios
-    iostat_bytes_choices = []  # type: list
-    iostat_ios_choices = []  # type: list
+    iostat_bytes_choices: list = []
+    iostat_ios_choices: list = []
     for iofile_name, iofile_id in oracle_iofiles:
         for size_code, size_text in oracle_io_sizes:
             for io_code, io_text, io_unit in oracle_io_types:
@@ -154,7 +154,7 @@ def _parameter_valuespec_oracle_performance():
                 ))
 
     # waitclasses
-    waitclasses_choices = [
+    waitclasses_choices: list = [
         (
             "oracle_wait_class_total",
             "Total waited",
@@ -165,7 +165,7 @@ def _parameter_valuespec_oracle_performance():
             "Total waited (FG)",
             levels_tuple(Float, "1/s"),
         ),
-    ]  # type: list
+    ]
     for waitclass in oracle_waitclasses:
         waitclasses_choices.append(
             (waitclass.metric, "%s wait class" % waitclass.name, levels_tuple(Float, "1/s")))

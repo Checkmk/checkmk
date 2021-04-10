@@ -1,1 +1,0 @@
-../../../../tests/unit/cmk/gui/test_userdb_ldap_connector.py

@@ -1,0 +1,34 @@
+Title: Diagnostics: New WATO mode for diagnostic analysis purposes
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1591262216
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+In order to improve error analysis there's a new WATO mode {{Diagnostics}}.
+With this new mode you can collection some general information about the
+Checkmk server and version. Details can be found on the {{Diagnostics}} page.
+
+In the future this mode will be extended with specific diagnostics elements,
+eg. information about local files.
+
+This mode will help you to analyse error situations. Another purpose is to have
+an interface for collecting information for our support, your customers or
+simply for your own analysis.
+
+The diagnostics information are stored within tar files in the folder
+{{var/check_mk/diagnostics}}. At the moment maximal five of these tar files are
+stored. This number is not configurable.
+
+There's also a command line option for collecting diagnostics information and
+collects information about the Checkmk site where it's executed.
+C+:
+cmk --create-diagnostics-dump [OPTIONS]
+C-:
+
+Note: The {{Diagnostics}} mode does not solve any problems. It's just a data
+collection which consolidates some commands and therefore facilitates error
+analysis.

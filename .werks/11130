@@ -1,0 +1,14 @@
+Title: f5_bigip_fans: fix duplicated items issue
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1590415413
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Fixed duplicated items in F5 Loadbalancer check f5_bigip_fans.
+Duplicate entries were removed or made visible.
+The numbering was incorrect, so not all fans were displayed.
+All fans will be displayed now and can configured through WATO.

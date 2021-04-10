@@ -1,0 +1,21 @@
+Title: Invalid configuration variable 'logwatch_groups'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615467394
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In Checkmk versions 2.0.0i1 to 2.0.0, users with rules defined via
+<i>Logfile Grouping</i> were unable to load their configuration.
+
+The displayed message was
+
+<pre>
+Invalid configuration variable 'logwatch_groups'
+--> Found 1 invalid variables
+If you use own helper variables, please prefix them with _.
+</pre>

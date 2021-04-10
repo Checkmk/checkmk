@@ -43,7 +43,7 @@ def check_keepalived(item, params, info):
     for id_, entry in enumerate(info[0]):
         vrrp_id = entry[0]
         address = info[1][id_][0]
-        hexaddr = address.encode("latin-1").encode("hex")
+        hexaddr = address.encode("latin-1").hex()
         if vrrp_id == item:
             status = params[map_state[str(entry[1])]]
             infotext = "This node is %s. IP Address: %s" % (map_state[str(

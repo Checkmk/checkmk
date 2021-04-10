@@ -1,0 +1,39 @@
+title: UCS C-Series Rack Server: Health Status of Fans
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors fault instances of UCS C-Series Rack Servers. The state of the
+ service depends on the severities of the fault instances as follows:
+
+ - {OK} for info, condition and cleared
+
+ - {WARN} for minor, warning and major
+
+ - {CRIT} for critical
+
+ - {UNKN} for all other severities
+
+ The check reports both a summary of all fault instances as well as detailed information
+ about each fault.
+
+ This check supports the following C-Series Rack Server models providing XML API 2.0
+ [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
+
+ - Cisco UCS C220 M5 Rack Server
+
+ - Cisco UCS C240 M5 Rack Server
+
+ - Cisco UCS C480 M5 Rack Server
+
+ - Cisco UCS C480 ML M5 Rack Server
+
+ - Cisco UCS C220 M4 Rack Server
+
+ - Cisco UCS C240 M4 Rack Server
+
+ - Cisco UCS C460 M4 Rack Server
+
+inventory:
+ One service is created.

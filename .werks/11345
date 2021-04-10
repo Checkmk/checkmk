@@ -1,0 +1,17 @@
+Title: Use correct periods for AWS
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1601301913
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The Special Agent for AWS uses the passed time since midnight for the cache interval for some sections.
+However AWS does only allow specific values for the periods. This is now ensured with this werk.
+
+Background information:
+AWS expects "period" to be an integer and a multiple of 60 for metrics.
+For metrics with high resolution, also the values 1, 5, 10, 30 and 60 are allowed.
+See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html

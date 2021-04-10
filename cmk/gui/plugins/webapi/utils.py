@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,8 +10,9 @@
 import abc
 from hashlib import md5
 import json
+from typing import Type
 
-import six
+from six import ensure_binary
 
 import cmk.utils.plugin_registry
 
@@ -25,18 +26,15 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
 
 
-class APICallCollection(six.with_metaclass(abc.ABCMeta, object)):
+class APICallCollection(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")
 
 
-class APICallCollectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return APICallCollection
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.__name__
+class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallCollection]]):
+    def plugin_name(self, instance):
+        return instance.__name__
 
 
 api_call_collection_registry = APICallCollectionRegistry()
@@ -88,7 +86,7 @@ def add_configuration_hash(response, configuration_object):
 def compute_config_hash(entity):
     try:
         entity_encoded = json.dumps(entity, sort_keys=True)
-        entity_hash = md5(six.ensure_binary(entity_encoded)).hexdigest()
+        entity_hash = md5(ensure_binary(entity_encoded)).hexdigest()
     except Exception as e:
         logger.error("Error %s", e)
         entity_hash = "0"

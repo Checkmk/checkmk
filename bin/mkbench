@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "1.7.0i1"
+__version__ = "2.1.0i1"
 
 # TODO:
 # - Do not create half-initialized objects, poisoning all use sites with dynamic
@@ -49,14 +49,14 @@ import select
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
 import time
 import traceback
-from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import six
 from psutil._common import sdiskusage  # type: ignore[import]
 from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
 import psutil  # type: ignore[import]
@@ -66,7 +66,6 @@ import livestatus
 
 from cmk.utils.render import fmt_bytes
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
-import cmk.utils.cmk_subprocess as subprocess
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -195,7 +194,7 @@ def ip_int_from_string(ip_str):
 
 
 def string_from_ip_int(ip_int):
-    octets = []  # type: List[str]
+    octets: List[str] = []
     for _ in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -277,8 +276,8 @@ class Test:
         self.version = __version__
         self.state = Test.STATE_INITIALIZING
         self._measurements = []
-        self.result = None  # type: Optional[str]
-        self.result_msg = None  # type: Optional[str]
+        self.result: Optional[str] = None
+        self.result_msg: Optional[str] = None
         self.system_info = SystemInfo()
 
         if id_ is None:
@@ -382,8 +381,8 @@ class Test:
         return bool(self._measurements)
 
     def get_measurements_by_test_case(self):
-        by_test_case = collections.OrderedDict(
-        )  # type: collections.OrderedDict[TestAgentBasedStandardHosts, List[Measurement]]
+        by_test_case: collections.OrderedDict[TestAgentBasedStandardHosts,
+                                              List[Measurement]] = collections.OrderedDict()
         for m in self._measurements:
             if m.test_case:
                 l = by_test_case.setdefault(m.test_case, [])
@@ -435,7 +434,7 @@ class TestRunner(threading.Thread):
         self.name = "test-runner"
         self._stop = threading.Event()
         self.test = Test()
-        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
+        self.test_case: Optional[TestAgentBasedStandardHosts] = None
 
         # Helper vars needed for test case generator
         self._num_hosts = num_hosts
@@ -590,8 +589,7 @@ class TestRunner(threading.Thread):
     def _increase_helpers(self):
         self._num_helpers += 40
 
-    def _generate_test_cases(self):
-        # type: () -> Iterable[TestAgentBasedStandardHosts]
+    def _generate_test_cases(self) -> Iterable[TestAgentBasedStandardHosts]:
         while not self._stop.is_set():
             yield TestAgentBasedStandardHosts(self,
                                               num_hosts=self._num_hosts,
@@ -780,7 +778,7 @@ class SystemInfo:
     def __init__(self):
         super(SystemInfo, self).__init__()
         self.cpu_count = 0
-        self.cpu_info = {}  # type: Dict[str, Any]
+        self.cpu_info: Dict[str, Any] = {}
         self.memory = 0.0
         self.block_device = ""
         self.linux_distro = ""
@@ -829,7 +827,7 @@ class SystemInfo:
         return None
 
     def _get_cpu_info(self):
-        node = {}  # type: Dict[str, Any]
+        node: Dict[str, Any] = {}
         num_threads_total = 0
         sockets = set([])
         for l in open("/proc/cpuinfo"):
@@ -897,12 +895,11 @@ class Measurement:
             for m in measurements:
                 values.append(getattr(m, k))
 
-            averaged = None  # type: Union[None, Tuple[float, ...], Dict[str, Union[Text, float]]]
+            averaged: Union[None, Tuple[float, ...], Dict[str, Union[str, float]]] = None
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
-                    averaged = tuple([sum(y) / len(y) for y in zip(*values)
-                                     ])  # fixed: true-division
+                    averaged = tuple(sum(y) / len(y) for y in zip(*values))  # fixed: true-division
                 else:
                     # averages of dict items
                     averaged = {}
@@ -912,7 +909,7 @@ class Measurement:
 
                     if real_values:
                         for key, value in real_values[0].items():
-                            if isinstance(value, six.text_type):
+                            if isinstance(value, str):
                                 averaged[key] = value
                             else:
                                 averaged[key] = float(sum([v[key] for v in real_values
@@ -926,15 +923,15 @@ class Measurement:
         super(Measurement, self).__init__()
         self._runner = runner
 
-        self.test_case = None  # type: Optional[TestAgentBasedStandardHosts]
+        self.test_case: Optional[TestAgentBasedStandardHosts] = None
         self.disk_counters = None
         self.site_state = None
 
-        self.time = None  # type: Optional[float]
-        self.cpu_load = None  # type: Optional[Tuple[float, float, float]]
-        self.memory = None  # type: Optional[svmem]
-        self.disk_usage = None  # type: Optional[sdiskusage]
-        self.disk_io = None  # type: Optional[sdiskio]
+        self.time: Optional[float] = None
+        self.cpu_load: Optional[Tuple[float, float, float]] = None
+        self.memory: Optional[svmem] = None
+        self.disk_usage: Optional[sdiskusage] = None
+        self.disk_io: Optional[sdiskio] = None
         self.site_stats = None
 
     def measure(self, last=None):
@@ -1157,18 +1154,19 @@ class AgentListener(multiprocessing.Process):
 
         # hundreds of a second
         num_cpus = 4
-        for i in [""] + list(map(str, range(num_cpus))):
+        cpu_idents = [""] + [str(n) for n in range(num_cpus)]
+        for i in cpu_idents:
             self._update_counter(host_id, "kernel_cpu%s_user" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_nice" % i, per_sec=0.05)
             self._update_counter(host_id, "kernel_cpu%s_system" % i, per_sec=0.10)
             self._update_counter(host_id, "kernel_cpu%s_idle" % i, per_sec=0.30)
             self._update_counter(host_id, "kernel_cpu%s_iowait" % i, per_sec=0.05)
 
-        counters = {k: v for k, (_t, v) in self._counters[host_id].iteritems()}
+        counters = {k: v for k, (_t, v) in self._counters[host_id].items()}
         counters["now"] = time.time()
 
         cpu_output = ""
-        for i in [""] + list(map(str, range(num_cpus))):
+        for i in cpu_idents:
             cpu_output += "cpu%s %d %d %d %d %d 0 0 0 0 0\n" % \
                 (i,
                  counters["kernel_cpu%s_user" % i],
@@ -2524,7 +2522,7 @@ class TestAgentBasedStandardHosts(TestCase):
     def _spawn_agent_listeners(self):
         self._test.info("  Starting agent listeners")
         for first_host_id in range(0, self.num_hosts, self._hosts_per_listener):
-            host_ids = range(first_host_id, first_host_id + self._hosts_per_listener)
+            host_ids = list(range(first_host_id, first_host_id + self._hosts_per_listener))
             listener = AgentListener(host_ids)
             listener.start()
             self._listeners.append(listener)
@@ -2567,7 +2565,7 @@ class TestAgentBasedStandardHosts(TestCase):
                     "    ( 5.0, [], ALL_HOSTS, {} ),\n"
                     "] + tcp_connect_timeouts\n")
 
-            # Ensure RRDs are created with Check_MK default config
+            # Ensure RRDs are created with Checkmk default config
             f.write(
                 "cmc_host_rrd_config = [\n"
                 "      ({'rras': [\n"
@@ -2838,7 +2836,7 @@ class TestAgentBasedStandardHosts(TestCase):
               and not os.path.exists("%s/tmp/run/live" % omd_root()):
             time.sleep(1)
 
-    # To deal with the load peak while initializing the Check_MK helpers we
+    # To deal with the load peak while initializing the Checkmk helpers we
     # need to wait till all helpers are initialized. Since we have no one
     # to tell us the state of the helpers, we need to detect this somehow.
     # -> Find all helper processes and check the open file descriptors.
@@ -3116,8 +3114,8 @@ class ConsoleRenderer(npyscreen.NPSApp):
         self._runner = runner
 
         # GUI widgets
-        self._window = None  # type: Optional[Window]
-        self._help = None  # type: Optional[HelpText]
+        self._window: Optional[Window] = None
+        self._help: Optional[HelpText] = None
 
     def main(self):
         npyscreen.setTheme(npyscreen.Themes.ElegantTheme)
@@ -3270,7 +3268,7 @@ def verify_site_is_empty():
     # - empty
     # - created with "omd-vonheute"
     # - previously terminated mkbench runs
-    if not hosts or hosts == ["heute"] or all([h.startswith("std-agent-host-") for h in hosts]):
+    if not hosts or hosts == ["heute"] or all(h.startswith("std-agent-host-") for h in hosts):
         return
 
     raise MKGeneralException("Site needs to be empty")

@@ -1,0 +1,17 @@
+Title: Activate changes: Improved speed of site snapshot packaging
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1591273420
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+During activate changes each site gets a distinct process to package its snapshot.
+If there were more sites than available CPUs on the system, the performance decreased
+if dozens of sites packaged a tar file at the same time.
+
+With this change, the number of parallel packaging processes is limited to the number
+of available CPUs and the remaining tasks are put into a queue.

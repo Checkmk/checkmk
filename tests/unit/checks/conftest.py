@@ -42,8 +42,7 @@ def clear_config_caches(monkeypatch):
 @pytest.fixture(scope="function")
 def initialised_item_state():
     previous = item_state.get_item_state_prefix()
-    # TODO: uncomment this and fix test_df_check
-    # item_state._cached_item_states.reset()
+    item_state._cached_item_states.reset()
     item_state.set_item_state_prefix(("unitialised-test-env", None))
     try:
         yield

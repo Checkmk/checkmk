@@ -162,6 +162,64 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
             store.release_lock(self._path)
 
 
+class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disable=too-many-ancestors
+    """Implements the overlay logic between dynamic and static value store"""
+    def __init__(
+        self,
+        *,
+        dynamic: _DynamicValueStore,
+        static: _StaticValueStore,
+    ) -> None:
+        self._dynamic = dynamic
+        self.static = static
+
+    def _keys(self) -> Set[_ValueStoreKey]:
+        return {
+            k for k in (set(self._dynamic) | set(self.static))
+            if k not in self._dynamic.removed_keys
+        }
+
+    def __getitem__(self, key: _ValueStoreKey) -> Any:
+        if key in self._dynamic.removed_keys:
+            raise KeyError(key)
+        try:
+            return self._dynamic.__getitem__(key)
+        except KeyError:
+            return self.static.__getitem__(key)
+
+    def __delitem__(self, key: _ValueStoreKey) -> None:
+        if key in self._dynamic.removed_keys:
+            raise KeyError(key)
+        try:
+            self._dynamic.__delitem__(key)
+            # key is now marked as removed.
+        except KeyError:
+            _ = self.static[key]
+
+    def pop(self, key: _ValueStoreKey, *args: Any) -> Any:
+        try:
+            return self._dynamic.pop(key)
+            # key is now marked as removed.
+        except KeyError:
+            return self.static.get(key, *args)
+
+    def __setitem__(self, key: _ValueStoreKey, value: Any) -> None:
+        self._dynamic.__setitem__(key, value)
+
+    def __iter__(self) -> Iterator[_ValueStoreKey]:
+        return iter(self._keys())
+
+    def __len__(self) -> int:
+        return len(self._keys())
+
+    def commit(self) -> None:
+        self.static.store(
+            removed=self._dynamic.removed_keys,
+            updated=self._dynamic,
+        )
+        self._dynamic = _DynamicValueStore()
+
+
 class MKCounterWrapped(MKException):
     pass
 
@@ -174,20 +232,19 @@ class CachedItemStates:
 
     def reset(self) -> None:
         self._item_state_prefix: Optional[ServicePrefix] = None
-        self._static_values: Optional[_StaticValueStore] = None
-        self._dynamic_values = _DynamicValueStore()
+        # This Union is due to the weird case where no host can be loaded.
+        self._value_store: Union[_EffectiveValueStore, MutableMapping[_ValueStoreKey, Any]] = {}
 
     def load(self, hostname: HostName) -> None:
-        self._static_values = _StaticValueStore(hostname, logger.debug)
-        self._static_values.load()
+        self._value_store = _EffectiveValueStore(
+            dynamic=_DynamicValueStore(),
+            static=_StaticValueStore(hostname, logger.debug),
+        )
+        self._value_store.static.load()
 
     def save(self) -> None:
-        if self._static_values is None:
-            return
-        self._static_values.store(
-            removed=self._dynamic_values.removed_keys,
-            updated=self._dynamic_values,
-        )
+        if isinstance(self._value_store, _EffectiveValueStore):
+            self._value_store.commit()
 
     def clear_item_state(self, user_key: _UserKey) -> None:
         key = self.get_unique_item_state_key(user_key)
@@ -198,39 +255,17 @@ class CachedItemStates:
             self.remove_full_key(key)
 
     def remove_full_key(self, full_key: _ValueStoreKey) -> None:
-        self._dynamic_values.pop(full_key, None)
+        self._value_store.pop(full_key, None)
 
     def get_item_state(self, user_key: _UserKey, default: Any = None) -> Any:
         key = self.get_unique_item_state_key(user_key)
-        if key in self._dynamic_values.removed_keys:
-            return default
-        try:
-            return self._lookup(key)
-        except KeyError:
-            return default
-
-    def _lookup(self, key: _ValueStoreKey) -> Any:
-        try:
-            return self._dynamic_values[key]
-        except KeyError:
-            if self._static_values is None:
-                # TODO: refactor s.t. this can never happen.
-                raise
-            return self._static_values[key]
+        return self._value_store.get(key, default)
 
     def set_item_state(self, user_key: _UserKey, state: Any) -> None:
-        self._dynamic_values[self.get_unique_item_state_key(user_key)] = state
+        self._value_store[self.get_unique_item_state_key(user_key)] = state
 
     def get_all_item_states(self) -> MutableMapping[_ValueStoreKey, Any]:
-        if self._static_values is None:
-            # TODO: refactor s.t. this can never happen.
-            return {
-                k: v
-                for k, v in self._dynamic_values.items()
-                if k not in self._dynamic_values.removed_keys
-            }
-        keys = set(self._static_values) | set(self._dynamic_values)
-        return {k: self._lookup(k) for k in keys if k not in self._dynamic_values.removed_keys}
+        return dict(self._value_store.items())
 
     def get_item_state_prefix(self) -> Optional[ServicePrefix]:
         return self._item_state_prefix

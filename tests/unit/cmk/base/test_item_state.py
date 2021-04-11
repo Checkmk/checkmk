@@ -137,6 +137,69 @@ class Test_StaticValueStore:
         assert list(svs.items()) == list(expected_values.items())
 
 
+class Test_EffectiveValueStore:
+    @staticmethod
+    def _get_store() -> item_state._EffectiveValueStore:
+        dynstore = item_state._DynamicValueStore()
+        dynstore.update({
+            ("dyn", "key", "1"): "dyn-val-1",
+            ("dyn", "key", "2"): "dyn-val-2",
+        })
+        return item_state._EffectiveValueStore(
+            dynamic=dynstore,
+            static=
+            {  # type: ignore[arg-type]
+                ("stat", "key", "1"): "stat-val-1",
+                ("stat", "key", "2"): "stat-val-2",
+            },
+        )
+
+    def test_getitem(self):
+        evs = self._get_store()
+        assert evs[("stat", "key", "1")] == "stat-val-1"
+        assert evs.get(("stat", "key", "2")) == "stat-val-2"
+        assert evs.get(("stat", "key", "3")) is None
+        assert evs[("dyn", "key", "1")] == "dyn-val-1"
+        assert evs.get(("dyn", "key", "2")) == "dyn-val-2"
+        assert evs.get(("dyn", "key", "3")) is None
+
+    def test_delitem(self):
+        evs = self._get_store()
+        assert ("stat", "key", "1") in evs
+        assert ("dyn", "key", "2") in evs
+
+        del evs[("stat", "key", "1")]
+        assert ("stat", "key", "1") not in evs
+
+        with pytest.raises(KeyError):
+            del evs[("stat", "key", "1")]
+
+        del evs[("dyn", "key", "1")]
+        assert ("dyn", "key", "1") not in evs
+
+    def test_pop(self):
+        evs = self._get_store()
+        assert ("stat", "key", "1") in evs
+        assert ("dyn", "key", "2") in evs
+
+        evs.pop(("stat", "key", "1"))
+        assert ("stat", "key", "1") not in evs
+
+        evs.pop(("dyn", "key", "1"))
+        assert ("dyn", "key", "1") not in evs
+
+    def test_iter(self):
+        evs = self._get_store()
+        assert sorted(evs) == [("dyn", "key", "1"), ("dyn", "key", "2"), ("stat", "key", "1"),
+                               ("stat", "key", "2")]
+
+        evs.pop(("stat", "key", "1"))
+        assert sorted(evs) == [("dyn", "key", "1"), ("dyn", "key", "2"), ("stat", "key", "2")]
+
+        evs.pop(("dyn", "key", "2"))
+        assert sorted(evs) == [("dyn", "key", "1"), ("stat", "key", "2")]
+
+
 def test_item_state_prefix_required():
     cis = item_state.CachedItemStates()
     # we *must* set a prefix:

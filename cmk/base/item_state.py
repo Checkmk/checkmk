@@ -21,7 +21,7 @@ structures like log files or stuff.
 
 import os
 import traceback
-from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -39,7 +39,7 @@ g_last_counter_wrap: 'Optional[MKCounterWrapped]' = None
 g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
-ItemStateKeyElement = Optional[AnyStr]
+ItemStateKeyElement = Optional[str]
 ItemStateKey = Tuple[ItemStateKeyElement, ...]
 ItemStates = Dict[ItemStateKey, Any]
 OnWrap = Union[None, bool, float]

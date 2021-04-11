@@ -16,8 +16,8 @@ def check_humidity(humidity: float, params: HumidityParamType) -> CheckResult:
     yield from check_levels(
         humidity,
         metric_name="humidity",
-        levels_upper=params.get("levels", (None, None)),
-        levels_lower=params.get("levels_lower", (None, None)),
+        levels_upper=params.get("levels"),
+        levels_lower=params.get("levels_lower"),
         render_func=render.percent,
         boundaries=(0, 100),
     )

@@ -5172,7 +5172,7 @@ class PainterHostLabels(Painter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Host labels")
 
     @property
     def short_title(self):
@@ -5204,7 +5204,7 @@ class PainterServiceLabels(Painter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Service labels")
 
     @property
     def short_title(self):

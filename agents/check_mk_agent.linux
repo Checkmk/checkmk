@@ -149,7 +149,7 @@ if [ "$ENCRYPTED" == "yes" ]; then
         echo -n "03"
         # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
         # always use key derivation here, as this is suitable for passwords of all lengths.
-        exec > >(openssl enc -aes-256-cbc -md sha256 -iter 100000 -k "$PASSPHRASE")
+        exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "$PASSPHRASE")
     elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
         echo -n "02"
         exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)

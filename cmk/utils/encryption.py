@@ -30,7 +30,7 @@ def decrypt_aes_256_cbc_pbkdf2(
     SALT_LENGTH = 8
     KEY_LENGTH = 32
     IV_LENGTH = 16
-    PBKDF2_CYCLES = 100_000
+    PBKDF2_CYCLES = 10_000
 
     salt = ciphertext[:SALT_LENGTH]
     raw_key = PBKDF2(password,

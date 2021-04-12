@@ -15,7 +15,7 @@ from livestatus import LocalConnection, MKLivestatusNotFoundError  # noqa: F401 
 HostInfo = Dict[str, Any]
 
 
-def query_host_configs() -> List[HostInfo]:
+def query_hosts_infos() -> List[HostInfo]:
     return LocalConnection().query_table_assoc(
         "GET hosts\n"
         "Columns: name alias address custom_variables contacts contact_groups")
@@ -24,6 +24,6 @@ def query_host_configs() -> List[HostInfo]:
 ################################################################################
 
 
-def query_config_timestamp() -> Timestamp:
+def query_status_program_start() -> Timestamp:
     return LocalConnection().query_value("GET status\n"  #
                                          "Columns: program_start")

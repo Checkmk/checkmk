@@ -10,7 +10,7 @@ from typing import Dict, Optional
 
 from cmk.utils.type_defs import HostName, Timestamp
 
-from .cmc_queries import HostInfo, query_host_configs, query_config_timestamp
+from .cmc_queries import HostInfo, query_hosts_infos, query_status_program_start
 
 #.
 #   .--Host config---------------------------------------------------------.
@@ -51,7 +51,7 @@ class HostConfig:
             False in case the update failed, otherwise True.
         """
         try:
-            timestamp = query_config_timestamp()
+            timestamp = query_status_program_start()
             if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
@@ -64,7 +64,7 @@ class HostConfig:
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
-        for host in query_host_configs():
+        for host in query_hosts_infos():
             host_name = host["name"]
             self._hosts_by_name[host_name] = host
             # Note: It is important that we use exactly the same algorithm here as

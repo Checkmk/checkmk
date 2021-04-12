@@ -18,6 +18,25 @@ You can find an introduction to hosts in the
 Please note that every host always resides in a folder. The folder is included twice
 in the host's links: Once based upon the canonical path and once based upon the folder's
 unique id. You can never remove a host from a folder, just move it to a different one.
+
+### Host and Folder attributes
+
+Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
+host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+community in a folder is equivalent to setting the same on all hosts in said folder.
+
+Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
+attributes up to the root.
+
+### Relations
+
+A host_config object can have the following relations present in `links`:
+
+ * `self` - The host itself.
+ * `urn:com.checkmk:rels/folder_config` - The folder object this host resides in.
+ * `urn:org.restfulobjects:rels/update` - The endpoint to update this host.
+ * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
+
 """
 from typing import Iterable
 

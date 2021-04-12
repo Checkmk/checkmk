@@ -121,16 +121,6 @@ certain endpoints. More specialized link relations are also available:
 
 Endpoint specific link relations are also possible.
 
-## Host and Folder attributes
-
-Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
-host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
-community in a folder is equivalent to setting the same on all hosts in said folder.
-
-Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
-attributes up to the root.
-
-
 # Updating values
 
 When an object is updated by multiple requests at the same time, it can happen that the second
@@ -301,6 +291,7 @@ implementation does not disrupt use-case requirements.
 The *major* version is part of the URL of each endpoint, while the whole version (in the form
 *major*.*minor*) can be sent via the HTTP header `X-API-Version`. If the header is not sent,
 the most recent *minor* version of the through the URL selected *major* version is used.
+The header will also be present in the accompanying HTTP response.
 
 ### Format
 

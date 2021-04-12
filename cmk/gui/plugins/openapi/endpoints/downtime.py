@@ -20,6 +20,14 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns, please take a look at the [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
 definition on GitHub.
 
+### Relations
+
+Downtime object can have the following relations:
+
+ * `self` - The downtime itself.
+ * `urn:com.checkmk:rels/host_config` - The host the downtime applies to.
+ * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
+
 """
 
 import json

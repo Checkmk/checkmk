@@ -14,6 +14,24 @@ You can find an introduction to hosts including folders in the
 
 Due to HTTP escaping folders are represented with the tilde character (`~`) as the path separator.
 
+### Host and Folder attributes
+
+Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
+host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+community in a folder is equivalent to setting the same on all hosts in said folder.
+
+Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
+attributes up to the root.
+
+### Relations
+
+A folder_config object can have the following relations present in `links`:
+
+ * `self` - The folder itself.
+ * `urn:org.restfulobjects:rels/update` - The endpoint to update this folder.
+ * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this folder.
+
+
 """
 from typing import List
 

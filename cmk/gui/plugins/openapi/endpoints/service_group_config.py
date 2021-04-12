@@ -11,6 +11,12 @@ for example, file system services of multiple hosts.
 
 You can find an introduction to services including service groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
+
+A service group object can have the following relations present in `links`:
+
+ * `self` - The service group itself.
+ * `urn:org.restfulobject/rels:update` - An endpoint to change this service group.
+ * `urn:org.restfulobject/rels:delete` - An endpoint to delete this service group.
 """
 
 from cmk.gui import watolib

@@ -385,7 +385,7 @@ class _MultiHostSections:
         # from within the check function, nowhere else.
         orig_item_state_prefix = item_state.get_item_state_prefix()
         try:
-            item_state.set_item_state_prefix((section_name, None))
+            item_state.set_item_state_prefix((str(section_name), None))
             return parse_function(section_content)
 
         except item_state.MKCounterWrapped:

@@ -47,7 +47,6 @@ import operator
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.http import Response
-from cmk.gui.log import logger
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -431,7 +430,6 @@ def _serve_host(host, effective_attributes=False):
 
 
 def serialize_host(host: watolib.CREHost, effective_attributes: bool):
-    # TODO: readd link mechanism once object ref between endpoints is in place
     if effective_attributes:
         attributes = host.effective_attributes()
     else:
@@ -441,32 +439,18 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
         attributes = attributes.copy()
         del attributes['meta_data']
 
-    links = [
-        constructors.link_rel(
-            rel='cmk/show',
-            href=constructors.object_href('folder_config', folder_slug(host.folder())),
-            method='get',
-            title='Show the folder config of the host',
-        ),
-    ]
-    try:
-        folder_id = host.folder().id()
-        links.append(
-            constructors.link_rel(
-                rel='cmk/permalink',
-                href=constructors.object_href('folder_config', folder_id),
-                method='get',
-                title='Show the permanent link of folder config of the host. This link will never '
-                'change, even if the folder has been moved or renamed.',
-            ))
-    except ValueError:
-        logger.warning("Folder %r does not have unique identifier.", host.folder().path())
-
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
-        links=links,
+        links=[
+            constructors.link_rel(
+                rel='cmk/folder_config',
+                href=constructors.object_href('folder_config', folder_slug(host.folder())),
+                method='get',
+                title='The folder config of the host.',
+            ),
+        ],
         extensions={
             'attributes': attributes,
             'is_cluster': host.is_cluster(),

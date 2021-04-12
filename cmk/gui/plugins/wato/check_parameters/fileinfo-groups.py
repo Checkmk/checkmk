@@ -36,7 +36,7 @@ def _valuespec_fileinfo_groups():
             elements=[
                 TextAscii(
                     title=_("Name of group"),
-                    size=10,
+                    size=20,
                 ),
                 Transform(Tuple(
                     show_titles=True,

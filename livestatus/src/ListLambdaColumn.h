@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -70,12 +71,12 @@ public:
         const T* data = columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
-        } else if (std::holds_alternative<f1_t>(f_)) {
+        }
+        if (std::holds_alternative<f1_t>(f_)) {
             return data == nullptr ? Default
                                    : std::get<f1_t>(f_)(*data, auth_user);
-        } else {
-            throw std::runtime_error("unreachable");
         }
+        throw std::runtime_error("unreachable");
     }
 
 private:
@@ -85,9 +86,11 @@ private:
 
 class ListColumn::Constant : public ListColumn {
 public:
+    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
-             const column_type& x)
-        : ListColumn{name, description, {}}, x_{x} {}
+             // cppcheck-suppress passedByValue
+             column_type x)
+        : ListColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;
     column_type getValue(Row /*row*/, const contact* /*auth_user*/,
                          std::chrono::seconds /*timezone_offset*/

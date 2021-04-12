@@ -17,7 +17,7 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
 )
 
-from .utils.mssql_counters import Section, get_int, get_item
+from .utils.mssql_counters import accumulate_node_results, Section, get_int, get_item
 
 
 def discovery_mssql_counters_cache_hits(
@@ -95,8 +95,11 @@ def cluster_check_mssql_counters_cache_hits(
     Result(state=<State.OK: 0>, summary='[node1] 99.59%')
     Metric('cache_hit_ratio', 99.59123862409379)
     """
-    for node_name, node_section in section.items():
-        yield from _check_common(node_name, item, node_section)
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_common(
+            node_name, item, node_section),
+        section=section,
+    )
 
 
 register.check_plugin(

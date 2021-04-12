@@ -15,6 +15,7 @@ from .agent_based_api.v1 import (
 )
 
 from .utils.mssql_counters import (
+    accumulate_node_results,
     Section,
     discovery_mssql_counters_generic,
     get_rate_or_none,
@@ -54,7 +55,7 @@ def _check_common(
         ('number_of_deadlocks/sec', 'Deadlocks'),
         ('lock_waits/sec', 'Waits'),
     ):
-        if not counter_key in counters:
+        if counter_key not in counters:
             continue
 
         rate = get_rate_or_none(
@@ -143,15 +144,11 @@ def _cluster_check_base(
     Result(state=<State.OK: 0>, summary='[node1] Waits: 1.0/s')
     Metric('lock_waits_per_second', 1.0, boundaries=(0.0, None))
     """
-    for node_name, node_section in section.items():
-        yield from _check_common(
-            value_store,
-            time_point,
-            "[%s] " % node_name,
-            item,
-            params,
-            node_section,
-        )
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_common(
+            value_store, time_point, "[%s] " % node_name, item, params, node_section),
+        section=section,
+    )
 
 
 def cluster_check_mssql_counters_locks(

@@ -6113,40 +6113,46 @@ def ColorWithThemeAndMetricDefault(
     )
 
 
+SSHKeyPairValue = _Tuple[str, str]
+
+
 class SSHKeyPair(ValueSpec):
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]):
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
             html.write(_("Key pair will be generated when you save."))
 
-    def value_to_text(self, value):
+    def value_to_text(self, value: SSHKeyPairValue) -> str:
         return self._get_key_fingerprint(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if html.request.has_var(varprefix):
-            return self._decode_key_from_url(html.request.var(varprefix))
+            return self._decode_key_from_url(html.request.get_ascii_input_mandatory(varprefix))
         return self._generate_ssh_key(varprefix)
 
     @staticmethod
-    def _encode_key_for_url(value):
+    def _encode_key_for_url(value: SSHKeyPairValue) -> str:
         return "|".join(value)
 
     @staticmethod
-    def _decode_key_from_url(text):
-        return text.split("|")
+    def _decode_key_from_url(text: str) -> SSHKeyPairValue:
+        parts = text.split("|")
+        if len(parts) != 2:
+            raise ValueError("Invalid value: %r" % text)
+        return parts[0], parts[1]
 
     @classmethod
-    def _generate_ssh_key(cls, varprefix):
+    def _generate_ssh_key(cls, varprefix: str) -> SSHKeyPairValue:
         key = RSA.generate(4096)
-        private_key = key.exportKey('PEM')
+        private_key = key.exportKey('PEM').decode("ascii")
         pubkey = key.publickey()
-        public_key = pubkey.exportKey('OpenSSH')
+        public_key = pubkey.exportKey('OpenSSH').decode("ascii")
         return (private_key, public_key)
 
     @classmethod
-    def _get_key_fingerprint(cls, value):
+    def _get_key_fingerprint(cls, value: SSHKeyPairValue) -> str:
         _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
         fp_plain = hashlib.md5(key).hexdigest()

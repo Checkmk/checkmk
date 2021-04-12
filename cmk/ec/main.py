@@ -44,13 +44,14 @@ import cmk.utils.regex
 import cmk.utils.debug
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import HostName
 import cmk.utils.store as store
 import livestatus
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
-from .host_config import HostConfig
+from .host_config import HostConfig, HostInfo
 from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
@@ -1667,10 +1668,11 @@ class EventServer(ECServerThread):
             # diskspace and make things worse by logging that we could
             # not log.
 
-    def get_hosts_with_active_event_limit(self):
+    def get_hosts_with_active_event_limit(self) -> List[str]:
         hosts = []
         for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
-            if count >= self._get_host_event_limit(core_host)[0]:
+            host_config = self.host_config.get_config_for_host(core_host)
+            if count >= self._get_host_event_limit(host_config)[0]:
                 hosts.append(hostname)
         return hosts
 
@@ -1765,20 +1767,22 @@ class EventServer(ECServerThread):
         return False
 
     # protected by self._event_status.lock
-    def _get_event_limit(self, ty, event):
+    def _get_event_limit(self, ty, event) -> Tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
         if ty == "by_rule":
             return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            return self._get_host_event_limit(event["core_host"])
+            core_host = event["core_host"]
+            host_config = self.host_config.get_config_for_host(core_host)
+            return self._get_host_event_limit(host_config)
         raise NotImplementedError()
 
-    def _get_overall_event_limit(self):
+    def _get_overall_event_limit(self) -> Tuple[int, str]:
         return (self._config["event_limit"]["overall"]["limit"],
                 self._config["event_limit"]["overall"]["action"])
 
-    def _get_rule_event_limit(self, rule_id):
+    def _get_rule_event_limit(self, rule_id) -> Tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
         rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
@@ -1787,9 +1791,8 @@ class EventServer(ECServerThread):
         return (self._config["event_limit"]["by_rule"]["limit"],
                 self._config["event_limit"]["by_rule"]["action"])
 
-    def _get_host_event_limit(self, core_host):
+    def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> Tuple[int, str]:
         """Prefer the host individual limit for by_host limit (in case there is some)"""
-        host_config = self.host_config.get_config_for_host(core_host)
         host_limit = (None if host_config is None else host_config.get("custom_variables",
                                                                        {}).get("EC_EVENT_LIMIT"))
         if host_limit:
@@ -3231,7 +3234,7 @@ class EventStatus:
     def _initialize_event_limit_status(self):
         self.num_existing_events = len(self._events)
 
-        self.num_existing_events_by_host = {}
+        self.num_existing_events_by_host: Dict[Tuple[str, HostName], int] = {}
         self.num_existing_events_by_rule = {}
         for event in self._events:
             self._count_event_add(event)

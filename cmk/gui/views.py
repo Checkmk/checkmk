@@ -289,9 +289,6 @@ class View(object):
 
     @property
     def row_limit(self):
-        if self.datasource.ignore_limit:
-            return None
-
         return self._row_limit
 
     @row_limit.setter
@@ -1359,8 +1356,11 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
+        # We test for limit here and not inside view.row_limit, because view.row_limit is used
+        # for rendering limits.
+        query_row_limit = None if view.datasource.ignore_limit else view.row_limit
         row_data = view.datasource.table.query(view, columns, headers, view.only_sites,
-                                               view.row_limit, all_active_filters)
+                                               query_row_limit, all_active_filters)
 
         # HW/SW inventory returns tuple, see a3ce07b75dfca48e372d5ef4ab2d6680c3654fe1
         if isinstance(row_data, tuple):

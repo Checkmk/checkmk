@@ -10,6 +10,15 @@ Every contact group represents a responsibility for a specific area in the IT la
 
 You can find an introduction to user management including contact groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_user.html).
+
+### Relations
+
+A contact group object can have the following relations present in `links`:
+
+ * `self` - The contact group itself.
+ * `urn:org.restfulobject/rels:update` - An endpoint to change this contact group.
+ * `urn:org.restfulobject/rels:delete` - An endpoint to delete this contact group.
+
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response

@@ -69,6 +69,8 @@ CmkEndpointName = Literal[
     'cmk/show',
     'cmk/sign',
     'cmk/start',
+    'cmk/host_config',
+    'cmk/folder_config',
     'cmk/delete_bi_rule',
     'cmk/delete_bi_aggregation',
     'cmk/delete_bi_pack',

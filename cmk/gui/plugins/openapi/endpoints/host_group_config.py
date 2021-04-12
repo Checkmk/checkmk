@@ -10,6 +10,13 @@ By using a host group you can generate suitable views for overview and/or analys
 
 You can find an introduction to hosts including host groups in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
+
+A host group object can have the following relations present in `links`:
+
+ * `self` - The host group itself.
+ * `urn:org.restfulobject/rels:update` - An endpoint to change this host group.
+ * `urn:org.restfulobject/rels:delete` - An endpoint to delete this host group.
+
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response

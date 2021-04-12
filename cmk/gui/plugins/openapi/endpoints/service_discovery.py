@@ -331,5 +331,7 @@ def serialize_service_discovery(
         identifier=f'{host_name}-services-wato',
         title='Services discovery',
         members=members,
+        editable=False,
+        deletable=False,
         extensions={},
     )

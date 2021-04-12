@@ -90,7 +90,6 @@ def list_hosts(param):
 
     q = Query(param['columns'])
 
-    # TODO: add sites parameter
     query_expr = param.get('query')
     if query_expr:
         q = q.filter(query_expr)

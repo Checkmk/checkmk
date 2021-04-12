@@ -379,10 +379,7 @@ class View:
         return sorters
 
     @property
-    def row_limit(self) -> Optional[int]:
-        if self.datasource.ignore_limit:
-            return None
-
+    def row_limit(self):
         return self._row_limit
 
     @row_limit.setter
@@ -1972,11 +1969,13 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter],
             all_active_filters,
             view,
         )
-
+        # We test for limit here and not inside view.row_limit, because view.row_limit is used
+        # for rendering limits.
+        query_row_limit = None if view.datasource.ignore_limit else view.row_limit
         row_data: Union[Rows,
                         _Tuple[Rows,
                                int]] = view.datasource.table.query(view, columns, headers,
-                                                                   view.only_sites, view.row_limit,
+                                                                   view.only_sites, query_row_limit,
                                                                    all_active_filters)
 
         if isinstance(row_data, tuple):

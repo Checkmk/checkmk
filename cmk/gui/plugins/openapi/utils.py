@@ -267,7 +267,7 @@ def collect_attributes(
         for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
             if not attr.is_visible(object_type, new):
                 continue
-            help_text: str = attr.help() or "Sorry, no help text available."
+            help_text: str = attr.help() or ""
             # TODO: what to do with attr.depends_on_tags()?
             attr_entry = Attr(
                 name=attr.name(),

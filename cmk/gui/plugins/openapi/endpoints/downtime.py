@@ -360,10 +360,19 @@ def _serialize_downtimes(downtimes):
 
 
 def _serialize_single_downtime(downtime):
+    links = []
     if downtime["is_service"]:
-        downtime_detail = "service: %s" % downtime["service_description"]
+        downtime_detail = f"service: {downtime['service_description']}"
     else:
-        downtime_detail = "host: %s" % downtime["host_name"]
+        host_name = downtime['host_name']
+        downtime_detail = f"host: {host_name}"
+        links.append(
+            constructors.link_rel(
+                rel='cmk/host_config',
+                href=constructors.object_href('host_config', host_name),
+                title='This host of this downtime.',
+                method='get',
+            ))
 
     downtime_id = downtime['id']
     return constructors.domain_object(
@@ -374,7 +383,7 @@ def _serialize_single_downtime(downtime):
         links=[
             constructors.link_rel(
                 rel='.../delete',
-                href='/domain-types/downtime/actions/delete/invoke',
+                href=constructors.domain_type_action_href('downtime', 'delete'),
                 method='post',
                 title='Delete the downtime',
                 body_params={

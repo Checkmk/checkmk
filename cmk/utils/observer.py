@@ -10,7 +10,6 @@ import logging
 from typing import Optional, Final, Dict
 
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostName
 
 # TODO(ml): move caching to utils too
 from cmk.base.caching import config_cache  # pylint: disable=cmk-module-layer-violation
@@ -27,29 +26,33 @@ __all__ = [
 
 
 class ABCResourceObserver(abc.ABC):
-    __slots__ = ['_logger', '_num_check_cycles', '_hostname']
+    __slots__ = ['_logger', '_num_check_cycles', '_hint']
 
     def __init__(self) -> None:
         super(ABCResourceObserver, self).__init__()
         self._logger = logging.getLogger("cmk.base")
         self._num_check_cycles = 0
-        self._hostname = "<unknown>"
+        self._hint = "<unknown>"
 
-    def _register_check(self, hostname: Optional[HostName]) -> None:
+    def _register_check(self, hint: Optional[str]) -> None:
         self._num_check_cycles += 1
-        if hostname is not None:
-            self._hostname = hostname
+        if hint is not None:
+            self._hint = hint
 
     @abc.abstractmethod
-    def check_resources(self, hostname: Optional[HostName]) -> None:
+    def check_resources(self, hint: Optional[str]) -> None:
+        """hint should provide reasonable additional information useful for analysis.
+        Good examples are hostname, service name or raw command."""
         raise NotImplementedError()
 
     def config_has_changed(self) -> None:
         pass
 
+    def _context(self) -> str:
+        return f'[cycle {self._num_check_cycles}, host "{self._hint}"]'
+
     def _warning(self, message: str) -> None:
-        self._logger.warning('[cycle %d, host "%s"] %s', self._num_check_cycles, self._hostname,
-                             message)
+        self._logger.warning('%s %s', self._context(), message)
 
     def _costly_checks_enabled(self) -> bool:
         return self._logger.isEnabledFor(VERBOSE)
@@ -123,8 +126,11 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
     Call sys.exit(14) if during call of check_resources() memory is overloaded.
     The microcore is responsible for restart of Fetcher.
     """
-    def check_resources(self, hostname: Optional[HostName]) -> None:
-        self._register_check(hostname)
+    def _context(self) -> str:
+        return f'[cycle {self._num_check_cycles}, command "{self._hint}"]'
+
+    def check_resources(self, hint: Optional[str]) -> None:
+        self._register_check(hint)
 
         if not self._validate_size():
             sys.exit(14)

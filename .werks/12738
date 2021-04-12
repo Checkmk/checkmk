@@ -1,0 +1,17 @@
+Title: Skip empty values on bulk host import via CSV file
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1618221953
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+If values were missing for some hosts and this kind of value was selected in
+preview, e.g. "IPv4 address", importing was not possible because of a
+validation error.
+
+Such values are now skipped. The affected hosts are now imported without the
+missing value.

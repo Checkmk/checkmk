@@ -271,6 +271,9 @@ class ModeBulkImport(WatoMode):
         host_name = None
         attributes: Dict[str, str] = {}
         for col_num, value in enumerate(row):
+            if not value:
+                continue
+
             attribute = html.request.var("attribute_%d" % col_num)
             if attribute == "host_name":
                 Hostname().validate_value(value, "host")

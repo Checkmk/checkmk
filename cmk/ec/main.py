@@ -46,9 +46,9 @@ from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import HostName
 import cmk.utils.store as store
-import livestatus
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
+from .cmc_queries import LocalConnection, MKLivestatusNotFoundError
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
 from .host_config import HostConfig, HostInfo
@@ -368,7 +368,7 @@ class TimePeriods:
         if self._periods is not None and int(time.time() / 60.0) == self._last_update:
             return  # only update once a minute
         try:
-            table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
+            table = LocalConnection().query("GET timeperiods\nColumns: name alias in")
             periods: Dict[str, Tuple[str, bool]] = {}
             for tpname, alias, isin in table:
                 periods[tpname] = (alias, bool(isin))
@@ -1526,9 +1526,9 @@ class EventServer(ECServerThread):
                  "Filter: host_name = %s\n" % (event["core_host"]))
 
         try:
-            return livestatus.LocalConnection().query_value(query) >= 1
+            return LocalConnection().query_value(query) >= 1
 
-        except livestatus.MKLivestatusNotFoundError:
+        except MKLivestatusNotFoundError:
             return False
 
         except Exception:

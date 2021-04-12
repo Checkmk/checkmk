@@ -9,7 +9,8 @@ from threading import Lock
 from typing import Any, Dict, List, Optional
 
 from cmk.utils.type_defs import HostName, Timestamp
-from livestatus import LocalConnection
+
+from .cmc_queries import LocalConnection
 
 #.
 #   .--Host config---------------------------------------------------------.

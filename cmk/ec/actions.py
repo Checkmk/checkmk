@@ -13,8 +13,8 @@ from typing import Any, Dict, Optional, Set
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-import livestatus
 
+from .cmc_queries import LocalConnection, MKLivestatusNotFoundError
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -432,11 +432,11 @@ def _rbn_groups_contacts(groups: Any) -> Any:
 
     try:
         contacts: Set[str] = set()
-        for contact_list in livestatus.LocalConnection().query_column(query):
+        for contact_list in LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts
 
-    except livestatus.MKLivestatusNotFoundError:
+    except MKLivestatusNotFoundError:
         return []
 
     except Exception:
@@ -447,7 +447,7 @@ def _rbn_groups_contacts(groups: Any) -> Any:
 
 def _core_has_notifications_disabled(event: Any, logger: Logger) -> bool:
     try:
-        notifications_enabled = livestatus.LocalConnection().query_value(
+        notifications_enabled = LocalConnection().query_value(
             "GET status\nColumns: enable_notifications")
         if not notifications_enabled:
             logger.info("Notifications are currently disabled. Skipped notification for event %d" %

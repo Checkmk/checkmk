@@ -10,10 +10,6 @@ import logging
 from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
-try:
-    from .cee.snmp_backend import pysnmp_backend  # type: ignore[import]
-except ImportError:
-    pysnmp_backend = None  # type: ignore[assignment]
 
 try:
     from .cee.snmp_backend import inline  # type: ignore[import]
@@ -47,8 +43,15 @@ def backend(snmp_config: SNMPHostConfig,
     if inline and snmp_config.snmp_backend == SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)
 
-    if pysnmp_backend and snmp_config.snmp_backend == SNMPBackendEnum.PYSNMP:
-        return pysnmp_backend.PySNMPBackend(snmp_config, logger)
+    if snmp_config.snmp_backend == SNMPBackendEnum.PYSNMP:
+        try:
+            # NOTE: delay import to save memory in fetcher. PySNMP is experimental and memory hog.
+            from .cee.snmp_backend import pysnmp_backend  # type: ignore[import]
+            return pysnmp_backend.PySNMPBackend(snmp_config, logger)
+        except ImportError:
+            # This is not an error: we may reuse pysnmp after trial expired. Also classic backedn
+            # is native fallback for pysnmp
+            pass
 
     if snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC:
         return ClassicSNMPBackend(snmp_config, logger)

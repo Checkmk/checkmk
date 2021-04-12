@@ -115,13 +115,13 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str],
                 if content_type == 'text/plain' and 'attachment' not in disposition:
                     payload = part.get_payload()
                     if encoding == "base64":
-                        payload = base64.b64decode(payload)
+                        payload = str(base64.b64decode(payload))
                     log_line += '|' + payload[:args.body_limit]
                     break
         else:
             payload = msg.get_payload()
             if encoding == "base64":
-                payload = base64.b64decode(payload)
+                payload = str(base64.b64decode(payload))
             log_line += '|' + payload[:args.body_limit]
 
         log_line = log_line.replace('\r\n', '\0')

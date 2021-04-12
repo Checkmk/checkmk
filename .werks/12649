@@ -1,0 +1,11 @@
+Title: Fix for Crash "Unhandled exception: TypeError('can only concatenate str (not "bytes") to str')"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618230071
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The active check "check_mail" crashed if the payload was encoded with base64. This werk fixes this issue.

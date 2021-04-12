@@ -1,0 +1,18 @@
+Title: MSSQL plugins: Stale services on clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618237600
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The check plugins
+<i>mssql_counters_cache_hits</i>,
+<i>mssql_counters_file_sizes</i>,
+<i>mssql_counters_locks</i>,
+<i>mssql_counters_pageactivity</i>,
+<i>mssql_counters_sqlstats</i> and
+<i>mssql_counters_transactions</i>
+produced stale services on clusters.

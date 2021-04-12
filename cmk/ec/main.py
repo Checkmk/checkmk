@@ -57,6 +57,9 @@ from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
 
+# TODO: We really, really need a stricter type here, this is *the* central data structure in the EC!
+Event = Dict[str, Any]
+
 
 class SyslogPriority:
     NAMES = {
@@ -1358,7 +1361,7 @@ class EventServer(ECServerThread):
         event = self._event_creator.create_event_from_line(line, address)
         self.process_event(event)
 
-    def process_event(self, event):
+    def process_event(self, event: Event) -> None:
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled
@@ -1504,7 +1507,7 @@ class EventServer(ECServerThread):
                 "contact_groups_precedence": rule["contact_groups"]["precedence"],
             })
 
-    def add_core_host_to_event(self, event):
+    def add_core_host_to_event(self, event: Event) -> None:
         name = self.host_config.get_canonical_name(event["host"])
         event["core_host"] = "" if name is None else name
 
@@ -1514,7 +1517,7 @@ class EventServer(ECServerThread):
         # Add some state dependent information (like host is in downtime etc.)
         event["host_in_downtime"] = self._is_host_in_downtime(event)
 
-    def _is_host_in_downtime(self, event):
+    def _is_host_in_downtime(self, event: Event) -> bool:
         if not event["core_host"]:
             return False  # Found no host in core: Not in downtime!
 
@@ -1642,7 +1645,7 @@ class EventServer(ECServerThread):
 
         return backedhost
 
-    def do_translate_hostname(self, event):
+    def do_translate_hostname(self, event: Event) -> None:
         try:
             event["host"] = self.translate_hostname(event["host"])
         except Exception as e:
@@ -1650,7 +1653,7 @@ class EventServer(ECServerThread):
                 self._logger.exception('Unable to parse host "%s" (%s)' % (event.get("host"), e))
             event["host"] = ""
 
-    def log_message(self, event):
+    def log_message(self, event: Event) -> None:
         try:
             with get_logfile(self._config, self.settings.paths.messages_dir.value,
                              self._message_period).open(mode='ab') as f:
@@ -1676,7 +1679,7 @@ class EventServer(ECServerThread):
                 hosts.append(hostname)
         return hosts
 
-    def get_rules_with_active_event_limit(self):
+    def get_rules_with_active_event_limit(self) -> List[str]:
         rule_ids = []
         for rule_id, num_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
@@ -1685,12 +1688,12 @@ class EventServer(ECServerThread):
                 rule_ids.append(rule_id)
         return rule_ids
 
-    def is_overall_event_limit_active(self):
+    def is_overall_event_limit_active(self) -> bool:
         return self._event_status.num_existing_events \
             >= self._config["event_limit"]["overall"]["limit"]
 
     # protected by self._event_status.lock
-    def new_event_respecting_limits(self, event):
+    def new_event_respecting_limits(self, event: Event) -> bool:
         self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
                          (event["host"], event["rule_id"]))
 
@@ -1716,7 +1719,7 @@ class EventServer(ECServerThread):
 
     # Returns False if the event has been created and actions should be
     # performed on that event
-    def _handle_event_limit(self, ty, event):
+    def _handle_event_limit(self, ty: str, event: Event) -> bool:
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
@@ -1767,7 +1770,7 @@ class EventServer(ECServerThread):
         return False
 
     # protected by self._event_status.lock
-    def _get_event_limit(self, ty, event) -> Tuple[int, str]:
+    def _get_event_limit(self, ty: str, event: Event) -> Tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
         if ty == "by_rule":
@@ -1868,7 +1871,7 @@ class EventCreator:
         self._logger = logger
         self._config = config
 
-    def create_event_from_line(self, line, address):
+    def create_event_from_line(self, line, address) -> Event:
         event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
@@ -3239,7 +3242,7 @@ class EventStatus:
         for event in self._events:
             self._count_event_add(event)
 
-    def _count_event_add(self, event):
+    def _count_event_add(self, event: Event) -> None:
         host_key = (event["host"], event["core_host"])
         if host_key not in self.num_existing_events_by_host:
             self.num_existing_events_by_host[host_key] = 1
@@ -3251,14 +3254,14 @@ class EventStatus:
         else:
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
-    def _count_event_remove(self, event):
+    def _count_event_remove(self, event: Event) -> None:
         host_key = (event["host"], event["core_host"])
 
         self.num_existing_events -= 1
         self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
-    def new_event(self, event):
+    def new_event(self, event: Event) -> None:
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
@@ -3267,14 +3270,14 @@ class EventStatus:
         self._count_event_add(event)
         self._history.add(event, "NEW")
 
-    def archive_event(self, event):
+    def archive_event(self, event: Event) -> None:
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
         self._history.add(event, "ARCHIVED")
 
-    def remove_event(self, event):
+    def remove_event(self, event: Event) -> None:
         try:
             self._events.remove(event)
             self._count_event_remove(event)
@@ -3282,7 +3285,7 @@ class EventStatus:
             self._logger.exception("Cannot remove event %d: not present" % event["id"])
 
     # protected by self.lock
-    def _remove_event_by_nr(self, index):
+    def _remove_event_by_nr(self, index: int) -> None:
         event = self._events.pop(index)
         self._count_event_remove(event)
 
@@ -3299,21 +3302,21 @@ class EventStatus:
             self._remove_oldest_event_of_host(event["host"])
 
     # protected by self.lock
-    def _remove_oldest_event_of_rule(self, rule_id):
+    def _remove_oldest_event_of_rule(self, rule_id) -> None:
         for event in self._events:
             if event["rule_id"] == rule_id:
                 self.remove_event(event)
                 return
 
     # protected by self.lock
-    def _remove_oldest_event_of_host(self, hostname):
+    def _remove_oldest_event_of_host(self, hostname: str) -> None:
         for event in self._events:
             if event["host"] == hostname:
                 self.remove_event(event)
                 return
 
     # protected by self.lock
-    def get_num_existing_events_by(self, ty, event):
+    def get_num_existing_events_by(self, ty: str, event: Event) -> int:
         if ty == "overall":
             return self.num_existing_events
         if ty == "by_rule":

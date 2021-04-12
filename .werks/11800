@@ -7,6 +7,6 @@ Version: 1.6.0p23
 Date: 1617808320
 Class: fix
 
-In case custom host attributes where containing special characters (e.g. "&" or "<" etc.), they where stored escaped on disk
+In case custom host attributes where containing special characters (e.g. "&"), they where stored escaped on disk
 and therfore also displayed escaped in the GUI.
 This fix is applied during <tt>omd update</tt>, so no manual interaction is needed when updating to this patchlevel.

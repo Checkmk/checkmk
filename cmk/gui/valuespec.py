@@ -531,8 +531,7 @@ class Filesize(Integer):
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
-    # TODO: Cleanup this hierarchy problem
-    def value_to_text(self, value: int) -> str:  # type: ignore[override]
+    def value_to_text(self, value: int) -> str:
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
 
@@ -601,7 +600,6 @@ class TextAscii(ValueSpec):
     def canonical_value(self) -> str:
         return ""
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -619,7 +617,6 @@ class TextAscii(ValueSpec):
             placeholder=self._placeholder,
         )
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def value_to_text(self, value: str) -> str:
         if not value:
             return self._empty_text
@@ -642,7 +639,6 @@ class TextAscii(ValueSpec):
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def _validate_value(self, value: str, varprefix: str) -> None:
         try:
             if isinstance(value, bytes):
@@ -685,8 +681,7 @@ class UUID(TextAscii):
 
 
 class TextUnicode(TextAscii):
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def from_html_vars(self, varprefix: str) -> str:  # type: ignore[override]
+    def from_html_vars(self, varprefix: str) -> str:
         return html.request.get_unicode_input_mandatory(varprefix, "").strip()
 
     def validate_datatype(self, value: str, varprefix: str) -> None:
@@ -1568,8 +1563,7 @@ class TextAreaUnicode(TextUnicode):
             return "%s" % html.render_pre(HTML(value), class_="ve_textarea")
         return escaping.escape_attribute(value).replace("\n", "<br>")
 
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def render_input(self, varprefix: str, value: str) -> None:  # type: ignore[override]
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
@@ -1596,8 +1590,7 @@ class TextAreaUnicode(TextUnicode):
                        **attrs)
 
     # Overridden because we do not want to strip() here and remove '\r'
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def from_html_vars(self, varprefix: str) -> str:  # type: ignore[override]
+    def from_html_vars(self, varprefix: str) -> str:
         text = html.request.get_unicode_input_mandatory(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
@@ -6337,8 +6330,7 @@ class RuleComment(TextAreaUnicode):
             cols=80,
         )
 
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def render_input(self, varprefix: str, value: str) -> None:  # type: ignore[override]
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         html.open_div(style="white-space: nowrap;")
 
         super().render_input(varprefix, value)

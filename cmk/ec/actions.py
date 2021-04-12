@@ -383,16 +383,16 @@ def _add_infos_from_monitoring_host(host_config: HostConfig, context: Any, event
         return
 
     context.update({
-        "HOSTNAME": config["name"],
-        "HOSTALIAS": config["alias"],
-        "HOSTADDRESS": config["address"],
-        "HOSTTAGS": config["custom_variables"].get("TAGS", ""),
-        "CONTACTS": ",".join(config["contacts"]),
-        "SERVICECONTACTGROUPNAMES": ",".join(config["contact_groups"]),
+        "HOSTNAME": config.name,
+        "HOSTALIAS": config.alias,
+        "HOSTADDRESS": config.address,
+        "HOSTTAGS": config.custom_variables.get("TAGS", ""),
+        "CONTACTS": ",".join(config.contacts),
+        "SERVICECONTACTGROUPNAMES": ",".join(config.contact_groups),
     })
 
     # Add custom variables to the notification context
-    for key, val in config["custom_variables"].items():
+    for key, val in config.custom_variables.items():
         context["HOST_%s" % key] = val
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"

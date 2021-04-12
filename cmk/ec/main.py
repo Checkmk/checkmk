@@ -1796,8 +1796,8 @@ class EventServer(ECServerThread):
 
     def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> Tuple[int, str]:
         """Prefer the host individual limit for by_host limit (in case there is some)"""
-        host_limit = (None if host_config is None else host_config.get("custom_variables",
-                                                                       {}).get("EC_EVENT_LIMIT"))
+        host_limit = (None if host_config is None else
+                      host_config.custom_variables.get("EC_EVENT_LIMIT"))
         if host_limit:
             limit, action = host_limit.split(":", 1)
             return int(limit), action

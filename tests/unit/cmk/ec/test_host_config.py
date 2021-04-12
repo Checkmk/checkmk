@@ -7,7 +7,7 @@
 import logging
 import pytest  # type: ignore[import]
 
-from cmk.ec.main import HostConfig
+from cmk.ec.host_config import HostConfig, HostInfo
 
 
 @pytest.fixture(name="host_config")
@@ -64,7 +64,21 @@ def fixture_livestatus(mock_livestatus):
 
 
 @pytest.mark.parametrize("search_term, result", [
-    ("heute", _heute_config()),
+    ("heute",
+     HostInfo(
+         name='heute',
+         alias='heute alias',
+         address='127.0.0.1',
+         custom_variables={
+             "FILENAME": "/wato/hosts.mk",
+             "ADDRESS_FAMILY": "4",
+             "ADDRESS_4": "127.0.0.1",
+             "ADDRESS_6": "",
+             "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+         },
+         contacts=set(),
+         contact_groups=set(['all']),
+     )),
     ("HEUTE", None),
     ("127.0.0.1", None),
 ])

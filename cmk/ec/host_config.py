@@ -64,14 +64,13 @@ class HostConfig:
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
-        for host in query_hosts_infos():
-            host_name = host["name"]
-            self._hosts_by_name[host_name] = host
+        for info in query_hosts_infos():
+            self._hosts_by_name[info.name] = info
             # Note: It is important that we use exactly the same algorithm here as
             # in the core, see World::loadHosts and World::getHostByDesignation.
-            if host["address"]:
-                self._hosts_by_designation[host["address"].lower()] = host_name
-            if host["alias"]:
-                self._hosts_by_designation[host["alias"].lower()] = host_name
-            self._hosts_by_designation[host_name.lower()] = host_name
+            if info.address:
+                self._hosts_by_designation[info.address.lower()] = info.name
+            if info.alias:
+                self._hosts_by_designation[info.alias.lower()] = info.name
+            self._hosts_by_designation[info.name.lower()] = info.name
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))

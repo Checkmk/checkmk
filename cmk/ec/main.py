@@ -1697,14 +1697,15 @@ class EventServer(ECServerThread):
         self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
                          (event["host"], event["rule_id"]))
 
+        host_config = self.host_config.get_config_for_host(event["core_host"])
         with self._event_status.lock:
-            if self._handle_event_limit("overall", event):
+            if self._handle_event_limit("overall", event, host_config):
                 return False
 
-            if self._handle_event_limit("by_host", event):
+            if self._handle_event_limit("by_host", event, host_config):
                 return False
 
-            if self._handle_event_limit("by_rule", event):
+            if self._handle_event_limit("by_rule", event, host_config):
                 return False
 
             self._event_status.new_event(event)
@@ -1719,12 +1720,12 @@ class EventServer(ECServerThread):
 
     # Returns False if the event has been created and actions should be
     # performed on that event
-    def _handle_event_limit(self, ty: str, event: Event) -> bool:
+    def _handle_event_limit(self, ty: str, event: Event, host_config: Optional[HostInfo]) -> bool:
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
 
-        limit, action = self._get_event_limit(ty, event)
+        limit, action = self._get_event_limit(ty, event, host_config)
         self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
                          num_already_open, limit)
 
@@ -1770,14 +1771,13 @@ class EventServer(ECServerThread):
         return False
 
     # protected by self._event_status.lock
-    def _get_event_limit(self, ty: str, event: Event) -> Tuple[int, str]:
+    def _get_event_limit(self, ty: str, event: Event,
+                         host_config: Optional[HostInfo]) -> Tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
         if ty == "by_rule":
             return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            core_host = event["core_host"]
-            host_config = self.host_config.get_config_for_host(core_host)
             return self._get_host_event_limit(host_config)
         raise NotImplementedError()
 

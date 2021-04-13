@@ -12,6 +12,28 @@ from livestatus import LocalConnection
 ################################################################################
 
 
+# NOTE: This function is a polished copy of cmk/base/notify.py. :-/
+def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
+    query = (
+        "GET contactgroups\n"  #
+        "Columns: members")
+    num_group_names = 0
+    for group_name in group_names:
+        query += f"\nFilter: name = {group_name}"
+        num_group_names += 1
+    query += f"\nOr: {num_group_names}"
+    contact_lists: List[List[str]] = (LocalConnection().query_column(query)
+                                      if num_group_names else [])
+    return {
+        UserId(contact)  #
+        for contact_list in contact_lists  #
+        for contact in contact_list
+    }
+
+
+################################################################################
+
+
 class HostInfo(NamedTuple):
     name: HostName
     alias: str
@@ -56,28 +78,6 @@ def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
 def query_status_program_start() -> Timestamp:
     return LocalConnection().query_value("GET status\n"  #
                                          "Columns: program_start")
-
-
-################################################################################
-
-
-# NOTE: This function is a polished copy of cmk/base/notify.py. :-/
-def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
-    query = (
-        "GET contactgroups\n"  #
-        "Columns: members")
-    num_group_names = 0
-    for group_name in group_names:
-        query += f"\nFilter: name = {group_name}"
-        num_group_names += 1
-    query += f"\nOr: {num_group_names}"
-    contact_lists: List[List[str]] = (LocalConnection().query_column(query)
-                                      if num_group_names else [])
-    return {
-        UserId(contact)  #
-        for contact_list in contact_lists  #
-        for contact in contact_list
-    }
 
 
 ################################################################################

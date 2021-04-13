@@ -381,13 +381,10 @@ class TimePeriods:
 
     def active(self, name: TimeperiodName) -> bool:
         self._update()
-        if self._cache_timestamp is None:
-            self._logger.warning("no timeperiod information, assuming %s is active", name)
-            return True
-        if name not in self._active:
-            self._logger.warning("no such timeperiod %s, assuming it is active", name)
-            return True
-        return self._active[name]
+        if (is_active := self._active.get(name)) is None:
+            self._logger.warning("unknown timeperiod '%s', assuming it is active", name)
+            is_active = True
+        return is_active
 
 
 #.

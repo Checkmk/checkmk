@@ -27,6 +27,7 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
+from __future__ import annotations
 import abc
 import copy
 import errno
@@ -37,7 +38,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Optional, IO, Union, Dict, List, Set, Type
+from typing import Optional, IO, Union, Dict, List, Set, Type, Tuple as _Tuple, Iterator
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -468,6 +469,14 @@ class LDAPUserConnector(UserConnector):
     def active_plugins(self):
         return self._config['active_plugins']
 
+    def active_sync_plugins(self) -> Iterator[_Tuple[str, dict, LDAPAttributePlugin]]:
+        for key, params in self._config['active_plugins'].items():
+            try:
+                plugin = ldap_attribute_plugin_registry[key]()
+            except KeyError:
+                continue
+            yield key, params, plugin
+
     def _directory_type(self):
         return self._config['directory_type'][0]
 
@@ -521,8 +530,7 @@ class LDAPUserConnector(UserConnector):
     def needed_attributes(self) -> List[str]:
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
         attrs: Set[str] = set()
-        for key, params in self._config['active_plugins'].items():
-            plugin = ldap_attribute_plugin_registry[key]()
+        for _key, params, plugin in self.active_sync_plugins():
             attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
 
@@ -1299,8 +1307,7 @@ class LDAPUserConnector(UserConnector):
         return changed
 
     def _execute_active_sync_plugins(self, user_id, ldap_user, user):
-        for key, params in self._config['active_plugins'].items():
-            plugin = ldap_attribute_plugin_registry[key]()
+        for key, params, plugin in self.active_sync_plugins():
             user.update(plugin.sync_func(self, key, params or {}, user_id, ldap_user, user))
 
     def _flush_caches(self):
@@ -1337,8 +1344,7 @@ class LDAPUserConnector(UserConnector):
     # by this connector
     def locked_attributes(self) -> List[str]:
         locked = {'password'}  # This attributes are locked in all cases!
-        for key, params in self._config['active_plugins'].items():
-            plugin = ldap_attribute_plugin_registry[key]()
+        for _key, params, plugin in self.active_sync_plugins():
             locked.update(plugin.lock_attributes(params))
         return list(locked)
 
@@ -1346,8 +1352,7 @@ class LDAPUserConnector(UserConnector):
     # the multisites users.mk
     def multisite_attributes(self) -> List[str]:
         attrs: Set[str] = set()
-        for key in self._config['active_plugins'].keys():
-            plugin = ldap_attribute_plugin_registry[key]()
+        for _key, _params, plugin in self.active_sync_plugins():
             attrs.update(plugin.multisite_attributes)
         return list(attrs)
 
@@ -1355,8 +1360,7 @@ class LDAPUserConnector(UserConnector):
     # the check_mks contacts.mk
     def non_contact_attributes(self) -> List[str]:
         attrs: Set[str] = set()
-        for key in self._config['active_plugins'].keys():
-            plugin = ldap_attribute_plugin_registry[key]()
+        for _key, _params, plugin in self.active_sync_plugins():
             attrs.update(plugin.non_contact_attributes)
         return list(attrs)
 

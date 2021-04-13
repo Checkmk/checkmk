@@ -342,4 +342,5 @@ register.check_plugin(
     check_function=check_oracle_tablespaces,
     check_default_parameters=ORACLE_TABLESPACES_DEFAULTS,
     check_ruleset_name="oracle_tablespaces",
+    cluster_check_function=cluster_check_oracle_tablespaces,
 )

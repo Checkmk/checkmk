@@ -8,7 +8,7 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Optional, Sequence, Set
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -421,17 +421,20 @@ def _add_contact_information_to_context(context: Any, contact_groups: Any, logge
 
 
 # NOTE: This function is a copy of cmk/base/notify.py. :-/
-def _rbn_groups_contacts(groups: Sequence[str]) -> Set[str]:
-    if not groups:
-        return set()
-    query = "GET contactgroups\nColumns: members\n"
-    for group in groups:
-        query += "Filter: name = %s\n" % group
-    query += "Or: %d\n" % len(groups)
-
+def _rbn_groups_contacts(group_names: Iterable[str]) -> Set[str]:
+    query = (
+        "GET contactgroups\n"  #
+        "Columns: members")
+    num_group_names = 0
+    for group_name in group_names:
+        query += f"\nFilter: name = {group_name}"
+        num_group_names += 1
+    query += f"\nOr: {num_group_names}"
     try:
+        contact_lists: List[List[str]] = (LocalConnection().query_column(query)
+                                          if num_group_names else [])
         contacts: Set[str] = set()
-        for contact_list in LocalConnection().query_column(query):
+        for contact_list in contact_lists:
             contacts.update(contact_list)
         return contacts
     except Exception:

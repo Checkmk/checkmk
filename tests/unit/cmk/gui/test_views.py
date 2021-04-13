@@ -207,7 +207,7 @@ def test_registered_commands():
         },
         'ec_archive_events_of_host': {
             'permission': 'mkeventd.archive_events_of_hosts',
-            'tables': ['host', 'service'],
+            'tables': ['service'],
             'title': u'Archive events of hosts'
         },
         'ec_change_state': {

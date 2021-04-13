@@ -416,8 +416,9 @@ from cmk.special_agents.agent_proxmox_ve import (
     (
         "proxmox_ve-backup-2021-04-10.log",
         {
-            '': {
-                'error': 'There is a max backup limit of 1 enforced by the target storage or the vzdump parameters. Either increase the limit or delete old backup(s).'
+            '100': {
+                'error': 'There is a max backup limit of 1 enforced by the target storage or the vzdump parameters. Either increase the limit or delete old backup(s).',
+                'started_time': '2021-04-10 12:19:30',
             },
         },
         None,

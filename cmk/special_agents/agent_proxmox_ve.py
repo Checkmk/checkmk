@@ -178,6 +178,10 @@ class BackupTask:
                     r"^ERROR: Backup of VM (\d+) failed - (.*)$",
                 ),
                 (
+                    "failed_job",
+                    r"^INFO: Failed at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$",
+                ),
+                (
                     "create_archive",
                     r"^INFO: creating(?: vzdump)? archive '(.*)'",
                 ),
@@ -278,7 +282,7 @@ class BackupTask:
                             (error_vmid, current_vmid),
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    result[current_vmid] = {**current_dataset, **{"error": error_msg}}
+                    result[error_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
                     continue
 
@@ -290,6 +294,14 @@ class BackupTask:
                             "Found start date while no VM was active",
                         )
                     current_dataset["started_time"] = started_time
+                    continue
+
+                failed_at_time = extract_single_value(line, "failed_job")
+                if failed_at_time:
+                    # in case a backup job fails we store the time it failed as
+                    # 'started_time' in order to be able to sort backup jobs
+                    for backup_data in result.values():
+                        backup_data.setdefault("started_time", failed_at_time)
                     continue
 
                 bytes_written = extract_tuple(line, "bytes_written", 2)
@@ -358,7 +370,9 @@ def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, B
     for task in backup_tasks:
         LOGGER.info("%s", task)
         LOGGER.debug("%r", task.backup_data)
+        # Look for the latest backup for a given VMID in all backup task logs.
         for vmid, bdata in task.backup_data.items():
+            # skip if we have a already newer backup
             if vmid in backup_data and backup_data[vmid]['started_time'] > bdata['started_time']:
                 continue
             backup_data[vmid] = bdata

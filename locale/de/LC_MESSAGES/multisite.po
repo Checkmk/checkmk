@@ -1124,13 +1124,6 @@ msgstr ""
 "nicht die Sortierordnung wieder."
 
 msgid ""
-"<b>Note</b>: On the agent side, this encryption is only supported by the "
-"Linux agent and the Windows agent. However, when setting the Encryption "
-"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
-"matching hosts. Please keep this in mind when configuring this ruleset."
-msgstr ""
-
-msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
 "3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
 "\"requests\" and \"PySocks\" is required on the target hosts."
@@ -1315,10 +1308,6 @@ msgstr ""
 "<br><i><i>Verwenden Sie explizite Dienstnamen und ignorieren Sie "
 "übergreifende Tags</i>: Mit dieser Auswahl können Sie explizite Namen "
 "angeben. Die ü\\bergreifende Tags werden für diesen Dienst ignoriert."
-
-#, fuzzy
-msgid "<i>Generated automatically</i>"
-msgstr "Ereignis wurde automatisch gelöscht"
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -10815,7 +10804,7 @@ msgid "Continue search"
 msgstr "Suche verfeinern"
 
 #, fuzzy
-msgid "Control encryption of data sent from agents to Checkmk."
+msgid "Control encryption of data sent from agent to host."
 msgstr "Verschlüsselung der Daten vom Agenten"
 
 msgid "Control group:"
@@ -16534,10 +16523,6 @@ msgstr ""
 
 msgid "Encryption"
 msgstr "Verschlüsselung"
-
-#, fuzzy
-msgid "Encryption (Linux, Windows)"
-msgstr "Text-Logdateien (Linux, Windows)"
 
 msgid "Encryption for Agent"
 msgstr "Verschlüsselung des Agenten"
@@ -45238,12 +45223,6 @@ msgstr ""
 "Zeitstempel subtrahiert wird."
 
 msgid ""
-"The agent communication is encrypted using AES. The underlying key is "
-"generated and stored automatically on rule creation. To enforce a new key, "
-"the rule must be deleted and replaced with a new one."
-msgstr ""
-
-msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
 "configured section. Also a single file can be monitored."
@@ -62505,6 +62484,16 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Event was deleted automatically"
+#~ msgid "<i>Generated automatically</i>"
+#~ msgstr "Ereignis wurde automatisch gelöscht"
+
+#, fuzzy
+#~| msgid "Text logfiles (Linux, Windows)"
+#~ msgid "Encryption (Linux, Windows)"
+#~ msgstr "Text-Logdateien (Linux, Windows)"
 
 #~ msgid "Critical if younger than"
 #~ msgstr "Kritsch wenn jünger als"

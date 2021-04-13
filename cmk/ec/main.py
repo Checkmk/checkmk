@@ -48,7 +48,7 @@ from cmk.utils.type_defs import HostName
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
-from .cmc_queries import LocalConnection, MKLivestatusNotFoundError
+from .cmc_queries import LocalConnection
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
 from .host_config import HostConfig, HostInfo
@@ -1521,20 +1521,11 @@ class EventServer(ECServerThread):
     def _is_host_in_downtime(self, host_name: HostName) -> bool:
         if not host_name:
             return False  # Found no host in core: Not in downtime!
-
-        query = ("GET hosts\n"
-                 "Columns: scheduled_downtime_depth\n"
-                 f"Filter: host_name = {host_name}")
-
         try:
-            return LocalConnection().query_value(query) >= 1
-
-        except MKLivestatusNotFoundError:
-            return False
-
+            return LocalConnection().query_value("GET hosts\n"
+                                                 "Columns: scheduled_downtime_depth\n"
+                                                 f"Filter: host_name = {host_name}") >= 1
         except Exception:
-            if cmk.utils.debug.enabled():
-                raise
             return False
 
     # Checks if an event matches a rule. Returns either False (no match)

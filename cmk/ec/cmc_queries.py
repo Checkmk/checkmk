@@ -7,7 +7,7 @@
 from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set
 
 from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, Timestamp, UserId
-from livestatus import LocalConnection, MKLivestatusNotFoundError  # noqa: F401 # pylint: disable=unused-import
+from livestatus import LocalConnection
 
 ################################################################################
 

@@ -213,7 +213,7 @@ class SorterHostLabels(ABCTagSorter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Host labels")
 
     @property
     def columns(self):
@@ -232,7 +232,7 @@ class SorterServiceLabels(ABCTagSorter):
 
     @property
     def title(self):
-        return _("Labels")
+        return _("Service labels")
 
     @property
     def columns(self):

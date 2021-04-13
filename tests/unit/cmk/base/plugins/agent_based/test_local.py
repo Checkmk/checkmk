@@ -12,6 +12,40 @@ import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric
 
 
+@pytest.mark.parametrize('line,expected_output', [
+    (
+        'service_name some rest',
+        ('service_name', ['some', 'rest'], None),
+    ),
+    (
+        '"space separated service name" some rest',
+        ('space separated service name', ['some', 'rest'], None),
+    ),
+    (
+        "'space separated service name' some rest",
+        ('space separated service name', ['some', 'rest'], None),
+    ),
+    (
+        '',
+        (None, None, "too many spaces or missing line content"),
+    ),
+    (
+        ' ',
+        (None, None, "too many spaces or missing line content"),
+    ),
+    (
+        ' "space separated service name" some rest',
+        (None, None, "too many spaces or missing line content"),
+    ),
+    (
+        '"space separated service name\' some rest',
+        (None, None, "missing closing quote character"),
+    ),
+])
+def test_extract_service_name(line, expected_output):
+    assert local._extract_service_name(line.split(' ')) == expected_output
+
+
 @pytest.mark.parametrize('string_table,exception_reason', [
     (
         [['node_1', 'cached(1556005301,300)', 'foo']],
@@ -182,6 +216,26 @@ def test_local_format_error(string_table, exception_reason):
                     )
                 }),
         ),
+        (['P  "item name" too many spaces'],
+         local.LocalSection(
+             errors=[
+                 local.LocalError(
+                     output='P  "item name" too many spaces',
+                     reason='Could not extract service name: too many spaces or missing line content'
+                 ),
+             ],
+             data={},
+         )),
+        (['P  "item name - missing quote'],
+         local.LocalSection(
+             errors=[
+                 local.LocalError(
+                     output='P  "item name - missing quote',
+                     reason='Could not extract service name: too many spaces or missing line content'
+                 ),
+             ],
+             data={},
+         )),
     ])
 def test_parse(string_table_row, expected_parsed_data):
     assert local.parse_local([string_table_row]) == expected_parsed_data

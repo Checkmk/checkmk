@@ -13,12 +13,9 @@
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-import shlex
 import time
 
 from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union
-
-import six
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -171,43 +168,64 @@ def _parse_perftxt(string):
     return perfdata, ""
 
 
+def _extract_service_name(line):
+    """
+    >>> _extract_service_name('item_name some rest'.split(' '))
+    ('item_name', ['some', 'rest'], None)
+    >>> _extract_service_name('"space separated item name" some rest'.split(' '))
+    ('space separated item name', ['some', 'rest'], None)
+    >>> _extract_service_name("'space separated item name' some rest".split(' '))
+    ('space separated item name', ['some', 'rest'], None)
+    """
+    try:
+        quote_char = line[0][0]
+        if quote_char in {"'", '"'}:
+            try:
+                close_index = next(i for i, x in enumerate(line) if x[-1] == quote_char)
+            except StopIteration:
+                return (None, None, "missing closing quote character")
+            return " ".join(line[0:close_index + 1])[1:-1], line[close_index + 1:], None
+        return line[0], line[1:], None
+    except IndexError:
+        return (None, None, "too many spaces or missing line content")
+
+
 def parse_local(string_table):
     now = time.time()
     errors = []
     data = {}
-    for line in string_table:
-        # allows blank characters in service description
-        if len(line) == 1:
-            # from agent version 1.7, local section with ":sep(0)"
-            # In python2 shlex uses cStringIO (if available), which is not able to deal with unicode
-            # strings *urgs* (See https://docs.python.org/2/library/stringio.html#module-cStringIO).
-            # To workaround this, we encode/and decode for shlex.
-            stripped_line = [six.ensure_text(s) for s in shlex.split(six.ensure_str(line[0]))]
-        else:
-            stripped_line = line
-
-        cached, stripped_line = _parse_cache(stripped_line, now)
+    for line in (l[0].split(" ") if len(l) == 1 else l for l in string_table):
+        cached, stripped_line = _parse_cache(line, now)
         if not _is_valid_line(stripped_line):
             # just pass on the line and reason, to report the offending ouput
             errors.append(
                 LocalError(
-                    output=" ".join(stripped_line),
+                    output=" ".join(line),
                     reason=_get_violation_reason(stripped_line),
                 ))
             continue
 
         raw_state, state_msg = _sanitize_state(stripped_line[0])
-        item = stripped_line[1]
-        perfdata, perf_msg = _parse_perftxt(stripped_line[2])
+
+        service, stripped_line, item_msg = _extract_service_name(stripped_line[1:])
+        if item_msg:
+            errors.append(
+                LocalError(
+                    output=" ".join(line),
+                    reason=f"Could not extract service name: {item_msg}",
+                ))
+            continue
+
+        perfdata, perf_msg = _parse_perftxt(stripped_line[0])
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
-        text = " ".join(stripped_line[3:]).replace("\\n", "\n")
+        text = " ".join(stripped_line[1:]).replace("\\n", "\n")
         if state_msg or perf_msg:
             raw_state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        data[item] = LocalResult(
+        data[service] = LocalResult(
             cached=cached,
-            item=item,
+            item=service,
             state=raw_state,
             text=text,
             perfdata=perfdata,

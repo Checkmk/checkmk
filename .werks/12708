@@ -1,0 +1,14 @@
+Title: 'local' check: raised ValueError (No escaped character) or (No closing quotation)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618311565
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The way 'local' splits it's input in order to be able to recognize (quoted) service names with
+spaces (namely shlex.split()) would stumble upon inconsistent input.
+This change switches back to split() and looks for opening and closing quotes manually and thus
+eleminating shlex related problems.

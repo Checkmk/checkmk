@@ -1401,13 +1401,18 @@ def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) ->
 
 
 def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
-    def split_ip(ip):
+    return compare_ips(r1.get(column, ''), r2.get(column, ''))
+
+
+def compare_ips(ip1: str, ip2: str) -> int:
+    def split_ip(ip: str) -> Tuple:
         try:
             return tuple(int(part) for part in ip.split('.'))
-        except Exception:
-            return ip
+        except ValueError:
+            # Make hostnames comparable with IPv4 address representations
+            return (255, 255, 255, 255, ip)
 
-    v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
+    v1, v2 = split_ip(ip1), split_ip(ip2)
     return (v1 > v2) - (v1 < v2)
 
 

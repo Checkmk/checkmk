@@ -23,6 +23,7 @@ from cmk.gui.plugins.views import (
     cmp_service_name_equiv,
     cmp_string_list,
     cmp_ip_address,
+    compare_ips,
     get_tag_groups,
     get_labels,
     get_perfdata_nth_value,
@@ -435,15 +436,7 @@ class SorterHostIpv4Address(Sorter):
                 zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
             return custom_vars.get("ADDRESS_4", "")
 
-        def split_ip(ip):
-            try:
-                return tuple(int(part) for part in ip.split('.'))
-            except ValueError:
-                # Make hostnames comparable with IPv4 address representations
-                return (255, 255, 255, 255, ip)
-
-        v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
-        return (v1 > v2) - (v1 < v2)
+        return compare_ips(get_address(r1), get_address(r2))
 
 
 @sorter_registry.register

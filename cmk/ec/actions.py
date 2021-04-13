@@ -13,6 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import ContactgroupName, UserId
 
 from .cmc_queries import LocalConnection, query_status_enable_notifications
 from .host_config import HostConfig
@@ -423,8 +424,8 @@ def _add_contact_information_to_context(context: Any, contact_groups: Any, logge
                len(contact_names), ",".join(contact_names), ",".join(contact_groups))
 
 
-# NOTE: This function is a copy of cmk/base/notify.py. :-/
-def _rbn_groups_contacts(group_names: Iterable[str]) -> Set[str]:
+# NOTE: This function is a polished copy of cmk/base/notify.py. :-/
+def _rbn_groups_contacts(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
     query = (
         "GET contactgroups\n"  #
         "Columns: members")
@@ -436,7 +437,7 @@ def _rbn_groups_contacts(group_names: Iterable[str]) -> Set[str]:
     contact_lists: List[List[str]] = (LocalConnection().query_column(query)
                                       if num_group_names else [])
     return {
-        contact  #
+        UserId(contact)  #
         for contact_list in contact_lists  #
         for contact in contact_list
     }

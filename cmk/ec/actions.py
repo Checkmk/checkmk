@@ -8,7 +8,7 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Optional, Sequence, Set
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -420,13 +420,10 @@ def _add_contact_information_to_context(context: Any, contact_groups: Any, logge
                len(contact_names), ",".join(contact_names), ",".join(contact_groups))
 
 
-# NOTE: This function is an exact copy from modules/notify.py. We need
-# to move all this Checkmk-specific livestatus query stuff to a helper
-# module in lib some day.
-# NOTE: Typing chaos ahead!
-def _rbn_groups_contacts(groups: Any) -> Any:
+# NOTE: This function is a copy of cmk/base/notify.py. :-/
+def _rbn_groups_contacts(groups: Sequence[str]) -> Set[str]:
     if not groups:
-        return {}
+        return set()
     query = "GET contactgroups\nColumns: members\n"
     for group in groups:
         query += "Filter: name = %s\n" % group
@@ -439,12 +436,12 @@ def _rbn_groups_contacts(groups: Any) -> Any:
         return contacts
 
     except MKLivestatusNotFoundError:
-        return []
+        return set()
 
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        return []
+        return set()
 
 
 def _core_has_notifications_enabled(logger: Logger) -> bool:

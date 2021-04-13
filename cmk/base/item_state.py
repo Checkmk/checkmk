@@ -309,10 +309,6 @@ def get_item_state_prefix() -> Optional[ServicePrefix]:
     return _cached_item_states.get_item_state_prefix()
 
 
-def _unique_item_state_key(user_key: _UserKey) -> None:
-    _cached_item_states.get_unique_item_state_key(user_key)
-
-
 def continue_on_counter_wrap() -> None:
     """Make get_rate always return 0 if something goes wrong"""
     global g_suppress_on_wrap

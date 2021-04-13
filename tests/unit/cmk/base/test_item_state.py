@@ -201,24 +201,17 @@ class Test_EffectiveValueStore:
 
 
 def test_item_state_prefix_required():
-    cis = item_state.CachedItemStates()
+    cis = item_state.CachedItemStates("test-host")
     # we *must* set a prefix:
     with pytest.raises(MKGeneralException):
         _ = cis.get_item_state("user-key", None)
 
 
 def test_set_get_item_state_prefix():
-    cis = item_state.CachedItemStates()
+    cis = item_state.CachedItemStates("test-host")
     test_prefix = ("unit-test", None)
     cis.set_item_state_prefix(test_prefix)
     assert cis.get_item_state_prefix() == test_prefix
-
-
-def test_no_host_needs_to_be_loaded():
-    cis = item_state.CachedItemStates()
-    cis.set_item_state_prefix(("unit-test", None))
-    # weirdly, this is enough. No need to load any host:
-    assert cis.get_item_state("user-key", None) is None
 
 
 def test_item_state_unloaded():
@@ -227,7 +220,7 @@ def test_item_state_unloaded():
     # This test is only supposed to make the status quo visible.
 
     test_prefix = ("unit-test", None)
-    cis = item_state.CachedItemStates()
+    cis = item_state.CachedItemStates("test-host")
     cis.set_item_state_prefix(test_prefix)
 
     # add some keys:
@@ -266,8 +259,8 @@ def test_item_state_loaded(mocker):
         autospec=True,
     )
 
-    cis = item_state.CachedItemStates()
-    cis.load("hostname")
+    cis = item_state.CachedItemStates("hostname")
+    cis.load()
     cis.set_item_state_prefix(test_prefix)
 
     assert cis.get_all_item_states() == stored_item_states

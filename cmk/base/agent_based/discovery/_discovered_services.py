@@ -167,7 +167,7 @@ def _discover_services(
 
     service_table: CheckTable = {}
     try:
-        with plugin_contexts.current_host(host_name, write_state=False):
+        with plugin_contexts.current_host(host_name):
             for check_plugin_name in plugin_candidates:
                 try:
                     service_table.update({

@@ -19,9 +19,6 @@ def test_value_store():
 
     store = value_store.get_value_store()
 
-    with pytest.raises(MKGeneralException):
-        store["foo"] = 42
-
     saved_prefix = value_store.get_item_state_prefix()
 
     with value_store.context(CheckPluginName("plugin"), "item"):

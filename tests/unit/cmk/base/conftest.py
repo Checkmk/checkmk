@@ -6,6 +6,8 @@
 
 import pytest  # type: ignore[import]
 
+from cmk.base import item_state
+
 from testlib.base import Scenario
 
 
@@ -23,3 +25,11 @@ def clear_config_caches(monkeypatch):
     from cmk.utils.caching import runtime_cache as _runtime_cache
     _config_cache.clear()
     _runtime_cache.clear()
+
+
+@pytest.fixture(autouse=True, scope="function")
+def initialised_item_state():
+    with item_state.load_host_value_store("non-existent-test-host", store_changes=False) as hvs:
+        hvs.load()
+        hvs.set_item_state_prefix(("unitialised-test-env", None))
+        yield

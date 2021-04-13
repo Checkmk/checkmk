@@ -399,7 +399,7 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
             has_perfdata = act_info.get('has_perfdata', False)
 
             # Make hostname available as global variable in argument functions
-            with plugin_contexts.current_host(hostname, write_state=False):
+            with plugin_contexts.current_host(hostname):
 
                 description = config.active_check_service_description(hostname, acttype, params)
 

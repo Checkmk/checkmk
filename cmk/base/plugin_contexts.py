@@ -13,7 +13,6 @@ from typing import Optional
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.check_utils import Service
-import cmk.base.item_state as item_state
 
 # Is set before check/discovery function execution
 # Host currently being checked
@@ -24,7 +23,7 @@ _service_description: Optional[str] = None
 
 
 @contextmanager
-def current_host(host_name_: str, *, write_state: bool):
+def current_host(host_name_: str):
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -34,15 +33,10 @@ def current_host(host_name_: str, *, write_state: bool):
     # we do not encourage nested contexts at all -- but it should work.
     previous_host_name = _hostname
     _hostname = host_name_
-    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
     try:
-        item_state.load(host_name_)
         yield
     finally:
         _hostname = previous_host_name
-        if write_state:
-            item_state.save()
-            item_state.cleanup_item_states()
 
 
 @contextmanager

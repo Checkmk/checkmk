@@ -15,16 +15,12 @@ from cmk.base import item_state
 
 @contextmanager
 def _test_context(mock_state: Mapping[str, object]):
-    previous_prefix = item_state.get_item_state_prefix()
-    item_state._cached_item_states.reset()
-    item_state.set_item_state_prefix(("item_state_unit_tests", None))
-    for k, v in mock_state.items():
-        item_state.set_item_state(k, v)
-    try:
+    with item_state.load_host_value_store("test-host", store_changes=False) as host_item_state:
+        host_item_state.set_item_state_prefix(("item_state_unit_tests", None))
+        for k, v in mock_state.items():
+            host_item_state.set_item_state(k, v)
+
         yield
-    finally:
-        item_state._cached_item_states.reset()
-        item_state.set_item_state_prefix(previous_prefix)
 
 
 @pytest.mark.parametrize("pre_state,time,value,errmsg", [

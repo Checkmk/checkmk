@@ -278,10 +278,7 @@ def use_fakeredis_client(monkeypatch):
 
 @pytest.fixture(scope="function")
 def initialised_item_state():
-    previous = item_state.get_item_state_prefix()
-    item_state._cached_item_states.reset()
-    item_state.set_item_state_prefix(("unitialised-test-env", None))
-    try:
+    with item_state.load_host_value_store("non-existent-test-host", store_changes=False) as hvs:
+        hvs.load()
+        hvs.set_item_state_prefix(("unitialised-test-env", None))
         yield
-    finally:
-        item_state.set_item_state_prefix(previous)

@@ -274,7 +274,7 @@ def run(check_info, dataset, write=False):
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
             with \
-                current_host("non-existent-testhost", write_state=False), \
+                current_host("non-existent-testhost"), \
                 MockItemState(mock_is), \
                 MockHostExtraConf(check, mock_hec), \
                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):

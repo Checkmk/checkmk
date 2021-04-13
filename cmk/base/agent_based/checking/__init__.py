@@ -265,7 +265,8 @@ def _do_all_checks_on_host(
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    with plugin_contexts.current_host(host_config.hostname, write_state=not dry_run):
+    with plugin_contexts.current_host(host_config.hostname), \
+        item_state.load_host_value_store(host_config.hostname, store_changes=not dry_run):
         for service in services:
             success = execute_check(
                 parsed_sections_broker,
@@ -450,8 +451,8 @@ def get_aggregated_result(
         if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
-        with plugin_contexts.current_host(
-                host_config.hostname, write_state=False), plugin_contexts.current_service(service):
+        with plugin_contexts.current_host(host_config.hostname), \
+            plugin_contexts.current_service(service):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

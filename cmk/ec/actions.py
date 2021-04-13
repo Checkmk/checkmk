@@ -8,14 +8,13 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Optional
 
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ContactgroupName, UserId
 
-from .cmc_queries import LocalConnection, query_status_enable_notifications
+from .cmc_queries import query_contactgroups_members, query_status_enable_notifications
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -415,32 +414,13 @@ def _add_contacts_from_rule(context: Any, event: Any, logger: Logger) -> None:
 
 def _add_contact_information_to_context(context: Any, contact_groups: Any, logger: Any) -> None:
     try:
-        contact_names = _rbn_groups_contacts(contact_groups)
+        contact_names = query_contactgroups_members(contact_groups)
     except Exception:
         contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
     logger.log(VERBOSE, "Setting %d contacts %s resulting from rule contact groups %s",
                len(contact_names), ",".join(contact_names), ",".join(contact_groups))
-
-
-# NOTE: This function is a polished copy of cmk/base/notify.py. :-/
-def _rbn_groups_contacts(group_names: Iterable[ContactgroupName]) -> Set[UserId]:
-    query = (
-        "GET contactgroups\n"  #
-        "Columns: members")
-    num_group_names = 0
-    for group_name in group_names:
-        query += f"\nFilter: name = {group_name}"
-        num_group_names += 1
-    query += f"\nOr: {num_group_names}"
-    contact_lists: List[List[str]] = (LocalConnection().query_column(query)
-                                      if num_group_names else [])
-    return {
-        UserId(contact)  #
-        for contact_list in contact_lists  #
-        for contact in contact_list
-    }
 
 
 def _core_has_notifications_enabled(logger: Logger) -> bool:

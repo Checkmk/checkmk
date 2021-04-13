@@ -44,7 +44,7 @@ import cmk.utils.regex
 import cmk.utils.debug
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import HostName, TimeperiodName
+from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
@@ -361,26 +361,27 @@ class TimePeriods:
     def __init__(self, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
-        self._periods: Optional[Dict[TimeperiodName, bool]] = None
-        self._last_update = 0
+        self._periods: Dict[TimeperiodName, bool] = {}
+        self._last_update: Optional[Timestamp] = None
 
     def _update(self) -> None:
-        if self._periods is not None and int(time.time() / 60.0) == self._last_update:
-            return  # only update once a minute
         try:
-            self._periods = {
-                name: bool(in_)  #
-                for name, in_ in LocalConnection().query("GET timeperiods\n"  #
-                                                         "Columns: name in")
-            }
-            self._last_update = int(time.time() / 60.0)
+            timestamp = int(time.time())
+            # update at most once a minute
+            if self._last_update is None or self._last_update + 60 <= timestamp:
+                self._periods = {
+                    name: bool(in_)  #
+                    for name, in_ in LocalConnection().query("GET timeperiods\n"  #
+                                                             "Columns: name in")
+                }
+                self._last_update = timestamp
         except Exception as e:
             self._logger.exception("Cannot update timeperiod information: %s" % e)
             raise
 
     def check(self, tpname: TimeperiodName) -> bool:
         self._update()
-        if not self._periods:
+        if self._last_update is None:
             self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
             return True
         if tpname not in self._periods:

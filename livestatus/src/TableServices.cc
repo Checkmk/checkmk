@@ -532,17 +532,17 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets, table->core(), true, DowntimeColumn::info::full));
-    table->addColumn(std::make_unique<CommentColumn>(
+    table->addColumn(std::make_unique<CommentColumn::Callback<service>>(
         prefix + "comments", "A list of all comment ids of the service",
-        offsets, table->core(), true, CommentColumn::verbosity::none));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::none, table->core()));
+    table->addColumn(std::make_unique<CommentColumn::Callback<service>>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        offsets, table->core(), true, CommentColumn::verbosity::info));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::info, table->core()));
+    table->addColumn(std::make_unique<CommentColumn::Callback<service>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        offsets, table->core(), true, CommentColumn::verbosity::extra_info));
+        offsets, CommentColumn::verbosity::extra_info, table->core()));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_", offsets.add([](Row r) {

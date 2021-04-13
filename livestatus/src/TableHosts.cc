@@ -527,17 +527,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets, mc, false, DowntimeColumn::info::full));
-    table->addColumn(std::make_unique<CommentColumn>(
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, mc, false, CommentColumn::verbosity::none));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::none, mc));
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, mc, false, CommentColumn::verbosity::info));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::info, mc));
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, mc, false, CommentColumn::verbosity::extra_info));
+        offsets, CommentColumn::verbosity::extra_info, mc));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

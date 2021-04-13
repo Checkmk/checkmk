@@ -5,13 +5,7 @@
 
 #include "CommentColumn.h"
 
-#include <algorithm>
-#include <iterator>
-
-#include "MonitoringCore.h"
 #include "Renderer.h"
-#include "Row.h"
-#include "nagios.h"
 
 void CommentColumn::output(Row row, RowRenderer &r,
                            const contact * /*auth_user*/,
@@ -40,27 +34,4 @@ void CommentColumn::output(Row row, RowRenderer &r,
             }
         }
     }
-}
-
-std::vector<std::string> CommentColumn::getValue(
-    Row row, const contact * /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    std::vector<std::string> ids;
-    auto comments = comments_for_row(row);
-    std::transform(
-        comments.begin(), comments.end(), std::back_inserter(ids),
-        [](const auto &comment) { return std::to_string(comment._id); });
-    return ids;
-}
-
-std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {
-    if (const auto *const data = columnData<void>(row)) {
-        return _is_service
-                   ? _mc->comments(
-                         reinterpret_cast<const MonitoringCore::Service *>(
-                             data))
-                   : _mc->comments(
-                         reinterpret_cast<const MonitoringCore::Host *>(data));
-    }
-    return {};
 }

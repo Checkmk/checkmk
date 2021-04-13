@@ -4928,7 +4928,7 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def title(self, cell: Cell) -> str:
-        return _("Labels")
+        return _("Host labels")
 
     def short_title(self, cell: Cell) -> str:
         return _("Labels")
@@ -4958,7 +4958,7 @@ class PainterServiceLabels(Painter):
         return "service_labels"
 
     def title(self, cell: Cell) -> str:
-        return _("Labels")
+        return _("Service labels")
 
     def short_title(self, cell: Cell) -> str:
         return _("Labels")

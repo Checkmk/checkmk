@@ -26,9 +26,8 @@ from typing import (
     Sequence,
 )
 
-import shlex
+import re
 import time
-import six
 
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -94,31 +93,15 @@ def _try_convert_to_float(value: str) -> Optional[float]:
         return None
 
 
-def _parse_cache(line: str, now: float) -> Tuple[Optional[Tuple[float, float, float]], str]:
-    """add cache info, if found"""
-    if not line or not line[0].startswith("cached("):
-        return None, line
-
-    cache_raw, stripped_line = line[0], line[1:]
+def _parse_cache(cache_raw: Optional[str], now: float) -> Optional[Tuple[float, float, float]]:
+    """Parse and preprocess cache info
+    make sure max(..) will give the oldest/most outdated case
+    """
+    if not cache_raw:
+        return None
     creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
     age = now - creation_time
-
-    # make sure max(..) will give the oldest/most outdated case
-    return (age, 100.0 * age / interval, interval), stripped_line
-
-
-def _is_valid_line(line: str) -> bool:
-    return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
-
-
-def _get_violation_reason(line: Sequence[str]) -> str:
-    if len(line) == 0:
-        return "Received empty line. Did any of your local checks returned a superfluous newline character?"
-    if len(line) < 4 and not (len(line) == 3 and line[0] == 'P'):
-        return ("Received wrong format of local check output. "
-                "Please read the documentation regarding the correct format: "
-                "https://docs.checkmk.com/2.0.0/de/localchecks.html ")
-    return ""
+    return (age, 100.0 * age / interval, interval)
 
 
 def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
@@ -137,6 +120,22 @@ def _parse_perfentry(entry: str) -> Perfdata:
         NAME=VALUE[;[[WARN_LOWER:]WARN_UPPER][;[[CRIT_LOWER:]CRIT_UPPER][;[MIN][;MAX]]]]
 
     see https://docs.checkmk.com/latest/de/localchecks.html
+    >>> _parse_perfentry("a=5;3:7;2:8;1;9")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(3.0, 2.0), boundaries=(1.0, 9.0))
+    >>> _parse_perfentry("a=5;7")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, inf), levels_lower=None, boundaries=(None, None))
+    >>> _parse_perfentry("a=5")
+    Perfdata(name='a', value=5.0, levels_upper=None, levels_lower=None, boundaries=(None, None))
+    >>> _parse_perfentry("a=5;7;8")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=None, boundaries=(None, None))
+    >>> _parse_perfentry("a=5;7;8;1")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=None, boundaries=(1.0, None))
+    >>> _parse_perfentry("a=5;7;8;1;9")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=None, boundaries=(1.0, 9.0))
+    >>> _parse_perfentry("a=5;3:7;8;1;9")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(3.0, -inf), boundaries=(1.0, 9.0))
+    >>> _parse_perfentry("a=5;7;2:8;1;9")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(1.0, 9.0))
     '''
     entry = entry.rstrip(";")
     name, raw_list = entry.split('=', 1)
@@ -200,8 +199,66 @@ def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
     return perfdata, ""
 
 
+def _split_check_result(line: str) -> Optional[Tuple[str, str, str, Optional[str]]]:
+    """Parse the output of a local check and return the individual components
+    Note: this regex does not check the validity of each component. E.g. the state component
+          could be 'NOK' (which is not a valid state) but would be complained later
+
+    >>> _split_check_result('0 "Service Name" temp=37.2;30|humidity=28;50:100 Some text')
+    ('0', 'Service Name', 'temp=37.2;30|humidity=28;50:100', 'Some text')
+
+    >>> _split_check_result("0 'Service Name' - Some text")
+    ('0', 'Service Name', '-', 'Some text')
+
+    >>> _split_check_result('NOK Service_name -')
+    ('NOK', 'Service_name', '-', None)
+    """
+    forbidden_service_name_characters = r"\"\'"
+    match = re.match(
+        r"^"
+        r"([^ ]+) "  #                                     - service state (permissive)
+        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) "  #   - optionally quoted service name
+        r"([^ ]+)"  #                                      - perf data
+        r"( +(.*))?"  #                                    - service string
+        r"$" % ((forbidden_service_name_characters,) * 3),
+        line)
+    return None if match is None else (
+        match.groups()[0] or "",
+        match.groups()[5] or match.groups()[3] or match.groups()[1] or "",
+        match.groups()[7] or "",
+        match.groups()[9],
+    )
+
+
 def parse_local(string_table: StringTable) -> LocalSection:
-    # Wrap pure counterpart
+    """
+    The local check result is encoded in a single line containing up to 5 - basically white space
+    separated - components of which the first and the last one are optional:
+    1 [optional] cache specifier "cached(number,number) "
+      - terminated by single white space (only if existent)
+
+    2 [mandatory] check result state [0|1|2|3|P]
+      - terminated by single white space
+
+    3 [mandatory] item name
+      - may contain all characters but double and single quote
+      - _might_ be double or single quoted and then containing spaces
+      - ! terminated by arbitrary number of white spaces
+      - !!! potential abuse: "  " is a valid name :)
+      - ! can contain backslashes (used for windows paths)
+      - ! can contain strange symbols like &$äöüÄÖÜß
+
+    4 [mandatory] encoded perf data string, may contain same characters as item name + [,;|=+-%]
+      - '|', ';' and '=' used as control characters
+      - single '-' stands for no perf data
+      - ! terminated by EOL or arbitrary number of spaces
+      - ! might contain ',' separated floats
+
+    5 [optional] arbitrary text - may contain all encodable characters
+      - will not start with spaces (due to regex)
+      - "\n" will be replaced by newlines
+    """
+    # wrap pure counterpart
     return parse_local_pure(string_table, time.time())
 
 
@@ -212,48 +269,71 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
     >>> parse_local_pure([['cached(1617883538,1617883538) 0 "Service Name" - arbitrary info text']], 1617883538).data
     {'Service Name': LocalResult(cached=(0.0, 0.0, 1617883538.0), item='Service Name', state=<State.OK: 0>, apply_levels=False, text='arbitrary info text', perfdata=[])}
     """
+    # NOTE: despite applying a regular expression to each line would allow for exact
+    #       matching against all syntactical requirements, a single mistake in the line
+    #       would make it invalid with no hints about what exactly was the problem.
+    #       Therefore we first apply a very loosy pattern to "split" into raw components
+    #       and later check those for validity.
     errors = []
-    data = {}
-    for line in string_table:
-        # allows blank characters in service description
-        if len(line) == 1:
-            # from agent version 1.7, local section with ":sep(0)"
-            # In python2 shlex uses cStringIO (if available), which is not able to deal with unicode
-            # strings *urgs* (See https://docs.python.org/2/library/stringio.html#module-cStringIO).
-            # To workaround this, we encode/and decode for shlex.
-            stripped_line = [six.ensure_text(s) for s in shlex.split(six.ensure_str(line[0]))]
-        else:
-            stripped_line = line  # type: ignore
+    parsed_data = {}
 
-        cached, stripped_line = _parse_cache(stripped_line, now)  # type: ignore
-        if not _is_valid_line(stripped_line):  # type: ignore[arg-type]
-            # just pass on the line and reason, to report the offending ouput
+    # turn splittet lines into monolithic strings again in order to be able to handle
+    # all input in the same manner. current `local` sections are 0-separated anyway so
+    # joining is only needed for legacy input
+    for line in (l[0] if len(l) == 1 else " ".join(l) for l in string_table):
+        # divide optional cache-info and whitespace-stripped rest
+        split_cache_match = re.match(r"^(cached\(\d+,\d+\))? *(.*) *$", line)
+        assert split_cache_match
+        raw_cached, raw_result = split_cache_match.groups()
+
+        if not raw_result:
             errors.append(
-                LocalError(
-                    output=" ".join(stripped_line),
-                    reason=_get_violation_reason(stripped_line),
-                ))
+                LocalError(output=line,
+                           reason="Received empty line. Maybe some of the local checks"
+                           " returns a superfluous newline character."))
             continue
 
-        raw_state, state_msg = _sanitize_state(stripped_line[0])
-        item = stripped_line[1]
-        perfdata, perf_msg = _parse_perftxt(stripped_line[2])
+        raw_components = _split_check_result(raw_result)
+        if not raw_components:
+            # splitting into raw components didn't work out so the given line must
+            # be really crappy
+            errors.append(
+                LocalError(output=line,
+                           reason="Received wrong format of local check output. "
+                           "Please read the documentation regarding the correct format: "
+                           "https://docs.checkmk.com/2.0.0/de/localchecks.html"))
+            continue
+
+        # these are raw components - not checked for validity yet
+        raw_state, raw_item, raw_perf, raw_info = raw_components
+
+        state, state_msg = _sanitize_state(raw_state)
+        if state_msg:
+            errors.append(LocalError(output=line, reason=state_msg))
+
+        item = raw_item
+
+        perfdata, perf_msg = _parse_perftxt(raw_perf)
+        if perf_msg:
+            errors.append(LocalError(output=line, reason=perf_msg))
+
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
-        text = " ".join(stripped_line[3:]).replace("\\n", "\n")
+        text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:
-            raw_state = 3
+            state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        data[item] = LocalResult(
-            cached=cached,
+
+        parsed_data[item] = LocalResult(
+            cached=_parse_cache(raw_cached, now),
             item=item,
-            state=State(raw_state) if raw_state != 'P' else State.OK,
-            apply_levels=raw_state == 'P',
+            state=State.OK if state == 'P' else State(state),
+            apply_levels=state == 'P',
             text=text,
             perfdata=perfdata,
         )
 
-    return LocalSection(errors=errors, data=data)
+    return LocalSection(errors=errors, data=parsed_data)
 
 
 register.agent_section(

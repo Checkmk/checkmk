@@ -12,20 +12,33 @@ import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric
 
 
+@pytest.mark.parametrize("check_line,expected_components", [
+    ('', None),
+    ('0', None),
+    ('0 name', None),
+    ('0 name -', ('0', 'name', '-', None)),
+    ('0 "name with space" -', ('0', 'name with space', '-', None)),
+    ('0 name - info text', ('0', 'name', '-', "info text")),
+    ("0 name - results' text has a quote", ('0', 'name', '-', "results' text has a quote")),
+    ("0 name - has a backslash\\", ('0', 'name', '-', "has a backslash\\")),
+])
+def test_regex_parser(check_line, expected_components):
+    assert local._split_check_result(check_line) == expected_components
+
+
 @pytest.mark.parametrize('string_table,exception_reason', [
     (
         [['node_1', 'cached(1556005301,300)', 'foo']],
-        ("Invalid line in agent section <<<local>>>. "
-         "Reason: Received wrong format of local check output. "
-         "Please read the documentation regarding the correct format: "
-         "https://docs.checkmk.com/2.0.0/de/localchecks.html  "
-         "First offending line: \"node_1 cached(1556005301,300) foo\""),
+        ("Invalid line in agent section <<<local>>>. Reason:"
+         " Invalid plugin status node_1."
+         " First offending line: \"node_1 cached(1556005301,300) foo\""),
     ),
     (
         [[]],
-        ("Invalid line in agent section <<<local>>>. Reason: Received empty line. "
-         "Did any of your local checks returned a superfluous newline character? "
-         "First offending line: \"\""),
+        ("Invalid line in agent section <<<local>>>. Reason:"
+         " Received empty line. Maybe some of the local checks"
+         " returns a superfluous newline character."
+         " First offending line: \"\""),
     ),
 ])
 def test_local_format_error(string_table, exception_reason):
@@ -172,17 +185,21 @@ def test_local_format_error(string_table, exception_reason):
                                }),
         ),
         (
-            ['P', "D'oh!", 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!'],
+            ['P', "D’oh!", 'this_is_an_invalid_metric|isotopes=0', 'I', 'messed', 'up!'],
             local.LocalSection(
-                errors=[],
+                errors=[
+                    local.LocalError(
+                        output='P D’oh! this_is_an_invalid_metric|isotopes=0 I messed up!',
+                        reason="Invalid performance data: 'this_is_an_invalid_metric'. ")
+                ],
                 data={
-                    "D'oh!": local.LocalResult(
+                    'D’oh!': local.LocalResult(
                         cached=None,
-                        item="D'oh!",
+                        item="D’oh!",
                         state=State.UNKNOWN,
                         apply_levels=False,
                         text=
-                        "Invalid performance data: 'this is an invalid metric'. Output is: I messed up!",
+                        "Invalid performance data: 'this_is_an_invalid_metric'. Output is: I messed up!",
                         perfdata=[
                             local.Perfdata(
                                 name="isotopes",
@@ -368,3 +385,14 @@ def test_cluster_missing_item():
     assert list(best) == [
         Result(state=State.OK, summary="[node0]: Service is OK"),
     ]
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import os
+    from testlib.utils import cmk_path  # type: ignore[import]
+    assert not pytest.main(
+        ["--doctest-modules",
+         os.path.join(cmk_path(), "cmk/base/plugins/agent_based/local.py")])
+    pytest.main(["-T=unit", "-vvsx", __file__])

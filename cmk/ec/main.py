@@ -361,33 +361,33 @@ class TimePeriods:
     def __init__(self, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
-        self._periods: Dict[TimeperiodName, bool] = {}
-        self._last_update: Optional[Timestamp] = None
+        self._active: Dict[TimeperiodName, bool] = {}
+        self._cache_timestamp: Optional[Timestamp] = None
 
     def _update(self) -> None:
         try:
             timestamp = int(time.time())
             # update at most once a minute
-            if self._last_update is None or self._last_update + 60 <= timestamp:
-                self._periods = {
+            if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
+                self._active = {
                     name: bool(in_)  #
                     for name, in_ in LocalConnection().query("GET timeperiods\n"  #
                                                              "Columns: name in")
                 }
-                self._last_update = timestamp
+                self._cache_timestamp = timestamp
         except Exception as e:
-            self._logger.exception("Cannot update timeperiod information: %s" % e)
+            self._logger.exception("Cannot update timeperiod information: %s", e)
             raise
 
-    def check(self, tpname: TimeperiodName) -> bool:
+    def active(self, name: TimeperiodName) -> bool:
         self._update()
-        if self._last_update is None:
-            self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
+        if self._cache_timestamp is None:
+            self._logger.warning("no timeperiod information, assuming %s is active", name)
             return True
-        if tpname not in self._periods:
-            self._logger.warning("no such timeperiod %s, assuming it is active" % tpname)
+        if name not in self._active:
+            self._logger.warning("no such timeperiod %s, assuming it is active", name)
             return True
-        return self._periods[tpname]
+        return self._active[name]
 
 
 #.
@@ -2315,7 +2315,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_timeperiod(self, rule, event):
-        if "match_timeperiod" in rule and not self._time_periods.check(rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info("  did not match, because timeperiod %s is not active" %
                                   rule["match_timeperiod"])

@@ -6,7 +6,7 @@
 
 from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set
 
-from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, Timestamp, UserId
+from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, TimeperiodName, Timestamp, UserId
 from livestatus import LocalConnection
 
 ################################################################################
@@ -86,3 +86,14 @@ def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> Set[
 def query_status_enable_notifications() -> bool:
     return bool(LocalConnection().query_value("GET status\n"  #
                                               "Columns: enable_notifications"))
+
+
+################################################################################
+
+
+def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:
+    return {
+        name: bool(in_)  #
+        for name, in_ in LocalConnection().query("GET timeperiods\n"  #
+                                                 "Columns: name in")
+    }

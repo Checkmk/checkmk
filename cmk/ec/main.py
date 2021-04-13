@@ -28,7 +28,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
 from six import ensure_binary
 
@@ -48,7 +48,7 @@ from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
-from .cmc_queries import LocalConnection, query_hosts_scheduled_downtime_depth
+from .cmc_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
 from .host_config import HostConfig, HostInfo
@@ -361,7 +361,7 @@ class TimePeriods:
     def __init__(self, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
-        self._active: Dict[TimeperiodName, bool] = {}
+        self._active: Mapping[TimeperiodName, bool] = {}
         self._cache_timestamp: Optional[Timestamp] = None
 
     def _update(self) -> None:
@@ -369,11 +369,7 @@ class TimePeriods:
             timestamp = int(time.time())
             # update at most once a minute
             if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
-                self._active = {
-                    name: bool(in_)  #
-                    for name, in_ in LocalConnection().query("GET timeperiods\n"  #
-                                                             "Columns: name in")
-                }
+                self._active = query_timeperiods_in()
                 self._cache_timestamp = timestamp
         except Exception as e:
             self._logger.exception("Cannot update timeperiod information: %s", e)

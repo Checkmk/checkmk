@@ -627,8 +627,8 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 
 def render_werk_id(werk, with_link) -> Union[HTML, str]:
     if with_link:
-        url = makeuri(request, [("werk", werk["id"])], filename="werk.py")
-        return html.render_a(render_werk_id(werk, with_link=False), url)
+        url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
+        return html.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
@@ -701,10 +701,14 @@ def insert_manpage_links(text: str) -> HTML:
     for part in parts:
         if (check_regex.match(part) and
                 os.path.exists(cmk.utils.paths.check_manpages_dir + "/" + part)):
-            url = makeuri_contextless(request, [
-                ("mode", "check_manpage"),
-                ("check_type", part),
-            ])
+            url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "check_manpage"),
+                    ("check_type", part),
+                ],
+                filename="wato.py",
+            )
             new_parts.append(html.render_a(content=part, href=url))
         else:
             new_parts.append(part)

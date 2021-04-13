@@ -16,6 +16,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
+from cmk.utils.type_defs import CheckPluginName
 import cmk.utils.version as cmk_version
 
 from cmk.base import item_state
@@ -280,5 +281,6 @@ def use_fakeredis_client(monkeypatch):
 def initialised_item_state():
     with item_state.load_host_value_store("non-existent-test-host", store_changes=False) as hvs:
         hvs.load()
-        hvs.set_item_state_prefix(("unitialised-test-env", None))
-        yield
+        service_id = (CheckPluginName("unitialised_test_env"), None)
+        with hvs.namespace(service_id):
+            yield

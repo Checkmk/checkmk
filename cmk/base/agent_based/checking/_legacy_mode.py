@@ -44,7 +44,6 @@ import cmk.base.item_state as item_state
 import cmk.base.plugin_contexts as plugin_contexts
 
 from cmk.base.api.agent_based import register as agent_based_register
-from cmk.base.api.agent_based import value_store
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent
 from cmk.base.check_utils import (
     LegacyCheckParameters,
@@ -72,13 +71,14 @@ def get_aggregated_result(
     service: Service,
     *,
     used_params: LegacyCheckParameters,
+    value_store_manager: item_state.ValueStoreManager,
 ) -> AggregatedResult:
     with plugin_contexts.current_service(service):
         # In the legacy mode from hell (tm) the item state features *probably*
         # need to be called from the parse functions. We consolidate the
         # preperation of the item state at this point, which is the largest
         # possible scope without leaving the 'legacy' world.
-        with value_store.context(*service.id()):
+        with value_store_manager.namespace(service.id()):
             return _get_aggregated_result(
                 parsed_sections_broker=parsed_sections_broker,
                 hostname=hostname,

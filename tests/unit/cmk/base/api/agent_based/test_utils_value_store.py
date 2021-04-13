@@ -19,30 +19,24 @@ def test_value_store():
 
     store = value_store.get_value_store()
 
-    saved_prefix = value_store.get_item_state_prefix()
+    assert len(store) == 0
+    assert not store
+    assert "foo" not in store
+    assert store.get("foo") is None
+    with pytest.raises(KeyError):
+        _ = store["foo"]
+    with pytest.raises(TypeError):
+        store[2] = "key must be string"  # type: ignore[index]
 
-    with value_store.context(CheckPluginName("plugin"), "item"):
+    store["foo"] = 42
+    store["bar"] = 23
 
-        assert len(store) == 0
-        assert not store
-        assert "foo" not in store
-        assert store.get("foo") is None
-        with pytest.raises(KeyError):
-            _ = store["foo"]
-        with pytest.raises(TypeError):
-            store[2] = "key must be string"  # type: ignore[index]
-
-        store["foo"] = 42
-        store["bar"] = 23
-
-        assert set(store) == {"foo", "bar"}
-        del store["bar"]
-        assert "foo" in store
-        assert len(store) == 1
-        assert bool(store)
-        assert store["foo"] == 42
-
-    assert value_store.get_item_state_prefix() == saved_prefix
+    assert set(store) == {"foo", "bar"}
+    del store["bar"]
+    assert "foo" in store
+    assert len(store) == 1
+    assert bool(store)
+    assert store["foo"] == 42
 
 
 @pytest.mark.parametrize("pre_state,time,value,raise_of,errmsg", [

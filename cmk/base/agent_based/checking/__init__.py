@@ -50,7 +50,6 @@ from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.api.agent_based.value_store as value_store
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
@@ -266,21 +265,23 @@ def _do_all_checks_on_host(
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    with plugin_contexts.current_host(host_config.hostname), \
-        item_state.load_host_value_store(host_config.hostname, store_changes=not dry_run):
-        for service in services:
-            success = execute_check(
-                parsed_sections_broker,
-                host_config,
-                ipaddress,
-                service,
-                dry_run=dry_run,
-                show_perfdata=show_perfdata,
-            )
-            if success:
-                num_success += 1
-            else:
-                plugins_missing_data.add(service.check_plugin_name)
+    with plugin_contexts.current_host(host_config.hostname):
+        with item_state.load_host_value_store(host_config.hostname,
+                                              store_changes=not dry_run) as value_store_manager:
+            for service in services:
+                success = execute_check(
+                    parsed_sections_broker,
+                    host_config,
+                    ipaddress,
+                    service,
+                    dry_run=dry_run,
+                    show_perfdata=show_perfdata,
+                    value_store_manager=value_store_manager,
+                )
+                if success:
+                    num_success += 1
+                else:
+                    plugins_missing_data.add(service.check_plugin_name)
 
     return num_success, sorted(plugins_missing_data)
 
@@ -337,6 +338,7 @@ def execute_check(
     *,
     dry_run: bool,
     show_perfdata: bool,
+    value_store_manager: item_state.ValueStoreManager,
 ) -> bool:
 
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
@@ -353,6 +355,7 @@ def execute_check(
                 time_resolved_check_parameters(service.parameters)  #
                 if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
                 service.parameters),
+            value_store_manager=value_store_manager,
         )
     else:  # This is the new, shiny, 'normal' case.
         submittable = get_aggregated_result(
@@ -362,6 +365,7 @@ def execute_check(
             service,
             plugin,
             lambda: _final_read_only_check_parameters(service.parameters),
+            value_store_manager=value_store_manager,
         )
 
     if submittable.submit:
@@ -386,6 +390,8 @@ def get_aggregated_result(
     service: Service,
     plugin: Optional[checking_classes.CheckPlugin],
     params_function: Callable[[], Parameters],
+    *,
+    value_store_manager: item_state.ValueStoreManager,
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -453,7 +459,7 @@ def get_aggregated_result(
 
         with plugin_contexts.current_host(host_config.hostname), \
             plugin_contexts.current_service(service), \
-            value_store.context(*service.id()):
+            value_store_manager.namespace(service.id()):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

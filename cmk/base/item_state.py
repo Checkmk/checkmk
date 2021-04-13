@@ -43,6 +43,9 @@ from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import HostName, Item
 from cmk.utils.log import logger
 
+from cmk.base.api.agent_based.type_defs import ValueStore
+from cmk.base.check_utils import ServiceID
+
 # Constants for counters
 SKIP = None
 RAISE = False
@@ -221,6 +224,40 @@ class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disa
         self._dynamic = _DynamicValueStore()
 
 
+class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-ancestors
+    def __init__(
+        self,
+        *,
+        data: MutableMapping[_ValueStoreKey, Any],
+        service_id: ServiceID,
+    ) -> None:
+        self._prefix = (str(service_id[0]), service_id[1])
+        self._data = data
+
+    def _map_key(self, user_key: _UserKey) -> _ValueStoreKey:
+        if self._prefix is None:
+            raise MKGeneralException("accessing value store outside service context")
+        if not isinstance(user_key, _UserKey):
+            raise TypeError(f"value store key must be {_UserKey}")
+        return (self._prefix[0], self._prefix[1], user_key)
+
+    def __getitem__(self, key: _UserKey) -> Any:
+        return self._data.__getitem__(self._map_key(key))
+
+    def __setitem__(self, key: _UserKey, value: Any) -> Any:
+        return self._data.__setitem__(self._map_key(key), value)
+
+    def __delitem__(self, key: _UserKey) -> Any:
+        return self._data.__delitem__(self._map_key(key))
+
+    def __iter__(self) -> Iterator[_UserKey]:
+        return (user_key for (check_name, item, user_key) in self._data
+                if (check_name, item) == self._prefix)
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self)
+
+
 class MKCounterWrapped(MKException):
     pass
 
@@ -228,12 +265,20 @@ class MKCounterWrapped(MKException):
 class ValueStoreManager:
     def __init__(self, host_name: HostName) -> None:
         self.host_name: Final = host_name
-        self._logger = logger
         self._value_store = _EffectiveValueStore(
             dynamic=_DynamicValueStore(),
             static=_StaticValueStore(host_name, logger.debug),
         )
-        self._item_state_prefix: Optional[ServicePrefix] = None
+        self.active_service_interface: Optional[_ValueStore] = None
+
+    @contextmanager
+    def namespace(self, service_id: ServiceID) -> Iterator[None]:
+        old_sif = self.active_service_interface
+        self.active_service_interface = _ValueStore(data=self._value_store, service_id=service_id)
+        try:
+            yield
+        finally:
+            self.active_service_interface = old_sif
 
     def load(self) -> None:
         self._value_store.static.load()
@@ -242,46 +287,24 @@ class ValueStoreManager:
         if isinstance(self._value_store, _EffectiveValueStore):
             self._value_store.commit()
 
-    def clear_item_state(self, user_key: _UserKey) -> None:
-        key = self.get_unique_item_state_key(user_key)
-        self._value_store.pop(key, None)
-
-    def get_item_state(self, user_key: _UserKey, default: Any = None) -> Any:
-        key = self.get_unique_item_state_key(user_key)
-        return self._value_store.get(key, default)
-
-    def set_item_state(self, user_key: _UserKey, state: Any) -> None:
-        self._value_store[self.get_unique_item_state_key(user_key)] = state
-
-    def get_all_item_states(self) -> MutableMapping[_ValueStoreKey, Any]:
-        return dict(self._value_store.items())
-
-    def get_item_state_prefix(self) -> Optional[ServicePrefix]:
-        return self._item_state_prefix
-
-    def set_item_state_prefix(self, args: Optional[ServicePrefix]) -> None:
-        self._item_state_prefix = args
-
-    def get_unique_item_state_key(self, user_key: _UserKey) -> _ValueStoreKey:
-        if self._item_state_prefix is None:
-            # TODO: consolidate this with the exception thrown in value_store.py
-            raise MKGeneralException("accessing item state outside check function")
-        if not isinstance(user_key, _UserKey):
-            raise TypeError(f"value store key must be {_UserKey}")
-        return self._item_state_prefix + (user_key,)
-
 
 _host_value_stores: MutableMapping[HostName, ValueStoreManager] = {}
 
 _active_host_value_store: Optional[ValueStoreManager] = None
 
 
-# TODO: do not return the whole ValueStoreManager, but only a clean interface
-# to the currently activeated service context
-def _get_value_store() -> ValueStoreManager:
+def get_value_store() -> ValueStore:
+    """Get the value store for the current service from Checkmk
+
+    The returned value store object can be used to persist values
+    between different check executions. It is a MutableMapping,
+    so it can be used just like a dictionary.
+    """
     if _active_host_value_store is None:
-        raise MKGeneralException("no item states have been loaded")
-    return _active_host_value_store
+        raise MKGeneralException("no value store manager available")
+    if _active_host_value_store.active_service_interface is None:
+        raise MKGeneralException("no service interface for value store manager available")
+    return _active_host_value_store.active_service_interface
 
 
 @contextmanager
@@ -333,7 +356,7 @@ def set_item_state(user_key: object, state: Any) -> None:
 
     The user_key is the identifier of the stored value and needs
     to be unique per service."""
-    _get_value_store().set_item_state(_stringify(user_key), state)
+    get_value_store()[_stringify(user_key)] = state
 
 
 def get_item_state(user_key: object, default: Any = None) -> Any:
@@ -341,12 +364,7 @@ def get_item_state(user_key: object, default: Any = None) -> Any:
 
     Returns None or the given default value in case there
     is currently no such item stored."""
-    return _get_value_store().get_item_state(_stringify(user_key), default)
-
-
-def get_all_item_states() -> Mapping[_ValueStoreKey, Any]:
-    """Returns all stored items of the host that is currently being checked."""
-    return _get_value_store().get_all_item_states()
+    return get_value_store().get(_stringify(user_key), default)
 
 
 def clear_item_state(user_key: _UserKey) -> None:
@@ -355,17 +373,7 @@ def clear_item_state(user_key: _UserKey) -> None:
 
     In case the given item does not exist, the function returns
     without modification."""
-    _get_value_store().clear_item_state(user_key)
-
-
-# TODO: drop this, and pass the active ValueStoreManager to the callsite!
-def set_item_state_prefix(args: Optional[ServicePrefix]) -> None:
-    _get_value_store().set_item_state_prefix(args)
-
-
-# TODO: drop this, and pass the active ValueStoreManager to the callsite!
-def get_item_state_prefix() -> Optional[ServicePrefix]:
-    return _get_value_store().get_item_state_prefix()
+    get_value_store().pop(user_key, None)
 
 
 def continue_on_counter_wrap() -> None:
@@ -481,12 +489,12 @@ def get_average(itemname: _UserKey,
 
        b = (1-w) ∑ᵢ₌₀ᵏ⁻¹  wⁱ  =>  w = (1 - b) ** (1/k)    ("geometric sum")
     """
-    cached_item_states = _get_value_store()
-    last_time, last_average = cached_item_states.get_item_state(itemname, (this_time, None))
+    value_store = get_value_store()
+    last_time, last_average = value_store.get(itemname, (this_time, None))
     # first call: take current value as average or assume 0.0
     if last_average is None:
         average = 0.0 if initialize_zero else this_val
-        cached_item_states.set_item_state(itemname, (this_time, average))
+        value_store[itemname] = (this_time, average)
         return average
 
     # at the current rate, how many values are in the backlog?
@@ -507,5 +515,5 @@ def get_average(itemname: _UserKey,
     weight = (1 - backlog_weight)**(1.0 / backlog_count)
 
     average = (1.0 - weight) * this_val + weight * last_average
-    cached_item_states.set_item_state(itemname, (this_time, average))
+    value_store[itemname] = (this_time, average)
     return average

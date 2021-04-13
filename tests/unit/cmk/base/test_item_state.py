@@ -9,6 +9,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import CheckPluginName
 from cmk.base import item_state
 
 _TEST_KEY = ("check", "item", "user-key")
@@ -200,97 +201,35 @@ class Test_EffectiveValueStore:
         assert sorted(evs) == [("dyn", "key", "1"), ("stat", "key", "2")]
 
 
-def test_item_state_prefix_required():
-    vsm = item_state.ValueStoreManager("test-host")
+class TestValueStoreManager:
+    @staticmethod
+    def test_namespace_context():
+        vsm = item_state.ValueStoreManager("test-host")
+        service_inner = (CheckPluginName("unit_test_inner"), None)
+        service_outer = (CheckPluginName("unit_test_outer"), None)
+
+        assert vsm.active_service_interface is None
+
+        with vsm.namespace(service_outer):
+            assert vsm.active_service_interface is not None
+            vsm.active_service_interface["key"] = "outer"
+
+            with vsm.namespace(service_inner):
+                assert vsm.active_service_interface is not None
+                assert "key" not in vsm.active_service_interface
+                vsm.active_service_interface["key"] = "inner"
+
+            assert vsm.active_service_interface["key"] == "outer"
+
+        assert vsm.active_service_interface is None
+
+
+def test_item_state_prefix_required(monkeypatch):
+    monkeypatch.setattr(
+        item_state,
+        "_active_host_value_store",
+        item_state.ValueStoreManager("test-host"),
+    )
     # we *must* set a prefix:
     with pytest.raises(MKGeneralException):
-        _ = vsm.get_item_state("user-key", None)
-
-
-def test_set_get_item_state_prefix():
-    vsm = item_state.ValueStoreManager("test-host")
-    test_prefix = ("unit-test", None)
-    vsm.set_item_state_prefix(test_prefix)
-    assert vsm.get_item_state_prefix() == test_prefix
-
-
-def test_item_state_unloaded():
-    # I am not really sure which (if any) part of the following behaviour
-    # is desired.
-    # This test is only supposed to make the status quo visible.
-
-    test_prefix = ("unit-test", None)
-    vsm = item_state.ValueStoreManager("test-host")
-    vsm.set_item_state_prefix(test_prefix)
-
-    # add some keys:
-    vsm.set_item_state("one", 1)
-    vsm.set_item_state("two", 2)
-    assert vsm.get_item_state("one") == 1
-    assert vsm.get_all_item_states() == {
-        test_prefix + ("one",): 1,
-        test_prefix + ("two",): 2,
-    }
-
-    vsm.clear_item_state("one")
-    assert vsm.get_item_state("one", None) is None
-    assert vsm.get_all_item_states() == {
-        test_prefix + ("two",): 2,
-    }
-
-
-def test_item_state_loaded(mocker):
-
-    test_prefix = ("unit-test", None)
-    stored_item_states = {
-        test_prefix + ("stored-user-key-1",): 23,
-        test_prefix + ("stored-user-key-2",): 42,
-    }
-
-    mocker.patch.object(
-        store,
-        "load_object_from_file",
-        side_effect=lambda *a, **kw: stored_item_states,
-    )
-
-    mocker.patch.object(
-        store,
-        "save_object_to_file",
-        autospec=True,
-    )
-
-    vsm = item_state.ValueStoreManager("hostname")
-    vsm.load()
-    vsm.set_item_state_prefix(test_prefix)
-
-    assert vsm.get_all_item_states() == stored_item_states
-
-    vsm.save()
-    assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
-            is None)  # not called, nothing changed
-
-    vsm.clear_item_state("this-key-does-not-exist-anyway")  # no-op, but qualifies as a 'change'
-    vsm.save()
-    assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
-            is not None)
-    assert store.save_object_to_file.call_args.args[1] == stored_item_states
-
-    # remove key
-    vsm.clear_item_state("stored-user-key-1")
-    vsm.save()
-    assert store.save_object_to_file.call_args is not None
-    assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}
-
-    # bring back key
-    vsm.set_item_state("stored-user-key-1", 42)
-    vsm.save()
-    assert store.save_object_to_file.call_args is not None
-    assert store.save_object_to_file.call_args.args[1] == {
-        test_prefix + ("stored-user-key-1",): 42,
-        test_prefix + ("stored-user-key-2",): 42,
-    }
-
-    vsm.clear_item_state("stored-user-key-1")
-    vsm.save()
-    assert store.save_object_to_file.call_args is not None
-    assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}
+        _ = item_state.get_item_state("user-key", None)

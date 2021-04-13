@@ -71,6 +71,7 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
+from cmk.base.item_state import load_host_value_store, ValueStoreManager
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -1150,18 +1151,20 @@ def get_check_preview(
         discovery_parameters,
     )
 
-    table = [
-        _check_preview_table_row(
-            host_config=host_config,
-            ip_address=ip_address,
-            service=service,
-            check_source=check_source,
-            parsed_sections_broker=parsed_sections_broker,
-            found_on_nodes=found_on_nodes,
-        )
-        for check_source, services_with_nodes in grouped_services.items()
-        for service, found_on_nodes in services_with_nodes
-    ]
+    with load_host_value_store(host_name, store_changes=False) as value_store_manager:
+        table = [
+            _check_preview_table_row(
+                host_config=host_config,
+                ip_address=ip_address,
+                service=service,
+                check_source=check_source,
+                parsed_sections_broker=parsed_sections_broker,
+                found_on_nodes=found_on_nodes,
+                value_store_manager=value_store_manager,
+            )
+            for check_source, services_with_nodes in grouped_services.items()
+            for service, found_on_nodes in services_with_nodes
+        ]
 
     return table, host_label_result
 
@@ -1174,6 +1177,7 @@ def _check_preview_table_row(
     check_source: str,
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: List[HostName],
+    value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
     params = _preview_params(host_config.hostname, service, plugin, check_source)
@@ -1196,6 +1200,7 @@ def _check_preview_table_row(
             service,
             plugin,
             lambda p=wrapped_params: p,  # type: ignore[misc]  # "type of lambda"
+            value_store_manager=value_store_manager,
         ).result
 
     # Service discovery never uses the perfdata in the check table. That entry

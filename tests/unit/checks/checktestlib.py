@@ -385,7 +385,7 @@ class MockItemState:
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    TARGET = 'cmk.base.item_state._active_host_value_store.get_item_state'
+    TARGET = 'cmk.base.item_state._active_host_value_store.active_service_interface.get'
 
     def __init__(self, mock_state):
         self.context = None

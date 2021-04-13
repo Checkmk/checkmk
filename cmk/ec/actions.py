@@ -413,7 +413,10 @@ def _add_contacts_from_rule(context: Any, event: Any, logger: Logger) -> None:
 
 
 def _add_contact_information_to_context(context: Any, contact_groups: Any, logger: Any) -> None:
-    contact_names = _rbn_groups_contacts(contact_groups)
+    try:
+        contact_names = _rbn_groups_contacts(contact_groups)
+    except Exception:
+        contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
     logger.log(VERBOSE, "Setting %d contacts %s resulting from rule contact groups %s",
@@ -430,15 +433,13 @@ def _rbn_groups_contacts(group_names: Iterable[str]) -> Set[str]:
         query += f"\nFilter: name = {group_name}"
         num_group_names += 1
     query += f"\nOr: {num_group_names}"
-    try:
-        contact_lists: List[List[str]] = (LocalConnection().query_column(query)
-                                          if num_group_names else [])
-        contacts: Set[str] = set()
-        for contact_list in contact_lists:
-            contacts.update(contact_list)
-        return contacts
-    except Exception:
-        return set()
+    contact_lists: List[List[str]] = (LocalConnection().query_column(query)
+                                      if num_group_names else [])
+    return {
+        contact  #
+        for contact_list in contact_lists  #
+        for contact in contact_list
+    }
 
 
 def _core_has_notifications_enabled(logger: Logger) -> bool:

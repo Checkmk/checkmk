@@ -14,7 +14,7 @@ import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 
-from .cmc_queries import LocalConnection, MKLivestatusNotFoundError, query_status_enable_notifications
+from .cmc_queries import LocalConnection, query_status_enable_notifications
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -434,13 +434,7 @@ def _rbn_groups_contacts(groups: Sequence[str]) -> Set[str]:
         for contact_list in LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts
-
-    except MKLivestatusNotFoundError:
-        return set()
-
     except Exception:
-        if cmk.utils.debug.enabled():
-            raise
         return set()
 
 

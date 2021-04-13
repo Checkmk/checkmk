@@ -1259,7 +1259,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
 
     @property
     def tables(self):
-        return ["host", "service"]
+        return ["service"]
 
     def render(self, what):
         html.help(

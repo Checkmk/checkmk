@@ -1253,13 +1253,16 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {
-        "name": "util"
+        "name": "util",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 60s": {
-        "name": "util1"
+        "name": "util1",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 5m": {
-        "name": "util5"
+        "name": "util5",
+        "deprecated": "2.0.0p4"
     },
 }
 check_metrics["check_mk-ibm_svc_nodestats_cache"] = {

@@ -934,11 +934,12 @@ class EventServer(ECServerThread):
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
 
+            host_name: HostName = event["core_host"]
             try:
-                in_downtime = host_downtimes[event["core_host"]]
+                in_downtime = host_downtimes[host_name]
             except KeyError:
-                in_downtime = self._is_host_in_downtime(event)
-                host_downtimes[event["core_host"]] = in_downtime
+                in_downtime = self._is_host_in_downtime(host_name)
+                host_downtimes[host_name] = in_downtime
 
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
@@ -1515,15 +1516,15 @@ class EventServer(ECServerThread):
         self.add_core_host_to_event(event)
 
         # Add some state dependent information (like host is in downtime etc.)
-        event["host_in_downtime"] = self._is_host_in_downtime(event)
+        event["host_in_downtime"] = self._is_host_in_downtime(event["core_host"])
 
-    def _is_host_in_downtime(self, event: Event) -> bool:
-        if not event["core_host"]:
+    def _is_host_in_downtime(self, host_name: HostName) -> bool:
+        if not host_name:
             return False  # Found no host in core: Not in downtime!
 
         query = ("GET hosts\n"
                  "Columns: scheduled_downtime_depth\n"
-                 "Filter: host_name = %s\n" % (event["core_host"]))
+                 f"Filter: host_name = {host_name}")
 
         try:
             return LocalConnection().query_value(query) >= 1

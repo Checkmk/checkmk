@@ -47,3 +47,11 @@ def query_hosts_infos() -> Sequence[HostInfo]:
 def query_status_program_start() -> Timestamp:
     return LocalConnection().query_value("GET status\n"  #
                                          "Columns: program_start")
+
+
+################################################################################
+
+
+def query_status_enable_notifications() -> bool:
+    return bool(LocalConnection().query_value("GET status\n"  #
+                                              "Columns: enable_notifications"))

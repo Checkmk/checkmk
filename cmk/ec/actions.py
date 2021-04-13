@@ -14,7 +14,7 @@ import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 
-from .cmc_queries import LocalConnection, MKLivestatusNotFoundError
+from .cmc_queries import LocalConnection, MKLivestatusNotFoundError, query_status_enable_notifications
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -42,7 +42,7 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
         event["live_until_phases"] = phases
 
     if rule.get("actions_in_downtime", True) is False and event["host_in_downtime"]:
-        logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
+        logger.info("Skip actions for event %d: Host is in downtime", event["id"])
         return
 
     do_event_actions(history,
@@ -265,7 +265,9 @@ def do_notify(host_config: HostConfig,
               event: Any,
               username: Optional[bool] = None,
               is_cancelling: bool = False) -> None:
-    if _core_has_notifications_disabled(event, logger):
+    if not _core_has_notifications_enabled(logger):
+        logger.info("Notifications are currently disabled. Skipped notification for event %d" %
+                    event["id"])
         return
 
     context = _create_notification_context(host_config, event, username, is_cancelling, logger)
@@ -445,15 +447,10 @@ def _rbn_groups_contacts(groups: Any) -> Any:
         return []
 
 
-def _core_has_notifications_disabled(event: Any, logger: Logger) -> bool:
+def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
-        notifications_enabled = LocalConnection().query_value(
-            "GET status\nColumns: enable_notifications")
-        if not notifications_enabled:
-            logger.info("Notifications are currently disabled. Skipped notification for event %d" %
-                        event["id"])
-            return True
+        return query_status_enable_notifications()
     except Exception as e:
-        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." %
+        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES.",
                     e)
-    return False
+        return True

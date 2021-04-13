@@ -16,18 +16,19 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 # TODO: this API violiation is due to the fact that this value_store
 # is currently nothing more than a polished version of item state.
 from cmk.base.item_state import (  # pylint: disable=cmk-module-layer-violation
-    ItemStateKey, set_item_state,  # for __setitem__
+    set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
     get_all_item_states,  # for __len__, __iter__
     get_item_state_prefix,  # for __repr__, context
     set_item_state_prefix,  # for context
+    ServicePrefix,
 )
 
 
 class _ValueStore(ValueStore):  # pylint: disable=too-many-ancestors
     """_ValueStore objects are used to persist values across check intervals"""
     @staticmethod
-    def _get_validated_item_state_prefix() -> ItemStateKey:
+    def _get_validated_item_state_prefix() -> ServicePrefix:
         prefix = get_item_state_prefix()
         if not prefix:
             raise MKGeneralException("accessing value store outside check function")

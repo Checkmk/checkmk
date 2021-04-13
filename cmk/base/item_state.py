@@ -26,8 +26,8 @@ from typing import (
     Callable,
     Dict,
     Final,
+    Iterable,
     Iterator,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -39,7 +39,7 @@ import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, Item
 from cmk.utils.log import logger
 
 # Constants for counters
@@ -51,14 +51,14 @@ g_last_counter_wrap: 'Optional[MKCounterWrapped]' = None
 g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
-ItemStateKeyElement = Optional[str]
-ItemStateKey = Tuple[ItemStateKeyElement, ...]
-ItemStates = Mapping[ItemStateKey, Any]
-MutableItemStates = MutableMapping[ItemStateKey, Any]
-OnWrap = Union[None, bool, float]
+_PluginName = str
+# consider using ServiceID some day (Tuple[CheckPluginName, Item]]):
+ServicePrefix = Tuple[_PluginName, Item]
+_ValueStoreKey = Tuple[_PluginName, Item, str]
+_OnWrap = Union[None, bool, float]
 
 
-class _DynamicValueStore(Dict[ItemStateKey, Any]):
+class _DynamicValueStore(Dict[_ValueStoreKey, Any]):
     """Represents the values that have been changed in a session
 
     This is a dict derivat that remembers if a key has been
@@ -67,40 +67,40 @@ class _DynamicValueStore(Dict[ItemStateKey, Any]):
     """
     def __init__(self):
         super().__init__()
-        self._removed_keys: Set[ItemStateKey] = set()
+        self._removed_keys: Set[_ValueStoreKey] = set()
 
     @property
-    def removed_keys(self) -> Set[ItemStateKey]:
+    def removed_keys(self) -> Set[_ValueStoreKey]:
         return self._removed_keys
 
-    def __setitem__(self, key: ItemStateKey, value: Any) -> None:
+    def __setitem__(self, key: _ValueStoreKey, value: Any) -> None:
         self._removed_keys.discard(key)
         super().__setitem__(key, value)
 
-    def __delitem__(self, key: ItemStateKey) -> None:
+    def __delitem__(self, key: _ValueStoreKey) -> None:
         self._removed_keys.add(key)
         super().__delitem__(key)
 
-    def pop(self, key: ItemStateKey, *args: Any) -> Any:
+    def pop(self, key: _ValueStoreKey, *args: Any) -> Any:
         self._removed_keys.add(key)
         return super().pop(key, *args)
 
 
-class _StaticValueStore(ItemStates):
+class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
     """Represents the values stored on disk"""
 
     STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
 
-    def __init__(self, host_name: HostName, log_debug: Callable) -> None:
+    def __init__(self, host_name: HostName, log_debug: Callable[[str], None]) -> None:
         self._path: Final = self.STORAGE_PATH / host_name
         self._loaded_mtime: Optional[float] = None
-        self._data: ItemStates = {}
+        self._data: Mapping[_ValueStoreKey, Any] = {}
         self._log_debug = log_debug
 
-    def __getitem__(self, key: ItemStateKey) -> Any:
+    def __getitem__(self, key: _ValueStoreKey) -> Any:
         return self._data.__getitem__(key)
 
-    def __iter__(self) -> Iterator[ItemStateKey]:
+    def __iter__(self) -> Iterator[_ValueStoreKey]:
         return self._data.__iter__()
 
     def __len__(self) -> int:
@@ -131,8 +131,8 @@ class _StaticValueStore(ItemStates):
     def store(
         self,
         *,
-        removed: Set[ItemStateKey],
-        updated: Mapping[ItemStateKey, Any],
+        removed: Set[_ValueStoreKey],
+        updated: Mapping[_ValueStoreKey, Any],
     ) -> None:
         """Re-load and then store the changes of the item state to disk
 
@@ -172,7 +172,7 @@ class CachedItemStates:
         self.reset()
 
     def reset(self) -> None:
-        self._item_state_prefix: Optional[ItemStateKey] = None
+        self._item_state_prefix: Optional[ServicePrefix] = None
         self._static_values: Optional[_StaticValueStore] = None
         self._dynamic_values = _DynamicValueStore()
 
@@ -192,11 +192,11 @@ class CachedItemStates:
         key = self.get_unique_item_state_key(user_key)
         self.remove_full_key(key)
 
-    def clear_item_states_by_full_keys(self, full_keys: List[ItemStateKey]) -> None:
+    def clear_item_states_by_full_keys(self, full_keys: Iterable[_ValueStoreKey]) -> None:
         for key in full_keys:
             self.remove_full_key(key)
 
-    def remove_full_key(self, full_key: ItemStateKey) -> None:
+    def remove_full_key(self, full_key: _ValueStoreKey) -> None:
         self._dynamic_values.pop(full_key, None)
 
     def get_item_state(self, user_key: str, default: Any = None) -> Any:
@@ -208,7 +208,7 @@ class CachedItemStates:
         except KeyError:
             return default
 
-    def _lookup(self, key: ItemStateKey) -> Any:
+    def _lookup(self, key: _ValueStoreKey) -> Any:
         try:
             return self._dynamic_values[key]
         except KeyError:
@@ -220,7 +220,7 @@ class CachedItemStates:
     def set_item_state(self, user_key: str, state: Any) -> None:
         self._dynamic_values[self.get_unique_item_state_key(user_key)] = state
 
-    def get_all_item_states(self) -> MutableItemStates:
+    def get_all_item_states(self) -> MutableMapping[_ValueStoreKey, Any]:
         if self._static_values is None:
             # TODO: refactor s.t. this can never happen.
             return {
@@ -231,13 +231,13 @@ class CachedItemStates:
         keys = set(self._static_values) | set(self._dynamic_values)
         return {k: self._lookup(k) for k in keys if k not in self._dynamic_values.removed_keys}
 
-    def get_item_state_prefix(self) -> Optional[ItemStateKey]:
+    def get_item_state_prefix(self) -> Optional[ServicePrefix]:
         return self._item_state_prefix
 
-    def set_item_state_prefix(self, args: Optional[ItemStateKey]) -> None:
+    def set_item_state_prefix(self, args: Optional[ServicePrefix]) -> None:
         self._item_state_prefix = args
 
-    def get_unique_item_state_key(self, user_key: str) -> ItemStateKey:
+    def get_unique_item_state_key(self, user_key: str) -> _ValueStoreKey:
         if self._item_state_prefix is None:
             # TODO: consolidate this with the exception thrown in value_store.py
             raise MKGeneralException("accessing item state outside check function")
@@ -271,7 +271,7 @@ def get_item_state(user_key: str, default: Any = None) -> Any:
     return _cached_item_states.get_item_state(user_key, default)
 
 
-def get_all_item_states() -> ItemStates:
+def get_all_item_states() -> Mapping[_ValueStoreKey, Any]:
     """Returns all stored items of the host that is currently being checked."""
     return _cached_item_states.get_all_item_states()
 
@@ -285,7 +285,7 @@ def clear_item_state(user_key: str) -> None:
     _cached_item_states.clear_item_state(user_key)
 
 
-def clear_item_states_by_full_keys(full_keys: List[ItemStateKey]) -> None:
+def clear_item_states_by_full_keys(full_keys: Iterable[_ValueStoreKey]) -> None:
     """Clears all stored items specified in full_keys.
 
     The items are deleted by their full identifiers, not only the
@@ -300,11 +300,11 @@ def cleanup_item_states() -> None:
     _cached_item_states.reset()
 
 
-def set_item_state_prefix(args: Optional[ItemStateKey]) -> None:
+def set_item_state_prefix(args: Optional[ServicePrefix]) -> None:
     _cached_item_states.set_item_state_prefix(args)
 
 
-def get_item_state_prefix() -> Optional[ItemStateKey]:
+def get_item_state_prefix() -> Optional[ServicePrefix]:
     return _cached_item_states.get_item_state_prefix()
 
 
@@ -324,7 +324,7 @@ def get_rate(user_key: str,
              this_time: float,
              this_val: float,
              allow_negative: bool = False,
-             onwrap: OnWrap = SKIP,
+             onwrap: _OnWrap = SKIP,
              is_rate: bool = False) -> float:
     try:
         return _get_counter(user_key, this_time, this_val, allow_negative, is_rate)[1]

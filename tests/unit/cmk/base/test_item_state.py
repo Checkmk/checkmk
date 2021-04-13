@@ -124,12 +124,12 @@ class Test_StaticValueStore:
         svs.load()
 
         svs.store(
-            removed={("check1", None, "stored-user-key-1")},
+            removed={("check2", "item", "stored-user-key-2")},
             updated={("check3", "el Barto", "Ay caramba"): "ASDF"},
         )
 
         expected_values = {
-            ("check2", "item", "stored-user-key-2"): 42,
+            ("check1", None, "stored-user-key-1"): 23,
             ("check3", "el Barto", "Ay caramba"): "ASDF",
         }
         written = store.save_object_to_file.call_args.args[1]  # type: ignore[attr-defined]

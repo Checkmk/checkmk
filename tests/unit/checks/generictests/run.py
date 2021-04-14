@@ -275,7 +275,6 @@ def run(check_info, dataset, write=False):
 
             with \
                 current_host("non-existent-testhost", write_state=False), \
-                value_store.context(CheckPluginName("test"), "unit-test"), \
                 MockItemState(mock_is), \
                 MockHostExtraConf(check, mock_hec), \
                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):

@@ -18,6 +18,8 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
+from cmk.base import item_state
+
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
@@ -272,3 +274,14 @@ def use_fakeredis_client(monkeypatch):
         "Redis",
         FakeRedis,
     )
+
+
+@pytest.fixture(scope="function")
+def initialised_item_state():
+    previous = item_state.get_item_state_prefix()
+    item_state._cached_item_states.reset()
+    item_state.set_item_state_prefix(("unitialised-test-env", None))
+    try:
+        yield
+    finally:
+        item_state.set_item_state_prefix(previous)

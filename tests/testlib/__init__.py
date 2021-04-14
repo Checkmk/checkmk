@@ -314,26 +314,6 @@ class BaseCheck(metaclass=abc.ABCMeta):
         import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
         cmk.base.plugin_contexts._hostname = 'non-existent-testhost'
 
-    def _get_service(self, item: Optional[str]):
-        from cmk.utils.type_defs import CheckPluginName
-        from cmk.utils.check_utils import maincheckify
-        from cmk.base.check_utils import Service
-
-        description = self.info["service_description"]
-
-        assert description, '%r is missing a service_description' % self.name
-        if item is not None:
-            assert "%s" in description, ("Missing '%%s' formatter in service description of %r" %
-                                         self.name)
-            description = description % item
-
-        return Service(
-            item=item,
-            check_plugin_name=CheckPluginName(maincheckify(self.name)),
-            description=description,
-            parameters={},
-        )
-
 
 class Check(BaseCheck):
     def __init__(self, name):
@@ -370,26 +350,6 @@ class Check(BaseCheck):
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
         return check_func(item, params, info)
-
-    #def run_parse_with_walk(self, walk_name):
-    #    if "parse_function" not in self.info:
-    #        raise Exception("This check has no parse function defined")
-
-    #    return self.info["parse_function"]()
-
-    #def run_discovery_with_walk(self, walk_name):
-    #     # TODO: use standard walk processing code
-    #    info = self._get_walk(walk_name)
-
-    #    # TODO: use standard sanitizing code
-    #    return self.info["inventory_function"](info)
-
-    #def run_check_with_walk(self, walk_name, item, params):
-    #     # TODO: use standard walk processing code
-    #    info = self._get_walk(walk_name)
-
-    #    # TODO: use standard sanitizing code
-    #    return self.info["check_function"](item, params, info)
 
 
 class ActiveCheck(BaseCheck):

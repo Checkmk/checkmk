@@ -15,12 +15,11 @@ from base64 import b64decode
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
-from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
 from werkzeug import Request, Response
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
-from cmk.utils import crash_reporting
+from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -183,7 +182,7 @@ class Authenticate:
 
 
 @functools.lru_cache
-def serve_file(file_name: str, content: str) -> Response:
+def serve_file(file_name: str, content: bytes) -> Response:
     """Construct and cache a Response from a static file."""
     content_type, _ = mimetypes.guess_type(file_name)
 
@@ -301,29 +300,27 @@ class ServeSwaggerUI:
             current_url = current_url[:-4]
 
         yaml_file = f"{current_url}/{yaml_filename}"
-        file_path = swagger_ui_3_path + self._relative_path(environ)
+        file_path = f"{paths.web_dir}/htdocs/openapi/swagger-ui-3/{self._relative_path(environ)}"
 
         if not os.path.exists(file_path):
             return NotFound()(environ, start_response)
 
-        with open(file_path, 'r') as fh:
-            content = fh.read()
+        with open(file_path, 'rb') as fh:
+            content: bytes = fh.read()
 
         if file_path.endswith("/index.html"):
             page = []
             for line in content.splitlines():
-                if "<title>" in line:
-                    page.append("<title>REST-API Interactive GUI - Checkmk</title>")
-                elif "favicon" in line:
-                    continue
-                elif "petstore.swagger.io" in line:
-                    page.append(f'        url: "{yaml_file}",')
-                    page.append('        validatorUrl: null,')
-                    page.append('        displayOperationId: false,')
+                if b"<title>" in line:
+                    page.append(b"<title>REST-API Interactive GUI - Checkmk</title>")
+                elif b"petstore.swagger.io" in line:
+                    page.append(f'        url: "{yaml_file}",'.encode('utf-8'))
+                    page.append(b'        validatorUrl: null,')
+                    page.append(b'        displayOperationId: false,')
                 else:
                     page.append(line)
 
-            content = '\n'.join(page)
+            content = b'\n'.join(page)
 
         return serve_file(file_path, content)(environ, start_response)
 

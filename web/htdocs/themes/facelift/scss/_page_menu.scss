@@ -148,18 +148,19 @@ div#top_heading {
     background-color: $color-background;
     border-spacing: 0;
 
-    tr {
-      display: flex;
-    }
-
     td {
       padding: 0;
       margin: 0;
       vertical-align: middle;
 
+      // Needed to prevent a buggy menubar display on rule edit pages (FEED-5754)
+      &.menues {
+        width: 1px;
+      }
+
       &.shortcuts {
         width: 100%;
-        padding: 3px 3px 0;
+        padding: 0 3px;
         background-color: $page-menu-bg-color;
 
         a.disabled {

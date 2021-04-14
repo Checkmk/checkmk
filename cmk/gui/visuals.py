@@ -566,7 +566,8 @@ def page_list(what,
                 clone_url = makeuri_contextless(
                     global_request,
                     [
-                        ("load_user", owner),
+                        ("mode", "clone"),
+                        ("owner", owner),
                         ("load_name", visual_name),
                         ("back", backurl),
                     ],
@@ -589,7 +590,10 @@ def page_list(what,
                 # Edit
                 if owner == config.user.id or (owner != "" and
                                                config.user.may("general.edit_foreign_%s" % what)):
-                    edit_vars = [("load_name", visual_name)]
+                    edit_vars = [
+                        ("mode", "edit"),
+                        ("load_name", visual_name),
+                    ]
                     if owner != config.user.id:
                         edit_vars.append(("owner", owner))
                     edit_url = makeuri_contextless(
@@ -835,45 +839,41 @@ def page_edit_visual(
     }
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
+    mode = html.request.get_str_input_mandatory("mode", "create")
     visualname = html.request.get_str_input_mandatory("load_name", "")
     oldname = visualname
-    mode = html.request.get_ascii_input_mandatory('mode', 'edit')
     owner_user_id = config.user.id
-    if visualname:
-        cloneuser = html.request.var("load_user")
-        if cloneuser is not None:
-            mode = 'clone'
-            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), {}))
-            if not visual:
-                raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
-            # Make sure, name is unique
-            if UserId(cloneuser) == owner_user_id:  # Clone own visual
-                newname = visualname + "_clone"
-            else:
-                newname = visualname
+    def _get_visual(owner_id, mode):
+        if visual := all_visuals.get((owner_id, visualname)):
+            return visual
+        if mode == "clone":
+            return _get_visual("", "builtins")
+        raise MKUserError(mode, _('The %s does not exist.') % visual_type.title)
+
+    if visualname:
+        owner_id = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
+        visual = _get_visual(owner_id, mode)
+
+        if mode == "edit":
+            owner_user_id = owner_id
+            title = _('Edit %s') % visual_type.title
+
+        elif mode == "clone":
+            title = _('Clone %s') % visual_type.title
+            visual = copy.deepcopy(visual)
+            visual["public"] = False
+
             # Name conflict -> try new names
-            n = 1
+            newname, n = visualname, 0
             while (owner_user_id, newname) in all_visuals:
                 n += 1
                 newname = visualname + "_clone%d" % n
             visual["name"] = newname
-            visual["public"] = False
             visualname = newname
             oldname = ""  # Prevent renaming
-            if UserId(cloneuser) == owner_user_id:
+            if owner_id == owner_user_id:
                 visual["title"] += _(" (Copy)")
-        else:
-            user_id_str = html.request.get_unicode_input("owner", config.user.id)
-            owner_user_id = None if user_id_str is None else UserId(user_id_str)
-            visual = all_visuals.get((owner_user_id, visualname), {})
-            if not visual:
-                visual = all_visuals.get(('', visualname), {})  # load builtin visual
-                mode = 'clone'
-                if not visual:
-                    raise MKUserError(None,
-                                      _('The requested %s does not exist.') % visual_type.title)
-                visual["public"] = False
 
         single_infos = visual['single_infos']
 
@@ -881,7 +881,7 @@ def page_edit_visual(
             load_handler(visual)
 
     else:
-        mode = 'create'
+        title = _('Create %s') % visual_type.title
         single_infos = []
         single_infos_raw = html.request.var('single_infos')
         if single_infos_raw:
@@ -890,13 +890,6 @@ def page_edit_visual(
                 if key not in visual_info_registry:
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
         visual['single_infos'] = single_infos
-
-    if mode == 'clone':
-        title = _('Clone %s') % visual_type.title
-    elif mode == 'create':
-        title = _('Create %s') % visual_type.title
-    else:
-        title = _('Edit %s') % visual_type.title
 
     back_url = html.get_url_input("back", "edit_%s.py" % what)
 

@@ -20,7 +20,7 @@ def parse_sophos_disk(info):
 
 def check_sophos_disk(item, params, parsed):
     return check_levels(parsed,
-                        "disk percentage usage",
+                        "disk_utilization",
                         params.get("disk_levels", (None, None)),
                         unit="%",
                         infoname="Disk percentage usage",

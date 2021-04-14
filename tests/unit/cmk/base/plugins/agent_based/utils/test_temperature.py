@@ -651,7 +651,7 @@ def test_check_temperature_value_store():
             10.0,
             None,
             unique_name=None,
-            value_store='temp.my_test',
+            value_store={},
             dev_unit=None,
             dev_levels=None,
             dev_levels_lower=None,
@@ -1300,3 +1300,8 @@ def test_check_temperature_device_status_override_ok():
     assert results[3].state == state.OK
     assert results[3].summary == ''
     assert results[3].details == 'Configuration: show least critical state'
+
+
+def test_check_temperature_fails_without_value_store() -> None:
+    with pytest.raises(ValueError):
+        list(temperature.check_temperature(0.2, {'trend_compute': {}}, unique_name='unique_name'))

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Tuple, Optional, TypedDict, Generator
+from typing import Union, Tuple, Optional, TypedDict, Generator, MutableMapping, Any
 import time
 from ..agent_based_api.v1 import (
     check_levels,
@@ -175,7 +175,7 @@ def _validate_levels(
 
 
 def _check_trend(
-    value_store,
+    value_store: MutableMapping[str, Any],
     temp: float,
     params: TrendComputeDict,
     output_unit: str,
@@ -256,7 +256,7 @@ def check_temperature(
     params: TempParamType,
     *,
     unique_name: Optional[str] = None,
-    value_store: Optional[str] = None,
+    value_store: Optional[MutableMapping[str, Any]] = None,
     dev_unit: Optional[str] = "c",
     dev_levels: Optional[Tuple[float, float]] = None,
     dev_levels_lower: Optional[Tuple[float, float]] = None,
@@ -272,6 +272,7 @@ def check_temperature(
         reading (Number): The numeric temperature value itself.
         params (dict): A dictionary giving the user's configuration. See below.
         unique_name (str): The name under which to track performance data.
+        value_store: The Value Store to use for trend computation
         dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
         dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
         dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
@@ -341,6 +342,9 @@ def check_temperature(
     usr_results = [usr_result]
     dev_results = [dev_result]
     if unique_name is not None and params.get('trend_compute') is not None:
+        if value_store is None:
+            raise ValueError("Can not track performance data without value_store")
+
         usr_results.extend(result for result in _check_trend(
             value_store=value_store,
             temp=temp,
@@ -358,7 +362,7 @@ def check_temperature(
             output_unit=output_unit,
             crit_temp=dev_levels_upper[1] if dev_levels_upper is not None else None,
             crit_temp_lower=dev_levels_lower[1] if dev_levels_lower is not None else None,
-            unique_name=unique_name,
+            unique_name=unique_name + '.dev',
         ))
 
     if dev_status is not None:

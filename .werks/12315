@@ -1,0 +1,12 @@
+Title: check: liebert_temp_air: fix Attribute Error
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618383394
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The check liebert_temp_air crashed with "AttributeError ('NoneType' object has
+no attribute 'get')". This should now be fixed.

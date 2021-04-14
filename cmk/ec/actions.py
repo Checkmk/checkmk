@@ -15,7 +15,7 @@ import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ContactgroupName
 
-from .cmc_queries import query_contactgroups_members, query_status_enable_notifications
+from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .host_config import HostConfig
 from .settings import Settings
 

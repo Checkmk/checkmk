@@ -48,7 +48,7 @@ from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
-from .cmc_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
+from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
 from .host_config import HostConfig, HostInfo

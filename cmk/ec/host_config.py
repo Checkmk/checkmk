@@ -10,7 +10,7 @@ from typing import Dict, Optional
 
 from cmk.utils.type_defs import HostName, Timestamp
 
-from .cmc_queries import HostInfo, query_hosts_infos, query_status_program_start
+from .core_queries import HostInfo, query_hosts_infos, query_status_program_start
 
 #.
 #   .--Host config---------------------------------------------------------.

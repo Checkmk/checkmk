@@ -584,6 +584,16 @@ def render_number_function(timeformat: str) -> Callable[[AVTimeStamp, int], str]
 
 
 def prepare_avo_timeformats(timeformat: str) -> AVTimeFormats:
+    """Processes the information provided in the Format time ranges section
+
+    Args:
+        timeformat:
+            list containing the options of the three dropdown menus in the 'Format time ranges' section
+
+    Returns:
+        list containing the value rendering options
+
+    """
     this_timeformat = [("percentage_2", render_number_function("percentage_2"))]
     if isinstance(timeformat, (list, tuple)):
         if timeformat[0] == "both":
@@ -1350,50 +1360,13 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
     }
 
     availability_columns = AvailabilityColumns()
-    statistics_headers = {
-        "min": _("Shortest"),
-        "max": _("Longest"),
-        "avg": _("Average"),
-        "cnt": _("Count"),
-    }
-
     # Titles for the columns that specify the object
-    titles = []
-    if what == "bi":
-        titles.append(_("Aggregate"))
-    else:
-        # in service availability we can only omit the host. In the
-        # host availability this is only possible if the alias is
-        # being displayed, Otherwise the table wouldn't make sense
-        # and the pdf renderer would crash
-        if "omit_host" not in labelling or\
-                (what == "host" and "show_alias" not in labelling):
-            titles.append(_("Host"))
-        if "show_alias" in labelling:
-            titles.append(_("Alias"))
-
-        if what != "host":
-            titles.append(_("Service"))
-
-    av_table["object_titles"] = titles
+    av_table["object_titles"] = object_column_titles(labelling, what)
 
     # Headers for availability cells
-    av_table["cell_titles"] = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
-    for timeformat, render_number in timeformats:
-        for sid, css, sname, help_txt in availability_columns[what]:
-            ssid = "%s-%s" % (sid, timeformat)
-            if not cell_active(sid, avoptions):
-                continue
-            if avoptions["av_mode"]:
-                sname = _("Avail.")
-
-            av_table["cell_titles"].append((sname, help_txt))
-
-            if sid in os_states:
-                for aggr in os_aggrs:
-                    title = statistics_headers[aggr]
-                    av_table["cell_titles"].append((title, None))
+    av_table["cell_titles"] = _availability_cell_headers(availability_columns, avoptions, os_aggrs,
+                                                         os_states, timeformats, what)
 
     # Actual rows
     for entry in availability_table:
@@ -1405,33 +1378,10 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         av_table["rows"].append(row)
 
         # Iconbuttons with URLs
-        urls = []
         if "omit_buttons" not in labelling:
-            if what != "bi":
-                timeline_url = makeuri(
-                    request,
-                    [
-                        ("av_mode", "timeline"),
-                        ("av_site", site),
-                        ("av_host", host),
-                        ("av_service", service),
-                    ],
-                )
-            else:
-                timeline_url = makeuri(
-                    request,
-                    [
-                        ("av_mode", "timeline"),
-                        ("av_aggr_group", host),
-                        ("aggr_name", service),
-                        ("view_name", "aggr_single"),
-                    ],
-                )
-            urls.append(("timeline", _("Timeline"), timeline_url))
-            if what != "bi":
-                urls.append(
-                    ("history", _("Event History"), history_url_of((site, host, service),
-                                                                   time_range)))
+            urls = omit_urls(host, service, site, time_range, what)
+        else:
+            urls = []
         row["urls"] = urls
         row["object"] = get_object_cells(what, entry, labelling)
 
@@ -1448,52 +1398,52 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         row["cells"] = cells
 
         for timeformat, render_number in timeformats:
-            for sid, css, sname, help_txt in availability_columns[what]:
-                ssid = "%s-%s" % (sid, timeformat)
+            for sid, css, _sname, _help_txt in availability_columns[what]:
                 if not cell_active(sid, avoptions):
                     continue
 
+                ssid = "%s-%s" % (sid, timeformat)
                 number = entry["states"].get(sid, 0)
+                considered_duration = entry["considered_duration"]
                 if not number:
                     css = "unused"
+                else:
+                    if show_summary:
+                        summary.setdefault(ssid, 0.0)
+                        if timeformat.startswith("percentage"):
+                            if considered_duration > 0:
+                                summary[ssid] += float(number) / considered_duration
+                        else:
+                            summary[ssid] += number
 
-                elif show_summary:
-                    summary.setdefault(ssid, 0.0)
-                    if timeformat.startswith("percentage"):
-                        if entry["considered_duration"] > 0:
-                            summary[ssid] += float(number) / entry["considered_duration"]
-                    else:
-                        summary[ssid] += number
-
-                # Apply visual availability levels (render OK in yellow/red, if too low)
-                if number and av_levels and sid in ["ok", "up"]:
-                    css = "state%d" % check_av_levels(number, av_levels,
-                                                      entry["considered_duration"])
+                    # Apply visual availability levels (render OK in yellow/red, if too low)
+                    if av_levels and sid in ("ok", "up"):
+                        css = "state%d" % check_av_levels(number, av_levels, considered_duration)
 
                 css = css + " state narrow number"
-                cells.append((render_number(number, entry["considered_duration"]), css))
+                cells.append((render_number(number, considered_duration), css))
 
                 # Statistics?
                 x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
-                os_aggrs, os_states = get_outage_statistic_options(avoptions)
                 if sid in os_states:
+                    statistics = []
                     for aggr in os_aggrs:
                         if x_cnt is not None:
                             if aggr == "avg":
-                                r = render_number(
-                                    int(number / x_cnt),
-                                    entry["considered_duration"])  # fixed: true-division
+                                r = render_number(int(number / x_cnt),
+                                                  considered_duration)  # fixed: true-division
                             elif aggr == "min":
-                                r = render_number(x_min, entry["considered_duration"])
+                                r = render_number(x_min, considered_duration)
                             elif aggr == "max":
-                                r = render_number(x_max, entry["considered_duration"])
+                                r = render_number(x_max, considered_duration)
                             else:
                                 r = ensure_str(x_cnt)
                                 summary_counts.setdefault(ssid, 0)
                                 summary_counts[ssid] += x_cnt
-                            cells.append((r, css))
+                            statistics.append((r, css))
                         else:
-                            cells.append((u"", ""))
+                            statistics.append((u"", ""))
+                    cells.extend(statistics)
 
             # If timeline == [] and states == {} then this objects has complete unmonitored state
             if entry["timeline"] == [] and entry["states"] == {}:
@@ -1506,22 +1456,22 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         summary_cells: AVRowCells = []
 
         for timeformat, render_number in timeformats:
-            for sid, css, sname, help_txt in availability_columns[what]:
+            for sid, css, _sname, _help_txt in availability_columns[what]:
                 ssid = "%s-%s" % (sid, timeformat)
                 if not cell_active(sid, avoptions):
                     continue
 
                 number = summary.get(ssid, 0)
-                if show_summary == "average" or timeformat.startswith("percentage"):
-                    number /= len_availability_table
-                    if timeformat.startswith("percentage"):
-                        number *= total_duration
-
                 if not number:
                     css = "unused"
+                else:
+                    if show_summary == "average" or timeformat.startswith("percentage"):
+                        number /= len_availability_table
+                        if timeformat.startswith("percentage"):
+                            number *= total_duration
 
-                if number and av_levels and sid in ["ok", "up"]:
-                    css = "state%d" % check_av_levels(number, av_levels, total_duration)
+                    if av_levels and sid in ["ok", "up"]:
+                        css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
                 css = css + " state narrow number"
                 summary_cells.append((render_number(number, int(total_duration)), css))
@@ -1539,6 +1489,80 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         av_table["summary"] = summary_cells
 
     return av_table
+
+
+def omit_urls(host, service, site, time_range, what):
+    urls = []
+    if what != "bi":
+        timeline_url = makeuri(
+            request,
+            [
+                ("av_mode", "timeline"),
+                ("av_site", site),
+                ("av_host", host),
+                ("av_service", service),
+            ],
+        )
+    else:
+        timeline_url = makeuri(
+            request,
+            [
+                ("av_mode", "timeline"),
+                ("av_aggr_group", host),
+                ("aggr_name", service),
+                ("view_name", "aggr_single"),
+            ],
+        )
+    urls.append(("timeline", _("Timeline"), timeline_url))
+    if what != "bi":
+        urls.append(("history", _("Event History"), history_url_of((site, host, service),
+                                                                   time_range)))
+    return urls
+
+
+def object_column_titles(labelling, what):
+    titles = []
+    if what == "bi":
+        titles.append(_("Aggregate"))
+    else:
+        # in service availability we can only omit the host. In the
+        # host availability this is only possible if the alias is
+        # being displayed, Otherwise the table wouldn't make sense
+        # and the pdf renderer would crash
+        if "omit_host" not in labelling or \
+            (what == "host" and "show_alias" not in labelling):
+            titles.append(_("Host"))
+        if "show_alias" in labelling:
+            titles.append(_("Alias"))
+
+        if what != "host":
+            titles.append(_("Service"))
+    return titles
+
+
+def _availability_cell_headers(availability_columns, avoptions, os_aggrs, os_states, timeformats,
+                               what):
+    statistics_headers = {
+        "min": _("Shortest"),
+        "max": _("Longest"),
+        "avg": _("Average"),
+        "cnt": _("Count"),
+    }
+    cell_titles = []
+    for _timeformat, _render in timeformats:
+        for sid, _css, sname, help_txt in availability_columns[what]:
+            if not cell_active(sid, avoptions):
+                continue
+            if avoptions["av_mode"]:
+                sname = _("Avail.")
+
+            cell_titles.append((sname, help_txt))
+
+            if sid in os_states:
+                for aggr in os_aggrs:
+                    title = statistics_headers[aggr]
+                    cell_titles.append((title, None))
+    return cell_titles
 
 
 def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]) -> AVObjectCells:

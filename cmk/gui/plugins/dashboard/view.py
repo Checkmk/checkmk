@@ -179,6 +179,7 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     def update(self):
         self._show_view_as_dashlet(self._get_view_spec())
+        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
 
     def infos(self):
         return self._get_infos_from_view_spec(self._get_view_spec())

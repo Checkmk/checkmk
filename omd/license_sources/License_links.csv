@@ -19,15 +19,14 @@ LGPL-2.0,https://opensource.org/licenses/LGPL-2.0,GNU Library General Public Lic
 LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,GNU Lesser General Public License version 2.1,
 LGPL-3.0,https://opensource.org/licenses/LGPL-3.0,GNU Lesser General Public License version 3,
 MIT,https://opensource.org/licenses/MIT,The MIT License,Expat style
-MIT - CMU style,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,,Derived for Carnegie Mellon University and Regents of the University of California
+MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,The MIT License CMU Style,Derived for Carnegie Mellon University and Regents of the University of California
 MPL-1.1,https://opensource.org/licenses/MPL-1.1,Mozilla Public License 1.1,"Outdated, recommend to use V2, if possible"
 MPL-2.0,https://opensource.org/licenses/MPL-2.0,Mozilla Public License 2.0,
-No license,No link available,,
 OML,https://spdx.org/licenses/OML.html,Open Market License,
 OpenSSL,https://spdx.org/licenses/OpenSSL.html,OpenSSL License,"includes an ""Original SSLeay License"""
 PIL,http://www.pythonware.com/products/pil/license.htm,Python Imaging Library,
 PSF-2.0,https://spdx.org/licenses/PSF-2.0.html,Python Software Foundation License 2.0,
-Public Domain,,Public Domain License ,
+Public-Domain,,Public Domain License ,
 Python-2.0,https://spdx.org/licenses/Python-2.0.html,Python License 2.0,
 Python-2.1.1,https://www.python.org/download/releases/2.1.1/license/,Python 2.1.1 License,
 Unlicense,https://opensource.org/licenses/unlicense,The Unlicense,

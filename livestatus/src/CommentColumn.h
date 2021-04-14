@@ -17,20 +17,20 @@
 #include <vector>
 
 #include "Column.h"
-#include "ListColumn.h"
+#include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "nagios.h"
 class RowRenderer;
 
-class CommentColumn : public deprecated::ListColumn {
+class CommentColumn : public ListColumn {
 public:
     enum class verbosity { none, info, extra_info };
     template <class T>
     class Callback;
     CommentColumn(const std::string &name, const std::string &description,
                   ColumnOffsets offsets, verbosity v)
-        : deprecated::ListColumn{name, description, std::move(offsets)}
+        : ListColumn{name, description, std::move(offsets)}
         , _verbosity{v} {}
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;

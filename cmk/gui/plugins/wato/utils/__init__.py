@@ -1527,9 +1527,6 @@ def configure_attributes(new,
             container = None
 
             if attr.show_inherited_value():
-                if for_what in ["host", "cluster"]:
-                    url = watolib.Folder.current().edit_url()
-
                 container = parent  # container is of type Folder
                 while container:
                     if attrname in container.attributes():

@@ -821,7 +821,7 @@ def page_edit_visual(
     create_handler=None,
     load_handler=None,
     info_handler=None,
-    sub_pages: pagetypes.SubPagesSpec = None,
+    sub_pages: Optional[pagetypes.SubPagesSpec] = None,
     help_text_context: Union[str, HTML, None] = None,
 ):
     if sub_pages is None:
@@ -835,7 +835,7 @@ def page_edit_visual(
     }
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
-    visualname = html.request.var("load_name")
+    visualname = html.request.get_str_input_mandatory("load_name", "")
     oldname = visualname
     mode = html.request.get_ascii_input_mandatory('mode', 'edit')
     owner_user_id = config.user.id
@@ -860,7 +860,7 @@ def page_edit_visual(
             visual["name"] = newname
             visual["public"] = False
             visualname = newname
-            oldname = None  # Prevent renaming
+            oldname = ""  # Prevent renaming
             if UserId(cloneuser) == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:

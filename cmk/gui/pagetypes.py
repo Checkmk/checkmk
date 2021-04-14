@@ -92,7 +92,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
-SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
+SubPagesSpec = List[Tuple[str, str, str]]
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -1197,7 +1197,7 @@ class Overridable(Base):
         # "edit"   -> edit existing page
         mode = html.request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
-            page_name = None
+            page_name = ""
             title = cls.phrase("create")
             page_dict = {
                 "name": cls.default_name(),
@@ -1205,7 +1205,7 @@ class Overridable(Base):
             }
         else:
             # Load existing page. visual from disk - and create a copy if 'load_user' is set
-            page_name = html.request.var("load_name")
+            page_name = html.request.get_str_input_mandatory("load_name")
             if mode == "edit":
                 title = cls.phrase("edit")
 
@@ -1250,10 +1250,11 @@ class Overridable(Base):
             type_title=cls.phrase("title"),
             type_title_plural=cls.phrase("title_plural"),
             ident_attr_name="name",
-            sub_pages=None,
+            sub_pages=[],
             form_name="edit",
             visualname=page_name,
         )
+
         html.header(title, breadcrumb, page_menu)
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
@@ -1419,7 +1420,7 @@ def PublishTo(title: _Optional[str] = None,
 
 def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: str, type_title: str,
                              type_title_plural, ident_attr_name: str, sub_pages: SubPagesSpec,
-                             form_name: str, visualname: _Optional[str]) -> PageMenu:
+                             form_name: str, visualname: str) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -1507,9 +1508,6 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
         is_suggested=True,
     )
 
-    if not sub_pages:
-        return
-
     for nr, (title, _pagename, _icon) in enumerate(sub_pages):
         yield PageMenuEntry(
             title=title,
@@ -1519,18 +1517,13 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
 
 
 def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, ident_attr_name: str,
-                                 visualname: _Optional[str]) -> Iterator[PageMenuEntry]:
+                                 visualname: str) -> Iterator[PageMenuEntry]:
     """Extra links to sub modules
 
     These are used for things to edit about this visual that are more complex to be done in one
     value spec."""
-    if not sub_pages:
-        return
-
     if mode != "edit":
         return
-
-    assert visualname is not None
 
     for title, pagename, icon in sub_pages:
         yield PageMenuEntry(

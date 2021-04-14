@@ -83,7 +83,6 @@ def test_df_discovery_yields_volume_name_as_item():
         assert item == expected_yield
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_df_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}
@@ -129,7 +128,6 @@ def test_io_discovery_yields_summary():
         assert item == expected_yield
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 def test_io_check():
     item_1st = 'VMFS_01'
     params = {'flex_levels': 'irrelevant'}

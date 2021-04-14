@@ -69,7 +69,6 @@ expected_result_2 = CheckResult([
 ])
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("info,mockstate,expected_result", [
     (info_statgrab_cpu_hpux, mock_state_tuple, expected_result_1),
     (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
@@ -84,7 +83,6 @@ def test_statgrab_cpu_check(info, mockstate, expected_result):
     assertCheckResultsEqual(result, expected_result)
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("info,mockstate", [
     (info_statgrab_cpu_hpux, mock_state_function),
 ])

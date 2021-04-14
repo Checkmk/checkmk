@@ -39,7 +39,7 @@ def clear_config_caches(monkeypatch):
     ts.apply(monkeypatch)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(autouse=True, scope="function")
 def initialised_item_state():
     previous = item_state.get_item_state_prefix()
     item_state._cached_item_states.reset()

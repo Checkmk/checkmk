@@ -37,7 +37,6 @@ info_recreate = [[
 ]]
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("info,expected", [
     (
         info_unavailable_ok,

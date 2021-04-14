@@ -380,7 +380,6 @@ def test_wmi_cpuload_timeout_exceptions(check_name, info, expected):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))
 
 
-@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("check_name, expected", [
     ('msexch_isclienttype', [
         (0, 'Average latency: 0.49 ms', [('average_latency', 0.48712422193702626, 40.0, 50.0)]),

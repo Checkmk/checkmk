@@ -77,7 +77,6 @@ PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Babel-2.8.0.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Flask-Babel-1.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
 PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.9.tar.gz # direct dependency
-PYTHON3_MODULES_LIST += swagger_ui_bundle-0.0.6.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += psutil-5.6.7.tar.gz # needed for omdlib
 PYTHON3_MODULES_LIST += passlib-1.7.2.tar.gz # needed for omdlib

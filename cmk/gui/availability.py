@@ -1449,6 +1449,15 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
             if entry["timeline"] == [] and entry["states"] == {}:
                 unmonitored_objects += 1
 
+        # regardless of timeformat the percentage value should be taken for summary levels
+        # verification since the percentage value takes the considered duration as reference duration
+        if show_summary and av_levels:
+            summary["ok_level"] = sum([
+                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+                for entry in availability_table
+                if entry["considered_duration"] > 0
+            ])
+
     # Summary line. It has the same format as each entry in cells
     # We ignore unmonitored objects
     len_availability_table = len(availability_table) - unmonitored_objects
@@ -1466,12 +1475,20 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                     css = "unused"
                 else:
                     if show_summary == "average" or timeformat.startswith("percentage"):
-                        number /= len_availability_table
-                        if timeformat.startswith("percentage"):
-                            number *= total_duration
+                        number = _availability_value(len_availability_table,
+                                                     number,
+                                                     total_duration,
+                                                     percentage=timeformat.startswith("percentage"))
 
-                    if av_levels and sid in ["ok", "up"]:
-                        css = "state%d" % check_av_levels(number, av_levels, total_duration)
+                    if av_levels and sid in ("ok", "up"):
+                        if sid == "ok":
+                            check_value = _availability_value(len_availability_table,
+                                                              summary["ok_level"],
+                                                              total_duration,
+                                                              percentage=True)
+                        else:
+                            check_value = number
+                        css = "state%d" % check_av_levels(check_value, av_levels, total_duration)
 
                 css = css + " state narrow number"
                 summary_cells.append((render_number(number, int(total_duration)), css))
@@ -1489,6 +1506,13 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
         av_table["summary"] = summary_cells
 
     return av_table
+
+
+def _availability_value(len_availability_table, number, total_duration, percentage=False):
+    number /= len_availability_table
+    if percentage:
+        number *= total_duration
+    return number
 
 
 def omit_urls(host, service, site, time_range, what):

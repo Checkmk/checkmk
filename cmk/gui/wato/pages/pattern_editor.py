@@ -61,7 +61,7 @@ class ModePatternEditor(WatoMode):
 
         # TODO: validate all fields
         self._item = html.request.var('file', '')
-        self._match_txt = html.request.var('match', '')
+        self._match_txt = html.get_unicode_input('match', '')
 
         self._host = watolib.Folder.current().host(self._hostname)
 

@@ -1,0 +1,11 @@
+Title: Logwatch pattern: don't crash with non-ascii characters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1618381545
+Class: fix
+
+If the "Text to match" contained non-ascii characters and a rule
+matched, an error was shown. This is fixed.

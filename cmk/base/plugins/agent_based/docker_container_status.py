@@ -56,7 +56,28 @@ def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
 
 
 def host_labels_docker_container_status(section) -> HostLabelGenerator:
-    """
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:container :
+            This label is set if the corresponding host is a docker container.
+
+        cmk/docker_image:
+            This label is set to the docker image if the corresponding host is
+            a docker container.
+            For instance: "docker.io/library/nginx:latest"
+
+        cmk/docker_image_name:
+            This label is set to the docker image name if the corresponding host
+            is a docker container. For instance: "nginx".
+
+        cmk/docker_image_version:
+            This label is set to the docker images version if the corresponding
+            host is a docker container. For instance: "latest".
+
+    Examples:
+
         >>> from pprint import pprint
         >>> def show(gen):
         ...     for l in gen: print(':'.join(l))

@@ -32,6 +32,15 @@ def parse_esx_vsphere_systeminfo(string_table):
 
 
 def host_label_esx_vshpere_systeminfo(section):
+    """Host label function
+
+    Labels:
+
+        cmk/vsphere_object:
+            This label is set to "vcenter" if the corresponding host is a
+            VMWare vCenter, and to "server" if the host is an ESXi hostsystem.
+
+    """
     name = section.get("name", "")
     if "vCenter" in name:
         yield HostLabel(u"cmk/vsphere_object", u"vcenter")

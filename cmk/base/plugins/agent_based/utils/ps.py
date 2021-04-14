@@ -70,6 +70,12 @@ def host_labels_ps(
     params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+        This function creates labels according to the user configuration.
+
+    """
     specs = get_discovery_specs(params)
     for process_info, command_line in section[1]:
         for _servicedesc, pattern, userspec, cgroupspec, labels, _default_params in specs:

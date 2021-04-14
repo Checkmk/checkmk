@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, MutableMapping
 from .utils.liebert import (
     DETECT_LIEBERT,
     parse_liebert,
@@ -19,6 +19,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
     Service,
     Result,
+    get_value_store,
     State as state,
 )
 from .agent_based_api.v1.type_defs import (
@@ -62,6 +63,23 @@ def check_liebert_temp_air(
     section_liebert_temp_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
 ) -> CheckResult:
+    value_store = get_value_store()
+    yield from _check_liebert_temp_air(
+        item,
+        params,
+        section_liebert_temp_air,
+        section_liebert_system,
+        value_store,
+    )
+
+
+def _check_liebert_temp_air(
+    item: str,
+    params: TempParamType,
+    section_liebert_temp_air: Optional[ParsedSection],
+    section_liebert_system: Optional[Dict[str, str]],
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
 
     if section_liebert_temp_air is None or section_liebert_system is None:
         return
@@ -86,6 +104,7 @@ def check_liebert_temp_air(
         value,
         params,
         unique_name="check_liebert_temp_air.%s" % item,
+        value_store=value_store,
     )
 
 

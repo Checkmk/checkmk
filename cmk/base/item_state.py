@@ -54,7 +54,8 @@ g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 _PluginName = str
 # consider using ServiceID some day (Tuple[CheckPluginName, Item]]):
 ServicePrefix = Tuple[_PluginName, Item]
-_ValueStoreKey = Tuple[_PluginName, Item, str]
+_UserKey = str
+_ValueStoreKey = Tuple[_PluginName, Item, _UserKey]
 _OnWrap = Union[None, bool, float]
 
 
@@ -188,7 +189,7 @@ class CachedItemStates:
             updated=self._dynamic_values,
         )
 
-    def clear_item_state(self, user_key: str) -> None:
+    def clear_item_state(self, user_key: _UserKey) -> None:
         key = self.get_unique_item_state_key(user_key)
         self.remove_full_key(key)
 
@@ -199,7 +200,7 @@ class CachedItemStates:
     def remove_full_key(self, full_key: _ValueStoreKey) -> None:
         self._dynamic_values.pop(full_key, None)
 
-    def get_item_state(self, user_key: str, default: Any = None) -> Any:
+    def get_item_state(self, user_key: _UserKey, default: Any = None) -> Any:
         key = self.get_unique_item_state_key(user_key)
         if key in self._dynamic_values.removed_keys:
             return default
@@ -217,7 +218,7 @@ class CachedItemStates:
                 raise
             return self._static_values[key]
 
-    def set_item_state(self, user_key: str, state: Any) -> None:
+    def set_item_state(self, user_key: _UserKey, state: Any) -> None:
         self._dynamic_values[self.get_unique_item_state_key(user_key)] = state
 
     def get_all_item_states(self) -> MutableMapping[_ValueStoreKey, Any]:
@@ -237,7 +238,7 @@ class CachedItemStates:
     def set_item_state_prefix(self, args: Optional[ServicePrefix]) -> None:
         self._item_state_prefix = args
 
-    def get_unique_item_state_key(self, user_key: str) -> _ValueStoreKey:
+    def get_unique_item_state_key(self, user_key: _UserKey) -> _ValueStoreKey:
         if self._item_state_prefix is None:
             # TODO: consolidate this with the exception thrown in value_store.py
             raise MKGeneralException("accessing item state outside check function")
@@ -255,7 +256,7 @@ def save() -> None:
     _cached_item_states.save()
 
 
-def set_item_state(user_key: str, state: Any) -> None:
+def set_item_state(user_key: _UserKey, state: Any) -> None:
     """Store arbitrary values until the next execution of a check.
 
     The user_key is the identifier of the stored value and needs
@@ -263,7 +264,7 @@ def set_item_state(user_key: str, state: Any) -> None:
     _cached_item_states.set_item_state(user_key, state)
 
 
-def get_item_state(user_key: str, default: Any = None) -> Any:
+def get_item_state(user_key: _UserKey, default: Any = None) -> Any:
     """Returns the currently stored item with the user_key.
 
     Returns None or the given default value in case there
@@ -276,7 +277,7 @@ def get_all_item_states() -> Mapping[_ValueStoreKey, Any]:
     return _cached_item_states.get_all_item_states()
 
 
-def clear_item_state(user_key: str) -> None:
+def clear_item_state(user_key: _UserKey) -> None:
     """Deletes a stored matching the given key. This needs to be
     the same key as used with set_item_state().
 
@@ -308,7 +309,7 @@ def get_item_state_prefix() -> Optional[ServicePrefix]:
     return _cached_item_states.get_item_state_prefix()
 
 
-def _unique_item_state_key(user_key: str) -> None:
+def _unique_item_state_key(user_key: _UserKey) -> None:
     _cached_item_states.get_unique_item_state_key(user_key)
 
 
@@ -320,7 +321,7 @@ def continue_on_counter_wrap() -> None:
 
 # Idea (2): Checkmk should fetch a time stamp for each info. This should also be
 # available as a global variable, so that this_time would be an optional argument.
-def get_rate(user_key: str,
+def get_rate(user_key: _UserKey,
              this_time: float,
              this_val: float,
              allow_negative: bool = False,
@@ -340,7 +341,7 @@ def get_rate(user_key: str,
 
 # Helper for get_rate(). Note: this function has been part of the official check API
 # for a long time. So we cannot change its call syntax or remove it for the while.
-def _get_counter(countername: str,
+def _get_counter(countername: _UserKey,
                  this_time: float,
                  this_val: float,
                  allow_negative: bool = False,
@@ -395,7 +396,7 @@ def raise_counter_wrap() -> None:
         raise g_last_counter_wrap  # pylint: disable=raising-bad-type
 
 
-def get_average(itemname: str,
+def get_average(itemname: _UserKey,
                 this_time: float,
                 this_val: float,
                 backlog_minutes: float,

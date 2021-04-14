@@ -5,9 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+
 import logging
-import pytest  # type: ignore[import]
-from testlib import on_time
+from typing import Any, Mapping
+
+import pytest
+
+from testlib import on_time, set_timezone
+
 import cmk.ec.export as ec
 import cmk.ec.main
 
@@ -208,8 +213,7 @@ def event_creator():
                 'time': 1427281326.0
             },
         ),
-        (
-            # Variant 9: syslog message (RFC 5424)
+        pytest.param(
             "<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - coming from  java code",
             {
                 'application': 'ChrisApp',
@@ -221,8 +225,57 @@ def event_creator():
                 'priority': 6,
                 'text': 'coming from  java code',
                 'time': 1464864545.0,
-                'pid': 0
+                'pid': 0,
             },
+            id="variant 9: syslog message (RFC 5424)",
+        ),
+        pytest.param(
+            "<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code",
+            {
+                'application': 'ChrisApp',
+                'core_host': '',
+                'facility': 16,
+                'host': 'chrissw7',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'priority': 6,
+                'text': '\ufeffcoming from  java code',
+                'time': 1464864545.0,
+                'pid': 0,
+            },
+            id="variant 9: syslog message (RFC 5424) with BOM",
+        ),
+        pytest.param(
+            '<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
+            {
+                'application': 'ChrisApp',
+                'core_host': '',
+                'facility': 16,
+                'host': 'chrissw7',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'priority': 6,
+                'text': '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
+                'time': 1464864545.0,
+                'pid': 0,
+            },
+            id="variant 9: syslog message (RFC 5424) with structured data",
+        ),
+        pytest.param(
+            r'<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
+            {
+                'application': 'ChrisApp',
+                'core_host': '',
+                'facility': 16,
+                'host': 'chrissw7',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'priority': 6,
+                'text': r'[exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
+                'time': 1464864545.0,
+                'pid': 0,
+            },
+            id="variant 9: syslog message (RFC 5424) with mean structured data",
         ),
         (
             # Variant 10:
@@ -245,3 +298,42 @@ def test_create_event_from_line(event_creator, monkeypatch, line, expected):
     address = ("127.0.0.1", 1234)
     with on_time(1550000000.0, "CET"):
         assert event_creator.create_event_from_line(line, address) == expected
+
+
+class TestEventCreator:
+    @pytest.mark.parametrize(
+        "line, expected_result",
+        [
+            pytest.param(
+                "1 2021-04-08T06:47:17+00:00 herbert some_deamon - - - something is wrong with herbert",
+                {
+                    'application': 'some_deamon',
+                    'host': 'herbert',
+                    'text': 'something is wrong with herbert',
+                    'time': 1617864437.0,
+                    'pid': 0,
+                },
+                id="no structured data",
+            ),
+            pytest.param(
+                '1 2021-04-08T06:47:17+00:00 - - - - [whatever@345 a="b" c="d"][Checkmk@18662 ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
+                {
+                    'application': '',
+                    'host': '',
+                    'text': '[whatever@345 a="b" c="d"][Checkmk@18662 ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
+                    'time': 1617864437.0,
+                    'pid': 0,
+                },
+                id="with structured data",
+            ),
+        ],
+    )
+    def test_parse_rfc5424_syslog_info(
+        self,
+        event_creator: cmk.ec.main.EventCreator,
+        line: str,
+        expected_result: Mapping[str, Any],
+    ) -> None:
+        # this is currently needed because we do not use the timezone information from the log message
+        with set_timezone("UTC"):
+            assert event_creator._parse_rfc5424_syslog_info(line) == expected_result

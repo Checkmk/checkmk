@@ -201,17 +201,17 @@ class Test_EffectiveValueStore:
 
 
 def test_item_state_prefix_required():
-    cis = item_state.CachedItemStates("test-host")
+    vsm = item_state.ValueStoreManager("test-host")
     # we *must* set a prefix:
     with pytest.raises(MKGeneralException):
-        _ = cis.get_item_state("user-key", None)
+        _ = vsm.get_item_state("user-key", None)
 
 
 def test_set_get_item_state_prefix():
-    cis = item_state.CachedItemStates("test-host")
+    vsm = item_state.ValueStoreManager("test-host")
     test_prefix = ("unit-test", None)
-    cis.set_item_state_prefix(test_prefix)
-    assert cis.get_item_state_prefix() == test_prefix
+    vsm.set_item_state_prefix(test_prefix)
+    assert vsm.get_item_state_prefix() == test_prefix
 
 
 def test_item_state_unloaded():
@@ -220,21 +220,21 @@ def test_item_state_unloaded():
     # This test is only supposed to make the status quo visible.
 
     test_prefix = ("unit-test", None)
-    cis = item_state.CachedItemStates("test-host")
-    cis.set_item_state_prefix(test_prefix)
+    vsm = item_state.ValueStoreManager("test-host")
+    vsm.set_item_state_prefix(test_prefix)
 
     # add some keys:
-    cis.set_item_state("one", 1)
-    cis.set_item_state("two", 2)
-    assert cis.get_item_state("one") == 1
-    assert cis.get_all_item_states() == {
+    vsm.set_item_state("one", 1)
+    vsm.set_item_state("two", 2)
+    assert vsm.get_item_state("one") == 1
+    assert vsm.get_all_item_states() == {
         test_prefix + ("one",): 1,
         test_prefix + ("two",): 2,
     }
 
-    cis.clear_item_state("one")
-    assert cis.get_item_state("one", None) is None
-    assert cis.get_all_item_states() == {
+    vsm.clear_item_state("one")
+    assert vsm.get_item_state("one", None) is None
+    assert vsm.get_all_item_states() == {
         test_prefix + ("two",): 2,
     }
 
@@ -259,38 +259,38 @@ def test_item_state_loaded(mocker):
         autospec=True,
     )
 
-    cis = item_state.CachedItemStates("hostname")
-    cis.load()
-    cis.set_item_state_prefix(test_prefix)
+    vsm = item_state.ValueStoreManager("hostname")
+    vsm.load()
+    vsm.set_item_state_prefix(test_prefix)
 
-    assert cis.get_all_item_states() == stored_item_states
+    assert vsm.get_all_item_states() == stored_item_states
 
-    cis.save()
+    vsm.save()
     assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
             is None)  # not called, nothing changed
 
-    cis.clear_item_state("this-key-does-not-exist-anyway")  # no-op, but qualifies as a 'change'
-    cis.save()
+    vsm.clear_item_state("this-key-does-not-exist-anyway")  # no-op, but qualifies as a 'change'
+    vsm.save()
     assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
             is not None)
     assert store.save_object_to_file.call_args.args[1] == stored_item_states
 
     # remove key
-    cis.clear_item_state("stored-user-key-1")
-    cis.save()
+    vsm.clear_item_state("stored-user-key-1")
+    vsm.save()
     assert store.save_object_to_file.call_args is not None
     assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}
 
     # bring back key
-    cis.set_item_state("stored-user-key-1", 42)
-    cis.save()
+    vsm.set_item_state("stored-user-key-1", 42)
+    vsm.save()
     assert store.save_object_to_file.call_args is not None
     assert store.save_object_to_file.call_args.args[1] == {
         test_prefix + ("stored-user-key-1",): 42,
         test_prefix + ("stored-user-key-2",): 42,
     }
 
-    cis.clear_item_state("stored-user-key-1")
-    cis.save()
+    vsm.clear_item_state("stored-user-key-1")
+    vsm.save()
     assert store.save_object_to_file.call_args is not None
     assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}

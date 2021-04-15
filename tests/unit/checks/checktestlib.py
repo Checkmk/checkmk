@@ -7,13 +7,11 @@
 import copy
 import os
 import types
-from typing import List
 
 import mock
 import pytest  # type: ignore[import]
 
 from cmk.base.item_state import MKCounterWrapped
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.check_api import Service
 
 
@@ -387,7 +385,7 @@ class MockItemState:
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    TARGET = 'cmk.base.item_state._cached_item_states.get_item_state'
+    TARGET = 'cmk.base.item_state._active_host_value_store.get_item_state'
 
     def __init__(self, mock_state):
         self.context = None

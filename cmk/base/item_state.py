@@ -225,7 +225,7 @@ class MKCounterWrapped(MKException):
     pass
 
 
-class CachedItemStates:
+class ValueStoreManager:
     def __init__(self, host_name: HostName) -> None:
         self.host_name: Final = host_name
         self._logger = logger
@@ -269,15 +269,17 @@ class CachedItemStates:
         return self._item_state_prefix + (user_key,)
 
 
-_host_value_stores: MutableMapping[HostName, CachedItemStates] = {}
+_host_value_stores: MutableMapping[HostName, ValueStoreManager] = {}
 
-_cached_item_states: Optional[CachedItemStates] = None
+_active_host_value_store: Optional[ValueStoreManager] = None
 
 
-def _get_cached_item_states() -> CachedItemStates:
-    if _cached_item_states is None:
+# TODO: do not return the whole ValueStoreManager, but only a clean interface
+# to the currently activeated service context
+def _get_value_store() -> ValueStoreManager:
+    if _active_host_value_store is None:
         raise MKGeneralException("no item states have been loaded")
-    return _cached_item_states
+    return _active_host_value_store
 
 
 @contextmanager
@@ -285,32 +287,33 @@ def load_host_value_store(
     host_name: HostName,
     *,
     store_changes: bool,
-) -> Generator[CachedItemStates, None, None]:
+) -> Generator[ValueStoreManager, None, None]:
     """Select (or create) the correct value store for the host and (re)load it"""
-    global _cached_item_states
+    global _active_host_value_store
 
-    pushed_host_name = _cached_item_states.host_name if _cached_item_states else None
+    pushed_host_name = _active_host_value_store.host_name if _active_host_value_store else None
 
     if not store_changes:
-        _cached_item_states = CachedItemStates(host_name)
+        _active_host_value_store = ValueStoreManager(host_name)
     else:
         try:
-            _cached_item_states = _host_value_stores[host_name]
+            _active_host_value_store = _host_value_stores[host_name]
         except KeyError:
-            _cached_item_states = _host_value_stores.setdefault(
+            _active_host_value_store = _host_value_stores.setdefault(
                 host_name,
-                CachedItemStates(host_name),
+                ValueStoreManager(host_name),
             )
 
-    assert _cached_item_states is not None
+    assert _active_host_value_store is not None
 
-    _cached_item_states.load()
+    _active_host_value_store.load()
     try:
-        yield _cached_item_states
+        yield _active_host_value_store
         if store_changes:
-            _cached_item_states.save()
+            _active_host_value_store.save()
     finally:
-        _cached_item_states = _host_value_stores.get(pushed_host_name) if pushed_host_name else None
+        _active_host_value_store = _host_value_stores.get(
+            pushed_host_name) if pushed_host_name else None
 
 
 def set_item_state(user_key: _UserKey, state: Any) -> None:
@@ -318,7 +321,7 @@ def set_item_state(user_key: _UserKey, state: Any) -> None:
 
     The user_key is the identifier of the stored value and needs
     to be unique per service."""
-    _get_cached_item_states().set_item_state(user_key, state)
+    _get_value_store().set_item_state(user_key, state)
 
 
 def get_item_state(user_key: _UserKey, default: Any = None) -> Any:
@@ -326,12 +329,12 @@ def get_item_state(user_key: _UserKey, default: Any = None) -> Any:
 
     Returns None or the given default value in case there
     is currently no such item stored."""
-    return _get_cached_item_states().get_item_state(user_key, default)
+    return _get_value_store().get_item_state(user_key, default)
 
 
 def get_all_item_states() -> Mapping[_ValueStoreKey, Any]:
     """Returns all stored items of the host that is currently being checked."""
-    return _get_cached_item_states().get_all_item_states()
+    return _get_value_store().get_all_item_states()
 
 
 def clear_item_state(user_key: _UserKey) -> None:
@@ -340,17 +343,17 @@ def clear_item_state(user_key: _UserKey) -> None:
 
     In case the given item does not exist, the function returns
     without modification."""
-    _get_cached_item_states().clear_item_state(user_key)
+    _get_value_store().clear_item_state(user_key)
 
 
-# TODO: drop this, and pass the active CachedItemStates to the callsite!
+# TODO: drop this, and pass the active ValueStoreManager to the callsite!
 def set_item_state_prefix(args: Optional[ServicePrefix]) -> None:
-    _get_cached_item_states().set_item_state_prefix(args)
+    _get_value_store().set_item_state_prefix(args)
 
 
-# TODO: drop this, and pass the active CachedItemStates to the callsite!
+# TODO: drop this, and pass the active ValueStoreManager to the callsite!
 def get_item_state_prefix() -> Optional[ServicePrefix]:
-    return _get_cached_item_states().get_item_state_prefix()
+    return _get_value_store().get_item_state_prefix()
 
 
 def continue_on_counter_wrap() -> None:
@@ -386,8 +389,8 @@ def _get_counter(countername: _UserKey,
                  this_val: float,
                  allow_negative: bool = False,
                  is_rate: bool = False) -> Tuple[float, float]:
-    old_state = _get_cached_item_states().get_item_state(countername, None)
-    _get_cached_item_states().set_item_state(countername, (this_time, this_val))
+    old_state = get_item_state(countername, None)
+    set_item_state(countername, (this_time, this_val))
 
     # First time we see this counter? Do not return
     # any data!
@@ -466,7 +469,7 @@ def get_average(itemname: _UserKey,
 
        b = (1-w) ∑ᵢ₌₀ᵏ⁻¹  wⁱ  =>  w = (1 - b) ** (1/k)    ("geometric sum")
     """
-    cached_item_states = _get_cached_item_states()
+    cached_item_states = _get_value_store()
     last_time, last_average = cached_item_states.get_item_state(itemname, (this_time, None))
     # first call: take current value as average or assume 0.0
     if last_average is None:

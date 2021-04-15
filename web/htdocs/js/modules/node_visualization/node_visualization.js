@@ -34,12 +34,8 @@ class NodeVisualization {
         this.datasource_manager.schedule();
     }
 
-    set_initial_overlays_config(overlay_config) {
-        this._initial_overlay_config = overlay_config;
-    }
-
-    get_initial_overlays_config() {
-        return this._initial_overlay_config;
+    update_browser_url() {
+        // The browser url can be used as bookmark
     }
 
     _initialize_components() {
@@ -105,6 +101,14 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_request_timer_active = false;
     }
 
+    update_browser_url() {
+        let current_url = new URL(window.location);
+
+        this._topology_settings.overlays_config = this.viewport.current_viewport.get_overlay_configs();
+        current_url.searchParams.set("topology_settings", JSON.stringify(this._topology_settings));
+        window.history.replaceState({}, "", current_url.toString());
+    }
+
     show_topology(topology_settings) {
         this._topology_settings = topology_settings;
 
@@ -115,23 +119,17 @@ export class TopologyVisualization extends NodeVisualization {
         topo_ds.set_update_interval(30);
 
         topo_ds.subscribe_new_data(d => this._show_topology());
+        for (let idx in topology_settings.overlays_config) {
+            this.viewport.current_viewport.set_overlay_config(
+                idx,
+                topology_settings.overlays_config[idx]
+            );
+        }
 
         this.add_depth_slider();
         this.add_max_nodes_slider();
         this.update_sliders();
         topo_ds.fetch_hosts(topology_settings);
-    }
-
-    set_growth_auto_max_nodes(value) {
-        this._growth_auto_max_nodes = value;
-    }
-
-    set_max_nodes(value) {
-        this._max_nodes = value;
-    }
-
-    set_mesh_depth(value) {
-        this._mesh_depth = value;
     }
 
     _show_topology() {
@@ -259,6 +257,7 @@ export class TopologyVisualization extends NodeVisualization {
     update_data() {
         if (this._throttle_update()) return;
 
+        this._topology_settings.overlays_config = this.viewport.current_viewport.get_overlay_configs();
         this._topology_settings.growth_root_nodes = [];
         this._topology_settings.growth_forbidden_nodes = [];
         this._topology_settings.growth_continue_nodes = [];
@@ -279,14 +278,9 @@ export class TopologyVisualization extends NodeVisualization {
         for (let key in this.custom_topology_fetch_parameters) {
             this._topology_settings[key] = this.custom_topology_fetch_parameters[key];
         }
-        this._update_bookmark_config(this._topology_settings);
-        ds.fetch_hosts(this._topology_settings);
-    }
 
-    _update_bookmark_config(topology_settings) {
-        let current_url = new URL(window.location);
-        current_url.searchParams.set("topology_settings", JSON.stringify(topology_settings));
-        window.history.replaceState({}, "", current_url.toString());
+        this.update_browser_url();
+        ds.fetch_hosts(this._topology_settings);
     }
 
     _throttle_update() {

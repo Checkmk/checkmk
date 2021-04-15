@@ -57,15 +57,19 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
     }
 }
 
+/// \sa Apart from the lambda, the code is the same in
+///    * CommentColumn::getValue()
+///    * DowntimeColumn::getValue()
+///    * ServiceGroupMembersColumn::getValue()
+///    * ServiceListColumn::getValue()
 std::vector<std::string> ServiceListColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     auto entries = getEntries(row, auth_user);
-    std::vector<std::string> descriptions;
-    std::transform(entries.begin(), entries.end(),
-                   std::back_inserter(descriptions),
+    std::vector<std::string> values;
+    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) { return entry.description; });
-    return descriptions;
+    return values;
 }
 
 #ifndef CMC

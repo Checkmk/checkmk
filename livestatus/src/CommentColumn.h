@@ -36,7 +36,7 @@ public:
 
 private:
     verbosity _verbosity;
-    [[nodiscard]] virtual std::vector<CommentData> comments_for_row(
+    [[nodiscard]] virtual std::vector<CommentData> getEntries(
         Row row) const = 0;
 };
 
@@ -55,27 +55,29 @@ public:
 private:
     MonitoringCore *_mc;
 
-    [[nodiscard]] std::vector<CommentData> comments_for_row(
-        Row row) const override;
+    [[nodiscard]] std::vector<CommentData> getEntries(Row row) const override;
     [[nodiscard]] std::vector<CommentData> comments(
         const void *const data) const;
 };
 
+/// \sa Apart from the lambda, the code is the same in
+///    * CommentColumn::getValue()
+///    * DowntimeColumn::getValue()
+///    * ServiceGroupMembersColumn::getValue()
+///    * ServiceListColumn::getValue()
 template <class T>
 std::vector<std::string> CommentColumn::Callback<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    std::vector<std::string> ids;
-    auto comments = comments_for_row(row);
-    std::transform(
-        comments.begin(), comments.end(), std::back_inserter(ids),
-        [](const auto &comment) { return std::to_string(comment._id); });
-    return ids;
+    auto entries = getEntries(row);
+    std::vector<std::string> values;
+    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
+                   [](const auto &entry) { return std::to_string(entry._id); });
+    return values;
 }
 
 template <class T>
-std::vector<CommentData> CommentColumn::Callback<T>::comments_for_row(
-    Row row) const {
+std::vector<CommentData> CommentColumn::Callback<T>::getEntries(Row row) const {
     if (const auto *const data = columnData<void>(row)) {
         return comments(data);
     }

@@ -41,8 +41,8 @@ private:
     MonitoringCore *_mc;
     const bool _show_state;
 
-    struct Member {
-        Member(std::string hn, HostState cs, bool hbc)
+    struct Entry {
+        Entry(std::string hn, HostState cs, bool hbc)
             : host_name(std::move(hn))
             , current_state(cs)
             , has_been_checked(hbc) {}
@@ -52,7 +52,7 @@ private:
         bool has_been_checked;
     };
 
-    std::vector<Member> getMembers(Row row, const contact *auth_user) const;
+    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };
 
 #endif  // HostListColumn_h

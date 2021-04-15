@@ -56,8 +56,8 @@ private:
     MonitoringCore *_mc;
     bool _show_state;
 
-    struct Member {
-        Member(std::string hn, std::string d, ServiceState cs, bool hbc)
+    struct Entry {
+        Entry(std::string hn, std::string d, ServiceState cs, bool hbc)
             : host_name(std::move(hn))
             , description(std::move(d))
             , current_state(cs)
@@ -69,7 +69,7 @@ private:
         bool has_been_checked;
     };
 
-    std::vector<Member> getMembers(Row row, const contact *auth_user) const;
+    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };
 
 #endif  // ServiceGroupMembersColumn_h

@@ -5,6 +5,9 @@
 
 #include "DowntimeColumn.h"
 
+#include <algorithm>
+#include <iterator>
+
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -17,7 +20,7 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
                             const contact * /*auth_user*/,
                             std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
-    for (const auto &downtime : downtimes_for_row(row)) {
+    for (const auto &downtime : getEntries(row)) {
         switch (_with_info) {
             case info::none:
                 l.output(downtime._id);
@@ -50,17 +53,22 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
     }
 }
 
+/// \sa Apart from the lambda, the code is the same in
+///    * CommentColumn::getValue()
+///    * DowntimeColumn::getValue()
+///    * ServiceGroupMembersColumn::getValue()
+///    * ServiceListColumn::getValue()
 std::vector<std::string> DowntimeColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    std::vector<std::string> ids;
-    for (const auto &downtime : downtimes_for_row(row)) {
-        ids.push_back(std::to_string(downtime._id));
-    }
-    return ids;
+    auto entries = getEntries(row);
+    std::vector<std::string> values;
+    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
+                   [](const auto &entry) { return std::to_string(entry._id); });
+    return values;
 }
 
-std::vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
+std::vector<DowntimeData> DowntimeColumn::getEntries(Row row) const {
     if (const auto *data = columnData<void>(row)) {
         return _is_service
                    ? _mc->downtimes_for_service(

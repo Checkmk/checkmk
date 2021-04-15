@@ -11,7 +11,7 @@ void CommentColumn::output(Row row, RowRenderer &r,
                            const contact * /*auth_user*/,
                            std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
-    for (const auto &comment : comments_for_row(row)) {
+    for (const auto &comment : getEntries(row)) {
         switch (_verbosity) {
             case verbosity::none:
                 l.output(comment._id);

@@ -13,6 +13,7 @@ die() { log "$@"; exit 1; }
 docker_push () {
     REGISTRY=$1
     FOLDER=$2
+
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
 
@@ -42,13 +43,11 @@ BRANCH=$1
 EDITION=$2
 VERSION=$3
 SET_LATEST_TAG=$4
-DEMO=''
-if [ $5 == yes ]; then
-    DEMO='.demo'
-fi
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
+if [ $EDITION = free ]; then
+    SUFFIX=.cfe
 elif [ $EDITION = enterprise ]; then
     SUFFIX=.cee
 elif [ $EDITION = managed ]; then

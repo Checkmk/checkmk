@@ -315,12 +315,11 @@ def get_relative_date_human_readable(timestamp: float) -> str:
 
 set_item_state = _item_state.set_item_state
 get_item_state = _item_state.get_item_state
-get_all_item_states = _item_state.get_all_item_states
 clear_item_state = _item_state.clear_item_state
-clear_item_states_by_full_keys = _item_state.clear_item_states_by_full_keys
+
 get_rate = _item_state.get_rate
 get_average = _item_state.get_average
-# TODO: Cleanup checks and deprecate this
+
 last_counter_wrap = _item_state.last_counter_wrap
 
 SKIP = _item_state.SKIP

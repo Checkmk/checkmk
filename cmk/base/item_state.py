@@ -28,7 +28,6 @@ from typing import (
     Dict,
     Final,
     Generator,
-    Iterable,
     Iterator,
     Mapping,
     MutableMapping,
@@ -245,14 +244,7 @@ class CachedItemStates:
 
     def clear_item_state(self, user_key: _UserKey) -> None:
         key = self.get_unique_item_state_key(user_key)
-        self.remove_full_key(key)
-
-    def clear_item_states_by_full_keys(self, full_keys: Iterable[_ValueStoreKey]) -> None:
-        for key in full_keys:
-            self.remove_full_key(key)
-
-    def remove_full_key(self, full_key: _ValueStoreKey) -> None:
-        self._value_store.pop(full_key, None)
+        self._value_store.pop(key, None)
 
     def get_item_state(self, user_key: _UserKey, default: Any = None) -> Any:
         key = self.get_unique_item_state_key(user_key)
@@ -349,16 +341,6 @@ def clear_item_state(user_key: _UserKey) -> None:
     In case the given item does not exist, the function returns
     without modification."""
     _get_cached_item_states().clear_item_state(user_key)
-
-
-def clear_item_states_by_full_keys(full_keys: Iterable[_ValueStoreKey]) -> None:
-    """Clears all stored items specified in full_keys.
-
-    The items are deleted by their full identifiers, not only the
-    names specified with set_item_state(). For checks this is
-    normally (<check_plugin_name>, <item>, <user_key>).
-    """
-    _get_cached_item_states().clear_item_states_by_full_keys(full_keys)
 
 
 # TODO: drop this, and pass the active CachedItemStates to the callsite!

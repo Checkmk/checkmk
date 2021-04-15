@@ -14,14 +14,6 @@ docker_push () {
     REGISTRY=$1
     FOLDER=$2
 
-    # During build the .demo suffix is a VERSION suffix. We don't want this to
-    # be part of the version in the registries. Make it part of the image name
-    # with the following commands. This will be cleaned up with 2.1 (CFE)
-    # renaming.
-    if [ -n "$DEMO" ]; then
-        docker tag "checkmk/check-mk-${EDITION}:${VERSION}${DEMO}" "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}"
-    fi
-
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
 
@@ -51,13 +43,11 @@ BRANCH=$1
 EDITION=$2
 VERSION=$3
 SET_LATEST_TAG=$4
-DEMO=''
-if [ $5 == yes ]; then
-    DEMO='.demo'
-fi
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
+if [ $EDITION = free ]; then
+    SUFFIX=.cfe
 elif [ $EDITION = enterprise ]; then
     SUFFIX=.cee
 elif [ $EDITION = managed ]; then

@@ -1271,8 +1271,8 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
                     if rulespec.title)
 
     @staticmethod
-    def is_affected_by_change(_change_action_name: str) -> bool:
-        return False
+    def is_affected_by_change(change_action_name: str) -> bool:
+        return change_action_name.endswith("-package")
 
     @property
     def is_localization_dependent(self) -> bool:

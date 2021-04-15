@@ -28,7 +28,7 @@ endif
 # Will be set to "yes" by cmk build system when building a free edition
 FREE               := no
 
-ifeq ('yes', $(FREE))
+ifeq (yes,$(FREE))
 EDITION            := free
 EDITION_SHORT      := cfe
 endif

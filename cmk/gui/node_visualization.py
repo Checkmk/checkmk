@@ -73,6 +73,7 @@ class TopologySettings:
     max_nodes: int = 400
     mesh_depth: int = 0
     growth_auto_max_nodes: int = 400
+    overlays_config: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 class TopologySettingsJSON(TopologySettings):
@@ -179,15 +180,10 @@ class ParentChildTopologyPage(Page):
             "topology_instance = new cmk.node_visualization.TopologyVisualization(%s);" %
             json.dumps(div_id))
 
-        overlay_config = self._get_overlay_config()
-        if overlay_config:
-            html.javascript("topology_instance.set_initial_overlays_config(%s)" %
-                            json.dumps(overlay_config))
-
         html.javascript("topology_instance.show_topology(%s)" %
                         json.dumps(TopologySettingsJSON(**asdict(topology_settings)).to_json()))
 
-    def _get_overlay_config(self) -> List:
+    def _get_overlays_config(self) -> List:
         return []
 
     def _get_filter_headers(self) -> FilterHeaders:

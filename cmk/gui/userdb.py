@@ -526,6 +526,14 @@ def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
     }
 
 
+def _convert_start_url(value: str) -> str:
+    # TODO in Version 2.0.0 and 2.0.0p1 the value was written without repr(),
+    # remove the if condition one day
+    if value.startswith("'") and value.endswith("'"):
+        return ast.literal_eval(value)
+    return value
+
+
 #.
 #   .-Users----------------------------------------------------------------.
 #   |                       _   _                                          |
@@ -731,7 +739,7 @@ def load_users(lock: bool = False) -> Users:
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
-                    ('start_url', lambda x: None if x == "None" else x),
+                    ('start_url', _convert_start_url),
                     ('ui_theme', lambda x: x),
                     ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
@@ -882,7 +890,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
             remove_custom_attr(user_id, "idle_timeout")
 
         if user.get("start_url") is not None:
-            save_custom_attr(user_id, "start_url", user["start_url"])
+            save_custom_attr(user_id, "start_url", repr(user["start_url"]))
         else:
             remove_custom_attr(user_id, "start_url")
 

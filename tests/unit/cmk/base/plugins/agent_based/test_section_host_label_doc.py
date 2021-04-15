@@ -13,6 +13,7 @@ import itertools
 from typing import Final, List, Optional, Sequence, Set
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/device_type",
     "cmk/docker_image",
     "cmk/docker_image_name",
     "cmk/docker_image_version",
@@ -24,22 +25,20 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 
 KNOWN_MISSING_DOCSTRING: Final = {  # TODO CMK-7660
-      "esx_vsphere_vm",
-      "k8s_daemon_pods",
-      "k8s_ingress_infos",
-      "k8s_job_info",
-      "k8s_nodes",
-      "k8s_pod_container",
-      "k8s_replicas",
-      "k8s_service_port",
-      "k8s_stateful_set_replicas",
-      "labels",
-      "omd_info",
-      "snmp_extended_info",
-      "snmp_info",
+    "esx_vsphere_vm",
+    "k8s_daemon_pods",
+    "k8s_ingress_infos",
+    "k8s_job_info",
+    "k8s_nodes",
+    "k8s_pod_container",
+    "k8s_replicas",
+    "k8s_service_port",
+    "k8s_stateful_set_replicas",
+    "omd_info",
 }
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
+    "labels",
     "ps",
     "ps_lnx",
 }

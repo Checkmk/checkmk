@@ -8,7 +8,6 @@ from typing import NamedTuple, Optional
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    HostLabelGenerator,
     StringTable,
     InventoryResult,
 )
@@ -44,14 +43,10 @@ def parse_snmp_info(string_table: StringTable) -> Optional[SNMPInfo]:
     return SNMPInfo(*snmp_info)
 
 
-def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:
-    yield from get_device_type_label(section.description)
-
-
 register.snmp_section(
     name="snmp_info",
     parse_function=parse_snmp_info,
-    host_label_function=host_label_snmp_info,
+    host_label_function=get_device_type_label,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.1",
         oids=["1", "4", "5", "6"],

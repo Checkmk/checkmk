@@ -23,6 +23,22 @@ def parse_labels(string_table):
 
 
 def host_label_function_labels(section):
+    """Host label function
+
+    Labels:
+
+        This function creates host labels according to the '<<<labels>>>'
+        section sent by the agent(s).
+
+    Example:
+
+        >>> section = {"tier": "control-plane", "component": "kube-scheduler"}
+        >>> for hl in host_label_function_labels(section):
+        ...     print(str(hl))
+        HostLabel('tier', 'control-plane')
+        HostLabel('component', 'kube-scheduler')
+
+    """
     for pair in section.items():
         yield HostLabel(*pair)
 

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, List
+from typing import NamedTuple
 from .agent_based_api.v1 import (
     exists,
     OIDEnd,
@@ -12,10 +12,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    HostLabelGenerator,
-)
+from .agent_based_api.v1.type_defs import StringTable
 
 from .utils.device_types import get_device_type_label
 
@@ -32,18 +29,20 @@ class SNMPExtendedInfo(NamedTuple):
     entPhysModelName: str
 
 
-def parse_snmp_extended_info(string_table: StringTable) -> List[SNMPExtendedInfo]:
-    return [SNMPExtendedInfo(*entry) for entry in string_table]
+class SNMPExtendedInfoSequence(list):
+    @property
+    def description(self):
+        return self[0].entPhysDescr
 
 
-def host_label_snmp_extended_info(section: List[SNMPExtendedInfo]) -> HostLabelGenerator:
-    yield from get_device_type_label(section[0].entPhysDescr)
+def parse_snmp_extended_info(string_table: StringTable) -> SNMPExtendedInfoSequence:
+    return SNMPExtendedInfoSequence(SNMPExtendedInfo(*entry) for entry in string_table)
 
 
 register.snmp_section(
     name="snmp_extended_info",
     parse_function=parse_snmp_extended_info,
-    host_label_function=host_label_snmp_extended_info,
+    host_label_function=get_device_type_label,
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.47.1.1.1.1",
         oids=[

@@ -1270,7 +1270,7 @@ class LDAPUserConnector(UserConnector):
 
                 if changed:
                     for key, (old_value, new_value) in sorted(changed.items()):
-                        details.append(('Changed %s from %s to %s' % (key, old_value, new_value)))
+                        details.append(_('Changed %s from %s to %s') % (key, old_value, new_value))
 
                 if details:
                     changes.append(

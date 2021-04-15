@@ -475,39 +475,96 @@ def update_metadata(
     return attributes
 
 
-class HostsStorage:
+class ABCHostsStorage(abc.ABC):
+    __slots__ = ['_out']
+
     def __init__(self) -> None:
+        super(ABCHostsStorage, self).__init__()
         self._out = io.StringIO()
-        self._out.write(wato_fileheader())
 
     def getvalue(self) -> str:
         return self._out.getvalue()
+
+    def save(self, s: str) -> None:
+        self._out.write(s)
 
     def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType],
                                                                  Optional[bool]]]):
         for group_rules, use_for_service in group_rules_list:
             self._save_group_rules(group_rules, use_for_service)
 
+    @abc.abstractmethod
     def _save_group_rules(self, group_rules: List[GroupRuleType],
                           use_for_services: Optional[bool]) -> None:
-        self._out.write("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        raise NotImplementedError()
+
+    def write(self, filename: str) -> None:
+        store.save_file(filename, self.getvalue())
+
+
+class StandardHostsStorage(ABCHostsStorage):
+    def __init__(self) -> None:
+        super(StandardHostsStorage, self).__init__()
+        self.save(wato_fileheader())
+
+    def _save_group_rules(self, group_rules: List[GroupRuleType],
+                          use_for_services: Optional[bool]) -> None:
+        self.save("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
 
         if use_for_services:
-            self._out.write("\nservice_contactgroups += %s\n\n" % format_config_value(group_rules))
+            self.save("\nservice_contactgroups += %s\n\n" % format_config_value(group_rules))
 
     def save_all_hosts(self, all_hosts: List[str]) -> None:
         if all_hosts:
-            self._out.write("all_hosts += %s\n" % format_config_value(all_hosts))
+            self.save("all_hosts += %s\n" % format_config_value(all_hosts))
 
     def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
         if clusters:
-            self._out.write("\nclusters.update(%s)\n" % format_config_value(clusters))
+            self.save("\nclusters.update(%s)\n" % format_config_value(clusters))
 
     def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
-        self._out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
+        self.save("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
 
     def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
-        self._out.write("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
+        self.save("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
 
     def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
         for custom_varname, entries in custom_macros.items():
@@ -515,24 +572,24 @@ class HostsStorage:
             for hostname, nagstring in entries.items():
                 macrolist.append((nagstring, [hostname]))
             if len(macrolist) > 0:
-                self._out.write("\n# Settings for %s\n" % custom_varname)
-                self._out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
-                self._out.write("  %s)\n" % format_config_value(macrolist))
+                self.save("\n# Settings for %s\n" % custom_varname)
+                self.save("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
+                self.save("  %s)\n" % format_config_value(macrolist))
 
     def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
         for varname, entries in explicit_host_settings.items():
             if len(entries) > 0:
-                self._out.write("\n# Explicit settings for %s\n" % varname)
-                self._out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
-                self._out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
+                self.save("\n# Explicit settings for %s\n" % varname)
+                self.save("explicit_host_conf.setdefault(%r, {})\n" % varname)
+                self.save("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
 
     def save_attributes(self, attribute_mappings: List[AttributeType]):
         for _, cmk_base_varname, dictionary, title in attribute_mappings:
             if dictionary:
-                self._out.write("\n# %s\n" % title)
-                self._out.write("%s.update(" % cmk_base_varname)
-                self._out.write(format_config_value(dictionary))
-                self._out.write(")\n")
+                self.save("\n# %s\n" % title)
+                self.save("%s.update(" % cmk_base_varname)
+                self.save(format_config_value(dictionary))
+                self.save(")\n")
 
     def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
         # If the contact groups of the folder are set to be used for the monitoring,
@@ -540,14 +597,13 @@ class HostsStorage:
         # each host that has an explicit setting for that attribute (see above).
         _permitted_groups, contact_groups, use_for_services = groups
         if contact_groups:
-            self._out.write(
-                "\nhost_contactgroups.insert(0, \n"
-                "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                list(contact_groups))
+            self.save("\nhost_contactgroups.insert(0, \n"
+                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                      list(contact_groups))
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
                 for cg in contact_groups:
-                    self._out.write(
+                    self.save(
                         "\nservice_contactgroups.insert(0, \n"
                         "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
                         cg)
@@ -555,11 +611,99 @@ class HostsStorage:
     def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
         """Write information about all host attributes into special variable - even
         values stored for check_mk as well."""
-        self._out.write("\n# Host attributes (needed for WATO)\n")
-        self._out.write("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
+        self.save("\n# Host attributes (needed for WATO)\n")
+        self.save("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
+
+
+class RawHostsStorage(ABCHostsStorage):
+    def __init__(self) -> None:
+        super(RawHostsStorage, self).__init__()
+        self.save("{\n")
 
     def write(self, filename: str) -> None:
-        store.save_file(filename, self.getvalue())
+        self.save("}\n")
+        store.save_file(filename + ".cfg", self.getvalue())
+
+    def _save_group_rules(self, group_rules: List[GroupRuleType],
+                          use_for_services: Optional[bool]) -> None:
+        self.save("    'host_contactgroups': %s,\n" % format_config_value(group_rules))
+
+        if use_for_services:
+            self.save("   'service_contactgroups': %s,\n" % format_config_value(group_rules))
+
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        if all_hosts:
+            self.save("    'all_hosts': %s,\n" % format_config_value(all_hosts))
+
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        if clusters:
+            self.save("    'clusters.update': %s,\n" % format_config_value(clusters))
+
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        self.save("    'host_tags.update': %s,\n" % format_config_value(host_tags))
+
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        self.save("    'host_labels.update': %s,\n" % format_config_value(host_labels))
+
+    def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        self.save("    'custom_macros': {\n")
+        for custom_varname, entries in custom_macros.items():
+            macrolist = []
+            for hostname, nagstring in entries.items():
+                macrolist.append((nagstring, [hostname]))
+            if len(macrolist) > 0:
+                self.save("        '%r': %s, \n" % (
+                    custom_varname,
+                    format_config_value(macrolist),
+                ))
+        self.save("    },\n")
+
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        self.save("    'explicit_host_conf': {\n")
+        for varname, entries in explicit_host_settings.items():
+            if len(entries) > 0:
+                self.save("        '%s': %r,\n" % (varname, entries))
+        self.save("    },\n")
+
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        self.save("    'attributes': {\n")
+        for _, cmk_base_varname, dictionary, _ in attribute_mappings:
+            if dictionary:
+                self.save("        '%s': %s,\n" % (
+                    cmk_base_varname,
+                    format_config_value(dictionary),
+                ))
+        self.save("    },\n")
+
+    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
+        _permitted_groups, contact_groups, use_for_services = groups
+        self.save("    'contact_groups': {\n")
+        if contact_groups:
+            self.save("        'host_contactgroups':"
+                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}}\n" %
+                      list(contact_groups))
+            if use_for_services:
+                # Currently service_contactgroups requires single values. Lists are not supported
+                for cg in contact_groups:
+                    self.save(
+                        "\nservice_contactgroups.insert(0, \n"
+                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                        cg)
+        self.save("    },\n")
+
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        self.save("    'host_attributes.update': %s,\n" % format_config_value(cleaned_hosts))
+
+
+def make_hosts_storage() -> ABCHostsStorage:
+    """Factory creates a storage suitable for current distribution.
+    The flag will be located, probably in cee.py"""
+    return StandardHostsStorage()
 
 
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
@@ -1035,7 +1179,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 custom_macros.setdefault(custom_varname, {})
                                 custom_macros[custom_varname][hostname] = nagstring
 
-        storage = HostsStorage()
+        storage = make_hosts_storage()
         storage.save_group_rules_list(group_rules_list)
         storage.save_all_hosts(all_hosts)
         storage.save_clusters(clusters)

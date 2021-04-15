@@ -1001,6 +1001,13 @@ class AutomationGetRealTimeChecks(Automation):
 
                 rt_checks.append((check_plugin_name_str, f"{plugin_name} - {title}"))
 
+        # Temporary fix for migration to new check API: real time data processing is handled
+        # by the agent rather than the checks from version 2.1
+        # winperf_processor.util has been migrated to the new API and must be hard-coded here
+        # so that it continues to be available in the real time check options
+        rt_checks.append(
+            ('winperf_processor.util', 'winperf_processor_util - Windows: CPU Utilization'))
+
         return rt_checks
 
 

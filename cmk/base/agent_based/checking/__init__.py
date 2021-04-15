@@ -50,6 +50,7 @@ from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.api.agent_based.value_store as value_store
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
@@ -343,7 +344,8 @@ def execute_check(
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-        with plugin_contexts.current_service(service):
+        with plugin_contexts.current_service(service), \
+            value_store.context(*service.id()):
             submittable = _legacy_mode.get_aggregated_result(
                 parsed_sections_broker,
                 host_config.hostname,
@@ -452,7 +454,8 @@ def get_aggregated_result(
             kwargs["params"] = params_function()
 
         with plugin_contexts.current_host(host_config.hostname), \
-            plugin_contexts.current_service(service):
+            plugin_contexts.current_service(service), \
+            value_store.context(*service.id()):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

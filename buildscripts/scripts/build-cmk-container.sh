@@ -46,7 +46,7 @@ SET_LATEST_TAG=$4
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
-if [ $EDITION = free ]; then
+elif [ $EDITION = free ]; then
     SUFFIX=.cfe
 elif [ $EDITION = enterprise ]; then
     SUFFIX=.cee

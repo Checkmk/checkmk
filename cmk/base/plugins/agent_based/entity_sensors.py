@@ -27,8 +27,8 @@
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional
-from .agent_based_api.v1 import (
+from typing import Any, List, Mapping
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
     check_levels,
     register,
@@ -39,94 +39,24 @@ from .agent_based_api.v1 import (
     SNMPTree,
     State,
 )
-from .agent_based_api.v1.type_defs import (
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
-from .utils.temperature import check_temperature, TempParamType
+from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
-OIDSysDescr = ".1.3.6.1.2.1.1.1.0"
-
-ENTITY_SENSOR_TYPES = {
-    "1": ("other", "other"),
-    "2": ("unknown", "unknown"),
-    "3": ("voltage", "V"),
-    "4": ("voltage", "V"),
-    "5": ("current", "A"),
-    "6": ("power", "W"),
-    "7": ("freqeuncy", "hz"),
-    "8": ("temp", "c"),
-    "9": ("percent", "%"),
-    "10": ("fan", "RPM"),
-    "11": ("volume", "cmm"),  # cubic decimetre dm^3
-    "12": ("power_presence", "boolean"),
-}
-
-ENTITY_SENSOR_SCALING = {
-    "1": 10**(-24),
-    "2": 10**(-21),
-    "3": 10**(-18),
-    "4": 10**(-15),
-    "5": 10**(-12),
-    "6": 10**(-9),
-    "7": 10**(-6),
-    "8": 10**(-3),
-    "9": 1,
-    "10": 10**(3),
-    "11": 10**(6),
-    "12": 10**(9),
-    "13": 10**(12),
-    "14": 10**(15),
-    "15": 10**(18),
-    "16": 10**(21),
-    "17": 10**(24),
-}
-
-
-class EntitySensor(NamedTuple):
-    name: str
-    reading: float
-    unit: str
-    state: State
-    status_descr: str
-
-
-EntitySensorSection = Dict[str, Dict[str, EntitySensor]]
-
-
-def _sensor_status_descr(status_nr: str) -> str:
-    return {
-        "1": "OK",
-        "2": "unavailable",
-        "3": "non-operational",
-    }.get(status_nr, status_nr)
-
-
-def _sensor_state(status_nr: str) -> State:
-    return {
-        "1": State.OK,
-        "2": State.CRIT,
-        "3": State.WARN,
-    }.get(status_nr, State.UNKNOWN)
-
-
-def _reformat_sensor_name(name: str) -> str:
-    new_name = name
-    for s in ['Fan', 'Temperature', '#', '@', 'Sensor']:
-        new_name = new_name.replace(s, '')
-    while '  ' in new_name:
-        new_name = new_name.replace('  ', ' ')
-    return f'Sensor {new_name.strip()}'
-
-
-def _unit_from_device_unit(unit: str) -> Optional[str]:
-    '''Converts device units to units known by Check_mk'''
-    return {
-        'celsius': 'c',
-        'fahrenheit': 'f',
-        'kelvin': 'k',
-    }.get(unit)
+from cmk.base.plugins.agent_based.utils.entity_sensors import (
+    OIDSysDescr,
+    ENTITY_SENSOR_TYPES,
+    ENTITY_SENSOR_SCALING,
+    EntitySensor,
+    EntitySensorSection,
+    sensor_status_descr,
+    sensor_state,
+    unit_from_device_unit,
+    reformat_sensor_name,
+)
 
 
 def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
@@ -137,14 +67,14 @@ def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection
         # the ENTITY-MIB including sensor/entity names.
         # Others (e.g. Palo Alto Networks Series 200) do not support
         # this MIB, thus we use OID as item instead
-        sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
+        sensor_name = reformat_sensor_name(sensor_names.get(oid_end, oid_end))
         sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
         section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
             name=sensor_name,
             reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
-            unit=_unit_from_device_unit(device_unit.lower()) or default_unit,
-            state=_sensor_state(status_nr),
-            status_descr=_sensor_status_descr(status_nr),
+            unit=unit_from_device_unit(device_unit.lower()) or default_unit,
+            state=sensor_state(status_nr),
+            status_descr=sensor_status_descr(status_nr),
         )
     return section
 
@@ -184,9 +114,9 @@ def discover_entity_sensors_temp(section: EntitySensorSection) -> DiscoveryResul
 
 
 def check_entity_sensors_temp(
-    item: str,
-    params: TempParamType,
-    section: EntitySensorSection,
+        item: str,
+        params: TempParamType,
+        section: EntitySensorSection,
 ) -> CheckResult:
     if not (sensor_reading := section.get('temp', {}).get(item)):
         return
@@ -218,9 +148,9 @@ def discover_entity_sensors_fan(section: EntitySensorSection) -> DiscoveryResult
 
 
 def check_entity_sensors_fan(
-    item: str,
-    params: Mapping[str, Any],
-    section: EntitySensorSection,
+        item: str,
+        params: Mapping[str, Any],
+        section: EntitySensorSection,
 ) -> CheckResult:
     if not (sensor_reading := section.get('fan', {}).get(item)):
         return
@@ -255,9 +185,9 @@ def discover_entity_sensors_power_presence(section: EntitySensorSection) -> Disc
 
 
 def check_entity_sensors_power_presence(
-    item: str,
-    params: Mapping[str, Any],
-    section: EntitySensorSection,
+        item: str,
+        params: Mapping[str, Any],
+        section: EntitySensorSection,
 ) -> CheckResult:
     if not (sensor_reading := section.get('power_presence', {}).get(item)):
         return

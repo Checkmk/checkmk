@@ -814,6 +814,91 @@ def render_context_specs(
         spec.render_input(ident, value)
 
 
+def _vs_general(single_infos, default_id, visual_type, visibility_elements):
+    return Dictionary(
+        title=_("General Properties"),
+        render='form',
+        optional_keys=False,
+        show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
+        elements=[
+            single_infos_spec(single_infos),
+            ('name',
+             TextAscii(
+                 title=_('Unique ID'),
+                 help=_("The ID will be used in URLs that point to a view, e.g. "
+                        "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
+                        "internally for identifying a view. You can create several views "
+                        "with the same title but only one per view name. If you create a "
+                        "view that has the same view name as a builtin view, then your "
+                        "view will override that (shadowing it)."),
+                 regex='^[a-zA-Z0-9_]+$',
+                 regex_error=_(
+                     'The name of the view may only contain letters, digits and underscores.'),
+                 size=50,
+                 allow_empty=False,
+                 default_value=default_id)),
+            ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('description',
+             TextAreaUnicode(
+                 title=_('Description') + '<sup>*</sup>',
+                 rows=4,
+                 cols=50,
+             )),
+            ('add_context_to_title',
+             Checkbox(
+                 title=_('Context information'),
+                 label=_('Add context information to title'),
+                 help=_("Whether or not additional information from the page context "
+                        "(filters) should be added to the title given above."),
+             )),
+            ('topic',
+             DropdownChoice(
+                 title=_("Topic in ’Monitor' menu"),
+                 default_value="my_workplace",
+                 help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
+                        "With this option, you can select in which section of the menu this "
+                        "dashboard should be accessible. If you want to define a new "
+                        "topic name you can do this here <a href='%s'>here</a>.") %
+                 "pagetype_topics.py",
+                 choices=pagetypes.PagetypeTopics.choices(),
+             )),
+            ("sort_index",
+             Integer(
+                 title=_("Sort index"),
+                 default_value=99,
+                 help=_("You can customize the order of the %s by changing "
+                        "this number. Lower numbers will be sorted first. "
+                        "Topics with the same number will be sorted alphabetically.") %
+                 visual_type.title,
+             )),
+            ("is_show_more",
+             Checkbox(
+                 title=_("Show more"),
+                 label=_("Only show the %s if show more is active" % visual_type.title),
+                 help=_("The navigation allows to hide items based on a show "
+                        "less / show more toggle. You can specify here whether or "
+                        "not this %s should only be shown with show more %s.") %
+                 (visual_type.title, visual_type.title),
+             )),
+            ('icon',
+             IconSelector(
+                 title=_('Icon'),
+                 help=_("This selection is only relevant if under 'User' "
+                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
+                        "the options 'Per Entry'. If this is the case, you "
+                        "select here the icon that will be placed next to your "
+                        "Dashboard’s name in the Monitoring menu. You can only "
+                        "select one icon (the colored icon) or one icon that is "
+                        "complemented with an additional symbol."),
+             )),
+            ('visibility', Dictionary(
+                title=_('Visibility'),
+                elements=visibility_elements,
+            )),
+        ],
+    )
+
+
 def page_edit_visual(
     what: Literal["dashboards", "views", "reports"],
     all_visuals: Dict[Any, Dict[str, Any]],
@@ -928,92 +1013,12 @@ def page_edit_visual(
                                         with_foreign_groups=with_foreign_groups,
                                     )))
 
-    vs_general = Dictionary(
-        title=_("General Properties"),
-        render='form',
-        optional_keys=False,
-        show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],
-        elements=[
-            single_infos_spec(single_infos),
-            ('name',
-             TextAscii(
-                 title=_('Unique ID'),
-                 help=_("The ID will be used in URLs that point to a view, e.g. "
-                        "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
-                        "internally for identifying a view. You can create several views "
-                        "with the same title but only one per view name. If you create a "
-                        "view that has the same view name as a builtin view, then your "
-                        "view will override that (shadowing it)."),
-                 regex='^[a-zA-Z0-9_]+$',
-                 regex_error=_(
-                     'The name of the view may only contain letters, digits and underscores.'),
-                 size=50,
-                 allow_empty=False,
-                 default_value=unique_default_name_suggestion(
-                     what[:-1],
-                     (visual["name"] for visual in all_visuals.values()),
-                 ))),
-            ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
-            ('description',
-             TextAreaUnicode(
-                 title=_('Description') + '<sup>*</sup>',
-                 rows=4,
-                 cols=50,
-             )),
-            ('add_context_to_title',
-             Checkbox(
-                 title=_('Context information'),
-                 label=_('Add context information to title'),
-                 help=_("Whether or not additional information from the page context "
-                        "(filters) should be added to the title given above."),
-             )),
-            ('topic',
-             DropdownChoice(
-                 title=_("Topic in ’Monitor' menu"),
-                 default_value="my_workplace",
-                 help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
-                        "With this option, you can select in which section of the menu this "
-                        "dashboard should be accessible. If you want to define a new "
-                        "topic name you can do this here <a href='%s'>here</a>.") %
-                 "pagetype_topics.py",
-                 choices=pagetypes.PagetypeTopics.choices(),
-             )),
-            ("sort_index",
-             Integer(
-                 title=_("Sort index"),
-                 default_value=99,
-                 help=_("You can customize the order of the %s by changing "
-                        "this number. Lower numbers will be sorted first. "
-                        "Topics with the same number will be sorted alphabetically.") %
-                 visual_type.title,
-             )),
-            ("is_show_more",
-             Checkbox(
-                 title=_("Show more"),
-                 label=_("Only show the %s if show more is active" % visual_type.title),
-                 help=_("The navigation allows to hide items based on a show "
-                        "less / show more toggle. You can specify here whether or "
-                        "not this %s should only be shown with show more %s.") %
-                 (visual_type.title, visual_type.title),
-             )),
-            ('icon',
-             IconSelector(
-                 title=_('Icon'),
-                 help=_("This selection is only relevant if under 'User' "
-                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
-                        "the options 'Per Entry'. If this is the case, you "
-                        "select here the icon that will be placed next to your "
-                        "Dashboard’s name in the Monitoring menu. You can only "
-                        "select one icon (the colored icon) or one icon that is "
-                        "complemented with an additional symbol."),
-             )),
-            ('visibility', Dictionary(
-                title=_('Visibility'),
-                elements=visibility_elements,
-            )),
-        ],
-    )
-
+    vs_general = _vs_general(
+        single_infos,
+        unique_default_name_suggestion(
+            what[:-1],
+            (visual["name"] for visual in all_visuals.values()),
+        ), visual_type, visibility_elements)
     context_specs = get_context_specs(visual, info_handler)
 
     # handle case of save or try or press on search button

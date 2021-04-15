@@ -1,0 +1,11 @@
+Title: Bulk edit inheritance
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1618491348
+Class: fix
+
+If bulk edit was performed within the root folder, the inherted host attributes (from their parent folder) were not displayed correctly.
+Furthermore, the shown link to the inherted folder in bulk mode is now working.

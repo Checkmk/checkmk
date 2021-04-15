@@ -188,6 +188,7 @@ from cmk.gui.watolib import (
     ConfigDomainCACertificates,
     LivestatusViaTCP,
     site_neutral_path,
+    hosts_and_folders,
 )
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
@@ -1411,6 +1412,17 @@ class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):
 mode_registry = ModeRegistry()
 
 
+def _find_title_and_url_of_inherited_value(starting_point, attrname):
+    if isinstance(starting_point, hosts_and_folders.CREHost):
+        starting_point = starting_point.folder()
+
+    while starting_point:
+        if attrname in starting_point.attributes():
+            return starting_point.title(), starting_point.edit_url()
+        starting_point = starting_point.parent()
+    return None
+
+
 # Show HTML form for editing attributes.
 #
 # new: Boolean flag if this is a creation step or editing
@@ -1489,10 +1501,13 @@ def configure_attributes(new,
             else:
                 hide_attributes.append(attr.name())
 
-            # "bulk": determine, if this attribute has the same setting for all hosts.
+            # "bulk": determine, if this attribute has the same setting for all hosts/folders.
             values = []
+            values_inherited = []
             num_have_locked_it = 0
             num_haveit = 0
+            num_haveit_inherited = 0
+            folders_inherited_from = {}
             for host in hosts.itervalues():
                 if not host:
                     continue
@@ -1504,14 +1519,33 @@ def configure_attributes(new,
 
                 if host.has_explicit_attribute(attrname):
                     num_haveit += 1
-                    if host.attribute(attrname) not in values:
-                        values.append(host.attribute(attrname))
+                    attrval = host.attribute(attrname)
+                    if attrval not in values:
+                        values.append(attrval)
+                else:
+                    # Value may be inherited
+                    title_url = _find_title_and_url_of_inherited_value(host, attrname)
+                    if title_url:
+                        num_haveit_inherited += 1
+                        attrvalue = host.effective_attributes().get(attrname)
+                        if attrvalue not in values_inherited:
+                            values_inherited.append(attrvalue)
+
+                        folders_inherited_from.setdefault(*title_url)
+
+            if new:
+                title_url = _find_title_and_url_of_inherited_value(parent, attrname)
+                if title_url:
+                    folders_inherited_from.setdefault(*title_url)
+                    values_inherited.append(parent.effective_attribute(attrname))
 
             # The value of this attribute is unique amongst all hosts if
             # either no host has a value for this attribute, or all have
             # one and have the same value
-            unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
-
+            unique_explicit = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
+            unique_inherited = num_haveit_inherited == 0 or (len(values_inherited) == 1 and
+                                                             num_haveit_inherited == len(hosts))
+            unique = unique_explicit and unique_inherited
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
                     host = hosts.values()[0]
@@ -1523,26 +1557,19 @@ def configure_attributes(new,
             # This does not apply in "host_search" mode.
             inherited_from = None
             inherited_value = None
-            has_inherited = False
-            container = None
 
             if attr.show_inherited_value():
-                container = parent  # container is of type Folder
-                while container:
-                    if attrname in container.attributes():
-                        url = container.edit_url()
-                        inherited_from = _("Inherited from ") + html.render_a(container.title(),
-                                                                              href=url)
+                if len(folders_inherited_from.keys()) == 1:
 
-                        inherited_value = container.attributes()[attrname]
-                        has_inherited = True
-                        if attr.is_tag_attribute:
-                            inherited_tags["attr_%s" % attrname] = inherited_value
-                        break
+                    inherited_from = _("Inherited from ") + html.render_a(
+                        folders_inherited_from.keys()[0],
+                        href=folders_inherited_from.values()[0],
+                    )
+                    inherited_value = values_inherited[0]
+                    if attr.is_tag_attribute:
+                        inherited_tags["attr_%s" % attrname] = inherited_value
 
-                    container = container.parent()
-
-            if not container:  # We are the root folder - we inherit the default values
+            if not folders_inherited_from:
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
@@ -1574,10 +1601,11 @@ def configure_attributes(new,
             if for_what == "folder" and attr.is_mandatory() \
                 and myself \
                 and some_host_hasnt_set(myself, attrname) \
-                and not has_inherited:
+                and not folders_inherited_from:
                 force_entry = True
                 active = True
-            elif for_what in ["host", "cluster"] and attr.is_mandatory() and not has_inherited:
+            elif for_what in ["host", "cluster"
+                             ] and attr.is_mandatory() and not folders_inherited_from:
                 force_entry = True
                 active = True
             elif cb is not None:
@@ -1657,8 +1685,8 @@ def configure_attributes(new,
             # in bulk mode we show inheritance only if *all* hosts inherit
             explanation = u""
             if for_what == "bulk":
-                if num_haveit == 0:
-                    explanation = u" (%s)" % inherited_from
+                if num_haveit == 0 and unique:
+                    explanation = " (" + inherited_from + ")"
                     value = inherited_value
                 elif not unique:
                     explanation = _("This value differs between the selected hosts.")

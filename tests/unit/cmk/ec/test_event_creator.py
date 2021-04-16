@@ -101,7 +101,8 @@ def event_creator():
                 'priority': 2,
                 'sl': 5,
                 'text': 'CRIT - This che',
-                'time': 1341847712.0
+                'time': 1341847712.0,
+                'pid': 0
             },
         ),
         (
@@ -118,7 +119,8 @@ def event_creator():
                 'priority': 2,
                 'sl': 5,
                 'text': 'CRIT - This che',
-                'time': 1341847712.0
+                'time': 1341847712.0,
+                'pid': 0
             },
         ),
         (
@@ -218,7 +220,8 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
                 'text': 'coming from  java code',
-                'time': 1464864545.0
+                'time': 1464864545.0,
+                'pid': 0
             },
         ),
         (
@@ -233,7 +236,8 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 5,
                 'text': '%LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:',
-                'time': 1464270107.0
+                'time': 1464270107.0,
+                'pid': 0
             },
         ),
     ])

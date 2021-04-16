@@ -435,6 +435,7 @@ class TextAscii(ValueSpec):
         self._regex_error = kwargs.get("regex_error",
                                        _("Your input does not match the required format."))
         self._minlen = kwargs.get('minlen', None)
+        self._maxlen = kwargs.get('maxlen', None)
         if isinstance(self._regex, str):
             self._regex = re.compile(self._regex)
         self._onkeyup = kwargs.get("onkeyup")
@@ -516,6 +517,9 @@ class TextAscii(ValueSpec):
         if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
+        if self._maxlen is not None and len(value) > self._maxlen:
+            raise MKUserError(varprefix,
+                              _("You must not provide more than %d characters.") % self._maxlen)
 
         ValueSpec.custom_validate(self, value, varprefix)
 

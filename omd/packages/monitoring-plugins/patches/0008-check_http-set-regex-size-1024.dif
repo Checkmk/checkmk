@@ -1,0 +1,13 @@
+diff --git a/plugins/check_http.c b/plugins/check_http.c
+index 2f046b4..e5ef7cc 100644
+--- a/plugins/check_http.c
++++ b/plugins/check_http.c
+@@ -72,7 +72,7 @@ int maximum_age = -1;
+ 
+ enum {
+   REGS = 2,
+-  MAX_RE_SIZE = 256
++  MAX_RE_SIZE = 1024
+ };
+ #include "regex.h"
+ regex_t preg;

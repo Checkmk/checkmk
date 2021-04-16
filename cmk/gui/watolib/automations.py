@@ -158,7 +158,7 @@ def check_mk_local_automation(command: str,
 
 def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
     call = subprocess.list2cmdline(cmdline) if config.debug else command
-    msg = "Error running automation call <tt>%s<tt>" % call
+    msg = "Error running automation call <tt>%s</tt>" % call
     if code:
         msg += " (exit code %d)" % code
     if out:

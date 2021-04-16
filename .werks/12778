@@ -1,0 +1,14 @@
+Title: check_http: maximum length of regex is now 1023
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1618571033
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p4
+
+Before this werk, the limit was 255 characters but not enforced.
+If the regular expression is longer than 1023 characters an error message is
+shown.

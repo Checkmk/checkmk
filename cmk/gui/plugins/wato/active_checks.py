@@ -1144,6 +1144,7 @@ def _valuespec_active_checks_http():
                                                     RegExp(
                                                         label=_("Regular expression: "),
                                                         mode=RegExp.infix,
+                                                        maxlen=1023,
                                                     ),
                                                     Checkbox(label=_("Case insensitive")),
                                                     Checkbox(label=_(

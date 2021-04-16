@@ -31,17 +31,16 @@ MpToDevice = Mapping[str, str]
 InodesSubsection = Sequence[DfInode]
 
 
-def is_int(string: str) -> bool:
-    with suppress(ValueError):
-        return bool(int(string)) or True
-    return False
+def _padded_line(line: List[str]) -> List[str]:
+    try:
+        int(line[1])
+    except ValueError:
+        return line
+    # Missing field 'fs_type'
+    return [line[0], ""] + line[1:]
 
 
-def padded_line(line: List[str]) -> List[str]:
-    return ([line[0], ""] + line[1:]) if is_int(line[1]) else line
-
-
-def reformat_line(line: List[str]) -> List[str]:
+def _reformat_line(line: List[str]) -> List[str]:
     # Handle known cases, where the file system contains spaces
     for index, entry in enumerate(line):
         if entry == "NTFS":
@@ -54,68 +53,62 @@ def reformat_line(line: List[str]) -> List[str]:
     return line
 
 
-def get_mountpoint(
-    fs_type: str,
-    device: str,
-    rest: Sequence[str],
-    btrfs_devices: Set[str],
-) -> Optional[str]:
-    # This particular bit of magic originated in Werk #2671 and has the purpose of avoiding duplicate checks,
-    # as btrfs filesystems are often mounted at multiple mountpoints. We keep it for compatibility.
-    if fs_type == "btrfs":
-        if device in btrfs_devices:
-            return None
-        btrfs_devices.add(device)
-        return "btrfs " + device
-
-    return " ".join(rest).replace('\\', '/')  # Windows \ is replaced with /
-
-
-def processed(
+def _processed(
     line: List[str],
-    btrfs_devices: Set[str],
+    seen_btrfs_devices: Set[str],
 ) -> Optional[DfBlock]:
-    with suppress(ValueError):
-        device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
-        mountpoint = get_mountpoint(fs_type, device, rest, btrfs_devices)
-
-        # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
-        # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
-        # Beware(2): the column used_mb does not account for the reserved space for
-        # superusers. So we rather use the column 'avail' and subtract that from total
-        # to compute the used space.
-        size_mb, used_mb, avail_mb = (int(i) / 1024 for i in (size_kb, used_kb, avail_kb))
-
-        # exclude filesystems without size
-        if size_mb == 0 or mountpoint in {None, "/etc/resolv.conf", "/etc/hostname", "/etc/hosts"}:
+    device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
+    if fs_type == "btrfs":
+        # This particular bit of magic originated in Werk #2671 and has the purpose of
+        # avoiding duplicate checks, as btrfs filesystems are often mounted at multiple
+        # mountpoints. We keep it for compatibility.
+        if device in seen_btrfs_devices:
             return None
+        seen_btrfs_devices.add(device)
+        mountpoint = "btrfs " + device
+    else:
+        # Windows \ is replaced with /
+        mountpoint = " ".join(rest).replace('\\', '/')
 
-        assert mountpoint is not None
-        return DfBlock(
-            device=device,
-            fs_type=fs_type or None,
-            size_mb=size_mb,
-            avail_mb=avail_mb,
-            reserved_mb=size_mb - avail_mb - used_mb,
-            mountpoint=mountpoint,
-        )
-    return None
+    # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
+    # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
+    # Beware(2): the column used_mb does not account for the reserved space for
+    # superusers. So we rather use the column 'avail' and subtract that from total
+    # to compute the used space.
+    try:
+        size_mb, used_mb, avail_mb = (int(i) / 1024 for i in (size_kb, used_kb, avail_kb))
+    except ValueError:
+        return None
+
+    # exclude filesystems without size
+    if size_mb == 0 or mountpoint in ("/etc/resolv.conf", "/etc/hostname", "/etc/hosts"):
+        return None
+
+    return DfBlock(
+        device=device,
+        fs_type=fs_type or None,
+        size_mb=size_mb,
+        avail_mb=avail_mb,
+        reserved_mb=size_mb - avail_mb - used_mb,
+        mountpoint=mountpoint,
+    )
 
 
-def parse_blocks_subsection(blocks_subsection: StringTable) -> Tuple[BlocksSubsection, MpToDevice]:
+def _parse_blocks_subsection(blocks_subsection: StringTable) -> Tuple[BlocksSubsection, MpToDevice]:
     seen_btrfs_devices: Set[str] = set()
-    df_blocks = tuple(item  #
-                      for line in blocks_subsection
-                      for item in (processed(reformat_line(padded_line(line)), seen_btrfs_devices),)
-                      if item is not None)
+    df_blocks = tuple(
+        item  #
+        for line in blocks_subsection
+        for item in (_processed(_reformat_line(_padded_line(line)), seen_btrfs_devices),)
+        if item is not None)
 
     # Be aware regarding 'mp_to_device': The first entry wins
     return df_blocks, {df_block.mountpoint: df_block.device for df_block in df_blocks}
 
 
-def parse_inodes_subsection(inodes_subsection: StringTable,
-                            mp_to_device: MpToDevice) -> InodesSubsection:
-    def to_entry(line: Sequence[str]) -> Optional[DfInode]:
+def _parse_inodes_subsection(inodes_subsection: StringTable,
+                             mp_to_device: MpToDevice) -> InodesSubsection:
+    def _to_entry(line: Sequence[str]) -> Optional[DfInode]:
         with suppress(ValueError):
             mountpoint = line[-1]
             return DfInode(
@@ -126,7 +119,8 @@ def parse_inodes_subsection(inodes_subsection: StringTable,
             )
         return None
 
-    return tuple(entry for l in inodes_subsection for entry in (to_entry(padded_line(l)),) if entry)
+    return tuple(
+        entry for l in inodes_subsection for entry in (_to_entry(_padded_line(l)),) if entry)
 
 
 def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsection]:
@@ -199,8 +193,8 @@ def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsect
             continue
         current_list.append(line)
 
-    df_blocks, mp_to_device = parse_blocks_subsection(blocks_subsection)
-    return df_blocks, parse_inodes_subsection(inodes_subsection, mp_to_device)
+    df_blocks, mp_to_device = _parse_blocks_subsection(blocks_subsection)
+    return df_blocks, _parse_inodes_subsection(inodes_subsection, mp_to_device)
 
 
 register.agent_section(

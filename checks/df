@@ -110,13 +110,14 @@ def _get_mountpoint_from_item(item, params, df_blocks):
         _prepare_item_name(df_block, include_device_name=True): df_block.mountpoint
         for df_block in df_blocks
     }
+
     if "patterns" in params or item in [df_block.mountpoint for df_block in df_blocks]:
-        mountpoint = item
-    elif item in item_to_mp:
-        mountpoint = item_to_mp[item]
-    else:
-        mountpoint = item
-    return mountpoint
+        return item
+
+    if item in item_to_mp:
+        return item_to_mp[item]
+
+    return item
 
 
 def check_df(item, params, parsed):

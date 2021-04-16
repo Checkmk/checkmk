@@ -23,7 +23,7 @@ Metric::Names scan_rrd(const std::filesystem::path& basedir,
                           << basedir;
     Metric::Names names;
     std::string line;
-    auto path = basedir / (desc + ".xml");
+    auto path = basedir / pnp_cleanup(desc + ".xml");
     auto infile = std::ifstream{path};
     if (!infile.is_open()) {
         const auto ge = generic_error{"cannot open " + path.string()};

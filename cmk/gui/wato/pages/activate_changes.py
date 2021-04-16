@@ -453,15 +453,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS):
                     html.write_text(_("Activation needed"))
                 else:
-                    if html.request.has_var("_finished"):
-                        label = _("State")
-                    else:
-                        label = _("Last state")
-
-                    html.write_text("%s: %s. " % (label, last_state["_status_text"]))
-                    if last_state["_status_details"]:
-                        html.write(last_state["_status_details"])
-
                     html.javascript("cmk.activation.update_site_activation_state(%s);" %
                                     json.dumps(last_state))
 

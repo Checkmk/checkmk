@@ -19,28 +19,38 @@ inventory_df_rules = []
 inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
 
 
-def _filter_by_exclude_rule(inv_rule_excludes, iterable):
-    """exclude these mount points (/tmp, /proc, whatever user wants)"""
-    for df_block in iterable:
-        if df_block.mountpoint not in inv_rule_excludes:
-            yield df_block
+def _filter_df_blocks(df_blocks, inventory_options):
+    ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
+    never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
+    for df_block in df_blocks:
+        if df_block.mountpoint in inventory_df_exclude_mountpoints:
+            continue
 
-def _filter_by_type(ignore_fs_types, never_ignore_mountpoints, iterable):
+        if df_block.mountpoint.startswith('/var/lib/docker/'):
+            # Always exclude filesystems below dockers local storage area
+            # and also exclude docker mounts in containers which are reported
+            # by the agent when the agent is executed in the container context
+            continue
 
-    for df_block in iterable:
         if df_block.fs_type not in ignore_fs_types:
             yield df_block
             continue
 
-        # Filesystem is not ignored, so check against mount point patterns
-        for p in never_ignore_mountpoints:
-            if p[0] == "~" and regex(p[1:]).match(df_block.mountpoint):
-                yield df_block
-                continue
+        if not _ignore_mountpoint(df_block.mountpoint, never_ignore_mountpoints):
+            yield df_block
+            continue
 
-            if df_block.mountpoint == p:
-                yield df_block
+
+def _ignore_mountpoint(mountpoint, never_ignore_mountpoints):
+    # Filesystem is not ignored, so check against mount point patterns
+    for p in never_ignore_mountpoints:
+        if p[0] == "~" and regex(p[1:]).match(mountpoint):
+            return False
+
+        if mountpoint == p:
+            return False
+    return True
 
 
 def _prepare_item_name(entry, include_device_name):
@@ -65,19 +75,8 @@ def inventory_df(parsed):
             #  ( {'include_volume_name': (True, 'volume_name_and_mountpoint')}, [], ALL_HOSTS, {} ),
             grouping_behaviour = include_volume_name_settings[1]
 
-    ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
-    never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
-
     df_blocks, _df_inodes = parsed
-
-    filtered_blocks = _filter_by_exclude_rule(inventory_df_exclude_mountpoints, df_blocks)
-    filtered_blocks = _filter_by_type(ignore_fs_types, never_ignore_mountpoints, filtered_blocks)
-
-    # Always exclude filesystems below dockers local storage area
-    # and also exclude docker mounts in containers which are reported
-    # by the agent when the agent is executed in the container context
-    filtered_blocks = (df_block for df_block in filtered_blocks
-                       if not df_block.mountpoint.startswith("/var/lib/docker/"))
+    filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
 
     include_device_name = include_volume_name and grouping_behaviour == "volume_name_and_mountpoint"
     mplist = [_prepare_item_name(df_block, include_device_name) for df_block in filtered_blocks]

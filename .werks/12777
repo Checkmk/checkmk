@@ -1,0 +1,12 @@
+Title: dell_poweredge_amperage: fix ValueError crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1618559674
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p3
+
+dell_poweredge_amperage check crashed when a probe was in unknown state.
+The state is now checked and reported as UNKN to checkmk.

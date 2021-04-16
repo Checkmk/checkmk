@@ -41,8 +41,10 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.item_state as item_state
+import cmk.base.plugin_contexts as plugin_contexts
 
 from cmk.base.api.agent_based import register as agent_based_register
+from cmk.base.api.agent_based import value_store
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent
 from cmk.base.check_utils import (
     LegacyCheckParameters,
@@ -69,6 +71,29 @@ def get_aggregated_result(
     ipaddress: Optional[HostAddress],
     service: Service,
     *,
+    used_params: LegacyCheckParameters,
+) -> AggregatedResult:
+    with plugin_contexts.current_service(service):
+        # In the legacy mode from hell (tm) the item state features *probably*
+        # need to be called from the parse functions. We consolidate the
+        # preperation of the item state at this point, which is the largest
+        # possible scope without leaving the 'legacy' world.
+        with value_store.context(*service.id()):
+            return _get_aggregated_result(
+                parsed_sections_broker=parsed_sections_broker,
+                hostname=hostname,
+                ipaddress=ipaddress,
+                service=service,
+                used_params=used_params,
+            )
+
+
+def _get_aggregated_result(
+    *,
+    parsed_sections_broker: ParsedSectionsBroker,
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    service: Service,
     used_params: LegacyCheckParameters,
 ) -> AggregatedResult:
     legacy_check_plugin_name = config.legacy_check_plugin_names.get(service.check_plugin_name)
@@ -381,23 +406,14 @@ class _MultiHostSections:
         if parse_function is None:
             return section_content
 
-        # (mo): ValueStores (formally Item state) need to be *only* available
-        # from within the check function, nowhere else.
-        orig_item_state_prefix = item_state.get_item_state_prefix()
         try:
-            item_state.set_item_state_prefix((str(section_name), None))
             return parse_function(section_content)
-
         except item_state.MKCounterWrapped:
             raise
-
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
             raise MKParseFunctionError(*sys.exc_info())
-
-        finally:
-            item_state.set_item_state_prefix(orig_item_state_prefix)
 
     def legacy_determine_cache_info(self, section_name: SectionName) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections

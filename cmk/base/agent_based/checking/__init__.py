@@ -344,18 +344,16 @@ def execute_check(
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-        with plugin_contexts.current_service(service), \
-            value_store.context(*service.id()):
-            submittable = _legacy_mode.get_aggregated_result(
-                parsed_sections_broker,
-                host_config.hostname,
-                ipaddress,
-                service,
-                used_params=(  #
-                    time_resolved_check_parameters(service.parameters)  #
-                    if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
-                    service.parameters),
-            )
+        submittable = _legacy_mode.get_aggregated_result(
+            parsed_sections_broker,
+            host_config.hostname,
+            ipaddress,
+            service,
+            used_params=(  #
+                time_resolved_check_parameters(service.parameters)  #
+                if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
+                service.parameters),
+        )
     else:  # This is the new, shiny, 'normal' case.
         submittable = get_aggregated_result(
             parsed_sections_broker,

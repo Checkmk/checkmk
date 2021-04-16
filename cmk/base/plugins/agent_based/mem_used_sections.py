@@ -280,3 +280,24 @@ register.agent_section(
     parsed_section_name="mem_used",
     parse_function=parse_statgrab_mem,
 )
+
+
+def parse_openbsd_mem(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
+    units = {'kB': 1024}
+
+    try:
+        mem_data = {k.strip(':'): int(v) * units[u] for k, v, u in string_table}
+    except ValueError:
+        return None
+
+    if set(mem_data) != {"MemTotal", "MemFree", "SwapTotal", "SwapFree"}:
+        return None
+
+    return mem_data
+
+
+register.agent_section(
+    name="openbsd_mem",
+    parsed_section_name="mem_used",
+    parse_function=parse_openbsd_mem,
+)

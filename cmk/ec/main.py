@@ -1962,14 +1962,14 @@ class EventCreator:
                 # There is no datetime information in the message, use current time
                 event['time'] = time.time()
                 # There is no host information, use the provided address
-                if address and isinstance(address, tuple):
-                    event["host"] = address[0]
+                event["host"] = address[0] if address and isinstance(address, tuple) else ""
 
             # Variant 10
             elif line[4] == " " and line[:4].isdigit():
                 time_part = line[:20]  # ignoring tz info
                 event["host"], application, line = line[25:].split(" ", 2)
                 event["application"] = application.rstrip(":")
+                event["pid"] = 0
                 event["text"] = line
                 event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
 
@@ -1991,6 +1991,7 @@ class EventCreator:
 
                 # Variant 4
                 if rest.startswith("@"):
+                    # TODO: host gets overwritten, strange... Is this OK?
                     event.update(self._parse_monitoring_info(rest))
 
                 # Variant 1, 2
@@ -2051,15 +2052,9 @@ class EventCreator:
         # here. This is seems to be ok for the moment - sorry. Please drop a note if you
         # got a good solutuion for this.
         event['time'] = time.mktime(time.strptime(timestamp[:19], '%Y-%m-%dT%H:%M:%S'))
-
-        if hostname != "-":
-            event["host"] = hostname
-
-        if app_name != "-":
-            event["application"] = app_name
-
-        if procid != "-":
-            event["pid"] = procid
+        event["host"] = "" if hostname == "-" else hostname
+        event["application"] = "" if app_name == "-" else app_name
+        event["pid"] = 0 if procid == "-" else procid
 
         if rest[0] == "[":
             # has stuctured data
@@ -2116,6 +2111,7 @@ class EventCreator:
         event["application"] = service
         event["text"] = message.strip()
         event["host"] = host
+        event["pid"] = 0
         return event
 
     def create_event_from_trap(self, trap, ipaddress):
@@ -3204,9 +3200,12 @@ class EventStatus:
                 self._logger.exception("Error loading event state from %s: %s" % (path, e))
                 raise
 
-        # Add new columns
+        # Add new columns and fix broken events
         for event in self._events:
             event.setdefault("ipaddress", "")
+            event.setdefault("host", "")
+            event.setdefault("application", "")
+            event.setdefault("pid", 0)
 
             if "core_host" not in event:
                 event_server.add_core_host_to_event(event)

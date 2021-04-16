@@ -863,63 +863,73 @@ div.varname {
   vertical-align: middle;
 }
 
-/* Replication */
-.wato table.data td.repprogress {
-  position: relative;
-  width: 140px;
-  min-width: 140px;
-  padding: 0;
-  margin: 0;
-}
+.wato table.activation {
+  td.details {
+    div.warning,
+    div.error {
+      margin: 2px 0;
+    }
 
-.wato td.repprogress {
-  div.msg {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    z-index: 20;
-    width: 160px;
-    height: 16px;
-    text-align: center;
-
-    &.state_success,
-    &.state_warning {
-      color: $dark-font-color;
+    pre {
+      white-space: pre-wrap;
     }
   }
 
-  div.progress {
-    position: absolute;
-    top: 4px;
-    left: 0;
-    z-index: 0;
-    width: 160px;
-    height: 24px;
-    padding-top: 10px;
-    font-size: 11px;
-    color: $black;
-    border-radius: $theme-border-radius;
-    box-shadow: none;
-    box-sizing: border-box;
+  td.repprogress {
+    position: relative;
+    width: 140px;
+    min-width: 140px;
+    padding: 0;
+    margin: 0;
 
-    &.in_progress {
-      background: $repprogress-progress-bg-color;
-      border-color: $repprogress-progress-border-color;
+    div.msg {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      z-index: 20;
+      width: 160px;
+      height: 16px;
+      text-align: center;
+
+      &.state_success,
+      &.state_warning {
+        color: $dark-font-color;
+      }
     }
 
-    &.state_success {
-      background: $color-state-success-background;
-      border-color: $color-state-success-border;
-    }
+    div.progress {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      z-index: 0;
+      width: 160px;
+      height: 24px;
+      padding-top: 10px;
+      font-size: 11px;
+      color: $black;
+      border-radius: $theme-border-radius;
+      box-shadow: none;
+      box-sizing: border-box;
 
-    &.state_error {
-      background: $color-state-2-background;
-      border-color: $color-state-2-border;
-    }
+      &.in_progress {
+        background: $repprogress-progress-bg-color;
+        border-color: $repprogress-progress-border-color;
+      }
 
-    &.state_warning {
-      background: $yellow;
-      border-color: $color-state-1-border;
+      &.state_success {
+        background: $color-state-success-background;
+        border-color: $color-state-success-border;
+      }
+
+      &.state_error {
+        background: $color-state-2-background;
+        border-color: $color-state-2-border;
+      }
+
+      &.state_warning {
+        background: $yellow;
+        border-color: $color-state-1-border;
+      }
     }
   }
 }

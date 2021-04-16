@@ -1375,7 +1375,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_done_result(configuration_warnings)
         except Exception as e:
             self._logger.exception("error activating changes")
-            self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
+            self._set_result(PHASE_DONE, _("Failed"), str(e), state=STATE_ERROR)
 
         finally:
             self._unlock_activation()

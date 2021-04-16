@@ -177,7 +177,7 @@ function update_activation_state(_unused_handler_data, response) {
 
 export function update_site_activation_state(site_state) {
     // Show status text (overlay text on the progress bar)
-    var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
+    const msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
 
     if (site_state["_phase"] == "done") {
@@ -189,8 +189,15 @@ export function update_site_activation_state(site_state) {
 
     // Show status details
     if (site_state["_status_details"]) {
-        msg = document.getElementById("site_" + site_state["_site_id"] + "_details");
-        msg.innerHTML = site_state["_status_details"];
+        const details = document.getElementById("site_" + site_state["_site_id"] + "_details");
+
+        let detail_content = site_state["_status_details"];
+        if (site_state["_state"] == "warning" || site_state["_state"] == "error") {
+            detail_content =
+                "<div class='" + site_state["_state"] + "'>" + detail_content + "</div>";
+        }
+
+        details.innerHTML = detail_content;
     }
 
     update_site_progress(site_state);

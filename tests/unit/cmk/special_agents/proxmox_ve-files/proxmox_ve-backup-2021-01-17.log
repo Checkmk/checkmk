@@ -1,0 +1,39 @@
+INFO: starting new backup job: vzdump 112 119 120 123 --storage StorageBox-219063 --quiet 1 --mode snapshot --compress zstd --mailto admin@helloworld.de --mailnotification always
+INFO: skip external VMs: 112, 123
+INFO: filesystem type on dumpdir is 'cifs' -using /var/tmp/vzdumptmp112226_119 for temporary files
+INFO: Starting Backup of VM 119 (lxc)
+INFO: Backup started at 2021-01-17 02:30:02
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating vzdump archive '/mnt/pve/StorageBox-219063/dump/vzdump-lxc-119-2021_01_17-02_30_02.tar.zst'
+INFO: Total bytes written: 62757529600 (59GiB, 79MiB/s)
+INFO: zstd: /*stdout*\: Input/output error 
+INFO: remove vzdump snapshot
+ERROR: Backup of VM 119 failed - command 'set -o pipefail && lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- tar cpf - --totals --one-file-system -p --sparse --numeric-owner --acls --xattrs '--xattrs-include=user.*' '--xattrs-include=security.capability' '--warning=no-file-ignored' '--warning=no-xattr-write' --one-file-system '--warning=no-file-ignored' '--directory=/var/tmp/vzdumptmp112226_119' ./etc/vzdump/pct.conf ./etc/vzdump/pct.fw '--directory=/mnt/vzsnap0' --no-anchored '--exclude=lost+found' --anchored '--exclude=./tmp/?*' '--exclude=./var/tmp/?*' '--exclude=./var/run/?*.pid' ./ | zstd --rsyncable '--threads=1' >/mnt/pve/StorageBox-219063/dump/vzdump-lxc-119-2021_01_17-02_30_02.tar.dat' failed: exit code 1
+INFO: Failed at 2021-01-17 02:45:52
+INFO: filesystem type on dumpdir is 'cifs' -using /var/tmp/vzdumptmp112226_120 for temporary files
+INFO: Starting Backup of VM 120 (lxc)
+INFO: Backup started at 2021-01-17 02:45:53
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: including mount point mp0 ('/opt/sonatype/sonatype-work/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: suspend vm to make snapshot
+INFO: create storage snapshot 'vzdump'
+INFO: resume vm
+INFO: guest is online again after <1 seconds
+INFO: creating vzdump archive '/mnt/pve/StorageBox-219063/dump/vzdump-lxc-120-2021_01_17-02_45_53.tar.zst'
+INFO: Total bytes written: 399821598720 (373GiB, 54MiB/s)
+INFO: zstd: /*stdout*\: Input/output error 
+INFO: remove vzdump snapshot
+ERROR: Backup of VM 120 failed - command 'set -o pipefail && lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- tar cpf - --totals --one-file-system -p --sparse --numeric-owner --acls --xattrs '--xattrs-include=user.*' '--xattrs-include=security.capability' '--warning=no-file-ignored' '--warning=no-xattr-write' --one-file-system '--warning=no-file-ignored' '--directory=/var/tmp/vzdumptmp112226_120' ./etc/vzdump/pct.conf ./etc/vzdump/pct.fw '--directory=/mnt/vzsnap0' --no-anchored '--exclude=lost+found' --anchored '--exclude=./tmp/?*' '--exclude=./var/tmp/?*' '--exclude=./var/run/?*.pid' ./ ./opt/sonatype/sonatype-work/ | zstd --rsyncable '--threads=1' >/mnt/pve/StorageBox-219063/dump/vzdump-lxc-120-2021_01_17-02_45_53.tar.dat' failed: exit code 1
+INFO: Failed at 2021-01-17 04:47:37
+INFO: Backup job finished with errors
+
+TASK ERROR: job errors

@@ -3165,6 +3165,7 @@ def _valuespec_special_agents_zerto():
                 allow_empty=False,
             )),
         ],
+        required_keys=['username', 'password'],
         title=_("Zerto"),
         help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
 

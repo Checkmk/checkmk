@@ -1681,6 +1681,16 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             site_changes.write(changes)
 
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
+        """Stores the current state for displaying in the GUI
+
+        Args:
+            phase: Identity of the current phase
+            status_text: Short label. Is used as text on the progress bar.
+            status_details: HTML code that is rendered into the Details cell.
+            state: String identifying the state of the activation. Is used as part of the
+                progress bar CSS class ("state_[state]").
+        """
+
         self._phase = phase
         self._status_text = status_text
 
@@ -1695,7 +1705,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._save_state()
 
     def _set_status_details(self, phase, status_details):
-        # As long as the site is lying in queue, there is no time started
+        # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
             self._status_details = _("Queued for update")
         else:

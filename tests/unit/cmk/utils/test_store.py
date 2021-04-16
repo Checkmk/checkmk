@@ -564,3 +564,27 @@ def test_non_blocking_decorated_locking_while_already_locked(locked_file, path_t
         assert result is False
         assert store.have_lock(path) is False
     assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("text, storage_format", [
+    ("standard", store.StorageFormat.STANDARD),
+    ("raw", store.StorageFormat.RAW),
+])
+def test_storage_format(text, storage_format):
+    assert store.StorageFormat(text) == storage_format
+    assert str(storage_format) == text
+    assert store.StorageFormat.from_str(text) == storage_format
+
+
+@pytest.mark.parametrize("storage_format, expected_extension", [
+    (store.StorageFormat.STANDARD, ".mk"),
+    (store.StorageFormat.RAW, ".cfg"),
+])
+def test_storage_format_extension(storage_format, expected_extension):
+    assert storage_format.extension() == expected_extension
+
+
+def test_storage_format_other():
+    assert store.StorageFormat("standard") != store.StorageFormat.RAW
+    with pytest.raises(KeyError):
+        store.StorageFormat.from_str("bad")

@@ -3936,3 +3936,7 @@ class CEEHostConfig(HostConfig):
     def lnx_remote_alert_handlers(self) -> List[Dict[str, str]]:
         return self._config_cache.host_extra_conf(self.hostname,
                                                   agent_config.get("lnx_remote_alert_handlers", []))
+
+
+def get_storage_format() -> 'store.StorageFormat':
+    return store.StorageFormat.from_str(config_storage_format)

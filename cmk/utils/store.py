@@ -8,6 +8,7 @@ functionality is the locked file opening realized with the File() context
 manager."""
 
 import ast
+import enum
 from contextlib import contextmanager
 import errno
 import fcntl
@@ -483,3 +484,22 @@ def cleanup_locks() -> Iterator[None]:
         except Exception:
             logger.exception("Error while releasing locks after block.")
             raise
+
+
+class StorageFormat(enum.Enum):
+    STANDARD = "standard"
+    RAW = "raw"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    @classmethod
+    def from_str(cls, value: str) -> 'StorageFormat':
+        return cls[value.upper()]
+
+    def extension(self) -> str:
+        # This typing error is a false positive.  There are tests to demonstrate that.
+        return {  # type: ignore[return-value]
+            StorageFormat.STANDARD: ".mk",
+            StorageFormat.RAW: ".cfg",
+        }[self]

@@ -22,30 +22,31 @@ inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
 def _filter_by_exclude_rule(inv_rule_excludes, iterable):
     """exclude these mount points (/tmp, /proc, whatever user wants)"""
     for df_block in iterable:
-        if df_block[0] not in inv_rule_excludes:
+        if df_block.mountpoint not in inv_rule_excludes:
             yield df_block
 
 
-def _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints, iterable):
+def _filter_by_type(ignore_fs_types, never_ignore_mountpoints, iterable):
 
     for df_block in iterable:
-        if volume_info[df_block[0]]["fs_type"] not in ignore_fs_types:
+        if df_block.fs_type not in ignore_fs_types:
             yield df_block
             continue
 
         # Filesystem is not ignored, so check against mount point patterns
         for p in never_ignore_mountpoints:
-            if p[0] == "~" and regex(p[1:]).match(df_block[0]):
+            if p[0] == "~" and regex(p[1:]).match(df_block.mountpoint):
                 yield df_block
                 continue
 
-            if df_block[0] == p:
+            if df_block.mountpoint == p:
                 yield df_block
 
 
-def _get_item_list_from_blocks(df_blocks):
-    """return the mountpoint"""  # TODO: fix this. Should include optional description
-    return [df_block[0] for df_block in df_blocks]
+def _prepare_item_name(entry, include_device_name):
+    if entry.device and include_device_name:
+        return "%s %s" % (entry.device, entry.mountpoint)
+    return entry.mountpoint
 
 
 def inventory_df(parsed):
@@ -67,24 +68,25 @@ def inventory_df(parsed):
     ignore_fs_types = inventory_options.get("ignore_fs_types", inventory_df_exclude_fs)
     never_ignore_mountpoints = inventory_options.get("never_ignore_mountpoints", [])
 
-    (df_blocks, volume_info), df_inodes = parsed
+    df_blocks, _df_inodes = parsed
 
     filtered_blocks = _filter_by_exclude_rule(inventory_df_exclude_mountpoints, df_blocks)
-    filtered_blocks = _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints,
-                                      filtered_blocks)
+    filtered_blocks = _filter_by_type(ignore_fs_types, never_ignore_mountpoints, filtered_blocks)
 
     # Always exclude filesystems below dockers local storage area
     # and also exclude docker mounts in containers which are reported
     # by the agent when the agent is executed in the container context
-    filtered_blocks = (mp for mp in filtered_blocks if not mp[0].startswith("/var/lib/docker/"))
+    filtered_blocks = (df_block for df_block in filtered_blocks
+                       if not df_block.mountpoint.startswith("/var/lib/docker/"))
 
-    mplist = _get_item_list_from_blocks(filtered_blocks)
+    include_device_name = include_volume_name and grouping_behaviour == "volume_name_and_mountpoint"
+    mplist = [_prepare_item_name(df_block, include_device_name) for df_block in filtered_blocks]
 
-    # Modify the df_blocks and df_inodes to include the volume name
-    # and hand the data over to the inventory function, this enables grouping based on volume and mountpoint
-    if include_volume_name and grouping_behaviour == "volume_name_and_mountpoint":
-        df_blocks, df_inodes = _add_volume_name(df_blocks, df_inodes, volume_info, mplist)
-        mplist = [x[0] for x in df_blocks]
+    # TODO df_inventory + mp_to_device:
+    #   df_inventory should also return a list of DfBlocks, because for the case
+    #       'include_volume_name and grouping_behaviour == "mountpoint"'
+    #   we need "device + mountpoint" as item. Then mp_to_device can be removed.
+    mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
     for mountpoint, params in df_inventory(mplist):
         if "patterns" in params:
@@ -96,68 +98,54 @@ def inventory_df(parsed):
             # but the grouping itself is based on the mountpoint only
             # => The df_inventory returns a list of mountpoints and mountpoint groups
             # Add the volume name as prefix for single mountpoints
-            mountpoint = "%s %s" % (volume_info[mountpoint]["volume_name"], mountpoint)
+            mountpoint = _prepare_item_name(mp_to_df_block[mountpoint], include_device_name=True)
 
         params["include_volume_name"] = include_volume_name
         yield mountpoint, params
 
 
 # Legacy params
-def _get_mountpoint_from_item(item, params, volume_info):
-    volume_and_mp_to_mp = {
-        ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
+def _get_mountpoint_from_item(item, params, df_blocks):
+    item_to_mp = {
+        _prepare_item_name(df_block, include_device_name=True): df_block.mountpoint
+        for df_block in df_blocks
     }
-    if "patterns" in params or item in volume_info:
+    if "patterns" in params or item in [df_block.mountpoint for df_block in df_blocks]:
         mountpoint = item
-    elif item in volume_and_mp_to_mp:
-        mountpoint = volume_and_mp_to_mp[item]
+    elif item in item_to_mp:
+        mountpoint = item_to_mp[item]
     else:
         mountpoint = item
     return mountpoint
 
 
-def _add_volume_name(df_blocks, df_inodes, volume_info, only_mp=None):
-    # Modify the df_blocks and df_inodes mount points to include the volume name
-    df_blocks_volume = []
-    df_inodes_volume = []
-    for entry in df_blocks:
-        if only_mp and entry[0] not in only_mp:
-            continue
-        # The parse function explictly creates a correspondin volume_info entry for each df_block
-        mountpoint_with_volume = "%s %s" % (volume_info[entry[0]]["volume_name"], entry[0])
-        df_blocks_volume.append((mountpoint_with_volume,) + entry[1:])
-    for entry in df_inodes:
-        if only_mp and entry[0] not in only_mp:
-            continue
-        # There is no guarantee that the inode mountpoint is in volume_info, check parse func
-        if entry[0] not in volume_info:
-            continue
-        mountpoint_with_volume = "%s %s" % (volume_info[entry[0]]["volume_name"], entry[0])
-        df_inodes_volume.append((mountpoint_with_volume,) + entry[1:])
-
-    return df_blocks_volume, df_inodes_volume
-
-
 def check_df(item, params, parsed):
-    (df_blocks, volume_info), df_inodes = parsed
+    df_blocks, df_inodes = parsed
 
+    include_device_name = False
     if "include_volume_name" not in params:
-        item = _get_mountpoint_from_item(item, params, volume_info)
+        item = _get_mountpoint_from_item(item, params, df_blocks)
 
     # Check if the item is not the actual mountpoint and modify the data accordingly
     elif params.get("include_volume_name"):
         if "patterns" not in params:
             # Single mountpoints with prefixed volume name
-            item = _get_mountpoint_from_item(item, params, volume_info)
+            item = _get_mountpoint_from_item(item, params, df_blocks)
+
         elif params["grouping_behaviour"] == "volume_name_and_mountpoint":
             # Filesystem group
             # There is no need to modify the item name, since is a custom text  and not used in for pattern matching.
             # The "volume_name_and_mount" grouping option however, requires the modification of the df_blocks
             # and df_inodes variables. After the modification these variables also include the volume name
             # which will be used during for group matching
-            df_blocks, df_inodes = _add_volume_name(df_blocks, df_inodes, volume_info)
+            include_device_name = True
 
-    return df_check_filesystem_list_coroutine(item, params, df_blocks, df_inodes)
+    raw_df_blocks = [(_prepare_item_name(df_block, include_device_name), df_block.size_mb,
+                      df_block.avail_mb, df_block.reserved_mb) for df_block in df_blocks]
+    raw_df_inodes = [(_prepare_item_name(df_inode,
+                                         include_device_name), df_inode.total, df_inode.avail)
+                     for df_inode in df_inodes]
+    return df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
 
 
 check_info['df'] = {

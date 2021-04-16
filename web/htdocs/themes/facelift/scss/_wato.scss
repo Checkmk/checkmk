@@ -866,7 +866,8 @@ div.varname {
 /* Replication */
 .wato table.data td.repprogress {
   position: relative;
-  width: 160px;
+  width: 140px;
+  min-width: 140px;
   padding: 0;
   margin: 0;
 }

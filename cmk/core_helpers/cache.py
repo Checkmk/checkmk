@@ -26,11 +26,13 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.store as _store
+from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.exceptions import MKGeneralException, MKFetcherError
-from cmk.utils.type_defs import AgentRawDataSection, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection, TRawData
+
+from .type_defs import AgentRawDataSection
 
 __all__ = [
     "ABCRawDataSection",

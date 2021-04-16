@@ -14,14 +14,14 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.type_defs import AgentRawData, AgentRawDataSection, SectionName
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.agent import AgentParser, SectionMarker
 from cmk.core_helpers.cache import PersistedSections, SectionStore
 from cmk.core_helpers.snmp import SNMPParser
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.core_helpers.type_defs import AgentRawDataSection, NO_SELECTION
 
 
 class TestAgentParser:

@@ -33,7 +33,6 @@ from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.translations import translate_piggyback_host, TranslationOptions
 from cmk.utils.type_defs import (
     AgentRawData,
-    AgentRawDataSection,
     AgentTargetVersion,
     ExitSpec,
     HostName,
@@ -47,7 +46,7 @@ from cmk.utils.werks import parse_check_mk_version
 from ._base import Fetcher, Parser, Summarizer
 from .cache import FileCache, FileCacheFactory, SectionStore
 from .host_sections import HostSections
-from .type_defs import Mode, NO_SELECTION, SectionNameCollection
+from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
 AgentHostSections = HostSections[AgentRawDataSection]
 

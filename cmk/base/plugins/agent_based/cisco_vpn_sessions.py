@@ -50,7 +50,7 @@ def parse_cisco_vpn_sessions(
     if not string_table:
         return None
 
-    raw_data = string_table[0][0]
+    raw_data = string_table[0]
     parsed = {}
     summary = {'active_sessions': 0, 'cumulative_sessions': 0}
 

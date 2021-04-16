@@ -11,8 +11,8 @@ from cmk.base.plugins.agent_based.cisco_vpn_sessions import parse_cisco_vpn_sess
 
 checkname = 'cisco_vpn_sessions'
 
-parsed = parse_cisco_vpn_sessions([[['31', '100', '50', '2', '55', '11', '776', '10000', '800',
-                                     '0', '0', '0', '12345']]])
+parsed = parse_cisco_vpn_sessions([['31', '100', '50', '2', '55', '11', '776', '10000', '800',
+                                     '0', '0', '0', '12345']])
 
 discovery = {'': [('IPsec RA', {}),
                   ('IPsec L2L', {}),

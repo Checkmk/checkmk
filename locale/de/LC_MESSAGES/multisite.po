@@ -8444,6 +8444,10 @@ msgstr ""
 msgid "Changed"
 msgstr "Änderung"
 
+#, fuzzy, python-format
+msgid "Changed %s from %s to %s"
+msgstr "Host umbenannt von %s nach %s"
+
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "Konfigurationsvariable %s nach %s geändert."

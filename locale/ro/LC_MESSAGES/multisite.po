@@ -7983,6 +7983,10 @@ msgstr ""
 msgid "Changed"
 msgstr "%d schimbări"
 
+#, fuzzy, python-format
+msgid "Changed %s from %s to %s"
+msgstr " pentru elementul %s"
+
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr ""

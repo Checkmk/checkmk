@@ -158,7 +158,7 @@ from cmk.special_agents.agent_proxmox_ve import (
                 'bytes_written_size': 399821598720,
                 'bytes_written_bandwidth': 56623104,
                 'error': "command 'set -o pipefail && lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- tar cpf - --totals --one-file-system -p --sparse --numeric-owner --acls --xattrs '--xattrs-include=user.*' '--xattrs-include=security.capability' '--warning=no-file-ignored' '--warning=no-xattr-write' --one-file-system '--warning=no-file-ignored' '--directory=/var/tmp/vzdumptmp112226_120' ./etc/vzdump/pct.conf ./etc/vzdump/pct.fw '--directory=/mnt/vzsnap0' --no-anchored '--exclude=lost+found' --anchored '--exclude=./tmp/?*' '--exclude=./var/tmp/?*' '--exclude=./var/run/?*.pid' ./ ./opt/sonatype/sonatype-work/ | zstd --rsyncable '--threads=1' >/mnt/pve/StorageBox-219063/dump/vzdump-lxc-120-2021_01_17-02_45_53.tar.dat' failed: exit code 1"
-            }
+            },
         },
         None,
     ),
@@ -409,6 +409,15 @@ from cmk.special_agents.agent_proxmox_ve import (
                 'transfer_size': 180355072,
                 'transfer_time': 8,
                 'total_duration': 14
+            },
+        },
+        None,
+    ),
+    (
+        "proxmox_ve-backup-2021-04-10.log",
+        {
+            '': {
+                'error': 'There is a max backup limit of 1 enforced by the target storage or the vzdump parameters. Either increase the limit or delete old backup(s).'
             },
         },
         None,

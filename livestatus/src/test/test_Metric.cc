@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include "Metric.h"
 #include "gtest/gtest.h"
+#include "pnp4nagios.h"
 
 namespace fs = std::filesystem;
 
@@ -23,14 +24,14 @@ bool operator<(const Metric::MangledName& x, const Metric::MangledName& y) {
 class MetricFixture : public ::testing::Test {
 public:
     const std::string ext = ".xml";
-    const std::string desc = "Service_Description";
-    const Metric::Names metrics = {Metric::MangledName{"abc"},
-                                   Metric::MangledName{"def"},
-                                   Metric::MangledName{"ghi"}};
-    const std::string desc_other = "Service_Description_Other";
-    const Metric::Names metrics_other = {Metric::MangledName{"jkl"},
-                                         Metric::MangledName{"mno"},
-                                         Metric::MangledName{"pqr"}};
+    const std::string desc = "Service Description";
+    const Metric::Names metrics = {Metric::MangledName{"abc 1"},
+                                   Metric::MangledName{"def 2"},
+                                   Metric::MangledName{"ghi 3"}};
+    const std::string desc_other = "Service Description Other";
+    const Metric::Names metrics_other = {Metric::MangledName{"jkl 4"},
+                                         Metric::MangledName{"mno 5"},
+                                         Metric::MangledName{"pqr 6"}};
     const fs::path basepath{fs::temp_directory_path() / "metric_tests"};
 
     static void dump(fs::path&& path, const Metric::Names& metrics) {
@@ -54,9 +55,9 @@ public:
     void SetUp() override {
         fs::create_directories(basepath);
         // Create the metrics we use for the test.
-        dump(basepath / (desc + ext), metrics);
+        dump(basepath / pnp_cleanup(desc + ext), metrics);
         // Add non-matching metrics to the directory.
-        dump(basepath / (desc_other + ext), metrics_other);
+        dump(basepath / pnp_cleanup(desc_other + ext), metrics_other);
     }
     void TearDown() override { fs::remove_all(basepath); }
 };

@@ -379,8 +379,7 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
     ],
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
-@pytest.mark.usefixtures("scenario")
-@pytest.mark.usefixtures("reset_log_level")
+@pytest.mark.usefixtures("scenario", "reset_log_level", "initialised_item_state")
 def test_automation_try_discovery_caching(scan, raise_errors, mocker):
     kwargs = {}
     kwargs.update(scan[1])

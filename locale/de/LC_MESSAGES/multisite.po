@@ -300,6 +300,10 @@ msgstr "%.2f%% OK"
 msgid "%/m"
 msgstr "%/m"
 
+#, fuzzy
+msgid "%H:%M"
+msgstr "%H:%M:%S"
+
 msgid "%H:%M:%S"
 msgstr "%H:%M:%S"
 
@@ -53841,6 +53845,17 @@ msgstr "Performance-Daten aus Trends"
 
 msgid "Treshold"
 msgstr "Schwellwert"
+
+msgid "Trial expired"
+msgstr ""
+
+#, python-format
+msgid "Trial expires in %s days"
+msgstr ""
+
+#, python-format
+msgid "Trial expires today (%s)"
+msgstr ""
 
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"

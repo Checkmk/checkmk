@@ -296,6 +296,9 @@ msgstr ""
 msgid "%/m"
 msgstr ""
 
+msgid "%H:%M"
+msgstr ""
+
 msgid "%H:%M:%S"
 msgstr ""
 
@@ -50693,6 +50696,17 @@ msgid "Trend performance data"
 msgstr ""
 
 msgid "Treshold"
+msgstr ""
+
+msgid "Trial expired"
+msgstr ""
+
+#, python-format
+msgid "Trial expires in %s days"
+msgstr ""
+
+#, python-format
+msgid "Trial expires today (%s)"
 msgstr ""
 
 #, python-format

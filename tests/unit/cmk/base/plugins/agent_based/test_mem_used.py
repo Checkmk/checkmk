@@ -515,8 +515,7 @@ def test_check_memory_fails(params, meminfo, fail_with_exception):
 def test_check_memory(params, meminfo, expected):
     copy_info = meminfo.copy()
 
-    with value_store.context(CheckPluginName("mem_used_unittest"), None):
-        result = list(check_mem_used(params, meminfo))
+    result = list(check_mem_used(params, meminfo))
 
     assert result == expected
     assert copy_info == meminfo

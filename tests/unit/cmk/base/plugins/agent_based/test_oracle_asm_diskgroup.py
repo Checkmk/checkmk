@@ -240,10 +240,8 @@ def test_discovery(section, expected):
     ])
 def test_check(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("oracle_asm_diskgroup"), None):
-            yielded_results = list(
-                oracle_asm_diskgroup.check_oracle_asm_diskgroup(ITEM, params, section))
-            assert yielded_results == expected
+        assert expected == list(
+            oracle_asm_diskgroup.check_oracle_asm_diskgroup(ITEM, params, section))
 
 
 @pytest.mark.parametrize("section, params, expected", [

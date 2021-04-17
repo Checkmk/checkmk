@@ -266,6 +266,8 @@ class ValueStoreManager:
         if self._item_state_prefix is None:
             # TODO: consolidate this with the exception thrown in value_store.py
             raise MKGeneralException("accessing item state outside check function")
+        if not isinstance(user_key, _UserKey):
+            raise TypeError(f"value store key must be {_UserKey}")
         return self._item_state_prefix + (user_key,)
 
 
@@ -316,20 +318,30 @@ def load_host_value_store(
             pushed_host_name) if pushed_host_name else None
 
 
-def set_item_state(user_key: _UserKey, state: Any) -> None:
+def _stringify(user_key: object) -> _UserKey:
+    """get a string representation of the key
+
+    The old API never *enforced* usage of a string as key,
+    so we use this function to keep weird legacy checks
+    working.
+    """
+    return user_key if isinstance(user_key, _UserKey) else repr(user_key)
+
+
+def set_item_state(user_key: object, state: Any) -> None:
     """Store arbitrary values until the next execution of a check.
 
     The user_key is the identifier of the stored value and needs
     to be unique per service."""
-    _get_value_store().set_item_state(user_key, state)
+    _get_value_store().set_item_state(_stringify(user_key), state)
 
 
-def get_item_state(user_key: _UserKey, default: Any = None) -> Any:
+def get_item_state(user_key: object, default: Any = None) -> Any:
     """Returns the currently stored item with the user_key.
 
     Returns None or the given default value in case there
     is currently no such item stored."""
-    return _get_value_store().get_item_state(user_key, default)
+    return _get_value_store().get_item_state(_stringify(user_key), default)
 
 
 def get_all_item_states() -> Mapping[_ValueStoreKey, Any]:

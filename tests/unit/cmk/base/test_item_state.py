@@ -224,6 +224,24 @@ class TestValueStoreManager:
         assert vsm.active_service_interface is None
 
 
+def test_load_host_value_store_loads_file(monkeypatch):
+
+    service_id = (CheckPluginName("test_service"), None)
+
+    monkeypatch.setattr(
+        item_state.store,
+        "load_object_from_file",
+        lambda *_a, **_kw: {(str(service_id[0]), service_id[1], "loaded_file"): True},
+    )
+
+    with item_state.load_host_value_store(
+            "test_load_host_value_store_loads_file",
+            store_changes=False,
+    ) as mgr:
+        with mgr.namespace(service_id):
+            assert item_state.get_value_store()["loaded_file"]
+
+
 def test_item_state_prefix_required(monkeypatch):
     monkeypatch.setattr(
         item_state,

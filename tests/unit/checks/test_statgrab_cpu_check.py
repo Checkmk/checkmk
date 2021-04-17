@@ -9,7 +9,7 @@ from testlib import Check  # type: ignore[import]
 from checktestlib import (
     CheckResult,
     assertCheckResultsEqual,
-    MockItemState,
+    mock_item_state,
     assertMKCounterWrapped,
 )
 
@@ -78,7 +78,7 @@ def test_statgrab_cpu_check(info, mockstate, expected_result):
     check = Check("statgrab_cpu")
 
     # set up mocking of `get_item_state`
-    with MockItemState(mockstate):
+    with mock_item_state(mockstate):
         result = CheckResult(check.run_check(None, {}, info))
     assertCheckResultsEqual(result, expected_result)
 
@@ -90,7 +90,7 @@ def test_statgrab_cpu_check_error(info, mockstate):
 
     check = Check("statgrab_cpu")
 
-    with MockItemState(mockstate):
+    with mock_item_state(mockstate):
         # the mock values are designed to raise an exception.
         # to make sure it is raised, use this:
         with assertMKCounterWrapped('Too short time difference since last check'):

@@ -8,8 +8,6 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.base import item_state
-
 
 @pytest.fixture(autouse=True, scope="session")
 def _autouse_fix_register(fix_register):

@@ -6,8 +6,6 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base import item_state
-
 from testlib.base import Scenario
 
 

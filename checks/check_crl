@@ -8,14 +8,18 @@
 
 
 def check_crl_arguments(params):
-    return "-u {} -w {} -c {}".format(params["url"], params["time"][0], params["time"][1])
+    url = params["url"]
+    warn = params["time"][0]
+    crit = params["time"][1]
+    return f"-u {url} -w {warn} -c {crit}"
 
 
 def check_crl_description(params):
-    return "CRL: {}".format(params["url"])
+    url = params["url"]
+    return f"CRL: {url}"
 
 
-active_check_info["check_crl"] = {
+active_check_info["crl"] = {
     "command_line": "check_crl $ARG1$",
     "argument_function": check_crl_arguments,
     "service_description": check_crl_description,

@@ -2492,7 +2492,7 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_active_checks_crl():
+def _valuespec_active_checks_crl() -> Dictionary:
     return Dictionary(
         title=_("Check CRL expiry"),
         help=_("Checks if a Certificate Revocation List is still valid"),
@@ -2517,6 +2517,6 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:check_crl",
+        name="active_checks:crl",
         valuespec=_valuespec_active_checks_crl,
     ))

@@ -51,12 +51,8 @@ import typing
 import argparse
 import urllib.request, urllib.parse, urllib.error
 
-def output_check_result(rc, s):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
-    sys.stdout.write('%s\n' % output)
 
-def check_crl(url: str, warn: int, crit: int):
+def check_crl(url: str, warn: int, crit: int) -> (int, str):
     tmpcrl = tempfile.mktemp(".crl")
     #request = urllib.request.urlretrieve(url, tmpcrl)
     try:
@@ -122,7 +118,7 @@ def usage():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", "-u", required=True)
+    parser.add_argument("--url", "-u", required=True, type=str)
     parser.add_argument("--warning", "-w", required=True, type=int)
     parser.add_argument("--critical", "-c", required=True, type=int)
     args = parser.parse_args()
@@ -136,5 +132,5 @@ def main():
 
 if __name__ == "__main__":
     exitcode, info = main()
-    output_check_result(exitcode, info)
+    sys.stdout.write('%s\n' % info)
     sys.exit(exitcode)

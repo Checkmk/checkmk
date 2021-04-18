@@ -62,6 +62,7 @@ import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
+from cmk.base.api.agent_based import value_store
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
@@ -266,8 +267,8 @@ def _do_all_checks_on_host(
     plugins_missing_data: Set[CheckPluginName] = set()
 
     with plugin_contexts.current_host(host_config.hostname):
-        with item_state.load_host_value_store(host_config.hostname,
-                                              store_changes=not dry_run) as value_store_manager:
+        with value_store.load_host_value_store(host_config.hostname,
+                                               store_changes=not dry_run) as value_store_manager:
             for service in services:
                 success = execute_check(
                     parsed_sections_broker,
@@ -338,7 +339,7 @@ def execute_check(
     *,
     dry_run: bool,
     show_perfdata: bool,
-    value_store_manager: item_state.ValueStoreManager,
+    value_store_manager: value_store.ValueStoreManager,
 ) -> bool:
 
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
@@ -391,7 +392,7 @@ def get_aggregated_result(
     plugin: Optional[checking_classes.CheckPlugin],
     params_function: Callable[[], Parameters],
     *,
-    value_store_manager: item_state.ValueStoreManager,
+    value_store_manager: value_store.ValueStoreManager,
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 

@@ -8,6 +8,8 @@ import socket
 import shutil
 import logging
 from pathlib import Path
+from unittest import mock
+from typing import Any, Mapping, NamedTuple
 
 from fakeredis import FakeRedis  # type: ignore[import]
 import pytest
@@ -16,10 +18,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
-from cmk.utils.type_defs import CheckPluginName
 import cmk.utils.version as cmk_version
-
-from cmk.base import item_state
 
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
@@ -277,10 +276,16 @@ def use_fakeredis_client(monkeypatch):
     )
 
 
+class _MockVSManager(NamedTuple):
+    host_name: str
+    active_service_interface: Mapping[str, Any]
+
+
 @pytest.fixture(scope="function")
 def initialised_item_state():
-    with item_state.load_host_value_store("non-existent-test-host", store_changes=False) as hvs:
-        hvs.load()
-        service_id = (CheckPluginName("unitialised_test_env"), None)
-        with hvs.namespace(service_id):
-            yield
+    mock_vs = _MockVSManager('test-host', {})
+    with mock.patch(
+            "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+            mock_vs,
+    ):
+        yield

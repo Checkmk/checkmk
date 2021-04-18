@@ -67,11 +67,11 @@ import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
+from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.item_state import load_host_value_store, ValueStoreManager
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters

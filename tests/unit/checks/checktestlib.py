@@ -7,6 +7,7 @@
 import copy
 import os
 import types
+from typing import Any, Callable, NamedTuple
 
 import mock
 import pytest  # type: ignore[import]
@@ -349,6 +350,22 @@ class BasicItemState:
         # We want to be able to test time anomalies.
 
 
+class _MockValueStore:
+    def __init__(self, getter: Callable):
+        self._getter = getter
+
+    def get(self, key, default=None):
+        return self._getter(key, default)
+
+    def __setitem__(self, key, value):
+        pass
+
+
+class _MockVSManager(NamedTuple):
+    host_name: str
+    active_service_interface: _MockValueStore
+
+
 def mock_item_state(mock_state):
     """Mock the calls to item_state API.
 
@@ -375,17 +392,14 @@ def mock_item_state(mock_state):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    if isinstance(mock_state, dict):
-        return mock.patch('cmk.base.item_state.get_value_store', mock_state.copy)
+    target = 'cmk.base.api.agent_based.value_store._global_state._active_host_value_store'
 
-    class _MockValueStore:
-        def get(self, key, default=None):
-            return mock_state(key, default) if callable(mock_state) else mock_state
+    getter = (  #
+        mock_state.get if isinstance(mock_state, dict) else
+        (mock_state if callable(mock_state) else  #
+         lambda key, default: mock_state))
 
-        def __setitem__(self, key, value):
-            pass
-
-    return mock.patch('cmk.base.item_state.get_value_store', _MockValueStore)
+    return mock.patch(target, _MockVSManager('test-host', _MockValueStore(getter)))
 
 
 class assertMKCounterWrapped:

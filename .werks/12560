@@ -6,7 +6,7 @@ Date: 1618587104
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0p3
+Version: 2.0.0p4
 
 The livestatus proxy can be configured to cascade livestatus connections. The
 feature was introduced with 1.5.0 by werk #5970 which describes how this can

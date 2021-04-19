@@ -544,6 +544,7 @@ def page_list(what,
                 config.user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
+    available_visuals = available(what, visuals)
     for title1, items in [(_('Customized'), my_visuals),
                           (_("Owned by other users"), foreign_visuals),
                           (_('Builtin'), builtin_visuals)]:
@@ -610,7 +611,7 @@ def page_list(what,
                 # Title
                 table.cell(_('Title'))
                 title2 = _u(visual['title'])
-                if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
+                if _visual_can_be_linked(what, visual_name, available_visuals, visual, owner):
                     html.a(title2,
                            href="%s.py?%s=%s" %
                            (what_s, visual_type_registry[what]().ident_attr, visual_name))
@@ -637,13 +638,12 @@ def page_list(what,
     html.footer()
 
 
-def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
+def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
     if owner == config.user.id:
         return True
 
     # Is this the visual which would be shown to the user in case the user
     # requests a visual with the current name?
-    user_visuals = available(what, all_visuals)
     if user_visuals.get(visual_name) != visual:
         return False
 

@@ -5,9 +5,6 @@
 
 #include "DowntimeColumn.h"
 
-#include <algorithm>
-#include <iterator>
-
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -21,18 +18,18 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
                             std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &downtime : getEntries(row)) {
-        switch (_with_info) {
-            case info::none:
+        switch (_verbosity) {
+            case verbosity::none:
                 l.output(downtime._id);
                 break;
-            case info::medium: {
+            case verbosity::medium: {
                 SublistRenderer s(l);
                 s.output(downtime._id);
                 s.output(downtime._author);
                 s.output(downtime._comment);
                 break;
             }
-            case info::full: {
+            case verbosity::full: {
                 SublistRenderer s(l);
                 s.output(downtime._id);
                 s.output(downtime._author);
@@ -51,31 +48,4 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
             }
         }
     }
-}
-
-/// \sa Apart from the lambda, the code is the same in
-///    * CommentColumn::getValue()
-///    * DowntimeColumn::getValue()
-///    * ServiceGroupMembersColumn::getValue()
-///    * ServiceListColumn::getValue()
-std::vector<std::string> DowntimeColumn::getValue(
-    Row row, const contact * /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    auto entries = getEntries(row);
-    std::vector<std::string> values;
-    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
-                   [](const auto &entry) { return std::to_string(entry._id); });
-    return values;
-}
-
-std::vector<DowntimeData> DowntimeColumn::getEntries(Row row) const {
-    if (const auto *data = columnData<void>(row)) {
-        return _is_service
-                   ? _mc->downtimes_for_service(
-                         reinterpret_cast<const MonitoringCore::Service *>(
-                             data))
-                   : _mc->downtimes_for_host(
-                         reinterpret_cast<const MonitoringCore::Host *>(data));
-    }
-    return {};
 }

@@ -521,17 +521,17 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<service>>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        offsets, table->core(), true, DowntimeColumn::info::none));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets, DowntimeColumn::verbosity::none, table->core()));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<service>>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        offsets, table->core(), true, DowntimeColumn::info::medium));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets, DowntimeColumn::verbosity::medium, table->core()));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<service>>(
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, table->core(), true, DowntimeColumn::info::full));
+        offsets, DowntimeColumn::verbosity::full, table->core()));
     table->addColumn(std::make_unique<CommentColumn::Callback<service>>(
         prefix + "comments", "A list of all comment ids of the service",
         offsets, CommentColumn::verbosity::none, table->core()));

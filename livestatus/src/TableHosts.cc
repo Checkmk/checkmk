@@ -515,18 +515,18 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
-        mc, false, DowntimeColumn::info::none));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        DowntimeColumn::verbosity::none, mc));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, mc, false, DowntimeColumn::info::medium));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets, DowntimeColumn::verbosity::medium, mc));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, mc, false, DowntimeColumn::info::full));
+        offsets, DowntimeColumn::verbosity::full, mc));
     table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments", "A list of the ids of all comments of this host",
         offsets, CommentColumn::verbosity::none, mc));

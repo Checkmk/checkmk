@@ -81,10 +81,8 @@ public:
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;
 
-    std::vector<DowntimeData> downtimes_for_host(
-        const Host *host) const override;
-    std::vector<DowntimeData> downtimes_for_service(
-        const Service *service) const override;
+    std::vector<DowntimeData> downtimes(const Host *host) const override;
+    std::vector<DowntimeData> downtimes(const Service *service) const override;
     std::vector<CommentData> comments(const Host *) const override;
     std::vector<CommentData> comments(const Service *) const override;
 

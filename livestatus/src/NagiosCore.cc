@@ -125,13 +125,11 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes_for_host(
-    const Host *host) const {
+std::vector<DowntimeData> NagiosCore::downtimes(const Host *host) const {
     return downtimes_for_object(toImpl(host), nullptr);
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes_for_service(
-    const Service *service) const {
+std::vector<DowntimeData> NagiosCore::downtimes(const Service *service) const {
     return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
 }
 

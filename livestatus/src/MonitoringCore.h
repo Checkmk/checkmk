@@ -96,10 +96,8 @@ public:
         const std::string &name) const = 0;
     [[nodiscard]] virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes_for_host(
-        const Host *) const = 0;
-    virtual std::vector<DowntimeData> downtimes_for_service(
-        const Service *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Host *) const = 0;
+    virtual std::vector<DowntimeData> downtimes(const Service *) const = 0;
     virtual std::vector<CommentData> comments(const Host *) const = 0;
     virtual std::vector<CommentData> comments(const Service *) const = 0;
 

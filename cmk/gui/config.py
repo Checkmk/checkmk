@@ -1233,7 +1233,7 @@ def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
     return site_choices({
         site_id: site
         for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
-        if site_is_local(site_id) or site.get("replication_ec", False)
+        if site_is_local(site_id) or site.get("replicate_ec", False)
     })
 
 

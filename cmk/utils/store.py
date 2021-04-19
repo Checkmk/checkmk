@@ -503,3 +503,10 @@ class StorageFormat(enum.Enum):
             StorageFormat.STANDARD: ".mk",
             StorageFormat.RAW: ".cfg",
         }[self]
+
+    def hosts_file(self) -> str:
+        return "hosts" + self.extension()
+
+    def is_hosts_config(self, filename: str) -> bool:
+        """Unified method to determine that the file is hosts config."""
+        return filename.startswith("/wato/") and filename.endswith("/" + self.hosts_file())

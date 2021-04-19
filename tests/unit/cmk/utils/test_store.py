@@ -588,3 +588,24 @@ def test_storage_format_other():
     assert store.StorageFormat("standard") != store.StorageFormat.RAW
     with pytest.raises(KeyError):
         store.StorageFormat.from_str("bad")
+
+
+@pytest.mark.parametrize("storage_format, expected_file", [
+    (store.StorageFormat.STANDARD, "hosts.mk"),
+    (store.StorageFormat.RAW, "hosts.cfg"),
+])
+def test_storage_host_file(storage_format, expected_file):
+    assert storage_format.hosts_file() == expected_file
+
+
+@pytest.mark.parametrize("file_path, valid_for_standard, valid_for_raw", [
+    ("/wato/the/aaa/hosts.mk", True, False),
+    ("wato/the/aaa/hosts.mk", False, False),
+    ("/wato/the/aaa/hosts.m", False, False),
+    ("/wato/the/aaa/hosts.cfg", False, True),
+    ("wato/the/aaa/hosts.cfg", False, False),
+    ("/wato/the/aaa/hosts.c", False, False),
+])
+def test_storage_is_hosts_config(file_path, valid_for_standard, valid_for_raw):
+    assert store.StorageFormat.STANDARD.is_hosts_config(file_path) == valid_for_standard
+    assert store.StorageFormat.RAW.is_hosts_config(file_path) == valid_for_raw

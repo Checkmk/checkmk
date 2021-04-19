@@ -13,6 +13,7 @@
 # 2021-03-18: rewrite for CMK 2.x
 # 2021-03-23: code improvements, added checkman, added unit test for parse function
 # 2021-04-08: entirely rewritten to base on CMK 2.0 plugin entity_sensors.py
+# 2021-04-16: moved parse function to utils/entity_sensors.py
 #
 # sample snmpwalk
 #
@@ -71,41 +72,20 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from cmk.base.plugins.agent_based.utils.entity_sensors import (
     OIDSysDescr,
-    ENTITY_SENSOR_TYPES,
-    ENTITY_SENSOR_SCALING,
-    EntitySensor,
     EntitySensorSection,
-    sensor_status_descr,
-    sensor_state,
-    unit_from_device_unit,
-    reformat_sensor_name,
 )
+
+from cmk.base.plugins.agent_based.utils import entity_sensors as utils
 
 
 def parse_cisco_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
-    section: EntitySensorSection = {}
-    sensor_names = {i[0]: i[1] for i in string_table[0]}
-    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
-        # Some devices support the ENTITY-MIB including sensor/entity names.
-        # Others (e.g. Cisco Firepower FPR-1140 Security Appliance) do not support
-        # this MIB, thus we use OID as item instead
-
-        # do not add undefined and temp sensors (duplicate with cisco_temperature)
-        if sensor_type_nr not in ['0', '8']:
-            sensor_name = reformat_sensor_name(sensor_names.get(oid_end, oid_end))
-            sensor_type, default_unit = ENTITY_SENSOR_TYPES.get(sensor_type_nr, ('undefined', sensor_type_nr))
-            section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
-                name=sensor_name,
-                reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
-                unit=unit_from_device_unit(device_unit.lower()) or default_unit,
-                state=sensor_state(status_nr),
-                status_descr=sensor_status_descr(status_nr),
-            )
-    return section
+    # do not add undefined and temperature (duplicate with cisco_temperature) sensors
+    return utils.parse_entity_sensors(string_table, sensor_types_ignore=['0', '8'])
 
 
 register.snmp_section(
     name='cisco_entity_sensors',
+    supersedes=['entity_sensors'],
     detect=all_of(startswith(OIDSysDescr, 'Cisco Firepower'),
                   contains(OIDSysDescr, 'security appliance'),
                   ),

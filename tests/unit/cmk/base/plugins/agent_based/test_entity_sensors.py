@@ -12,7 +12,6 @@ from cmk.base.plugins.agent_based.entity_sensors import (
     discover_entity_sensors_fan,
     discover_entity_sensors_power_presence,
     discover_entity_sensors_temp,
-    EntitySensor,
     parse_entity_sensors,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -21,6 +20,18 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.utils.entity_sensors import (
+    EntitySensor,
+)
+
+_section_cisco_entity_sensors = {
+    'fan': {
+        'Sensor 47': EntitySensor(name='Sensor 47', reading=2820.0, unit='RPM', state=State.OK, status_descr='OK'),
+    },
+    'power_presence': {
+        'Sensor 48': EntitySensor(name='Sensor 48', reading=1.0, unit='boolean', state=State.OK, status_descr='OK'),
+    },
+}
 
 
 @pytest.mark.parametrize("string_table, expected_section", [
@@ -456,6 +467,18 @@ def test_check_entity_sensors_temp(item, params, section, expected_result):
             Result(state=State.CRIT, summary='Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)'),
         ],
     ),
+    pytest.param(
+        'Sensor 47',
+        {
+            'lower': (2000, 1000),
+        },
+        _section_cisco_entity_sensors,
+        [
+            Result(state=State.OK, summary='Operational status: OK'),
+            Result(state=State.OK, summary='Speed: 2820 RPM'),
+        ],
+        id='Check: Cisco entity Fan Sensors'
+    ),
 ])
 def test_check_entity_sensors_fan(item, params, section, expected_result):
     assert list(check_entity_sensors_fan(item, params, section)) == expected_result
@@ -501,6 +524,17 @@ def test_check_entity_sensors_fan(item, params, section, expected_result):
         [
             Result(state=State.CRIT, summary='Powered off'),
         ],
+    ),
+    pytest.param(
+        'Sensor 48',
+        {
+            'power_off_criticality': 1,
+        },
+        _section_cisco_entity_sensors,
+        [
+            Result(state=State.OK, summary='Powered on'),
+        ],
+        id='Check: Cisco entity power presence Sensors'
     ),
 ])
 def test_check_entity_sensors_power_presence(item, params, section, expected_result):

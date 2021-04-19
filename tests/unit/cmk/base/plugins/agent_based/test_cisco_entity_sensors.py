@@ -15,15 +15,6 @@ from cmk.base.plugins.agent_based.utils.entity_sensors import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
-    Service,
-    Result,
-)
-
-from cmk.base.plugins.agent_based.entity_sensors import (
-    check_entity_sensors_fan,
-    check_entity_sensors_power_presence,
-    discover_entity_sensors_fan,
-    discover_entity_sensors_power_presence,
 )
 
 _string_table = [
@@ -75,66 +66,3 @@ _section = {
 ])
 def test_parse_cisco_entity_sensors(string_table, expected_section):
     assert parse_cisco_entity_sensors(string_table) == expected_section
-
-
-@pytest.mark.parametrize('string_table, expected_discovery', [
-    pytest.param(
-        _string_table,
-        [
-            Service(item='Sensor 47'),
-        ],
-        id='Discover: Cisco entity FAN Sensors'
-    ),
-])
-def test_discover_entity_sensors_fan(string_table, expected_discovery):
-    assert list(discover_entity_sensors_fan(
-        parse_cisco_entity_sensors(string_table))) == expected_discovery
-
-
-@pytest.mark.parametrize('string_table, expected_discovery', [
-    pytest.param(
-        _string_table,
-        [
-            Service(item='Sensor 48'),
-        ],
-        id='Discover: Cisco entity Power presence Sensors'
-    ),
-])
-def test_discover_entity_sensors_power_presence(string_table, expected_discovery):
-    assert list(discover_entity_sensors_power_presence(
-        parse_cisco_entity_sensors(string_table))) == expected_discovery
-
-
-@pytest.mark.parametrize('item, params, section, expected_result', [
-    pytest.param(
-        'Sensor 47',
-        {
-            'lower': (2000, 1000),
-        },
-        _section,
-        [
-            Result(state=State.OK, summary='Operational status: OK'),
-            Result(state=State.OK, summary='Speed: 2820 RPM'),
-        ],
-        id='Check: Cisco entity Fan Sensors'
-    ),
-])
-def test_check_entity_sensors_fan(item, params, section, expected_result):
-    assert list(check_entity_sensors_fan(item, params, section)) == expected_result
-
-
-@pytest.mark.parametrize('item, params, section, expected_result', [
-    pytest.param(
-        'Sensor 48',
-        {
-            'power_off_criticality': 1,
-        },
-        _section,
-        [
-            Result(state=State.OK, summary='Powered on'),
-        ],
-        id='Check: Cisco entity power presence Sensors'
-    ),
-])
-def test_check_entity_sensors_power_presence(item, params, section, expected_result):
-    assert list(check_entity_sensors_power_presence(item, params, section)) == expected_result

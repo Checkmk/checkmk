@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional, List, Container
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
+)
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    StringTable,
 )
 
 OIDSysDescr = '.1.3.6.1.2.1.1.1.0'
@@ -90,3 +94,31 @@ def unit_from_device_unit(unit: str) -> Optional[str]:
         'fahrenheit': 'f',
         'kelvin': 'k',
     }.get(unit)
+
+
+def parse_entity_sensors(string_table: List[StringTable],
+                         sensor_types_ignore: Optional[Container[str]] = None) -> EntitySensorSection:
+    '''
+    :param string_table:
+    :param sensor_types_ignore: list of sensor types to ignore. e.g ['0', '8'] for undefined and temperature
+    '''
+    if sensor_types_ignore is None:
+        sensor_types_ignore = []
+    section: EntitySensorSection = {}
+    sensor_names = {i[0]: i[1] for i in string_table[0]}
+    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
+        if sensor_type_nr not in sensor_types_ignore:
+            # Some devices such as Palo Alto Network series 3000 support
+            # the ENTITY-MIB including sensor/entity names.
+            # Others (e.g. Palo Alto Networks Series 200) do not support
+            # this MIB, thus we use OID as item instead
+            sensor_name = reformat_sensor_name(sensor_names.get(oid_end, oid_end))
+            sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
+            section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
+                name=sensor_name,
+                reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
+                unit=unit_from_device_unit(device_unit.lower()) or default_unit,
+                state=sensor_state(status_nr),
+                status_descr=sensor_status_descr(status_nr),
+            )
+    return section

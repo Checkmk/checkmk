@@ -404,7 +404,7 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
             user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
             return bool(user_groups.intersection(visual["public"][1]))
 
-        return False
+        return config.user.may("general.edit_foreign_%s" % what)
 
     def restricted_visual(visualname: VisualName):
         permname = "%s.%s" % (permprefix, visualname)
@@ -642,12 +642,11 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
     if owner == config.user.id:
         return True
 
-    # Is this the visual which would be shown to the user in case the user
-    # requests a visual with the current name?
+    # Is this the highest priority visual that the user has available?
     if user_visuals.get(visual_name) != visual:
         return False
 
-    return visual["public"]
+    return visual["public"] or config.user.may("general.edit_foreign_%s" % what)
 
 
 #.

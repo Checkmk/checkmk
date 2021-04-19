@@ -756,7 +756,7 @@ class Overridable(Base):
                 section=PermissionSectionGeneral,
                 name="edit_foreign_" + cls.type_name(),
                 title=_l("Edit foreign %s") % cls.phrase("title_plural"),
-                description=_("Allows to edit %s created by other users.") %
+                description=_("Allows to view and edit %s created by other users.") %
                 cls.phrase("title_plural"),
                 defaults=["admin"],
             ))

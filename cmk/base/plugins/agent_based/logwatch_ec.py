@@ -458,7 +458,11 @@ def logwatch_shall_spool_messages(method):
             and isinstance(method[1], dict) and "spool" in method[1]
 
 
-def logwatch_forward_send_tcp(method, message_chunks, result):
+def logwatch_forward_send_tcp(
+    method,
+    message_chunks: Iterable[Tuple[float, int, List[str]]],
+    result,
+):
     protocol, method_params = method
 
     if protocol == 'udp':
@@ -478,7 +482,7 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
                 except IndexError:
                     break  # chunk complete
 
-                sock.send(message.encode("utf-8") + "\n")
+                sock.send(message.encode("utf-8") + b"\n")
                 message_chunk.pop(0)  # remove sent message
                 result.num_forwarded += 1
     except Exception as exc:
@@ -489,7 +493,10 @@ def logwatch_forward_send_tcp(method, message_chunks, result):
 
 # a) Rewrite chunks that have been processed partially
 # b) Write files for new chunk
-def logwatch_spool_messages(message_chunks, result):
+def logwatch_spool_messages(
+    message_chunks: Iterable[Tuple[float, int, List[str]]],
+    result,
+):
     path = logwatch_spool_path()
 
     os.makedirs(path, exist_ok=True)
@@ -521,7 +528,7 @@ def logwatch_spool_messages(message_chunks, result):
                 result.num_dropped += len(message_chunk)
 
 
-def logwatch_load_spooled_messages(method, result):
+def logwatch_load_spooled_messages(method, result) -> List[Tuple[float, int, List[str]]]:
     spool_params = method[1]["spool"]
 
     try:

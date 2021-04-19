@@ -1,0 +1,14 @@
+Title: Fix required comment field for adhoc downtimes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1618834792
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p4
+
+If you used adhoc downtimes in previous 2.0 versions, the downtime could not be
+send, because the comment field was stated as required after using the button
+of the configured adhoc downtime.

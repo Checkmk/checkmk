@@ -890,11 +890,13 @@ class CommandScheduleDowntimes(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.text_input("_down_comment",
-                        id_="down_comment",
-                        size=60,
-                        label=_("Comment"),
-                        required=True)
+        html.text_input(
+            "_down_comment",
+            id_="down_comment",
+            size=60,
+            label=_("Comment"),
+            required=not self._adhoc_downtime_configured(),
+        )
         html.close_div()
 
         html.open_div(class_="group")
@@ -916,7 +918,7 @@ class CommandScheduleDowntimes(Command):
             html.button("_down_remove", _("Remove all"))
         html.close_div()
 
-        if config.adhoc_downtime and config.adhoc_downtime.get("duration"):
+        if self._adhoc_downtime_configured():
             adhoc_duration = config.adhoc_downtime.get("duration")
             adhoc_comment = config.adhoc_downtime.get("comment", "")
             html.open_div(class_="group")
@@ -1055,7 +1057,8 @@ class CommandScheduleDowntimes(Command):
         return delayed_duration
 
     def _comment(self):
-        comment = html.request.get_unicode_input("_down_comment")
+        comment = config.adhoc_downtime.get("comment", "") if html.request.var("_down_adhoc") else \
+                html.request.get_unicode_input("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         return comment
@@ -1188,6 +1191,9 @@ class CommandScheduleDowntimes(Command):
             return True
         except ImportError:
             return False
+
+    def _adhoc_downtime_configured(self) -> bool:
+        return bool(config.adhoc_downtime and config.adhoc_downtime.get("duration"))
 
 
 def bi_commands(downtime: DowntimeSchedule, node: Any) -> List[Tuple[Any, Any]]:

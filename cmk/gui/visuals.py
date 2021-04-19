@@ -526,33 +526,13 @@ def page_list(what,
         except MKUserError as e:
             html.user_error(e)
 
-    keys_sorted = sorted(sorted(visuals.keys(), key=lambda x: x[1]),
-                         key=lambda x: x[0],
-                         reverse=True)
-
-    my_visuals, foreign_visuals, builtin_visuals = [], [], []
-    for (owner, visual_name) in keys_sorted:
-        if owner == "" and not config.user.may("%s.%s" % (what_s, visual_name)):
-            continue  # not allowed to see this view
-
-        visual = visuals[(owner, visual_name)]
-        if visual["public"] and owner == "":
-            builtin_visuals.append((owner, visual_name, visual))
-        elif owner == config.user.id:
-            my_visuals.append((owner, visual_name, visual))
-        elif (visual["public"] and owner != '' and config.user_may(owner, "general.publish_%s" % what)) or \
-                config.user.may("general.edit_foreign_%s" % what):
-            foreign_visuals.append((owner, visual_name, visual))
-
     available_visuals = available(what, visuals)
-    for title1, items in [(_('Customized'), my_visuals),
-                          (_("Owned by other users"), foreign_visuals),
-                          (_('Builtin'), builtin_visuals)]:
+    for title1, visual_group in _partition_visuals(visuals, what):
         html.h3(title1, class_="table")
 
         with table_element(css='data', limit=None) as table:
 
-            for owner, visual_name, visual in items:
+            for owner, visual_name, visual in visual_group:
                 table.row(css='data')
 
                 # Actions
@@ -576,7 +556,7 @@ def page_list(what,
                 # Delete
                 if owner and (owner == config.user.id or
                               config.user.may('general.delete_foreign_%s' % what)):
-                    add_vars = [('_delete', visual_name)]
+                    add_vars: HTTPVariables = [('_delete', visual_name)]
                     if owner != config.user.id:
                         add_vars.append(('_user_id', owner))
                     html.icon_button(
@@ -588,7 +568,7 @@ def page_list(what,
                 # Edit
                 if owner == config.user.id or (owner != "" and
                                                config.user.may("general.edit_foreign_%s" % what)):
-                    edit_vars = [
+                    edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
                     ]
@@ -647,6 +627,31 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
         return False
 
     return visual["public"] or config.user.may("general.edit_foreign_%s" % what)
+
+
+def _partition_visuals(visuals: Dict[Tuple[UserId, str], Dict],
+                       what: str) -> List[Tuple[str, List[Tuple[UserId, str, Dict]]]]:
+    keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
+
+    my_visuals, foreign_visuals, builtin_visuals = [], [], []
+    for (owner, visual_name) in keys_sorted:
+        if owner == "" and not config.user.may("%s.%s" % (what[:-1], visual_name)):
+            continue  # not allowed to see this view
+
+        visual = visuals[(owner, visual_name)]
+        if visual["public"] and owner == "":
+            builtin_visuals.append((owner, visual_name, visual))
+        elif owner == config.user.id:
+            my_visuals.append((owner, visual_name, visual))
+        elif (visual["public"] and owner != '' and config.user_may(owner, "general.publish_%s" % what)) or \
+                config.user.may("general.edit_foreign_%s" % what):
+            foreign_visuals.append((owner, visual_name, visual))
+
+    return [
+        (_('Customized'), my_visuals),
+        (_("Owned by other users"), foreign_visuals),
+        (_('Builtin'), builtin_visuals),
+    ]
 
 
 #.

@@ -51,6 +51,7 @@ from cmk.gui.type_defs import (
     InfoName,
     SingleInfos,
     Visual,
+    VisualName,
     VisualContext,
     VisualTypeName,
 )
@@ -389,21 +390,25 @@ def declare_custom_permissions(what):
 
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
-def available(what, all_visuals):
+def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
+                                           Visual]) -> Dict[VisualName, Visual]:
     user = config.user.id
     visuals = {}
     permprefix = what[:-1]
 
-    def published_to_user(visual):
+    def published_to_user(visual: Visual) -> bool:
         if visual["public"] is True:
             return True
 
         if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
             user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
-            if user_groups.intersection(visual["public"][1]):
-                return True
+            return bool(user_groups.intersection(visual["public"][1]))
 
         return False
+
+    def restricted_visual(visualname: VisualName):
+        permname = "%s.%s" % (permprefix, visualname)
+        return permname in permission_registry and not config.user.may(permname)
 
     # 1. user's own visuals, if allowed to edit visuals
     if config.user.may("general.edit_" + what):
@@ -413,13 +418,9 @@ def available(what, all_visuals):
 
     # 2. visuals of special users allowed to globally override builtin visuals
     for (u, n), visual in all_visuals.items():
+        # Honor original permissions for the current user
         if n not in visuals and published_to_user(visual) and config.user_may(
-                u, "general.force_" + what):
-            # Honor original permissions for the current user
-            permname = "%s.%s" % (permprefix, n)
-            if permname in permission_registry \
-                    and not config.user.may(permname):
-                continue
+                u, "general.force_" + what) and not restricted_visual(n):
             visuals[n] = visual
 
     # 3. Builtin visuals, if allowed.
@@ -427,18 +428,14 @@ def available(what, all_visuals):
         if u == '' and n not in visuals and config.user.may("%s.%s" % (permprefix, n)):
             visuals[n] = visual
 
-    # 4. other users visuals, if public. Sill make sure we honor permission
+    # 4. other users visuals, if public. Still make sure we honor permission
     #    for builtin visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
     if config.user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
+            # Is there a builtin visual with the same name? If yes, honor permissions.
             if n not in visuals and published_to_user(visual) and config.user_may(
-                    u, "general.publish_" + what):
-                # Is there a builtin visual with the same name? If yes, honor permissions.
-                permname = "%s.%s" % (permprefix, n)
-                if permname in permission_registry \
-                        and not config.user.may(permname):
-                    continue
+                    u, "general.publish_" + what) and not restricted_visual(n):
                 visuals[n] = visual
 
     return visuals

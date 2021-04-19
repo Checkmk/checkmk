@@ -50,6 +50,9 @@ node (NODE) {
         // Gather the list of changed agent plugins
         def CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
+        // Gather the list of changed agent plugins unit tests
+        def CHANGED_AGENT_PLUGINS_TESTS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
         // Gather the list of changed livestatus / core files
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
@@ -63,6 +66,7 @@ node (NODE) {
 
         print "Changed Python files: ${CHANGED_PYTHON_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
+        print "Changed agent plugins tests: ${CHANGED_AGENT_PLUGINS_TESTS}"
         print "Changed core files: ${CHANGED_CORE_FILES}"
         print "Changed JS files: ${CHANGED_JS_FILES}"
         print "Changed CSS files: ${CHANGED_CSS_FILES}"
@@ -147,7 +151,7 @@ node (NODE) {
 
         gerrit_stages.run(
             NAME: 'Agent Plugin Unit Tests',
-            CONDITION: CHANGED_AGENT_PLUGINS != "",
+            CONDITION: CHANGED_AGENT_PLUGINS != "" || CHANGED_AGENT_PLUGINS_TESTS != "",
             DIR: 'tests',
             ENV_VARS: [
             "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-junit.xml",

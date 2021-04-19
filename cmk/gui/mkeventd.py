@@ -165,22 +165,22 @@ def daemon_running() -> bool:
     return _socket_path().exists()
 
 
-# Note: in order to be able to simulate an original IP address
-# we put hostname|ipaddress into the host name field. The EC
-# recognizes this and unpacks the data correctly.
-def send_event(event):
-    # "<%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag% %msg%\n"
-    prio = (event["facility"] << 3) + event["priority"]
+def send_event(event) -> str:
+    syslog_message_str = repr(
+        ec.SyslogMessage(
+            facility=event["facility"],
+            severity=event["priority"],
+            timestamp=time.time(),
+            host_name=event["host"],
+            application=event["application"],
+            text=event["text"],
+            ip_address=event["ipaddress"],
+            service_level=event["sl"],
+        ))
 
-    rfc = [
-        "<%d>@%d" % (prio, int(time.time())),
-        "%d %s|%s %s: %s\n" %
-        (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
-    ]
+    execute_command("CREATE", [syslog_message_str], site=event["site"])
 
-    execute_command("CREATE", [ensure_str(r) for r in rfc], site=event["site"])
-
-    return ";".join(rfc)
+    return syslog_message_str
 
 
 def get_local_ec_status():

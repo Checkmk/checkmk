@@ -487,7 +487,8 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
 def _get_config_file_paths(with_conf_d: bool) -> List[Path]:
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
-        list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
+        all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
+        list_of_files += sorted([p for p in all_files if p.suffix in {".mk", ".cfg"}],
                                 key=cmk.utils.key_config_paths)
     for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
         if path.exists():

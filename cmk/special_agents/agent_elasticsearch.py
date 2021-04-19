@@ -27,9 +27,11 @@
 import argparse
 import sys
 import requests
+import cmk.utils.password_store
 
 
 def main():
+    cmk.utils.password_store.replace_passwords()
 
     args = parse_arguments()
 

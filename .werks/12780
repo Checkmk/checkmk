@@ -1,0 +1,11 @@
+Title: enable password store for elasticsearch agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1618837119
+Class: fix
+
+The option "From password store" did not work for the rule "Check state of
+Elasticsearch".

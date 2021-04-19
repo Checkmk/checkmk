@@ -9,7 +9,9 @@ withFolderProperties{
     DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
 }
 
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
+// Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
+// until we have a feasible solution or we drop the support for 2.6 completly.
+def PYTHON_VERSIONS = [ "2.7", "3.4", "3.5", "3.6", "3.7", "3.8" ]
 
 node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

@@ -24,7 +24,7 @@
 # [1] Files and Folders
 # WATO organizes hosts in folders. A wato folder is represented by a
 # OS directory. If the folder contains host definitions, then in that
-# directory a file name "hosts.mk" is kept.
+# directory a file name "hosts{.mk|.cfg}" is kept.
 # The directory hierarchy of WATO is rooted at etc/check_mk/conf.d/wato.
 # All files in and below that directory are kept by WATO. WATO does not
 # touch any other files or directories in conf.d.

@@ -358,7 +358,7 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
 
     def get_tag_groups(self, value: Any) -> Dict[str, str]:
         """Each attribute may set multiple tag groups for a host
-        This is used for calculating the effective host tags when writing the hosts.mk"""
+        This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
 
     @property

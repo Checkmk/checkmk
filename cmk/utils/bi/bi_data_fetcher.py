@@ -129,7 +129,7 @@ class BIStructureFetcher:
                 site,
                 set(host_tags.values()),
                 host_labels,
-                host_filename.rstrip("/hosts.mk"),
+                str(Path(host_filename).parent),  # remove /hosts{.mk|.cfg}
                 services,
                 tuple(host_childs),
                 tuple(host_parents),

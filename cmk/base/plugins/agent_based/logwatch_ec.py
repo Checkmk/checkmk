@@ -19,6 +19,7 @@ import errno
 import os
 import socket
 import time
+from pathlib import Path
 
 from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 
@@ -29,6 +30,7 @@ from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-la
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 # import from legacy API until we come up with something better
 from cmk.base.check_api import host_name, service_extra_conf  # pylint: disable=cmk-module-layer-violation
+from cmk.ec.export import SyslogMessage, SyslogForwarderUnixSocket  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import Metric, register, Result, Service, State as state
@@ -249,8 +251,8 @@ def check_logwatch_ec_common(
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
     # <facility+priority> timestamp hostname logfile: message
-    facility = params.get('facility', 17) << 3  # default to "local1"
-    messages = []
+    facility = params.get('facility', 17)  # default to "local1"
+    syslog_messages = []
     cur_time = int(time.time())
 
     forwarded_logfiles = set([])
@@ -299,10 +301,16 @@ def check_logwatch_ec_common(
                         rclfd_to_ignore += 1
                         continue
 
-            msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s;%d;; %s %s: %s' % (cur_time, service_level, host_name(), logfile, line[2:])
-
-            messages.append(msg)
+            syslog_messages.append(
+                SyslogMessage(
+                    facility=facility,
+                    severity=logwatch_to_prio(rclfd_level or line[0]),
+                    timestamp=cur_time,
+                    host_name=host_name(),
+                    application=logfile,
+                    text=line[2:],
+                    service_level=service_level,
+                ))
             forwarded_logfiles.add(logfile)
 
     try:
@@ -311,7 +319,7 @@ def check_logwatch_ec_common(
         else:
             logfile_info = ""
 
-        result = logwatch_forward_messages(params.get("method"), item, messages)
+        result = logwatch_forward_messages(params.get("method"), item, syslog_messages)
 
         yield Result(
             state=state.OK,
@@ -338,7 +346,8 @@ def check_logwatch_ec_common(
             raise
         yield Result(
             state=state.CRIT,
-            summary='Failed to forward messages (%s). Lost %d messages.' % (exc, len(messages)),
+            summary='Failed to forward messages (%s). Lost %d messages.' %
+            (exc, len(syslog_messages)),
         )
 
     if rclfd_total:
@@ -365,7 +374,7 @@ class LogwatchFordwardResult:
 def logwatch_forward_messages(
     method: Union[None, str, Tuple],
     item: Optional[str],
-    messages: List[str],
+    syslog_messages: Sequence[SyslogMessage],
 ) -> LogwatchFordwardResult:
     if not method:
         method = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
@@ -373,12 +382,15 @@ def logwatch_forward_messages(
         method += cmk.utils.paths.omd_root + "/var/mkeventd/spool"
 
     if isinstance(method, tuple):
-        return logwatch_forward_tcp(method, messages)
+        return logwatch_forward_tcp(method, syslog_messages)
 
     if not method.startswith('spool:'):
-        return logwatch_forward_pipe(method, messages)
+        return logwatch_forward_pipe(
+            method,
+            syslog_messages,
+        )
 
-    return logwatch_forward_spool_directory(method, item, messages)
+    return logwatch_forward_spool_directory(method, item, syslog_messages)
 
 
 # write into local event pipe
@@ -386,16 +398,14 @@ def logwatch_forward_messages(
 # is *not* existing! This prevents us from hanging in such
 # situations. So we must make sure that we do not create a file
 # instead of the pipe!
-def logwatch_forward_pipe(method, messages):
-    if not messages:
+def logwatch_forward_pipe(
+    path: str,
+    events: Sequence[SyslogMessage],
+) -> LogwatchFordwardResult:
+    if not events:
         return LogwatchFordwardResult()
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(method)
-    sock.send(('\n'.join(messages) + '\n').encode("utf-8"))
-    sock.close()
-
-    return LogwatchFordwardResult(num_forwarded=len(messages))
+    SyslogForwarderUnixSocket(path=Path(path)).forward(events)
+    return LogwatchFordwardResult(num_forwarded=len(events))
 
 
 # Spool the log messages to given spool directory.
@@ -404,9 +414,10 @@ def logwatch_forward_pipe(method, messages):
 def logwatch_forward_spool_directory(
     method: str,
     item: Optional[str],
-    messages: List[str],
+    syslog_messages: Sequence[SyslogMessage],
 ) -> LogwatchFordwardResult:
-    if not messages:
+
+    if not syslog_messages:
         return LogwatchFordwardResult()
 
     spool_path = method[6:]
@@ -415,13 +426,17 @@ def logwatch_forward_spool_directory(
     os.makedirs(spool_path, exist_ok=True)
 
     with open('%s/%s' % (spool_path, file_name), 'w', encoding="utf-8") as f:
-        f.write('\n'.join(messages) + '\n')
+        f.write('\n'.join(map(repr, syslog_messages)) + '\n')
     os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
-    return LogwatchFordwardResult(num_forwarded=len(messages))
+    return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
 
 
-def logwatch_forward_tcp(method: Tuple, new_messages: List[str]) -> LogwatchFordwardResult:
+def logwatch_forward_tcp(
+    method: Tuple,
+    syslog_messages: Sequence[SyslogMessage],
+) -> LogwatchFordwardResult:
+
     # Transform old format: (proto, address, port)
     if not isinstance(method[1], dict):
         method = (method[0], {"address": method[1], "port": method[2]})
@@ -434,8 +449,8 @@ def logwatch_forward_tcp(method: Tuple, new_messages: List[str]) -> LogwatchFord
         message_chunks += logwatch_load_spooled_messages(method, result)
 
     # Add chunk of new messages (when there are new ones)
-    if new_messages:
-        message_chunks.append((time.time(), 0, new_messages))
+    if syslog_messages:
+        message_chunks.append((time.time(), 0, list(map(repr, syslog_messages))))
 
     if not message_chunks:
         return result  # Nothing to process

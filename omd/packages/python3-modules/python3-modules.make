@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 2
+PYTHON3_MODULES_BUILD_ID := 3
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -119,8 +119,8 @@ PYTHON3_MODULES_LIST += psycopg2-binary-2.8.4.tar.gz # needed by check_sql activ
 
 # To automatically generate checkmk.yaml OpenAPI spec file
 PYTHON3_MODULES_LIST += apispec-3.3.1.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-3.7.1.tar.gz
-PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.0.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-3.11.1.tar.gz
+PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.1.0.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory

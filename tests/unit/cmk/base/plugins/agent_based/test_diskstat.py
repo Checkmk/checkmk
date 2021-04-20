@@ -83,8 +83,8 @@ def test_parse_diskstat_predictive(value_store: MutableMapping[str, Any], mocker
         item="item-nvme0n1",
         description="unittest_sd_description",
     )
-    with plugin_contexts.current_host(
-            "unittest-hn", write_state=False), plugin_contexts.current_service(dummy_service):
+    with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
+            dummy_service):
 
         with pytest.raises(IgnoreResultsError):
             list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))

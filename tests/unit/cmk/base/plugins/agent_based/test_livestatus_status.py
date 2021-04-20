@@ -7,6 +7,7 @@
 # pylint: disable=protected-access
 
 import pytest  # type: ignore[import]
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State as state,
@@ -371,6 +372,61 @@ def test_check_new_counters_in_oldstabe(fetcher_checker_counters):
     assert all(x in yielded_results for x in fetcher_checker_counters)
 
 
+_RESULTS = [
+    Result(state=state.OK, summary='Livestatus version: 2019.05.31'),
+    Result(state=state.OK, summary='Host checks: 0.0/s'),
+    Metric('host_checks', 7.615869237677187e-05, boundaries=(0.0, None)),
+    Result(state=state.OK, summary='Service checks: 0.0/s'),
+    Metric('service_checks', 0.0002685888198403617, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Process creations: -0.0/s'),
+    Metric('forks', -3.4376948802370615e-09, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Livestatus connects: 0.0/s'),
+    Metric('connections', 6.261761224351807e-06, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Livestatus requests: 0.0/s'),
+    Metric('requests', 8.090614900637924e-06, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Log messages: 0.0/s'),
+    Metric('log_messages', 1.5985281193102335e-06, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Average check latency: 0.000s'),
+    Metric('average_latency_generic', 2.23711e-06, levels=(30.0, 60.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Average Checkmk latency: 0.000s'),
+    Metric('average_latency_cmk', 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Average fetcher latency: 0.000s'),
+    Metric('average_latency_fetcher', 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Check helper usage: 1.43%'),
+    Metric('helper_usage_generic', 1.42967, levels=(80.0, 90.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Checkmk helper usage: 0.04%'),
+    Metric('helper_usage_cmk', 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Fetcher helper usage: 0.04%'),
+    Metric('helper_usage_fetcher',
+           0.043827200000000004,
+           levels=(80.0, 90.0),
+           boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Checker helper usage: 0.04%'),
+    Metric('helper_usage_checker',
+           0.043827200000000004,
+           levels=(80.0, 90.0),
+           boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Livestatus usage: <0.01%'),
+    Metric('livestatus_usage', 3.46e-321, levels=(60.0, 80.0), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Livestatus overflow rate: 0.0/s'),
+    Metric('livestatus_overflows_rate', 0.0, levels=(0.01, 0.02), boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Hosts: 2.00'),
+    Metric('monitored_hosts', 2.0, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Services: 513.00'),
+    Metric('monitored_services', 513.0, boundaries=(0.0, None)),
+    Result(state=state.OK, notice='Core version: Checkmk 2019.05.31'),
+    Result(
+        state=state.OK,
+        notice='Site certificate valid until Oct 01 3017',
+    ),
+    Result(
+        state=state.OK,
+        notice='Expiring in: 1029 years 363 days',
+    ),
+    Metric('site_cert_days', 375948.7452314815),
+]
+
+
 def test_check():
 
     yielded_results = list(
@@ -390,59 +446,35 @@ def test_check():
             581785200,
         ))
 
-    assert yielded_results == [
-        Result(state=state.OK, summary='Livestatus version: 2019.05.31'),
-        Result(state=state.OK, summary='Host checks: 0.0/s'),
-        Metric('host_checks', 7.615869237677187e-05, boundaries=(0.0, None)),
-        Result(state=state.OK, summary='Service checks: 0.0/s'),
-        Metric('service_checks', 0.0002685888198403617, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Process creations: -0.0/s'),
-        Metric('forks', -3.4376948802370615e-09, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Livestatus connects: 0.0/s'),
-        Metric('connections', 6.261761224351807e-06, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Livestatus requests: 0.0/s'),
-        Metric('requests', 8.090614900637924e-06, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Log messages: 0.0/s'),
-        Metric('log_messages', 1.5985281193102335e-06, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Average check latency: 0.000s'),
-        Metric('average_latency_generic', 2.23711e-06, levels=(30.0, 60.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Average Checkmk latency: 0.000s'),
-        Metric('average_latency_cmk', 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Average fetcher latency: 0.000s'),
-        Metric('average_latency_fetcher', 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Check helper usage: 1.43%'),
-        Metric('helper_usage_generic', 1.42967, levels=(80.0, 90.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Checkmk helper usage: 0.04%'),
-        Metric('helper_usage_cmk',
-               0.043827200000000004,
-               levels=(80.0, 90.0),
-               boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Fetcher helper usage: 0.04%'),
-        Metric('helper_usage_fetcher',
-               0.043827200000000004,
-               levels=(80.0, 90.0),
-               boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Checker helper usage: 0.04%'),
-        Metric('helper_usage_checker',
-               0.043827200000000004,
-               levels=(80.0, 90.0),
-               boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Livestatus usage: <0.01%'),
-        Metric('livestatus_usage', 3.46e-321, levels=(60.0, 80.0), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Livestatus overflow rate: 0.0/s'),
-        Metric('livestatus_overflows_rate', 0.0, levels=(0.01, 0.02), boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Hosts: 2.00'),
-        Metric('monitored_hosts', 2.0, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Services: 513.00'),
-        Metric('monitored_services', 513.0, boundaries=(0.0, None)),
-        Result(state=state.OK, notice='Core version: Checkmk 2019.05.31'),
-        Result(
-            state=state.OK,
-            notice='Site certificate valid until Oct 01 3017',
-        ),
-        Result(
-            state=state.OK,
-            notice='Expiring in: 1029 years 363 days',
-        ),
-        Metric('site_cert_days', 375948.7452314815),
-    ]
+    assert yielded_results == _RESULTS
+
+
+def test_cluster_check(monkeypatch):
+
+    monkeypatch.setattr(
+        livestatus_status,
+        "get_value_store",
+        lambda: {
+            "host_checks": [1, 2],
+            "service_checks": [1, 2],
+            "forks": [1, 2],
+            "connections": [1, 2],
+            "requests": [1, 2],
+            "log_messages": [1, 2],
+        },
+    )
+
+    monkeypatch.setattr(
+        livestatus_status.time,
+        "time",
+        lambda: 581785200,
+    )
+    yielded_results = list(
+        livestatus_status.cluster_check_livestatus_status(
+            "heute",
+            Parameters(livestatus_status.livestatus_status_default_levels),
+            {"node1": PARSED_STATUS},
+            {"node1": PARSED_SSL},
+        ))
+
+    assert yielded_results == _RESULTS

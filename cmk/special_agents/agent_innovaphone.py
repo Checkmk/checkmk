@@ -7,7 +7,7 @@
 import sys
 from typing import Iterable, Optional, Sequence, Tuple
 from xml.etree import ElementTree as etree
-
+import urllib.parse
 import requests
 
 from cmk.special_agents.utils.argument_parsing import (
@@ -17,7 +17,8 @@ from cmk.special_agents.utils.argument_parsing import (
 
 
 class InnovaphoneConnection:
-    def __init__(self, user, password):
+    def __init__(self, host, user, password):
+        self._base_url = f"http://{host}"
         self._user = user
         self._password = password
         self._session = requests.Session()
@@ -25,9 +26,9 @@ class InnovaphoneConnection:
         # the REQUESTS_CA_BUNDLE env variable
         self._verify_ssl = False
 
-    def get(self, url):
+    def get(self, endpoint):
         # we must provide the verify keyword to every individual request call!
-        response = self._session.get(url,
+        response = self._session.get(urllib.parse.urljoin(self._base_url, endpoint),
                                      verify=self._verify_ssl,
                                      auth=(self._user, self._password))
         if response.status_code != 200:
@@ -36,8 +37,8 @@ class InnovaphoneConnection:
         return response.text
 
 
-def get_informations(host: str, connection: InnovaphoneConnection, name, xml_id, org_name):
-    url = "http://%s/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=%s" % (host, xml_id)
+def get_informations(connection: InnovaphoneConnection, name, xml_id, org_name):
+    url = "LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=%s" % (xml_id)
     data = _get_element(connection.get(url))
     if data is None:
         return
@@ -54,22 +55,20 @@ def get_informations(host: str, connection: InnovaphoneConnection, name, xml_id,
 
 def pri_channels_section(
     *,
-    host: str,
     connection: InnovaphoneConnection,
     channels: Sequence[str],
 ) -> Iterable[str]:
     yield "<<<innovaphone_channels>>>"
-    for channel_name, channel_data in _pri_channels_fetch_data(host, connection, channels):
+    for channel_name, channel_data in _pri_channels_fetch_data(connection, channels):
         yield _pri_channel_format_line(channel_name, channel_data)
 
 
 def _pri_channels_fetch_data(
-    host: str,
     connection: InnovaphoneConnection,
     channels: Sequence[str],
 ) -> Iterable[Tuple[str, etree.Element]]:
     for channel_name in channels:
-        url = "http://%s/%s/mod_cmd.xml" % (host, channel_name)
+        url = "%s/mod_cmd.xml" % channel_name
         response = connection.get(url)
         if response == "?\r\n":
             # ignore response for invalid module names. For details see
@@ -96,8 +95,8 @@ def _pri_channel_format_line(channel_name: str, data: etree.Element) -> str:
     return "%s %s %s %s %s" % (channel_name, link, physical, idle, total)
 
 
-def licenses_section(host: str, connection: InnovaphoneConnection) -> Iterable[str]:
-    url = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % host
+def licenses_section(connection: InnovaphoneConnection) -> Iterable[str]:
+    url = "PBX0/ADMIN/mod_cmd_login.xml"
     try:
         data = _get_element(connection.get(url))
     except Exception:  # pylint: disable=broad-except # TODO: use requests 'raise_for_status'
@@ -136,10 +135,9 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
     args = parse_arguments(sys_argv)
-    connection = InnovaphoneConnection(user=args.user, password=args.password)
+    connection = InnovaphoneConnection(host=args.host, user=args.user, password=args.password)
 
-    url = "http://%s/LOG0/CNT/mod_cmd.xml?cmd=xml-counts" % args.host
-    root_data = etree.fromstring(connection.get(url))
+    root_data = etree.fromstring(connection.get("LOG0/CNT/mod_cmd.xml?cmd=xml-counts"))
     if root_data is None:
         return 1
 
@@ -152,16 +150,15 @@ def main(sys_argv=None):
     for what in ["CPU", "MEM", "TEMP"]:
         if informations.get(what):
             section_name = "innovaphone_" + what.lower()
-            get_informations(args.host, connection, section_name, informations[what], what)
+            get_informations(connection, section_name, informations[what], what)
 
     sys.stdout.writelines(f"{line}\n" for line in pri_channels_section(
-        host=args.host,
         connection=connection,
         # TODO: do we really need to guess at the channels?!
         channels=("PRI1", "PRI2", "PRI3", "PRI4"),
     ))
 
-    sys.stdout.writelines(f"{line}\n" for line in licenses_section(args.host, connection))
+    sys.stdout.writelines(f"{line}\n" for line in licenses_section(connection))
 
 
 if __name__ == "__main__":

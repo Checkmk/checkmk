@@ -10,6 +10,7 @@
 #define install_api_h__
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -21,7 +22,8 @@ namespace cma {
 namespace install {
 bool UseScriptToInstall();
 
-std::filesystem::path FindProductMsi(std::wstring_view product_name);
+std::optional<std::filesystem::path> FindProductMsi(
+    std::wstring_view product_name);
 
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
@@ -31,7 +33,9 @@ class ExecuteUpdate {
 public:
     ExecuteUpdate() { determineFilePaths(); }
     void prepare(const std::filesystem::path& exe,
-                 const std::filesystem::path& msi, bool validate_script_exists);
+                 const std::filesystem::path& msi,
+                 const std::filesystem::path& recover_msi,
+                 bool validate_script_exists);
 
     bool copyScriptToTemp() const;
     void backupLog() const;
@@ -55,6 +59,8 @@ private:
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 
 constexpr const std::string_view kMsiLogFileName = "agent_msi.log";
+
+constexpr const std::wstring_view kAgentProductName{L"Check MK Agent 2.0"};
 
 namespace registry
 

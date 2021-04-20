@@ -154,7 +154,9 @@ TEST_F(WmiWrapperFixture, Table) {
     EXPECT_EQ(line1.size(), line2.size());
     EXPECT_EQ(line1.size(), header_array.size());
     auto last_line = cma::tools::SplitString(table[table.size() - 1], L",");
-    EXPECT_EQ(line1.size(), last_line.size());
+    EXPECT_EQ(line1.size(), last_line.size()) << "line1     = \n"
+                                              << table[1] << "last_line = \n"
+                                              << table[table.size() - 1];
 }
 
 }  // namespace wtools

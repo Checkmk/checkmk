@@ -1,0 +1,12 @@
+Title: apache_status: add cluster functionality
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1618912178
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p4
+
+The check plugin <i>apache_status</i> is now ready to
+handle clustered data (failover cluster).

@@ -1045,6 +1045,8 @@ run_liveupdate() {
     if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
         if [ -z "$REMOTE" ]; then
             echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+        elif [ -z "$RTC_SECRET" ] && [ -z "$PASSPHRASE" ] && [ "$ENCRYPTED_RT" != "no" ]; then
+            echo "ERROR: Missing secret for encryping Real-Time Check data,  while encryption is requested. Not starting Real-Time Checks." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else

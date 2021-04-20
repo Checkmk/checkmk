@@ -18,6 +18,7 @@ import ast
 import abc
 import json
 import fcntl
+import datetime
 from contextlib import contextmanager
 from urlparse import urlparse
 
@@ -2207,11 +2208,32 @@ class SpecialAgent(object):
 
 
 @contextmanager
-def on_time(utctime, timezone):
-    """Set the time and timezone for the test"""
+def set_timezone(timezone):
+    if "TZ" not in os.environ:
+        tz_set = False
+        old_tz = ""
+    else:
+        tz_set = True
+        old_tz = os.environ['TZ']
+
     os.environ['TZ'] = timezone
     time.tzset()
-    with freezegun.freeze_time(utctime):
-        yield
-    os.environ.pop('TZ')
+
+    yield
+
+    if not tz_set:
+        del os.environ['TZ']
+    else:
+        os.environ['TZ'] = old_tz
+
     time.tzset()
+
+
+@contextmanager
+def on_time(utctime, timezone):
+    """Set the time and timezone for the test"""
+    if isinstance(utctime, (int, float)):
+        utctime = datetime.datetime.utcfromtimestamp(utctime)
+
+    with set_timezone(timezone), freezegun.freeze_time(utctime):
+        yield

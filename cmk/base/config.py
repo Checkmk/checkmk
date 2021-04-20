@@ -354,6 +354,10 @@ def cleanup_fs_used_marker_flag(log):
         os.remove(old_config_flag)
 
 
+def _load_config_file(file_to_load: Union[str, Path], variables: Dict[str, Any]) -> None:
+    exec(open(file_to_load).read(), variables, variables)
+
+
 def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     helper_vars = {
         "FOLDER_PATH": None,
@@ -367,6 +371,11 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
 
     global_dict = globals()
     global_dict.update(helper_vars)
+
+    # Load assorted experimental parameters if any
+    experimental_config = cmk.utils.paths.make_experimental_config_file()
+    if experimental_config.exists():
+        _load_config_file(experimental_config, global_dict)
 
     cleanup_fs_used_marker_flag(console.info)  # safety cleanup for 1.6->1.7 update
 
@@ -394,7 +403,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
             all_hosts.set_current_path(current_path)
             clusters.set_current_path(current_path)
 
-            exec(open(_f).read(), global_dict, global_dict)
+            _load_config_file(_f, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(

@@ -119,3 +119,12 @@ def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
 
 def make_fetchers_config_path(serial: ConfigSerial) -> Path:
     return make_helper_config_path(serial) / "fetchers"
+
+
+def make_experimental_config_file() -> Path:
+    """ Returns file with experimental settings to be used.
+    Used to enable features which is "in development" and not good enough to be enabled by default.
+    Example of experimental.mk:
+    config_storage_format = "raw"
+    """
+    return Path(default_config_dir) / "experimental.mk"

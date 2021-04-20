@@ -1,5 +1,6 @@
 import time
 import pytest
+from testlib import on_time
 import cmk.utils.log
 import cmk.ec.defaults
 import cmk.ec.main as main
@@ -30,7 +31,7 @@ def event_creator():
                 'host_in_downtime': False,
                 'application': 'CRON',
                 'host': 'Klapprechner',
-                'time': 1558874701.0,
+                'time': 1558871101.0,
                 'ipaddress': '127.0.0.1',
             },
         ),
@@ -62,7 +63,7 @@ def event_creator():
                 'pid': '8046',
                 'priority': 6,
                 'text': 'message',
-                'time': 1558874701.0
+                'time': 1558871101.0
             },
         ),
         (
@@ -247,4 +248,5 @@ def test_create_event_from_line(event_creator, monkeypatch, line, expected):
     )
 
     address = ("127.0.0.1", 1234)
-    assert event_creator.create_event_from_line(line, address) == expected
+    with on_time(1550000000.0, "CET"):
+        assert event_creator.create_event_from_line(line, address) == expected

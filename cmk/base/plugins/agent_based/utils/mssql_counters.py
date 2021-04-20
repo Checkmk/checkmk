@@ -12,7 +12,7 @@
 #  - Rate counters (per second)
 """
 
-from typing import Any, Callable, Dict, Tuple, Set, Mapping, MutableMapping, Optional
+from typing import Any, Callable, Dict, Tuple, TypeVar, Set, Mapping, MutableMapping, Optional
 from contextlib import suppress
 
 from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
@@ -65,10 +65,13 @@ def get_item(item: str, section: Section) -> Tuple[Counters, str]:
     return section[(obj, instance)], counter[0] if counter else ""
 
 
+_NodeSection = TypeVar("_NodeSection")
+
+
 def accumulate_node_results(
     *,
-    node_check_function: Callable[[str, Section], CheckResult],
-    section: Mapping[str, Section],
+    node_check_function: Callable[[str, _NodeSection], CheckResult],
+    section: Mapping[str, _NodeSection],
 ) -> CheckResult:
 
     found_any = False

@@ -1,0 +1,12 @@
+Title: mssql_transactionlogs, mssql_datafiles: add cluster functionality
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1618910826
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p4
+
+The check plugins <i>mssql_transactionlogs</i> and <i>mssql_datafiles</i>
+are now ready to handle clustered data (failover cluster).

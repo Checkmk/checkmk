@@ -35,7 +35,8 @@ exit /b 0
 
 :check_exe
 for /l %%x in (1, 1, 30 ) do (
-  fc /b ..\..\artefacts\check_mk_agent-64.exe %f% >nul && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
+  rem fc /b ..\..\artefacts\check_mk_agent-64.exe %f% >nul && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
+  call is_installed.cmd ..\..\artefacts\check_mk_agent.msi && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
   powershell Write-Host "." -nonewline -foreground cyan
   powershell Start-Sleep 1
 )

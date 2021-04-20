@@ -27,19 +27,30 @@ class InnovaphoneConnection:
         self._verify_ssl = False
 
     def get(self, endpoint):
-        # we must provide the verify keyword to every individual request call!
-        response = self._session.get(urllib.parse.urljoin(self._base_url, endpoint),
-                                     verify=self._verify_ssl,
-                                     auth=(self._user, self._password))
+        try:
+            # we must provide the verify keyword to every individual request call!
+            url = urllib.parse.urljoin(self._base_url, endpoint)
+            response = self._session.get(
+                url,
+                verify=self._verify_ssl,
+                auth=(self._user, self._password),
+            )
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"ERROR while connecting to {url}: {e}\n")
+            return None
+
         if response.status_code != 200:
             sys.stderr.write(
-                f"RESPONSE.status_code: {response.status_code}, reason: {response.reason}")
+                f"ERROR while processing request [{response.status_code}]: {response.reason}\n")
         return response.text
 
 
 def get_informations(connection: InnovaphoneConnection, name, xml_id, org_name):
     url = "LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=%s" % (xml_id)
-    data = _get_element(connection.get(url))
+    response = connection.get(url)
+    if response is None:
+        return
+    data = _get_element(response)
     if data is None:
         return
 
@@ -70,6 +81,8 @@ def _pri_channels_fetch_data(
     for channel_name in channels:
         url = "%s/mod_cmd.xml" % channel_name
         response = connection.get(url)
+        if response is None:
+            return
         if response == "?\r\n":
             # ignore response for invalid module names. For details see
             # https://wiki.innovaphone.com/index.php?title=Howto:Effect_arbitrary_Configuration_Changes_using_a_HTTP_Command_Line_Client_or_from_an_Update
@@ -97,10 +110,10 @@ def _pri_channel_format_line(channel_name: str, data: etree.Element) -> str:
 
 def licenses_section(connection: InnovaphoneConnection) -> Iterable[str]:
     url = "PBX0/ADMIN/mod_cmd_login.xml"
-    try:
-        data = _get_element(connection.get(url))
-    except Exception:  # pylint: disable=broad-except # TODO: use requests 'raise_for_status'
+    response = connection.get(url)
+    if response is None:
         return
+    data = _get_element(response)
 
     if data is None:
         return
@@ -117,9 +130,9 @@ def licenses_section(connection: InnovaphoneConnection) -> Iterable[str]:
 def _get_element(text: str) -> Optional[etree.Element]:
     try:
         return etree.fromstring(text)
-    except etree.ParseError as err:
+    except etree.ParseError as e:
         # this is a bit broad. But for now it fixes the agent.
-        sys.stderr.write("ERROR: %s\n" % err)
+        sys.stderr.write(f"ERROR while parsing: {e}\n")
     return None
 
 
@@ -137,7 +150,10 @@ def main(sys_argv=None):
     args = parse_arguments(sys_argv)
     connection = InnovaphoneConnection(host=args.host, user=args.user, password=args.password)
 
-    root_data = etree.fromstring(connection.get("LOG0/CNT/mod_cmd.xml?cmd=xml-counts"))
+    response = connection.get("LOG0/CNT/mod_cmd.xml?cmd=xml-counts")
+    if response is None:
+        return 1
+    root_data = _get_element(response)
     if root_data is None:
         return 1
 

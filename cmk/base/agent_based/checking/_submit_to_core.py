@@ -96,7 +96,7 @@ def finalize() -> None:
 def _convert_perf_data(p: Sequence[Union[None, str, float]]) -> str:
     # replace None with "" and fill up to 6 values
     normalized = [_convert_perf_value(v) for v in p]
-    normalized.extend('      ')
+    normalized.extend([""] * 6)
     return "%s=%s;%s;%s;%s;%s" % tuple(normalized[:6])
 
 

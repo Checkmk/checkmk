@@ -24,7 +24,7 @@ if type zypper > /dev/null ; then
     echo '<<<zypper:sep(124)>>>'
     if egrep -q 'VERSION = 10|VERSION_ID="10' < $RELEASEFILE
     then
-        ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --terse'
+        ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --terse'
         REFRESH=`$ZYPPER refresh 2>&1`
         if  [ "$REFRESH" ]
         then
@@ -34,7 +34,7 @@ if type zypper > /dev/null ; then
     	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
         fi
     else
-        ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --quiet'
+        ZYPPER='waitmax 50 zypper --no-gpg-checks --non-interactive --quiet'
         REFRESH=`$ZYPPER refresh 2>&1`
         if  [ "$REFRESH" ]
         then

@@ -1,0 +1,13 @@
+Title: ps_section: allow ps sections with missing cgroup column
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619006873
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+Werk 12706 introduced a bug by filtering ps sections missing not only mandatory columns but also
+cgroup column, rendering formerly valid ps sections invalid.
+This change excludes 'cgroup' from mandatory columns, so those sections are being accepted again.

@@ -1613,14 +1613,49 @@ def _factory_default_special_agents_innovaphone():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _special_agents_innovaphone_transform(value):
+    if isinstance(value, tuple):
+        return {
+            'auth_basic': {
+                'username': value[0],
+                'password': ('password', value[1]),
+            }
+        }
+    return value
+
+
 def _valuespec_special_agents_innovaphone():
-    return Tuple(
-        title=_("Innovaphone Gateways"),
-        help=_("Please specify the user and password needed to access the xml interface"),
-        elements=[
-            TextAscii(title=_("Username")),
-            Password(title=_("Password")),
-        ],
+    return Transform(
+        Dictionary(
+            title=_("Innovaphone Gateways"),
+            help=_("Please specify the user and password needed to access the xml interface"),
+            elements=[(
+                'auth_basic',
+                Dictionary(
+                    elements=[
+                        ('username', TextAscii(
+                            title=_('Login username'),
+                            allow_empty=False,
+                        )),
+                        (
+                            "password",
+                            CascadingDropdown(
+                                title=_("Password"),
+                                help=None,
+                                choices=[
+                                    ("password", _("Explicit"), Password(
+                                        allow_empty=False,
+                                        size=25,
+                                    )),
+                                    # password store can be added as another choice
+                                ],
+                                orientation="horizontal",
+                            )),
+                    ],
+                    optional_keys=[],
+                    title=_("Basic authentication")))],
+        ),
+        forth=_special_agents_innovaphone_transform,
     )
 
 

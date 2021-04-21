@@ -11,7 +11,12 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize('params,expected_args', [
-    (('user', 'password'), ["address", "user", "password"]),
+    ({
+        'auth_basic': {
+            'username': 'user123',
+            'password': ('password', 'passwordABC')
+        }
+    }, ["address", "user123", "passwordABC"]),
 ])
 def test_innovaphone_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""

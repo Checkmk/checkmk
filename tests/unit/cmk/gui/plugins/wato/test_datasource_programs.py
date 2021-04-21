@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.gui.plugins.wato.datasource_programs import _special_agents_kubernetes_transform
+from cmk.gui.plugins.wato.datasource_programs import _special_agents_kubernetes_transform, _special_agents_innovaphone_transform
 
 
 @pytest.mark.parametrize('parameters, expected_result', [
@@ -73,3 +73,15 @@ from cmk.gui.plugins.wato.datasource_programs import _special_agents_kubernetes_
 ])
 def test__special_agents_kubernetes_transform(parameters, expected_result):
     assert _special_agents_kubernetes_transform(parameters) == expected_result
+
+
+@pytest.mark.parametrize('parameters, expected_result', [
+    (('USER123', 'PasswordABC'), {
+        'auth_basic': {
+            'password': ('password', 'PasswordABC'),
+            'username': 'USER123'
+        },
+    }),
+])
+def test__special_agents_innovaphone_transform(parameters, expected_result):
+    assert _special_agents_innovaphone_transform(parameters) == expected_result

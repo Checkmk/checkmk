@@ -43,8 +43,6 @@ def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
-def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
-def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_URL = 'deploy@archive.tribe29.com'
 def UPLOAD_DEST = "${UPLOAD_URL}:/var/downloads/checkmk/"
 
@@ -139,7 +137,7 @@ node(NODE) {
         notify.notify_error(e)
     }
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(WORKSPACE, CMK_VERS)
 
@@ -156,7 +154,6 @@ node(NODE) {
                 NAME: "source",
                 FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
                 FILE_NAME: SOURCE_PACKAGE_NAME,
-                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
                 CMK_VERS: CMK_VERS,
                 UPLOAD_DEST: UPLOAD_DEST,
                 SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
@@ -189,7 +186,7 @@ node(NODE) {
                             }
                         }
 
-                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
                             def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                             def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
@@ -204,7 +201,6 @@ node(NODE) {
                                 NAME: DISTRO,
                                 FILE_PATH: FINAL_PACKAGE_PATH,
                                 FILE_NAME: PACKAGE_NAME,
-                                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
                                 CMK_VERS: CMK_VERS,
                                 UPLOAD_DEST: UPLOAD_DEST,
                                 SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
@@ -219,14 +215,14 @@ node(NODE) {
         notify.notify_error(e)
     }finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                upload_artifacts.create_and_upload_hashes(ARCHIVE_DIR, scm, shall_publish_package(scm, JOB_BASE_NAME), UPLOAD_DEST, CMK_VERS)
             }
         }
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                    deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
+                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                    upload_artifacts.deploy_to_website(UPLOAD_URL, CMK_VERS)
                 }
             }
         } else {
@@ -427,6 +423,10 @@ def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {
 
 def sign_package(PACKAGE_PATH, DISTRO, WORKSPACE) {
     stage(DISTRO + ' sign package') {
+        withCredentials([file(credentialsId: 'Check_MK_Release_Key', variable: 'GPG_KEY')]) {
+            // --batch is needed to awoid ioctl error
+            sh "gpg --batch --import ${GPG_KEY}"
+        }
         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
             sh "${WORKSPACE}/git/buildscripts/scripts/sign-packages.sh ${PACKAGE_PATH}"
         }
@@ -455,27 +455,3 @@ def clean_venv() {
     sh('rm -rf git/.venv')
 }
 
-def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
-    stage("Create and upload file hashes") {
-        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
-        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
-        upload_artifacts.upload(
-            NAME: "hashes",
-            FILE_PATH: HASHES_PATH,
-            FILE_NAME: "HASHES",
-            RELEASE_KEY_PATH: RELEASE_KEY_PATH,
-            CMK_VERS: CMK_VERS,
-            UPLOAD_DEST: UPLOAD_DEST,
-            SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
-        )
-    }
-}
-
-def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
-    stage("Deploy to Website") {
-        sh """
-            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
-                ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
-        """
-    }
-}

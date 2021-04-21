@@ -447,7 +447,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
-            # Enable HW/SW inventory + status data inventory for docker containers and Check-MK servers by default to
+            # Enable HW/SW inventory + status data inventory for docker
+            # containers, kubernetes objects and Check-MK servers by default to
             # simplify the setup procedure for them
             'active_checks': {
                 'cmk_inv': [
@@ -467,6 +468,17 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                         'condition': {
                             'host_labels': {
                                 u'cmk/check_mk_server': u'yes',
+                            }
+                        },
+                        'value': {
+                            'status_data_inventory': True
+                        },
+                    },
+                    {
+                        'id': '2527cb37-e9da-4a15-a7d9-80825a7f6661',
+                        'condition': {
+                            'host_labels': {
+                                'cmk/kubernetes': 'yes',
                             }
                         },
                         'value': {

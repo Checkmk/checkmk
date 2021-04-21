@@ -6,7 +6,8 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.inventory_k8s_endpoint_info import inventory_k8s_endpoints, parse_k8s_endpoint_info
+from cmk.base.plugins.agent_based.inventory_k8s_endpoint_info import inventory_k8s_endpoints
+from cmk.base.plugins.agent_based.k8s_endpoint_info import parse_k8s_endpoint_info
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable

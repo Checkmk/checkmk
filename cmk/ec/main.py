@@ -2072,9 +2072,9 @@ class EventCreator(object):
 
             # Variant 5
             elif len(line) > 24 and line[10] == 'T':
-                rfc3339_part, event['host'], line = line.split(' ', 2)
-                event['time'] = _timestamp(dateutil.parser.isoparse(rfc3339_part))
-                event.update(self._parse_syslog_info(line))
+                timestamp, event['host'], rest = line.split(' ', 2)
+                event['time'] = _timestamp(dateutil.parser.isoparse(timestamp))
+                event.update(self._parse_syslog_info(rest))
 
             # Variant 9
             elif len(line) > 24 and line[12] == "T":
@@ -2082,9 +2082,8 @@ class EventCreator(object):
 
             # Variant 8
             elif line[10] == '-' and line[19] == ' ':
-                event['host'] = line.split(' ')[1]
-                event['time'] = time.mktime(time.strptime(line.split(' ')[0], '%Y:%m:%d-%H:%M:%S'))
-                rest = " ".join(line.split(' ')[2:])
+                timestamp, event['host'], rest = line.split(' ', 2)
+                event['time'] = time.mktime(time.strptime(timestamp, '%Y:%m:%d-%H:%M:%S'))
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 6

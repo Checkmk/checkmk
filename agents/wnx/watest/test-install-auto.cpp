@@ -12,6 +12,7 @@
 #include "test_tools.h"
 
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace cma::install {
 
@@ -241,4 +242,20 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
                   std::string::npos);
     }
 }
+
+TEST(InstallAuto, FindAgentMsiSkippable) {
+    auto agent_msi = FindProductMsi(L"Check MK Agent 2.0");
+    if (agent_msi.empty()) {
+        GTEST_SKIP();
+    }
+    ASSERT_FALSE(agent_msi.empty());
+    ASSERT_TRUE(fs::exists(agent_msi));
+}
+
+TEST(InstallAuto, FindProductMsi) {
+    auto msi = FindProductMsi(L"MSI Development Tools");
+    ASSERT_FALSE(msi.empty());
+    ASSERT_TRUE(fs::exists(msi));
+}
+
 }  // namespace cma::install

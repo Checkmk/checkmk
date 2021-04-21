@@ -1,0 +1,11 @@
+Title: Fixed excessively long compuation time of timeperiods during core config generation
+Class: fix
+Compatible: compat
+Component: core
+Date: 1619016103
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+

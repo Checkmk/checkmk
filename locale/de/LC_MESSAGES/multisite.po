@@ -4845,6 +4845,10 @@ msgstr "Erlaubt, eigene %s zu löschen."
 msgid "Allows to edit %s created by other users."
 msgstr "Erlaubt, von anderen Benutzern erstellte %s zu bearbeiten."
 
+#, fuzzy, python-format
+msgid "Allows to view and edit %s created by other users."
+msgstr "Erlaubt, von anderen Benutzern erstellte %s zu bearbeiten."
+
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr "Ermöglicht dir ein Seitenleistenelement im Dashboard zu verwenden."
 
@@ -47760,10 +47764,6 @@ msgstr "Der ausgewählte Report Preview ist nicht verfügbar"
 msgid "The requested %s does not exist"
 msgstr "Die angeforderte %s existiert nicht."
 
-#, python-format
-msgid "The requested %s does not exist."
-msgstr "Die zu kopierende %s existiert nicht."
-
 msgid "The requested connection does not exist."
 msgstr "Diese Verbindung existiert nicht"
 
@@ -62709,6 +62709,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "The requested %s does not exist."
+#~ msgstr "Die zu kopierende %s existiert nicht."
 
 #~ msgid "Checks to send data for"
 #~ msgstr "Checks, für die Daten übertragen werden sollen"

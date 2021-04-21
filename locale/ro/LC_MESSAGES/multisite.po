@@ -4620,6 +4620,10 @@ msgstr ""
 msgid "Allows to edit %s created by other users."
 msgstr ""
 
+#, python-format
+msgid "Allows to view and edit %s created by other users."
+msgstr ""
+
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr ""
 
@@ -45917,10 +45921,6 @@ msgstr ""
 msgid "The requested %s does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
-#, fuzzy, python-format
-msgid "The requested %s does not exist."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
 #, fuzzy
 msgid "The requested connection does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
@@ -58665,6 +58665,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "The requested %s does not exist."
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 #~ msgid "Failover state"

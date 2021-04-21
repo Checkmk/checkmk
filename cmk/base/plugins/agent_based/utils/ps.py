@@ -522,7 +522,7 @@ def check_ps_common(
     if processes.min_elapsed is not None and processes.max_elapsed is not None:
         yield from uptime_check(processes.min_elapsed, processes.max_elapsed, params)
 
-    if params.get("process_info"):
+    if params.get("process_info") and processes.count:
         yield Result(
             state=state.OK,
             notice=format_process_list(processes, params["process_info"] == "html"),

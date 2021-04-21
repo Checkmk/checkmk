@@ -80,7 +80,7 @@ from cmk.base.plugins.agent_based.utils import entity_sensors as utils
 
 def parse_cisco_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
     # do not add undefined and temperature (duplicate with cisco_temperature) sensors
-    return utils.parse_entity_sensors(string_table, sensor_types_ignore=['0', '8'])
+    return utils.parse_entity_sensors(string_table, {'0', '8'})
 
 
 register.snmp_section(

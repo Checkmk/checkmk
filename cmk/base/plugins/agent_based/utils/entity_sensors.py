@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, NamedTuple, Optional, List, Container
+from typing import Dict, NamedTuple, Optional, List, Container, Set
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
@@ -62,7 +62,7 @@ class EntitySensor(NamedTuple):
 EntitySensorSection = Dict[str, Dict[str, EntitySensor]]
 
 
-def sensor_status_descr(status_nr: str) -> str:
+def _sensor_status_descr(status_nr: str) -> str:
     return {
         '1': 'OK',
         '2': 'unavailable',
@@ -70,7 +70,7 @@ def sensor_status_descr(status_nr: str) -> str:
     }.get(status_nr, status_nr)
 
 
-def sensor_state(status_nr: str) -> State:
+def _sensor_state(status_nr: str) -> State:
     return {
         '1': State.OK,
         '2': State.CRIT,
@@ -78,7 +78,7 @@ def sensor_state(status_nr: str) -> State:
     }.get(status_nr, State.UNKNOWN)
 
 
-def reformat_sensor_name(name: str) -> str:
+def _reformat_sensor_name(name: str) -> str:
     new_name = name
     for s in ['Fan', 'Temperature', '#', '@', 'Sensor']:
         new_name = new_name.replace(s, '')
@@ -87,7 +87,7 @@ def reformat_sensor_name(name: str) -> str:
     return f'Sensor {new_name.strip()}'
 
 
-def unit_from_device_unit(unit: str) -> Optional[str]:
+def _unit_from_device_unit(unit: str) -> Optional[str]:
     '''Converts device units to units known by Check_mk'''
     return {
         'celsius': 'c',
@@ -97,28 +97,29 @@ def unit_from_device_unit(unit: str) -> Optional[str]:
 
 
 def parse_entity_sensors(string_table: List[StringTable],
-                         sensor_types_ignore: Optional[Container[str]] = None) -> EntitySensorSection:
+                         sensor_types_ignore: Optional[Set[Container[str]]] = None) -> EntitySensorSection:
     '''
     :param string_table:
-    :param sensor_types_ignore: list of sensor types to ignore. e.g ['0', '8'] for undefined and temperature
+    :param sensor_types_ignore: set of sensor types to ignore. e.g {'0', '8'} for undefined and temperature
     '''
     if sensor_types_ignore is None:
-        sensor_types_ignore = []
+        sensor_types_ignore = set()
     section: EntitySensorSection = {}
     sensor_names = {i[0]: i[1] for i in string_table[0]}
     for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
-        if sensor_type_nr not in sensor_types_ignore:
-            # Some devices such as Palo Alto Network series 3000 support
-            # the ENTITY-MIB including sensor/entity names.
-            # Others (e.g. Palo Alto Networks Series 200) do not support
-            # this MIB, thus we use OID as item instead
-            sensor_name = reformat_sensor_name(sensor_names.get(oid_end, oid_end))
-            sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
-            section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
-                name=sensor_name,
-                reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
-                unit=unit_from_device_unit(device_unit.lower()) or default_unit,
-                state=sensor_state(status_nr),
-                status_descr=sensor_status_descr(status_nr),
-            )
+        if sensor_type_nr in sensor_types_ignore:
+            continue
+        # Some devices such as Palo Alto Network series 3000 support
+        # the ENTITY-MIB including sensor/entity names.
+        # Others (e.g. Palo Alto Networks Series 200) do not support
+        # this MIB, thus we use OID as item instead
+        sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
+        sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
+        section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
+            name=sensor_name,
+            reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
+            unit=_unit_from_device_unit(device_unit.lower()) or default_unit,
+            state=_sensor_state(status_nr),
+            status_descr=_sensor_status_descr(status_nr),
+        )
     return section

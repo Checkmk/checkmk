@@ -5477,6 +5477,9 @@ class ImageUpload(FileUpload):
         super().__init__(**kwargs)
 
     def render_input(self, varprefix: str, value: bytes) -> None:
+        if isinstance(value, str):
+            # since latin_1 only uses one byte, we can use it for str->byte conversion
+            value = value.encode("latin_1")
         if self._show_current_image and value:
             html.open_table()
             html.open_tr()

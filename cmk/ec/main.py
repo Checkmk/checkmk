@@ -30,6 +30,7 @@ import traceback
 from types import FrameType
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
+import dateutil.parser
 from six import ensure_binary
 
 import cmk.utils.version as cmk_version
@@ -1954,11 +1955,8 @@ class EventCreator:
 
             # Variant 5
             elif len(line) > 24 and line[10] == 'T':
-                # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-                # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-                # got a good solutuion for this.
                 rfc3339_part, event['host'], line = line.split(' ', 2)
-                event['time'] = time.mktime(time.strptime(rfc3339_part[:19], '%Y-%m-%dT%H:%M:%S'))
+                event['time'] = dateutil.parser.isoparse(rfc3339_part).timestamp()
                 event.update(self._parse_syslog_info(line))
 
             # Variant 9
@@ -2064,10 +2062,7 @@ class EventCreator:
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
 
-        # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-        # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-        # got a good solutuion for this.
-        event['time'] = time.mktime(time.strptime(timestamp[:19], '%Y-%m-%dT%H:%M:%S'))
+        event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
         event["host"] = "" if hostname == "-" else hostname
         event["application"] = "" if app_name == "-" else app_name
         event["pid"] = 0 if procid == "-" else procid

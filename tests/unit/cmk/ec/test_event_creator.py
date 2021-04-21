@@ -129,12 +129,8 @@ def event_creator():
             },
         ),
         (
-            # Variant 5: syslog message
-            #  Timestamp is RFC3339 with additional restrictions:
-            #  - The "T" and "Z" characters in this syntax MUST be upper case.
-            #  - Usage of the "T" character is REQUIRED.
-            #  - Leap seconds MUST NOT be used.
-            "<166>2013-04-05T13:49:31.685Z esx Vpxa: message....",
+            # Variant 5: syslog message (RFC3339), subseconds + Zulu time
+            "<166>2013-04-05T13:49:31.625Z esx Vpxa: message....",
             {
                 'application': 'Vpxa',
                 'core_host': '',
@@ -145,7 +141,23 @@ def event_creator():
                 'pid': 0,
                 'priority': 6,
                 'text': 'message....',
-                'time': 1365162571.0
+                'time': 1365169771.625
+            },
+        ),
+        (
+            # Variant 5: syslog message (RFC3339), timezone offset
+            "<166>2013-04-05T13:49:31+02:00 esx Vpxa: message....",
+            {
+                'application': 'Vpxa',
+                'core_host': '',
+                'facility': 20,
+                'host': 'esx',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'pid': 0,
+                'priority': 6,
+                'text': 'message....',
+                'time': 1365162571
             },
         ),
         (
@@ -214,7 +226,7 @@ def event_creator():
             },
         ),
         pytest.param(
-            "<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - coming from  java code",
+            "<134>1 2016-06-02T12:49:05.125Z chrissw7 ChrisApp - TestID - coming from  java code",
             {
                 'application': 'ChrisApp',
                 'core_host': '',
@@ -224,13 +236,13 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
                 'text': 'coming from  java code',
-                'time': 1464864545.0,
+                'time': 1464871745.125,
                 'pid': 0,
             },
             id="variant 9: syslog message (RFC 5424)",
         ),
         pytest.param(
-            "<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code",
+            "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code",
             {
                 'application': 'ChrisApp',
                 'core_host': '',
@@ -240,13 +252,13 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
                 'text': '\ufeffcoming from  java code',
-                'time': 1464864545.0,
+                'time': 1464864545,
                 'pid': 0,
             },
             id="variant 9: syslog message (RFC 5424) with BOM",
         ),
         pytest.param(
-            '<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
+            '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
             {
                 'application': 'ChrisApp',
                 'core_host': '',
@@ -256,13 +268,13 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
                 'text': '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
-                'time': 1464864545.0,
+                'time': 1464864545.125,
                 'pid': 0,
             },
             id="variant 9: syslog message (RFC 5424) with structured data",
         ),
         pytest.param(
-            r'<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
+            r'<134>1 2016-06-02T12:49:05-01:30 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
             {
                 'application': 'ChrisApp',
                 'core_host': '',
@@ -272,7 +284,7 @@ def event_creator():
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
                 'text': r'[exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
-                'time': 1464864545.0,
+                'time': 1464877145,
                 'pid': 0,
             },
             id="variant 9: syslog message (RFC 5424) with mean structured data",

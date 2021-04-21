@@ -10,6 +10,7 @@
 import abc
 import time
 import re
+import os
 import hashlib
 from pathlib import Path
 import traceback
@@ -2009,12 +2010,15 @@ class Cell:
     def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
+            themes = html.icon_themes()
             for file_path in [
                     cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
-                if file_path.exists():
-                    return str(file_path)
+                for path_in_theme in (
+                        str(file_path).replace(theme, "facelift") for theme in themes):
+                    if os.path.exists(path_in_theme):
+                        return path_in_theme
 
         try:
             row = join_row(row, self)

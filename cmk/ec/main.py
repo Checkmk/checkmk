@@ -33,6 +33,7 @@
 
 import abc
 import ast
+import datetime
 import errno
 import json
 import os
@@ -49,6 +50,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=un
 
 import pathlib2 as pathlib
 import six
+import dateutil.parser
 
 import cmk
 import cmk.utils.daemon
@@ -1960,6 +1962,27 @@ class EventServer(ECServerThread):
         return new_event
 
 
+# Some ugly backwards compatiblity stuff for Python 2.7...
+
+
+class _UTC(datetime.tzinfo):
+    def tzname(self, dt):
+        return "UTC"
+
+    def utcoffset(self, dt):
+        return datetime.timedelta()
+
+    def dst(self, dt):
+        return datetime.timedelta()
+
+
+_EPOCH = datetime.datetime(1970, 1, 1, tzinfo=_UTC())
+
+
+def _timestamp(dt):
+    return (dt - _EPOCH).total_seconds()
+
+
 class EventCreator(object):
     def __init__(self, logger, config):
         super(EventCreator, self).__init__()
@@ -2049,11 +2072,8 @@ class EventCreator(object):
 
             # Variant 5
             elif len(line) > 24 and line[10] == 'T':
-                # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-                # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-                # got a good solutuion for this.
                 rfc3339_part, event['host'], line = line.split(' ', 2)
-                event['time'] = time.mktime(time.strptime(rfc3339_part[:19], '%Y-%m-%dT%H:%M:%S'))
+                event['time'] = _timestamp(dateutil.parser.isoparse(rfc3339_part))
                 event.update(self._parse_syslog_info(line))
 
             # Variant 9
@@ -2159,10 +2179,7 @@ class EventCreator(object):
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
 
-        # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-        # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-        # got a good solutuion for this.
-        event['time'] = time.mktime(time.strptime(timestamp[:19], '%Y-%m-%dT%H:%M:%S'))
+        event['time'] = _timestamp(dateutil.parser.isoparse(timestamp))
         event["host"] = "" if hostname == "-" else hostname
         event["application"] = "" if app_name == "-" else app_name
         event["pid"] = 0 if procid == "-" else procid

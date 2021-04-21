@@ -1,4 +1,4 @@
-Common Development and Distribution License Version 1.0 (CDDL-1.0)
+Common Development and Distribution License Version 1.0
 
     1. Definitions.
 

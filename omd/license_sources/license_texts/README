@@ -1,0 +1,7 @@
+The file names for license texts need to match the pattern "<license-id>.txt" to be included in the
+omd/License_texts.pdf file.
+<license-id> needs to match one of the IDs listed in omd/license_sources/License_links.csv. Thus, to
+add a new license text, the text file must be put here (omd/license_sources/license_texts/) and an
+according entry must be put into the License_links.csv.
+Also, only the text of those licenses is included in the PDF which occur at least once in the list
+of licenses omd/Licenses.csv.

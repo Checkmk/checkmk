@@ -1997,7 +1997,7 @@ class EventCreator:
                     event.update(self._parse_syslog_info(rest))
 
                     month = EventServer.month_names[month_name]
-                    day = int(day)
+                    iday = int(day)
 
                     # Nasty: the year is not contained in the message. We cannot simply
                     # assume that the message if from the current year.
@@ -2011,7 +2011,7 @@ class EventCreator:
 
                     # A further problem here: we do not now whether the message is in DST or not
                     event["time"] = time.mktime(
-                        (year, month, day, hours, minutes, seconds, 0, 0, lt.tm_isdst))
+                        (year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
 
             # The event simulator ships the simulated original IP address in the
             # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"

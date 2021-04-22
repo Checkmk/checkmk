@@ -152,6 +152,10 @@ class BackupTask:
                     r"^ERROR: Backup of VM (\d+) failed - (.*)$",
                 ),
                 (
+                    "failed_job",
+                    r"^INFO: Failed at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$",
+                ),
+                (
                     "create_archive",
                     r"^INFO: creating(?: vzdump)? archive '(.*)'",
                 ),
@@ -253,7 +257,7 @@ class BackupTask:
                             (error_vmid, current_vmid),
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    result[current_vmid] = {**current_dataset, **{"error": error_msg}}
+                    result[error_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
                     continue
 
@@ -265,6 +269,14 @@ class BackupTask:
                             "Found start date while no VM was active",
                         )
                     current_dataset["started_time"] = started_time
+                    continue
+
+                failed_at_time = extract_single_value(line, "failed_job")
+                if failed_at_time:
+                    # in case a backup job fails we store the time it failed as
+                    # 'started_time' in order to be able to sort backup jobs
+                    for backup_data in result.values():
+                        backup_data.setdefault("started_time", failed_at_time)
                     continue
 
                 bytes_written = extract_tuple(line, "bytes_written", 2)

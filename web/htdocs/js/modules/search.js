@@ -109,6 +109,7 @@ export function on_input_search(id) {
         }
         current_search.previous_timeout_id = setTimeout(function () {
             current_search.execute_search();
+            resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
         }, 300);
     }
 }

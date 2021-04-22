@@ -924,8 +924,7 @@ def page_edit_visual(
         'link_from': {},
     }
 
-    # Load existing visual from disk - and create a copy if 'load_user' is set
-    mode = html.request.get_str_input_mandatory("mode", "create")
+    mode = html.request.get_str_input_mandatory("mode", "edit")
     visualname = html.request.get_str_input_mandatory("load_name", "")
     oldname = visualname
     owner_user_id = config.user.id
@@ -941,11 +940,10 @@ def page_edit_visual(
         owner_id = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
         visual = _get_visual(owner_id, mode)
 
-        if mode == "edit":
+        if mode == "edit" and owner_id != "":  # editing builtins requires copy
             owner_user_id = owner_id
             title = _('Edit %s') % visual_type.title
-
-        elif mode == "clone":
+        else:  # clone explicit or edit from builtin that needs copy
             title = _('Clone %s') % visual_type.title
             visual = copy.deepcopy(visual)
             visual["public"] = False
@@ -968,6 +966,7 @@ def page_edit_visual(
 
     else:
         title = _('Create %s') % visual_type.title
+        mode = "create"
         single_infos = []
         single_infos_raw = html.request.var('single_infos')
         if single_infos_raw:
@@ -1114,9 +1113,8 @@ def page_edit_visual(
     html.begin_form("visual", method="POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
-    if html.request.has_var("load_user"):
-        html.hidden_field("load_user",
-                          html.request.var("load_user"))  # safe old name in case user changes it
+    if html.request.has_var("owner"):
+        html.hidden_field("owner", html.request.var("owner"))
     html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,

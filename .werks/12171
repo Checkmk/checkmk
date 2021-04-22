@@ -1,0 +1,14 @@
+Title: Handle subseconds and timezones in RFC-like syslog messages
+Knowledge: doc
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p23
+Date: 1619077263
+
+The event console message parser ignored subseconds and timezones in some
+RFC-like message formats, leading to incorrect timestamps in events.  This
+has been fixed.

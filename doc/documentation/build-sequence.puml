@@ -1,0 +1,117 @@
+participant jenkins as "Jenkins main"
+participant dc4 as "Jenkins agent"
+participant nexus as "Nexus storage"
+participant git as "Central git repo"
+participant winnode as "Windows build node"
+
+' 3rd party components
+database pypi as "pypi.python.org" #red
+database choco as "community.chocolatey.org" #red
+database win as "visualstudio.microsoft.com" #red
+database reportlab as "reportlab.com" #red
+database dockerhub as "hub.docker.com" #red
+
+database archive as "Archive storage"
+database artifacts as "Artifacts storage"
+database registry as "Docker registry"
+database download as "Download server"
+participant website as "checkmk.com"
+actor user as "User"
+
+group Nightly 0. Master (nightly-trigger.jenkins)
+    group Nightly 1. Master (build-cmk-version.jenkins)
+    jenkins -> dc4: trigger
+    git <-> dc4: ""git checkout""
+    alt NOT Fake Windows Artifacts?
+
+        par #lightgrey
+            group Windows Agent Compile
+            dc4 -> winnode: trigger
+                winnode <-> git: ""git checkout""
+                winnode <-> winnode: ""make -C agents/wnx setversion""
+                winnode <-> winnode: ""cd agents/wnx && call build_release.cmd""
+                alt missing dependencies?
+                winnode <-> choco: choco install -y make (HTTPS & Checksum Verification)
+                winnode <-> win: install Visual Studio 2018
+                end
+                winnode <-> winnode: msbuild.exe
+            dc4 <- winnode: **copy artifacts: check_mk_agent.{msi|exe}**
+            end
+
+            group Windows Python Build
+            dc4 -> winnode: trigger
+                winnode <-> git: ""git checkout""
+                winnode <-> winnode: ""make -C agents/wnx setversion""
+                group cached build
+                winnode <-> winnode: ""call build_the_module.cmd cached""
+                alt cache available?
+                winnode <- artifacts: **""curl *.cab""**
+                else
+                winnode <-> winnode: "make build || make python_344"
+                winnode <-> pypi: pip install
+                winnode -> artifacts: **""curl *.cab""**
+                end
+            dc4 <- winnode: **copy artifacts: *.cab**
+            end
+
+            group Linux Agent Updater Build
+            dc4 <-> dc4: ""./make-agent-updater""" (in BUILD Container)
+            alt Cache available?
+                dc4 <- artifacts: curl
+            else
+                dc4 <-> dc4:  Build cmk_update_agent.py binary with PyInstaller (in Container)
+            end
+            end
+        end
+        end
+
+
+        group Create source package (in BUILD Container)
+        dc4 <-> dc4: ""cd agents; make rpm""
+        dc4 <-> dc4: ""sign-packages.sh""
+        dc4 <-> dc4: ""make dist""
+        dc4 -> archive: **rsync via ssh: check-mk-EDITION-VERSION.tar.gz**
+        end
+
+
+        par #lightgrey
+        loop for all DISTROS
+        group ""make omd [rpm OR cma]"" (in DISTRO Container)
+        dc4 <-> nexus: get package from cache if available
+        dc4 <-> reportlab: get reportlab
+        dc4 <-> pypi: get various py packets
+        end
+        dc4 <-> dc4: "sign-packages.sh"" (in BUILD Container)
+        dc4 <-> dc4: ""make test-packaging"" (in BUILD Container)
+        dc4 -> archive: **rsync via ssh: check-mk-EDITION-VERSION.{rpm,deb,cma}**
+        end
+        end
+
+        group Create and upload Hashes (in BUILD Container)
+        dc4 <-> dc4: ""sha256sum -- *.{tar.gz,rpm,deb,cma,cmk}""
+        dc4 -> archive: **rsync via ssh: HASHES**
+        end
+
+        alt Shall publish package
+        dc4 -> archive: **ssh ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk**
+        archive -> download: **checkmk version as link via smb**
+        end
+
+        end
+    group Nightly 2. Build (Docker) (build-cmk-container.jenkins)
+    jenkins -> dc4: trigger
+    git <-> dc4: ""git checkout""
+    dc4 <-> dc4: build-cmk-container.sh
+    dc4 -> registry: push Dockerimage
+    dc4 -> dockerhub: push raw edition to Docker Hub
+    dc4 -> archive: **rsync via ssh: check-mk-enterprise-docker-DATE.tar.gz**
+    end
+end
+
+group End User Process
+user->website: asks for version
+download <-website: asks link & hashes
+website-> user: provides link & hashes
+download-> user: downloads .rpm, .deb, .tar.gz
+end
+@enduml

@@ -17,7 +17,7 @@ import os
 from pathlib import Path
 import pprint
 import tempfile
-from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast
+from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast, List, Tuple
 
 from six import ensure_binary
 
@@ -484,6 +484,50 @@ def cleanup_locks() -> Iterator[None]:
         except Exception:
             logger.exception("Error while releasing locks after block.")
             raise
+
+
+class RawStorageLoader:
+    """This is POC class: minimal working functionality. OOP and more clear API is planned"""
+    __slots__ = ['_data', '_loaded']
+
+    def __init__(self) -> None:
+        self._data: str = ""
+        self._loaded: Dict[str, Any] = {}
+
+    def read(self, filename: Path) -> None:
+        with filename.open() as f:
+            self._data = f.read()
+
+    def parse(self) -> None:
+        to_run = "loaded.update(" + self._data + ")"
+
+        exec(to_run, {'__builtins__': None}, {"loaded": self._loaded})
+
+    def apply(self, variables: Dict[str, Any]) -> bool:
+        """Stub"""
+        isinstance(variables, dict)
+        return True
+
+    def _all_hosts(self) -> List[str]:
+        return self._loaded.get("all_hosts", [])
+
+    def _host_tags(self) -> Dict[str, Any]:
+        return self._loaded.get("host_tags", {})
+
+    def _host_labels(self) -> Dict[str, Any]:
+        return self._loaded.get("host_labels", {})
+
+    def _attributes(self) -> Dict[str, Dict[str, Any]]:
+        return self._loaded.get("attributes", {})
+
+    def _host_attributes(self) -> Dict[str, Any]:
+        return self._loaded.get("host_attributes", {})
+
+    def _explicit_host_conf(self) -> Dict[str, Dict[str, Any]]:
+        return self._loaded.get("explicit_host_conf", {})
+
+    def _extra_host_conf(self) -> Dict[str, List[Tuple[str, List[str]]]]:
+        return self._loaded.get("extra_host_conf", {})
 
 
 class StorageFormat(enum.Enum):

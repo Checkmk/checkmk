@@ -403,7 +403,13 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
             all_hosts.set_current_path(current_path)
             clusters.set_current_path(current_path)
 
-            _load_config_file(_f, global_dict)
+            if Path(_f).suffix == store.StorageFormat.RAW.extension():
+                loader = store.RawStorageLoader()
+                loader.read(Path(_f))
+                loader.parse()
+                loader.apply(global_dict)
+            else:
+                _load_config_file(_f, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(

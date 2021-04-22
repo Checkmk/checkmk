@@ -515,7 +515,7 @@ class ABCHostsStorage(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -566,7 +566,7 @@ class StandardHostsStorage(ABCHostsStorage):
     def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
         self.save("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
 
-    def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
         for custom_varname, entries in custom_macros.items():
             macrolist = []
             for hostname, nagstring in entries.items():
@@ -637,15 +637,15 @@ class RawHostsStorage(ABCHostsStorage):
 
     def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
         if clusters:
-            self.save("    'clusters.update': %s,\n" % format_config_value(clusters))
+            self.save("    'clusters': %s,\n" % format_config_value(clusters))
 
     def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
-        self.save("    'host_tags.update': %s,\n" % format_config_value(host_tags))
+        self.save("    'host_tags': %s,\n" % format_config_value(host_tags))
 
     def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
-        self.save("    'host_labels.update': %s,\n" % format_config_value(host_labels))
+        self.save("    'host_labels': %s,\n" % format_config_value(host_labels))
 
-    def save_custom_macros(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
         self.save("    'custom_macros': {\n")
         for custom_varname, entries in custom_macros.items():
             macrolist = []
@@ -697,7 +697,7 @@ class RawHostsStorage(ABCHostsStorage):
     def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
         """Write information about all host attributes into special variable - even
         values stored for check_mk as well."""
-        self.save("    'host_attributes.update': %s,\n" % format_config_value(cleaned_hosts))
+        self.save("    'host_attributes': %s,\n" % format_config_value(cleaned_hosts))
 
 
 def make_hosts_storage() -> ABCHostsStorage:
@@ -1179,20 +1179,26 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 custom_macros.setdefault(custom_varname, {})
                                 custom_macros[custom_varname][hostname] = nagstring
 
-        storage = make_hosts_storage()
-        storage.save_group_rules_list(group_rules_list)
-        storage.save_all_hosts(all_hosts)
-        storage.save_clusters(clusters)
-        storage.save_host_tags(host_tags)
-        storage.save_host_labels(host_labels)
+        storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
+        if config.get_storage_format() == store.StorageFormat.RAW:
+            storage_list.append(RawHostsStorage())
 
-        storage.save_attributes(attribute_mappings)
-        storage.save_custom_macros(custom_macros)
-        storage.save_explicit_host_settings(explicit_host_settings)
-        storage.save_contact_groups(self.groups())
+        for storage in storage_list:  # = make_hosts_storage()
+            storage.save_group_rules_list(group_rules_list)
+            storage.save_all_hosts(all_hosts)
 
-        storage.save_cleaned_hosts(cleaned_hosts)
-        storage.write(self.hosts_file_path())
+            storage.save_clusters(clusters)
+            storage.save_host_tags(host_tags)
+            storage.save_host_labels(host_labels)
+
+            storage.save_attributes(attribute_mappings)
+            storage.save_extra_host_conf(custom_macros)
+            storage.save_explicit_host_settings(explicit_host_settings)
+
+            storage.save_contact_groups(self.groups())
+            storage.save_cleaned_hosts(cleaned_hosts)
+
+            storage.write(self.hosts_file_path())
 
     def _get_alias_from_extra_conf(self, host_name, variables):
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])

@@ -13,6 +13,7 @@
 
 import abc
 import ast
+import datetime
 import errno
 import json
 from logging import Logger, getLogger
@@ -31,6 +32,7 @@ from types import FrameType
 from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
 import dateutil.parser
+import dateutil.tz
 from six import ensure_binary
 
 import cmk.utils.version as cmk_version
@@ -1850,13 +1852,33 @@ class EventServer(ECServerThread):
         return new_event
 
 
+def current_utcoffset_seconds() -> int:
+    utcoffset = datetime.datetime.now(dateutil.tz.tzlocal()).utcoffset()
+    # utcoffset is an 'aware' datetime object (we explicitly passed a timezone above),
+    # but the typing is too weak to express this. As a consequnce, we must help mypy.
+    assert utcoffset is not None
+    return round(utcoffset.total_seconds())
+
+
+# Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
+def fix_broken_sophos_timestamp(timestamp: str) -> str:
+    # Step 1: Fix separator between date and time
+    timestamp = timestamp.replace('-', 'T', 1)
+    # Step 2: Fix separators between date parts
+    timestamp = timestamp.replace(':', '-', 2)
+    # Step 3: Add explicit offset for local time
+    offset = current_utcoffset_seconds()
+    hours, minutes = divmod(abs(offset) // 60, 60)
+    return timestamp + f'{"-" if offset < 0 else "+"}{hours:02}{minutes:02}'
+
+
 class EventCreator:
     def __init__(self, logger: Logger, config: Dict[str, Any]) -> None:
         super().__init__()
         self._logger = logger
         self._config = config
 
-    def create_event_from_line(self, line, address) -> Event:
+    def create_event_from_line(self, line: str, address: str) -> Event:
         event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
@@ -1950,7 +1972,8 @@ class EventCreator:
             # Variant 8
             elif line[10] == '-' and line[19] == ' ':
                 timestamp, event['host'], rest = line.split(' ', 2)
-                event['time'] = time.mktime(time.strptime(timestamp, '%Y:%m:%d-%H:%M:%S'))
+                timestamp = fix_broken_sophos_timestamp(timestamp)
+                event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 6

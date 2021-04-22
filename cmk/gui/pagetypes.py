@@ -645,13 +645,17 @@ class Overridable(Base):
         return config.user.may('general.edit_foreign_%s' % self.type_name())
 
     def edit_url(self):
-        owner = ("&owner=%s" % self.owner()) if not self.is_mine() else ""
-        return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
+        http_vars: HTTPVariables = [("load_name", self.name())]
+        if not self.is_mine():
+            http_vars.append(("owner", self.owner()))
+
+        return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self):
         backurl = html.urlencode(makeuri(request, []))
-        return "edit_%s.py?load_user=%s&load_name=%s&mode=clone&back=%s" \
-                    % (self.type_name(), self.owner(), self.name(), backurl)
+        return makeuri_contextless(request, [("owner", self.owner()), ("load_name", self.name()),
+                                             ("mode", "clone"), ("back", backurl)],
+                                   filename="edit_%s.py" % self.type_name())
 
     def delete_url(self):
         add_vars: HTTPVariables = [('_delete', self.name())]
@@ -1204,7 +1208,6 @@ class Overridable(Base):
                 "topic": cls.default_topic(),
             }
         else:
-            # Load existing page. visual from disk - and create a copy if 'load_user' is set
             page_name = html.request.get_str_input_mandatory("load_name")
             if mode == "edit":
                 title = cls.phrase("edit")
@@ -1230,11 +1233,10 @@ class Overridable(Base):
                 page_dict = page.internal_representation()
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.request.get_unicode_input(
-                    "load_user")  # FIXME: Change varname to "owner"
+                owner_id = html.request.get_unicode_input_mandatory("owner")
 
                 try:
-                    page = cls.instance((load_user, page_name))
+                    page = cls.instance((owner_id, page_name))
                 except KeyError:
                     raise MKUserError(None,
                                       _("The requested %s does not exist") % cls.phrase("title"))

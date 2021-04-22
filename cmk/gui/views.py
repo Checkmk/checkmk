@@ -963,7 +963,7 @@ class GUIViewRenderer(ABCViewRenderer):
             ]
 
             if self.view.spec["owner"] != config.user.id:
-                url_vars.append(("load_user", self.view.spec["owner"]))
+                url_vars.append(("owner", self.view.spec["owner"]))
 
             url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
 

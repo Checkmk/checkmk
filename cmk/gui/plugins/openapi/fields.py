@@ -650,7 +650,7 @@ class ExprSchema(OneOfSchema):
         '!<=': BinaryExprSchema,
     }
 
-    def load(self, data, *, many=None, partial=None, unknown=None):
+    def load(self, data, *, many=None, partial=None, unknown=None, **kwargs):
         # When being passed in via the query string, we may get the raw JSON string instead of
         # the deserialized dictionary. We need to unpack it ourselves.
         if isinstance(data, str):
@@ -676,7 +676,7 @@ class ExprSchema(OneOfSchema):
             tree_to_expr(data, self.context['table'])
         except ValueError as e:
             raise ValidationError(str(e)) from e
-        return super().load(data, many=many, partial=partial, unknown=unknown)
+        return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
 
 
 class _ExprNested(Nested):

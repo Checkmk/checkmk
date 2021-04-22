@@ -23940,6 +23940,10 @@ msgstr ""
 msgid "Invalid topology_config %r"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Invalid topology_settings %r"
+msgstr "%d setări de Filtrare"
+
 #, fuzzy
 msgid "Invalid transaction"
 msgstr "%d traduceri"

@@ -25294,6 +25294,10 @@ msgstr "Ungültiges Thema"
 msgid "Invalid topology_config %r"
 msgstr "Ungültige topology_config %r"
 
+#, fuzzy, python-format
+msgid "Invalid topology_settings %r"
+msgstr "Ungültige topology_config %r"
+
 msgid "Invalid transaction"
 msgstr "Ungültige Transaktion"
 

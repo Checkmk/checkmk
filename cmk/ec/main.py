@@ -51,6 +51,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=un
 import pathlib2 as pathlib
 import six
 import dateutil.parser
+import dateutil.tz
 
 import cmk
 import cmk.utils.daemon
@@ -1983,6 +1984,26 @@ def _timestamp(dt):
     return (dt - _EPOCH).total_seconds()
 
 
+def current_utcoffset_seconds():
+    utcoffset = datetime.datetime.now(dateutil.tz.tzlocal()).utcoffset()
+    # utcoffset is an 'aware' datetime object (we explicitly passed a timezone above),
+    # but the typing is too weak to express this. As a consequnce, we must help mypy.
+    assert utcoffset is not None
+    return round(utcoffset.total_seconds())
+
+
+# Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
+def fix_broken_sophos_timestamp(timestamp):
+    # Step 1: Fix separator between date and time
+    timestamp = timestamp.replace('-', 'T', 1)
+    # Step 2: Fix separators between date parts
+    timestamp = timestamp.replace(':', '-', 2)
+    # Step 3: Add explicit offset for local time
+    offset = current_utcoffset_seconds()
+    hours, minutes = divmod(abs(offset) // 60, 60)
+    return timestamp + ('%s%02d%02d' % ('-' if offset < 0 else '+', hours, minutes))
+
+
 class EventCreator(object):
     def __init__(self, logger, config):
         super(EventCreator, self).__init__()
@@ -2083,7 +2104,8 @@ class EventCreator(object):
             # Variant 8
             elif line[10] == '-' and line[19] == ' ':
                 timestamp, event['host'], rest = line.split(' ', 2)
-                event['time'] = time.mktime(time.strptime(timestamp, '%Y:%m:%d-%H:%M:%S'))
+                timestamp = fix_broken_sophos_timestamp(timestamp)
+                event['time'] = _timestamp(dateutil.parser.isoparse(timestamp))
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 6

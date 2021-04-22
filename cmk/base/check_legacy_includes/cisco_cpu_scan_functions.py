@@ -10,9 +10,10 @@
 
 
 def snmp_scan_cisco_cpu(oid):
-    return (_is_cisco(oid) and not _has_table_2(oid) and
-            (bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1')) or
-             bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1'))))
+    return (_is_cisco(oid) and
+            (not _is_cisco_nexus(oid) or not bool(oid(".1.3.6.1.4.1.9.9.305.1.1.1.0"))) and
+            not _has_table_2(oid) and (bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1')) or
+                                       bool(oid('.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1'))))
 
 
 #   ---fallback-------------------------------------------------------------

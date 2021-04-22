@@ -59,7 +59,7 @@ class StatsDashletDataGenerator:
         return {
             "title": settings.get("title", cls._title()),
             "title_url": settings.get("title_url"),
-            "data": cls._collect_data(context, settings["single_infos"]).serialize(),
+            "data": cls._collect_data(context, settings).serialize(),
         }
 
     @classmethod
@@ -79,15 +79,15 @@ class StatsDashletDataGenerator:
         raise NotImplementedError()
 
     @classmethod
-    def _collect_data(cls, context, single_infos) -> StatsElement:
-        stats = cls._get_stats(context)
+    def _collect_data(cls, context, settings) -> StatsElement:
+        stats = cls._get_stats(context, settings)
 
         general_url_vars = [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
             ("search", "1"),
         ]
-        general_url_vars.extend(visuals.get_context_uri_vars(context, single_infos))
+        general_url_vars.extend(visuals.get_context_uri_vars(context, settings["single_infos"]))
 
         parts, total = cls._get_parts_and_total_count(stats, general_url_vars)
         total_part = StatsPart(
@@ -103,9 +103,9 @@ class StatsDashletDataGenerator:
         )
 
     @classmethod
-    def _get_stats(cls, context):
+    def _get_stats(cls, context, settings):
         filter_headers, only_sites = visuals.get_filter_headers(table=cls._livestatus_table(),
-                                                                infos=HostStatsDashlet.infos(),
+                                                                infos=settings["infos"],
                                                                 context=context)
         query = cls._stats_query() + "\n" + filter_headers
         try:
@@ -337,10 +337,6 @@ class HostStatsDashlet(ABCFigureDashlet):
     def infos(cls) -> List[str]:
         return ["host"]
 
-    @classmethod
-    def data_generator(cls):
-        return HostStatsDashletDataGenerator
-
 
 @dashlet_registry.register
 class ServiceStatsDashlet(ABCFigureDashlet):
@@ -376,7 +372,3 @@ class ServiceStatsDashlet(ABCFigureDashlet):
     @classmethod
     def initial_size(cls):
         return (30, 18)
-
-    @classmethod
-    def data_generator(cls):
-        return ServiceStatsDashletDataGenerator

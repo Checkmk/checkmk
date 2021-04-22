@@ -600,6 +600,8 @@ class FigureDashletPage(AjaxPage):
         raw_properties = html.request.get_str_input_mandatory("properties")
         properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+        # Inject the infos because the datagenerator is a separate instance to dashlet
+        settings["infos"] = dashlet_type.infos()
         response_data = dashlet_type.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
@@ -988,7 +990,8 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
 
 
 def service_table_query(properties, context, column_generator):
-    filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
+    filter_headers, only_sites = visuals.get_filter_headers("services", ["host", "service"],
+                                                            context)
     columns = column_generator(properties, context)
 
     query = ("GET services\n"

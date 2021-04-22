@@ -804,10 +804,7 @@ class EventServer(ECServerThread):
         if self._snmptrap is not None:
             listen_list.append(self._snmptrap)
 
-        # Keep list of client connections via UNIX socket and
-        # read data that is not yet processed. Map from
-        # fd to (fileobject, data)
-        client_sockets: Dict[FileDescr, Tuple[socket.socket, Any, bytes]] = {}
+        client_sockets: Dict[FileDescr, Tuple[socket.socket, Optional[Tuple[str, int]], bytes]] = {}
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
@@ -817,16 +814,28 @@ class EventServer(ECServerThread):
                 if e.args[0] != errno.EINTR:
                     raise
                 continue
+            address: Optional[Tuple[str, int]]  # host/port
             data: Optional[bytes] = None
 
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
-                client_socket, address = self._eventsocket.accept()
-                client_sockets[client_socket.fileno()] = (client_socket, address, b"")
+                client_socket, remote_address = self._eventsocket.accept()
+                # We have a AF_UNIX socket, so the remote address is a str, which is always ''.
+                if not (isinstance(remote_address, str) and remote_address == ""):
+                    raise ValueError("Invalid remote address '%r' for event socket" %
+                                     (remote_address,))
+                client_sockets[client_socket.fileno()] = (client_socket, None, b"")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
+                # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
+                # where host can be the domain name or an IPv4 address.
+                if not (isinstance(address, tuple) and  #
+                        isinstance(address[0], str) and  #
+                        isinstance(address[1], int)):
+                    raise ValueError("Invalid remote address '%r' for syslog socket (TCP)" %
+                                     (address,))
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections
@@ -900,19 +909,31 @@ class EventServer(ECServerThread):
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
-                message, sender_address = self._syslog_udp.recvfrom(4096)
-                self.process_raw_lines(message, sender_address)
+                message, address = self._syslog_udp.recvfrom(4096)
+                # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
+                # where host can be the domain name or an IPv4 address.
+                if not (isinstance(address, tuple) and  #
+                        isinstance(address[0], str) and  #
+                        isinstance(address[1], int)):
+                    raise ValueError("Invalid remote address '%r' for syslog socket (UDP)" %
+                                     (address,))
+                self.process_raw_lines(message, address)
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
                 try:
-                    message, sender_address = self._snmptrap.recvfrom(65535)
+                    message, address = self._snmptrap.recvfrom(65535)
+                    # We have an AF_INET socket, so the remote address is a pair (host: str, port: int),
+                    # where host can be the domain name or an IPv4 address.
+                    if not (isinstance(address, tuple) and  #
+                            isinstance(address[0], str) and  #
+                            isinstance(address[1], int)):
+                        raise ValueError("Invalid remote address '%r' for SNMP trap" % (address,))
                     self.process_raw_data(
-                        lambda: self._snmp_trap_engine.process_snmptrap(message, sender_address))
+                        lambda: self._snmp_trap_engine.process_snmptrap(message, address))
                 except Exception:
                     self._logger.exception(
-                        'Exception handling a SNMP trap from "%s". Skipping this one' %
-                        sender_address[0])
+                        'exception while handling an SNMP trap, skipping this one')
 
             try:
                 # process the first spool file we get
@@ -937,7 +958,7 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data: bytes, address: Optional[Any]) -> None:
+    def process_raw_lines(self, data: bytes, address: Optional[Tuple[str, int]]) -> None:
         lines = data.splitlines()
         for line_bytes in lines:
             line = scrub_and_decode(line_bytes.rstrip())
@@ -1386,7 +1407,7 @@ class EventServer(ECServerThread):
                               (SyslogFacility(facility), SyslogPriority(priority), count,
                                (100.0 * count / float(total_count))))
 
-    def process_line(self, line: str, address: Any) -> None:
+    def process_line(self, line: str, address: Optional[Tuple[str, int]]) -> None:
         line = line.rstrip()
         if self._config["debug_rules"]:
             if address:
@@ -1916,10 +1937,11 @@ class EventCreator:
         self._logger = logger
         self._config = config
 
-    def create_event_from_line(self, line: str, address: str) -> Event:
+    def create_event_from_line(self, line: str, address: Optional[Tuple[str, int]]) -> Event:
+        # TODO: Is it really never a domain name?
+        ipaddress = "" if address is None else address[0]
         event: Event = {
-            # address is either None or a tuple of (ipaddress, port)
-            "ipaddress": address[0] if address else "",
+            "ipaddress": ipaddress,
             "core_host": None,
             "host_in_downtime": False,
         }
@@ -2020,7 +2042,7 @@ class EventCreator:
                 # There is no datetime information in the message, use current time
                 event['time'] = time.time()
                 # There is no host information, use the provided address
-                event["host"] = address[0] if address and isinstance(address, tuple) else ""
+                event["host"] = ipaddress
 
             # Variant 10
             elif line[4] == " " and line[:4].isdigit():
@@ -2040,7 +2062,7 @@ class EventCreator:
                 host, tmp_rest = rest.split(None, 1)
                 if host.endswith(":"):
                     # There is no host information sent, use the source address as "host"
-                    host = address[0]
+                    host = ipaddress
                 else:
                     # Use the extracted host and continue with the remaining message text
                     rest = tmp_rest
@@ -2086,7 +2108,7 @@ class EventCreator:
                 "priority": 0,
                 "text": line,
                 "host": "",
-                "ipaddress": address[0] if address else "",
+                "ipaddress": ipaddress,
                 "application": "",
                 "pid": 0,
                 "time": time.time(),

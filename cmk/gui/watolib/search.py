@@ -396,6 +396,8 @@ class IndexSearcher:
         return (
             _("Setup"),
             _("Hosts"),
+            _("VM, Cloud, Container"),
+            _("Other integrations"),
             _("Service monitoring rules"),
             _("Service discovery rules"),
         )

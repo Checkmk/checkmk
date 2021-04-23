@@ -37,8 +37,8 @@ public:
         unsigned long step{};
         std::vector<double> values;
     };
-    RRDDataMaker(MonitoringCore *mc, const RRDColumnArgs &args)
-        : _mc{mc}, _args{args} {}
+    RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
+        : _mc{mc}, _args{std::move(args)} {}
 
     template <class T>
     [[nodiscard]] Data operator()(const T &row) const {

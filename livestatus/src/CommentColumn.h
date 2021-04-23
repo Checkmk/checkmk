@@ -23,6 +23,10 @@
 #include "nagios.h"
 class RowRenderer;
 
+#ifdef CMC
+class Object;
+#endif
+
 class CommentColumn : public ListColumn {
 public:
     enum class verbosity { none, info, extra_info };
@@ -44,9 +48,9 @@ template <class T>
 class CommentColumn::Callback : public CommentColumn {
 public:
     Callback(const std::string &name, const std::string &description,
-             ColumnOffsets offsets, CommentColumn::verbosity v,
+             const ColumnOffsets &offsets, CommentColumn::verbosity v,
              MonitoringCore *mc)
-        : CommentColumn{name, description, std::move(offsets), v}, _mc{mc} {}
+        : CommentColumn{name, description, offsets, v}, _mc{mc} {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
@@ -56,8 +60,7 @@ private:
     MonitoringCore *_mc;
 
     [[nodiscard]] std::vector<CommentData> getEntries(Row row) const override;
-    [[nodiscard]] std::vector<CommentData> comments(
-        const void *const data) const;
+    [[nodiscard]] std::vector<CommentData> comments(const void *data) const;
 };
 
 /// \sa Apart from the lambda, the code is the same in

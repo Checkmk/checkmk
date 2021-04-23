@@ -43,12 +43,12 @@ public:
         const T* data = columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
-        } else if (std::holds_alternative<f1_t>(f_)) {
+        }
+        if (std::holds_alternative<f1_t>(f_)) {
             return data == nullptr ? Default
                                    : std::get<f1_t>(f_)(*data, auth_user);
-        } else {
-            throw std::runtime_error("unreachable");
         }
+        throw std::runtime_error("unreachable");
     }
 
 private:

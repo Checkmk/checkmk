@@ -13,15 +13,18 @@
 #include <chrono>
 #include <iterator>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Row.h"
 #include "nagios.h"
+class ColumnOffsets;
 class RowRenderer;
+
+#ifdef CMC
+class Object;
+#endif
 
 class DowntimeColumn : public ListColumn {
 public:
@@ -45,9 +48,9 @@ template <class T>
 class DowntimeColumn::Callback : public DowntimeColumn {
 public:
     Callback(const std::string &name, const std::string &description,
-             ColumnOffsets offsets, DowntimeColumn::verbosity v,
+             const ColumnOffsets &offsets, DowntimeColumn::verbosity v,
              MonitoringCore *mc)
-        : DowntimeColumn{name, description, std::move(offsets), v}, _mc{mc} {}
+        : DowntimeColumn{name, description, offsets, v}, _mc{mc} {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
@@ -56,8 +59,7 @@ public:
 private:
     MonitoringCore *_mc;
     [[nodiscard]] std::vector<DowntimeData> getEntries(Row row) const override;
-    [[nodiscard]] std::vector<DowntimeData> downtimes(
-        const void *const data) const;
+    [[nodiscard]] std::vector<DowntimeData> downtimes(const void *data) const;
 };
 
 /// \sa Apart from the lambda, the code is the same in

@@ -83,8 +83,8 @@ public:
 
     std::vector<DowntimeData> downtimes(const Host *host) const override;
     std::vector<DowntimeData> downtimes(const Service *service) const override;
-    std::vector<CommentData> comments(const Host *) const override;
-    std::vector<CommentData> comments(const Service *) const override;
+    std::vector<CommentData> comments(const Host *host) const override;
+    std::vector<CommentData> comments(const Service *service) const override;
 
     bool mkeventdEnabled() override;
 

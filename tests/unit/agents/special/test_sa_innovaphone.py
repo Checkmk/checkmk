@@ -13,9 +13,9 @@ from cmk.special_agents import agent_innovaphone
 
 @pytest.mark.parametrize("args, expected_stdout", [(
     [
+        '192.168.178.10',
         'USER',
         'PASSWORD',
-        '192.168.178.10',
     ],
     '<<<innovaphone_cpu>>>\nCPU 21\n<<<innovaphone_mem>>>\nMEM 5\n<<<innovaphone_temp>>>\nTEMP 35\n<<<innovaphone_channels>>>\nPRI1 Up Up 8 30\nPRI2 Up Up 12 30\n<<<innovaphone_licenses>>>\n',
 )])

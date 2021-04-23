@@ -138,9 +138,9 @@ def _get_element(text: str) -> Optional[etree.Element]:
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("host", metavar="HOST")
     parser.add_argument("user", metavar="USER")
     parser.add_argument("password", metavar="PASSWORD")
-    parser.add_argument("host", metavar="HOST")
     return parser.parse_args(argv)
 
 

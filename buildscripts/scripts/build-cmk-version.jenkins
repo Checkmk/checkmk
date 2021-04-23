@@ -1,4 +1,5 @@
 import java.text.SimpleDateFormat
+def node(NODE) = ''
 
 def DISTRO_LIST_DEFAULT = ''
 withFolderProperties{
@@ -7,6 +8,7 @@ withFolderProperties{
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
     }
+    node(NODE) = env.BUILD_NODE
 }
 
 properties([
@@ -74,7 +76,7 @@ def unmount_overlay(UPPER_DIR) {
     sh "until umount ${WORKSPACE}/${UPPER_DIR}; do sleep 1; done"
 }
 
-node {
+node(NODE)  {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
@@ -157,7 +159,7 @@ AGENT_LIST.each { AGENT ->
             }
         }
         else {
-            node {
+            node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image('agent-builder-' + AGENT).pull()
                     docker.image('agent-builder-' + AGENT).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra") {
@@ -212,7 +214,7 @@ AGENT_LIST.each { AGENT ->
 }
 parallel AGENT_BUILDS
 
-node {
+node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
@@ -241,7 +243,7 @@ node {
 try {
     DISTRO_LIST.each { DISTRO ->
         PACKAGE_BUILDS[DISTRO] = {
-            node {
+            node(NODE) {
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                     docker.image(DISTRO + ':' + DOCKER_TAG).pull()
                     docker.image(DISTRO + ':' + DOCKER_TAG).inside("-u 0:0 --ulimit nofile=1024:1024  -v ${DAILY_DATA}:${DAILY_DATA} --privileged --network ci_local-infra --hostname ${DISTRO}") {
@@ -278,7 +280,7 @@ try {
     }
     parallel PACKAGE_BUILDS
 } finally {
-    node {
+    node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             IMAGE = 'ubuntu-18.04-common'
             docker.image(IMAGE).pull()

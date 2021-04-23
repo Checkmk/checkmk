@@ -92,12 +92,6 @@ class TCPFetcher(AgentFetcher):
             self._socket.close()
         self._socket = None
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
             raise MKFetcherError("Got no data: No usable cache file present at %s" %

@@ -72,12 +72,6 @@ class IPMIFetcher(AgentFetcher):
             "password": self.password,
         }
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._command is None:
             raise MKFetcherError("Not connected")

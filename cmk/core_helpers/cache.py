@@ -32,7 +32,7 @@ from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection, TRawData
 
-from .type_defs import AgentRawDataSection
+from .type_defs import AgentRawDataSection, Mode
 
 __all__ = [
     "ABCRawDataSection",
@@ -213,7 +213,20 @@ class FileCache(Generic[TRawData], abc.ABC):
     def _to_cache_file(raw_data: TRawData) -> bytes:
         raise NotImplementedError()
 
-    def read(self) -> Optional[TRawData]:
+    @staticmethod
+    @abc.abstractmethod
+    def cache_read(mode: Mode) -> bool:
+        raise NotImplementedError()
+
+    @staticmethod
+    @abc.abstractmethod
+    def cache_write(mode: Mode) -> bool:
+        raise NotImplementedError()
+
+    def read(self, mode: Mode) -> Optional[TRawData]:
+        if not (self.simulation or self.cache_read(mode)):
+            return None
+
         raw_data = self._read()
         if raw_data is None and self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -248,8 +261,8 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
         return self._from_cache_file(cache_file)
 
-    def write(self, raw_data: TRawData) -> None:
-        if self.disabled:
+    def write(self, raw_data: TRawData, mode: Mode) -> None:
+        if self.disabled or not self.cache_write(mode):
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
 

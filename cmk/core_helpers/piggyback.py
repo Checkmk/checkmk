@@ -60,12 +60,6 @@ class PiggybackFetcher(AgentFetcher):
     def close(self) -> None:
         self._sources.clear()
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         return AgentRawData(b"" + self._get_main_section() + self._get_source_labels_section())
 

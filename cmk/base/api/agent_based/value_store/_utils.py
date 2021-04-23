@@ -243,7 +243,6 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
 
 class ValueStoreManager:
     def __init__(self, host_name: HostName) -> None:
-        self.host_name: Final = host_name
         self._value_store = _EffectiveValueStore(
             dynamic=_DynamicValueStore(),
             static=_StaticValueStore(host_name, logger.debug),

@@ -362,7 +362,6 @@ class _MockValueStore:
 
 
 class _MockVSManager(NamedTuple):
-    host_name: str
     active_service_interface: _MockValueStore
 
 
@@ -399,7 +398,7 @@ def mock_item_state(mock_state):
         (mock_state if callable(mock_state) else  #
          lambda key, default: mock_state))
 
-    return mock.patch(target, _MockVSManager('test-host', _MockValueStore(getter)))
+    return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
 
 
 class assertMKCounterWrapped:

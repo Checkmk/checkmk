@@ -277,13 +277,12 @@ def use_fakeredis_client(monkeypatch):
 
 
 class _MockVSManager(NamedTuple):
-    host_name: str
     active_service_interface: Mapping[str, Any]
 
 
 @pytest.fixture(scope="function")
 def initialised_item_state():
-    mock_vs = _MockVSManager('test-host', {})
+    mock_vs = _MockVSManager({})
     with mock.patch(
             "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
             mock_vs,

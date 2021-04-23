@@ -1179,6 +1179,10 @@ class TimeperiodValuespec(ValueSpec):
         super(TimeperiodValuespec, self)._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
+        super().validate_datatype(value, varprefix)
+        self._get_used_valuespec(value).validate_datatype(value, varprefix)
+
     def _get_timeperiod_valuespec(self):
         return Dictionary(
             elements=[

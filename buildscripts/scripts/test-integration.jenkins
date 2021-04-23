@@ -4,7 +4,17 @@
 // buildscripts/scripts/ on file jenkins-lib-loader/jenkins-template.groovy and run
 // jenkins-lib-loader/update-jenkins-lib-loading.sh
 // check the results and commit
-node {
+
+def NODE = ''
+
+def DISTRO_LIST_DEFAULT = ''
+withFolderProperties{
+    NODE = env.BUILD_NODE
+}
+
+
+
+node(NODE) {
    stage('Load Jenkins Libs') {
        def LIB = [
            $class: 'GitSCM',
@@ -61,7 +71,7 @@ if(BRANCH == 'master') {
 def TEST_DATA = '/var/jenkins_home/test-data/' + CMK_VERSION
 OMD_SITE = 'int_' + BRANCH.replaceAll("\\.","")
 
-node {
+node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         println(DOCKER_REGISTRY)
         IMAGE = 'ubuntu-18.04-common'
@@ -85,7 +95,7 @@ node {
 try {
     DISTRO_LIST.each { DISTRO ->
         DOCKER_BUILDS[DISTRO] = {
-            node {
+            node(NODE) {
                 def JENKINS_USER = id.getUser('jenkins')
                 def JENKINS_GROUP = id.getGroup('jenkins')
                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -208,7 +218,7 @@ try {
         parallel DOCKER_BUILDS
     }
 } finally {
-    node {
+    node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             println(DOCKER_REGISTRY)
             IMAGE = 'ubuntu-18.04-common'

@@ -561,6 +561,7 @@ class TextAscii(ValueSpec):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -589,6 +590,7 @@ class TextAscii(ValueSpec):
         self._regex_error = regex_error if regex_error is not None else \
             _("Your input does not match the required format.")
         self._minlen = minlen
+        self._maxlen = maxlen
         self._onkeyup = onkeyup
         self._autocomplete = autocomplete
         self._hidden = hidden
@@ -664,6 +666,9 @@ class TextAscii(ValueSpec):
         if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
+        if self._maxlen is not None and len(value) > self._maxlen:
+            raise MKUserError(varprefix,
+                              _("You must not provide more than %d characters.") % self._maxlen)
 
 
 class UUID(TextAscii):
@@ -750,6 +755,7 @@ class RegExp(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -773,6 +779,7 @@ class RegExp(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -878,6 +885,7 @@ class EmailAddress(TextUnicode):
         forbidden_chars: str = "",
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -929,6 +937,7 @@ class EmailAddress(TextUnicode):
                              re.I | re.UNICODE),
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1053,6 +1062,7 @@ class TextAsciiAutocomplete(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         hidden: bool = False,
         placeholder: _Optional[str] = None,
@@ -1081,6 +1091,7 @@ class TextAsciiAutocomplete(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=False,
             hidden=hidden,
@@ -1231,6 +1242,7 @@ class HostAddress(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1254,6 +1266,7 @@ class HostAddress(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1379,6 +1392,7 @@ class Url(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1402,6 +1416,7 @@ class Url(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1520,6 +1535,7 @@ class TextAreaUnicode(TextUnicode):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1543,6 +1559,7 @@ class TextAreaUnicode(TextUnicode):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1621,6 +1638,7 @@ class Filename(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1644,6 +1662,7 @@ class Filename(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,

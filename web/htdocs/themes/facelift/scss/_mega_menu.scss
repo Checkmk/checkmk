@@ -276,6 +276,7 @@
           }
 
           h2 {
+            display: flex;
             padding-bottom: 4px;
             margin: 0;
             font-size: $font-size-large;
@@ -283,7 +284,7 @@
             color: $font-color;
 
             span {
-              margin-left: 22px;
+              margin-left: 24px;
             }
 
             span.emblem {
@@ -292,7 +293,8 @@
 
             img + span,
             span + span {
-              margin-left: 0; /* No spacing if icons per entry are used */
+              display: inline-block;
+              margin: 3px 0 0; /* No spacing if icons per entry are used */
             }
 
             a.show_all_topics,
@@ -343,7 +345,11 @@
             img.icon {
               width: 14px;
               height: 14px;
-              margin-right: 5px;
+              margin-right: 7px;
+            }
+
+            img.emblem {
+              margin-right: 2px;
             }
 
             input.button {
@@ -363,7 +369,7 @@
 
             &.show_all_items {
               display: none;
-              margin-top: $spacing;
+              margin-top: 2px;
 
               a {
                 font-weight: 700;

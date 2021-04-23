@@ -1,5 +1,5 @@
 import java.text.SimpleDateFormat
-def node(NODE) = ''
+def NODE = ''
 
 def DISTRO_LIST_DEFAULT = ''
 withFolderProperties{
@@ -8,7 +8,7 @@ withFolderProperties{
     } else {
         DISTRO_LIST_DEFAULT = env.DISTRO_LIST_TESTBUILD
     }
-    node(NODE) = env.BUILD_NODE
+    NODE = env.BUILD_NODE
 }
 
 properties([

@@ -15,8 +15,8 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    ServiceState,
     ServiceDetails,
+    ServiceState,
 )
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache

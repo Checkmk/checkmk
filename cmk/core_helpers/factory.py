@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 import logging
+from typing import Optional
 
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

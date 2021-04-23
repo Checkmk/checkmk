@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import contextlib
 import json
 import logging
 import os
 import signal
+import sys
 import traceback
 from pathlib import Path
 from types import FrameType
@@ -19,9 +19,9 @@ import cmk.utils.cleanup
 import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.type_defs import ConfigSerial, HostName, result
-from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
+from cmk.utils.observer import ABCResourceObserver
+from cmk.utils.type_defs import ConfigSerial, HostName, result
 
 from . import FetcherType, protocol
 from .snmp import SNMPFetcher, SNMPPluginStore

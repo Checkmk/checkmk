@@ -11,15 +11,22 @@ from typing import Any, Dict, final, Final, Generic, Literal, Optional, Tuple, T
 
 import cmk.utils
 from cmk.utils.exceptions import (
+    MKAgentError,
+    MKEmptyAgentData,
     MKFetcherError,
     MKIPAddressLookupError,
-    MKEmptyAgentData,
-    MKAgentError,
     MKSNMPError,
     MKTimeout,
 )
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ExitSpec, HostAddress, result, ServiceDetails, ServiceState, state_markers
+from cmk.utils.type_defs import (
+    ExitSpec,
+    HostAddress,
+    result,
+    ServiceDetails,
+    ServiceState,
+    state_markers,
+)
 
 from cmk.snmplib.type_defs import TRawData
 

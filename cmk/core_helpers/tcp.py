@@ -6,13 +6,17 @@
 
 import logging
 import socket
-from typing import Any, Dict, Final, List, Mapping, Optional, TYPE_CHECKING, Tuple
-
 from hashlib import md5, sha256
+from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+
 import cmk.utils.debug
+from cmk.utils.encryption import (
+    decrypt_aes_256_cbc_legacy,
+    decrypt_aes_256_cbc_pbkdf2,
+    OPENSSL_SALTED_MARKER,
+)
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
-from cmk.utils.encryption import decrypt_aes_256_cbc_legacy, decrypt_aes_256_cbc_pbkdf2, OPENSSL_SALTED_MARKER
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache

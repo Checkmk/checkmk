@@ -211,7 +211,7 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
     def _calculate_daily_services(self) -> DailyServices:
         daily_services: DailyServices = {}
         for site_id, history in self._short_samples:
-            self._last_daily_services.setdefault(site_id, history[-1] if history else None)
+            self._last_daily_services.setdefault(site_id, history[0] if history else None)
 
             for sample in history:
                 sample_date = datetime.fromtimestamp(sample.sample_time)

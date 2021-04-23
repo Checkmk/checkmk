@@ -20,15 +20,13 @@ structures like log files or stuff.
 """
 
 from contextlib import contextmanager
-from typing import Generator, MutableMapping, Optional
+from typing import Generator, Optional
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 from cmk.base.api.agent_based.type_defs import ValueStore
 
 from ._utils import ValueStoreManager
-
-_host_value_stores: MutableMapping[HostName, ValueStoreManager] = {}
 
 _active_host_value_store: Optional[ValueStoreManager] = None
 
@@ -56,26 +54,16 @@ def load_host_value_store(
     """Select (or create) the correct value store for the host and (re)load it"""
     global _active_host_value_store
 
-    pushed_host_name = _active_host_value_store.host_name if _active_host_value_store else None
+    pushed_back_store = _active_host_value_store
 
-    if not store_changes:
-        _active_host_value_store = ValueStoreManager(host_name)
-    else:
-        try:
-            _active_host_value_store = _host_value_stores[host_name]
-        except KeyError:
-            _active_host_value_store = _host_value_stores.setdefault(
-                host_name,
-                ValueStoreManager(host_name),
-            )
-
-    assert _active_host_value_store is not None
-
-    _active_host_value_store.load()
     try:
+
+        _active_host_value_store = ValueStoreManager(host_name)
+        _active_host_value_store.load()  # TODO incorporate into init
+
         yield _active_host_value_store
+
         if store_changes:
             _active_host_value_store.save()
     finally:
-        _active_host_value_store = _host_value_stores.get(
-            pushed_host_name) if pushed_host_name else None
+        _active_host_value_store = pushed_back_store

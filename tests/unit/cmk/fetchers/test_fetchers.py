@@ -96,20 +96,20 @@ class TestNoCache:
         assert not file_cache.disabled
         assert not file_cache.path.exists()
 
-        file_cache.write(agent_raw_data)
+        file_cache.write(agent_raw_data, Mode.DISCOVERY)
 
         assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.read(Mode.DISCOVERY) is None
 
     def test_disabled_write_and_read(self, file_cache, agent_raw_data):
         file_cache.disabled = True
         assert file_cache.disabled is True
         assert not file_cache.path.exists()
 
-        file_cache.write(agent_raw_data)
+        file_cache.write(agent_raw_data, Mode.DISCOVERY)
 
         assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.read(Mode.DISCOVERY) is None
 
 
 class TestDefaultFileCache_and_SNMPFileCache:
@@ -140,34 +140,34 @@ class TestDefaultFileCache_and_SNMPFileCache:
         assert not file_cache.disabled
         assert not file_cache.path.exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(raw_data, Mode.DISCOVERY)
 
         assert file_cache.path.exists()
-        assert file_cache.read() == raw_data
+        assert file_cache.read(Mode.DISCOVERY) == raw_data
 
         # Now with another instance
         clone = clone_file_cache(file_cache)
         assert clone.path.exists()
-        assert clone.read() == raw_data
+        assert clone.read(Mode.DISCOVERY) == raw_data
 
     def test_disabled_write(self, file_cache, raw_data):
         file_cache.disabled = True
         assert file_cache.disabled is True
         assert not file_cache.path.exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(raw_data, Mode.DISCOVERY)
 
         assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.read(Mode.DISCOVERY) is None
 
     def test_disabled_read(self, file_cache, raw_data):
-        file_cache.write(raw_data)
+        file_cache.write(raw_data, Mode.DISCOVERY)
         assert file_cache.path.exists()
-        assert file_cache.read() == raw_data
+        assert file_cache.read(Mode.DISCOVERY) == raw_data
 
         file_cache.disabled = True
         assert file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.read(Mode.DISCOVERY) is None
 
 
 class TestIPMIFetcher:
@@ -730,10 +730,16 @@ class StubFileCache(DefaultAgentFileCache):
         super().__init__(*args, **kwargs)
         self.cache: Optional[AgentRawData] = None
 
-    def write(self, raw_data: AgentRawData) -> None:
+    def write(self, raw_data: AgentRawData, mode: Mode) -> None:
+        if not self.cache_write(mode):
+            return None
+
         self.cache = raw_data
 
-    def read(self) -> Optional[AgentRawData]:
+    def read(self, mode: Mode) -> Optional[AgentRawData]:
+        if not self.cache_read(mode):
+            return None
+
         return self.cache
 
 

@@ -101,7 +101,20 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
     def _to_cache_file(raw_data: TRawData) -> bytes:
         raise NotImplementedError()
 
-    def read(self) -> Optional[TRawData]:
+    @staticmethod
+    @abc.abstractmethod
+    def cache_read(mode: Mode) -> bool:
+        raise NotImplementedError()
+
+    @staticmethod
+    @abc.abstractmethod
+    def cache_write(mode: Mode) -> bool:
+        raise NotImplementedError()
+
+    def read(self, mode: Mode) -> Optional[TRawData]:
+        if not (self.simulation or self.cache_read(mode)):
+            return None
+
         raw_data = self._read()
         if raw_data is None and self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -136,8 +149,8 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         self._logger.log(VERBOSE, "Using data from cache file %s", self.path)
         return self._from_cache_file(cache_file)
 
-    def write(self, raw_data: TRawData) -> None:
-        if self.disabled:
+    def write(self, raw_data: TRawData, mode: Mode) -> None:
+        if self.disabled or not self.cache_write(mode):
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
 
@@ -224,41 +237,26 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
                 raise
             return result.Error(exc)
 
-    @abc.abstractmethod
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        """Decide whether to try to read data from cache"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        """Decide whether to write data to cache"""
-        raise NotImplementedError()
-
     def _fetch(self, mode: Mode) -> TRawData:
         self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
                            self.__class__.__name__, self.file_cache,
-                           self._is_cache_read_enabled(mode))
+                           self.file_cache.cache_read(mode))
 
         # TODO(ml): EAFP would significantly simplify the code.
-        if self.file_cache.simulation or self._is_cache_read_enabled(mode):
-            raw_data = self._fetch_from_cache()
-            if raw_data:
-                self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
-                return raw_data
+        raw_data = self.file_cache.read(mode)
+        if raw_data:
+            self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)
+            return raw_data
 
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
         raw_data = self._fetch_from_io(mode)
-        if self._is_cache_write_enabled(mode):
-            self.file_cache.write(raw_data)
+        self.file_cache.write(raw_data, mode)
         return raw_data
 
     @abc.abstractmethod
     def _fetch_from_io(self, mode: Mode) -> TRawData:
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()
-
-    def _fetch_from_cache(self) -> Optional[TRawData]:
-        return self.file_cache.read()
 
 
 def verify_ipaddress(address: Optional[HostAddress]) -> None:

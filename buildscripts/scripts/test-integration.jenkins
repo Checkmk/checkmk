@@ -6,10 +6,11 @@
 // check the results and commit
 
 def NODE = ''
-
 def DISTRO_LIST_DEFAULT = ''
+
 withFolderProperties{
     NODE = env.BUILD_NODE
+    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
 }
 
 
@@ -30,11 +31,6 @@ node(NODE) {
 }
 // jenkins-libs loaded
 import java.text.SimpleDateFormat
-
-def DISTRO_LIST_DEFAULT = ''
-withFolderProperties{
-    DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-}
 
 properties([
   parameters([

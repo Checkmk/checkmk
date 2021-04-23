@@ -1524,7 +1524,11 @@ msgid ""
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
 "mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
-"defined here.</p><p>Select \"Ignore\" as state to get the matching logs "
+"defined here.</p><p>Note that to match a special regex character in your "
+"patterns, you need to use a backslash to escape its special meaning. This is "
+"especially relevant for Windows file paths. For example, to match the "
+"Windows path \"C:\\Users\\amdin\\Desktop\", enter \"C:\\\\Users\\\\admin\\"
+"\\Desktop\".</p><p>Select \"Ignore\" as state to get the matching logs "
 "deleted. Other states will keep the log entries but reclassify the state of "
 "them.</p>"
 msgstr ""
@@ -9099,9 +9103,6 @@ msgstr ""
 msgid "Clone this element"
 msgstr "Adaungă un nou element"
 
-msgid "Clone this fixel element"
-msgstr ""
-
 #, fuzzy
 msgid "Clone this metric"
 msgstr "Adaungă un nou element"
@@ -12734,9 +12735,6 @@ msgstr "Sterge Elementul"
 msgid "Delete this entry"
 msgstr ""
 
-msgid "Delete this fixel element"
-msgstr ""
-
 msgid "Delete this folder"
 msgstr ""
 
@@ -15593,9 +15591,6 @@ msgstr "Adaugă element"
 #, fuzzy
 msgid "Edit this element"
 msgstr "Adaugă element"
-
-msgid "Edit this fixel element"
-msgstr ""
 
 msgid "Edit this host"
 msgstr ""
@@ -45911,10 +45906,6 @@ msgid ""
 "schedules refering this report to be able to delete the report."
 msgstr ""
 
-#, fuzzy
-msgid "The report you are trying to preview does not exist."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
 msgid "The report you are trying to preview has no valid filename"
 msgstr ""
 
@@ -46095,10 +46086,6 @@ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 msgid "The schedule you are trying to edit does not exist."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-#, fuzzy
-msgid "The schedule you are trying to execute does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The secret access key for your AWS account"
@@ -58669,6 +58656,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "The report you are trying to preview does not exist."
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+#~ msgid "The schedule you are trying to execute does not exist."
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 #~ msgid "The requested %s does not exist."

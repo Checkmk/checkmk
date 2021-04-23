@@ -1722,13 +1722,18 @@ msgstr ""
 "tatsächlichen Benutzernamen angegeben. Zum Beispiel \"\\\\NT AUTHORITY"
 "\\NETWORK SERVICE\" oder \"\\CHKMKTEST\\Administrator\".</p> "
 
+#, fuzzy
 msgid ""
 "<p>You can define one or several patterns (regular expressions) in each "
 "logfile pattern rule. These patterns are applied to the selected logfiles to "
 "reclassify the matching log messages. The first pattern which matches a line "
 "will be used for reclassifying a message. You can use the <a href=\"wato.py?"
 "mode=pattern_editor\">Logfile Pattern Analyzer</a> to test the rules you "
-"defined here.</p><p>Select \"Ignore\" as state to get the matching logs "
+"defined here.</p><p>Note that to match a special regex character in your "
+"patterns, you need to use a backslash to escape its special meaning. This is "
+"especially relevant for Windows file paths. For example, to match the "
+"Windows path \"C:\\Users\\amdin\\Desktop\", enter \"C:\\\\Users\\\\admin\\"
+"\\Desktop\".</p><p>Select \"Ignore\" as state to get the matching logs "
 "deleted. Other states will keep the log entries but reclassify the state of "
 "them.</p>"
 msgstr ""
@@ -9604,9 +9609,6 @@ msgstr "Eine neue Verbindung auf Basis einer Kopie von dieser anlegen"
 msgid "Clone this element"
 msgstr "Dieses Element duplizieren"
 
-msgid "Clone this fixel element"
-msgstr "Dieses Seitenelement klonen"
-
 msgid "Clone this metric"
 msgstr "Diese Metrik klonen"
 
@@ -13207,9 +13209,6 @@ msgstr "Dieses Element löschen"
 msgid "Delete this entry"
 msgstr "Lösche Eintrag"
 
-msgid "Delete this fixel element"
-msgstr "Dieses Seitenelement löschen"
-
 msgid "Delete this folder"
 msgstr "Lösche Ordner"
 
@@ -16045,9 +16044,6 @@ msgstr "Diesen Kunden bearbeiten"
 
 msgid "Edit this element"
 msgstr "Dieses Element bearbeiten"
-
-msgid "Edit this fixel element"
-msgstr "Seitenelement bearbeiten"
 
 msgid "Edit this host"
 msgstr "Diesen Host bearbeiten"
@@ -47755,9 +47751,6 @@ msgstr ""
 "die sich auf diesen Bericht beziehen, löschen, bevor Sie diesen Bericht "
 "löschen können."
 
-msgid "The report you are trying to preview does not exist."
-msgstr "Der ausgewählte Preview Report existiert nicht."
-
 msgid "The report you are trying to preview has no valid filename"
 msgstr "Der ausgewählte Preview Report hat keinen gültigen Dateinamen"
 
@@ -47961,9 +47954,6 @@ msgstr "Der Eintrag, den Sie löschen möchten, existiert nicht."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Der Eintrag, den Sie bearbeiten möchten, existiert nicht."
-
-msgid "The schedule you are trying to execute does not exist."
-msgstr "Der Geplante Bereicht, den Sie ausführen möchten, existiert nicht."
 
 msgid "The secret access key for your AWS account"
 msgstr "Der geheime Schlüssel für Ihr AWS-Konto"
@@ -62713,6 +62703,21 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Clone this fixel element"
+#~ msgstr "Dieses Seitenelement klonen"
+
+#~ msgid "Delete this fixel element"
+#~ msgstr "Dieses Seitenelement löschen"
+
+#~ msgid "Edit this fixel element"
+#~ msgstr "Seitenelement bearbeiten"
+
+#~ msgid "The report you are trying to preview does not exist."
+#~ msgstr "Der ausgewählte Preview Report existiert nicht."
+
+#~ msgid "The schedule you are trying to execute does not exist."
+#~ msgstr "Der Geplante Bereicht, den Sie ausführen möchten, existiert nicht."
 
 #~ msgid "The requested %s does not exist."
 #~ msgstr "Die zu kopierende %s existiert nicht."

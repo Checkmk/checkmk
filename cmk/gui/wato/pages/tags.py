@@ -734,11 +734,14 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(self.breadcrumb(), operation)
-        if message:
-            self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
-            add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
-            if isinstance(message, str):
-                flash(message)
+        if message is False:
+            return FinalizeRequest(code=200)
+
+        self._save_tags_and_update_hosts(changed_hosttags_config.get_dict_format())
+        add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._id))
+        if isinstance(message, str):
+            flash(message)
+
         return redirect(mode_url("tags"))
 
     def page(self):

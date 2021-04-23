@@ -85,10 +85,8 @@ public:
     time_t _start_time;
     time_t _end_time;
     int _fixed;
-    // TODO(sp): Wrong types, caused by TableDowntimes accessing it via
-    // OffsetIntColumn, should be unsigned long
-    int _duration;
-    int _triggered_by;
+    unsigned long _duration;
+    unsigned long _triggered_by;
     Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };
 

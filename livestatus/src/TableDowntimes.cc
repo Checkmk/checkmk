@@ -64,10 +64,18 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
-        [](const Downtime &r) { return r._fixed; }));
+        [](const Downtime &r) {
+            // TODO(ml): Ugly cast unsigned long to int because
+            //           the int columns are currently 32-bits signed only.
+            return static_cast<int>(r._fixed);
+        }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
-        [](const Downtime &r) { return r._duration; }));
+        [](const Downtime &r) {
+            // TODO(ml): Ugly cast unsigned long to int because
+            //           the int columns are currently 32-bits signed only.
+            return static_cast<int>(r._duration);
+        }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",

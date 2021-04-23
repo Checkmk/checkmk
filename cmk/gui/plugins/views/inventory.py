@@ -1333,7 +1333,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'datasource': 'hosts',
     "topic": "inventory",
     "sort_index": 10,
-    'title': _('CPU Related Inventory of all Hosts'),
+    'title': _('CPU inventory of all hosts'),
     'description': _('A list of all hosts with some CPU related inventory data'),
     'public': True,
     'hidden': False,

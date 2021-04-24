@@ -56400,6 +56400,10 @@ msgstr ""
 msgid "You might want to add some helpful description for the attribute."
 msgstr ""
 
+#, python-format
+msgid "You must not provide more than %d characters."
+msgstr ""
+
 msgid ""
 "You must specify a name for your Kubernetes cluster. The provided name will "
 "be used to create a piggyback host for the cluster related services."

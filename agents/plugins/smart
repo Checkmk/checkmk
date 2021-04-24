@@ -108,6 +108,9 @@ if which smartctl > /dev/null 2>&1 ; then
             continue
         fi
 
+        # Exlude DVD-RAM
+        [ "$MODEL" != "${MODEL%DVD-RAM\*}" ] && continue
+
         # Avoid duplicate entries for same device
         if [ "${SEEN//.$N./}" != "$SEEN" ] ; then
             continue

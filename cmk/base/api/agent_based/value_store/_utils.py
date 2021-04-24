@@ -21,12 +21,13 @@ structures like log files or stuff.
 
 from contextlib import contextmanager
 from pathlib import Path
-import traceback
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
     Final,
+    Iterable,
     Iterator,
     Mapping,
     MutableMapping,
@@ -81,10 +82,10 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
 
     def __init__(self, host_name: HostName, log_debug: Callable[[str], None]) -> None:
         self._path: Final = self.STORAGE_PATH / host_name
-        self._loaded_mtime: Optional[float] = None
+        self._last_sync: Optional[float] = None
         self._data: Mapping[_ValueStoreKey, Any] = {}
         self._log_debug = log_debug
-        self.initial_load()
+        self.disksync()
 
     def __getitem__(self, key: _ValueStoreKey) -> Any:
         return self._data.__getitem__(key)
@@ -95,60 +96,39 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
     def __len__(self) -> int:
         return len(self._data)
 
-    # TODO: 'load' is actually 'store' with falsey arguments,
-    # and 'store' does more than storing.
-    # -> we should consolidate those into a single 'disksync' method
-    def initial_load(self) -> None:
-        self._log_debug("Loading item states")
-
-        try:
-            store.aquire_lock(self._path)
-            self._load()
-        finally:
-            store.release_lock(self._path)
-
-    def _load(self) -> None:
-        try:
-            current_mtime = self._path.stat().st_mtime
-        except FileNotFoundError:
-            return
-
-        if current_mtime == self._loaded_mtime:
-            self._log_debug("already loaded")
-            return
-
-        self._data = store.load_object_from_file(self._path, default={}, lock=False)
-        self._loaded_mtime = current_mtime
-
-    def store(
-        self,
-        *,
-        removed: Set[_ValueStoreKey],
-        updated: Mapping[_ValueStoreKey, Any],
+    def disksync(
+            self,
+            *,
+            removed: Container[_ValueStoreKey] = (),
+            updated: Iterable[Tuple[_ValueStoreKey, Any]] = (),
     ) -> None:
         """Re-load and then store the changes of the item state to disk
 
         Make sure the object is in sync with the file after writing.
         """
-        self._log_debug("Storing item states")
-        if not (removed or updated):
-            return
+        self._log_debug("value store: synchronizing")
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             store.aquire_lock(self._path)
-            self._load()
 
-            data = {
-                **{k: v for k, v in self._data.items() if k not in removed},
-                **updated,
-            }
-            store.save_object_to_file(self._path, data, pretty=False)
-            self._mtime = self._path.stat().st_mtime
-            self._data = data
-        except Exception:
-            raise MKGeneralException(f"Cannot write to {self._path}: {traceback.format_exc()}")
+            if self._path.stat().st_mtime == self._last_sync:
+                self._log_debug("value store: already loaded")
+            else:
+                self._log_debug("value store: loading from disk")
+                self._data = store.load_object_from_file(self._path, default={}, lock=False)
+
+            if removed or updated:
+                data = {k: v for k, v in self._data.items() if k not in removed}
+                data.update(updated)
+                self._log_debug("value store: writing to disk")
+                store.save_object_to_file(self._path, data, pretty=False)
+                self._data = data
+
+            self._last_sync = self._path.stat().st_mtime
+        except Exception as exc:
+            raise MKGeneralException from exc
         finally:
             store.release_lock(self._path)
 
@@ -204,9 +184,9 @@ class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disa
         return len(self._keys())
 
     def commit(self) -> None:
-        self.static.store(
+        self.static.disksync(
             removed=self._dynamic.removed_keys,
-            updated=self._dynamic,
+            updated=self._dynamic.items(),
         )
         self._dynamic = _DynamicValueStore()
 

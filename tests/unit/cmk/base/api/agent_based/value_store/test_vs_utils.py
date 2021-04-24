@@ -126,9 +126,9 @@ class Test_StaticValueStore:
 
         svs = _StaticValueStore("test-host", lambda msg: None)
 
-        svs.store(
+        svs.disksync(
             removed={("check2", "item", "stored-user-key-2")},
-            updated={("check3", "el Barto", "Ay caramba"): "ASDF"},
+            updated=[(("check3", "el Barto", "Ay caramba"), "ASDF")],
         )
 
         expected_values = {

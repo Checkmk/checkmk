@@ -13,7 +13,7 @@ def agent_netapp_arguments(params, hostname, ipaddress):
     if params.get("skip_elements"):
         no_ctrs = [x[4:] for x in params["skip_elements"] if x.startswith("ctr_")]
         if no_ctrs:
-            args += ["--nocounters %s" % ",".join(no_ctrs)]
+            args += ["--nocounters", "%s" % ",".join(no_ctrs)]
 
     args += [ipaddress]
     return args

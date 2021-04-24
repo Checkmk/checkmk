@@ -1,0 +1,16 @@
+Title: jira notification: Fix empty rule on edit if rule was created pre 1.6.0p18
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p24
+Date: 1619272590
+Class: fix
+
+With werk #11202 the option "Site custom field ID" was introduced. If you
+configured rules before that werk and tried to edit such rule in versions from
+1.6.0p18 upwards, an empty rule was shown.
+
+A workaround was, to edit the file /var/check_mk/conf.d/wato/notifications.mk
+and add the key value pair "'site_customid': ''" to the "jira_issues"
+notification rule.

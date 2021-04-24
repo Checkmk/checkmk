@@ -24,7 +24,6 @@ NOT_TESTED_YET = {
     'agent_hp_msa',
     'agent_ipmi_sensors',
     'agent_jolokia',
-    'agent_netapp',
     'agent_prism',
     'agent_random',
     'agent_ruckus_spot',
@@ -82,6 +81,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_innovaphone': [
         '--debug', '--verbose', '--vcrtrace', 'TRACEFILE', 'User', 'MyPass', 'Hostname'
     ],
+    'agent_netapp': ["address", "user", "password", "--no_counters", "volumes"],
 }
 
 

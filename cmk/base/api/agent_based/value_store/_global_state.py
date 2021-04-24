@@ -59,8 +59,6 @@ def load_host_value_store(
     try:
 
         _active_host_value_store = ValueStoreManager(host_name)
-        _active_host_value_store.load()  # TODO incorporate into init
-
         yield _active_host_value_store
 
         if store_changes:

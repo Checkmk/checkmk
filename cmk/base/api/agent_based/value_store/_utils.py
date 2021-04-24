@@ -84,6 +84,7 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
         self._loaded_mtime: Optional[float] = None
         self._data: Mapping[_ValueStoreKey, Any] = {}
         self._log_debug = log_debug
+        self.initial_load()
 
     def __getitem__(self, key: _ValueStoreKey) -> Any:
         return self._data.__getitem__(key)
@@ -94,7 +95,10 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
     def __len__(self) -> int:
         return len(self._data)
 
-    def load(self) -> None:
+    # TODO: 'load' is actually 'store' with falsey arguments,
+    # and 'store' does more than storing.
+    # -> we should consolidate those into a single 'disksync' method
+    def initial_load(self) -> None:
         self._log_debug("Loading item states")
 
         try:
@@ -257,9 +261,6 @@ class ValueStoreManager:
             yield
         finally:
             self.active_service_interface = old_sif
-
-    def load(self) -> None:
-        self._value_store.static.load()
 
     def save(self) -> None:
         if isinstance(self._value_store, _EffectiveValueStore):

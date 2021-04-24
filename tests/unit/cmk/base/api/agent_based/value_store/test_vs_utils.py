@@ -104,15 +104,13 @@ class Test_StaticValueStore:
 
     def test_mapping_features(self, mocker):
 
+        self._mock_load(mocker)
         svs = _StaticValueStore("test-host", lambda msg: None)
         assert svs.get(("check_no", None, "moo")) is None
         with pytest.raises(KeyError):
             _ = svs[("check_no", None, "moo")]
-        assert list(svs) == []
-        assert len(svs) == 0
+        assert len(svs) == 2
 
-        self._mock_load(mocker)
-        svs.load()
         assert svs.get(("check1", None, "stored-user-key-1")) == 23
         assert svs[("check2", "item", "stored-user-key-2")] == 42
         assert list(svs) == [
@@ -127,7 +125,6 @@ class Test_StaticValueStore:
         self._mock_store(mocker)
 
         svs = _StaticValueStore("test-host", lambda msg: None)
-        svs.load()
 
         svs.store(
             removed={("check2", "item", "stored-user-key-2")},

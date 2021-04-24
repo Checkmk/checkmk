@@ -199,52 +199,6 @@ class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
     def __getitem__(self, key: HostKey) -> ParsedSectionsResolver:
         return self._resolvers.__getitem__(key)
 
-    # TODO (mo): consider making this a function
-    def get_section_kwargs(
-        self,
-        host_key: HostKey,
-        parsed_section_names: List[ParsedSectionName],
-    ) -> Dict[str, ParsedSectionContent]:
-        """Prepares section keyword arguments for a non-cluster host
-
-        It returns a dictionary containing one entry (may be None) for each
-        of the required sections, or an empty dictionary if no data was found at all.
-        """
-        keys = (["section"] if len(parsed_section_names) == 1 else
-                ["section_%s" % s for s in parsed_section_names])
-
-        kwargs = {
-            key: self.get_parsed_section(host_key, parsed_section_name)
-            for key, parsed_section_name in zip(keys, parsed_section_names)
-        }
-        # empty it, if nothing was found:
-        if all(v is None for v in kwargs.values()):
-            kwargs.clear()
-
-        return kwargs
-
-    # TODO (mo): consider making this a function
-    def get_section_cluster_kwargs(
-        self,
-        node_keys: List[HostKey],
-        parsed_section_names: List[ParsedSectionName],
-    ) -> Dict[str, Dict[str, ParsedSectionContent]]:
-        """Prepares section keyword arguments for a cluster host
-
-        It returns a dictionary containing one optional dictionary[Host, ParsedSection]
-        for each of the required sections, or an empty dictionary if no data was found at all.
-        """
-        kwargs: Dict[str, Dict[str, Any]] = {}
-        for node_key in node_keys:
-            node_kwargs = self.get_section_kwargs(node_key, parsed_section_names)
-            for key, sections_node_data in node_kwargs.items():
-                kwargs.setdefault(key, {})[node_key.hostname] = sections_node_data
-        # empty it, if nothing was found:
-        if all(v is None for s in kwargs.values() for v in s.values()):
-            kwargs.clear()
-
-        return kwargs
-
     def get_cache_info(
         self,
         parsed_section_names: List[ParsedSectionName],

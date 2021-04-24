@@ -51,6 +51,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
+from cmk.base.agent_based.utils import get_section_kwargs
 import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import (
@@ -319,7 +320,8 @@ def _do_inv_for_realhost(
             continue
 
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
-            kwargs = parsed_sections_broker.get_section_kwargs(
+            kwargs = get_section_kwargs(
+                parsed_sections_broker,
                 HostKey(host_config.hostname, ipaddress, source_type),
                 inventory_plugin.sections,
             )

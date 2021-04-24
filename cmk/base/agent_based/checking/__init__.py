@@ -14,6 +14,7 @@ from typing import (
     DefaultDict,
     Dict,
     List,
+    MutableMapping,
     Optional,
     Sequence,
     Set,
@@ -61,6 +62,7 @@ import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
+from cmk.base.agent_based.utils import get_section_kwargs, get_section_cluster_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based import value_store
@@ -463,16 +465,18 @@ def get_aggregated_result(
 
     config_cache = config.get_config_cache()
 
-    kwargs = {}
+    kwargs: MutableMapping[str, Any] = {}
     try:
-        kwargs = parsed_sections_broker.get_section_cluster_kwargs(
+        kwargs = get_section_cluster_kwargs(
+            parsed_sections_broker,
             config_cache.get_clustered_service_node_keys(
                 host_config.hostname,
                 source_type,
                 service.description,
             ) or [],
             plugin.sections,
-        ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(
+        ) if host_config.is_cluster else get_section_kwargs(
+            parsed_sections_broker,
             HostKey(host_config.hostname, ipaddress, source_type),
             plugin.sections,
         )
@@ -481,14 +485,16 @@ def get_aggregated_result(
             # in 1.6 some plugins where discovered for management boards, but with
             # the regular host plugins name. In this case retry with the source type
             # forced to MANAGEMENT:
-            kwargs = parsed_sections_broker.get_section_cluster_kwargs(
+            kwargs = get_section_cluster_kwargs(
+                parsed_sections_broker,
                 config_cache.get_clustered_service_node_keys(
                     host_config.hostname,
                     SourceType.MANAGEMENT,
                     service.description,
                 ) or [],
                 plugin.sections,
-            ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(
+            ) if host_config.is_cluster else get_section_kwargs(
+                parsed_sections_broker,
                 HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
                 plugin.sections,
             )

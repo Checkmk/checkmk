@@ -8,7 +8,7 @@
 import os
 import sys
 import traceback
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Mapping, Optional, Union
 from pathlib import Path
 
 import cmk.utils.debug
@@ -52,7 +52,7 @@ def create_check_crash_dump(
     host_name: HostName,
     service_name: ServiceName,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
-    plugin_kwargs: Dict[str, Any],
+    plugin_kwargs: Mapping[str, Any],
     is_manual: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
@@ -91,7 +91,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         cls,
         hostname: HostName,
         check_plugin_name: str,
-        check_plugin_kwargs: Dict[str, Any],
+        check_plugin_kwargs: Mapping[str, Any],
         is_manual_check: bool,
         description: ServiceName,
         text: str,

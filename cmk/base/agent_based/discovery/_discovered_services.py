@@ -39,6 +39,7 @@ import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.check_utils import CheckTable, Service
 from cmk.base.discovered_labels import (
@@ -282,7 +283,7 @@ def _discover_plugins_services(
     )
 
     try:
-        kwargs = parsed_sections_broker.get_section_kwargs(host_key, check_plugin.sections)
+        kwargs = get_section_kwargs(parsed_sections_broker, host_key, check_plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise

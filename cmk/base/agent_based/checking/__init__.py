@@ -124,10 +124,12 @@ def do_check(
         if ipaddress is None and not host_config.is_cluster:
             ipaddress = config.lookup_ip_address(host_config)
 
-        services_to_check = _get_services_to_check(
-            config_cache=config_cache,
+        services = config.resolve_service_dependencies(
             host_name=hostname,
-            run_plugin_names=run_plugin_names,
+            services=sorted(
+                check_table.get_check_table(hostname).values(),
+                key=lambda service: service.description,
+            ),
         )
 
         with CPUTracker() as tracker:
@@ -145,11 +147,12 @@ def do_check(
             )
 
             num_success, plugins_missing_data = _do_all_checks_on_host(
-                config_cache,
-                host_config,
-                ipaddress,
+                config_cache=config_cache,
+                host_config=host_config,
+                ipaddress=ipaddress,
                 parsed_sections_broker=broker,
-                services=services_to_check,
+                services=services,
+                run_plugin_names=run_plugin_names,
                 dry_run=dry_run,
                 show_perfdata=show_perfdata,
             )
@@ -254,12 +257,13 @@ def _check_plugins_missing_data(
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def _do_all_checks_on_host(
+    *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    *,
-    services: List[Service],
+    services: Sequence[Service],
+    run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
 ) -> Tuple[int, List[CheckPluginName]]:
@@ -269,7 +273,12 @@ def _do_all_checks_on_host(
     with plugin_contexts.current_host(host_config.hostname):
         with value_store.load_host_value_store(host_config.hostname,
                                                store_changes=not dry_run) as value_store_manager:
-            for service in services:
+            for service in _filter_services_to_check(
+                    services=services,
+                    run_plugin_names=run_plugin_names,
+                    config_cache=config_cache,
+                    host_name=host_config.hostname,
+            ):
                 success = execute_check(
                     parsed_sections_broker,
                     host_config,
@@ -287,28 +296,21 @@ def _do_all_checks_on_host(
     return num_success, sorted(plugins_missing_data)
 
 
-def _get_services_to_check(
+def _filter_services_to_check(
     *,
+    services: Sequence[Service],
+    run_plugin_names: Container[CheckPluginName],
     config_cache: config.ConfigCache,
     host_name: HostName,
-    run_plugin_names: Container[CheckPluginName],
 ) -> List[Service]:
-    """Gather list of services to check"""
-    services = config.resolve_service_dependencies(
-        host_name=host_name,
-        services=sorted(
-            check_table.get_check_table(host_name).values(),
-            key=lambda service: service.description,
-        ),
-    )
-
+    """Filter list of services to check"""
     if run_plugin_names is EVERYTHING:
         return [
             service for service in services
             if not service_outside_check_period(config_cache, host_name, service.description)
         ]
 
-    # If check types are specified via command line, drop all others
+    # If check types are specified (e.g. via command line), drop all others
     return [
         service for service in services if service.check_plugin_name in run_plugin_names and
         not service_outside_check_period(config_cache, host_name, service.description)

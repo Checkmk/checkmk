@@ -52,7 +52,7 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
     # TODO: It should be supported that different sources produce equal sections.
     # this is handled for the self.sections data by simply concatenating the lines
     # of the sections, but for the self.cache_info this is not done. Why?
-    # TODO: checking.execute_check() is using the oldest cached_at and the largest interval.
+    # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
     #       Would this be correct here?
     def add(self, host_sections: "HostSections") -> None:
         """Add the content of `host_sections` to this HostSection."""

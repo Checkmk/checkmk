@@ -146,7 +146,7 @@ def do_check(
                 on_scan_error="raise",
             )
 
-            num_success, plugins_missing_data = _do_all_checks_on_host(
+            num_success, plugins_missing_data = do_all_checks_on_host(
                 config_cache=config_cache,
                 host_config=host_config,
                 ipaddress=ipaddress,
@@ -256,7 +256,7 @@ def _check_plugins_missing_data(
 
 # Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
 # function that examines that data and sends the result to the Core.
-def _do_all_checks_on_host(
+def do_all_checks_on_host(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
@@ -279,7 +279,7 @@ def _do_all_checks_on_host(
                     config_cache=config_cache,
                     host_name=host_config.hostname,
             ):
-                success = execute_check(
+                success = _execute_check(
                     parsed_sections_broker,
                     host_config,
                     ipaddress,
@@ -333,7 +333,7 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
     return True
 
 
-def execute_check(
+def _execute_check(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],

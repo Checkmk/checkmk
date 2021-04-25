@@ -509,6 +509,7 @@ class Site(object):
             "WaitTimeout: %d\n" \
             "WaitCondition: last_check > %d\n" \
             "WaitCondition: state = %d\n" \
+            "WaitCondition: has_been_checked = 1\n" \
             "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description, wait_timeout*1000, last_check_before, expected_state))
         self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
                                        expected_state, plugin_output, wait_timeout)

@@ -74,7 +74,7 @@ def test_user_error(register_builtin_html):
     with html.plugged():
         html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
         c = html.drain()
-    assert c == "<div class=\"error\">asd <script>alert(1)</script> <br> <b></div>"
+    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
 
 
 def test_add_user_error(register_builtin_html):
@@ -85,4 +85,4 @@ def test_add_user_error(register_builtin_html):
     with html.plugged():
         html.show_user_errors()
         c = html.drain()
-    assert c == "<div class=\"error\">asd <script>alert(1)</script> <br> <b></div>"
+    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"

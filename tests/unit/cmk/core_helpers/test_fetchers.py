@@ -238,16 +238,16 @@ class TestIPMIFetcher:
             ):
                 pass
 
-    def test_parse_sensor_reading_standard_case(self):
+    def test_parse_sensor_reading_standard_case(self, fetcher):
         reading = SensorReading(  #
             ['lower non-critical threshold'], 1, "Hugo", None, "", [42], "hugo-type", None, 0)
-        assert IPMIFetcher._parse_sensor_reading(  #
+        assert fetcher._parse_sensor_reading(  #
             0, reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"WARNING"]
 
-    def test_parse_sensor_reading_false_positive(self):
+    def test_parse_sensor_reading_false_positive(self, fetcher):
         reading = SensorReading(  #
             ['Present'], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1)
-        assert IPMIFetcher._parse_sensor_reading(  #
+        assert fetcher._parse_sensor_reading(  #
             0, reading) == [b"0", b"Dingeling", b"FancyDevice", b"3.14", b"C", b"Present"]
 
 

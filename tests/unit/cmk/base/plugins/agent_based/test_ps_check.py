@@ -12,9 +12,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
 from cmk.base.plugins.agent_based import ps_section
@@ -282,6 +279,7 @@ def test_inventory_common():
     assert sorted({s.item: s for s in ps_utils.discover_ps(  # type: ignore[attr-defined]
         PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
         ps_section.parse_ps(info),
+        None,
         None,
         None,
     )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
@@ -681,7 +679,7 @@ def test_subset_patterns():
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None)  # type: ignore[arg-type]
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)  # type: ignore[arg-type]
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):

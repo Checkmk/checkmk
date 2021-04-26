@@ -141,7 +141,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_file_cache(self) -> SNMPFileCache:
         return SNMPFileCacheFactory(
-            path=self.file_cache_path,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make(force_cache_refresh=self._force_cache_refresh)

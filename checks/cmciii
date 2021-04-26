@@ -45,8 +45,7 @@ def cmciii_phase_get_item_and_key(container, device, var_type):
     itemname = [device]
     if container[1]:
         itemname.append(container[1])
-    itemname += [ "Phase", container[2].replace("Phase", "")\
-                                       .replace("L", "").strip() ]
+    itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
     itemname = " ".join(itemname)
     if var_type == "2":
         key = "_".join(container[3:]).lower()
@@ -90,8 +89,7 @@ def parse_cmciii(info):
 
         devices.setdefault(endoid, dev_name)
 
-        if dev_name in parsed["state"] and \
-           parsed["state"][dev_name]["_location_"] != endoid:
+        if dev_name in parsed["state"] and parsed["state"][dev_name]["_location_"] != endoid:
             dev_name += " %s" % endoid
 
         parsed["state"].setdefault(dev_name, {
@@ -111,41 +109,32 @@ def parse_cmciii(info):
         if container[1].startswith("PSM_") and "Unit" in container:
             this_table = "psm_current"
             itemname = "%s %s" % (device, container[1])
-
         elif container[1].startswith("PSM_") and container[2].startswith("Plug"):
             this_table = "psm_plugs"
             itemname = "%s %s" % (device, ".".join(container[1:]))
-
         elif container[1].startswith("Input") or container[1].startswith("Output"):
             this_table = "io"
             itemname = "%s %s" % (device, container[1])
-
         elif "Access" in container:
             this_table = "access"
             itemname = "%s %s" % (device, container[1])
-
         elif "Humidity" in container:
             this_table = "humidity"
             itemname = "%s %s" % (device, container[1])
-
         elif "Temperature" in container or "Dew Point" in container or \
              container[2].endswith("Temperature"):
             this_table = "temp"
             itemname = cmciii_temp_get_item(container, device)
-
         elif container[2].startswith("CAN") and container[2].endswith("Current"):
             this_table = "can_current"
             itemname = "%s %s" % (device, ".".join(container[1:]))
-
         elif container[1].startswith("Phase"):
             this_table = "phase"
             container = [container[0], ""] + container[1:]
             itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
-
         elif container[2].startswith("Phase"):
             this_table = "phase"
             itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
-
         else:
             this_table = None
 
@@ -170,8 +159,7 @@ def parse_cmciii(info):
             if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
                 value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
 
-        if itemname in parsed[this_table] and \
-           parsed[this_table][itemname]["_location_"] != location:
+        if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
             itemname += " %s" % location
 
         parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
@@ -181,13 +169,15 @@ def parse_cmciii(info):
         found_temp_in_out = False
         for attr, val in attrs.items():
             if attr.startswith("In-") or attr.startswith("Out-"):
-                parsed["temp_in_out"].setdefault("%s %s" % \
-                    (entry, attr.replace("-", " ")\
-                                .replace("Bot", "Bottom")\
-                                .replace("Mid", "Middle")), {
-                    "Value"      : val,
-                    "_device_"   : device,
-                    "_location_" : location})
+                parsed["temp_in_out"].setdefault(
+                    "%s %s" % (entry, attr.replace("-", " ").replace("Bot", "Bottom").replace(
+                        "Mid", "Middle")),
+                    {
+                        "Value": val,
+                        "_device_": device,
+                        "_location_": location
+                    },
+                )
                 found_temp_in_out = True
         if found_temp_in_out:
             del parsed["temp"][entry]

@@ -444,6 +444,7 @@ def discover_ps(
     params: Sequence[Mapping[str, Any]],
     section_ps: Optional[Section],
     section_mem: Optional[memory.SectionMem],
+    section_mem_used: Optional[Dict[str, memory.SectionMem]],
     section_cpu: Optional[cpu.Section],
 ) -> DiscoveryResult:
     if not section_ps:

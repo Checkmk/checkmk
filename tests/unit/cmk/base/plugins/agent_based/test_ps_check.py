@@ -284,6 +284,7 @@ def test_inventory_common():
         ps_section.parse_ps(info),
         None,
         None,
+        None,
     )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
             "")  # type: ignore[attr-defined]
 
@@ -683,7 +684,7 @@ def test_subset_patterns():
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None)  # type: ignore[arg-type]
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)  # type: ignore[arg-type]
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):

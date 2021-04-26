@@ -1619,7 +1619,7 @@ def _special_agents_innovaphone_transform(value):
             'auth_basic': {
                 'username': value[0],
                 'password': ('password', value[1]),
-            }
+            },
         }
     return value
 
@@ -1630,9 +1630,10 @@ def _valuespec_special_agents_innovaphone():
             title=_("Innovaphone Gateways"),
             help=_("Please specify the user and password needed to access the xml interface"),
             elements=connection_set(
-                options=[],
+                options=['protocol', 'ssl_verify'],
                 auth_option='basic',
-            )),
+            ),
+            optional_keys=['protocol', 'no-cert-check']),
         forth=_special_agents_innovaphone_transform,
     )
 

@@ -14,9 +14,10 @@ pytestmark = pytest.mark.checks
     ({
         'auth_basic': {
             'username': 'user123',
-            'password': ('password', 'passwordABC')
-        }
-    }, ["address", "user123", "passwordABC"]),
+            'password': ('password', 'passwordABC'),
+        },
+        'protocol': 'https',
+    }, ["host", "user123", "passwordABC", '--protocol', 'https']),
 ])
 def test_innovaphone_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""

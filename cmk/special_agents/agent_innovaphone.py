@@ -18,14 +18,14 @@ import cmk.utils.password_store
 
 
 class InnovaphoneConnection:
-    def __init__(self, host, user, password):
-        self._base_url = f"http://{host}"
+    def __init__(self, *, host, protocol, user, password, verify_ssl):
+        self._base_url = f"{protocol}://{host}"
         self._user = user
         self._password = password
         self._session = requests.Session()
         # we cannot use self._session.verify because it will be overwritten by
         # the REQUESTS_CA_BUNDLE env variable
-        self._verify_ssl = False
+        self._verify_ssl = verify_ssl
 
     def get(self, endpoint):
         try:
@@ -142,6 +142,20 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument("host", metavar="HOST")
     parser.add_argument("user", metavar="USER")
     parser.add_argument("password", metavar="PASSWORD")
+    parser.add_argument(
+        "--protocol",
+        choices=[
+            'http',
+            'https',
+        ],
+        default="https",
+        help='specify the connection protocol (default: https)',
+    )
+    parser.add_argument(
+        '--no-cert-check',
+        action='store_true',
+        help='Disable certificate verification',
+    )
     return parser.parse_args(argv)
 
 
@@ -150,7 +164,13 @@ def main(sys_argv=None):
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
     args = parse_arguments(sys_argv)
-    connection = InnovaphoneConnection(host=args.host, user=args.user, password=args.password)
+    connection = InnovaphoneConnection(
+        host=args.host,
+        protocol=args.protocol,
+        user=args.user,
+        password=args.password,
+        verify_ssl=not args.no_cert_check,
+    )
 
     response = connection.get("LOG0/CNT/mod_cmd.xml?cmd=xml-counts")
     if response is None:

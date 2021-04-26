@@ -13,7 +13,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-counts
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-counts
   response:
     body:
       string: <info pos='23' t0='15.04.2021 04:00' t7='15.04.2021 11:00'><c x='0'
@@ -55,7 +55,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=0
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=0
   response:
     body:
       string: <info x='0' i='00' n='CPU' m='00000000' s='100' t='100%' l='0' t0='15.04.2021
@@ -146,7 +146,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=2
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=2
   response:
     body:
       string: <info x='2' i='00' n='MEM' m='00000000' s='244501' t='244501kB' l='0'
@@ -234,7 +234,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=3
+    uri: https://192.168.178.10/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x=3
   response:
     body:
       string: "<info x='3' i='00' n='TEMP' m='00000000' s='100' t='\xB0C' l='0' t0='15.04.2021\
@@ -329,7 +329,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/PRI1/mod_cmd.xml
+    uri: https://192.168.178.10/PRI1/mod_cmd.xml
   response:
     body:
       string: <info mode="isdn" if="pri" userlevel="1" ch-numbering="" chi-type=""
@@ -384,7 +384,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/PRI2/mod_cmd.xml
+    uri: https://192.168.178.10/PRI2/mod_cmd.xml
   response:
     body:
       string: <info mode="isdn" if="pri" userlevel="1" ch-numbering="" chi-type=""
@@ -439,7 +439,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/PRI3/mod_cmd.xml
+    uri: https://192.168.178.10/PRI3/mod_cmd.xml
   response:
     body:
       string: "?\r\n"
@@ -473,7 +473,7 @@ interactions:
       authorization:
       - '****'
     method: GET
-    uri: http://192.168.178.10/PBX0/ADMIN/mod_cmd_login.xml
+    uri: https://192.168.178.10/PBX0/ADMIN/mod_cmd_login.xml
   response:
     body:
       string: '<HTML><HEAD><TITLE>401 Unauthorized</TITLE></HEAD>

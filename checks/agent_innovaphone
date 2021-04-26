@@ -8,7 +8,7 @@
 def agent_innovaphone_arguments(params, hostname, ipaddress):
     auth_info = params["auth_basic"]
     username = auth_info['username']
-    password = auth_info['password'][1]
+    password = passwordstore_get_cmdline("%s", auth_info['password'])
     return [ipaddress, username, password]
 
 

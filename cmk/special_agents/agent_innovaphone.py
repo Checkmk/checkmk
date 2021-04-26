@@ -14,6 +14,7 @@ from cmk.special_agents.utils.argument_parsing import (
     Args,
     create_default_argument_parser,
 )
+import cmk.utils.password_store
 
 
 class InnovaphoneConnection:
@@ -146,6 +147,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 def main(sys_argv=None):
     if sys_argv is None:
+        cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
     args = parse_arguments(sys_argv)
     connection = InnovaphoneConnection(host=args.host, user=args.user, password=args.password)

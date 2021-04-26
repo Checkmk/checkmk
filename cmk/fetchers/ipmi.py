@@ -154,7 +154,7 @@ class IPMIFetcher(AgentFetcher):
                 # not installed
                 if "GPU" in reading.name and has_no_gpu:
                     continue
-                sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
+                sensors.append(self._parse_sensor_reading(sensor.sensor_number, reading))
 
         return AgentRawData(b"<<<ipmi_sensors:sep(124)>>>\n" +
                             b"".join(b"|".join(sensor) + b"\n" for sensor in sensors))
@@ -196,8 +196,8 @@ class IPMIFetcher(AgentFetcher):
 
         return any("GPU" in line for line in inventory_entries)
 
-    @staticmethod
-    def _parse_sensor_reading(number: int, reading: "ipmi_sdr.SensorReading") -> List[AgentRawData]:
+    def _parse_sensor_reading(self, number: int,
+                              reading: "ipmi_sdr.SensorReading") -> List[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]
@@ -209,7 +209,7 @@ class IPMIFetcher(AgentFetcher):
             health_txt = b"CRITICAL"
         elif reading.health >= ipmi_const.Health.Warning:
             # workaround for pyghmi bug: https://bugs.launchpad.net/pyghmi/+bug/1790120
-            health_txt = IPMIFetcher._handle_false_positive_warnings(reading)
+            health_txt = self._handle_false_positive_warnings(reading)
         elif reading.health == ipmi_const.Health.Ok:
             health_txt = b"OK"
 
@@ -224,8 +224,7 @@ class IPMIFetcher(AgentFetcher):
             )
         ]
 
-    @staticmethod
-    def _handle_false_positive_warnings(reading: "ipmi_sdr.SensorReading") -> AgentRawData:
+    def _handle_false_positive_warnings(self, reading: "ipmi_sdr.SensorReading") -> AgentRawData:
         """This is a workaround for a pyghmi bug
         (bug report: https://bugs.launchpad.net/pyghmi/+bug/1790120)
 
@@ -243,6 +242,8 @@ class IPMIFetcher(AgentFetcher):
         The health warning is set, but only due to the lookup errors. We remove the lookup
         errors, and see whether the remaining states are meaningful.
         """
+        self._logger.debug("Raw reading states of %s: %s", reading.name, reading.states)
+
         states = [s.encode("utf-8") for s in reading.states if not s.startswith("Unknown state ")]
 
         if not states:

@@ -1994,7 +1994,7 @@ class html(ABCHTMLGenerator):
     def user_error(self, e: MKUserError) -> None:
         assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
         self.open_div(class_="error")
-        self.write("%s" % e.message)
+        self.write_text(str(e))
         self.close_div()
         self.add_user_error(e.varname, e)
 
@@ -2018,7 +2018,8 @@ class html(ABCHTMLGenerator):
     def show_user_errors(self) -> None:
         if self.has_user_errors():
             self.open_div(class_="error")
-            self.write('<br>'.join(self.user_errors.values()))
+            self.write(self.render_br().join(
+                self.render_text(s) for s in self.user_errors.values()))
             self.close_div()
 
     def text_input(self,

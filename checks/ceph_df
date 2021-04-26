@@ -153,7 +153,13 @@ def parse_ceph_df(info) -> FSBlocks:
             avail_mb = parse_byte_values(data["AVAIL"])
         else:
             avail_mb = parse_byte_values(data["MAX AVAIL"])
-            size_mb = avail_mb + parse_byte_values(data["USED"])
+
+            # from ceph version pacific STORED is a notional amount of data stored
+            # USED is the total data stored (incl. replication)
+            # https://docs.ceph.com/en/latest/rados/operations/monitoring/
+            # werk 12199
+            used_size = data["STORED"] if "STORED" in data else data["USED"]
+            size_mb = avail_mb + parse_byte_values(used_size)
         mps.append((mp, size_mb, avail_mb, 0))
     return mps
 

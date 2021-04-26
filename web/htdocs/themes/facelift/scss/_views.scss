@@ -1321,13 +1321,29 @@ td.rule_conditions table td.title {
   background-color: $color-table-background;
 }
 
-table.agents tbody > tr.data > td {
-  line-height: 20px;
-  vertical-align: top;
+table.agents tbody > tr {
+  &.data > td {
+    vertical-align: top;
 
-  &.agent_config {
-    line-height: normal;
-    vertical-align: middle;
+    &.agent_config {
+      min-width: 50%;
+    }
+
+    &.agent_download {
+      text-align: center;
+      font-size: $font-size-small;
+      width: 66px;
+
+      img {
+        margin-bottom: 3px;
+      }
+    }
+  }
+
+  th.header_agent_download,
+  td.agent_download:not(.state):not(.hstate) {
+    text-align: center;
+    padding: 2px 4px;
   }
 }
 

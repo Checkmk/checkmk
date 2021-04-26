@@ -694,7 +694,7 @@ div.filter_buttons {
   body.main .popup_menu & span {
     display: block;
     width: 330px;
-    height: 80px;
+    height: 70px;
     margin: 0 8px 8px 0;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
@@ -710,7 +710,7 @@ div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 $spacing;
+    padding: $spacing 0 0;
     border: $wato-a-border;
   }
 
@@ -730,7 +730,7 @@ div.filter_buttons {
       top: 20px;
       left: 72px;
       width: 234px;
-      padding: 16px 0;
+      padding: 16px 0 0;
       overflow: hidden;
       font-size: $font-size-small;
       font-weight: 500;
@@ -743,7 +743,7 @@ div.filter_buttons {
 
   img {
     position: absolute;
-    top: 16px;
+    top: 22px;
     left: 16px;
     width: 36px;
     height: 36px;

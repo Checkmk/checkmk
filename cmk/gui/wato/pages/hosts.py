@@ -578,7 +578,7 @@ class ModeCreateHost(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        return _("Create new host")
+        return _("Add host")
 
     @classmethod
     def _init_new_host_object(cls):
@@ -613,7 +613,7 @@ class ModeCreateCluster(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        return _("Create new cluster")
+        return _("Create cluster")
 
     @classmethod
     def _init_new_host_object(cls):

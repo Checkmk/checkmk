@@ -386,7 +386,7 @@ class ModeFolder(WatoMode):
         if not self._folder.locked_subfolders() and not self._folder.locked():
             if self._folder.may("write") and config.user.may("wato.manage_folders"):
                 yield PageMenuEntry(
-                    title=_("Add subfolder"),
+                    title=_("Add folder"),
                     icon_name="newfolder",
                     item=make_simple_link(self._folder.url([("mode", "newfolder")])),
                     is_shortcut=True,
@@ -572,20 +572,22 @@ class ModeFolder(WatoMode):
                     mode_or_url=makeuri_contextless(global_request,
                                                     [("mode", "newhost"),
                                                      ("folder", self._folder.path())]),
-                    title=_("Create new host"),
+                    title=_("Add host to the monitoring"),
                     icon="new",
                     permission="hosts",
-                    description=_("Add a new host to the monitoring (agent must be installed)"),
+                    description=
+                    _("The host must have the Checkmk agent or SNMP or an API integration prepared."
+                     ),
                 ),
                 MenuItem(
                     mode_or_url=makeuri_contextless(global_request,
                                                     [("mode", "newcluster"),
                                                      ("folder", self._folder.path())]),
-                    title=_("Create new cluster"),
+                    title=_("Create cluster"),
                     icon="new_cluster",
                     permission="hosts",
-                    description=_("Use Check_MK clusters if an item can move from one host "
-                                  "to another at runtime"),
+                    description=_("Use Checkmk clusters if an item can move from one host "
+                                  "to another at runtime."),
                 )
             ])
 
@@ -595,7 +597,7 @@ class ModeFolder(WatoMode):
                     mode_or_url=makeuri_contextless(global_request,
                                                     [("mode", "newfolder"),
                                                      ("folder", self._folder.path())]),
-                    title=_("Create new folder"),
+                    title=_("Add folder"),
                     icon="newfolder",
                     permission="hosts",
                     description=_(
@@ -1208,7 +1210,7 @@ class ModeCreateFolder(ABCFolderMode):
         return watolib.Folder(name=None)
 
     def title(self):
-        return _("Create new folder")
+        return _("Add folder")
 
     def _save(self, title, attributes):
         if not config.wato_hide_filenames:

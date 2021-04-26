@@ -732,7 +732,7 @@ def get_effective_global_setting(site_id: SiteId, is_wato_slave_site: bool, varn
         current_settings = load_configuration_settings(site_specific=True)
     else:
         sites = SiteManagementFactory.factory().load_sites()
-        current_settings = sites[site_id].get("globals", {})
+        current_settings = sites.get(site_id, {}).get("globals", {})
 
     if varname in current_settings:
         return current_settings[varname]

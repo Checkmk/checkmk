@@ -514,7 +514,7 @@ class CEESiteManagement(SiteManagement):
         }
 
         defaults = ConfigDomainLiveproxy.connection_params_defaults()
-        for key, val in value.items():
+        for key, val in list(value.items()):
             if val == defaults[key]:
                 del value[key]
 

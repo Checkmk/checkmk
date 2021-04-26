@@ -75,5 +75,5 @@ TEST(TimeColumn, GetValueDefault) {
         }};
 
     EXPECT_NE(v + tz, col.getValue(row, tz));
-    EXPECT_EQ(TimeColumn::column_type{} + tz, col.getValue(row, tz));
+    EXPECT_EQ(TimeColumn::value_type{} + tz, col.getValue(row, tz));
 }

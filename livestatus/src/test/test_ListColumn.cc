@@ -21,7 +21,7 @@ struct DummyRow : Row {
 struct DummyValue {};
 
 TEST(ListColumn, ConstantList) {
-    const auto v = ListColumn::column_type{"hello"s, "world"s};
+    const auto v = ListColumn::value_type{"hello"s, "world"s};
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
     const auto col = ListColumn::Constant{"name"s, "description"s, v};
@@ -30,7 +30,7 @@ TEST(ListColumn, ConstantList) {
 }
 
 TEST(ListColumn, ConstantDefaultRow) {
-    const auto v = ListColumn::column_type{"hello"s, "world"s};
+    const auto v = ListColumn::value_type{"hello"s, "world"s};
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn::Constant{"name"s, "description"s, v};
 
@@ -38,7 +38,7 @@ TEST(ListColumn, ConstantDefaultRow) {
 }
 
 TEST(ListColumn, Reference) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
+    auto v = ListColumn::value_type{"hello"s, "world"s};
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn::Reference{"name"s, "description"s, v};
 
@@ -49,7 +49,7 @@ TEST(ListColumn, Reference) {
 }
 
 TEST(ListColumn, GetValueLambda) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
+    auto v = ListColumn::value_type{"hello"s, "world"s};
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
@@ -62,7 +62,7 @@ TEST(ListColumn, GetValueLambda) {
 }
 
 TEST(ListColumn, GetValueDefault) {
-    auto v = ListColumn::column_type{"hello"s, "world"s};
+    auto v = ListColumn::value_type{"hello"s, "world"s};
 
     const auto row = DummyRow{nullptr};
     const auto col = ListColumn::Callback<DummyRow>{
@@ -71,5 +71,5 @@ TEST(ListColumn, GetValueDefault) {
         }};
 
     EXPECT_NE(v, col.getValue(row, nullptr, 0s));
-    EXPECT_EQ(ListColumn::column_type{}, col.getValue(row, nullptr, 0s));
+    EXPECT_EQ(ListColumn::value_type{}, col.getValue(row, nullptr, 0s));
 }

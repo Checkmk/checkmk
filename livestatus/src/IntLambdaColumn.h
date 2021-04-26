@@ -16,21 +16,21 @@
 class Row;
 
 struct IntColumn : deprecated::IntColumn {
-    using column_type = std::int32_t;
+    using value_type = std::int32_t;
     class Constant;
     class Reference;
-    template <class T, column_type = 0>
+    template <class T, value_type = 0>
     class Callback;
 
     using deprecated::IntColumn::IntColumn;
-    column_type getValue(Row row,
-                         const contact* /*auth_user*/) const override = 0;
+    value_type getValue(Row row,
+                        const contact* /*auth_user*/) const override = 0;
 };
 
-template <class T, IntColumn::column_type Default>
+template <class T, IntColumn::value_type Default>
 class IntColumn::Callback : public IntColumn {
-    using f0_t = std::function<column_type(const T&)>;
-    using f1_t = std::function<column_type(const T&, const contact*)>;
+    using f0_t = std::function<value_type(const T&)>;
+    using f1_t = std::function<value_type(const T&, const contact*)>;
     using function_type = std::variant<f0_t, f1_t>;
 
 public:
@@ -39,7 +39,7 @@ public:
         : IntColumn{name, description, offsets}, f_{f} {}
     ~Callback() override = default;
 
-    column_type getValue(Row row, const contact* auth_user) const override {
+    value_type getValue(Row row, const contact* auth_user) const override {
         const T* data = columnData<T>(row);
         if (std::holds_alternative<f0_t>(f_)) {
             return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
@@ -58,33 +58,33 @@ private:
 class IntColumn::Constant : public IntColumn {
 public:
     Constant(const std::string& name, const std::string& description,
-             column_type x)
+             value_type x)
         : IntColumn{name, description, {}}, x_{x} {}
     ~Constant() override = default;
 
-    column_type getValue(Row /*row*/,
-                         const contact* /*auth_user*/) const override {
+    value_type getValue(Row /*row*/,
+                        const contact* /*auth_user*/) const override {
         return x_;
     }
 
 private:
-    const column_type x_;
+    const value_type x_;
 };
 
 class IntColumn::Reference : public IntColumn {
 public:
     Reference(const std::string& name, const std::string& description,
-              column_type& x)
+              value_type& x)
         : IntColumn{name, description, {}}, x_{x} {}
     ~Reference() override = default;
 
-    column_type getValue(Row /*row*/,
-                         const contact* /*auth_user*/) const override {
+    value_type getValue(Row /*row*/,
+                        const contact* /*auth_user*/) const override {
         return x_;
     }
 
 private:
-    const column_type& x_;
+    const value_type& x_;
 };
 
 #endif

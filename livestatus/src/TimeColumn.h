@@ -28,7 +28,7 @@ struct TimeColumn : Column {
     template <class T>
     class Callback;
 
-    using column_type = std::chrono::system_clock::time_point;
+    using value_type = std::chrono::system_clock::time_point;
 
     using Column::Column;
     ~TimeColumn() override = default;
@@ -59,7 +59,7 @@ struct TimeColumn : Column {
             });
     }
 
-    [[nodiscard]] virtual column_type getValue(
+    [[nodiscard]] virtual value_type getValue(
         Row /*row*/, std::chrono::seconds /*timezone_offset*/) const = 0;
 };
 
@@ -70,34 +70,34 @@ class TimeColumn::Callback : public TimeColumn {
 public:
     Callback(const std::string& name, const std::string& description,
              const ColumnOffsets& offsets,
-             std::function<column_type(const T&)> f)
+             std::function<value_type(const T&)> f)
         : TimeColumn(name, description, offsets), f_{std::move(f)} {}
 
     ~Callback() override = default;
 
-    [[nodiscard]] column_type getValue(
+    [[nodiscard]] value_type getValue(
         Row row, std::chrono::seconds timezone_offset) const override {
         const T* data = columnData<T>(row);
-        return timezone_offset + (data == nullptr ? column_type{} : f_(*data));
+        return timezone_offset + (data == nullptr ? value_type{} : f_(*data));
     }
 
 private:
-    std::function<column_type(const T&)> f_;
+    std::function<value_type(const T&)> f_;
 };
 
 class TimeColumn::Constant : public TimeColumn {
 public:
     Constant(const std::string& name, const std::string& description,
-             column_type x)
+             value_type x)
         : TimeColumn{name, description, {}}, x_{x} {};
 
-    [[nodiscard]] column_type getValue(
+    [[nodiscard]] value_type getValue(
         Row /*row*/, std::chrono::seconds timezone_offset) const override {
         return timezone_offset + x_;
     }
 
 private:
-    const column_type x_;
+    const value_type x_;
 };
 
 class TimeColumn::Reference : public TimeColumn {
@@ -105,13 +105,13 @@ public:
     Reference(const std::string& name, const std::string& description,
               std::chrono::system_clock::time_point& x)
         : TimeColumn{name, description, {}}, x_{x} {};
-    [[nodiscard]] column_type getValue(
+    [[nodiscard]] value_type getValue(
         Row /*row*/, std::chrono::seconds timezone_offset) const override {
         return timezone_offset + x_;
     }
 
 private:
-    const column_type& x_;
+    const value_type& x_;
 };
 
 #endif

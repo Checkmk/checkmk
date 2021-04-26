@@ -26,7 +26,7 @@
 
 class DoubleColumn : public Column {
 public:
-    using column_type = double;
+    using value_type = double;
     class Constant;
     class Reference;
     template <class T>
@@ -34,7 +34,7 @@ public:
     using Column::Column;
     ~DoubleColumn() override = default;
 
-    [[nodiscard]] virtual column_type getValue(Row row) const = 0;
+    [[nodiscard]] virtual value_type getValue(Row row) const = 0;
     void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         r.output(getValue(row));
@@ -63,45 +63,45 @@ public:
 // template parameter (see P0732).
 template <class T>
 class DoubleColumn::Callback : public DoubleColumn {
-    using function_type = std::function<column_type(const T&)>;
+    using function_type = std::function<value_type(const T&)>;
 
 public:
     Callback(const std::string& name, const std::string& description,
              const ColumnOffsets& offsets, const function_type& f)
         : DoubleColumn{name, description, offsets}, f_{f} {}
     ~Callback() override = default;
-    [[nodiscard]] column_type getValue(Row row) const override {
+    [[nodiscard]] value_type getValue(Row row) const override {
         const T* data = columnData<T>(row);
         return data == nullptr ? 0.0 : f_(*data);
     }
 
 private:
-    const column_type Default{};
+    const value_type Default{};
     const function_type f_;
 };
 
 class DoubleColumn::Constant : public DoubleColumn {
 public:
     Constant(const std::string& name, const std::string& description,
-             column_type x)
+             value_type x)
         : DoubleColumn{name, description, {}}, x_{x} {}
     ~Constant() override = default;
-    column_type getValue(Row /*row*/) const override { return x_; }
+    value_type getValue(Row /*row*/) const override { return x_; }
 
 private:
-    const column_type x_;
+    const value_type x_;
 };
 
 class DoubleColumn::Reference : public DoubleColumn {
 public:
     Reference(const std::string& name, const std::string& description,
-              column_type& x)
+              value_type& x)
         : DoubleColumn{name, description, {}}, x_{x} {}
     ~Reference() override = default;
-    column_type getValue(Row /*row*/) const override { return x_; }
+    value_type getValue(Row /*row*/) const override { return x_; }
 
 private:
-    const column_type& x_;
+    const value_type& x_;
 };
 
 #endif  // DoubleColumn_h

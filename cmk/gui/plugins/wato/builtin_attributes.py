@@ -644,7 +644,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 110
+        return 120
 
     def show_in_table(self):
         return False
@@ -672,7 +672,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 120
+        return 110
 
     def show_in_table(self):
         return False
@@ -994,9 +994,6 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 190
-
-    def is_show_more(self) -> bool:
-        return True
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

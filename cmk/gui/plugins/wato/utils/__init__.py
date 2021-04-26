@@ -1444,7 +1444,7 @@ def configure_attributes(new,
 
         forms.header(
             topic_title,
-            isopen=topic_id in ["basic", "address", "data_sources"],
+            isopen=topic_id in ["basic", "address", "monitoring_agents"],
             table_id=topic_id,
             show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
             show_more_mode=show_more_mode,

@@ -85,7 +85,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Network Address")
+        return _("Network address")
 
     @property
     def sort_index(self):
@@ -96,11 +96,11 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 class HostAttributeTopicDataSources(HostAttributeTopic):
     @property
     def ident(self):
-        return "data_sources"
+        return "monitoring_agents"
 
     @property
     def title(self):
-        return _("Data sources")
+        return _("Monitoring agents")
 
     @property
     def sort_index(self):
@@ -145,7 +145,7 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Management Board")
+        return _("Management board")
 
     @property
     def sort_index(self):
@@ -699,15 +699,15 @@ def _transform_attribute_topic_title_to_id(topic_title):
     _topic_title_to_id_map = {
         u"Basic settings": "basic",
         u"Address": "address",
-        u"Data sources": "data_sources",
-        u"Management Board": "management_board",
+        u"Monitoring agents": "monitoring_agents",
+        u"Management board": "management_board",
         u"Network Scan": "network_scan",
         u"Custom attributes": "custom_attributes",
         u"Host tags": "custom_attributes",
         u"Tags": "custom_attributes",
         u"Grundeinstellungen": "basic",
         u"Adresse": "address",
-        u"Datenquellen": "data_sources",
+        u"Monitoringagenten": "monitoring_agents",
         u"Management-Board": "management_board",
         u"Netzwerk-Scan": "network_scan",
         u"Eigene Attribute": "custom_attributes",
@@ -894,6 +894,9 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
     def get_tag_groups(self, value):
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
+
+    def is_show_more(self) -> bool:
+        return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):

@@ -1,0 +1,12 @@
+Title: ceph_df: Error in metrics calculation in new ceph version
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619451322
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+From ceph version pacific info USED is no longer notional size of data, but total size.
+STORED is now used for calculation of metrics.

@@ -343,7 +343,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 if self._is_foreign(change):
                     html.icon("foreign_changes", _("This change has been made by another user"))
 
-                table.cell(_("Change"), change["text"])
+                # Text is already escaped (see ActivateChangesWriter._add_change_to_site). We have
+                # to handle this in a special way because of the SiteChanges file format. Would be
+                # cleaner to transport the text type (like AuditLogStore is doing it).
+                table.cell(_("Change"), HTML(change["text"]))
 
                 table.cell(_("Affected sites"), css="affected_sites")
                 if self._affects_all_sites(change):

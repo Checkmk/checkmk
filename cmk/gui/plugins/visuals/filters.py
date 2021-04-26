@@ -3144,12 +3144,18 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
 
         # check if sites are missing
         if not unique_sites_from_services.issuperset(connected_sites):
+            manual_ref = html.resolve_help_text_macros(
+                _("Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for more details."
+                 ))
+            if len(connected_sites) == 1:
+                raise MKMissingDataError(
+                    _("As soon as you add your Checkmk server to the monitoring, a graph showing "
+                      "the history of your host problems will appear here. ") + manual_ref)
             raise MKMissingDataError(
-                _("Add all your Checkmk servers as monitored hosts to Checkmk to render this "
-                  "graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
-                  "the following sites: %s. Either the corresponding Checkmk servers are not "
-                  "monitored at all, or you filtered them out by applying site filters.") %
-                ", ".join(connected_sites - unique_sites_from_services))
+                _("As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
+                  "the history of your host problems will appear here. Currently the following "
+                  "Checkmk sites are not monitored: %s. " %
+                  ", ".join(connected_sites - unique_sites_from_services)) + manual_ref)
 
         # there are duplicate sites --> filter by PID
         rows_filtered = []

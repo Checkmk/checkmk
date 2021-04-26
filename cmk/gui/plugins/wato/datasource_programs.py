@@ -1884,7 +1884,7 @@ def _valuespec_special_agents_siemens_plc():
                                   'is used to name the resulting services.'))),
                          ('host_address',
                           TextAscii(
-                              title=_('Network Address'),
+                              title=_('Network address'),
                               allow_empty=False,
                               help=
                               _('Specify the hostname or IP address of the PLC to communicate with.'

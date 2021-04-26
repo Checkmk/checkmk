@@ -23,7 +23,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Network Address'
+        'topic': u'Network address'
     },
     'additional_ipv6addresses': {
         'class_name': 'ValueSpecAttribute',
@@ -36,7 +36,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Network Address'
+        'topic': u'Network address'
     },
     'alias': {
         'class_name': 'NagiosTextAttribute',
@@ -75,7 +75,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': u'Network Address'
+        'topic': u'Network address'
     },
     'ipv6address': {
         'class_name': 'ValueSpecAttribute',
@@ -88,7 +88,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': u'Network Address'
+        'topic': u'Network address'
     },
     'locked_attributes': {
         'class_name': 'ValueSpecAttribute',
@@ -127,7 +127,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Management Board'
+        'topic': u'Management board'
     },
     'management_ipmi_credentials': {
         'class_name': 'ValueSpecAttribute',
@@ -140,7 +140,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Management Board'
+        'topic': u'Management board'
     },
     'management_protocol': {
         'class_name': 'ValueSpecAttribute',
@@ -153,7 +153,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Management Board'
+        'topic': u'Management board'
     },
     'management_snmp_community': {
         'class_name': 'ValueSpecAttribute',
@@ -166,7 +166,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Management Board'
+        'topic': u'Management board'
     },
     'meta_data': {
         'class_name': 'ValueSpecAttribute',
@@ -244,7 +244,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Data sources',
+        'topic': u'Monitoring agents',
     },
     'tag_address_family': {
         'depends_on_roles': [],
@@ -256,7 +256,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Network Address'
+        'topic': u'Network address'
     },
     'tag_agent': {
         'depends_on_roles': [],
@@ -268,7 +268,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Data sources'
+        'topic': u'Monitoring agents'
     },
     'tag_snmp_ds': {
         'depends_on_roles': [],
@@ -280,7 +280,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Data sources'
+        'topic': u'Monitoring agents'
     },
     'tag_piggyback': {
         'depends_on_roles': [],
@@ -292,7 +292,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': u'Data sources'
+        'topic': u'Monitoring agents'
     },
     'labels': {
         'depends_on_roles': [],
@@ -407,7 +407,7 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
 
 @pytest.mark.parametrize("old,new", [
     ('Basic settings', 'basic'),
-    ('Management Board', 'management_board'),
+    ('Management board', 'management_board'),
     ("Custom attributes", 'custom_attributes'),
     ('Eigene Attribute', 'custom_attributes'),
     ('xyz_unknown', 'custom_attributes'),
@@ -437,10 +437,10 @@ def test_custom_host_attribute_transform(old, new):
 def test_host_attribute_topics(for_what):
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what, new=False) == [
         ("basic", u"Basic settings"),
-        ("address", u'Network Address'),
-        ("data_sources", u'Data sources'),
+        ("address", u'Network address'),
+        ("monitoring_agents", u'Monitoring agents'),
         ('custom_attributes', u'Custom attributes'),
-        ("management_board", u'Management Board'),
+        ("management_board", u'Management board'),
         ('meta_data', u'Creation / Locking'),
     ]
 
@@ -449,11 +449,11 @@ def test_host_attribute_topics(for_what):
 def test_host_attribute_topics_for_folders():
     assert attrs.get_sorted_host_attribute_topics("folder", new=False) == [
         ("basic", u"Basic settings"),
-        ('address', u'Network Address'),
-        ('data_sources', u'Data sources'),
+        ('address', u'Network address'),
+        ('monitoring_agents', u'Monitoring agents'),
         ('custom_attributes', u'Custom attributes'),
         ('network_scan', u'Network Scan'),
-        ('management_board', u'Management Board'),
+        ('management_board', u'Management board'),
         ('meta_data', u'Creation / Locking'),
     ]
 
@@ -482,15 +482,15 @@ def test_host_attributes(for_what, new):
             'additional_ipv4addresses',
             'additional_ipv6addresses',
         ],
-        "data_sources": [
+        "monitoring_agents": [
             'tag_agent',
             'tag_snmp_ds',
             'snmp_community',
             'tag_piggyback',
         ],
         "management_board": [
-            'management_address',
             'management_protocol',
+            'management_address',
             'management_snmp_community',
             'management_ipmi_credentials',
         ],

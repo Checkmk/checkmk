@@ -579,27 +579,27 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Checkmk agent'),
-                'topic': _('Data sources'),
+                'title': _('Checkmk agent / API integrations'),
+                'topic': _('Monitoring agents'),
                 'tags': [
                     {
                         'id': 'cmk-agent',
-                        'title': _('Normal Checkmk agent, or special agent if configured'),
+                        'title': _('API integrations if configured, else Checkmk agent'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'all-agents',
-                        'title': _('Normal Checkmk agent, all configured special agents'),
+                        'title': _('Configured API integrations and Checkmk agent'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'special-agents',
-                        'title': _('No Checkmk agent, all configured special agents'),
+                        'title': _('Configured API integrations, no Checkmk agent'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'no-agent',
-                        'title': _('No agent'),
+                        'title': _('No API integrations, no Checkmk agent'),
                         'aux_tags': [],
                     },
                 ],
@@ -607,7 +607,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'piggyback',
                 'title': _("Piggyback"),
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'help': _(
                     "By default every host has the piggyback data source "
                     "<b>Use piggyback data from other hosts if present</b>. "
@@ -640,7 +640,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'snmp_ds',
                 'title': _('SNMP'),
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'tags': [{
                     'id': 'no-snmp',
                     'title': _('No SNMP'),
@@ -699,17 +699,17 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'snmp',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'title': _('Monitor via SNMP'),
             },
             {
                 'id': 'tcp',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'title': _('Monitor via Checkmk Agent'),
             },
             {
                 'id': 'ping',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'title': _('Only ping this device'),
             },
         ]

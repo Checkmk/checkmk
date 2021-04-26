@@ -28258,6 +28258,9 @@ msgstr "Verwaltete Objekte"
 msgid "Management Board"
 msgstr "Management-Board"
 
+msgid "Management board"
+msgstr "Management-Board"
+
 msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
 msgstr "Management Board SNMP mit Bulk Walk (erzwingt SNMP v2c)"
 
@@ -29892,6 +29895,9 @@ msgstr "Monitoring URL"
 
 msgid "Monitoring agent"
 msgstr "Monitoringagent"
+
+msgid "Monitoring agents"
+msgstr "Monitoringagenten"
 
 msgid "Monitoring core"
 msgstr "Monitorign-Kern"

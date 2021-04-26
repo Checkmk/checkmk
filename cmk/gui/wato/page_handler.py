@@ -51,7 +51,7 @@ else:
 #   | 3. Anzeigen von Inhalten                                             |
 #   |                                                                      |
 #   | Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der    |
-#   | Aktion ab. Wenn man z.B. bei einem Host bei "Create new host" auf    |
+#   | Aktion ab. Wenn man z.B. bei einem Host bei "Add host" auf           |
 #   | [Save] klickt, dann kommt bei Erfolg die Inventurseite, bei Miss-    |
 #   | bleibt man auf der Neuanlegen-Seite                                  |
 #   |                                                                      |

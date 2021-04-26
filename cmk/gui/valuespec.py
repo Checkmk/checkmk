@@ -4008,9 +4008,9 @@ class TimeofdayRange(ValueSpec):
 class TimeHelper:
     @staticmethod
     def round(timestamp, unit):
-        lt = datetime.datetime.fromtimestamp(timestamp, tzlocal()).replace(hour=0,
-                                                                           minute=0,
-                                                                           second=0)
+        lt = datetime.datetime.fromtimestamp(timestamp, tzlocal()).replace(minute=0, second=0)
+        if unit != 'h':
+            lt = lt.replace(hour=0)
 
         if unit == 'w':
             lt -= datetime.timedelta(days=lt.weekday())
@@ -4018,7 +4018,7 @@ class TimeHelper:
             lt = lt.replace(day=1)
         elif unit == 'y':
             lt = lt.replace(month=1, day=1)
-        elif unit != 'd':
+        elif unit not in {'d', 'h'}:
             raise MKGeneralException("invalid time unit %s" % unit)
 
         return time.mktime(lt.timetuple())

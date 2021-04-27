@@ -16,21 +16,21 @@
 #include "nagios.h"
 
 namespace {
-struct servicebygroup {
+struct service_and_group {
     const service *svc;
-    const servicegroup *service_group;
+    const servicegroup *group;
 };
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     TableServices::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<servicebygroup>()->svc;
+        return r.rawData<service_and_group>()->svc;
     }),
                               true);
     TableServiceGroups::addColumns(
         this, "servicegroup_", offsets.add([](Row r) {
-            return r.rawData<servicebygroup>()->service_group;
+            return r.rawData<service_and_group>()->group;
         }));
 }
 
@@ -43,18 +43,18 @@ void TableServicesByGroup::answerQuery(Query *query) {
         query->authUser() != nullptr &&
         core()->groupAuthorization() == AuthorizationKind::strict;
 
-    for (const servicegroup *sg = servicegroup_list; sg != nullptr;
-         sg = sg->next) {
+    for (const auto *group = servicegroup_list; group != nullptr;
+         group = group->next) {
         if (requires_authcheck &&
             !is_authorized_for_service_group(core()->groupAuthorization(),
-                                             core()->serviceAuthorization(), sg,
-                                             query->authUser())) {
+                                             core()->serviceAuthorization(),
+                                             group, query->authUser())) {
             continue;
         }
 
-        for (const servicesmember *m = sg->members; m != nullptr; m = m->next) {
-            servicebygroup sbg{m->service_ptr, sg};
-            if (!query->processDataset(Row(&sbg))) {
+        for (const auto *m = group->members; m != nullptr; m = m->next) {
+            service_and_group sag{m->service_ptr, group};
+            if (!query->processDataset(Row(&sag))) {
                 return;
             }
         }
@@ -62,7 +62,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = rowData<servicebygroup>(row)->svc;
+    const auto *svc = rowData<service_and_group>(row)->svc;
     return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
                              svc);
 }

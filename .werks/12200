@@ -1,0 +1,12 @@
+Title: winperf_processor_util: Perfometer for CPU utilization added
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1619538083
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+In version 2.0, CPU utilization metric was renamed,
+but perfometer for a new metric wasn't added.

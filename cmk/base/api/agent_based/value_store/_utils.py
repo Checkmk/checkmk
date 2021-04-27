@@ -202,8 +202,6 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
         self._data = data
 
     def _map_key(self, user_key: _UserKey) -> _ValueStoreKey:
-        if self._prefix is None:
-            raise MKGeneralException("accessing value store outside service context")
         if not isinstance(user_key, _UserKey):
             raise TypeError(f"value store key must be {_UserKey}")
         return (self._prefix[0], self._prefix[1], user_key)

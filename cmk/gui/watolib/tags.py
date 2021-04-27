@@ -279,7 +279,7 @@ class OperationRemoveAuxTag(ABCTagGroupOperation):
 
 
 class OperationReplaceGroupedTags(ABCOperation):
-    def __init__(self, tag_group_id: str, remove_tag_ids: List[str],
+    def __init__(self, tag_group_id: str, remove_tag_ids: List[Optional[str]],
                  replace_tag_ids: Dict[str, str]) -> None:
         super(OperationReplaceGroupedTags, self).__init__()
         self.tag_group_id = tag_group_id
@@ -420,7 +420,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map: List[_Tuple[str, Any]] = list(operation.replace_tag_ids.items())
+    tag_map: List[_Tuple[Optional[str], Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices

@@ -81,7 +81,25 @@ import cmk.base.plugins.agent_based.hr_mem as hr_mem
                 ['.1.3.6.1.2.1.25.2.1.4', '/sys/fs/cgroup/cpu', '4096', '0', '0'],
                 ['.1.3.6.1.2.1.25.2.1.4', '/mnt/ext', '4096', '106746', '101037']
             ]],
-            {},
+            {
+                'RAM': [('physical memory', 16746676224, 16450293760),],
+                'fixed disk': [
+                    ('/mnt/hda_root', 517427200, 192806912),
+                    ('/sys/fs/cgroup/memory', 0, 0),
+                    ('/share/cache1_data', 532504903680, 56283680768),
+                    ('/share/cache2_data', 2181553897472, 1874833588224),
+                    ('/sys/fs/cgroup/cpu', 0, 0),
+                    ('/mnt/ext', 437231616, 413847552),
+                ],
+                'other': [
+                    ('memory buffers', 16746676224, 1924583424),
+                    ('cached memory', 354430976, 354430976),
+                ],
+                'virtual memory': [
+                    ('virtual memory', 50903494656, 22604648448),
+                    ('swap space', 34156818432, 6154354688),
+                ]
+            },
         ),
         (
             [[

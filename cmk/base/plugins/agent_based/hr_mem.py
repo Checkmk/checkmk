@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, List, Optional, Tuple
+from contextlib import suppress
 
 from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register, SNMPTree
@@ -25,25 +26,46 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     """
     info = string_table[0]
 
-    map_types = {
-        '.1.3.6.1.2.1.25.2.1.1': 'other',
-        '.1.3.6.1.2.1.25.2.1.2': 'RAM',
-        'iso.3.6.1.2.1.25.2.1.2': 'RAM',  # OKI 8300e bug
-        '.2.3848679438.841888046.842346034.774975026': 'RAM',  # HP Officejet Pro 8600 N911g
-        '.1.3.6.1.2.1.25.2.1.3': 'virtual memory',
-        '.1.3.6.1.2.1.25.2.1.4': 'fixed disk',
-        '.1.3.6.1.2.1.25.2.1.5': 'removeable disk',
-        '.1.3.6.1.2.1.25.2.1.6': 'floppy disk',
-        '.1.3.6.1.2.1.25.2.1.7': 'compact disk',
-        '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
-        '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
-        '.1.3.6.1.2.1.25.2.1.10': 'network disk',
-        '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
-        # known misbehaving devices returning rubbish for .1.3.6.1.2.1.25.2.3.1.2.1 (hrStorageType)
-        '.0.1.3.6.1.2.1.25.2.1': "RAM",  # HP bug - taken from other walk
-        '.0.0': None,  #                   Arris modems set ".0.0"
-        '': None,  #                       ClearPass Policy Manager doesn't even send a type..
-    }
+    def identify_map_type(hrtype_str: str) -> Optional[str]:
+        map_types = {
+            '.1.3.6.1.2.1.25.2.1.1': 'other',
+            '.1.3.6.1.2.1.25.2.1.2': 'RAM',
+            '.1.3.6.1.2.1.25.2.1.3': 'virtual memory',
+            '.1.3.6.1.2.1.25.2.1.4': 'fixed disk',
+            '.1.3.6.1.2.1.25.2.1.5': 'removeable disk',
+            '.1.3.6.1.2.1.25.2.1.6': 'floppy disk',
+            '.1.3.6.1.2.1.25.2.1.7': 'compact disk',
+            '.1.3.6.1.2.1.25.2.1.8': 'RAM disk',
+            '.1.3.6.1.2.1.25.2.1.9': 'flash memory',
+            '.1.3.6.1.2.1.25.2.1.10': 'network disk',
+
+            # known misbehaving devices returning rubbish for `hrStorageType`
+
+            # HP and OKI seem to be unable to write '.1.3.6.1.2.1.25.2.1.2'
+            '.1.3.6.1.2.1.25.2.1.20': 'RAM',  # HP ProLiant DL380 G5
+            'iso.3.6.1.2.1.25.2.1.2': 'RAM',  # OKI 8300e bug
+            '.0.1.3.6.1.2.1.25.2.1': "RAM",  # HP bug
+            '.2.3848679438.841888046.842346034.774975026': 'RAM',  # HP Officejet Pro 8600 N911g
+
+            # Some devices don't care about proper SNMP at all but are known to not write
+            # interesting data anyway so we can ignore them silently by returning None (rather
+            # than "unknown")
+            '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
+            '.0.0': None,  #                   Arris modems set ".0.0"
+            '': None,  #                       ClearPass Policy Manager doesn't even send a type..
+        }
+
+        with suppress(KeyError):
+            return map_types[hrtype_str]
+
+        with suppress(KeyError):
+            # split last OID digit in order to identify
+            # '.1.3.6.1.2.1.25.3.9.*'
+            return map_types[hrtype_str[:hrtype_str.rfind(".")]]
+
+        raise KeyError(f"{hrtype_str} is not a valid value for hrStorageType. This is an indicator"
+                       " for invalid SNMP data sent by the host. Please provide a report for this"
+                       " incident to enable proper handling in the future.")
 
     def to_bytes(units: str) -> int:
         """In some cases instead of a plain byte-count an extra quantifier is appended
@@ -57,23 +79,19 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
         # should crash when the hrtype is not defined in the mapping table:
         # it may mean there was an important change in the way the OIDs are
         # mapped that we should know about
-        try:
-            map_type = map_types[hrtype]
-        except KeyError:
-            # split last OID digit in order to identify
-            # '.1.3.6.1.2.1.25.3.9.*'
-            map_type = map_types[hrtype[:hrtype.rfind(".")]]
+        map_type = identify_map_type(hrtype)
 
-        if map_type:
-            # Sometimes one of the values that is being converted is an empty
-            # string. This means that SNMP delivers invalid data, and the service
-            # should not be discovered.
-            try:
-                units = to_bytes(hrunits)
-                size = int(hrsize) * units
-                used = int(hrused) * units
-            except ValueError:
-                return {}
+        # if hrStorageType maps to None it means the corresponding value is invalid - skip it
+        if map_type is None:
+            continue
+
+        # Sometimes one of the values that is being converted is an empty
+        # string. This means that SNMP delivers invalid data, and the service
+        # should not be discovered.
+        with suppress(ValueError):
+            units = to_bytes(hrunits)
+            size = int(hrsize) * units
+            used = int(hrused) * units
             parsed.setdefault(map_type, []).append((hrdescr.lower(), size, used))
 
     return parsed

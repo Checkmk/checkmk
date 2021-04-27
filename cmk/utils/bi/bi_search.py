@@ -156,7 +156,7 @@ class BIHostSearch(ABCBISearch):
         search_results = []
         for search_match in search_matches:
             search_result = {
-                "$1$": search_match.host.name,
+                "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                 "$HOSTNAME$": search_match.host.name,
                 "$HOSTALIAS$": search_match.host.alias
             }
@@ -175,7 +175,7 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_children.add(child)
                 search_result = {
-                    "$1$": bi_searcher.hosts[child].name,
+                    "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": bi_searcher.hosts[child].name,
                     "$HOSTALIAS$": bi_searcher.hosts[child].alias
                 }
@@ -191,7 +191,7 @@ class BIHostSearch(ABCBISearch):
                     continue
                 handled_parents.add(parent)
                 search_result = {
-                    "$1$": search_match.host.name,
+                    "$1$": search_match.match_groups[0] if search_match.match_groups else "",
                     "$HOSTNAME$": search_match.host.name,
                     "$HOSTALIAS$": search_match.host.alias
                 }
@@ -222,6 +222,9 @@ class BIHostSearch(ABCBISearch):
 
         search_results = []
         for host in matched_hosts:
+            # Note: The parameter $1$ does not reflect the first regex match group for the initial host
+            #       This information was lost when all children were put into the all_children pool
+            #       We can live with it. The option is not used sensibly anywhere anyway :)
             search_result = {"$1$": host.name, "$HOSTNAME$": host.name, "$HOSTALIAS$": host.alias}
             search_results.append(search_result)
 
@@ -270,12 +273,15 @@ class BIServiceSearch(ABCBISearch):
         search_results = []
         for search_match in sorted(search_matches, key=lambda x: x.service_description):
             search_result = {
-                "$1$": search_match.host.name,
-                "$HOSTNAME$": search_match.host.name,
-                "$HOSTALIAS$": search_match.host.alias
+                "$1$": next(iter(search_match.host_match.match_groups), ""),
+                "$HOSTNAME$": search_match.host_match.host.name,
+                "$HOSTALIAS$": search_match.host_match.host.alias
             }
-            for idx, group in enumerate(search_match.match_groups):
-                search_result["$%d$" % (idx + 2)] = group
+            for idx, group in enumerate(search_match.match_groups, start=2):
+                search_result["$%d$" % (idx)] = group
+
+            for idx, group in enumerate(search_match.host_match.match_groups):
+                search_result["$HOST_MG_%d$" % idx] = group
             search_results.append(search_result)
         return search_results
 

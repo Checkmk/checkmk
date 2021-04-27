@@ -1,0 +1,11 @@
+Title: BI configuration: The macro $1$ incorrectly referred to the hostname instead of the first regex match group
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1619527780
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+

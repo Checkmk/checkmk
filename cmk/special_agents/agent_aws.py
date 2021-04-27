@@ -936,7 +936,10 @@ class EC2Limits(AWSSectionLimits):
                 logging.info("%s: Unknown instance type '%s'", self.name, inst_type)
                 continue
 
-            inst_az = res_inst['AvailabilityZone']
+            inst_az = res_inst.get('AvailabilityZone')
+            if not inst_az:
+                logging.info("AvailabilityZone not available")
+                continue
             res_limits.setdefault(inst_az, {})[inst_type] = res_limits.get(inst_az, {}).get(
                 inst_type, 0) + res_inst['InstanceCount']
         return res_limits

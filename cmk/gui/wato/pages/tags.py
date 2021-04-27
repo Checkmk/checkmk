@@ -499,7 +499,7 @@ class ModeTagUsage(ABCTagMode):
 
         table.cell(_("Tag group"), _u(tag_group.choice_title))
         # TODO: This check shouldn't be necessary if we get our types right.
-        if tag.title is None or tag.id is None or tag_group.id is None:
+        if tag.title is None or tag_group.id is None:
             raise Exception("uninitialized tag/tag group")
         table.cell(_("Tag"), _u(tag.title))
 

@@ -7,6 +7,7 @@ from checktestlib import (
     BasicCheckResult,
     PerfValue,
     assertCheckResultsEqual,
+    MockHostExtraConf,
 )
 
 pytestmark = pytest.mark.checks
@@ -321,3 +322,62 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
             group_pattern,
             fileinfo_single_check.run_parse(info),
         ))
+
+
+@pytest.mark.parametrize('item, host_rulesets, expected_result', [
+    (
+        'SMS_checked',
+        [
+            [
+                ('In', ('C:\\in\\*.xml', '')),
+            ],
+            [
+                ('Updates', ('C:\\ProgramData\\Updates\\*.xml', '')),
+            ],
+            [
+                ('Logs', ('C:\\SomeLog*.log', 'C:\\SomeLog*.1.log')),
+            ],
+            [
+                ('SMS_failed', ('/sms/failed/*', '')),
+                ('SMS_outgoing', ('/sms/outgoing/*', '')),
+                ('SMS_checked', ('/sms/checked/.*', '')),
+            ],
+        ],
+        [(3, 'No group pattern found.')],
+    ),
+    (
+        'random_item',
+        [
+            [
+                ('In', ('C:\\in\\*.xml', '')),
+            ],
+            [
+                ('Updates', ('C:\\ProgramData\\Updates\\*.xml', '')),
+            ],
+        ],
+        [(3, 'No group pattern found.')],
+    ),
+])
+@pytest.mark.usefixtures("config_load_all_checks")
+def test_check_fileinfo_group_patterns_host_extra_conf(item, host_rulesets, expected_result):
+    fileinfo_groups_check = Check('fileinfo.groups')
+
+    def mock_host_extra_conf(_hostname, _rulesets):
+        return host_rulesets
+
+    with MockHostExtraConf(fileinfo_groups_check, mock_host_extra_conf, 'host_extra_conf'):
+        assert list(
+            fileinfo_groups_check.run_check(
+                item,
+                {},
+                {
+                    'reftime': 1619516613,
+                    'files': {
+                        '/sms/checked/bla': FileinfoItem(name='/sms/checked/bla',
+                                                         missing=False,
+                                                         failed=False,
+                                                         size=0,
+                                                         time=1619515730)
+                    },
+                },
+            )) == expected_result

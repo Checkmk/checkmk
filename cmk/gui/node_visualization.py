@@ -515,23 +515,22 @@ class AjaxFetchTopology(AjaxPage):
                 mesh_root = list(mesh)[0]
             mesh_info = topology.get_info_for_host(mesh_root, mesh)
 
-            mesh_info["children"] = []
-            mesh_info["children"].extend(
-                topology.get_info_for_host(x, mesh) for x in mesh if x != mesh_root)
-
-            sorted_mesh = [mesh_root] + sorted([x for x in mesh if x != mesh_root])
+            sorted_children = sorted([x for x in mesh if x != mesh_root])
+            mesh_info["children"] = list(
+                topology.get_info_for_host(x, mesh) for x in sorted_children)
+            sorted_mesh = [mesh_root] + sorted_children
 
             mesh_links = set()
-            for idx, hostname in enumerate(sorted_mesh[1:]):
+            for idx, hostname in enumerate(sorted_mesh):
                 # Incoming connections
                 for child in topology.get_host_incoming(hostname):
                     if child in sorted_mesh:
-                        mesh_links.add((sorted_mesh.index(child), idx + 1))
+                        mesh_links.add((sorted_mesh.index(child), idx))
 
                 # Outgoing connections
                 for parent in topology.get_host_outgoing(hostname):
                     if parent in sorted_mesh:
-                        mesh_links.add((idx + 1, sorted_mesh.index(parent)))
+                        mesh_links.add((idx, sorted_mesh.index(parent)))
 
             topology_info["topology_chunks"][mesh_root] = {
                 "layout": {

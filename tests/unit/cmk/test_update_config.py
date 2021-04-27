@@ -48,10 +48,15 @@ def test_update_config_init():
     update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
 
 
+def mock_run():
+    sys.stdout.write("XYZ\n")
+    return 0
+
+
 def test_main(monkeypatch):
     buf = io.StringIO()
     monkeypatch.setattr(sys, "stdout", buf)
-    monkeypatch.setattr(update_config.UpdateConfig, "run", lambda self: sys.stdout.write("XYZ\n"))
+    monkeypatch.setattr(update_config.UpdateConfig, "run", lambda self: mock_run())
     assert update_config.main([]) == 0
     assert "XYZ" in buf.getvalue()
 

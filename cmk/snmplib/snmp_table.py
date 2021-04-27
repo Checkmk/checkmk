@@ -202,7 +202,7 @@ def _make_table(columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig) 
 
 
 def _oid_to_bin(oid: OID) -> SNMPRawValue:
-    return ensure_binary("".join([chr(int(p)) for p in oid.strip(".").split(".")]))
+    return bytes(int(p) for p in oid.split(".") if p)
 
 
 def _extract_end_oid(prefix: OID, complete: OID) -> OID:

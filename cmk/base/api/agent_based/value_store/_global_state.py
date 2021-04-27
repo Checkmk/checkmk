@@ -20,18 +20,16 @@ structures like log files or stuff.
 """
 
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Any, Generator, MutableMapping, Optional
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
-
-from cmk.base.api.agent_based.type_defs import ValueStore
 
 from ._utils import ValueStoreManager
 
 _active_host_value_store: Optional[ValueStoreManager] = None
 
 
-def get_value_store() -> ValueStore:
+def get_value_store() -> MutableMapping[str, Any]:
     """Get the value store for the current service from Checkmk
 
     The returned value store object can be used to persist values

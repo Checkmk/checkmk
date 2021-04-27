@@ -4,19 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-These functions allow checks to keep a memory until the next time
-the check is being executed. The most frequent use case is compu-
-tation of rates from two succeeding counter values. This is done
-via the helper function get_rate(). Averaging is another example
-and done by get_average().
-
-While a host is being checked this memory is kept in _cached_item_states.
-That is a dictionary. The keys are unique to one check type and
-item. The value is free form.
-
-Note: The item state is kept in tmpfs and not reboot-persistant.
-Do not store long-time things here. Also do not store complex
-structures like log files or stuff.
+This module keeps the global state of the ValueStore.
 """
 
 from contextlib import contextmanager
@@ -29,6 +17,7 @@ from ._utils import ValueStoreManager
 _active_host_value_store: Optional[ValueStoreManager] = None
 
 
+# Caveat: this function (and its docstring) is part of the public Check API.
 def get_value_store() -> MutableMapping[str, Any]:
     """Get the value store for the current service from Checkmk
 
@@ -49,7 +38,7 @@ def load_host_value_store(
     *,
     store_changes: bool,
 ) -> Generator[ValueStoreManager, None, None]:
-    """Select (or create) the correct value store for the host and (re)load it"""
+    """Create and load the value store for the host"""
     global _active_host_value_store
 
     pushed_back_store = _active_host_value_store

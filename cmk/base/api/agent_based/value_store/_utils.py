@@ -3,22 +3,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-These functions allow checks to keep a memory until the next time
-the check is being executed. The most frequent use case is compu-
-tation of rates from two succeeding counter values. This is done
-via the helper function get_rate(). Averaging is another example
-and done by get_average().
-
-While a host is being checked this memory is kept in _cached_item_states.
-That is a dictionary. The keys are unique to one check type and
-item. The value is free form.
-
-Note: The item state is kept in tmpfs and not reboot-persistant.
-Do not store long-time things here. Also do not store complex
-structures like log files or stuff.
-"""
-
 from contextlib import contextmanager
 from pathlib import Path
 from typing import (
@@ -76,7 +60,13 @@ class _DynamicValueStore(Dict[_ValueStoreKey, Any]):
 
 
 class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
-    """Represents the values stored on disk"""
+    """Represents the values stored on disk
+
+    This class provides a Mapping-interface for the values stored
+    on disk.
+
+    The only way to modify the values is the disksync method.
+    """
 
     STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
 
@@ -102,9 +92,13 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
             removed: Container[_ValueStoreKey] = (),
             updated: Iterable[Tuple[_ValueStoreKey, Any]] = (),
     ) -> None:
-        """Re-load and then store the changes of the item state to disk
+        """Re-load and write the changes of the stored values
 
-        Make sure the object is in sync with the file after writing.
+        This method will reload the values from disk, apply the changes (remove keys
+        and update values) as specified by the arguments, and then write the result to disk.
+
+        When this method returns, the data provided via the Mapping-interface and
+        the data stored on disk must be in sync.
         """
         self._log_debug("value store: synchronizing")
 
@@ -192,6 +186,12 @@ class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disa
 
 
 class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-ancestors
+    """Implements the mutable mapping that is exposed to the plugins
+
+    This class ensures that every service has its own name space in the
+    persisted values, by adding the service ID (check plugin name and item) to
+    the user supplied keys.
+    """
     def __init__(
         self,
         *,
@@ -224,6 +224,17 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
 
 
 class ValueStoreManager:
+    """Provide the ValueStores for one host
+
+    This class provides method to load (upon __init__) and
+    save a hosts value store, as well as selecting (via context manager)
+    the name space for any given service.
+
+    .. automethod:: ValueStoreManager.namespace
+
+    .. automethod:: ValueStoreManager.save
+
+    """
     def __init__(self, host_name: HostName) -> None:
         self._value_store = _EffectiveValueStore(
             dynamic=_DynamicValueStore(),
@@ -233,6 +244,10 @@ class ValueStoreManager:
 
     @contextmanager
     def namespace(self, service_id: Tuple[CheckPluginName, Item]) -> Iterator[None]:
+        """Return a context manager
+
+        In the corresponding context the value store for the given service is active
+        """
         old_sif = self.active_service_interface
         self.active_service_interface = _ValueStore(data=self._value_store, service_id=service_id)
         try:
@@ -241,5 +256,6 @@ class ValueStoreManager:
             self.active_service_interface = old_sif
 
     def save(self) -> None:
+        """Write all current values of this host to disk"""
         if isinstance(self._value_store, _EffectiveValueStore):
             self._value_store.commit()

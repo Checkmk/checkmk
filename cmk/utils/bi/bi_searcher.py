@@ -111,6 +111,7 @@ class BISearcher(ABCBISearcher):
             pattern_match_cache[host.name] = match.groups()
             matched_hosts.append(host)
             matched_re_groups[host.name] = pattern_match_cache[host.name]
+
         return matched_hosts, matched_re_groups
 
     def get_host_alias_matches(self, hosts: List[BIHostData],
@@ -131,22 +132,21 @@ class BISearcher(ABCBISearcher):
             matched_re_groups[host.name] = tuple(match.groups())
         return matched_hosts, matched_re_groups
 
-    def get_service_description_matches(self, hosts: List[BIHostData],
+    def get_service_description_matches(self, host_matches: List[BIHostSearchMatch],
                                         pattern: str) -> List[BIServiceSearchMatch]:
         matched_services = []
         regex_pattern = regex(pattern)
-        for host in hosts:
-            for service_description in host.services.keys():
-                match = regex_pattern.match(service_description)
-                if match is None:
-                    continue
-                matched_services.append(
-                    BIServiceSearchMatch(host, service_description, tuple(match.groups())))
+        for host_match in host_matches:
+            for service_description in host_match.host.services.keys():
+                if match := regex_pattern.match(service_description):
+                    matched_services.append(
+                        BIServiceSearchMatch(host_match, service_description,
+                                             tuple(match.groups())))
         return matched_services
 
     def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
         host_matches: List[BIHostSearchMatch] = self.search_hosts(conditions)
-        service_matches = self.get_service_description_matches([x.host for x in host_matches],
+        service_matches = self.get_service_description_matches(host_matches,
                                                                conditions["service_regex"])
         service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
         return service_matches
@@ -176,7 +176,7 @@ class BISearcher(ABCBISearcher):
 
         matched_services = []
         for service in services:
-            service_data = service.host.services[service.service_description]
+            service_data = service.host_match.host.services[service.service_description]
             if matches_labels(service_data.labels, required_labels):
                 matched_services.append(service)
         return matched_services

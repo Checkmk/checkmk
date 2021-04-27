@@ -150,7 +150,7 @@ BIHostSearchMatch = NamedTuple("BIHostSearchMatch", [
 ])
 
 BIServiceSearchMatch = NamedTuple("BIServiceSearchMatch", [
-    ("host", BIHostData),
+    ("host_match", BIHostSearchMatch),
     ("service_description", str),
     ("match_groups", tuple),
 ])
@@ -363,7 +363,7 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_service_description_matches(self, hosts: List[BIHostData],
+    def get_service_description_matches(self, host_matches: List[BIHostSearchMatch],
                                         pattern: str) -> List[BIServiceSearchMatch]:
         raise NotImplementedError()
 

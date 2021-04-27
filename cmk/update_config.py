@@ -127,8 +127,10 @@ class UpdateConfig:
             console_handler = log.logger.handlers[0]
             del log.logger.handlers[:]
             logging.getLogger().addHandler(console_handler)
+        self._has_errors = False
 
-    def run(self):
+    def run(self) -> bool:
+        self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
         with application_and_request_context():
             self._initialize_gui_environment()
@@ -145,11 +147,13 @@ class UpdateConfig:
                 try:
                     step_func()
                 except Exception:
+                    self._has_errors = True
                     self._logger.error(" + \"%s\" failed" % title, exc_info=True)
                     if self._arguments.debug:
                         raise
 
         self._logger.log(VERBOSE, "Done")
+        return self._has_errors
 
     def _steps(self):
         return [
@@ -497,6 +501,12 @@ class UpdateConfig:
             ]
 
     def _validate_regexes_in_item_specs(self, all_rulesets):
+        def format_error(msg: str):
+            return "\033[91m {}\033[00m".format(msg)
+
+        def format_warning(msg: str):
+            return "\033[93m {}\033[00m".format(msg)
+
         num_errors = 0
         for ruleset in all_rulesets.get_rulesets().values():
             for folder, index, rule in ruleset.get_rules():
@@ -512,22 +522,29 @@ class UpdateConfig:
                         re.compile(regex)
                     except re.error as e:
                         self._logger.error(
-                            "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
-                            "Rule nr: %s, Condition: %s, Exception: %s)", ruleset.name,
+                            format_error(
+                                "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
+                                "Rule nr: %s, Condition: %s, Exception: %s)"), ruleset.name,
                             folder.path(), index, regex, e)
                         num_errors += 1
                         continue
                     if PureWindowsPath(regex).is_absolute() and _MATCH_SINGLE_BACKSLASH.search(
                             regex):
                         self._logger.warn(
-                            "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped."
-                            " Use double backslash as directory separator in regex expressions, e.g."
-                            " 'C:\\\\Program Files\\\\'"
-                            " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)", ruleset.name,
-                            folder.path(), index, regex)
+                            format_warning(
+                                "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped.\n"
+                                " Use double backslash as directory separator in regex expressions, e.g.\n"
+                                " 'C:\\\\Program Files\\\\'\n"
+                                " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)"),
+                            ruleset.name, folder.path(), index, regex)
 
-        if num_errors and self._arguments.debug:
-            raise MKGeneralException("Detected %d errors in service conditions" % num_errors)
+        if num_errors:
+            self._has_errors = True
+            self._logger.error(
+                format_error("Detected %s errors in service conditions.\n "
+                             "You must correct these errors *before* starting checkmk.\n "
+                             "For more information regarding errors in regular expressions see:\n "
+                             "https://docs.checkmk.com/latest/en/regexes.html"), num_errors)
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")
@@ -937,14 +954,14 @@ def main(args: List[str]) -> int:
     logger.debug("parsed arguments: %s", arguments)
 
     try:
-        UpdateConfig(logger, arguments).run()
+        has_errors = UpdateConfig(logger, arguments).run()
     except Exception:
         if arguments.debug:
             raise
         logger.exception("ERROR: Please repair this and run \"cmk-update-config -v\" "
                          "BEFORE starting the site again.")
         return 1
-    return 0
+    return 1 if has_errors else 0
 
 
 def parse_arguments(args: List[str]) -> argparse.Namespace:

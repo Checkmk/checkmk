@@ -34,7 +34,7 @@ RUN yum -y --enablerepo=PowerTools --allowerasing install \
 RUN alternatives --set python /usr/bin/python2 && python -V
 
 # Now bring pip and pipenv to our standard version used in all environments.
-RUN curl https://bootstrap.pypa.io/2.7/get-pip.py -o get-pip.py \
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py
 RUN pip install --upgrade setuptools virtualenv \
     && pip install git+https://github.com/pypa/pipenv.git@2549656dc09e132d8ba2fa6327c939f5f9a951b7

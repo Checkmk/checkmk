@@ -67,30 +67,6 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 echo '<<<uptime>>>'
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
 
-echo "<<<mem>>>"
-MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
-MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
-MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)
-
-SWAPCTL_OUTPUT=$(swapctl -k -s)
-SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
-SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
-
-# if there is no swap space swap values are 0
-if [ -z "$SWAPCTL_OUTPUT" ]
-        then
-        SWAP_FREE=0
-        SWAP_TOTAL=0
-fi
-
-echo "MemTotal:\t" $MEM_TOTAL kB
-echo "MemFree:\t" $MEM_FREE kB
-echo "SwapTotal:\t" $SWAP_TOTAL kB
-echo "SwapFree:\t" $SWAP_FREE kB
-
-# openbsd_mem and mem sections are the same
-# the reason behind it is that we need the same section under two different names
-# so two different generic checks can process them
 echo "<<<openbsd_mem>>>"
 MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
 MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)

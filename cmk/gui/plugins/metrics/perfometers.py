@@ -431,6 +431,12 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "linear",
+    "segments": ["util_numcpu_as_max",],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
     "segments": ["generic_util",],
     "total": 100.0,
 })

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+from pathlib import Path
 from six import ensure_binary
 
 from cmk.utils.type_defs import AgentRawData
@@ -34,6 +36,9 @@ class DefaultAgentFileCache(AgentFileCache):
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 
+    def make_path(self, mode: Mode) -> Path:
+        return self.base_path
+
 
 class NoCache(AgentFileCache):
     """Noop cache for fetchers that do not cache."""
@@ -52,6 +57,9 @@ class NoCache(AgentFileCache):
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         return ensure_binary(raw_data)
+
+    def make_path(self, mode: Mode) -> Path:
+        return Path(os.devnull)
 
 
 class AgentFetcher(ABCFetcher[AgentRawData]):

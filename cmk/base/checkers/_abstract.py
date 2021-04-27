@@ -76,13 +76,13 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
 
     def __init__(
         self,
-        path: Union[Path, str],
+        base_path: Union[Path, str],
         *,
         max_age: int,
         simulation: bool = False,
     ):
         super().__init__()
-        self.path: Final[Path] = Path(path)
+        self.base_path: Final[Path] = Path(base_path)
         self.max_age: Final[int] = max_age
         self.simulation: Final[bool] = simulation
 
@@ -133,7 +133,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.file_cache_path: Final[Path] = cache_dir / self.hostname
+        self.file_cache_base_path: Final[Path] = cache_dir / self.hostname
         self.file_cache_max_age: int = 0
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
 

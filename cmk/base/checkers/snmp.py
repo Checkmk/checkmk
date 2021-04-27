@@ -53,13 +53,13 @@ SNMPHostSections = HostSections[SNMPSectionContent]
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
     def make(self) -> SNMPFileCache:
         return SNMPFileCache(
-            path=self.path,
+            base_path=self.base_path,
             max_age=0,
             disabled=self.disabled,
             use_outdated=False,
             simulation=self.simulation,
         ) if self.force_snmp_cache_refresh else SNMPFileCache(
-            path=self.path,
+            base_path=self.base_path,
             max_age=self.max_age,
             disabled=self.disabled,
             use_outdated=self.use_outdated,
@@ -145,7 +145,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_file_cache(self) -> SNMPFileCache:
         return SNMPFileCacheFactory(
-            path=self.file_cache_path,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()

@@ -91,7 +91,7 @@ class TCPFetcher(AgentFetcher):
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
             raise MKFetcherError("Got no data: No usable cache file present at %s" %
-                                 self.file_cache.path)
+                                 self.file_cache.base_path)
         if self._socket is None:
             raise MKFetcherError("Not connected")
 

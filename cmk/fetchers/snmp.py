@@ -143,7 +143,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         in the cache), but all sections for which the detection spec evaluates to true,
         which can be many more.
         """
-        return mode is Mode.DISCOVERY
+        return mode is not Mode.FORCE_SECTIONS
 
     @staticmethod
     def cache_write(mode: Mode) -> bool:
@@ -154,7 +154,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         DISCOVERY only, we must only write it if we're dealing with the right
         sections for discovery.
         """
-        return mode is Mode.DISCOVERY
+        return True
 
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
@@ -164,6 +164,11 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
     @staticmethod
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+
+    def make_path(self, mode: Mode) -> Path:
+        if mode is Mode.DISCOVERY:
+            return self.base_path.with_suffix("." + mode.name.lower())
+        return self.base_path
 
 
 class SNMPFetcher(ABCFetcher[SNMPRawData]):

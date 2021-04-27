@@ -276,7 +276,7 @@ class StubSource(AgentSource):
 
     def _make_file_cache(self):
         return NoCache(
-            path=Path(os.devnull),
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=False,

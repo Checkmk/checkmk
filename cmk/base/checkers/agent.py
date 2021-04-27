@@ -49,7 +49,7 @@ AgentHostSections = HostSections[AgentSectionContent]
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
     def make(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCache(
-            path=self.path,
+            base_path=self.base_path,
             max_age=self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=self.use_outdated,
@@ -60,7 +60,7 @@ class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
 class NoCacheFactory(FileCacheFactory[AgentRawData]):
     def make(self) -> NoCache:
         return NoCache(
-            path=self.path,
+            base_path=self.base_path,
             max_age=self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=self.use_outdated,

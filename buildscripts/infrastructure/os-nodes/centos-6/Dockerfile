@@ -4,15 +4,15 @@ SHELL ["/bin/bash", "-c"]
 
 ARG PACKAGES
 
+# Handle Centos-6 EOL repos, taken from https://www.getpagespeed.com/server-setup/how-to-fix-yum-after-centos-6-went-eol
+COPY ./CentOS-Base.repo ./CentOS-SCLo-scl-rh.repo ./CentOS-SCLo-scl.repo  /etc/yum.repos.d/
+
 RUN yum -y --enablerepo=extras install \
     epel-release \
     && yum -y install \
     centos-release-scl-rh \
     && yum -y install \
-    curl \
-    && curl http://mirror.ghettoforge.org/distributions/gf/el/6/plus/x86_64/rsync-3.1.2-1.gf.el6.x86_64.rpm --output rsync-3.1.2-1.gf.el6.x86_64.rpm \
-    && rpm -i rsync-3.1.2-1.gf.el6.x86_64.rpm \
-    && rm rsync-3.1.2-1.gf.el6.x86_64.rpm \
+    rsync \
     && yum -y install \
     dpkg \
     enchant \

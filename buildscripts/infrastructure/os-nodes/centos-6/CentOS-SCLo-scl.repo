@@ -1,0 +1,35 @@
+# Obtained with "curl https://www.getpagespeed.com/files/centos6-scl-eol.repo"
+
+# CentOS-SCLo-sclo.repo
+#
+# Please see http://wiki.centos.org/SpecialInterestGroup/SCLo for more
+# information
+
+[centos-sclo-sclo]
+name=CentOS-6 - SCLo sclo
+baseurl=http://vault.centos.org/centos/6/sclo/$basearch/sclo/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
+
+[centos-sclo-sclo-testing]
+name=CentOS-6 - SCLo sclo Testing
+baseurl=http://buildlogs.centos.org/centos/6/sclo/$basearch/sclo/
+gpgcheck=0
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
+
+[centos-sclo-sclo-source]
+name=CentOS-6 - SCLo sclo Sources
+baseurl=http://vault.centos.org/centos/6/sclo/Source/sclo/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
+
+[centos-sclo-sclo-debuginfo]
+name=CentOS-6 - SCLo sclo Debuginfo
+baseurl=http://debuginfo.centos.org/centos/6/sclo/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-SCLo
+

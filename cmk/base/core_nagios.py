@@ -1008,6 +1008,21 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache,
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
 
+    if host_config.is_cluster:
+        if host_config.nodes is None:
+            raise TypeError()
+
+        for node_config in (config_cache.get_host_config(node) for node in host_config.nodes):
+            (
+                node_needed_legacy_check_plugin_names,
+                node_needed_agent_based_check_plugin_names,
+                node_needed_agent_based_inventory_plugin_names,
+            ) = _get_needed_plugin_names(node_config)
+            needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
+            needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
+            needed_agent_based_inventory_plugin_names.update(
+                node_needed_agent_based_inventory_plugin_names)
+
     needed_legacy_check_plugin_names.update(
         _get_required_legacy_check_sections(
             needed_agent_based_check_plugin_names,

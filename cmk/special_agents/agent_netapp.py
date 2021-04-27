@@ -128,13 +128,17 @@ def parse_arguments(argv):
                                      formatter_class=Formatter,
                                      epilog=epilog.lstrip())
     parser.add_argument(
-        dest='host_address',
-        type=str,
+        'host_address',
         help='Hostname or IP-address of NetApp Filer.',
     )
-
-    parser.add_argument('-u', '--user', help='Username for NetApp login')
-    parser.add_argument('-s', '--secret', help='Secret/Password for NetApp login')
+    parser.add_argument(
+        'user',
+        help='Username for NetApp login',
+    )
+    parser.add_argument(
+        'secret',
+        help='Secret/Password for NetApp login',
+    )
 
     parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
 
@@ -148,9 +152,8 @@ def parse_arguments(argv):
               'to each individual subquery. (Default is %(default)s seconds)'),
     )
     parser.add_argument(
-        '--nocounters',
-        dest='no_counters',
-        action='append',
+        '--no_counters',
+        nargs='*',
         type=str,
         default=[],
         choices=['volumes'],

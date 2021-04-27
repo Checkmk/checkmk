@@ -25,7 +25,6 @@ NOT_TESTED_YET = {
     'agent_innovaphone',
     'agent_ipmi_sensors',
     'agent_jolokia',
-    'agent_netapp',
     'agent_prism',
     'agent_random',
     'agent_ruckus_spot',
@@ -80,6 +79,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
+    'agent_netapp': ["address", "user", "password", "--no_counters", "volumes"],
 }
 
 

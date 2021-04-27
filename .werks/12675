@@ -1,0 +1,24 @@
+Title: Error in systemd socket unit
+Level: 1
+Component: agents
+Compatible: incomp
+Edition: cee
+Version: 1.6.0p24
+Date: 1619535587
+Class: fix
+
+This is a regression since 1.6.0p23 and Werk #12153.
+
+When installing the Checkmk agent package on Linux systems,
+an erroneous systemd socket unit will be installed on the target
+system.
+
+If the affected system is actually contacted via systemd, i.e., no
+xinetd is installed on the system, this will lead to an inaccessible
+host.
+
+In order to recover from this error on affected hosts, you have to
+either install the newly baked agent package on the hosts manually,
+or, if you are using automatic agent updates, run <tt>cmk-update-agent</tt>
+once manually on the hosts, as it won't get triggered via agent call.
+

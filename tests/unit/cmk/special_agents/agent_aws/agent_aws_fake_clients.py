@@ -6,7 +6,6 @@
 
 import abc
 import random
-
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
@@ -130,22 +129,24 @@ class Bytes(Str):
 
 
 class InstanceBuilder(metaclass=abc.ABCMeta):
-    def __init__(self, idx, amount):
+    def __init__(self, idx, amount, skip_entities=None):
         self._idx = idx
         self._amount = amount
+        self._skip_entities = [] if not skip_entities else skip_entities
 
     def _fill_instance(self):
         return []
 
-    def create_instance(self):
-        instance = {}
-        for value in self._fill_instance():
-            instance[value.key] = value.create(self._idx, self._amount)
-        return instance
+    def _create_instance(self):
+        return {
+            value.key: value.create(self._idx, self._amount)
+            for value in self._fill_instance()
+            if value.key not in self._skip_entities
+        }
 
     @classmethod
-    def create_instances(cls, amount):
-        return [cls(idx, amount).create_instance() for idx in range(amount)]
+    def create_instances(cls, amount, skip_entities=None):
+        return [cls(idx, amount, skip_entities)._create_instance() for idx in range(amount)]
 
 
 #.

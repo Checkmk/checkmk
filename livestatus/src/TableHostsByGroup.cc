@@ -16,19 +16,19 @@
 #include "nagios.h"
 
 namespace {
-struct hostbygroup {
+struct host_and_group {
     const host *hst;
-    const hostgroup *host_group;
+    const hostgroup *group;
 };
 }  // namespace
 
 TableHostsByGroup::TableHostsByGroup(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
     TableHosts::addColumns(this, "", offsets.add([](Row r) {
-        return r.rawData<hostbygroup>()->hst;
+        return r.rawData<host_and_group>()->hst;
     }));
     TableHostGroups::addColumns(this, "hostgroup_", offsets.add([](Row r) {
-        return r.rawData<hostbygroup>()->host_group;
+        return r.rawData<host_and_group>()->group;
     }));
 }
 
@@ -41,17 +41,18 @@ void TableHostsByGroup::answerQuery(Query *query) {
         query->authUser() != nullptr &&
         core()->groupAuthorization() == AuthorizationKind::strict;
 
-    for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
+    for (const auto *group = hostgroup_list; group != nullptr;
+         group = group->next) {
         if (requires_authcheck &&
             !is_authorized_for_host_group(core()->groupAuthorization(),
-                                          core()->serviceAuthorization(), hg,
+                                          core()->serviceAuthorization(), group,
                                           query->authUser())) {
             continue;
         }
 
-        for (const hostsmember *m = hg->members; m != nullptr; m = m->next) {
-            hostbygroup hbg{m->host_ptr, hg};
-            if (!query->processDataset(Row(&hbg))) {
+        for (const auto *m = group->members; m != nullptr; m = m->next) {
+            host_and_group hag{m->host_ptr, group};
+            if (!query->processDataset(Row(&hag))) {
                 return;
             }
         }
@@ -60,5 +61,5 @@ void TableHostsByGroup::answerQuery(Query *query) {
 
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for(core()->serviceAuthorization(), ctc,
-                             rowData<hostbygroup>(row)->hst, nullptr);
+                             rowData<host_and_group>(row)->hst, nullptr);
 }

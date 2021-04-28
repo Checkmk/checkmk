@@ -212,7 +212,7 @@ class UpdateConfig:
 
     def _rewrite_wato_host_and_folder_config(self):
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
-        root_folder.save()
+        root_folder.rewrite_folders()
         root_folder.rewrite_hosts_files()
 
     def _update_global_settings(self):

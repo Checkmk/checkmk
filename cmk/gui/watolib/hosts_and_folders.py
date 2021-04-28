@@ -1979,6 +1979,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for subfolder in self.subfolders():
             subfolder.rewrite_hosts_files()
 
+    def rewrite_folders(self):
+        self.persist_instance()
+        for subfolder in self.subfolders():
+            subfolder.rewrite_folders()
+
     def _add_host(self, host):
         self._load_hosts_on_demand()
         self._hosts[host.name()] = host

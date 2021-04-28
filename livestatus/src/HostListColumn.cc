@@ -73,8 +73,7 @@ std::vector<HostListColumn::Entry> HostListColumn::getEntries(
     if (const auto *const p = columnData<hostsmember *>(row)) {
         for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
-            if (auth_user == nullptr ||
-                is_authorized_for(_mc->serviceAuthorization(), auth_user, hst,
+            if (is_authorized_for(_mc->serviceAuthorization(), auth_user, hst,
                                   nullptr)) {
                 entries.emplace_back(hst->name,
                                      static_cast<HostState>(hst->current_state),

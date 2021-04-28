@@ -32,9 +32,11 @@ bool service_has_contact(AuthorizationKind service_auth, const host *hst,
 
 bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
                        const host *hst, const service *svc) {
-    return ctc != unknown_auth_user() &&
-           (svc == nullptr ? host_has_contact(hst, ctc)
-                           : service_has_contact(service_auth, hst, svc, ctc));
+    return ctc == nullptr ||
+           (ctc != unknown_auth_user() &&
+            (svc == nullptr
+                 ? host_has_contact(hst, ctc)
+                 : service_has_contact(service_auth, hst, svc, ctc)));
 }
 
 bool is_authorized_for_host_group(AuthorizationKind group_auth,

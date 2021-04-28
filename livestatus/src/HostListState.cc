@@ -29,8 +29,7 @@ int32_t HostListState::operator()(const value_type &hsts,
 #else
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(_get_service_auth(), auth_user, hst, nullptr)) {
+        if (is_authorized_for(_get_service_auth(), auth_user, hst, nullptr)) {
             update(auth_user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||

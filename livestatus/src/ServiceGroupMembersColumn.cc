@@ -106,8 +106,7 @@ ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
     if (const auto *p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (auth_user == nullptr ||
-                is_authorized_for(_mc->serviceAuthorization(), auth_user,
+            if (is_authorized_for(_mc->serviceAuthorization(), auth_user,
                                   svc->host_ptr, svc)) {
                 entries.emplace_back(
                     svc->host_name, svc->description,

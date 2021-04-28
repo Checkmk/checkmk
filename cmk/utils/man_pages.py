@@ -191,6 +191,7 @@ catalog_titles = {
         "nullmailer"    : "Nullmailer",
         "nutanix"       : "Nutanix",
         "cmk"           : "Checkmk",
+        "opentextfuse"  : "OpenText Fuse Management Central",
         "oracle"        : "ORACLE Database",
         "plesk"         : "Plesk",
         "pfsense"       : "pfsense",

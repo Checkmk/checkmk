@@ -1,0 +1,13 @@
+Title: Fix reflected XSS using the on page search
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1619613291
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+The on page search could be used to trigger a reflected XSS attack.  It was
+possible to execute arbitrary javascript code in the context of the user
+clicking on the reset button of the on page search.

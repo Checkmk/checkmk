@@ -241,8 +241,7 @@ bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     return ctc == nullptr ||  //
            clazz == LogEntry::Class::info ||
            clazz == LogEntry::Class::program ||
-           clazz == LogEntry::Class::ext_command ||
-           clazz == LogEntry::Class::text;
+           clazz == LogEntry::Class::ext_command;
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

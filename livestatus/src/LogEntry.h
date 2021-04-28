@@ -66,6 +66,7 @@ enum class LogEntryKind {
 
 class LogEntry {
 public:
+    // TODO(sp) Do we have to keep the values in sync with something?
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
@@ -74,7 +75,7 @@ public:
         passivecheck = 4,     // passive checks
         ext_command = 5,      // external commands
         state = 6,            // initial or current states
-        text = 7,             // specific text passages
+        // text = 7,          // specific text passages, seems to be unused
         alert_handlers = 8,   // Started and stopped alert handlers
 
         // TODO(sp): This class sets different logclasses on match -> fix this

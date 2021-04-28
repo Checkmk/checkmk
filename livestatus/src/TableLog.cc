@@ -231,20 +231,18 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     const auto *lr = rowData<LogRow>(row);
-    service *svc = lr->svc;
-    host *hst = lr->hst;
-
-    if (hst != nullptr || svc != nullptr) {
-        return is_authorized_for(core()->serviceAuthorization(), ctc, hst, svc);
-        // suppress entries for messages that belong to hosts that do not exist
-        // anymore.
+    if (lr->hst != nullptr) {
+        return is_authorized_for(core()->serviceAuthorization(), ctc, lr->hst,
+                                 lr->svc);
     }
+    // If we have an AuthUser, suppress entries for messages with hosts that do
+    // not exist anymore.
     auto clazz = lr->entry->_class;
-    return !(clazz == LogEntry::Class::alert ||
-             clazz == LogEntry::Class::hs_notification ||
-             clazz == LogEntry::Class::passivecheck ||
-             clazz == LogEntry::Class::alert_handlers ||
-             clazz == LogEntry::Class::state);
+    return ctc == nullptr ||  //
+           clazz == LogEntry::Class::info ||
+           clazz == LogEntry::Class::program ||
+           clazz == LogEntry::Class::ext_command ||
+           clazz == LogEntry::Class::text;
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

@@ -71,6 +71,7 @@ def parse_cmciii(info):
         "can_current": {},
         "humidity": {},
         "phase": {},
+        "leakage": {},
     }
 
     dev_table, var_table = info
@@ -125,6 +126,9 @@ def parse_cmciii(info):
              container[2].endswith("Temperature"):
             this_table = "temp"
             itemname = cmciii_temp_get_item(container, device)
+        elif "Leakage" in container:
+            this_table = "leakage"
+            itemname = "%s %s" % (device, container[1])
         elif container[2].startswith("CAN") and container[2].endswith("Current"):
             this_table = "can_current"
             itemname = "%s %s" % (device, ".".join(container[1:]))
@@ -628,4 +632,44 @@ check_info['cmciii.phase'] = {
     "service_description": "Input %s",
     "has_perfdata": True,
     "group": "el_inphase",
+}
+
+#   .--leakage-------------------------------------------------------------.
+#   |                  _            _                                      |
+#   |                 | | ___  __ _| | ____ _  __ _  ___                   |
+#   |                 | |/ _ \/ _` | |/ / _` |/ _` |/ _ \                  |
+#   |                 | |  __/ (_| |   < (_| | (_| |  __/                  |
+#   |                 |_|\___|\__,_|_|\_\__,_|\__, |\___|                  |
+#   |                                         |___/                        |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+#.
+
+
+def inventory_cmciii_leakage(parsed):
+    for entry in parsed["leakage"]:
+        yield entry, {}
+
+
+def check_cmciii_leakage(item, _no_params, parsed):
+    entry = parsed["leakage"].get(item)
+    if not entry:
+        return
+
+    # We do not take entry["Position"] into account. It detects leaks but does
+    # not account for the delay. The delay is the time after which the status
+    # message changes.
+    # The leakage status is a readable text for notAvail(1), ok(4), alarm(5),
+    # probeOpen(24). All numeric values are defined in cmcIIIMsgStatus.
+    status = entry["Status"]
+    yield 2 if status != "OK" else 0, "Status: %s" % status
+    yield 0, "Delay: %s" % entry["Delay"]
+
+
+check_info['cmciii.leakage'] = {
+    "inventory_function": inventory_cmciii_leakage,
+    "check_function": check_cmciii_leakage,
+    "service_description": "%s",
+    "has_perfdata": True,
 }

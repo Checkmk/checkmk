@@ -2008,6 +2008,9 @@ msgid ""
 "or team integration api keys."
 msgstr ""
 
+msgid "API integrations if configured, else Checkmk agent"
+msgstr ""
+
 msgid "API key"
 msgstr ""
 
@@ -2802,10 +2805,6 @@ msgid "Actual traffic"
 msgstr "Numele Elementului"
 
 #, fuzzy
-msgid "Adaptable"
-msgstr "spatiu utilizat"
-
-#, fuzzy
 msgid "Add"
 msgstr "Adaugă Condiție"
 
@@ -2896,9 +2895,6 @@ msgstr "Adaugă filtre"
 msgid "Add a first row with column titles"
 msgstr ""
 
-msgid "Add a new host to the monitoring (agent must be installed)"
-msgstr ""
-
 #, fuzzy
 msgid "Add additional folder"
 msgstr "Informații Adiționale"
@@ -2921,14 +2917,6 @@ msgstr ""
 #, fuzzy
 msgid "Add all metrics of this graph to"
 msgstr "Adaugă acesta vedere la..."
-
-#, python-format
-msgid ""
-"Add all your Checkmk servers as monitored hosts to Checkmk to render this "
-"graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
-"the following sites: %s. Either the corresponding Checkmk servers are not "
-"monitored at all, or you filtered them out by applying site filters."
-msgstr ""
 
 #, fuzzy
 msgid "Add attribute"
@@ -3030,6 +3018,10 @@ msgid "Add filter"
 msgstr "Adaugă filtre"
 
 #, fuzzy
+msgid "Add folder"
+msgstr "Adaugă filtre"
+
+#, fuzzy
 msgid "Add group"
 msgstr "Adaugă group de model"
 
@@ -3044,6 +3036,10 @@ msgstr "Adaugă la Favorite"
 #, fuzzy
 msgid "Add host group"
 msgstr "Grup nou"
+
+#, fuzzy
+msgid "Add host to the monitoring"
+msgstr "Adaugă instanțe pentru monitorizare"
 
 msgid "Add instance to be monitored"
 msgstr "Adaugă instanțe pentru monitorizare"
@@ -3287,10 +3283,6 @@ msgstr "Adaugă Contoar"
 #, fuzzy
 msgid "Add state configuration"
 msgstr "Adaugp o noua configurație de utilizator"
-
-#, fuzzy
-msgid "Add subfolder"
-msgstr "Adaugă filtre"
 
 #, fuzzy
 msgid "Add tag"
@@ -5202,6 +5194,18 @@ msgstr ""
 #, fuzzy
 msgid "As server"
 msgstr "serviciu"
+
+msgid ""
+"As soon as you add your Checkmk server to the monitoring, a graph showing "
+"the history of your host problems will appear here. "
+msgstr ""
+
+#, python-format
+msgid ""
+"As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
+"the history of your host problems will appear here. Currently the following "
+"Checkmk sites are not monitored: %s. "
+msgstr ""
 
 msgid ""
 "As soon as you configure expected strings in the response the check will "
@@ -8516,6 +8520,10 @@ msgstr "(fără Nivel de serviciu)"
 msgid "Checkmk agent"
 msgstr "Acces la Agenți"
 
+#, fuzzy
+msgid "Checkmk agent / API integrations"
+msgstr "Perioada de timp Noua"
+
 msgid "Checkmk agent network service (Linux)"
 msgstr ""
 
@@ -9817,6 +9825,14 @@ msgstr ""
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
 
+#, fuzzy
+msgid "Configured API integrations and Checkmk agent"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
+#, fuzzy
+msgid "Configured API integrations, no Checkmk agent"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
 msgid "Configured feature mismatch"
 msgstr ""
 
@@ -10761,6 +10777,10 @@ msgid "Create clone of %s"
 msgstr ""
 
 #, fuzzy
+msgid "Create cluster"
+msgstr "Cluster nou"
+
+#, fuzzy
 msgid "Create custom graph"
 msgstr "Atribute personalizate"
 
@@ -10800,15 +10820,6 @@ msgid "Create new %s group %s"
 msgstr ""
 
 msgid "Create new auxiliary tag"
-msgstr ""
-
-msgid "Create new cluster"
-msgstr ""
-
-msgid "Create new folder"
-msgstr ""
-
-msgid "Create new host"
 msgstr ""
 
 msgid "Create new notification rule"
@@ -12029,9 +12040,6 @@ msgstr "fire"
 #, fuzzy
 msgid "Data size"
 msgstr "Dimensiunea Maxima"
-
-msgid "Data sources"
-msgstr ""
 
 msgid "Data targeted for higher tier"
 msgstr ""
@@ -25662,9 +25670,6 @@ msgstr ""
 msgid "Line spacing"
 msgstr ""
 
-msgid "Linear"
-msgstr ""
-
 msgid "Linear Regression Trend"
 msgstr ""
 
@@ -27149,8 +27154,9 @@ msgstr ""
 msgid "Managed Objects"
 msgstr ""
 
-msgid "Management Board"
-msgstr ""
+#, fuzzy
+msgid "Management board"
+msgstr "(fără parametri)"
 
 msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
 msgstr ""
@@ -28092,6 +28098,10 @@ msgid "Medium"
 msgstr ""
 
 #, fuzzy
+msgid "Medium (default)"
+msgstr "Reseteaza contoarele"
+
+#, fuzzy
 msgid "Mega menu icons"
 msgstr "Meniu Principal"
 
@@ -28919,6 +28929,10 @@ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Monitoring agent"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Monitoring agents"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
@@ -29753,10 +29767,6 @@ msgid "Network Adapters"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "Network Address"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "Network ID"
 msgstr "Adresă"
 
@@ -29774,6 +29784,10 @@ msgstr ""
 
 msgid "Network Topology"
 msgstr ""
+
+#, fuzzy
+msgid "Network address"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Network address:"
@@ -30023,8 +30037,9 @@ msgstr ""
 msgid "No (Error: %s, Code: %d, Depth: %d)"
 msgstr ""
 
-msgid "No Checkmk agent, all configured special agents"
-msgstr ""
+#, fuzzy
+msgid "No API integrations, no Checkmk agent"
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 #, fuzzy
 msgid "No Conditions"
@@ -30065,9 +30080,6 @@ msgid "No activation needed"
 msgstr "Notificari"
 
 msgid "No actual SLA computation"
-msgstr ""
-
-msgid "No agent"
 msgstr ""
 
 msgid "No authentication, no privacy"
@@ -30470,6 +30482,9 @@ msgstr ""
 msgid "Noncritical events"
 msgstr "Vechimea maxima"
 
+msgid "None (linear)"
+msgstr ""
+
 msgid "None (silent)"
 msgstr ""
 
@@ -30488,12 +30503,6 @@ msgid "None selected"
 msgstr ""
 
 msgid "Normal"
-msgstr ""
-
-msgid "Normal Checkmk agent, all configured special agents"
-msgstr ""
-
-msgid "Normal Checkmk agent, or special agent if configured"
 msgstr ""
 
 msgid "Normal check interval"
@@ -34258,6 +34267,11 @@ msgstr ""
 #, fuzzy
 msgid "Please provide a valid name"
 msgstr "%s nu este un număr întreg valid."
+
+msgid ""
+"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
+"more details."
+msgstr ""
 
 msgid "Please select a file."
 msgstr ""
@@ -42755,9 +42769,6 @@ msgstr ""
 msgid "Surge queue length"
 msgstr ""
 
-msgid "Susceptible"
-msgstr ""
-
 msgid "Suspended"
 msgstr ""
 
@@ -45004,6 +45015,10 @@ msgid "The host is missing."
 msgstr ""
 
 msgid "The host must be in one of the selected host groups"
+msgstr ""
+
+msgid ""
+"The host must have the Checkmk agent or SNMP or an API integration prepared."
 msgstr ""
 
 msgid "The host name attribute needs to be assigned to a column."
@@ -52222,11 +52237,11 @@ msgid ""
 "tt> to insert to original host name"
 msgstr ""
 
-msgid ""
-"Use Check_MK clusters if an item can move from one host to another at runtime"
+msgid "Use Checkmk Python, if it has been installed"
 msgstr ""
 
-msgid "Use Checkmk Python, if it has been installed"
+msgid ""
+"Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
 
 msgid "Use Classic Backend"
@@ -53528,7 +53543,7 @@ msgstr ""
 msgid "Vertical spacing"
 msgstr ""
 
-msgid "Very voluble"
+msgid "Very high"
 msgstr ""
 
 #, fuzzy
@@ -53710,10 +53725,6 @@ msgstr ""
 
 msgid "Voltage on Power Channel"
 msgstr ""
-
-#, fuzzy
-msgid "Voluble"
-msgstr "Nume nou"
 
 #, fuzzy
 msgid "Volume"
@@ -58662,6 +58673,18 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Adaptable"
+#~ msgstr "spatiu utilizat"
+
+#, fuzzy
+#~ msgid "Network Address"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Voluble"
+#~ msgstr "Nume nou"
+
+#, fuzzy
 #~ msgid "The report you are trying to preview does not exist."
 #~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
@@ -60357,10 +60380,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Removing site specific configuration variable"
 #~ msgstr "Salveaza configuratia manuala a verificarilor"
-
-#, fuzzy
-#~ msgid "Rename cluster"
-#~ msgstr "Cluster nou"
 
 #, fuzzy
 #~ msgid ""

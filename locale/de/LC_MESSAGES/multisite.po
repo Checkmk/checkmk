@@ -2349,6 +2349,9 @@ msgstr ""
 "Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
 "globale oder Team Keys verwenden."
 
+msgid "API integrations if configured, else Checkmk agent"
+msgstr ""
+
 msgid "API key"
 msgstr "API-Schlüssel"
 
@@ -3069,9 +3072,6 @@ msgstr "Updates zu Log-Aktivitäten"
 msgid "Actual traffic"
 msgstr "Aktueller Traffic"
 
-msgid "Adaptable"
-msgstr "Anpassungsfähig"
-
 msgid "Add"
 msgstr "Hinzufügen"
 
@@ -3146,9 +3146,6 @@ msgstr "Endung hinzufügen"
 msgid "Add a first row with column titles"
 msgstr "Eine erste Zeile mit Spaltentiteln hinzufügen"
 
-msgid "Add a new host to the monitoring (agent must be installed)"
-msgstr "Neuen Host hinzufügen  (Agent muss installiert sein)"
-
 msgid "Add additional folder"
 msgstr "Zusätzlichen Ordner hinzufügen"
 
@@ -3168,19 +3165,6 @@ msgstr ""
 
 msgid "Add all metrics of this graph to"
 msgstr "Alle Metriken dieses Graphen hinzufügen zu"
-
-#, python-format
-msgid ""
-"Add all your Checkmk servers as monitored hosts to Checkmk to render this "
-"graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
-"the following sites: %s. Either the corresponding Checkmk servers are not "
-"monitored at all, or you filtered them out by applying site filters."
-msgstr ""
-"Fügen Sie alle Ihre Checkmk-Server als überwachte Hosts zu Checkmk hinzu, um "
-"diese Grafik darzustellen. Insbesondere fehlen die 'Site [SITE]-Statistik'-"
-"Dienste der folgenden Sites: %s. Entweder werden die entsprechenden Checkmk-"
-"Server überhaupt nicht überwacht, oder Sie haben sie durch Anwendung von "
-"Site-Filtern herausgefiltert."
 
 msgid "Add attribute"
 msgstr "Attribut hinzufügen"
@@ -3263,6 +3247,10 @@ msgstr "Zu überwachende Dateien hinzufügen"
 msgid "Add filter"
 msgstr "Filter hinzufügen"
 
+#, fuzzy
+msgid "Add folder"
+msgstr "Unterverzeichnis hinzufügen"
+
 msgid "Add group"
 msgstr "Gruppe hinzufügen"
 
@@ -3274,6 +3262,10 @@ msgstr "Host-Attribut hinzufügen"
 
 msgid "Add host group"
 msgstr "Hostgruppe hinzufügen"
+
+#, fuzzy
+msgid "Add host to the monitoring"
+msgstr "Zu überwachende Dateien hinzufügen"
 
 msgid "Add instance to be monitored"
 msgstr "Zu überwachende Instanz hinzufügen"
@@ -3471,9 +3463,6 @@ msgstr "Sortierer hinzufügen"
 
 msgid "Add state configuration"
 msgstr "Neue Statuskonfiguriation hinzufügen"
-
-msgid "Add subfolder"
-msgstr "Unterverzeichnis hinzufügen"
 
 msgid "Add tag"
 msgstr "Tag hinzufügen"
@@ -5479,6 +5468,18 @@ msgstr ""
 
 msgid "As server"
 msgstr "Als Server"
+
+msgid ""
+"As soon as you add your Checkmk server to the monitoring, a graph showing "
+"the history of your host problems will appear here. "
+msgstr ""
+
+#, python-format
+msgid ""
+"As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
+"the history of your host problems will appear here. Currently the following "
+"Checkmk sites are not monitored: %s. "
+msgstr ""
 
 msgid ""
 "As soon as you configure expected strings in the response the check will "
@@ -8992,6 +8993,10 @@ msgstr "Einstellungen des Checkmk Windows-Agenten-Service"
 msgid "Checkmk agent"
 msgstr "Checkmk Agent"
 
+#, fuzzy
+msgid "Checkmk agent / API integrations"
+msgstr "Checkmk Agent Version"
+
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmk Agent Netzwerk-Service (Linux)"
 
@@ -10385,6 +10390,14 @@ msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
 "Konfigurieren Sie hier die Servicenow URL (bspw. https://myservicenow.com)."
 
+#, fuzzy
+msgid "Configured API integrations and Checkmk agent"
+msgstr "TCP Port für die Verbindung zum Checkmk Agent"
+
+#, fuzzy
+msgid "Configured API integrations, no Checkmk agent"
+msgstr "TCP Port für die Verbindung zum Checkmk Agent"
+
 msgid "Configured feature mismatch"
 msgstr "Diskrepanz konfigurierter Features"
 
@@ -11303,6 +11316,10 @@ msgstr "Erzeuge Check wenn Service im Status"
 msgid "Create clone of %s"
 msgstr "Erzeuge Klon von %s"
 
+#, fuzzy
+msgid "Create cluster"
+msgstr "Erzeuge neuen Cluster"
+
 msgid "Create custom graph"
 msgstr "Benutzergraph erzeugen"
 
@@ -11338,15 +11355,6 @@ msgstr "Erzeuge neu %s Gruppe %s"
 
 msgid "Create new auxiliary tag"
 msgstr "Erzeuge neues Hilfsmerkmal"
-
-msgid "Create new cluster"
-msgstr "Erzeuge neuen Cluster"
-
-msgid "Create new folder"
-msgstr "Erzeuge neuen Ordner"
-
-msgid "Create new host"
-msgstr "Erzeuge neuen Host"
 
 msgid "Create new notification rule"
 msgstr "Eine neue Alarmierungsregel erstellen"
@@ -12496,9 +12504,6 @@ msgstr "Gelesene Daten"
 
 msgid "Data size"
 msgstr "Datengröße"
-
-msgid "Data sources"
-msgstr "Datenquellen"
 
 msgid "Data targeted for higher tier"
 msgstr "Daten für höhere Stufe anvisiert"
@@ -26932,9 +26937,6 @@ msgstr "Zeilennummer in Logdatei"
 msgid "Line spacing"
 msgstr "Zeilenabstand"
 
-msgid "Linear"
-msgstr "Linear"
-
 msgid "Linear Regression Trend"
 msgstr "Lineare Regression Trend"
 
@@ -28392,7 +28394,8 @@ msgstr "Benutzer anlegen, ändern und löschen, Ändern von Passworten"
 msgid "Managed Objects"
 msgstr "Verwaltete Objekte"
 
-msgid "Management Board"
+#, fuzzy
+msgid "Management board"
 msgstr "Management-Board"
 
 msgid "Management board SNMP using bulk walk (enforces SNMP v2c)"
@@ -29247,6 +29250,10 @@ msgstr "Mediation Server - Fehlerindex für Leseaufrufe"
 msgid "Medium"
 msgstr "Mittel"
 
+#, fuzzy
+msgid "Medium (default)"
+msgstr "Standard"
+
 msgid "Mega menu icons"
 msgstr "Megamenü Symbole"
 
@@ -30028,6 +30035,10 @@ msgid "Monitoring URL"
 msgstr "Monitoring URL"
 
 msgid "Monitoring agent"
+msgstr "Monitoringagent"
+
+#, fuzzy
+msgid "Monitoring agents"
 msgstr "Monitoringagent"
 
 msgid "Monitoring core"
@@ -30824,9 +30835,6 @@ msgstr "Netzwerkadapter %d"
 msgid "Network Adapters"
 msgstr "Netzwerkadapter"
 
-msgid "Network Address"
-msgstr "Netzwerkadresse"
-
 msgid "Network ID"
 msgstr "Netzwerk-ID"
 
@@ -30844,6 +30852,10 @@ msgstr "Netzwerk-Scan"
 
 msgid "Network Topology"
 msgstr "Topologie des Netzwerks"
+
+#, fuzzy
+msgid "Network address"
+msgstr "Netzwerkadresse:"
 
 msgid "Network address:"
 msgstr "Netzwerkadresse:"
@@ -31065,8 +31077,9 @@ msgstr "Nein"
 msgid "No (Error: %s, Code: %d, Depth: %d)"
 msgstr "Nein (Fehler: %s, Code: %d, Tiefe: %d)"
 
-msgid "No Checkmk agent, all configured special agents"
-msgstr "Kein Checkmk-Agent, alle konfigurierten Spezialagenten"
+#, fuzzy
+msgid "No API integrations, no Checkmk agent"
+msgstr "TCP Port für die Verbindung zum Checkmk Agent"
 
 msgid "No Conditions"
 msgstr "Keine Bedingungen"
@@ -31107,9 +31120,6 @@ msgstr "Keine Aktivierung erforderlich"
 
 msgid "No actual SLA computation"
 msgstr "Keine tatsächliche SLA Berechnung"
-
-msgid "No agent"
-msgstr "Kein Agent"
 
 msgid "No authentication, no privacy"
 msgstr "Keine Authentifizierung, keine Privacy"
@@ -31498,6 +31508,10 @@ msgstr "Rate nicht kritischer Ereignisse"
 msgid "Noncritical events"
 msgstr "Nicht kritische Ereignisse"
 
+#, fuzzy
+msgid "None (linear)"
+msgstr "Still"
+
 msgid "None (silent)"
 msgstr "Still"
 
@@ -31518,12 +31532,6 @@ msgstr "Nichts ausgewählt"
 
 msgid "Normal"
 msgstr "Normal"
-
-msgid "Normal Checkmk agent, all configured special agents"
-msgstr "Normaler Checkmk-Agent, alle konfigurierten Spezialagenten"
-
-msgid "Normal Checkmk agent, or special agent if configured"
-msgstr "Normaler Checkmk-Agent oder Spezialagent, falls konfiguriert"
 
 msgid "Normal check interval"
 msgstr "Normales Checkintervall"
@@ -35337,6 +35345,11 @@ msgstr ""
 
 msgid "Please provide a valid name"
 msgstr "Bitte geben Sie einen gültigen Namen an"
+
+msgid ""
+"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
+"more details."
+msgstr ""
 
 msgid "Please select a file."
 msgstr "Bitte wählen Sie eine Datei."
@@ -43860,9 +43873,6 @@ msgstr "Unterdrücke nicht verfügbare Sensoren"
 msgid "Surge queue length"
 msgstr "Anstieg der Warteschlangenlänge"
 
-msgid "Susceptible"
-msgstr "Anfällig"
-
 msgid "Suspended"
 msgstr "Angehalten"
 
@@ -46611,6 +46621,10 @@ msgstr "Der Host fehlt."
 
 msgid "The host must be in one of the selected host groups"
 msgstr "Der Host muss in einer der ausgewählten Hostgruppen sein"
+
+msgid ""
+"The host must have the Checkmk agent or SNMP or an API integration prepared."
+msgstr ""
 
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Das Hostname-Attribut muss einre Spalte zugeordnet sein."
@@ -55335,14 +55349,15 @@ msgstr ""
 "Verwenden Sie <tt>\\1</tt>, <tt>\\2</tt> etc um die gematchten Subgruppen zu "
 "ersetzen, <tt>\\0</tt> um den Originalhostname einzufügen"
 
+msgid "Use Checkmk Python, if it has been installed"
+msgstr "Verwenden Sie Checkmk Python, wenn es installiert wurde"
+
+#, fuzzy
 msgid ""
-"Use Check_MK clusters if an item can move from one host to another at runtime"
+"Use Checkmk clusters if an item can move from one host to another at runtime."
 msgstr ""
 "Wenn zur Laufzeit Objekte zwischen Hosts bewegt werden können, dann Check_MK "
 "Cluster verwenden."
-
-msgid "Use Checkmk Python, if it has been installed"
-msgstr "Verwenden Sie Checkmk Python, wenn es installiert wurde"
 
 msgid "Use Classic Backend"
 msgstr "Klassisches Backend verwenden"
@@ -56762,8 +56777,8 @@ msgstr "Vertikaler Abstand"
 msgid "Vertical spacing"
 msgstr "Vertikaler Abstand"
 
-msgid "Very voluble"
-msgstr "Sehr geläufig"
+msgid "Very high"
+msgstr ""
 
 msgid "Vhost name"
 msgstr "Vhost Name"
@@ -56934,9 +56949,6 @@ msgstr "Spannungsschwellwerte (USV, Stromverteiler, anderen Geräte)"
 
 msgid "Voltage on Power Channel"
 msgstr "Spannung auf Stromleitung"
-
-msgid "Voluble"
-msgstr "Geläufig"
 
 msgid "Volume"
 msgstr "Volume"
@@ -62707,6 +62719,60 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Adaptable"
+#~ msgstr "Anpassungsfähig"
+
+#~ msgid "Add a new host to the monitoring (agent must be installed)"
+#~ msgstr "Neuen Host hinzufügen  (Agent muss installiert sein)"
+
+#~ msgid ""
+#~ "Add all your Checkmk servers as monitored hosts to Checkmk to render this "
+#~ "graph. Specifically, we are missing the 'Site [SITE] statistics' services "
+#~ "of the following sites: %s. Either the corresponding Checkmk servers are "
+#~ "not monitored at all, or you filtered them out by applying site filters."
+#~ msgstr ""
+#~ "Fügen Sie alle Ihre Checkmk-Server als überwachte Hosts zu Checkmk hinzu, "
+#~ "um diese Grafik darzustellen. Insbesondere fehlen die 'Site [SITE]-"
+#~ "Statistik'-Dienste der folgenden Sites: %s. Entweder werden die "
+#~ "entsprechenden Checkmk-Server überhaupt nicht überwacht, oder Sie haben "
+#~ "sie durch Anwendung von Site-Filtern herausgefiltert."
+
+#~ msgid "Create new folder"
+#~ msgstr "Erzeuge neuen Ordner"
+
+#~ msgid "Create new host"
+#~ msgstr "Erzeuge neuen Host"
+
+#~ msgid "Data sources"
+#~ msgstr "Datenquellen"
+
+#~ msgid "Linear"
+#~ msgstr "Linear"
+
+#~ msgid "Network Address"
+#~ msgstr "Netzwerkadresse"
+
+#~ msgid "No Checkmk agent, all configured special agents"
+#~ msgstr "Kein Checkmk-Agent, alle konfigurierten Spezialagenten"
+
+#~ msgid "No agent"
+#~ msgstr "Kein Agent"
+
+#~ msgid "Normal Checkmk agent, all configured special agents"
+#~ msgstr "Normaler Checkmk-Agent, alle konfigurierten Spezialagenten"
+
+#~ msgid "Normal Checkmk agent, or special agent if configured"
+#~ msgstr "Normaler Checkmk-Agent oder Spezialagent, falls konfiguriert"
+
+#~ msgid "Susceptible"
+#~ msgstr "Anfällig"
+
+#~ msgid "Very voluble"
+#~ msgstr "Sehr geläufig"
+
+#~ msgid "Voluble"
+#~ msgstr "Geläufig"
 
 #~ msgid "Clone this fixel element"
 #~ msgstr "Dieses Seitenelement klonen"

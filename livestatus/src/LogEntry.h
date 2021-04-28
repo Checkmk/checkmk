@@ -76,7 +76,7 @@ public:
         ext_command = 5,      // external commands
         state = 6,            // initial or current states
         // text = 7,          // specific text passages, seems to be unused
-        alert_handlers = 8,   // Started and stopped alert handlers
+        alert_handlers = 8,  // Started and stopped alert handlers
 
         // TODO(sp): This class sets different logclasses on match -> fix this
         invalid = 0x7fffffff  // never stored

@@ -25,7 +25,7 @@ public:
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     [[nodiscard]] Row get(const std::string &primary_key) const override;
-    bool isAuthorized(Row row, const contact * /*ctc*/) const override;
+    bool isAuthorized(Row row, const contact *ctc) const override;
 
     static void addColumns(Table *table, const std::string &prefix,
                            const ColumnOffsets &offsets);

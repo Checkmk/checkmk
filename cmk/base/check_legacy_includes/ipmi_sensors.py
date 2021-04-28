@@ -192,6 +192,9 @@ def freeipmi_status_txt_mapping(status_txt):
     if state is not None:
         return state
 
+    if "non-critical" in status_txt.lower():
+        return 1
+
     if status_txt.lower() in [
         "entity present", "battery presence detected",
         "drive presence", "transition to running", "device enabled",

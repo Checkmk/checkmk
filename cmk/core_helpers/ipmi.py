@@ -266,9 +266,6 @@ class IPMIFetcher(AgentFetcher):
         if not states:
             return AgentRawData(b"no state reported")
 
-        if any(b"non-critical" in s for s in states):
-            return AgentRawData(b"WARNING")
-
         # just keep all the available info. It should be dealt with in
         # ipmi_sensors.include (freeipmi_status_txt_mapping),
         # where it will default to 2(CRIT)

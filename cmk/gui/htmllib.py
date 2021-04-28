@@ -1945,7 +1945,7 @@ class html(ABCHTMLGenerator):
                    style=style,
                    title=title,
                    disabled=disabled,
-                   onclick="location.href=\'%s\'" % href)
+                   onclick="location.href=%s" % json.dumps(href))
 
     def empty_icon_button(self) -> None:
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))

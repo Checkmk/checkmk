@@ -96,7 +96,8 @@ class FilterText(Filter):
                           choices,
                           current_value,
                           style="width: 250px;",
-                          class_=["ajax-vals", input_type])
+                          class_=["ajax-vals", input_type],
+                          data_strict="True" if self.op == "=" else "False")
         else:
             html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
 

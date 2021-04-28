@@ -36,7 +36,7 @@ from collections.abc import MutableMapping
 from collections.abc import Sequence as ABCSequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Final, Generic, Iterable, List, NamedTuple
+from typing import Any, Callable, Dict, Final, Generic, Iterable, List, NamedTuple, Literal
 from typing import Optional as _Optional
 from typing import Pattern, Protocol, Sequence, Set, SupportsFloat
 from typing import Tuple as _Tuple
@@ -2523,6 +2523,7 @@ class AjaxDropdownChoice(DropdownChoice):
         self,
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
+        strict: Literal["True", "False", "withHost"] = "False",
         # DropdownChoice
         label: _Optional[str] = None,
         choices: _Optional[DropdownChoices] = None,
@@ -2548,6 +2549,7 @@ class AjaxDropdownChoice(DropdownChoice):
             self._regex = regex
         self._regex_error = regex_error if regex_error is not None else \
             _("Your input does not match the required format.")
+        self._strict = strict
 
     def from_html_vars(self, varprefix: str) -> str:
         return html.request.get_str_input_mandatory(varprefix, "")
@@ -2575,7 +2577,9 @@ class AjaxDropdownChoice(DropdownChoice):
                       ordered=self._sorted,
                       style="width: 250px;",
                       class_=["ajax-vals", self.ident],
-                      read_only=self._read_only)
+                      read_only=self._read_only,
+                      data_strict=self._strict)
+        #**{"data-strict":self._strict})
 
     @classmethod
     @abc.abstractmethod
@@ -2591,7 +2595,7 @@ class AutocompleterRegistry(cmk.utils.plugin_registry.Registry[Type[AjaxDropdown
 autocompleter_registry = AutocompleterRegistry()
 
 
-def _sorted_unique_lq(query: str, limit: int, value: str) -> Choices:
+def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choices:
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
     with sites.set_limit(limit):
@@ -2599,7 +2603,7 @@ def _sorted_unique_lq(query: str, limit: int, value: str) -> Choices:
     if len(choices) > limit:
         choices.append(_("(Max limit reached, be more specific)"))
 
-    if value not in choices:
+    if value not in choices and params["strict"] == "False":
         choices.insert(0, value)  # User is allowed to enter anything they want
 
     return [(h, h) for h in choices]
@@ -2630,7 +2634,7 @@ class MonitoredHostname(AjaxDropdownChoice):
                  "Columns: host_name\n"
                  "Filter: host_name ~~ %s" % livestatus.lqencode(value))
 
-        return _sorted_unique_lq(query, 200, value)
+        return _sorted_unique_lq(query, 200, value, params)
 
 
 @autocompleter_registry.register
@@ -2645,15 +2649,19 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        host = params.get("host")
+        if host is None and params["strict"] == "withHost":
+            return []
+
         query = ("GET services\n"
                  "Cache: reload\n"
                  "Columns: service_description\n"
                  "Filter: service_description ~~ %s\n" % livestatus.lqencode(value))
 
-        if params.get("host"):
+        if host:
             query += "Filter: host_name = %s\n" % livestatus.lqencode(params['host'])
 
-        return _sorted_unique_lq(query, 200, value)
+        return _sorted_unique_lq(query, 200, value, params)
 
 
 @page_registry.register_page("ajax_vs_autocomplete")
@@ -6434,14 +6442,15 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
 
         vs_host = MonitoredHostname(
             label=_("Filter %s selection by hostname: ") % self._hint_label,
-            choices=[(None, _("Hint a hostname"))],
+            choices=[],
+            strict="True",
         )
         html.br()
         vs_host.render_input(varprefix + "_hostname_hint", None)
 
-        vs_service = MonitoredServiceDescription(
-            label=_("Filter %s selection by service: ") % self._hint_label,
-            choices=[(None, _("Hint a service"))],
-        )
+        vs_service = MonitoredServiceDescription(label=_("Filter %s selection by service: ") %
+                                                 self._hint_label,
+                                                 choices=[],
+                                                 strict="True")
         html.br()
         vs_service.render_input(varprefix + "_service_hint", None)

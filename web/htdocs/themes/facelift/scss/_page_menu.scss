@@ -644,10 +644,6 @@ div#page_menu_popups div.side_popup {
 
       span.select2-container--default {
         display: inline-block;
-
-        &:last-child {
-          width: auto !important;
-        }
       }
 
       &.host_auxtags {

@@ -30,13 +30,31 @@ bool service_has_contact(AuthorizationKind service_auth, const host *hst,
 }
 }  // namespace
 
+bool is_authorized_for_hst(const contact *ctc, const host *hst) {
+    if (ctc == nullptr) {
+        return true;
+    }
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+    return host_has_contact(hst, ctc);
+}
+
+bool is_authorized_for_svc(AuthorizationKind service_auth, const contact *ctc,
+                           const host *hst, const service *svc) {
+    if (ctc == nullptr) {
+        return true;
+    }
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+    return service_has_contact(service_auth, hst, svc, ctc);
+}
+
 bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
                        const host *hst, const service *svc) {
-    return ctc == nullptr ||
-           (ctc != unknown_auth_user() &&
-            (svc == nullptr
-                 ? host_has_contact(hst, ctc)
-                 : service_has_contact(service_auth, hst, svc, ctc)));
+    return svc == nullptr ? is_authorized_for_hst(ctc, hst)
+                          : is_authorized_for_svc(service_auth, ctc, hst, svc);
 }
 
 bool is_authorized_for_host_group(AuthorizationKind group_auth,
@@ -45,8 +63,6 @@ bool is_authorized_for_host_group(AuthorizationKind group_auth,
     if (ctc == nullptr) {
         return true;
     }
-    // cppcheck false positive!
-    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }
@@ -79,8 +95,6 @@ bool is_authorized_for_service_group(AuthorizationKind group_auth,
     if (ctc == nullptr) {
         return true;
     }
-    // cppcheck false positive!
-    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }

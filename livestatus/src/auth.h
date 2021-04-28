@@ -22,6 +22,12 @@ inline contact *unknown_auth_user() {
 }
 #else
 contact *unknown_auth_user();
+// NOTE: Although technically not necessary (C functions in Nagios vs. C++
+// functions with mangled names), we avoid name clashes with the Nagios API
+// here to avoid confusion.
+bool is_authorized_for_hst(const contact *ctc, const host *hst);
+bool is_authorized_for_svc(AuthorizationKind service_auth, const contact *ctc,
+                           const host *hst, const service *svc);
 bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
                        const host *hst, const service *svc);
 bool is_authorized_for_host_group(AuthorizationKind group_auth,

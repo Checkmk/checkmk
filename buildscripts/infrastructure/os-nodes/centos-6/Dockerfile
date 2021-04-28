@@ -5,7 +5,7 @@ SHELL ["/bin/bash", "-c"]
 ARG PACKAGES
 
 # Handle Centos-6 EOL repos, taken from https://www.getpagespeed.com/server-setup/how-to-fix-yum-after-centos-6-went-eol
-COPY ./CentOS-Base.repo ./CentOS-SCLo-scl-rh.repo ./CentOS-SCLo-scl.repo  /etc/yum.repos.d/
+COPY CentOS-Base.repo CentOS-SCLo-scl-rh.repo CentOS-SCLo-scl.repo  /etc/yum.repos.d/
 
 RUN yum -y --enablerepo=extras install \
     epel-release \

@@ -1142,6 +1142,17 @@ class TextAsciiAutocomplete(TextAscii):
         raise NotImplementedError()
 
 
+def _sorted_unique_lq(query: str, limit: int) -> Choices:
+    """Livestatus query of single column of unique elements.
+    Prepare dropdown choices"""
+    with sites.set_limit(limit):
+        choices = sorted(sites.live().query_column_unique(query))
+    if len(choices) > limit:
+        choices.append(_("(Max limit reached, be more specific)"))
+
+    return [(h, h) for h in choices]
+
+
 # TODO: Cleanup kwargs
 class MonitoredHostname(TextAsciiAutocomplete):
     """Hostname input with dropdown completion
@@ -1162,7 +1173,7 @@ class MonitoredHostname(TextAsciiAutocomplete):
                  "Columns: host_name\n"
                  "Filter: host_name ~~ %s" % livestatus.lqencode(value))
 
-        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+        return _sorted_unique_lq(query, 200)
 
 
 class MonitoredServiceDescription(TextAsciiAutocomplete):
@@ -1191,7 +1202,7 @@ class MonitoredServiceDescription(TextAsciiAutocomplete):
         if params.get("host"):
             query += "Filter: host_name = %s\n" % livestatus.lqencode(params['host'])
 
-        return [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+        return _sorted_unique_lq(query, 200)
 
 
 @page_registry.register_page("ajax_vs_autocomplete")

@@ -227,7 +227,8 @@ class TestIPMIFetcher:
         reading = SensorReading(  #
             ['lower non-critical threshold'], 1, "Hugo", None, "", [42], "hugo-type", None, 0)
         assert fetcher._parse_sensor_reading(  #
-            0, reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"WARNING"]
+            0,
+            reading) == [b"0", b"Hugo", b"hugo-type", b"N/A", b"", b"lower non-critical threshold"]
 
     def test_parse_sensor_reading_false_positive(self, fetcher):
         reading = SensorReading(  #

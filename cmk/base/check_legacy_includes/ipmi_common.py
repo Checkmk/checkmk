@@ -58,8 +58,13 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
     warn_high = data["warn_high"]
     crit_high = data["crit_high"]
 
-    # stay compatible with older versions
-    yield status_txt_mapping(status_txt), "Status: %s" % status_txt
+    status = status_txt_mapping(status_txt)
+    for wato_status_txt, wato_status in params.get("sensor_states", []):
+        if status_txt.startswith(wato_status_txt):
+            status = wato_status
+            break
+
+    yield status, "Status: %s" % status_txt
 
     perfdata = []
     if val is not None:
@@ -77,11 +82,6 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
                                            unit)
         yield status, infotext, perfdata
         yield from ipmi_common_check_levels(item, val, params, unit)
-
-    for wato_status_txt, wato_status in params.get("sensor_states", []):
-        if status_txt.startswith(wato_status_txt):
-            yield wato_status, ""
-            break
 
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
     if status_txt.startswith('nc'):

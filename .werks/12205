@@ -1,0 +1,12 @@
+Title: ipmi_sensors: Sensor with "non-critical" state wasn't parametrizable
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621257232
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p5
+
+Sensor with a "non-critical" state was always in WARN, parametrization
+wasn't possible. Now, user can parametrize the Checkmk state for this case.

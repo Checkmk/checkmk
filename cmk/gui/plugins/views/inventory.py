@@ -28,6 +28,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
@@ -70,7 +71,6 @@ PaintResult = Tuple[str, Union[str, HTML]]
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     hostname = row.get("host_name")
     sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
-
     if len(sites_with_same_named_hosts) > 1:
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
@@ -1922,6 +1922,9 @@ class DeltaNodeRenderer(NodeRenderer):
 def ajax_inv_render_tree():
     site_id = html.request.var("site")
     hostname = html.request.var("host")
+    if not inventory.may_see(hostname, site_id):
+        raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % hostname)
+
     invpath = html.request.var("path")
     tree_id = html.request.var("treeid", "")
     show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))

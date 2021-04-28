@@ -437,7 +437,7 @@ def has_inventory(hostname):
 
 def inventory_of_host(host_name, request):
     site = request.get("site")
-    if not _may_see(host_name, site):
+    if not may_see(host_name, site):
         raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
 
     row = get_status_data_via_livestatus(site, host_name)
@@ -454,21 +454,23 @@ def inventory_of_host(host_name, request):
     return merged_tree.get_raw_tree()
 
 
-def _may_see(host_name, site):
+def may_see(host_name, site):
     if config.user.may("general.see_all"):
         return True
 
     query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
     if site:
         sites.live().set_only_sites([site])
+
     try:
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
+    except livestatus.MKLivestatusNotFoundError:
+        # TODO differentiate between empty data and permissions
+        return False
     finally:
         if site:
             sites.live().set_only_sites()
 
-    if not result:
-        return False
     return result[0] > 0
 
 

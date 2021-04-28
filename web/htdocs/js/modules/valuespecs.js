@@ -736,6 +736,7 @@ function set_select2_element(elem, value) {
 
 function hook_select2_hint(elem, source_id) {
     let source_field = $(source_id);
+    if (!source_field) return;
     set_select2_element(elem, source_field.val()); // page initialization
     source_field.on("change", () => set_select2_element(elem, source_field.val()));
 }
@@ -750,84 +751,94 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
             JSON.stringify({
                 ident: ident,
                 params: params(elem),
-                value: term.term || elem.value || "",
+                value:
+                    term.term !== undefined
+                        ? term.term
+                        : ["hostname", "service"].find(el => ident.includes(el))
+                        ? elem.value
+                        : "",
             }),
-
         processResults: resp => ({
             results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
         }),
     };
 }
 
-function select2_vs_autocomplete(elem, ident, params) {
-    let placeholder = ident.includes("hostname") ? "hostname" : "service";
-    $(elem)
-        .select2({
-            width: "style",
-            allowClear: true,
-            placeholder: `(Select ${placeholder})`,
-            ajax: select2_ajax_vs_autocomplete(elem, ident, params),
-        })
-        .on("select2:open", () => $(".select2-search input").val(elem.value));
-}
-
-function config_hostname_autocompleter(container) {
+function select2_vs_autocomplete(container, css_class, params) {
+    let field_element =
+        ["hostname", "service", "metric", "graph"].find(el => css_class.includes(el)) || "item";
     $(container)
-        .find(".config_hostname")
-        .each((i, elem) => select2_vs_autocomplete(elem, "config_hostname", elem => ({})));
-}
-
-function hostnames_autocompleter(container) {
-    $(container)
-        .find(".monitored_hostname")
+        .find("." + css_class)
         .each((i, elem) => {
-            select2_vs_autocomplete(elem, "monitored_hostname", elem => ({}));
+            $(elem)
+                .select2({
+                    width: "style",
+                    allowClear: true,
+                    placeholder: `(Select ${field_element})`,
+                    ajax: select2_ajax_vs_autocomplete(elem, css_class, params),
+                })
+                .on("select2:open", () => {
+                    if (["hostname", "service"].includes(field_element))
+                        $(".select2-search input").val(elem.value);
+                });
+
             if (elem.id.endsWith("_hostname_hint")) hook_select2_hint(elem, "#context_host_p_host");
-        });
-}
-
-function service_desc_autocompleter(container) {
-    $(container)
-        .find(".monitored_service_description")
-        .each((i, elem) => {
-            select2_vs_autocomplete(elem, "monitored_service_description", elem => {
-                let host_id = elem.id.endsWith("_service_hint")
-                    ? elem.id.slice(0, -13) + "_hostname_hint"
-                    : "context_host_p_host";
-                let val_or_empty = obj => (obj ? obj.value : "");
-
-                return {
-                    host: val_or_empty(document.getElementById(host_id)),
-                };
-            });
 
             if (elem.id.endsWith("_service_hint"))
                 hook_select2_hint(elem, "#context_service_p_service");
+
+            // CustomGraph editor clearing
+            if (elem.id.endsWith(`_metric_${field_element}_hint`)) {
+                let tail = field_element.length + 6;
+                let metric_field_id = `#${elem.id.slice(0, -tail)}`;
+                $(elem).on("change.select2", () => {
+                    $(metric_field_id).empty();
+                    if (field_element === "hostname") $(metric_field_id + "_service_hint").empty();
+                });
+            }
         });
 }
 
+function hostnames_autocompleter(css_class, container) {
+    let params = elem => ({
+        strict: elem.dataset.strict,
+    });
+    select2_vs_autocomplete(container, css_class, params);
+}
+
+function service_desc_autocompleter(css_class, container) {
+    let params = elem => {
+        let host_id = elem.id.endsWith("_service_hint")
+            ? `${elem.id.slice(0, -13)}_hostname_hint`
+            : "context_host_p_host";
+        let val_or_empty = obj => (obj ? obj.value : "");
+
+        return {
+            host: val_or_empty(document.getElementById(host_id)),
+            strict: elem.dataset.strict,
+        };
+    };
+
+    select2_vs_autocomplete(container, css_class, params);
+}
+
 function autocompleter_with_host_service_hints(css_class, container) {
-    let placeholder = css_class.includes("metric") ? "metric" : "graph";
-    $(container)
-        .find("." + css_class)
-        .each((i, elem) =>
-            $(elem).select2({
-                width: "style",
-                placeholder: `(Select ${placeholder})`,
-                ajax: select2_ajax_vs_autocomplete(elem, css_class, () => ({
-                    host: document.getElementById(`${elem.id}_hostname_hint`).value,
-                    service: document.getElementById(`${elem.id}_service_hint`).value,
-                })),
-            })
-        );
+    let params = elem => ({
+        host: document.getElementById(`${elem.id}_hostname_hint`).value,
+        service: document.getElementById(`${elem.id}_service_hint`).value,
+        strict: elem.dataset.strict,
+    });
+
+    select2_vs_autocomplete(container, css_class, params);
 }
 
 export function initialize_autocompleters(container) {
-    hostnames_autocompleter(container);
-    service_desc_autocompleter(container);
+    hostnames_autocompleter("monitored_hostname", container);
+    hostnames_autocompleter("config_hostname", container);
+    service_desc_autocompleter("monitored_service_description", container);
     autocompleter_with_host_service_hints("monitored_metrics", container);
     autocompleter_with_host_service_hints("available_graphs", container);
-    config_hostname_autocompleter(container);
+    autocompleter_with_host_service_hints("metric_with_source", container);
 }
 
 var vs_color_pickers = [];

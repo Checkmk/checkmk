@@ -29,7 +29,7 @@ class VisualInfoHost(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('host', MonitoredHostname(title=_('Hostname'),))]
+        return [('host', MonitoredHostname(title=_('Hostname'), strict="True"))]
 
     @property
     def multiple_site_filters(self):
@@ -56,7 +56,8 @@ class VisualInfoService(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('service', MonitoredServiceDescription(title=_('Service Description')))]
+        return [('service',
+                 MonitoredServiceDescription(title=_('Service Description'), strict="True"))]
 
     @property
     def multiple_site_filters(self):

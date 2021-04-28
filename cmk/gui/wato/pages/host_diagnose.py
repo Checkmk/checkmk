@@ -385,7 +385,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_('Invalid test.'))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args: List[str] = [u""] * 12
+        args: List[str] = [u""] * 13
         for idx, what in enumerate([
                 'ipaddress',
                 'snmp_community',
@@ -403,16 +403,16 @@ class ModeAjaxDiagHost(AjaxPage):
                 u"2": u"authPriv",
             }.get(request.get("snmpv3_use", u""), u"")
 
-            args[6] = snmpv3_use
+            args[7] = snmpv3_use
             if snmpv3_use != u"noAuthNoPriv":
                 snmpv3_auth_proto = {
                     str(DropdownChoice.option_id("md5")): u"md5",
                     str(DropdownChoice.option_id("sha")): u"sha"
                 }.get(request.get("snmpv3_auth_proto", u""), u"")
 
-                args[7] = snmpv3_auth_proto
-                args[8] = request.get("snmpv3_security_name", u"")
-                args[9] = request.get("snmpv3_security_password", u"")
+                args[8] = snmpv3_auth_proto
+                args[9] = request.get("snmpv3_security_name", u"")
+                args[10] = request.get("snmpv3_security_password", u"")
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
@@ -420,11 +420,11 @@ class ModeAjaxDiagHost(AjaxPage):
                         str(DropdownChoice.option_id("AES")): u"AES"
                     }.get(request.get("snmpv3_privacy_proto", u""), u"")
 
-                    args[10] = snmpv3_privacy_proto
+                    args[11] = snmpv3_privacy_proto
 
-                    args[11] = request.get("snmpv3_privacy_password", u"")
+                    args[12] = request.get("snmpv3_privacy_password", u"")
             else:
-                args[8] = request.get("snmpv3_security_name", u"")
+                args[9] = request.get("snmpv3_security_name", u"")
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {

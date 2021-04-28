@@ -248,8 +248,17 @@ def check_auth_cookie(cookie_name):
 
 def parse_auth_cookie(cookie_name):
     raw_value = html.request.cookie(cookie_name, "::")
-    username, issue_time, cookie_hash = raw_value.split(':', 2)
-    return username.decode("utf-8"), float(issue_time) if issue_time else 0.0, cookie_hash
+    username, raw_issue_time, cookie_hash = raw_value.split(':', 2)
+
+    # Special handling for 2.0+ cookies: Ignore these specific parsing issues
+    # to prevent a web.log entry for each access. The 2.0 cookies have the
+    # session ID in the second field.
+    try:
+        issue_time = float(raw_issue_time) if raw_issue_time else 0.0
+    except ValueError:
+        raise MKAuthException("Refusing 2.0+ auth cookie")
+
+    return username.decode("utf-8"), issue_time, cookie_hash
 
 
 def check_parsed_auth_cookie(username, issue_time, cookie_hash):

@@ -1,0 +1,16 @@
+Title: Prevent log entry in web.log on each page access caused by 2.0 cookies
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p24
+Date: 1619604349
+Class: fix
+
+Users which have authentication cookies issued by a Checkmk 2.0 site caused a
+log entry on each page access in the web.log. The log message looked like this:
+<tt>Exception while checking cookie auth_[site]: ... ValueError: could not
+convert string to float:</tt>.
+
+Since the authentication cookies of both versions are not compatible at all,
+we now silently skip processing the cookies of Checkmk 2.0 or newer.

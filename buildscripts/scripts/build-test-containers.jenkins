@@ -38,7 +38,7 @@ node(NODE) {
                 BRANCH = versioning.get_branch(scm)
 
                 stash name: 'distroinfos', includes: 'omd/distros/*.mk'
-                stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/os-nodes/*/Dockerfile'
+                stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/os-nodes/*/*'
             }
         }
     }

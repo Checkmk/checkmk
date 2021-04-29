@@ -4,9 +4,9 @@ SHELL ["/bin/bash", "-c"]
 
 ARG PACKAGES
 
-RUN yum -y --enablerepo=PowerTools --allowerasing install \
+RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
-    && yum -y --enablerepo=PowerTools --allowerasing install \
+    && yum -y --enablerepo=powertools --allowerasing install \
     curl \
     enchant \
     gcc \
@@ -39,7 +39,7 @@ RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py \
 RUN pip install --upgrade setuptools virtualenv \
     && pip install git+https://github.com/pypa/pipenv.git@v2020.6.2
 
-RUN yum -y --enablerepo=PowerTools install \
+RUN yum -y --enablerepo=powertools install \
     $PACKAGES \
     && yum clean all
 
@@ -51,7 +51,7 @@ RUN touch /etc/fstab
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools install \
     joe \
     iputils \
     vim \

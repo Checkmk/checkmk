@@ -44,6 +44,18 @@ def discover_snapshots_summary(section: Section) -> DiscoveryResult:
 
 def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
     snapshots = section  # just to be clear
+
+    # use UTC-timestamp - don't use time.time() here since it's local
+    now = int(datetime.datetime.utcnow().timestamp())
+
+    if any(s for s in snapshots if s.time > now):
+        yield Result(
+            state=State.WARN,
+            summary=
+            "Snapshot with a creation time in future found. Please check your network time synchronisation."
+        )
+        return
+
     yield Result(state=State.OK, summary=f"Count: {len(snapshots)}")
 
     if not section:
@@ -51,9 +63,6 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
 
     powered_on = (s.name for s in snapshots if s.state == "poweredOn")
     yield Result(state=State.OK, summary="Powered on: %s" % (', '.join(powered_on) or "None"))
-
-    # use UTC-timestamp - don't use time.time() here since it's local
-    now = int(datetime.datetime.utcnow().timestamp())
 
     latest_snapshot = max(snapshots, key=lambda s: s.time)
     latest_timestamp = render.datetime(latest_snapshot.time)

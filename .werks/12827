@@ -1,0 +1,22 @@
+Title: Cascading livestatus proxy is now compatible with disabled IP protocols
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1619709468
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p4
+
+The livestatus proxy can be configured to cascade livestatus connections. The
+feature was introduced with 1.5.0 by werk #5970 which describes how this can be
+used.
+
+The livestatus proxy is always trying to open an IPv4 and IPv6 listening
+socket.  In previous versions the startup of the livestatus proxy failed with
+an error message <tt>MKGeneralException: Cannot create TCP socket :::6560: [Errno 97] Address family not supported by protocol</tt> in <tt>var/log/liveproxyd.log</tt>.
+
+The process now continues if the port could not be opened for the reason that
+an address family is not supported. Additionally an informational message is
+written to the <tt>var/log/liveproxyd.log</tt>.

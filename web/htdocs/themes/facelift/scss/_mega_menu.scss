@@ -251,6 +251,16 @@
           margin: $spacing;
         }
 
+        &.search > div.topic {
+          width: 350px;
+
+          li a {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
         div.topic {
           flex-grow: 1;
           width: 250px;

@@ -57,6 +57,6 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
 
 bool TableServicesByHostGroup::isAuthorized(Row row, const contact *ctc) const {
     const auto *svc = rowData<service_and_group>(row)->svc;
-    return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
-                             svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                 svc->host_ptr, svc);
 }

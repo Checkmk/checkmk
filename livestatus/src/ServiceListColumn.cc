@@ -113,8 +113,8 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (is_authorized_for(_mc->serviceAuthorization(), auth_user,
-                                  svc->host_ptr, svc)) {
+            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+                                      svc->host_ptr, svc)) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),

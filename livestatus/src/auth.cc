@@ -101,7 +101,7 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
 
     auto has_contact = [=](servicesmember *mem) {
         service *svc = mem->service_ptr;
-        return is_authorized_for(service_auth, ctc, svc->host_ptr, svc);
+        return is_authorized_for_svc(service_auth, ctc, svc->host_ptr, svc);
     };
     if (group_auth == GroupAuthorization::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"

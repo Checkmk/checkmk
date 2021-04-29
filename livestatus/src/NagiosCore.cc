@@ -188,11 +188,11 @@ Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
 size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
 
-AuthorizationKind NagiosCore::serviceAuthorization() const {
+ServiceAuthorization NagiosCore::serviceAuthorization() const {
     return _authorization._service;
 }
 
-AuthorizationKind NagiosCore::groupAuthorization() const {
+GroupAuthorization NagiosCore::groupAuthorization() const {
     return _authorization._group;
 }
 

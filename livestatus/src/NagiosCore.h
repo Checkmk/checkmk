@@ -52,8 +52,8 @@ struct NagiosLimits {
 };
 
 struct NagiosAuthorization {
-    AuthorizationKind _service{AuthorizationKind::loose};
-    AuthorizationKind _group{AuthorizationKind::strict};
+    ServiceAuthorization _service{ServiceAuthorization::loose};
+    GroupAuthorization _group{GroupAuthorization::strict};
 };
 
 class NagiosCore : public MonitoringCore {
@@ -103,8 +103,8 @@ public:
     size_t maxResponseSize() override;
     size_t maxCachedMessages() override;
 
-    AuthorizationKind serviceAuthorization() const override;
-    AuthorizationKind groupAuthorization() const override;
+    ServiceAuthorization serviceAuthorization() const override;
+    GroupAuthorization groupAuthorization() const override;
 
     Logger *loggerLivestatus() override;
     Logger *loggerRRD() override;

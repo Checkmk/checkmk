@@ -18,14 +18,14 @@ bool host_has_contact(const host *hst, const contact *ctc) {
                                          const_cast<contact *>(ctc)) != 0;
 }
 
-bool service_has_contact(AuthorizationKind service_auth, const host *hst,
+bool service_has_contact(ServiceAuthorization service_auth, const host *hst,
                          const service *svc, const contact *ctc) {
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_service(const_cast<service *>(svc),
                                   const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_service(const_cast<service *>(svc),
                                             const_cast<contact *>(ctc)) != 0 ||
-           (service_auth == AuthorizationKind::loose &&
+           (service_auth == ServiceAuthorization::loose &&
             host_has_contact(hst, ctc));
 }
 }  // namespace
@@ -40,8 +40,9 @@ bool is_authorized_for_hst(const contact *ctc, const host *hst) {
     return host_has_contact(hst, ctc);
 }
 
-bool is_authorized_for_svc(AuthorizationKind service_auth, const contact *ctc,
-                           const host *hst, const service *svc) {
+bool is_authorized_for_svc(ServiceAuthorization service_auth,
+                           const contact *ctc, const host *hst,
+                           const service *svc) {
     if (ctc == nullptr) {
         return true;
     }
@@ -51,14 +52,14 @@ bool is_authorized_for_svc(AuthorizationKind service_auth, const contact *ctc,
     return service_has_contact(service_auth, hst, svc, ctc);
 }
 
-bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
+bool is_authorized_for(ServiceAuthorization service_auth, const contact *ctc,
                        const host *hst, const service *svc) {
     return svc == nullptr ? is_authorized_for_hst(ctc, hst)
                           : is_authorized_for_svc(service_auth, ctc, hst, svc);
 }
 
-bool is_authorized_for_host_group(AuthorizationKind group_auth,
-                                  AuthorizationKind service_auth,
+bool is_authorized_for_host_group(GroupAuthorization group_auth,
+                                  ServiceAuthorization service_auth,
                                   const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
         return true;
@@ -70,7 +71,7 @@ bool is_authorized_for_host_group(AuthorizationKind group_auth,
     auto has_contact = [=](hostsmember *mem) {
         return is_authorized_for(service_auth, ctc, mem->host_ptr, nullptr);
     };
-    if (group_auth == AuthorizationKind::loose) {
+    if (group_auth == GroupAuthorization::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
             if (has_contact(mem)) {
@@ -88,8 +89,8 @@ bool is_authorized_for_host_group(AuthorizationKind group_auth,
     return true;
 }
 
-bool is_authorized_for_service_group(AuthorizationKind group_auth,
-                                     AuthorizationKind service_auth,
+bool is_authorized_for_service_group(GroupAuthorization group_auth,
+                                     ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc) {
     if (ctc == nullptr) {
@@ -103,7 +104,7 @@ bool is_authorized_for_service_group(AuthorizationKind group_auth,
         service *svc = mem->service_ptr;
         return is_authorized_for(service_auth, ctc, svc->host_ptr, svc);
     };
-    if (group_auth == AuthorizationKind::loose) {
+    if (group_auth == GroupAuthorization::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (servicesmember *mem = sg->members; mem != nullptr;
              mem = mem->next) {

@@ -59,7 +59,7 @@ public:
     // NOTE: Due to an ugly technical reason, we have to delay getting the
     // service authorization, for details see the test
     // Store.TheCoreIsNotAccessedDuringConstructionOfTheStore.
-    ServiceListState(std::function<AuthorizationKind()> get_service_auth,
+    ServiceListState(std::function<ServiceAuthorization()> get_service_auth,
                      Type logictype)
         : _get_service_auth{std::move(get_service_auth)}
         , _logictype{logictype} {}
@@ -90,9 +90,9 @@ public:
     int32_t operator()(const value_type &svcs, const contact *auth_user) const;
 
 private:
-    std::function<AuthorizationKind()> _get_service_auth;
+    std::function<ServiceAuthorization()> _get_service_auth;
     const Type _logictype;
-    static int32_t getValueFromServices(AuthorizationKind service_auth,
+    static int32_t getValueFromServices(ServiceAuthorization service_auth,
                                         Type logictype, const value_type &svcs,
                                         const contact *auth_user);
     static void update(Type logictype, ServiceState current_state,

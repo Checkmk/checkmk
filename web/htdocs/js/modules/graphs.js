@@ -411,8 +411,9 @@ function render_graph(graph) {
                     ctx.beginPath();
                     ctx.strokeStyle = color;
                     ctx.lineWidth = curve_line_width;
-                    ctx.moveTo(trans_t(t - step), trans_v(prev_upper));
-                    ctx.lineTo(trans_t(t), trans_v(upper));
+                    let mirrored = upper <= 0;
+                    ctx.moveTo(trans_t(t - step), trans_v(mirrored ? prev_lower : prev_upper));
+                    ctx.lineTo(trans_t(t), trans_v(mirrored ? lower : upper));
                     ctx.stroke();
                 }
                 prev_lower = lower;

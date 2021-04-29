@@ -93,6 +93,26 @@ def table_for_container(container):
     return None
 
 
+def sensor_value(value_str, value_int, scale, var_type, var_unit, container):
+    if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
+        return value_str
+
+    # neg. scale: "-X" => "/ X"
+    # pos. scale: "X"  => "* X"
+    # else:            => "* 1"
+    value = int(value_int)
+    if scale:
+        if (int_scale := int(scale)) < 0:
+            value = float(value_int) * (-1.0 / float(scale))
+        elif int_scale > 0:
+            value = float(value_int) * float(scale)
+
+    if "Power" in container or "Energy" in container:
+        if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
+            value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
+    return value
+
+
 def parse_cmciii(info):
     devices = {}
     parsed = {
@@ -169,24 +189,8 @@ def parse_cmciii(info):
         if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
             itemname += " %s" % location
 
-        if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
-            value = value_str
-        else:
-            # neg. scale: "-X" => "/ X"
-            # pos. scale: "X"  => "* X"
-            # else:            => "* 1"
-            value = int(value_int)
-            if scale:
-                if (int_scale := int(scale)) < 0:
-                    value = float(value_int) * (-1.0 / float(scale))
-                elif int_scale > 0:
-                    value = float(value_int) * float(scale)
-
-        if "Power" in container or "Energy" in container:
-            if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
-                value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
-
         parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
+        value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
         parsed[this_table][itemname].setdefault(key, value)
 
     for entry, attrs in parsed.get("temp", {}).items():

@@ -17,17 +17,14 @@
 #include "contact_fwd.h"
 class ColumnOffsets;
 enum class HostState;
-class MonitoringCore;
 class Row;
 class RowRenderer;
 
 class HostListColumn : public deprecated::ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, MonitoringCore *mc,
-                   bool show_state)
+                   const ColumnOffsets &offsets, bool show_state)
         : deprecated::ListColumn(name, description, offsets)
-        , _mc(mc)
         , _show_state(show_state) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
@@ -38,7 +35,6 @@ public:
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    MonitoringCore *_mc;
     const bool _show_state;
 
     struct Entry {

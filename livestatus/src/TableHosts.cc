@@ -601,11 +601,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }), mc,
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
         false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
         false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<RRDColumn<host>>>(
         prefix + "rrddata",
@@ -825,8 +825,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core()->serviceAuthorization(), ctc,
-                             rowData<host>(row), nullptr);
+    return is_authorized_for_hst(ctc, rowData<host>(row));
 }
 
 Row TableHosts::get(const std::string &primary_key) const {

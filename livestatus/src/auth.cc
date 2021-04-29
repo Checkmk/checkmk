@@ -59,7 +59,6 @@ bool is_authorized_for(ServiceAuthorization service_auth, const contact *ctc,
 }
 
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
-                                  ServiceAuthorization service_auth,
                                   const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
         return true;
@@ -69,7 +68,7 @@ bool is_authorized_for_host_group(GroupAuthorization group_auth,
     }
 
     auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(service_auth, ctc, mem->host_ptr, nullptr);
+        return is_authorized_for_hst(ctc, mem->host_ptr);
     };
     if (group_auth == GroupAuthorization::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"

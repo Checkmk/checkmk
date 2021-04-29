@@ -19,7 +19,6 @@
 #include "State.h"
 #include "cmc.h"
 #else
-#include "MonitoringCore.h"
 #include "auth.h"
 #include "nagios.h"
 #endif
@@ -58,7 +57,6 @@ std::vector<HostListColumn::Entry> HostListColumn::getEntries(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {
             if (auth_user == nullptr || hst->hasContact(auth_user)) {
@@ -73,8 +71,7 @@ std::vector<HostListColumn::Entry> HostListColumn::getEntries(
     if (const auto *const p = columnData<hostsmember *>(row)) {
         for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
-            if (is_authorized_for(_mc->serviceAuthorization(), auth_user, hst,
-                                  nullptr)) {
+            if (is_authorized_for_hst(auth_user, hst)) {
                 entries.emplace_back(hst->name,
                                      static_cast<HostState>(hst->current_state),
                                      hst->has_been_checked != 0);

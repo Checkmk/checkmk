@@ -41,7 +41,6 @@ bool is_authorized_for_svc(ServiceAuthorization service_auth,
 bool is_authorized_for(ServiceAuthorization service_auth, const contact *ctc,
                        const host *hst, const service *svc);
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
-                                  ServiceAuthorization service_auth,
                                   const hostgroup *hg, const contact *ctc);
 bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,

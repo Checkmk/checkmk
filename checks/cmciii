@@ -29,38 +29,6 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # this complicated way :(
 
 
-def cmciii_temp_get_item(container, device):
-    device = device.replace("Liquid_Cooling_Package", "LCP")
-    itemname = container[1].replace("Temperature", "")
-    if itemname == "":
-        itemname = "Ambient"
-    if device is not None:
-        itemname += " %s" % device
-    if container[-1].startswith("In-") or container[-1].startswith("Out-"):
-        itemname += " %s" % container[-1].split("-")[0]
-    return itemname
-
-
-def cmciii_phase_get_key(container, var_type):
-    if var_type != "2":
-        return " ".join(container[3:])
-
-    key = "_".join(container[3:]).lower()
-    if key == "power_apparent":
-        key = "appower"
-    elif key.endswith("_active"):
-        key = key.replace("_active", "")
-    return key
-
-
-def cmciii_phase_get_item(container, device):
-    itemname = [device]
-    if container[1]:
-        itemname.append(container[1])
-    itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
-    return " ".join(itemname)
-
-
 def cmciii_container(location, variable_splitted):
     container = [location] + variable_splitted[:-1]
     if len(container) == 2:
@@ -98,18 +66,39 @@ def sensor_type(container):
 
 def sensor_item(table, container, device):
     if table == "temp":
-        return cmciii_temp_get_item(container, device)
+        device = device.replace("Liquid_Cooling_Package", "LCP")
+        itemname = container[1].replace("Temperature", "")
+        if itemname == "":
+            itemname = "Ambient"
+        if device is not None:
+            itemname += " %s" % device
+        if container[-1].startswith("In-") or container[-1].startswith("Out-"):
+            itemname += " %s" % container[-1].split("-")[0]
+        return itemname
     if table == "phase":
-        return cmciii_phase_get_item(container, device)
+        itemname = [device]
+        if container[1]:
+            itemname.append(container[1])
+        itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
+        return " ".join(itemname)
     if table in ("psm_plugs", "can_current"):
         return "%s %s" % (device, ".".join(container[1:]))
     return "%s %s" % (device, container[1])
 
 
 def sensor_key(table, container, var_type, variable_splitted):
-    if table == "phase":
-        return cmciii_phase_get_key(container, var_type)
-    return variable_splitted[-1]
+    if table != "phase":
+        return variable_splitted[-1]
+
+    if var_type != "2":
+        return " ".join(container[3:])
+
+    key = "_".join(container[3:]).lower()
+    if key == "power_apparent":
+        key = "appower"
+    elif key.endswith("_active"):
+        key = key.replace("_active", "")
+    return key
 
 
 def sensor_value(value_str, value_int, scale, var_type, var_unit, container):

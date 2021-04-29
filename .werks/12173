@@ -1,0 +1,18 @@
+Title: Fixed service authorization handling
+Knowledge: doc
+Level: 2
+Component: cmc
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p24
+Date: 1619686384
+
+For some tables ("comments" / "log") and some aggregated columns (like
+"num_services" or "worst_service_state") in the tables "hosts" /
+"hostgroups" / "servicegroups", the service authorization was always
+"loose", regardless of the global setting.  As a consequence, some users
+could see too many comments and log entries, and some aggregated values
+didn't match what they were seeing elsewhere.  This has been fixed.
+

@@ -70,7 +70,7 @@ def cmciii_container(location, variable_splitted):
     return container
 
 
-def table_for_container(container):
+def sensor_type(container):
     if container[1].startswith("PSM_") and "Unit" in container:
         return "psm_current"
     if container[1].startswith("PSM_") and container[2].startswith("Plug"):
@@ -150,12 +150,10 @@ def parse_cmciii(info):
 
     dev_table, var_table = info
 
-    num = 0
-    for endoid, name, alias, status in dev_table:
+    for num, (endoid, name, alias, status) in enumerate(dev_table, start=1):
         # no blanks in names since we use blanks in items
         # later to split between unit_name and item_name
         dev_name = alias.replace(" ", "_")
-        num += 1
         if not dev_name:
             dev_name = name + "-" + str(num)
 
@@ -175,21 +173,21 @@ def parse_cmciii(info):
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")
         variable_splitted = variable.split(".")
-        device = devices.get(location)
         container = cmciii_container(location, variable_splitted)
 
-        this_table = table_for_container(container)
-        if this_table is None:
+        type_ = sensor_type(container)
+        if type_ is None:
             continue
 
-        itemname = sensor_item(this_table, container, device)
-        if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
-            itemname += " %s" % location
-        parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
+        device = devices.get(location)
+        item = sensor_item(type_, container, device)
+        if item in parsed[type_] and parsed[type_][item]["_location_"] != location:
+            item += " %s" % location
+        parsed[type_].setdefault(item, {"_device_": device, "_location_": location})
 
-        key = sensor_key(this_table, container, var_type, variable_splitted)
+        key = sensor_key(type_, container, var_type, variable_splitted)
         value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
-        parsed[this_table][itemname].setdefault(key, value)
+        parsed[type_][item].setdefault(key, value)
 
     for entry, attrs in parsed.get("temp", {}).items():
         found_temp_in_out = False

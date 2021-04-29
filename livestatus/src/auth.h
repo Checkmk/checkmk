@@ -36,8 +36,7 @@ contact *unknown_auth_user();
 // here to avoid confusion.
 bool is_authorized_for_hst(const contact *ctc, const host *hst);
 bool is_authorized_for_svc(ServiceAuthorization service_auth,
-                           const contact *ctc, const host *hst,
-                           const service *svc);
+                           const contact *ctc, const service *svc);
 bool is_authorized_for(ServiceAuthorization service_auth, const contact *ctc,
                        const host *hst, const service *svc);
 bool is_authorized_for_host_group(GroupAuthorization group_auth,

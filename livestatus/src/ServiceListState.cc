@@ -37,8 +37,7 @@ int32_t ServiceListState::getValueFromServices(
 #else
     for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
-        if (is_authorized_for_svc(service_auth, auth_user, svc->host_ptr,
-                                  svc)) {
+        if (is_authorized_for_svc(service_auth, auth_user, svc)) {
             update(logictype, static_cast<ServiceState>(svc->current_state),
                    static_cast<ServiceState>(svc->last_hard_state),
                    svc->has_been_checked != 0,

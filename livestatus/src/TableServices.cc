@@ -718,8 +718,7 @@ void TableServices::answerQuery(Query *query) {
 
 bool TableServices::isAuthorized(Row row, const contact *ctc) const {
     const auto *svc = rowData<service>(row);
-    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
-                                 svc->host_ptr, svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc, svc);
 }
 
 Row TableServices::get(const std::string &primary_key) const {

@@ -144,7 +144,7 @@ class HPMSAConnection:
 
     def _get_session_key(self, hash_class, username, password):
         login_hash = hash_class()
-        login_hash.update("%s_%s" % (username, password))
+        login_hash.update(f"{username}_{password}".encode('utf-8'))
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)
@@ -190,6 +190,6 @@ def main(argv=None):
     # Output sections
     for section, lines in sections.items():
         print("<<<hp_msa_%s>>>" % section)
-        print("\n".join(x.encode("utf-8") for x in lines))
+        print("\n".join(x for x in lines))
 
     return 0

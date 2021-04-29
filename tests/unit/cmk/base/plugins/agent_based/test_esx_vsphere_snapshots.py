@@ -25,24 +25,34 @@ def test_parse_esx_vsphere_snapshots():
                                        ]) == [Snapshot(time=0, state='On', name='foo')]
 
 
+@pytest.mark.parametrize("section, expected_result", [
+    ([
+        Snapshot(5234560, 'poweredOn', 'PC1'),
+        Snapshot(2087850, 'poweredOff', 'PC2'),
+    ], [
+        Result(state=State.OK, summary='Count: 2'),
+        Result(state=State.OK, summary='Powered on: PC1'),
+        Result(state=State.OK, summary='Latest: PC1 Mar 02 1970 14:02:40'),
+        Result(state=State.OK, notice='Age of latest: 50 years 278 days'),
+        Result(state=State.OK, summary='Oldest: PC2 Jan 25 1970 03:57:30'),
+        Result(state=State.OK, notice='Age of oldest: 50 years 314 days'),
+    ]),
+    ([
+        Snapshot(5234560, 'poweredOn', 'PC1'),
+        Snapshot(1606089700, 'poweredOff', 'PC2')
+    ], [
+        Result(
+            state=State.WARN,
+            summary=
+            'Snapshot with a creation time in future found. Please check your network time synchronisation.'
+        ),
+    ]),
+])
 @freeze_time("2020-11-23")
-def test_check_snapshots_summary(monkeypatch):
+def test_check_snapshots_summary(section, expected_result, monkeypatch):
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    assert list(
-        check_snapshots_summary(
-            {},
-            [
-                Snapshot(5234560, 'poweredOn', 'PC1'),
-                Snapshot(2087850, 'poweredOff', 'PC2'),
-            ],
-        )) == [
-            Result(state=State.OK, summary='Count: 2'),
-            Result(state=State.OK, summary='Powered on: PC1'),
-            Result(state=State.OK, summary='Latest: PC1 Mar 02 1970 14:02:40'),
-            Result(state=State.OK, notice='Age of latest: 50 years 278 days'),
-            Result(state=State.OK, summary='Oldest: PC2 Jan 25 1970 03:57:30'),
-            Result(state=State.OK, notice='Age of oldest: 50 years 314 days'),
-        ]
+    result = check_snapshots_summary({}, section)
+    assert list(result) == expected_result
 
 
 @freeze_time("2020-11-23")

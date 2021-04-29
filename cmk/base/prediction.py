@@ -128,11 +128,7 @@ def _get_prediction_timegroup(
     rel_time: seconds offset of now in the current slice
     """
     # Convert to local timezone
-    group_by_function = period_info.groupby
-    if not callable(group_by_function):
-        raise RuntimeError()
-
-    timegroup, rel_time = group_by_function(t)
+    timegroup, rel_time = period_info.groupby(t)
     from_time = t - rel_time
     until_time = from_time + period_info.slice
     return timegroup, from_time, until_time, rel_time

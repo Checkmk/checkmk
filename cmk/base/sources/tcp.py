@@ -58,6 +58,7 @@ class TCPSource(AgentSource):
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
             timeout=self.timeout or self.host_config.tcp_connect_timeout,

@@ -52,6 +52,7 @@ class PiggybackSource(AgentSource):
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,

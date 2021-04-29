@@ -1,30 +1,40 @@
 // library for simple string modifications
 package lib
+import groovy.json.JsonSlurperClassic
 
-// This function runs a test inside of a Jenkins stage
-// NAME: Display name of the Stage, should describe the test
-// CONDITION: true or false, determening whether the stage has to be run
-// DIR: Directory in which the test is executed
+
+// Runs provided command in a shell and returns the JSON parsed stdout output
+def loadJson(json_file) {
+    def cmd_stdout_result = sh(script: "cat ${json_file}", returnStdout: true);
+    (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
+}
+
+// Creates a stage with provided properties. The created stage will be marked as
+// successful or failed if its command returns with non-zero and can thus be used
+// to implement tests.
+// NAME:     Display name of the Stage, should describe the test
+// SKIPPED:  Only available when stage shall be skipped. Contains information to be
+//           displayed if the test was skipped
+// DIR:      Directory in which the test is executed
 // ENV_VARS: Array [] of environment variables needed for the test
-// COMMAND: command that should be executed. It should be possible to use this exact
-//          command to reproduce the test locally in the coresponding DIR
-// TEXT_ON_SKIP: Information that is displayed if the test was skipped
-
-def run(Map args) {
+// COMMAND:  command that should be executed. It should be possible to use this exact
+//           command to reproduce the test locally in the coresponding DIR
+def create_stage(Map args) {
     stage(args.NAME) {
-        print(args.CONDITION)
-        if (args.CONDITION) {
+        print("Args: ${args}")
+        if (args.SKIPPED) {
+            println("SKIPPED: ${args.SKIPPED}")
+            desc_add_status_row(args.NAME, 'skipped')
+        } else {
+            println("CMD: ${args.COMMAND}")
             dir(args.DIR) {
                 args.ENV_VARS.add("TEST_CONTAINER=${TEST_CONTAINER}")
                 withEnv(args.ENV_VARS) {
-                    STATUS = sh(script: args.COMMAND, returnStatus: true)
-                    desc_add_status_row(args.NAME, STATUS)
-                    sh('exit ' + STATUS)
+                    cmd_status = sh(script: args.COMMAND, returnStatus: true)
+                    desc_add_status_row(args.NAME, cmd_status)
+                    sh('exit ' + cmd_status)
                 }
             }
-        } else {
-            println(args.TEXT_ON_SKIP)
-            desc_add_status_row(args.NAME, 'skipped')
         }
     }
 }

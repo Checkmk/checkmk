@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""What would Jenkins do?
+
+This script evaluates a YAML file containing dynamic information about Jenkins pipeline stages
+and environmental conditions (e.g. changed files since last commit) and generates a static list
+of stages (i.e. without any variables left to evaluate).
+This list can either be executed directly or returned on stdout (JSON encoded) in order to be read
+and handled later by a Jenkins pipelined job.
+"""
+
+# Note: this script represents an intermediate state and still contains some typing quirks
+#       and left todos
+
+from typing import TypedDict, Mapping, Sequence, Iterable, Union, Any
+import sys
+from functools import reduce
+import json
+import yaml
+import argparse
+import logging
+from pathlib import Path
+
+
+LOG = logging.getLogger("verify_changes")
+
+EnvVars = Mapping[str, str]
+
+class StageInfo(TypedDict, total=False):
+    NAME: str
+    ONLY_WHEN_NOT_EMPTY: str
+    DIR: str
+    ENV_VARS: Union[Mapping[str, str], Sequence[str]]
+    COMMAND: str
+    TEXT_ON_SKIP: str
+    SKIPPED: str
+
+Stages = Iterable[StageInfo]
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments and return argument object"""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--log-level", "-l", type=str.upper, default='INFO',
+                        help="Set the minimum level for debug messages")
+    parser.add_argument("--env", "-e", type=str, default=[], action='append',
+                        help="Set a variable to be used to expand commands")
+    parser.add_argument("--write-file", "-w", type=str,
+                        help="Don't execute the stages but write a JSON encoded list of stages to"
+                        " given file ('-' for stdout")
+    parser.add_argument("--no-skip", type=lambda a: a.lower() in {"1", "true"}, default=False,
+                        help="Ignore conditions for skipping stages (activate all)")
+    parser.add_argument("input", type=Path,
+                        help="A YAML encoded file containing information about stages to generate")
+    return parser.parse_args()
+
+
+def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
+    """Return StageInfo created from validated @raw_stage"""
+    result = StageInfo()
+    for k, v in raw_stage.items():
+        if not isinstance(k, str):
+            raise TypeError("Keys must be strings")
+        if not isinstance(v, (str, Mapping)):
+            raise TypeError("Values must be strings or mappings")
+        result[k] = v
+    return result
+
+
+def to_stage_info_sequence(raw_stages: Any) -> Stages:
+    assert isinstance(raw_stages, Sequence)
+    return map(to_stage_info, raw_stages)
+
+
+def replace_variables(string: str, env_vars: EnvVars) -> str:
+    """Replace all occurrences of '${VAR_NAME}' in @string based on @env_vars
+    >>> replace_variables("foo: ${foo}", {"foo": "bar"})
+    'foo: bar'
+    """
+    return reduce(
+        lambda a, kv: str.replace(a, f"${{{kv[0]}}}", kv[1]),
+        env_vars.items(),
+        string
+    )
+
+
+def apply_variables(in_data: StageInfo, env_vars: EnvVars) -> StageInfo:
+    """
+    >>> apply_variables({"foo": "${foo}", "bar": "${bar}"}, {"foo": "bar", "bar": "foo"})
+    {'foo': 'bar', 'bar': 'foo'}
+    """
+    return StageInfo({
+        key: (replace_variables(value, env_vars) if isinstance(value, str ) else
+              {k: replace_variables(v, env_vars) for k, v in value.items()})
+        for key, value in in_data.items()
+    })
+
+
+def finalize_stage(stage: StageInfo, env_vars: EnvVars, no_skip: bool) -> StageInfo:
+    """Return an updated list of stages with conditions applied and values reformatted"""
+    condition_vars = stage.get("ONLY_WHEN_NOT_EMPTY")
+    skip_stage = condition_vars and not any(env_vars.get(v) for v in condition_vars.split(","))
+    return (
+        StageInfo(
+            NAME=stage["NAME"],
+            DIR=stage.get("DIR", ""),
+            ENV_VARS=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
+            COMMAND=stage["COMMAND"],
+        )
+        if no_skip or not skip_stage else
+        StageInfo(
+            NAME=stage["NAME"],
+            SKIPPED=(f'Reason: {stage.get("TEXT_ON_SKIP") or "not provided"},'
+                     f' Condition: {condition_vars}'),
+        )
+    )
+
+
+def compile_stage_info(stages_file: str, env_vars: EnvVars, no_skip: bool) -> Stages:
+    """Return a list of stages loaded from provided YAML file with variables applied"""
+    return (
+        finalize_stage(
+            apply_variables(
+                stage, env_vars),
+            env_vars,
+            no_skip,
+        )
+        for stage in to_stage_info_sequence(
+            yaml.load(
+                open(stages_file),
+                Loader=yaml.BaseLoader)["stages"],
+            )
+    )
+
+
+def run_locally(stages: Stages) -> None:
+    """Not yet implementd: run all stages by executing each command"""
+    print("NYI")
+    for s in stages:
+        print(f"{s['NAME']}: {s.get('COMMAND', 'SKIPPED: ' + s.get('SKIPPED', ''))}")
+
+
+def main() -> None:
+    """Generate and either process or write a static list of stages"""
+    LOG.debug(f"Python: {sys.version} {sys.executable}")
+    args = parse_args()
+    stages = compile_stage_info(
+        args.input,
+        {
+            key: value
+            for var in args.env
+            for key, value in (var.split("=", 1),)
+        },
+        args.no_skip,
+    )
+    if args.write_file:
+        json.dump(
+            obj=list(stages),
+            fp=sys.stdout if args.write_file=="-" else open(args.write_file, "w"),
+            indent=2)
+    else:
+        run_locally(stages)
+
+
+if __name__ == "__main__":
+    import doctest
+    assert not doctest.testmod().failed
+    main()

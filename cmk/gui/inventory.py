@@ -288,8 +288,8 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
         if '/' in hostname:
             # just for security reasons
             return None
-        cache_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir if tree_type == "inventory" \
-                else cmk.utils.paths.status_data_dir, hostname)
+        cache_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir if tree_type == "inventory"
+                                else cmk.utils.paths.status_data_dir, hostname)
         try:
             inventory_tree = StructuredDataTree().load_from(cache_path)
         except Exception as e:

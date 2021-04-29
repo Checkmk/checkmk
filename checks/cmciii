@@ -140,6 +140,9 @@ def parse_cmciii(info):
         container = cmciii_container(location, variable_splitted)
 
         this_table = table_for_container(container)
+        if this_table is None:
+            continue
+
         key = variable_splitted[-1]
         if container[1].startswith("PSM_") and "Unit" in container:
             itemname = "%s %s" % (device, container[1])
@@ -163,12 +166,11 @@ def parse_cmciii(info):
         elif container[2].startswith("Phase"):
             itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
 
-        if this_table is None:
-            continue
+        if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
+            itemname += " %s" % location
 
         if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
             value = value_str
-
         else:
             # neg. scale: "-X" => "/ X"
             # pos. scale: "X"  => "* X"
@@ -183,9 +185,6 @@ def parse_cmciii(info):
         if "Power" in container or "Energy" in container:
             if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
                 value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
-
-        if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
-            itemname += " %s" % location
 
         parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
         parsed[this_table][itemname].setdefault(key, value)

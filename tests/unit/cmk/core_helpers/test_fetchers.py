@@ -55,6 +55,7 @@ def json_identity(data):
 
 def clone_file_cache(file_cache):
     return type(file_cache)(
+        file_cache.hostname,
         base_path=file_cache.base_path,
         max_age=file_cache.max_age,
         disabled=file_cache.disabled,
@@ -67,6 +68,7 @@ class TestFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, NoCache, SNMPFileCache])
     def file_cache(self, request):
         return request.param(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -81,11 +83,12 @@ class TestFileCache:
 class TestNoCache:
     @pytest.fixture
     def path(self, tmp_path):
-        return tmp_path / "database"
+        return tmp_path
 
     @pytest.fixture
     def file_cache(self, path):
         return NoCache(
+            "hostname",
             base_path=path,
             max_age=999,
             disabled=False,
@@ -129,6 +132,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, SNMPFileCache])
     def file_cache(self, path, request):
         return request.param(
+            "hostname",
             base_path=path,
             max_age=999,
             disabled=False,
@@ -188,6 +192,7 @@ class TestIPMIFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -244,6 +249,7 @@ class TestPiggybackFetcher:
     @pytest.fixture
     def file_cache(self):
         return NoCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -272,6 +278,7 @@ class TestProgramFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -472,6 +479,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return SNMPFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -510,6 +518,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return SNMPFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -633,6 +642,7 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return StubFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -667,6 +677,7 @@ class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
@@ -761,6 +772,7 @@ class TestFetcherCaching:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
+            "hostname",
             base_path=Path(os.devnull),
             max_age=0,
             disabled=True,

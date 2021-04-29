@@ -177,13 +177,14 @@ class SNMPFileCache(FileCache[SNMPRawData]):
 
     def make_path(self, mode: Mode) -> Path:
         if mode is Mode.DISCOVERY:
-            return self.base_path.parent / mode.name.lower() / self.base_path.name
-        return self.base_path.parent / "checking" / self.base_path.name
+            return self.base_path / mode.name.lower() / self.hostname
+        return self.base_path / "checking" / self.hostname
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
     def make(self, *, force_cache_refresh: bool = False) -> SNMPFileCache:
         return SNMPFileCache(
+            self.hostname,
             base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled,

@@ -64,7 +64,7 @@ class DefaultAgentFileCache(AgentFileCache):
         return ensure_binary(raw_data)
 
     def make_path(self, mode: Mode) -> Path:
-        return self.base_path
+        return self.base_path / self.hostname
 
 
 class NoCache(AgentFileCache):
@@ -94,6 +94,7 @@ class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
     # to implement it here anyway:
     def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
         return DefaultAgentFileCache(
+            self.hostname,
             base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
@@ -107,6 +108,7 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
     # to implement it here anyway. At the time of this writing NoCache does nothing either way.
     def make(self, *, force_cache_refresh: bool = False) -> NoCache:
         return NoCache(
+            self.hostname,
             base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,

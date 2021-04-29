@@ -121,6 +121,7 @@ def test_attribute_defaults(mode, monkeypatch):
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "file_cache": {
+            "hostname": "testhost",
             "disabled": False,
             "max_age": 0,
             "base_path": "/my/path",

@@ -28,7 +28,7 @@ import cmk.utils
 import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection, TRawData
 
@@ -146,6 +146,7 @@ def set_cache_opts(use_caches: bool) -> None:
 class FileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
+        hostname: HostName,
         *,
         base_path: Union[str, Path],
         max_age: int,
@@ -154,6 +155,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         simulation: bool,
     ) -> None:
         super().__init__()
+        self.hostname: Final[HostName] = hostname
         self.base_path: Final[Path] = Path(base_path)
         self.max_age: Final[int] = max_age
         self.disabled: Final[bool] = disabled
@@ -162,8 +164,9 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
-        return "%s(base_path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r)" % (
+        return "%s(hostname=%r, base_path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r)" % (
             type(self).__name__,
+            self.hostname,
             self.base_path,
             self.max_age,
             self.disabled,
@@ -173,7 +176,14 @@ class FileCache(Generic[TRawData], abc.ABC):
 
     def __hash__(self) -> int:
         *_rest, last = itertools.accumulate(
-            (self.base_path, self.max_age, self.disabled, self.use_outdated, self.simulation),
+            (
+                self.hostname,
+                self.base_path,
+                self.max_age,
+                self.disabled,
+                self.use_outdated,
+                self.simulation,
+            ),
             lambda acc, elem: acc ^ hash(elem),
             initial=0,
         )
@@ -183,6 +193,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         if not isinstance(other, type(self)):
             return NotImplemented
         return all((
+            self.hostname == other.hostname,
             self.base_path == other.base_path,
             self.max_age == other.max_age,
             self.disabled == other.disabled,
@@ -192,6 +203,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
     def to_json(self) -> Dict[str, Any]:
         return {
+            "hostname": str(self.hostname),
             "base_path": str(self.base_path),
             "max_age": self.max_age,
             "disabled": self.disabled,
@@ -306,12 +318,14 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
 
     def __init__(
         self,
+        hostname: HostName,
         base_path: Union[Path, str],
         *,
         max_age: int,
         simulation: bool = False,
     ):
         super().__init__()
+        self.hostname: Final = hostname
         self.base_path: Final[Path] = Path(base_path)
         self.max_age: Final[int] = max_age
         self.simulation: Final[bool] = simulation

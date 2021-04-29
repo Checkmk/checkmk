@@ -9,18 +9,9 @@ package lib
 // COMMAND: command that should be executed. It should be possible to use this exact
 //          command to reproduce the test locally in the coresponding DIR
 // TEXT_ON_SKIP: Information that is displayed if the test was skipped
+
 def run(Map args) {
     stage(args.NAME) {
-        print("Git Status")
-        sh("git status")
-        print("Git log")
-        sh("git log --oneline -n10")
-        GERRIT_CHANGE_ID_BASH = sh(script: 'git show --format=%B  -s | grep Change-Id: | cut -d " " -f2', returnStdout: true).toString().trim()
-        if (GERRIT_CHANGE_ID_BASH != GERRIT_CHANGE_ID) {
-            print("ERROR: Git checkout has changed!!!")
-            sh "exit 1"
-        }
-
         print(args.CONDITION)
         if (args.CONDITION) {
             dir(args.DIR) {

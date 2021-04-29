@@ -14,9 +14,16 @@
 #include "nagios.h"
 #endif
 
-enum class AuthorizationKind { loose = 0, strict = 1 };
-enum class ServiceAuthorization { loose = 0, strict = 1 };
-enum class GroupAuthorization { loose = 0, strict = 1 };
+enum class ServiceAuthorization {
+    loose = 0,   // contacts for hosts see all services
+    strict = 1,  // must be explicit contact of a service
+};
+
+enum class GroupAuthorization {
+    loose = 0,   // sufficient to be contact for one member
+    strict = 1,  // must be contact of all members
+
+};
 
 #ifdef CMC
 inline contact *unknown_auth_user() {

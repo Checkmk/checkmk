@@ -118,7 +118,10 @@ div.cmk_figure {
     box-shadow: $graph-hover-popup-box-shadow;
     border-radius: 5px;
 
-    td {
+    div.loading_img {
+      left: 0;
+      width: 24px;
+      height: 24px;
     }
   }
 

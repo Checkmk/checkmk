@@ -58,6 +58,31 @@ def cmciii_phase_get_item_and_key(container, device, var_type):
     return itemname, key
 
 
+def table_for_container(container):
+    if container[1].startswith("PSM_") and "Unit" in container:
+        return "psm_current"
+    if container[1].startswith("PSM_") and container[2].startswith("Plug"):
+        return "psm_plugs"
+    if container[1].startswith("Input") or container[1].startswith("Output"):
+        return "io"
+    if "Access" in container:
+        return "access"
+    if "Humidity" in container:
+        return "humidity"
+    if ("Temperature" in container or "Dew Point" in container or
+            container[2].endswith("Temperature")):
+        return "temp"
+    if "Leakage" in container:
+        return "leakage"
+    if container[2].startswith("CAN") and container[2].endswith("Current"):
+        return "can_current"
+    if container[1].startswith("Phase"):
+        return "phase"
+    if container[2].startswith("Phase"):
+        return "phase"
+    return None
+
+
 def parse_cmciii(info):
     devices = {}
     parsed = {
@@ -106,41 +131,30 @@ def parse_cmciii(info):
         if len(container) == 2:
             container += [""]
 
+        this_table = table_for_container(container)
         key = variable_splitted[-1]
         if container[1].startswith("PSM_") and "Unit" in container:
-            this_table = "psm_current"
             itemname = "%s %s" % (device, container[1])
         elif container[1].startswith("PSM_") and container[2].startswith("Plug"):
-            this_table = "psm_plugs"
             itemname = "%s %s" % (device, ".".join(container[1:]))
         elif container[1].startswith("Input") or container[1].startswith("Output"):
-            this_table = "io"
             itemname = "%s %s" % (device, container[1])
         elif "Access" in container:
-            this_table = "access"
             itemname = "%s %s" % (device, container[1])
         elif "Humidity" in container:
-            this_table = "humidity"
             itemname = "%s %s" % (device, container[1])
-        elif "Temperature" in container or "Dew Point" in container or \
-             container[2].endswith("Temperature"):
-            this_table = "temp"
+        elif ("Temperature" in container or "Dew Point" in container or
+              container[2].endswith("Temperature")):
             itemname = cmciii_temp_get_item(container, device)
         elif "Leakage" in container:
-            this_table = "leakage"
             itemname = "%s %s" % (device, container[1])
         elif container[2].startswith("CAN") and container[2].endswith("Current"):
-            this_table = "can_current"
             itemname = "%s %s" % (device, ".".join(container[1:]))
         elif container[1].startswith("Phase"):
-            this_table = "phase"
             container = [container[0], ""] + container[1:]
             itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
         elif container[2].startswith("Phase"):
-            this_table = "phase"
             itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
-        else:
-            this_table = None
 
         if this_table is None:
             continue

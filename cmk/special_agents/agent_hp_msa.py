@@ -144,7 +144,7 @@ class HPMSAConnection:
 
     def _get_session_key(self, hash_class, username, password):
         login_hash = hash_class()
-        login_hash.update("%s_%s" % (username, password))
+        login_hash.update(f"{username}_{password}".encode('utf-8'))
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)

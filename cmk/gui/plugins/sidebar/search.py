@@ -1303,7 +1303,7 @@ class MenuSearchResultsRenderer:
 
     def _get_icon_mapping(
         self,
-        default_icon: Icon = "topic_overview",
+        default_icons: Tuple[Icon, Icon],
     ) -> Dict[str, Tuple[Icon, Icon]]:
         # {topic: (Icon(Topic): green, Icon(Item): colorful)}
         mapping: Dict[str, Tuple[Icon, Icon]] = {}
@@ -1312,40 +1312,40 @@ class MenuSearchResultsRenderer:
                 mega_menu_registry.menu_monitoring(),
         ]:
             mapping[menu.title] = (
-                menu.icon + "_active" if isinstance(menu.icon, str) else default_icon,
-                menu.icon if menu.icon else default_icon,
+                menu.icon + "_active" if isinstance(menu.icon, str) else default_icons[0],
+                menu.icon if menu.icon else default_icons[1],
             )
 
             for topic in menu.topics():
                 mapping[topic.title] = (
-                    topic.icon if topic.icon else default_icon,
-                    topic.icon if topic.icon else default_icon,
+                    topic.icon if topic.icon else default_icons[0],
+                    topic.icon if topic.icon else default_icons[1],
                 )
                 for item in topic.items:
                     mapping[item.title] = (
-                        topic.icon if topic.icon else default_icon,
-                        item.icon if item.icon else default_icon,
+                        topic.icon if topic.icon else default_icons[0],
+                        item.icon if item.icon else default_icons[1],
                     )
         for module_class in main_module_registry.values():
             module = module_class()
             if module.title not in mapping:
                 mapping[module.title] = (
                     module.topic.icon_name
-                    if module.topic and module.topic.icon_name else default_icon,
-                    module.icon if module.icon else default_icon,
+                    if module.topic and module.topic.icon_name else default_icons[0],
+                    module.icon if module.icon else default_icons[1],
                 )
         return mapping
 
     def _render_results(
         self,
         results: SearchResultsByTopic,
-        default_icon: Icon = "topic_overview",
     ) -> str:
         with html.plugged():
-            icon_mapping = self._get_icon_mapping(default_icon)
+            default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
+            icon_mapping = self._get_icon_mapping(default_icons)
             for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
-                icons = icon_mapping.get(topic, (default_icon, default_icon))
+                icons = icon_mapping.get(topic, default_icons)
                 self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(list(search_results)):
@@ -1381,7 +1381,9 @@ class MenuSearchResultsRenderer:
         html.open_a(
             href=result.url,
             target="main",
-            onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');"
+            onclick=
+            f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
+            title=result.title,
         )
         html.write_text(result.title)
         html.close_a()

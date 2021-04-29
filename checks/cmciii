@@ -132,10 +132,33 @@ def sensor_value(value_str, value_int, scale, var_type, var_unit, container):
     return value
 
 
+def parse_devices_and_states(device_table):
+    devices, states = {}, {}
+    for num, (endoid, name, alias, status) in enumerate(device_table, start=1):
+        # no blanks in names since we use blanks in items
+        # later to split between unit_name and item_name
+        dev_name = alias.replace(" ", "_")
+        if not dev_name:
+            dev_name = name + "-" + str(num)
+
+        if dev_name in states:
+            dev_name = "%s %s" % (alias, endoid)
+
+        devices.setdefault(endoid, dev_name)
+
+        if dev_name in states and states[dev_name]["_location_"] != endoid:
+            dev_name += " %s" % endoid
+
+        states.setdefault(dev_name, {"status": status, "_location_": endoid})
+    return devices, states
+
+
 def parse_cmciii(info):
-    devices = {}
+    device_table, var_table = info
+    devices, states = parse_devices_and_states(device_table)
+
     parsed = {
-        "state": {},
+        "state": states,
         "psm_current": {},
         "psm_plugs": {},
         "io": {},
@@ -147,28 +170,6 @@ def parse_cmciii(info):
         "phase": {},
         "leakage": {},
     }
-
-    dev_table, var_table = info
-
-    for num, (endoid, name, alias, status) in enumerate(dev_table, start=1):
-        # no blanks in names since we use blanks in items
-        # later to split between unit_name and item_name
-        dev_name = alias.replace(" ", "_")
-        if not dev_name:
-            dev_name = name + "-" + str(num)
-
-        if dev_name in parsed["state"]:
-            dev_name = "%s %s" % (alias, endoid)
-
-        devices.setdefault(endoid, dev_name)
-
-        if dev_name in parsed["state"] and parsed["state"][dev_name]["_location_"] != endoid:
-            dev_name += " %s" % endoid
-
-        parsed["state"].setdefault(dev_name, {
-            "status": status,
-            "_location_": endoid,
-        })
 
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")

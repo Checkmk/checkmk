@@ -41,21 +41,24 @@ def cmciii_temp_get_item(container, device):
     return itemname
 
 
-def cmciii_phase_get_item_and_key(container, device, var_type):
+def cmciii_phase_get_key(container, var_type):
+    if var_type != "2":
+        return " ".join(container[3:])
+
+    key = "_".join(container[3:]).lower()
+    if key == "power_apparent":
+        key = "appower"
+    elif key.endswith("_active"):
+        key = key.replace("_active", "")
+    return key
+
+
+def cmciii_phase_get_item(container, device):
     itemname = [device]
     if container[1]:
         itemname.append(container[1])
     itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
-    itemname = " ".join(itemname)
-    if var_type == "2":
-        key = "_".join(container[3:]).lower()
-        if key == "power_apparent":
-            key = "appower"
-        elif key.endswith("_active"):
-            key = key.replace("_active", "")
-    else:
-        key = " ".join(container[3:])
-    return itemname, key
+    return " ".join(itemname)
 
 
 def cmciii_container(location, variable_splitted):
@@ -182,9 +185,11 @@ def parse_cmciii(info):
         elif container[2].startswith("CAN") and container[2].endswith("Current"):
             itemname = "%s %s" % (device, ".".join(container[1:]))
         elif container[1].startswith("Phase"):
-            itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
+            key = cmciii_phase_get_key(container, var_type)
+            itemname = cmciii_phase_get_item(container, device)
         elif container[2].startswith("Phase"):
-            itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
+            key = cmciii_phase_get_key(container, var_type)
+            itemname = cmciii_phase_get_item(container, device)
 
         if itemname in parsed[this_table] and parsed[this_table][itemname]["_location_"] != location:
             itemname += " %s" % location

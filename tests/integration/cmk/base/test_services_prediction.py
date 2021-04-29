@@ -156,9 +156,8 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
     period_info = prediction._PREDICTION_PERIODS[params['period']]
     with on_time(utcdate, timezone):
         now = int(time.time())
-        groupby = period_info["groupby"]
-        assert callable(groupby)
-        timegroup = groupby(now)[0]
+        assert callable(period_info.groupby)
+        timegroup = period_info.groupby(now)[0]
         time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
                                                timegroup)
 
@@ -200,9 +199,8 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
     period_info = prediction._PREDICTION_PERIODS[params['period']]
     with on_time(utcdate, timezone):
         now = int(time.time())
-        groupby = period_info["groupby"]
-        assert callable(groupby)
-        timegroup = groupby(now)[0]
+        assert callable(period_info.groupby)
+        timegroup = period_info.groupby(now)[0]
 
         time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
                                                timegroup)

@@ -7,8 +7,6 @@
 
 #include "contact_fwd.h"
 
-contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
-
 namespace {
 bool host_has_contact(const host *hst, const contact *ctc) {
     // Older Nagios headers are not const-correct... :-P

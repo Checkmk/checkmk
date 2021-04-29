@@ -27,11 +27,11 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "cmc.h"
 #else
-#include "auth.h"
 #include "nagios.h"
 #endif
 

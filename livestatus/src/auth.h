@@ -10,6 +10,13 @@
 
 #ifdef CMC
 #include "contact_fwd.h"
+class Host;
+using host = Host;
+class Service;
+using service = Service;
+class ObjectGroup;
+using hostgroup = ObjectGroup;
+using servicegroup = ObjectGroup;
 #else
 #include "nagios.h"
 #endif
@@ -25,12 +32,10 @@ enum class GroupAuthorization {
 
 };
 
-#ifdef CMC
 inline contact *unknown_auth_user() {
     return reinterpret_cast<contact *>(0xdeadbeaf);
 }
-#else
-contact *unknown_auth_user();
+
 // NOTE: Although technically not necessary (C functions in Nagios vs. C++
 // functions with mangled names), we avoid name clashes with the Nagios API
 // here to avoid confusion.
@@ -43,6 +48,5 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
-#endif
 
 #endif  // auth_h

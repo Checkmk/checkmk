@@ -30,6 +30,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep
@@ -46,7 +47,6 @@
 #else
 #include <unordered_map>
 
-#include "auth.h"
 #include "nagios.h"
 #endif
 

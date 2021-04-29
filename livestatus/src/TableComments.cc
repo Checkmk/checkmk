@@ -93,6 +93,8 @@ void TableComments::answerQuery(Query *query) {
 
 bool TableComments::isAuthorized(Row row, const contact *ctc) const {
     const auto *co = rowData<Comment>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, co->_host,
-                             co->_service);
+    return co->_service == nullptr
+               ? is_authorized_for_hst(ctc, co->_host)
+               : is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                       co->_service);
 }

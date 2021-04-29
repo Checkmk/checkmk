@@ -51,12 +51,6 @@ bool is_authorized_for_svc(ServiceAuthorization service_auth,
     return service_has_contact(service_auth, svc, ctc);
 }
 
-bool is_authorized_for(ServiceAuthorization service_auth, const contact *ctc,
-                       const host *hst, const service *svc) {
-    return svc == nullptr ? is_authorized_for_hst(ctc, hst)
-                          : is_authorized_for_svc(service_auth, ctc, svc);
-}
-
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {

@@ -891,11 +891,12 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
 
 bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
     const auto *entry = rowData<HostServiceState>(row);
-    if (entry->_host == nullptr) {  // TODO(sp): Can this ever happen???
-        return ctc == nullptr;
-    }
-    return is_authorized_for(core()->serviceAuthorization(), ctc, entry->_host,
-                             entry->_service);
+    return entry->_host == nullptr  // TODO(sp): Can this ever happen???
+               ? ctc == nullptr
+               : entry->_service == nullptr
+                     ? is_authorized_for_hst(ctc, entry->_host)
+                     : is_authorized_for_svc(core()->serviceAuthorization(),
+                                             ctc, entry->_service);
 }
 
 std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {

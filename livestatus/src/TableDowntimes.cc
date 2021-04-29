@@ -104,6 +104,8 @@ void TableDowntimes::answerQuery(Query *query) {
 
 bool TableDowntimes::isAuthorized(Row row, const contact *ctc) const {
     const auto *dt = rowData<Downtime>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, dt->_host,
-                             dt->_service);
+    return dt->_service == nullptr
+               ? is_authorized_for_hst(ctc, dt->_host)
+               : is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                       dt->_service);
 }

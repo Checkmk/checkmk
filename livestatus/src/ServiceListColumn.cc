@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <iterator>
 
+#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include <memory>
@@ -23,9 +25,7 @@
 #else
 #include <unordered_map>
 
-#include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
-#include "auth.h"
 #endif
 
 void ServiceListColumn::output(Row row, RowRenderer &r,
@@ -93,10 +93,10 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *mem = columnData<Host::services_t>(row)) {
         for (const auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(auth_user)) {
+            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+                                      svc.get())) {
                 entries.emplace_back(
                     svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),

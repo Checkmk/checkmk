@@ -10,6 +10,7 @@
 
 #include "Renderer.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include <unordered_set>
@@ -18,7 +19,6 @@
 #include "LogEntry.h"
 #include "State.h"
 #else
-#include "auth.h"
 #include "nagios.h"
 #endif
 
@@ -58,7 +58,7 @@ std::vector<HostListColumn::Entry> HostListColumn::getEntries(
 #ifdef CMC
     if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {
-            if (auth_user == nullptr || hst->hasContact(auth_user)) {
+            if (is_authorized_for_hst(auth_user, hst)) {
                 entries.emplace_back(
                     hst->name(),
                     static_cast<HostState>(hst->state()->_current_state),

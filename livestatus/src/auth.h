@@ -33,6 +33,8 @@ enum class GroupAuthorization {
 
 };
 
+inline contact *no_auth_user() { return nullptr; }
+
 inline contact *unknown_auth_user() {
     return reinterpret_cast<contact *>(0xdeadbeaf);
 }

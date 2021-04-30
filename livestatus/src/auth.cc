@@ -14,62 +14,66 @@
 #include "cmc.h"
 #endif
 
-#ifndef CMC
 namespace {
 bool host_has_contact(const host *hst, const contact *ctc) {
+#ifdef CMC
+    return hst->hasContact(ctc);
+#else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_host(const_cast<host *>(hst),
                                const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_host(const_cast<host *>(hst),
                                          const_cast<contact *>(ctc)) != 0;
+#endif
 }
 
-bool service_has_contact(ServiceAuthorization service_auth, const service *svc,
-                         const contact *ctc) {
+bool service_has_contact(const service *svc, const contact *ctc) {
+#ifdef CMC
+    return svc->hasContact(ctc);
+#else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_service(const_cast<service *>(svc),
                                   const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_service(const_cast<service *>(svc),
-                                            const_cast<contact *>(ctc)) != 0 ||
-           (service_auth == ServiceAuthorization::loose &&
-            host_has_contact(svc->host_ptr, ctc));
+                                            const_cast<contact *>(ctc)) != 0;
+#endif
+}
+
+const host *host_for_service(const service *svc) {
+#ifdef CMC
+    return svc->host();
+#else
+    return svc->host_ptr;
+#endif
 }
 }  // namespace
-#endif
 
 bool is_authorized_for_hst(const contact *ctc, const host *hst) {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
     if (ctc == unknown_auth_user()) {
         return false;
     }
-#ifdef CMC
-    return hst->hasContact(ctc);
-#else
     return host_has_contact(hst, ctc);
-#endif
 }
 
 bool is_authorized_for_svc(ServiceAuthorization service_auth,
                            const contact *ctc, const service *svc) {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
     if (ctc == unknown_auth_user()) {
         return false;
     }
-#ifdef CMC
-    (void)service_auth;  // TODO(sp) Change API below to use this!
-    return svc->hasContact(ctc);
-#else
-    return service_has_contact(service_auth, svc, ctc);
-#endif
+    return service_has_contact(svc, ctc) ||
+           (service_auth == ServiceAuthorization::loose &&
+            host_has_contact(host_for_service(svc), ctc));
 }
 
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc) {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
     if (ctc == unknown_auth_user()) {
@@ -107,7 +111,7 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc) {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
     if (ctc == unknown_auth_user()) {

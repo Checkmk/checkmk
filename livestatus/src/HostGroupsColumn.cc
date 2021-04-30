@@ -21,7 +21,6 @@ std::vector<std::string> HostGroupsColumn::getValue(
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *object = columnData<Object>(row)) {
         for (const auto &hg : object->_groups) {
             if (is_authorized_for_host_group(_mc->groupAuthorization(), hg,

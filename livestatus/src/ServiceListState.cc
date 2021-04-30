@@ -25,9 +25,8 @@ int32_t ServiceListState::getValueFromServices(
     const value_type &svcs, const contact *auth_user) {
     int32_t result = 0;
 #ifdef CMC
-    (void)service_auth;
     for (const auto &svc : svcs) {
-        if (auth_user == nullptr || svc->hasContact(auth_user)) {
+        if (is_authorized_for_svc(service_auth, auth_user, svc)) {
             const auto *state = svc->state();
             update(logictype, static_cast<ServiceState>(state->_current_state),
                    static_cast<ServiceState>(state->_last_hard_state),

@@ -244,7 +244,7 @@ bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     // If we have an AuthUser, suppress entries for messages with hosts that do
     // not exist anymore.
     return lr->hst == nullptr  //
-               ? ctc == nullptr || rowWithoutHost(lr)
+               ? ctc == no_auth_user() || rowWithoutHost(lr)
                : lr->svc == nullptr
                      ? is_authorized_for_hst(ctc, lr->hst)
                      : is_authorized_for_svc(core()->serviceAuthorization(),

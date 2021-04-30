@@ -16,7 +16,7 @@ int32_t HostListState::operator()(const value_type &hsts,
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
-        if (auth_user == nullptr || hst->hasContact(auth_user)) {
+        if (is_authorized_for_hst(auth_user, hst)) {
             const auto *state = hst->state();
             auto svcs = ServiceListState::value_type(hst->_services.size());
             for (const auto &s : hst->_services) {

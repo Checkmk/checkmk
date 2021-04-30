@@ -10,8 +10,10 @@
 
 #include "ListFilter.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include <unordered_set>
@@ -20,9 +22,6 @@
 #include "LogEntry.h"
 #include "Service.h"
 #include "State.h"
-#else
-#include "MonitoringCore.h"
-#include "auth.h"
 #endif
 
 void ServiceGroupMembersColumn::output(
@@ -91,10 +90,10 @@ std::vector<ServiceGroupMembersColumn::Entry>
 ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *p = columnData<Host::services_t>(row)) {
         for (const auto &svc : *p) {
-            if (auth_user == nullptr || svc->hasContact(auth_user)) {
+            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+                                      svc.get())) {
                 entries.emplace_back(
                     svc->host()->name(), svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),

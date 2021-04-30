@@ -249,7 +249,7 @@ void TableEventConsole::answerQuery(Query *query) {
 
 bool TableEventConsole::isAuthorizedForEvent(Row row,
                                              const contact *ctc) const {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
     // TODO(sp) Remove evil casts below.

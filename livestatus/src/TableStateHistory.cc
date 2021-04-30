@@ -893,7 +893,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
 bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
     const auto *entry = rowData<HostServiceState>(row);
     return entry->_host == nullptr  // TODO(sp): Can this ever happen???
-               ? ctc == nullptr
+               ? ctc == no_auth_user()
                : entry->_service == nullptr
                      ? is_authorized_for_hst(ctc, entry->_host)
                      : is_authorized_for_svc(core()->serviceAuthorization(),

@@ -81,7 +81,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_innovaphone': [
         '--debug', '--verbose', '--vcrtrace', 'TRACEFILE', 'User', 'MyPass', 'Hostname'
     ],
-    'agent_netapp': ["address", "user", "password", "--no_counters", "volumes"],
+    'agent_netapp': ["address", "user", "password"],
 }
 
 

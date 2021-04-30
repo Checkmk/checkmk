@@ -7,17 +7,28 @@
 __version__ = "2.1.0i1"
 
 # This agent plugin has been built to collect information from SAP R/3 systems
-# using RFC calls. It needs the python module sapnwrfc (available in Checkmk
-# git at agents/sap/sapnwrfc) and the nwrfcsdk (can be downloaded from SAP
-# download portal) installed to be working. You can configure the agent plugin
+# using RFC calls. It needs the python module pyrfc.
+# pyrfc requires following libs (installable via pip3: Sphinx Cython setuptools-git
+# via apt or yum/dnf: gcc gcc-c++ python3-devel) (and the nwrfcsdk (can be downloaded from SAP
+# download portal) installed to be working. To install pyrfc export the SAPNWRFC_HOME:
+# "export SAPNWRFC_HOME=/usr/sap/nwrfcsdk". You can configure the agent plugin
 # using the configuration file /etc/check_mk/sap.cfg (a sample file can be
 # found in Checkmk git at agents/sap/sap.cfg) to tell it how to connect to
 # your SAP instance and which values you want to fetch from your system to be
 # forwarded to and checked by Checkmk.
 #
-# This current agent has been developed and tested with:
-#   python-sapnwrfc-0.19
+#   Tested Versions:
+#   pyrfc:
+#   2.1.0,2.4.0
+#   SAP nwrfc:
+#   750P_8-70002752
+
+# required params in sap.cfg:
+# 'ashost''sysnr' 'client' 'user' 'passwd' 'trace' 'loglevel' 'lang'
 #
+# create file /etc/ld.so.conf.d/pyrfc.conf and containing the path
+# "/usr/sap/nwrfcsdk/lib" and run "ldconfig" afterwards.
+
 # During development the "CCMS_Doku.pdf" was really helpful.
 
 import os
@@ -26,30 +37,14 @@ import time
 import fcntl
 import fnmatch
 import datetime
+
 try:
     from typing import Tuple, List, Dict, Union, Any
 except ImportError:
     pass
 
-# sapnwrfc needs to know where the libs are located. During
-# development the import failed, since the module did not
-# find the libraries. So we preload the library to have it
-# already loaded.
-try:
-    import sapnwrfc  # type: ignore[import]
-except ImportError as e:
-    if 'sapnwrfc.so' in str(e):
-        sys.stderr.write(
-            'Unable to find the library sapnwrfc.so. Maybe you need to put a file pointing to\n'
-            'the sapnwrfc library directory into the /etc/ld.so.conf.d directory. For example\n'
-            'create the file /etc/ld.so.conf.d/sapnwrfc.conf containing the path\n'
-            '"/usr/sap/nwrfcsdk/lib" and run "ldconfig" afterwards.\n')
-        sys.exit(1)
-    elif 'No module named sapnwrfc' in str(e):
-        sys.stderr.write("Missing the Python module sapnwfrc.\n")
-        sys.exit(1)
-    else:
-        raise
+import pyrfc
+
 
 # #############################################################################
 
@@ -114,7 +109,7 @@ local_cfg = {
     'passwd': '',
     'trace': '3',
     'loglevel': 'warn',
-    #'lang':     'EN',
+    'lang':     'EN',
     #'host_prefix': 'FOOBAR_',
 }
 
@@ -183,79 +178,41 @@ def node_path(tree, node, path=''):
     return path
 
 
-#
-# API ACCESS FUNCTIONS
-#
-
-
-def query(what, params, debug=False):
-    if conn:
-        fd = conn.discover(what)
-
-    if debug:
-        sys.stdout.write("Name: %s Params: %s\n" % (fd.name, fd.handle.parameters))
-        sys.stdout.write("Given-Params: %s\n" % params)
-
-    f = fd.create_function_call()
-    for param_key, val in params.items():
-        getattr(f, param_key)(val)
-    f.invoke()
-
-    ret = f.RETURN.value
-    if ret['TYPE'] == 'E':
-        sys.stderr.write("ERROR: %s\n" % ret['MESSAGE'].strip())
-
-    return f
-
-
 def login():
-    f = query(
-        'BAPI_XMI_LOGON', {
-            'EXTCOMPANY': 'Mathias Kettner GmbH',
-            'EXTPRODUCT': 'Check_MK SAP Agent',
-            'INTERFACE': 'XAL',
-            'VERSION': '1.0',
-        })
-    #sys.stdout.write("%s\n" % f.RETURN)
-    return f.SESSIONID.value
+    f = conn.call('BAPI_XMI_LOGON', EXTCOMPANY='Mathias Kettner GmbH',EXTPRODUCT= 'Check_MK SAP Agent',INTERFACE='XAL',VERSION='1.0',
+        )
+    #sys.stdout.write("%s\n" % f['RETURN'])
+    return f['SESSIONID']
 
 
 def logout():
-    query('BAPI_XMI_LOGOFF', {
-        'INTERFACE': 'XAL',
-    })
+    conn.call('BAPI_XMI_LOGOFF', INTERFACE='XAL')
 
 
 def mon_list(cfg_entry):
-    f = query("BAPI_SYSTEM_MON_GETLIST", {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-    })
+    f = conn.call("BAPI_SYSTEM_MON_GETLIST", EXTERNAL_USER_NAME=cfg_entry['user'])
     l = []
-    for mon in f.MONITOR_NAMES.value:
+    for mon in f['MONITOR_NAMES']:
         l.append((mon["MS_NAME"].rstrip(), mon["MONI_NAME"].rstrip()))
     return l
 
 
 #def ms_list( cfg ):
-#    f = query("BAPI_SYSTEM_MS_GETLIST", {
-#        'EXTERNAL_USER_NAME': cfg['user'],
-#    })
+#    f = conn.call('BAPI_SYSTEM_MS_GETLIST', EXTERNAL_USER_NAME=cfg['user'] )
 #    l = []
-#    for ms in f.MONITOR_SETS.value:
+#    for ms in f['MONITOR_SETS']':
 #        l.append(ms['NAME'].rstrip())
 #    return l
 
 
 def mon_tree(cfg_entry, ms_name, mon_name):
-    f = query(
-        "BAPI_SYSTEM_MON_GETTREE", {
-            'EXTERNAL_USER_NAME': cfg_entry['user'],
-            'MONITOR_NAME': {
+    f = conn.call(
+        "BAPI_SYSTEM_MON_GETTREE",EXTERNAL_USER_NAME= cfg_entry['user'],
+            MONITOR_NAME= {
                 "MS_NAME": ms_name,
                 "MONI_NAME": mon_name
-            },
-        })
-    tree = f.TREE_NODES.value
+            })
+    tree = f['TREE_NODES']
     for node in tree:
         node['PATH'] = ms_name + SEPARATOR + node_path(tree, node)
     return tree
@@ -274,29 +231,21 @@ def tid(node):
 
 
 def mon_perfdata(cfg_entry, node):
-    f = query('BAPI_SYSTEM_MTE_GETPERFCURVAL', {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-        'TID': tid(node),
-    })
-    value = f.CURRENT_VALUE.value['LASTPERVAL']
+    f = conn.call('BAPI_SYSTEM_MTE_GETPERFCURVAL', EXTERNAL_USER_NAME= cfg_entry['user'], TID= tid(node))
+    value = f['CURRENT_VALUE']['LASTPERVAL']
 
-    f = query('BAPI_SYSTEM_MTE_GETPERFPROP', {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-        'TID': tid(node),
-    })
-    if f.PROPERTIES.value['DECIMALS'] != 0:
-        value = (value + 0.0) / 10**f.PROPERTIES.value['DECIMALS']
-    uom = f.PROPERTIES.value['VALUNIT'].strip()
+    f = conn.call('BAPI_SYSTEM_MTE_GETPERFPROP', EXTERNAL_USER_NAME= cfg_entry['user'], TID= tid(node))
+    if f['PROPERTIES']['DECIMALS'] != 0:
+        value = (value + 0.0) / 10**f['PROPERTIES']['DECIMALS']
+    uom = f['PROPERTIES']['VALUNIT'].strip()
 
     return value, uom
 
 
 def mon_msg(cfg_entry, node):
-    f = query('BAPI_SYSTEM_MTE_GETSMVALUE', {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-        'TID': tid(node),
-    })
-    data = f.VALUE.value
+    f = conn.call('BAPI_SYSTEM_MTE_GETSMVALUE', EXTERNAL_USER_NAME= cfg_entry['user'],
+        TID= tid(node))
+    data = f['VALUE']
     dt = parse_dt(data['SMSGDATE'], data['SMSGTIME'])
     return (dt, data['MSG'].strip())
 
@@ -310,11 +259,9 @@ def parse_dt(d, t):
 
 
 def mon_alerts(cfg_entry, node):
-    f = query('BAPI_SYSTEM_MTE_GETALERTS', {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-        'TID': tid(node),
-    })
-    return f.ALERTS.value
+    f = conn.call('BAPI_SYSTEM_MTE_GETALERTS', EXTERNAL_USER_NAME= cfg_entry['user'],
+        TID= tid(node))
+    return f['ALERTS']
 
 
 def aid(alert):
@@ -329,13 +276,11 @@ def aid(alert):
 
 
 def alert_details(cfg_entry, alert):
-    f = query('BAPI_SYSTEM_ALERT_GETDETAILS', {
-        'EXTERNAL_USER_NAME': cfg_entry['user'],
-        'AID': aid(alert),
-    })
-    #prop  = f.PROPERTIES.value
-    state = f.VALUE.value
-    msg = f.XMI_EXT_MSG.value['MSG'].strip()
+    f = conn.call('BAPI_SYSTEM_ALERT_GETDETAILS', EXTERNAL_USER_NAME= cfg_entry['user'],
+        AID= aid(alert))
+    #prop  = f['PROPERTIES']
+    state = f['VALUE']
+    msg = f['XMI_EXT_MSG']['MSG'].strip()
     return state, msg
 
 
@@ -379,7 +324,7 @@ def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
 
 def check(cfg_entry):
     global conn
-    conn = sapnwrfc.base.rfc_connect(cfg_entry)
+    conn = pyrfc.Connection(ashost=cfg_entry['ashost'], sysnr=cfg_entry['sysnr'], client=cfg_entry['client'], user=cfg_entry['user'], passwd=cfg_entry['passwd'], loglevel=cfg_entry['loglevel'], lang=cfg_entry['lang'])
     login()
 
     logs = {}  # type: Dict[str, Dict[str, List]]
@@ -482,15 +427,10 @@ try:
         try:
             check(entry)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tOK\n' % entry['ashost'])
-        except sapnwrfc.RFCCommunicationError as e:
-            sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
-            sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnable to connect (%s)\n' %\
-                             (entry['ashost'], e))
-            processed_all = False
         except Exception as e:
             sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n' %\
-                             (entry['ashost'], e))
+                        (entry['ashost'], e))
             processed_all = False
 
     # Now check whether or not an old logfile needs to be removed. This can only

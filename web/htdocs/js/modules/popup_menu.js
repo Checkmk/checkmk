@@ -458,9 +458,11 @@ export function resize_mega_menu_popup(menu_popup) {
             menu_popup.style.width = "";
             mega_menu_last_topic_grow(topics);
             return;
-        } else {
+        } else if (utils.has_class(menu_popup, "single_column")) {
             topics.forEach(topic => utils.remove_class(topic, "single_column"));
             utils.remove_class(menu_popup, "single_column");
+            resize_mega_menu_popup(menu_popup);
+            return;
         }
         menu_popup.style.width = menu_width + "px";
     } else {

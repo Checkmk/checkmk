@@ -12,6 +12,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 from enum import Enum, unique
 
 import livestatus
+import json
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import (
@@ -1349,8 +1350,14 @@ class MenuSearchResultsRenderer:
             icon_mapping = self._get_icon_mapping(default_icons)
 
             for topic, search_results in results:
-                html.open_div(id_=topic, class_="topic")
+                max_num_displayed_results_exceeded = len(
+                    list(search_results)) >= self._max_num_displayed_results
+
                 icons = icon_mapping.get(topic, default_icons)
+                html.open_div(
+                    id_=topic,
+                    class_=["topic", "extendable" if max_num_displayed_results_exceeded else ""],
+                )
                 self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(list(search_results)):
@@ -1360,14 +1367,16 @@ class MenuSearchResultsRenderer:
                     )
 
                 # TODO: Remove this as soon as the index search does limit its search results
-                if len(list(search_results)) >= self._max_num_displayed_results:
-                    html.input(
-                        name="show_all_results",
-                        value=_("Show all results"),
-                        type_="button",
+                if max_num_displayed_results_exceeded:
+                    html.open_li(class_="show_all_items")
+                    html.open_a(
+                        href="",
                         onclick=
-                        f"cmk.search.on_click_show_all_results('{topic}', 'popup_menu_{self.search_type}');",
-                        class_="button")
+                        f"cmk.search.on_click_show_all_results({json.dumps(topic)}, 'popup_menu_{self.search_type}');",
+                    )
+                    html.write_text(_("Show all results"))
+                    html.close_a()
+                    html.close_li()
 
                 html.close_ul()
                 html.close_div()
@@ -1377,6 +1386,15 @@ class MenuSearchResultsRenderer:
     def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
         html.open_h2()
         html.div(class_="spacer", content="")
+
+        html.open_a(
+            class_="show_all_topics",
+            href="",
+            onclick=f"cmk.search.on_click_show_all_topics({json.dumps(topic)})",
+        )
+        html.icon(icon="collapse_arrow", title=_("Show all topics"))
+        html.close_a()
+
         if not config.user.get_attribute("icons_per_item"):
             html.icon(icons[0])
         else:
@@ -1385,7 +1403,10 @@ class MenuSearchResultsRenderer:
         html.close_h2()
 
     def _render_result(self, result, hidden=False):
-        html.open_li(class_="hidden" if hidden else "")
+        html.open_li(
+            class_="hidden" if hidden else "",
+            **{"data-extended": "false" if hidden else ""},
+        )
         html.open_a(
             href=result.url,
             target="main",

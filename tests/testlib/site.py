@@ -495,7 +495,7 @@ class Site:
                 'cmk.carbon': 7,
                 'cmk.core': 7,
                 'cmk.downtime': 7,
-                'cmk.helper': 7,
+                'cmk.helper': 6,
                 'cmk.livestatus': 7,
                 'cmk.notification': 7,
                 'cmk.rrd': 7,

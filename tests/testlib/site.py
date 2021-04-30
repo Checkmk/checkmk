@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
+import pytest
 
 from typing import Union
 
@@ -600,6 +601,10 @@ class Site:
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
+
+    def ensure_running(self):
+        if not self.is_running():
+            pytest.exit("Site was not running completely while it should. Enforcing stop.")
 
     def is_running(self):
         return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,

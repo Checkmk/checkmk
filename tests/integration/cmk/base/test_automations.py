@@ -23,6 +23,8 @@ import cmk.base.config as config
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-outer-name
+    site.ensure_running()
+
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",

@@ -104,6 +104,8 @@ def _execute_as_site_user(site, args):
         site.path("local/bin/pytest"),
         "-p",
         "no:cov",
+        "--log-cli-level=DEBUG",
+        "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
         "--junitxml",
         site.path("junit.xml"),
         "-T",

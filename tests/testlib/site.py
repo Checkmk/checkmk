@@ -256,14 +256,14 @@ class Site:
                 "sudo", "su", "-l", self.id, "-c",
                 pipes.quote(" ".join(pipes.quote(p) for p in cmd))
             ]))
-        sys.stdout.write("Executing: %s\n" % cmd_txt)
+        logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
 
     def omd(self, mode: str, *args: str) -> int:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
-        sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
+        logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         return subprocess.call(cmd)
 
     def path(self, rel_path):
@@ -743,7 +743,7 @@ class Site:
             start_again = True
             self.stop()
 
-        sys.stdout.write("Have livestatus port lock\n")
+        logger.info("Have livestatus port lock")
         self.set_config("LIVESTATUS_TCP", "on")
         self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
@@ -752,7 +752,7 @@ class Site:
         if start_again:
             self.start()
 
-        sys.stdout.write("After livestatus port lock\n")
+        logger.info("After livestatus port lock")
 
     def _gather_livestatus_port(self):
         if self.reuse and self.exists():

@@ -2357,7 +2357,7 @@ def test_register_sorter(monkeypatch):
 
 def test_get_needed_regular_columns(view):
     class SomeFilter(Filter):
-        def display(self):
+        def display(self, value):
             return
 
         def columns_for_filter_table(self, context):
@@ -2990,6 +2990,7 @@ def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
         return d
 
     live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(['NO_SITE', 'remote'])
     live.add_table('hosts', [_prepend('host_', {
         'accept_passive_checks': 0,
         'acknowledged': 0,
@@ -3045,4 +3046,4 @@ def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
         assert 'heute' in resp
         assert 'query=null' not in resp
-        assert '/domain-types/host/collections/all' in resp
+        assert str(resp).count('/domain-types/host/collections/all') == 1

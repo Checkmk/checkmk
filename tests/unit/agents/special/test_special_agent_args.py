@@ -79,7 +79,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
-    'agent_netapp': ["address", "user", "password", "--no_counters", "volumes"],
+    'agent_netapp': ["address", "user", "password"],
 }
 
 

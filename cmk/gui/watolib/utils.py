@@ -65,12 +65,9 @@ def convert_cgroups_from_tuple(value):
     if isinstance(value, dict):
         if "use_for_services" in value:
             return value
-
-        new_value = {
-            "use_for_services": False,
-        }
-        new_value.update(value)
-        return value
+        new_value = value.copy()
+        new_value.update({"use_for_services": False})
+        return new_value
 
     return {
         "groups": value[1],

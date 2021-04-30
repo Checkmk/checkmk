@@ -1,0 +1,14 @@
+Title: Fix AssertionError if escalation is used in flexible notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1619766836
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p4
+
+If flexible notifications with option "Restrict to nth to mth notification
+(escalation)" were used, notifications failed with an AssertionError in
+notify.log.

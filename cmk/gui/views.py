@@ -1845,11 +1845,11 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries):
+def _add_rest_api_menu_entries(view_renderer, queries: List[str]):
     from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
     from cmk.gui.plugins.openapi.utils import create_url
-    entries = []
-    for text_query in queries:
+    entries: List[PageMenuEntry] = []
+    for text_query in set(queries):
         if "\nStats:" in text_query:
             continue
         try:

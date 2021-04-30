@@ -6320,6 +6320,7 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         return d
 
     live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(['NO_SITE', 'remote'])
     live.add_table('hosts', [_prepend('host_', {
         'accept_passive_checks': 0,
         'acknowledged': 0,
@@ -6376,4 +6377,4 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
         assert 'heute' in resp
         assert 'query=null' not in resp
-        assert '/domain-types/host/collections/all' in resp
+        assert str(resp).count('/domain-types/host/collections/all') == 1

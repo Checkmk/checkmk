@@ -30,12 +30,12 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 
 def cmciii_container(location, variable_splitted):
-    container = [location] + variable_splitted[:-1]
-    if len(container) == 2:
-        container += [""]
-    if container[1].startswith("Phase"):
-        container = [container[0], ""] + container[1:]
-    return container
+    variable_part = variable_splitted[:-1]
+    if len(variable_part) == 1:
+        variable_part += [""]
+    if variable_part[0].startswith("Phase"):
+        variable_part = [""] + variable_part
+    return [location] + variable_part
 
 
 def sensor_type(container):

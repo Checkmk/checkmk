@@ -30,6 +30,8 @@ def backup_path_fixture(tmp_path):
 
 @pytest.fixture(name="test_cfg", scope="function")
 def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=redefined-outer-name
+    site.ensure_running()
+
     cfg = {
         'jobs': {
             'testjob': {
@@ -94,6 +96,8 @@ def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=re
     #
     site.delete_file("etc/check_mk/backup_keys.mk")
     site.delete_file("etc/check_mk/backup.mk")
+
+    site.ensure_running()
 
 
 def _execute_backup(site, job_id="testjob"):

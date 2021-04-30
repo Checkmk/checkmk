@@ -729,6 +729,8 @@ class CMKWebSession:
         return result
 
     def activate_changes(self, mode=None, allow_foreign_changes=None, relevant_sites=None):
+        self.site.ensure_running()
+
         request = {}
         if not relevant_sites:
             relevant_sites = [self.site]
@@ -773,6 +775,8 @@ class CMKWebSession:
         for site in relevant_sites:
             if site.id in involved_sites:
                 site.wait_for_core_reloaded(old_t[site.id])
+
+        self.site.ensure_running()
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(

@@ -56,6 +56,6 @@ void TableServicesByGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
-    const auto *svc = rowData<service_and_group>(row)->svc;
-    return is_authorized_for_svc(core()->serviceAuthorization(), ctc, svc);
+    return is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                 rowData<service_and_group>(row)->svc);
 }

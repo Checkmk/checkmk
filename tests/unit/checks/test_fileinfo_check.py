@@ -355,7 +355,6 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
         [(3, 'No group pattern found.')],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_patterns_host_extra_conf(item, host_rulesets, expected_result):
     fileinfo_groups_check = Check('fileinfo.groups')
 

@@ -7292,9 +7292,6 @@ msgstr "% utilizare"
 msgid "CPU Model"
 msgstr ""
 
-msgid "CPU Related Inventory of all Hosts"
-msgstr ""
-
 msgid "CPU Time"
 msgstr ""
 
@@ -7310,6 +7307,10 @@ msgstr ""
 
 msgid "CPU in percent"
 msgstr ""
+
+#, fuzzy
+msgid "CPU inventory of all hosts"
+msgstr " pentru hostul %s"
 
 #, fuzzy
 msgid "CPU load"

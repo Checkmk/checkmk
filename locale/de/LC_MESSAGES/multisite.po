@@ -7717,9 +7717,6 @@ msgstr "verwendeter CPU Speicher"
 msgid "CPU Model"
 msgstr "CPU Modell"
 
-msgid "CPU Related Inventory of all Hosts"
-msgstr "CPU-bezogene Inventur aller Hosts"
-
 msgid "CPU Time"
 msgstr "CPU-Zeit"
 
@@ -7734,6 +7731,10 @@ msgstr "CPU-Leerlaufzeit"
 
 msgid "CPU in percent"
 msgstr "CPU in Prozent"
+
+#, fuzzy
+msgid "CPU inventory of all hosts"
+msgstr "CPU-bezogene Inventur aller Hosts"
 
 #, fuzzy
 msgid "CPU load"

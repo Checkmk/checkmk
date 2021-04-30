@@ -430,7 +430,7 @@ try:
         except Exception as e:
             sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
             sys.stdout.write('<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n' %\
-                        (entry['ashost'], e))
+                            (entry['ashost'], e))
             processed_all = False
 
     # Now check whether or not an old logfile needs to be removed. This can only

@@ -48,7 +48,11 @@ def get_ip_address_human_readable(ip_addr):
     """
     u'\xc2;xJ'  ->  '194.59.120.74'
     """
-    ip_addr_binary = bytes(ord(x) for x in ip_addr)
+    try:
+        ip_addr_binary = bytes(ord(x) for x in ip_addr)
+    except ValueError:
+        return "-"
+
     if len(ip_addr_binary) == 4:
         return socket.inet_ntop(socket.AF_INET, ip_addr_binary)
     if len(ip_addr_binary) == 16:

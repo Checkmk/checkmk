@@ -1179,6 +1179,10 @@ class TimeperiodValuespec(ValueSpec):
         super(TimeperiodValuespec, self)._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
+        super().validate_datatype(value, varprefix)
+        self._get_used_valuespec(value).validate_datatype(value, varprefix)
+
     def _get_timeperiod_valuespec(self):
         return Dictionary(
             elements=[
@@ -1272,8 +1276,8 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
                     if rulespec.title)
 
     @staticmethod
-    def is_affected_by_change(_change_action_name: str) -> bool:
-        return False
+    def is_affected_by_change(change_action_name: str) -> bool:
+        return change_action_name.endswith("-package")
 
     @property
     def is_localization_dependent(self) -> bool:

@@ -121,6 +121,7 @@ class WtoolsKillProcessTreeFixture : public ::testing::Test {
 protected:
     void SetUp() override {
         std::vector<std::string> names;
+        temp_fs = tst::TempCfgFs::Create();
 
         wtools::ScanProcessList([&names](const PROCESSENTRY32& entry) -> auto {
             names.emplace_back(wtools::ToUtf8(entry.szExeFile));
@@ -147,9 +148,9 @@ protected:
     void TearDown() override {}
 
     uint32_t startProcessTree() {
-        auto exe_a = temp_dir / "a.cmd";
-        auto exe_b = temp_dir / "b.cmd";
-        auto exe_c = temp_dir / "c.cmd";
+        auto exe_a = temp_dir() / "a.cmd";
+        auto exe_b = temp_dir() / "b.cmd";
+        auto exe_c = temp_dir() / "c.cmd";
 
         tst::CreateTextFile(exe_a, "@echo start\n@call " + exe_b.u8string());
         tst::CreateTextFile(exe_b, "@echo start\n@call " + exe_c.u8string());
@@ -200,8 +201,8 @@ protected:
         return {proc_name, parent_process_id};
     }
 
-    tst::TempCfgFs temp_fs;
-    std::filesystem::path temp_dir{temp_fs.data()};
+    tst::TempCfgFs::ptr temp_fs;
+    std::filesystem::path temp_dir() { return temp_fs->data(); };
 };
 
 TEST_F(WtoolsKillProcessTreeFixture, Integration) {
@@ -308,7 +309,8 @@ TEST(Wtools, Utf16Utf8) {
 std::vector<int> TsValues = {
     8154,  // windows 10, dev machine
     2066,  // windows server, build machine
-    5090   // windows 10, dev machine, late build
+    5090,  // windows 10, dev machine, late build
+    6324   // windows 10, 20h2
 };
 
 TEST(Wtools, Perf) {

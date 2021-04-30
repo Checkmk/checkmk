@@ -22,7 +22,7 @@ def test_check_levels_predictive_default_render_func(mocker):
         description="unittest-service-description",
         parameters={},
     )
-    with current_host("unittest", write_state=False), current_service(service):
+    with current_host("unittest"), current_service(service):
         result = next(utils.check_levels_predictive(42.42, metric_name="metric_name", levels={}))
 
     assert isinstance(result, Result)

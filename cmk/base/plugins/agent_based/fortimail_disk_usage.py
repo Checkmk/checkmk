@@ -14,12 +14,12 @@ from .utils.fortinet import DETECT_FORTIMAIL
 Section = Mapping[str, float]
 
 
-def parse_fortimail_disk_usage(string_table: StringTable) -> Section:
+def parse_fortimail_disk_usage(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortimail_disk_usage([["13"]])
     {'disk_usage': 13.0}
     """
-    return {"disk_usage": float(string_table[0][0])}
+    return {"disk_usage": float(string_table[0][0])} if string_table else None
 
 
 def discover_fortimail_disk_usage(section: Section) -> DiscoveryResult:

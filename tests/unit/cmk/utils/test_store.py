@@ -564,3 +564,161 @@ def test_non_blocking_decorated_locking_while_already_locked(locked_file, path_t
         assert result is False
         assert store.have_lock(path) is False
     assert store.have_lock(path) is False
+
+
+@pytest.mark.parametrize("text, storage_format", [
+    ("standard", store.StorageFormat.STANDARD),
+    ("raw", store.StorageFormat.RAW),
+])
+def test_storage_format(text, storage_format):
+    assert store.StorageFormat(text) == storage_format
+    assert str(storage_format) == text
+    assert store.StorageFormat.from_str(text) == storage_format
+
+
+@pytest.mark.parametrize("storage_format, expected_extension", [
+    (store.StorageFormat.STANDARD, ".mk"),
+    (store.StorageFormat.RAW, ".cfg"),
+])
+def test_storage_format_extension(storage_format, expected_extension):
+    assert storage_format.extension() == expected_extension
+
+
+def test_storage_format_other():
+    assert store.StorageFormat("standard") != store.StorageFormat.RAW
+    with pytest.raises(KeyError):
+        store.StorageFormat.from_str("bad")
+
+
+@pytest.mark.parametrize("storage_format, expected_file", [
+    (store.StorageFormat.STANDARD, "hosts.mk"),
+    (store.StorageFormat.RAW, "hosts.cfg"),
+])
+def test_storage_host_file(storage_format, expected_file):
+    assert storage_format.hosts_file() == expected_file
+
+
+@pytest.mark.parametrize("file_path, valid_for_standard, valid_for_raw", [
+    ("/wato/the/aaa/hosts.mk", True, False),
+    ("wato/the/aaa/hosts.mk", False, False),
+    ("/wato/the/aaa/hosts.m", False, False),
+    ("/wato/the/aaa/hosts.cfg", False, True),
+    ("wato/the/aaa/hosts.cfg", False, False),
+    ("/wato/the/aaa/hosts.c", False, False),
+])
+def test_storage_is_hosts_config(file_path, valid_for_standard, valid_for_raw):
+    assert store.StorageFormat.STANDARD.is_hosts_config(file_path) == valid_for_standard
+    assert store.StorageFormat.RAW.is_hosts_config(file_path) == valid_for_raw
+
+
+_raw_storage_loader_test_data = """{
+    'all_hosts': ['0699z0imsnpsl01', '0699z0imsnpsl02'],
+    'host_tags': {
+        '0699z0imsnpsl01': {
+            'site': 'heute',
+            'address_family': 'ip-v4-only',
+            'ip-v4': 'ip-v4',
+            'agent': 'cmk-agent',
+            'tcp': 'tcp',
+            'piggyback': 'auto-piggyback',
+            'snmp_ds': 'no-snmp',
+            'criticality': 'prod',
+            'networking': 'lan'
+        },
+        '0699z0imsnpsl02': {
+            'site': 'heute',
+            'address_family': 'ip-v4-only',
+            'ip-v4': 'ip-v4',
+            'agent': 'cmk-agent',
+            'tcp': 'tcp',
+            'piggyback': 'auto-piggyback',
+            'snmp_ds': 'no-snmp',
+            'criticality': 'prod',
+            'networking': 'lan'
+        }
+    },
+    'host_labels': {
+        '0699z0imsnpsl01': {
+            'hw': 'test1'
+        },
+        '0699z0imsnpsl02': {
+            'hw': 'test2'
+        }
+    },
+    'attributes': {
+        'ipaddresses': {
+            '0699z0imsnpsl01': '10.211.162.80',
+            '0699z0imsnpsl02': '10.211.162.81'
+        },
+    },
+    'extra_host_conf': {
+        'alias': [(u'699 Radius Server 02', ['0699z0imsnpsl02']),
+                  (u'699 Radius Server 01', ['0699z0imsnpsl01'])],
+        '_aldi_country_id': [(u'699', ['0699z0imsnpsl02']), (u'699', ['0699z0imsnpsl01'])]
+    },
+    'explicit_host_conf': {
+        'alias': {
+            '0699z0imsnpsl01': '699 Radius Server 01',
+            '0699z0imsnpsl02': '699 Radius Server 02'
+        },
+    },
+    'contact_groups': {},
+    'host_attributes': {
+        '0699z0imsnpsl01': {
+            'alias': '699 Radius Server 01',
+            'ipaddress': '10.211.162.80',
+            'meta_data': {
+                'created_at': 1619089977.0,
+                'created_by': 'cmkadmin',
+                'updated_at': 1619094577.9326406
+            },
+            'labels': {
+                'hw': 'test1'
+            },
+            'tag_agent': 'cmk-agent',
+            'tag_snmp_ds': 'no-snmp',
+            'tag_criticality': 'prod'
+        },
+        '0699z0imsnpsl02': {
+            'alias': '699 Radius Server 02',
+            'ipaddress': '10.211.162.81',
+            'meta_data': {
+                'created_at': 1619089977.0,
+                'created_by': 'cmkadmin',
+                'updated_at': 1619094577.9345043
+            },
+            'labels': {
+                'hw': 'test2'
+            },
+            'tag_agent': 'cmk-agent',
+            'tag_snmp_ds': 'no-snmp',
+            'tag_criticality': 'prod'
+        }
+    },
+}
+"""
+
+
+@pytest.fixture
+def loader():
+    loader = store.RawStorageLoader()
+    loader._data = _raw_storage_loader_test_data
+    loader.parse()
+    loader.apply({})
+    return loader
+
+
+def test_raw_storage_loader(loader):
+    hosts = loader._all_hosts()
+    assert hosts == ['0699z0imsnpsl01', '0699z0imsnpsl02']
+    ips = loader._attributes()["ipaddresses"]
+    host_conf_alias = loader._explicit_host_conf()["alias"]
+    for h in hosts:
+        assert isinstance(loader._host_tags()[h], dict)
+        assert isinstance(loader._host_labels()[h], dict)
+        assert isinstance(loader._host_attributes()[h], dict)
+        assert isinstance(ips[h], str)
+        assert isinstance(host_conf_alias[h], str)
+
+    assert isinstance(loader._extra_host_conf()['alias'], list)
+    assert isinstance(loader._extra_host_conf()['_aldi_country_id'], list)

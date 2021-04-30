@@ -7,6 +7,7 @@
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
+from cmk.gui.exceptions import MKUserError
 from tools import compare_html  # type: ignore[import]
 
 
@@ -67,3 +68,21 @@ def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
         HTML(
             u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.de/cms_graphing.html#rrds\" target=\"_blank\">RRDs</a></div>"
         ))
+
+
+def test_user_error(register_builtin_html):
+    with html.plugged():
+        html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
+        c = html.drain()
+    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
+
+
+def test_add_user_error(register_builtin_html):
+    assert not html.has_user_errors()
+    html.add_user_error(None, "asd <script>alert(1)</script> <br> <b>")
+    assert html.has_user_errors()
+
+    with html.plugged():
+        html.show_user_errors()
+        c = html.drain()
+    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"

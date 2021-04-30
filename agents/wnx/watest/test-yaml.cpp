@@ -725,12 +725,11 @@ TEST(AgentConfig, WorkConfig) {
     using namespace std;
     using namespace cma::cfg;
 
-    tst::TempCfgFs test_fs;
-    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
-    auto cfg = cma::cfg::GetLoadedConfig();
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    const auto cfg = cma::cfg::GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 
-    cfg = cma::cfg::GetLoadedConfig();
     auto sz = cfg.size();
     EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
     using namespace cma::cfg;
@@ -852,24 +851,32 @@ TEST(AgentConfig, WorkConfig) {
 
     // modules
     {
-        auto modules_table = GetLoadedConfig()[groups::kModules];
+        auto modules_table = cfg[groups::kModules];
         SCOPED_TRACE("");
-        tst::CheckYaml(modules_table,
-                       {
-                           // name, type
-                           {vars::kEnabled, YAML::NodeType::Scalar},
-                           {vars::kModulesPython, YAML::NodeType::Scalar},
-                           {vars::kModulesTable, YAML::NodeType::Sequence}
-                           //
-                       });
+        tst::CheckYaml(
+            modules_table,
+            {
+                // name, type
+                {vars::kEnabled, YAML::NodeType::Scalar},
+                {vars::kModulesPython, YAML::NodeType::Scalar},
+                {vars::kModulesQuickReinstall, YAML::NodeType::Scalar},
+                {vars::kModulesTable, YAML::NodeType::Sequence}
+                //
+            });
     }
 
+    // modules values
+    {
+        EXPECT_TRUE(
+            cfg[groups::kModules][vars::kModulesQuickReinstall].as<bool>());
+    }
+
+    // modules table
     {
         auto table =
             GetArray<YAML::Node>(groups::kModules, vars::kModulesTable);
         EXPECT_EQ(table.size(), 1);
-        auto modules_table =
-            GetLoadedConfig()[groups::kModules][vars::kModulesTable];
+        auto modules_table = cfg[groups::kModules][vars::kModulesTable];
         auto pos = 0;
         for (auto entry : modules_table) {
             EXPECT_EQ(entry[vars::kModulesName].as<std::string>(),

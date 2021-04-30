@@ -102,8 +102,8 @@ def render_user_notification_table(what: str) -> None:
                 onclick=onclick,
             )
 
-            table.text_cell(_("Message"), message)
-            table.text_cell(_("Date"), datetime)
+            table.cell(_("Message"), message)
+            table.cell(_("Date"), datetime)
 
     html.close_div()
 

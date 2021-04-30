@@ -107,21 +107,20 @@ class FilterText(Filter):
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
 
-    def filter(self, infoname):
-        current_value = self._current_value()
+    def _negate_symbol(self) -> str:
+        return "!" if self.negateable and html.get_checkbox(self.htmlvars[1]) else ""
 
-        if self.negateable and html.get_checkbox(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
+    def _filter(self, current_value: str) -> str:
+        return "Filter: %s %s%s %s\n" % (
+            self.column,
+            self._negate_symbol(),
+            self.op,
+            livestatus.lqencode(current_value),
+        )
 
-        if current_value:
-            return "Filter: %s %s%s %s\n" % (
-                self.column,
-                negate,
-                self.op,
-                livestatus.lqencode(current_value),
-            )
+    def filter(self, infoname: Any) -> str:
+        if current_value := self._current_value():
+            return self._filter(current_value)
         return ""
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
@@ -247,21 +246,12 @@ class FilterHostnameOrAlias(FilterText):
             description=_("Search field allowing regular expressions and partial matches"),
         )
 
-    def filter(self, infoname):
-        current_value = self._current_value()
-
-        if self.negateable and html.get_checkbox(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
-
-        if current_value:
-            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
-                negate,
-                self.op,
-                livestatus.lqencode(current_value),
-            ) * 2)
-        return ""
+    def _filter(self, current_value: str) -> str:
+        return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
+            self._negate_symbol(),
+            self.op,
+            livestatus.lqencode(current_value),
+        ) * 2)
 
 
 class FilterIPAddress(Filter):
@@ -1704,8 +1694,18 @@ filter_registry.register(
         op="~~",
     ))
 
+
+class FilterLogContactName(FilterText):
+    """Special filter class to correctly filter the column contact_name from the log table. This
+    list contains comma-separated contact names (user ids), but it is of type string."""
+    def filter(self, infoname: Any):
+        if current_value := self._current_value():
+            return self._filter("(,|^)" + current_value.replace(".", "\\.") + "(,|$)")
+        return ""
+
+
 filter_registry.register(
-    FilterText(
+    FilterLogContactName(
         ident="log_contact_name",
         title=_l("Log: contact name (exact match)"),
         sort_index=260,
@@ -1713,7 +1713,7 @@ filter_registry.register(
         info="log",
         column="log_contact_name",
         htmlvar="log_contact_name",
-        op="=",
+        op="~",
     ))
 
 filter_registry.register(
@@ -3144,12 +3144,18 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
 
         # check if sites are missing
         if not unique_sites_from_services.issuperset(connected_sites):
+            manual_ref = html.resolve_help_text_macros(
+                _("Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for more details."
+                 ))
+            if len(connected_sites) == 1:
+                raise MKMissingDataError(
+                    _("As soon as you add your Checkmk server to the monitoring, a graph showing "
+                      "the history of your host problems will appear here. ") + manual_ref)
             raise MKMissingDataError(
-                _("Add all your Checkmk servers as monitored hosts to Checkmk to render this "
-                  "graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
-                  "the following sites: %s. Either the corresponding Checkmk servers are not "
-                  "monitored at all, or you filtered them out by applying site filters.") %
-                ", ".join(connected_sites - unique_sites_from_services))
+                _("As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
+                  "the history of your host problems will appear here. Currently the following "
+                  "Checkmk sites are not monitored: %s. " %
+                  ", ".join(connected_sites - unique_sites_from_services)) + manual_ref)
 
         # there are duplicate sites --> filter by PID
         rows_filtered = []

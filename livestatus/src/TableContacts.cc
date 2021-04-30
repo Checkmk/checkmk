@@ -5,14 +5,14 @@
 
 #include "TableContacts.h"
 
-#include <algorithm>
+// We keep <algorithm> for std::transform but IWYU wants it gone.
+#include <algorithm>  // IWYU pragma: keep
 #include <cstdint>
 #include <iosfwd>
 #include <iterator>
 #include <memory>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "AttributeListLambdaColumn.h"

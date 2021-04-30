@@ -26,7 +26,8 @@ TEST(SectionProviderSpool, Construction) {
 
 TEST(SectionProviderSpool, BaseApiIntegration) {
     namespace fs = std::filesystem;
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
+
     fs::path dir = cma::cfg::GetSpoolDir();
     EXPECT_TRUE(cma::provider::IsDirectoryValid(dir));
     EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "<GTEST>"));
@@ -36,24 +37,24 @@ TEST(SectionProviderSpool, BaseApiIntegration) {
 
     const fs::path spool_dir{cfg::dirs::kSpool};
 
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "0", ""));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "0", ""));
     EXPECT_FALSE(cma::provider::IsSpoolFileValid(dir / "0"));
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "1", ""));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "1", ""));
     ::Sleep(1000);
     EXPECT_FALSE(cma::provider::IsSpoolFileValid(dir / "1"));
 
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "99", ""));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "99", ""));
     EXPECT_TRUE(cma::provider::IsSpoolFileValid(dir / "99"));
 
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "99.z", ""));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "99.z", ""));
     EXPECT_TRUE(cma::provider::IsSpoolFileValid(dir / "99.z"));
     EXPECT_FALSE(cma::provider::IsSpoolFileValid(dir / "99xxx.z"));
 }
 
 TEST(SectionProviderSpool, FullIntegration) {
     namespace fs = std::filesystem;
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     auto cfg = cfg::GetLoadedConfig();
     cfg[cfg::groups::kGlobal][cfg::vars::kSectionsEnabled] =
         YAML::Load("[spool]");
@@ -63,11 +64,11 @@ TEST(SectionProviderSpool, FullIntegration) {
     const fs::path spool_dir{cfg::dirs::kSpool};
 
     // assume three files in the spool folder, one of them is expired
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "a.txt", "aaaa\nbbbb\n"));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "a.txt", "aaaa\nbbbb\n"));
 
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "0",  // <-- expired!
-                                       "0000\n0000\n\n\n\n\n"));
-    ASSERT_TRUE(temp_fs.createDataFile(spool_dir / "99", "123456\n9999\n"));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "0",  // <-- expired!
+                                        "0000\n0000\n\n\n\n\n"));
+    ASSERT_TRUE(temp_fs->createDataFile(spool_dir / "99", "123456\n9999\n"));
 
     tst::EnableSectionsNode(cma::section::kSpool, true);
 

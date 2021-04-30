@@ -16,6 +16,8 @@
 #include "tools/_process.h"
 #include "tools/_tgt.h"
 
+namespace fs = std::filesystem;
+
 template <class T>
 std::string type_name() {
     typedef typename std::remove_reference<T>::type TR;
@@ -164,28 +166,23 @@ TEST(CvtTest, ToYaml) {
 }
 
 TEST(CvtTest, LogFilesSection) {
-    namespace fs = std::filesystem;
-    fs::path test_file = cma::cfg::GetUserDir();
-    test_file /= "check_mk.logfiles.test.ini";
+    auto test_file = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
+                     "check_mk.logfiles.test.ini";
     Parser p;
     p.prepare();
     p.readIni(test_file, false);
 
     auto yaml = p.emitYaml();
-    yaml[groups::kGlobal][vars::kEnabled] =
-        true;  // mandatory, otherwise file to be disabled
+    yaml[groups::kGlobal][vars::kEnabled] = true;
     EXPECT_TRUE(yaml.IsDefined() && yaml.IsMap());
-    // EXPECT_EQ(yaml[kGlobal][kEnabled])
-    fs::path temp_file = cma::cfg::GetTempDir();
+
+    fs::path temp_file = tst::GetTempDir();
     temp_file /= "temp.check.yml";
     std::ofstream ofs(temp_file.u8string());
     ofs << yaml;
     ofs.close();
-    OnStart(AppType::test, temp_file.wstring());
-    std::error_code ec;
-    ON_OUT_OF_SCOPE(fs::remove(temp_file, ec); OnStart(AppType::test));
     {
-        auto ya = cma::cfg::GetLoadedConfig();
+        auto ya = YAML::LoadFile(temp_file.u8string());
         ASSERT_TRUE(ya[groups::kLogFiles].IsMap());
         auto logfiles = ya[groups::kLogFiles];
         ASSERT_TRUE(logfiles.IsMap());

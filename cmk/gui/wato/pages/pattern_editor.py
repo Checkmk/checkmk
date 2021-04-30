@@ -269,7 +269,7 @@ class ModePatternEditor(WatoMode):
                         cls = 'state%d' % logwatch.level_state(state)
                     table.cell(_('State'), html.render_span(logwatch.level_name(state)), css=cls)
                     table.cell(_('Pattern'), html.render_tt(pattern))
-                    table.cell(_('Comment'), html.render_text(comment))
+                    table.cell(_('Comment'), comment)
                     table.cell(_('Matched line'), disp_match_txt)
 
                 table.row(fixed=True)

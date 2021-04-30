@@ -12,7 +12,6 @@ import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
@@ -170,8 +169,8 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), escaping.escape_attribute(name))
-        table.cell(_("Alias"), escaping.escape_attribute(group['alias']))
+        table.cell(_("Name"), name)
+        table.cell(_("Alias"), group['alias'])
 
     def page(self) -> None:
         if not self._groups:

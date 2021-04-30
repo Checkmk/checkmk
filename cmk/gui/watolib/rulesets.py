@@ -1135,7 +1135,7 @@ def service_description_to_condition(service_description: str) -> Dict[str, str]
 
     >>> service_description_to_condition("abc")
     {'$regex': 'abc$'}
-    >>> service_description_to_condition("a / b / c \ d \ e")
+    >>> service_description_to_condition("a / b / c \\ d \\ e")
     {'$regex': 'a / b / c \\\\ d \\\\ e$'}
     """
     return {"$regex": "%s$" % escape_regex_chars(service_description)}

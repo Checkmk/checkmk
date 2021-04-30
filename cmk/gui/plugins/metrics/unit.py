@@ -98,8 +98,8 @@ unit_info["1/s"] = {
     "title": _("per second"),
     "description": _("Frequency (displayed in events/s)"),
     "symbol": _("/s"),
-    "render": lambda v: "%s%s" % (cmk.utils.render.drop_dotzero(v), _("/s")),
-    "js_render": "v => cmk.number_format.drop_dotzero(v) + '/s'",
+    "render": lambda v: "%s%s" % (cmk.utils.render.scientific(v, 2), _("/s")),
+    "js_render": "v => cmk.number_format.scientific(v, 2) + '/s'",
 }
 
 unit_info["hz"] = {

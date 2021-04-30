@@ -1,0 +1,5 @@
+INFO: starting new backup job: vzdump 100 --compress zstd --storage local --node pve-dc15-001 --mode snapshot --remove 0
+ERROR: Backup of VM 100 failed - There is a max backup limit of 1 enforced by the target storage or the vzdump parameters. Either increase the limit or delete old backup(s).
+INFO: Failed at 2021-04-10 12:19:30
+INFO: Backup job finished with errors
+TASK ERROR: job errors

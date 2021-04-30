@@ -128,13 +128,17 @@ def parse_arguments(argv):
                                      formatter_class=Formatter,
                                      epilog=epilog.lstrip())
     parser.add_argument(
-        dest='host_address',
-        type=str,
+        'host_address',
         help='Hostname or IP-address of NetApp Filer.',
     )
-
-    parser.add_argument('-u', '--user', help='Username for NetApp login')
-    parser.add_argument('-s', '--secret', help='Secret/Password for NetApp login')
+    parser.add_argument(
+        'user',
+        help='Username for NetApp login',
+    )
+    parser.add_argument(
+        'secret',
+        help='Secret/Password for NetApp login',
+    )
 
     parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
 
@@ -148,9 +152,8 @@ def parse_arguments(argv):
               'to each individual subquery. (Default is %(default)s seconds)'),
     )
     parser.add_argument(
-        '--nocounters',
-        dest='no_counters',
-        action='append',
+        '--no_counters',
+        nargs='*',
         type=str,
         default=[],
         choices=['volumes'],
@@ -1056,13 +1059,16 @@ def process_clustermode(args, server, netapp_mode, licenses):
     snapmirror_info = query(args, server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
+        # NOTE: destination-location is used as the item name for clustermode snapvault services, as the destination
+        # volume may not be unique. For 7mode installations, this has not been implemented, as we do not have a test case
+        # and we do not know whether the issue exists.
         print(
             format_config(snapmirror_info,
                           "snapvault",
                           "destination-volume",
                           config_report=[
                               "destination-volume-node", "policy", "mirror-state", "source-vserver",
-                              "lag-time", "relationship-status"
+                              "lag-time", "relationship-status", "destination-location"
                           ],
                           config_rename={
                               "destination-volume-node": "destination-system",

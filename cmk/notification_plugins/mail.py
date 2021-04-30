@@ -845,7 +845,7 @@ class BulkEmailContent(EmailContent):
             from_address=utils.format_address(
                 context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
                 # TODO: Correct context parameter???
-                context.get("PARAMETER_FROM", utils.default_from_address())),
+                context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
             reply_to=utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
                                           context.get("PARAMETER_REPLY_TO", u"")),
             content_txt=content_txt,

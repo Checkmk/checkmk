@@ -116,7 +116,7 @@ class BIStructureFetcher:
         for row in self._sites_callback.query(service_query, list(only_sites.keys())):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
-        site_data: Dict[str, Dict] = {}
+        site_data: Dict[str, Dict] = {x: {} for x in only_sites.keys()}
         for site, host_name, host_tags, host_labels, host_childs, host_parents, host_alias, host_filename in host_rows:
             services = {
                 description: (set(tags), labels)
@@ -125,11 +125,11 @@ class BIStructureFetcher:
 
             # This data will be serialized to disc
             # Named tuples/dicts will be used later on when the data gets processed
-            site_data.setdefault(site, {})[host_name] = (
+            site_data[site][host_name] = (
                 site,
                 set(host_tags.values()),
                 host_labels,
-                host_filename.rstrip("/hosts.mk"),
+                str(Path(host_filename).parent),  # remove /hosts{.mk|.cfg}
                 services,
                 tuple(host_childs),
                 tuple(host_parents),

@@ -55,7 +55,8 @@ def json_identity(data):
 
 def clone_file_cache(file_cache):
     return type(file_cache)(
-        path=file_cache.path,
+        file_cache.hostname,
+        base_path=file_cache.base_path,
         max_age=file_cache.max_age,
         disabled=file_cache.disabled,
         use_outdated=file_cache.use_outdated,
@@ -67,12 +68,19 @@ class TestFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, NoCache, SNMPFileCache])
     def file_cache(self, request):
         return request.param(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=False,
             simulation=True,
         )
+
+    def test_repr(self, file_cache):
+        assert isinstance(repr(file_cache), str)
+
+    def test_hash(self, file_cache):
+        assert isinstance(hash(file_cache), int)
 
     def test_deserialization(self, file_cache):
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
@@ -81,12 +89,13 @@ class TestFileCache:
 class TestNoCache:
     @pytest.fixture
     def path(self, tmp_path):
-        return tmp_path / "database"
+        return tmp_path
 
     @pytest.fixture
     def file_cache(self, path):
         return NoCache(
-            path=path,
+            "hostname",
+            base_path=path,
             max_age=999,
             disabled=False,
             use_outdated=False,
@@ -98,23 +107,27 @@ class TestNoCache:
         return AgentRawData(b"<<<check_mk>>>\nagent raw data")
 
     def test_write_and_read_is_noop(self, file_cache, agent_raw_data):
+        mode = Mode.DISCOVERY
+
         assert not file_cache.disabled
-        assert not file_cache.path.exists()
+        assert file_cache.make_path(mode) == Path(os.devnull)
 
-        file_cache.write(agent_raw_data)
+        file_cache.write(agent_raw_data, mode)
 
-        assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.make_path(mode) == Path(os.devnull)
+        assert file_cache.read(mode) is None
 
     def test_disabled_write_and_read(self, file_cache, agent_raw_data):
+        mode = Mode.DISCOVERY
+
         file_cache.disabled = True
         assert file_cache.disabled is True
-        assert not file_cache.path.exists()
+        assert file_cache.make_path(mode) == Path(os.devnull)
 
-        file_cache.write(agent_raw_data)
+        file_cache.write(agent_raw_data, mode)
 
-        assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.make_path(mode) == Path(os.devnull)
+        assert file_cache.read(mode) is None
 
 
 class TestDefaultFileCache_and_SNMPFileCache:
@@ -125,7 +138,8 @@ class TestDefaultFileCache_and_SNMPFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, SNMPFileCache])
     def file_cache(self, path, request):
         return request.param(
-            path=path,
+            "hostname",
+            base_path=path,
             max_age=999,
             disabled=False,
             use_outdated=False,
@@ -141,44 +155,51 @@ class TestDefaultFileCache_and_SNMPFileCache:
         return {SectionName("X"): table}
 
     def test_write_and_read(self, file_cache, raw_data):
+        mode = Mode.DISCOVERY
+
         assert not file_cache.disabled
-        assert not file_cache.path.exists()
+        assert not file_cache.make_path(mode).exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(raw_data, mode)
 
-        assert file_cache.path.exists()
-        assert file_cache.read() == raw_data
+        assert file_cache.make_path(mode).exists()
+        assert file_cache.read(mode) == raw_data
 
         # Now with another instance
         clone = clone_file_cache(file_cache)
-        assert clone.path.exists()
-        assert clone.read() == raw_data
+        assert clone.make_path(mode).exists()
+        assert clone.read(mode) == raw_data
 
     def test_disabled_write(self, file_cache, raw_data):
+        mode = Mode.DISCOVERY
+
         file_cache.disabled = True
         assert file_cache.disabled is True
-        assert not file_cache.path.exists()
+        assert not file_cache.make_path(mode).exists()
 
-        file_cache.write(raw_data)
+        file_cache.write(raw_data, mode)
 
-        assert not file_cache.path.exists()
-        assert file_cache.read() is None
+        assert not file_cache.make_path(mode).exists()
+        assert file_cache.read(mode) is None
 
     def test_disabled_read(self, file_cache, raw_data):
-        file_cache.write(raw_data)
-        assert file_cache.path.exists()
-        assert file_cache.read() == raw_data
+        mode = Mode.DISCOVERY
+
+        file_cache.write(raw_data, mode)
+        assert file_cache.make_path(mode).exists()
+        assert file_cache.read(mode) == raw_data
 
         file_cache.disabled = True
-        assert file_cache.path.exists()
-        assert file_cache.read() is None
+        assert file_cache.make_path(mode).exists()
+        assert file_cache.read(mode) is None
 
 
 class TestIPMIFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -189,6 +210,7 @@ class TestIPMIFetcher:
     def fetcher(self, file_cache):
         return IPMIFetcher(
             file_cache,
+            cluster=False,
             address="1.2.3.4",
             username="us3r",
             password="secret",
@@ -211,6 +233,7 @@ class TestIPMIFetcher:
         with pytest.raises(MKFetcherError):
             with IPMIFetcher(
                     file_cache,
+                    cluster=False,
                     address="127.0.0.1",
                     username="",
                     password="",
@@ -234,7 +257,8 @@ class TestPiggybackFetcher:
     @pytest.fixture
     def file_cache(self):
         return NoCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -245,6 +269,7 @@ class TestPiggybackFetcher:
     def fetcher(self, file_cache):
         return PiggybackFetcher(
             file_cache,
+            cluster=False,
             hostname="host",
             address="1.2.3.4",
             time_settings=[],
@@ -262,7 +287,8 @@ class TestProgramFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -273,6 +299,7 @@ class TestProgramFetcher:
     def fetcher(self, file_cache):
         return ProgramFetcher(
             file_cache,
+            cluster=False,
             cmdline="/bin/true",
             stdin=None,
             is_cmc=False,
@@ -378,6 +405,7 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher(self, file_cache):
         return SNMPFetcher(
             file_cache,
+            cluster=False,
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -405,6 +433,7 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher_inline(self, file_cache):
         return SNMPFetcher(
             file_cache,
+            cluster=False,
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -433,6 +462,7 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher_pysnmp(self, file_cache):
         return SNMPFetcher(
             file_cache,
+            cluster=False,
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -462,7 +492,8 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return SNMPFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -500,7 +531,8 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return SNMPFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -515,13 +547,15 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             lambda *_, **__: table,
         )
         section_name = SectionName('pim')
-        monkeypatch.setattr(fetcher, "sections", {
-            section_name: SectionMeta(
-                checking=True,
-                disabled=False,
-                fetch_interval=None,
-            ),
-        })
+        monkeypatch.setattr(
+            fetcher, "sections", {
+                section_name: SectionMeta(
+                    checking=True,
+                    disabled=False,
+                    redetect=False,
+                    fetch_interval=None,
+                ),
+            })
 
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
@@ -535,13 +569,15 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
 
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
         section_name = SectionName('pum')
-        monkeypatch.setattr(fetcher, "sections", {
-            section_name: SectionMeta(
-                checking=True,
-                disabled=False,
-                fetch_interval=None,
-            ),
-        })
+        monkeypatch.setattr(
+            fetcher, "sections", {
+                section_name: SectionMeta(
+                    checking=True,
+                    disabled=False,
+                    redetect=False,
+                    fetch_interval=None,
+                ),
+            })
         table = [['1']]
         monkeypatch.setattr(
             snmp_table,
@@ -562,7 +598,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: {SectionName('pam')},
         )
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({})
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({SectionName('pam'): [[]]})
 
     @pytest.fixture(name="set_sections")
     def _set_sections(self, monkeypatch):
@@ -619,7 +655,8 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     @pytest.fixture
     def file_cache(self):
         return StubFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -642,8 +679,8 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
 
 class TestSNMPSectionMeta:
     @pytest.mark.parametrize("meta", [
-        SectionMeta(checking=False, disabled=False, fetch_interval=None),
-        SectionMeta(checking=True, disabled=False, fetch_interval=None),
+        SectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
+        SectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
     ])
     def test_serialize(self, meta):
         assert SectionMeta.deserialize(meta.serialize()) == meta
@@ -653,7 +690,8 @@ class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -664,6 +702,7 @@ class TestTCPFetcher:
     def fetcher(self, file_cache):
         return TCPFetcher(
             file_cache,
+            cluster=False,
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
             timeout=0.1,
@@ -685,6 +724,7 @@ class TestTCPFetcher:
         output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
+            cluster=False,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -698,6 +738,7 @@ class TestTCPFetcher:
         output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
+            cluster=False,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -713,6 +754,7 @@ class TestTCPFetcher:
         output = AgentRawData(b"the first two bytes are not a number")
         fetcher = TCPFetcher(
             file_cache,
+            cluster=False,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -730,10 +772,16 @@ class StubFileCache(DefaultAgentFileCache):
         super().__init__(*args, **kwargs)
         self.cache: Optional[AgentRawData] = None
 
-    def write(self, raw_data: AgentRawData) -> None:
+    def write(self, raw_data: AgentRawData, mode: Mode) -> None:
+        if not self.cache_write(mode):
+            return None
+
         self.cache = raw_data
 
-    def read(self) -> Optional[AgentRawData]:
+    def read(self, mode: Mode) -> Optional[AgentRawData]:
+        if not self.cache_read(mode):
+            return None
+
         return self.cache
 
 
@@ -741,7 +789,8 @@ class TestFetcherCaching:
     @pytest.fixture
     def file_cache(self):
         return DefaultAgentFileCache(
-            path=Path(os.devnull),
+            "hostname",
+            base_path=Path(os.devnull),
             max_age=0,
             disabled=True,
             use_outdated=True,
@@ -753,6 +802,7 @@ class TestFetcherCaching:
         # We use the TCPFetcher to test a general feature of the fetchers.
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),
+            cluster=False,
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,

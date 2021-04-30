@@ -818,7 +818,7 @@ class Document:
         self.restore_state()
 
     def render_image(self, left_mm, top_mm, width_mm, height_mm, path):
-        pil = PngImagePlugin.PngImageFile(fp=open(path))
+        pil = PngImagePlugin.PngImageFile(fp=path)
         ir = ImageReader(pil)
         try:
             self._canvas.drawImage(ir,

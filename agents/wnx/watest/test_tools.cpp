@@ -298,9 +298,8 @@ TempCfgFs::TempCfgFs(Mode mode) : mode_{mode} {
         cma::cfg::GetCfg().pushFolders(root_, data_);
     } else {
         cma::cfg::GetCfg().pushFoldersNoIo(root_, data_);
-        auto ret = loadContent("global:\n  enabled: yes\n  install: yes\n");
-        if (ret) XLOG::l("cant load content");
     }
+    yaml_ = YAML::Clone(cma::cfg::GetLoadedConfig());
 }
 
 TempCfgFs ::~TempCfgFs() {
@@ -308,6 +307,7 @@ TempCfgFs ::~TempCfgFs() {
     if (mode_ == Mode::standard) {
         std::filesystem::remove_all(base_);
     }
+    cma::cfg::GetCfg().setConfig(yaml_);
 }
 
 bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {

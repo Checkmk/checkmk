@@ -13,7 +13,9 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
+#ifndef CMC
 #include "nagios.h"
+#endif
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 

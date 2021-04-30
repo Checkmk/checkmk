@@ -1,0 +1,1052 @@
+INFO: starting new backup job: vzdump --all 1 --quiet 1 --mailto admin@helloworld.de --exclude 112,123 --mailnotification always --mode snapshot --storage pbs-fi-backup1
+INFO: skip external VMs: 100, 103, 104, 106, 107, 108, 109, 111, 113, 114, 115, 116, 118, 119, 120, 121, 122, 124, 125, 127, 128, 129, 133, 134, 138, 139, 140, 143, 146, 147, 148, 149, 151, 152, 153, 154, 155, 601, 602, 603, 996, 997, 998, 999, 9000
+INFO: Starting Backup of VM 101 (qemu)
+INFO: Backup started at 2021-04-11 12:15:02
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-101-disk-0' 32G
+INFO: include disk 'scsi1' 'local-zfs:vm-101-disk-1' 60G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/101/2021-04-11T10:15:02Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '7348cb13-a5a5-4187-9fe0-a2aa7608dd64'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (2.0 GiB of 32.0 GiB dirty)
+INFO: scsi1: dirty-bitmap status: OK (3.6 GiB of 60.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 5.6 GiB dirty of 92.0 GiB total
+INFO:   7% (404.0 MiB of 5.6 GiB) in  3s, read: 134.7 MiB/s, write: 134.7 MiB/s
+INFO:   8% (464.0 MiB of 5.6 GiB) in 35s, read: 1.9 MiB/s, write: 1.9 MiB/s
+INFO:   9% (520.0 MiB of 5.6 GiB) in 38s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  10% (580.0 MiB of 5.6 GiB) in 43s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  11% (640.0 MiB of 5.6 GiB) in 46s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  12% (692.0 MiB of 5.6 GiB) in 52s, read: 8.7 MiB/s, write: 8.7 MiB/s
+INFO:  13% (740.0 MiB of 5.6 GiB) in 56s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  14% (804.0 MiB of 5.6 GiB) in 59s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  15% (864.0 MiB of 5.6 GiB) in  1m 28s, read: 2.1 MiB/s, write: 2.1 MiB/s
+INFO:  16% (912.0 MiB of 5.6 GiB) in  1m 32s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  17% (968.0 MiB of 5.6 GiB) in  1m 43s, read: 5.1 MiB/s, write: 5.1 MiB/s
+INFO:  18% (1.0 GiB of 5.6 GiB) in  1m 53s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO:  19% (1.1 GiB of 5.6 GiB) in  1m 58s, read: 14.4 MiB/s, write: 14.4 MiB/s
+INFO:  20% (1.1 GiB of 5.6 GiB) in  2m  1s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  21% (1.2 GiB of 5.6 GiB) in  2m  5s, read: 18.0 MiB/s, write: 18.0 MiB/s
+INFO:  22% (1.2 GiB of 5.6 GiB) in  2m 26s, read: 2.7 MiB/s, write: 2.7 MiB/s
+INFO:  23% (1.3 GiB of 5.6 GiB) in  2m 30s, read: 13.0 MiB/s, write: 13.0 MiB/s
+INFO:  24% (1.3 GiB of 5.6 GiB) in  2m 38s, read: 7.5 MiB/s, write: 7.5 MiB/s
+INFO:  25% (1.4 GiB of 5.6 GiB) in  2m 42s, read: 11.0 MiB/s, write: 11.0 MiB/s
+INFO:  26% (1.5 GiB of 5.6 GiB) in  2m 47s, read: 13.6 MiB/s, write: 13.6 MiB/s
+INFO:  27% (1.5 GiB of 5.6 GiB) in  2m 53s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  28% (1.6 GiB of 5.6 GiB) in  2m 57s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  29% (1.6 GiB of 5.6 GiB) in  3m 13s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  30% (1.7 GiB of 5.6 GiB) in  3m 16s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  31% (1.7 GiB of 5.6 GiB) in  3m 22s, read: 11.3 MiB/s, write: 11.3 MiB/s
+INFO:  32% (1.8 GiB of 5.6 GiB) in  3m 27s, read: 8.8 MiB/s, write: 8.8 MiB/s
+INFO:  33% (1.8 GiB of 5.6 GiB) in  3m 31s, read: 14.0 MiB/s, write: 14.0 MiB/s
+INFO:  34% (1.9 GiB of 5.6 GiB) in  3m 35s, read: 18.0 MiB/s, write: 18.0 MiB/s
+INFO:  35% (1.9 GiB of 5.6 GiB) in  3m 39s, read: 11.0 MiB/s, write: 11.0 MiB/s
+INFO:  36% (2.0 GiB of 5.6 GiB) in  3m 57s, read: 3.1 MiB/s, write: 3.1 MiB/s
+INFO:  37% (2.1 GiB of 5.6 GiB) in  4m  0s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  38% (2.1 GiB of 5.6 GiB) in  4m  4s, read: 14.0 MiB/s, write: 14.0 MiB/s
+INFO:  39% (2.2 GiB of 5.6 GiB) in  4m  7s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  40% (2.2 GiB of 5.6 GiB) in  4m 11s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  41% (2.3 GiB of 5.6 GiB) in  4m 14s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  42% (2.3 GiB of 5.6 GiB) in  4m 21s, read: 8.6 MiB/s, write: 8.6 MiB/s
+INFO:  43% (2.4 GiB of 5.6 GiB) in  4m 40s, read: 2.9 MiB/s, write: 2.9 MiB/s
+INFO:  44% (2.5 GiB of 5.6 GiB) in  4m 49s, read: 7.6 MiB/s, write: 7.6 MiB/s
+INFO:  45% (2.5 GiB of 5.6 GiB) in  4m 52s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  46% (2.6 GiB of 5.6 GiB) in  4m 55s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  47% (2.6 GiB of 5.6 GiB) in  5m  1s, read: 10.0 MiB/s, write: 10.0 MiB/s
+INFO:  48% (2.7 GiB of 5.6 GiB) in  5m  6s, read: 13.6 MiB/s, write: 13.6 MiB/s
+INFO:  49% (2.7 GiB of 5.6 GiB) in  5m  9s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  50% (2.8 GiB of 5.6 GiB) in  5m 13s, read: 18.0 MiB/s, write: 18.0 MiB/s
+INFO:  51% (2.8 GiB of 5.6 GiB) in  5m 16s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  52% (2.9 GiB of 5.6 GiB) in  5m 19s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  53% (3.0 GiB of 5.6 GiB) in  5m 22s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  54% (3.0 GiB of 5.6 GiB) in  5m 25s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  55% (3.1 GiB of 5.6 GiB) in  5m 28s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  56% (3.1 GiB of 5.6 GiB) in  5m 32s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  57% (3.2 GiB of 5.6 GiB) in  5m 35s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  58% (3.2 GiB of 5.6 GiB) in  5m 39s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  59% (3.3 GiB of 5.6 GiB) in  5m 57s, read: 2.7 MiB/s, write: 2.7 MiB/s
+INFO:  60% (3.3 GiB of 5.6 GiB) in  6m  0s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  61% (3.4 GiB of 5.6 GiB) in  6m  4s, read: 18.0 MiB/s, write: 18.0 MiB/s
+INFO:  62% (3.4 GiB of 5.6 GiB) in  6m  7s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  63% (3.5 GiB of 5.6 GiB) in  6m 10s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  64% (3.6 GiB of 5.6 GiB) in  6m 13s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  68% (3.8 GiB of 5.6 GiB) in  6m 16s, read: 84.0 MiB/s, write: 69.3 MiB/s
+INFO:  71% (4.0 GiB of 5.6 GiB) in  6m 19s, read: 64.0 MiB/s, write: 45.3 MiB/s
+INFO:  72% (4.0 GiB of 5.6 GiB) in  6m 53s, read: 843.3 KiB/s, write: 722.8 KiB/s
+INFO:  73% (4.1 GiB of 5.6 GiB) in  6m 56s, read: 17.3 MiB/s, write: 14.7 MiB/s
+INFO:  74% (4.1 GiB of 5.6 GiB) in  6m 59s, read: 26.7 MiB/s, write: 16.0 MiB/s
+INFO:  75% (4.2 GiB of 5.6 GiB) in  7m  2s, read: 21.3 MiB/s, write: 18.7 MiB/s
+INFO:  77% (4.3 GiB of 5.6 GiB) in  7m  5s, read: 30.7 MiB/s, write: 21.3 MiB/s
+INFO:  78% (4.4 GiB of 5.6 GiB) in  7m  8s, read: 24.0 MiB/s, write: 16.0 MiB/s
+INFO:  79% (4.4 GiB of 5.6 GiB) in  7m 27s, read: 1.3 MiB/s, write: 862.3 KiB/s
+INFO:  80% (4.4 GiB of 5.6 GiB) in  7m 30s, read: 18.7 MiB/s, write: 14.7 MiB/s
+INFO:  81% (4.5 GiB of 5.6 GiB) in  7m 33s, read: 26.7 MiB/s, write: 21.3 MiB/s
+INFO:  82% (4.6 GiB of 5.6 GiB) in  7m 36s, read: 21.3 MiB/s, write: 20.0 MiB/s
+INFO:  83% (4.7 GiB of 5.6 GiB) in  7m 39s, read: 26.7 MiB/s, write: 21.3 MiB/s
+INFO:  85% (4.8 GiB of 5.6 GiB) in  7m 42s, read: 32.0 MiB/s, write: 28.0 MiB/s
+INFO:  86% (4.8 GiB of 5.6 GiB) in  7m 45s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  88% (4.9 GiB of 5.6 GiB) in  7m 48s, read: 37.3 MiB/s, write: 25.3 MiB/s
+INFO:  89% (5.0 GiB of 5.6 GiB) in  7m 51s, read: 14.7 MiB/s, write: 9.3 MiB/s
+INFO:  90% (5.0 GiB of 5.6 GiB) in  7m 54s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  92% (5.1 GiB of 5.6 GiB) in  7m 57s, read: 32.0 MiB/s, write: 28.0 MiB/s
+INFO:  93% (5.2 GiB of 5.6 GiB) in  8m  0s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  94% (5.2 GiB of 5.6 GiB) in  8m  3s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  96% (5.3 GiB of 5.6 GiB) in  8m  6s, read: 32.0 MiB/s, write: 32.0 MiB/s
+INFO:  97% (5.4 GiB of 5.6 GiB) in  8m  9s, read: 25.3 MiB/s, write: 22.7 MiB/s
+INFO:  98% (5.5 GiB of 5.6 GiB) in  8m 12s, read: 26.7 MiB/s, write: 26.7 MiB/s
+INFO:  99% (5.5 GiB of 5.6 GiB) in  8m 16s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO: 100% (5.6 GiB of 5.6 GiB) in  8m 19s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO: backup was done incrementally, reused 86.78 GiB (94%)
+INFO: transferred 5.56 GiB in 537 seconds (10.6 MiB/s)
+INFO: Finished Backup of VM 101 (00:09:07)
+INFO: Backup finished at 2021-04-11 12:24:09
+INFO: Starting Backup of VM 102 (qemu)
+INFO: Backup started at 2021-04-11 12:24:10
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-102-disk-0' 9G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/102/2021-04-11T10:24:10Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'ae967906-d9a2-43bf-8331-8c6040775acd'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1008.0 MiB of 9.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1008.0 MiB dirty of 9.0 GiB total
+INFO:  40% (404.0 MiB of 1008.0 MiB) in  3s, read: 134.7 MiB/s, write: 114.7 MiB/s
+INFO:  41% (420.0 MiB of 1008.0 MiB) in 16s, read: 1.2 MiB/s, write: 630.2 KiB/s
+INFO:  45% (456.0 MiB of 1008.0 MiB) in 19s, read: 12.0 MiB/s, write: 4.0 MiB/s
+INFO:  51% (524.0 MiB of 1008.0 MiB) in 22s, read: 22.7 MiB/s, write: 17.3 MiB/s
+INFO:  57% (584.0 MiB of 1008.0 MiB) in 25s, read: 20.0 MiB/s, write: 12.0 MiB/s
+INFO:  63% (640.0 MiB of 1008.0 MiB) in 28s, read: 18.7 MiB/s, write: 14.7 MiB/s
+INFO:  69% (704.0 MiB of 1008.0 MiB) in 31s, read: 21.3 MiB/s, write: 9.3 MiB/s
+INFO:  82% (836.0 MiB of 1008.0 MiB) in 34s, read: 44.0 MiB/s, write: 16.0 MiB/s
+INFO:  94% (952.0 MiB of 1008.0 MiB) in 37s, read: 38.7 MiB/s, write: 18.7 MiB/s
+INFO: 100% (1008.0 MiB of 1008.0 MiB) in 40s, read: 18.7 MiB/s, write: 2.7 MiB/s
+INFO: backup was done incrementally, reused 8.38 GiB (93%)
+INFO: transferred 1008.00 MiB in 79 seconds (12.8 MiB/s)
+INFO: Finished Backup of VM 102 (00:01:49)
+INFO: Backup finished at 2021-04-11 12:25:59
+INFO: Starting Backup of VM 105 (qemu)
+INFO: Backup started at 2021-04-11 12:25:59
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs-nvme:vm-105-disk-0' 30G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/105/2021-04-11T10:25:59Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '3779b26c-be00-49ea-8ff9-56a60f8140e2'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.8 GiB of 30.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.8 GiB dirty of 30.0 GiB total
+INFO:  21% (404.0 MiB of 1.8 GiB) in  3s, read: 134.7 MiB/s, write: 70.7 MiB/s
+INFO:  22% (408.0 MiB of 1.8 GiB) in 28s, read: 163.8 KiB/s, write: 0 B/s
+INFO:  28% (528.0 MiB of 1.8 GiB) in 31s, read: 40.0 MiB/s, write: 18.7 MiB/s
+INFO:  31% (588.0 MiB of 1.8 GiB) in 34s, read: 20.0 MiB/s, write: 18.7 MiB/s
+INFO:  36% (676.0 MiB of 1.8 GiB) in 37s, read: 29.3 MiB/s, write: 5.3 MiB/s
+INFO:  40% (752.0 MiB of 1.8 GiB) in 40s, read: 25.3 MiB/s, write: 16.0 MiB/s
+INFO:  44% (812.0 MiB of 1.8 GiB) in 43s, read: 20.0 MiB/s, write: 8.0 MiB/s
+INFO:  46% (864.0 MiB of 1.8 GiB) in  1m  9s, read: 2.0 MiB/s, write: 1.7 MiB/s
+INFO:  52% (968.0 MiB of 1.8 GiB) in  1m 13s, read: 26.0 MiB/s, write: 15.0 MiB/s
+INFO:  58% (1.1 GiB of 1.8 GiB) in  1m 16s, read: 37.3 MiB/s, write: 26.7 MiB/s
+INFO:  62% (1.1 GiB of 1.8 GiB) in  1m 19s, read: 25.3 MiB/s, write: 12.0 MiB/s
+INFO:  66% (1.2 GiB of 1.8 GiB) in  1m 22s, read: 21.3 MiB/s, write: 12.0 MiB/s
+INFO:  68% (1.2 GiB of 1.8 GiB) in  2m  6s, read: 744.7 KiB/s, write: 744.7 KiB/s
+INFO:  71% (1.3 GiB of 1.8 GiB) in  2m  9s, read: 22.7 MiB/s, write: 20.0 MiB/s
+INFO:  74% (1.3 GiB of 1.8 GiB) in  2m 12s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  77% (1.4 GiB of 1.8 GiB) in  2m 15s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  84% (1.5 GiB of 1.8 GiB) in  2m 18s, read: 42.7 MiB/s, write: 41.3 MiB/s
+INFO:  87% (1.6 GiB of 1.8 GiB) in  2m 21s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  88% (1.6 GiB of 1.8 GiB) in  2m 24s, read: 6.7 MiB/s, write: 5.3 MiB/s
+INFO:  89% (1.6 GiB of 1.8 GiB) in  3m 32s, read: 180.7 KiB/s, write: 180.7 KiB/s
+INFO:  90% (1.6 GiB of 1.8 GiB) in  3m 35s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  92% (1.7 GiB of 1.8 GiB) in  3m 38s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  94% (1.7 GiB of 1.8 GiB) in  3m 41s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  95% (1.7 GiB of 1.8 GiB) in  3m 44s, read: 10.7 MiB/s, write: 4.0 MiB/s
+INFO:  98% (1.8 GiB of 1.8 GiB) in  3m 47s, read: 16.0 MiB/s, write: 1.3 MiB/s
+INFO:  99% (1.8 GiB of 1.8 GiB) in  3m 50s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO: 100% (1.8 GiB of 1.8 GiB) in  3m 53s, read: 2.7 MiB/s, write: 2.7 MiB/s
+INFO: backup was done incrementally, reused 28.82 GiB (96%)
+INFO: transferred 1.80 GiB in 307 seconds (6.0 MiB/s)
+INFO: Finished Backup of VM 105 (00:05:39)
+INFO: Backup finished at 2021-04-11 12:31:38
+INFO: Starting Backup of VM 110 (lxc)
+INFO: Backup started at 2021-04-11 12:31:38
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/110/2021-04-11T10:31:38Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp22126_110/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 110 --backup-time 1618137098 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/110/2021-04-11T10:31:38Z
+INFO: Client name: pve-dc4-001
+INFO: Starting backup protocol: Sun Apr 11 12:31:39 2021
+INFO: Downloading previous manifest (Sat Apr 10 20:09:14 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp22126_110/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 836.53 MiB of 17.85 GiB in 229.00s, average speed 3.65 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 17.03 GiB (95.4%)
+INFO: Uploaded backup catalog (2.96 MiB)
+INFO: Duration: 286.07s
+INFO: End Time: Sun Apr 11 12:36:25 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 110 (00:04:48)
+INFO: Backup finished at 2021-04-11 12:36:26
+INFO: Starting Backup of VM 117 (qemu)
+INFO: Backup started at 2021-04-11 12:36:26
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs-nvme:vm-117-disk-0' 250G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/117/2021-04-11T10:36:26Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+ERROR: VM 117 qmp command 'backup' failed - got timeout
+INFO: aborting backup job
+ERROR: Backup of VM 117 failed - VM 117 qmp command 'backup' failed - got timeout
+INFO: Failed at 2021-04-11 12:37:27
+INFO: Starting Backup of VM 126 (qemu)
+INFO: Backup started at 2021-04-11 12:37:27
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-126-disk-0' 83G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/126/2021-04-11T10:37:27Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+ERROR: VM 126 qmp command 'backup' failed - got timeout
+INFO: aborting backup job
+ERROR: Backup of VM 126 failed - VM 126 qmp command 'backup' failed - got timeout
+INFO: Failed at 2021-04-11 12:38:33
+INFO: Starting Backup of VM 130 (qemu)
+INFO: Backup started at 2021-04-11 12:38:33
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-130-disk-0' 64G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/130/2021-04-11T10:38:33Z'
+INFO: skipping guest-agent 'fs-freeze', agent configured but not running?
+INFO: started backup task 'e1c0b639-2fb5-4047-9d2d-d21e24f3ac9f'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (2.5 GiB of 64.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 2.5 GiB dirty of 64.0 GiB total
+INFO:  15% (404.0 MiB of 2.5 GiB) in  3s, read: 134.7 MiB/s, write: 133.3 MiB/s
+INFO:  16% (412.0 MiB of 2.5 GiB) in 30s, read: 303.4 KiB/s, write: 303.4 KiB/s
+INFO:  17% (452.0 MiB of 2.5 GiB) in 33s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  20% (508.0 MiB of 2.5 GiB) in 36s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  21% (556.0 MiB of 2.5 GiB) in 39s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  22% (564.0 MiB of 2.5 GiB) in 42s, read: 2.7 MiB/s, write: 2.7 MiB/s
+INFO:  23% (592.0 MiB of 2.5 GiB) in 45s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  24% (620.0 MiB of 2.5 GiB) in 48s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  25% (636.0 MiB of 2.5 GiB) in 51s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  26% (676.0 MiB of 2.5 GiB) in 55s, read: 10.0 MiB/s, write: 10.0 MiB/s
+INFO:  28% (732.0 MiB of 2.5 GiB) in 58s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  30% (760.0 MiB of 2.5 GiB) in  1m  1s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  31% (800.0 MiB of 2.5 GiB) in  1m  4s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  32% (812.0 MiB of 2.5 GiB) in  1m  7s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  33% (844.0 MiB of 2.5 GiB) in  1m 57s, read: 655.4 KiB/s, write: 655.4 KiB/s
+INFO:  34% (884.0 MiB of 2.5 GiB) in  2m  0s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  35% (908.0 MiB of 2.5 GiB) in  2m  3s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  36% (916.0 MiB of 2.5 GiB) in  2m  6s, read: 2.7 MiB/s, write: 2.7 MiB/s
+INFO:  37% (944.0 MiB of 2.5 GiB) in  2m  9s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  38% (984.0 MiB of 2.5 GiB) in  2m 12s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  40% (1.0 GiB of 2.5 GiB) in  2m 15s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  42% (1.0 GiB of 2.5 GiB) in  2m 18s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  44% (1.1 GiB of 2.5 GiB) in  2m 21s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  46% (1.1 GiB of 2.5 GiB) in  2m 24s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  47% (1.2 GiB of 2.5 GiB) in  2m 27s, read: 12.0 MiB/s, write: 10.7 MiB/s
+INFO:  48% (1.2 GiB of 2.5 GiB) in  2m 30s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  49% (1.2 GiB of 2.5 GiB) in  3m 24s, read: 379.3 KiB/s, write: 379.3 KiB/s
+INFO:  50% (1.2 GiB of 2.5 GiB) in  3m 27s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  52% (1.3 GiB of 2.5 GiB) in  3m 30s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  54% (1.3 GiB of 2.5 GiB) in  3m 33s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  55% (1.4 GiB of 2.5 GiB) in  3m 36s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  56% (1.4 GiB of 2.5 GiB) in  3m 39s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  57% (1.4 GiB of 2.5 GiB) in  3m 42s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  58% (1.4 GiB of 2.5 GiB) in  3m 45s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  59% (1.5 GiB of 2.5 GiB) in  3m 48s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  60% (1.5 GiB of 2.5 GiB) in  3m 53s, read: 4.8 MiB/s, write: 4.8 MiB/s
+INFO:  61% (1.5 GiB of 2.5 GiB) in  3m 56s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  62% (1.6 GiB of 2.5 GiB) in  3m 59s, read: 13.3 MiB/s, write: 10.7 MiB/s
+INFO:  63% (1.6 GiB of 2.5 GiB) in  4m  2s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  64% (1.6 GiB of 2.5 GiB) in  4m  5s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  65% (1.6 GiB of 2.5 GiB) in  5m 21s, read: 323.4 KiB/s, write: 323.4 KiB/s
+INFO:  66% (1.6 GiB of 2.5 GiB) in  5m 24s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  68% (1.7 GiB of 2.5 GiB) in  5m 27s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  69% (1.7 GiB of 2.5 GiB) in  5m 30s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  70% (1.8 GiB of 2.5 GiB) in  5m 33s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  71% (1.8 GiB of 2.5 GiB) in  5m 36s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  73% (1.8 GiB of 2.5 GiB) in  5m 39s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  74% (1.8 GiB of 2.5 GiB) in  5m 42s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  75% (1.9 GiB of 2.5 GiB) in  5m 45s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  76% (1.9 GiB of 2.5 GiB) in  5m 48s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  78% (1.9 GiB of 2.5 GiB) in  5m 51s, read: 16.0 MiB/s, write: 14.7 MiB/s
+INFO:  80% (2.0 GiB of 2.5 GiB) in  5m 54s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  81% (2.0 GiB of 2.5 GiB) in  6m 58s, read: 384.0 KiB/s, write: 384.0 KiB/s
+INFO:  83% (2.1 GiB of 2.5 GiB) in  7m  1s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  84% (2.1 GiB of 2.5 GiB) in  7m  4s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  85% (2.1 GiB of 2.5 GiB) in  7m  7s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  87% (2.2 GiB of 2.5 GiB) in  7m 10s, read: 17.3 MiB/s, write: 9.3 MiB/s
+INFO:  89% (2.2 GiB of 2.5 GiB) in  7m 13s, read: 14.7 MiB/s, write: 0 B/s
+INFO:  91% (2.3 GiB of 2.5 GiB) in  7m 16s, read: 18.7 MiB/s, write: 1.3 MiB/s
+INFO:  92% (2.3 GiB of 2.5 GiB) in  7m 19s, read: 10.7 MiB/s, write: 0 B/s
+INFO:  94% (2.3 GiB of 2.5 GiB) in  7m 22s, read: 17.3 MiB/s, write: 0 B/s
+INFO:  96% (2.4 GiB of 2.5 GiB) in  7m 25s, read: 10.7 MiB/s, write: 0 B/s
+INFO:  97% (2.4 GiB of 2.5 GiB) in  8m 17s, read: 551.4 KiB/s, write: 0 B/s
+INFO:  99% (2.4 GiB of 2.5 GiB) in  8m 20s, read: 16.0 MiB/s, write: 9.3 MiB/s
+INFO: 100% (2.5 GiB of 2.5 GiB) in  8m 23s, read: 6.7 MiB/s, write: 2.7 MiB/s
+INFO: backup is sparse: 292.00 MiB (11%) total zero data
+INFO: backup was done incrementally, reused 61.84 GiB (96%)
+INFO: transferred 2.47 GiB in 534 seconds (4.7 MiB/s)
+INFO: Finished Backup of VM 130 (00:09:33)
+INFO: Backup finished at 2021-04-11 12:48:06
+INFO: Starting Backup of VM 131 (qemu)
+INFO: Backup started at 2021-04-11 12:48:06
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-131-disk-0' 80G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/131/2021-04-11T10:48:06Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'fd6ef441-7b0b-4cfb-9bfe-8987e1f66cad'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.9 GiB of 80.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.9 GiB dirty of 80.0 GiB total
+INFO:  20% (404.0 MiB of 1.9 GiB) in  3s, read: 134.7 MiB/s, write: 132.0 MiB/s
+INFO:  21% (412.0 MiB of 1.9 GiB) in 31s, read: 292.6 KiB/s, write: 292.6 KiB/s
+INFO:  23% (452.0 MiB of 1.9 GiB) in 34s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  25% (508.0 MiB of 1.9 GiB) in 37s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  28% (556.0 MiB of 1.9 GiB) in 40s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  29% (584.0 MiB of 1.9 GiB) in 43s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  31% (624.0 MiB of 1.9 GiB) in 46s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  34% (668.0 MiB of 1.9 GiB) in 49s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  35% (704.0 MiB of 1.9 GiB) in 52s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  37% (728.0 MiB of 1.9 GiB) in 55s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  39% (772.0 MiB of 1.9 GiB) in 58s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  41% (812.0 MiB of 1.9 GiB) in  1m  1s, read: 13.3 MiB/s, write: 10.7 MiB/s
+INFO:  42% (824.0 MiB of 1.9 GiB) in  1m 31s, read: 409.6 KiB/s, write: 136.5 KiB/s
+INFO:  43% (848.0 MiB of 1.9 GiB) in  1m 34s, read: 8.0 MiB/s, write: 6.7 MiB/s
+INFO:  45% (888.0 MiB of 1.9 GiB) in  1m 37s, read: 13.3 MiB/s, write: 5.3 MiB/s
+INFO:  47% (932.0 MiB of 1.9 GiB) in  1m 40s, read: 14.7 MiB/s, write: 10.7 MiB/s
+INFO:  49% (968.0 MiB of 1.9 GiB) in  1m 43s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  51% (1012.0 MiB of 1.9 GiB) in  1m 46s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  53% (1.0 GiB of 1.9 GiB) in  1m 49s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  56% (1.1 GiB of 1.9 GiB) in  1m 52s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  59% (1.1 GiB of 1.9 GiB) in  1m 55s, read: 18.7 MiB/s, write: 14.7 MiB/s
+INFO:  62% (1.2 GiB of 1.9 GiB) in  1m 58s, read: 16.0 MiB/s, write: 6.7 MiB/s
+INFO:  63% (1.2 GiB of 1.9 GiB) in  2m 19s, read: 780.2 KiB/s, write: 585.1 KiB/s
+INFO:  67% (1.3 GiB of 1.9 GiB) in  2m 22s, read: 28.0 MiB/s, write: 9.3 MiB/s
+INFO:  70% (1.3 GiB of 1.9 GiB) in  2m 25s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  72% (1.4 GiB of 1.9 GiB) in  2m 28s, read: 16.0 MiB/s, write: 5.3 MiB/s
+INFO:  74% (1.4 GiB of 1.9 GiB) in  2m 31s, read: 14.7 MiB/s, write: 5.3 MiB/s
+INFO:  76% (1.5 GiB of 1.9 GiB) in  2m 34s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  82% (1.6 GiB of 1.9 GiB) in  2m 37s, read: 36.0 MiB/s, write: 17.3 MiB/s
+INFO:  83% (1.6 GiB of 1.9 GiB) in  2m 40s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  84% (1.6 GiB of 1.9 GiB) in  2m 57s, read: 1.6 MiB/s, write: 1.4 MiB/s
+INFO:  90% (1.7 GiB of 1.9 GiB) in  3m  0s, read: 40.0 MiB/s, write: 21.3 MiB/s
+INFO:  96% (1.9 GiB of 1.9 GiB) in  3m  3s, read: 40.0 MiB/s, write: 40.0 MiB/s
+INFO: 100% (1.9 GiB of 1.9 GiB) in  3m  6s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO: backup is sparse: 4.00 MiB (0%) total zero data
+INFO: backup was done incrementally, reused 78.42 GiB (98%)
+INFO: transferred 1.91 GiB in 255 seconds (7.7 MiB/s)
+INFO: Finished Backup of VM 131 (00:04:51)
+INFO: Backup finished at 2021-04-11 12:52:57
+INFO: Starting Backup of VM 132 (qemu)
+INFO: Backup started at 2021-04-11 12:52:57
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-132-disk-0' 80G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/132/2021-04-11T10:52:57Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'dc44492a-cf81-4f51-b08a-204b58f2b2cb'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (3.4 GiB of 80.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 3.4 GiB dirty of 80.0 GiB total
+INFO:  11% (404.0 MiB of 3.4 GiB) in  3s, read: 134.7 MiB/s, write: 134.7 MiB/s
+INFO:  12% (424.0 MiB of 3.4 GiB) in 27s, read: 853.3 KiB/s, write: 853.3 KiB/s
+INFO:  13% (476.0 MiB of 3.4 GiB) in 30s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  15% (536.0 MiB of 3.4 GiB) in 33s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  16% (560.0 MiB of 3.4 GiB) in 36s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  17% (604.0 MiB of 3.4 GiB) in 39s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  18% (628.0 MiB of 3.4 GiB) in 42s, read: 8.0 MiB/s, write: 6.7 MiB/s
+INFO:  19% (680.0 MiB of 3.4 GiB) in 45s, read: 17.3 MiB/s, write: 14.7 MiB/s
+INFO:  20% (716.0 MiB of 3.4 GiB) in 48s, read: 12.0 MiB/s, write: 10.7 MiB/s
+INFO:  21% (744.0 MiB of 3.4 GiB) in 51s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  23% (796.0 MiB of 3.4 GiB) in 54s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  24% (848.0 MiB of 3.4 GiB) in  1m 13s, read: 2.7 MiB/s, write: 2.3 MiB/s
+INFO:  25% (896.0 MiB of 3.4 GiB) in  1m 16s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  27% (936.0 MiB of 3.4 GiB) in  1m 19s, read: 13.3 MiB/s, write: 12.0 MiB/s
+INFO:  28% (980.0 MiB of 3.4 GiB) in  1m 22s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  30% (1.0 GiB of 3.4 GiB) in  1m 25s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO:  32% (1.1 GiB of 3.4 GiB) in  1m 28s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  33% (1.1 GiB of 3.4 GiB) in  1m 31s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  34% (1.2 GiB of 3.4 GiB) in  1m 34s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  35% (1.2 GiB of 3.4 GiB) in  1m 37s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  36% (1.2 GiB of 3.4 GiB) in  2m  2s, read: 1.1 MiB/s, write: 1.1 MiB/s
+INFO:  37% (1.3 GiB of 3.4 GiB) in  2m  8s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO:  38% (1.3 GiB of 3.4 GiB) in  2m 11s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  39% (1.3 GiB of 3.4 GiB) in  2m 15s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  40% (1.4 GiB of 3.4 GiB) in  2m 18s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  42% (1.4 GiB of 3.4 GiB) in  2m 21s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  44% (1.5 GiB of 3.4 GiB) in  2m 24s, read: 18.7 MiB/s, write: 17.3 MiB/s
+INFO:  45% (1.5 GiB of 3.4 GiB) in  2m 28s, read: 11.0 MiB/s, write: 11.0 MiB/s
+INFO:  47% (1.6 GiB of 3.4 GiB) in  2m 31s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  48% (1.6 GiB of 3.4 GiB) in  3m  3s, read: 1.2 MiB/s, write: 1.2 MiB/s
+INFO:  49% (1.7 GiB of 3.4 GiB) in  3m  6s, read: 13.3 MiB/s, write: 12.0 MiB/s
+INFO:  50% (1.7 GiB of 3.4 GiB) in  3m  9s, read: 14.7 MiB/s, write: 12.0 MiB/s
+INFO:  51% (1.8 GiB of 3.4 GiB) in  3m 12s, read: 14.7 MiB/s, write: 12.0 MiB/s
+INFO:  52% (1.8 GiB of 3.4 GiB) in  3m 15s, read: 5.3 MiB/s, write: 1.3 MiB/s
+INFO:  53% (1.8 GiB of 3.4 GiB) in  3m 18s, read: 8.0 MiB/s, write: 5.3 MiB/s
+INFO:  54% (1.8 GiB of 3.4 GiB) in  3m 22s, read: 10.0 MiB/s, write: 10.0 MiB/s
+INFO:  55% (1.9 GiB of 3.4 GiB) in  3m 26s, read: 7.0 MiB/s, write: 7.0 MiB/s
+INFO:  56% (1.9 GiB of 3.4 GiB) in  3m 30s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  58% (2.0 GiB of 3.4 GiB) in  3m 33s, read: 20.0 MiB/s, write: 18.7 MiB/s
+INFO:  59% (2.0 GiB of 3.4 GiB) in  3m 40s, read: 4.6 MiB/s, write: 4.6 MiB/s
+INFO:  60% (2.0 GiB of 3.4 GiB) in  4m  4s, read: 1.3 MiB/s, write: 1.3 MiB/s
+INFO:  62% (2.1 GiB of 3.4 GiB) in  4m  7s, read: 33.3 MiB/s, write: 33.3 MiB/s
+INFO:  65% (2.2 GiB of 3.4 GiB) in  4m 10s, read: 29.3 MiB/s, write: 29.3 MiB/s
+INFO:  68% (2.3 GiB of 3.4 GiB) in  4m 13s, read: 40.0 MiB/s, write: 38.7 MiB/s
+INFO:  70% (2.4 GiB of 3.4 GiB) in  4m 16s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  71% (2.4 GiB of 3.4 GiB) in  4m 34s, read: 910.2 KiB/s, write: 455.1 KiB/s
+INFO:  72% (2.5 GiB of 3.4 GiB) in  4m 44s, read: 5.2 MiB/s, write: 5.2 MiB/s
+INFO:  74% (2.5 GiB of 3.4 GiB) in  4m 47s, read: 20.0 MiB/s, write: 18.7 MiB/s
+INFO:  75% (2.5 GiB of 3.4 GiB) in  4m 50s, read: 8.0 MiB/s, write: 6.7 MiB/s
+INFO:  76% (2.6 GiB of 3.4 GiB) in  5m 17s, read: 1.3 MiB/s, write: 1.3 MiB/s
+INFO:  77% (2.6 GiB of 3.4 GiB) in  5m 29s, read: 3.3 MiB/s, write: 3.3 MiB/s
+INFO:  78% (2.6 GiB of 3.4 GiB) in  5m 33s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  79% (2.7 GiB of 3.4 GiB) in  5m 37s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  80% (2.7 GiB of 3.4 GiB) in  5m 40s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  81% (2.8 GiB of 3.4 GiB) in  5m 43s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  82% (2.8 GiB of 3.4 GiB) in  5m 46s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  83% (2.8 GiB of 3.4 GiB) in  6m  8s, read: 558.5 KiB/s, write: 558.5 KiB/s
+INFO:  84% (2.8 GiB of 3.4 GiB) in  6m 14s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO:  85% (2.9 GiB of 3.4 GiB) in  6m 17s, read: 17.3 MiB/s, write: 16.0 MiB/s
+INFO:  87% (3.0 GiB of 3.4 GiB) in  6m 20s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  89% (3.0 GiB of 3.4 GiB) in  6m 23s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  90% (3.1 GiB of 3.4 GiB) in  6m 26s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  92% (3.1 GiB of 3.4 GiB) in  6m 29s, read: 14.7 MiB/s, write: 9.3 MiB/s
+INFO:  94% (3.2 GiB of 3.4 GiB) in  6m 32s, read: 25.3 MiB/s, write: 24.0 MiB/s
+INFO:  95% (3.2 GiB of 3.4 GiB) in  6m 45s, read: 1.8 MiB/s, write: 1.8 MiB/s
+INFO:  96% (3.3 GiB of 3.4 GiB) in  6m 50s, read: 9.6 MiB/s, write: 9.6 MiB/s
+INFO:  99% (3.4 GiB of 3.4 GiB) in  6m 53s, read: 33.3 MiB/s, write: 33.3 MiB/s
+INFO: 100% (3.4 GiB of 3.4 GiB) in  6m 56s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO: backup was done incrementally, reused 76.74 GiB (95%)
+INFO: transferred 3.38 GiB in 453 seconds (7.6 MiB/s)
+INFO: Finished Backup of VM 132 (00:08:11)
+INFO: Backup finished at 2021-04-11 13:01:08
+INFO: Starting Backup of VM 135 (qemu)
+INFO: Backup started at 2021-04-11 13:01:08
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-135-disk-0' 43G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/135/2021-04-11T11:01:08Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '970e4dd4-677d-4681-b4a7-ba92b41f37c7'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (2.5 GiB of 43.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 2.5 GiB dirty of 43.0 GiB total
+INFO:  15% (404.0 MiB of 2.5 GiB) in  3s, read: 134.7 MiB/s, write: 132.0 MiB/s
+INFO:  16% (428.0 MiB of 2.5 GiB) in 17s, read: 1.7 MiB/s, write: 1.7 MiB/s
+INFO:  19% (512.0 MiB of 2.5 GiB) in 20s, read: 28.0 MiB/s, write: 28.0 MiB/s
+INFO:  22% (584.0 MiB of 2.5 GiB) in 23s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO:  25% (648.0 MiB of 2.5 GiB) in 26s, read: 21.3 MiB/s, write: 21.3 MiB/s
+INFO:  26% (684.0 MiB of 2.5 GiB) in 30s, read: 9.0 MiB/s, write: 9.0 MiB/s
+INFO:  28% (740.0 MiB of 2.5 GiB) in 33s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  31% (812.0 MiB of 2.5 GiB) in 36s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO:  32% (836.0 MiB of 2.5 GiB) in 56s, read: 1.2 MiB/s, write: 1.2 MiB/s
+INFO:  34% (892.0 MiB of 2.5 GiB) in 59s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  37% (968.0 MiB of 2.5 GiB) in  1m  2s, read: 25.3 MiB/s, write: 25.3 MiB/s
+INFO:  40% (1.0 GiB of 2.5 GiB) in  1m  5s, read: 26.7 MiB/s, write: 26.7 MiB/s
+INFO:  43% (1.1 GiB of 2.5 GiB) in  1m  8s, read: 22.7 MiB/s, write: 22.7 MiB/s
+INFO:  46% (1.2 GiB of 2.5 GiB) in  1m 11s, read: 25.3 MiB/s, write: 25.3 MiB/s
+INFO:  47% (1.2 GiB of 2.5 GiB) in  1m 14s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO:  48% (1.2 GiB of 2.5 GiB) in  1m 31s, read: 1.9 MiB/s, write: 1.9 MiB/s
+INFO:  50% (1.3 GiB of 2.5 GiB) in  1m 34s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  51% (1.3 GiB of 2.5 GiB) in  1m 37s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  53% (1.3 GiB of 2.5 GiB) in  1m 40s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  56% (1.4 GiB of 2.5 GiB) in  1m 43s, read: 28.0 MiB/s, write: 28.0 MiB/s
+INFO:  59% (1.5 GiB of 2.5 GiB) in  1m 46s, read: 22.7 MiB/s, write: 18.7 MiB/s
+INFO:  62% (1.6 GiB of 2.5 GiB) in  1m 49s, read: 26.7 MiB/s, write: 8.0 MiB/s
+INFO:  63% (1.6 GiB of 2.5 GiB) in  1m 52s, read: 9.3 MiB/s, write: 5.3 MiB/s
+INFO:  64% (1.6 GiB of 2.5 GiB) in  2m 12s, read: 1.0 MiB/s, write: 204.8 KiB/s
+INFO:  67% (1.7 GiB of 2.5 GiB) in  2m 15s, read: 30.7 MiB/s, write: 9.3 MiB/s
+INFO:  70% (1.8 GiB of 2.5 GiB) in  2m 18s, read: 22.7 MiB/s, write: 6.7 MiB/s
+INFO:  72% (1.8 GiB of 2.5 GiB) in  2m 21s, read: 22.7 MiB/s, write: 13.3 MiB/s
+INFO:  77% (1.9 GiB of 2.5 GiB) in  2m 24s, read: 40.0 MiB/s, write: 30.7 MiB/s
+INFO:  79% (2.0 GiB of 2.5 GiB) in  2m 27s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  83% (2.1 GiB of 2.5 GiB) in  2m 50s, read: 5.0 MiB/s, write: 4.3 MiB/s
+INFO:  90% (2.3 GiB of 2.5 GiB) in  2m 53s, read: 54.7 MiB/s, write: 20.0 MiB/s
+INFO:  93% (2.3 GiB of 2.5 GiB) in  2m 56s, read: 26.7 MiB/s, write: 12.0 MiB/s
+INFO:  95% (2.4 GiB of 2.5 GiB) in  2m 59s, read: 16.0 MiB/s, write: 10.7 MiB/s
+INFO:  97% (2.5 GiB of 2.5 GiB) in  3m 16s, read: 4.5 MiB/s, write: 1.6 MiB/s
+INFO: 100% (2.5 GiB of 2.5 GiB) in  3m 19s, read: 17.3 MiB/s, write: 14.7 MiB/s
+INFO: backup is sparse: 4.00 MiB (0%) total zero data
+INFO: backup was done incrementally, reused 40.98 GiB (95%)
+INFO: transferred 2.51 GiB in 224 seconds (11.5 MiB/s)
+INFO: Finished Backup of VM 135 (00:04:10)
+INFO: Backup finished at 2021-04-11 13:05:18
+INFO: Starting Backup of VM 136 (qemu)
+INFO: Backup started at 2021-04-11 13:05:19
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-136-disk-0' 500G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/136/2021-04-11T11:05:19Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'a0513a21-e812-4bc9-8ff3-ba7b2c525dae'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (39.0 GiB of 500.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 39.0 GiB dirty of 500.0 GiB total
+INFO:   1% (404.0 MiB of 39.0 GiB) in  3s, read: 134.7 MiB/s, write: 25.3 MiB/s
+INFO:   2% (812.0 MiB of 39.0 GiB) in 35s, read: 12.8 MiB/s, write: 2.0 MiB/s
+INFO:   5% (2.2 GiB of 39.0 GiB) in  1m  1s, read: 57.4 MiB/s, write: 0 B/s
+INFO:   7% (2.9 GiB of 39.0 GiB) in  1m  4s, read: 232.0 MiB/s, write: 2.7 MiB/s
+INFO:   8% (3.3 GiB of 39.0 GiB) in  1m 27s, read: 17.7 MiB/s, write: 2.4 MiB/s
+INFO:   9% (3.7 GiB of 39.0 GiB) in  1m 54s, read: 14.8 MiB/s, write: 303.4 KiB/s
+INFO:  10% (4.1 GiB of 39.0 GiB) in  2m 18s, read: 17.2 MiB/s, write: 853.3 KiB/s
+INFO:  11% (4.5 GiB of 39.0 GiB) in  2m 45s, read: 15.3 MiB/s, write: 758.5 KiB/s
+INFO:  12% (4.9 GiB of 39.0 GiB) in  3m  1s, read: 21.8 MiB/s, write: 768.0 KiB/s
+INFO:  13% (5.4 GiB of 39.0 GiB) in  3m 18s, read: 32.0 MiB/s, write: 722.8 KiB/s
+INFO:  15% (6.0 GiB of 39.0 GiB) in  3m 34s, read: 40.0 MiB/s, write: 1.8 MiB/s
+INFO:  16% (6.2 GiB of 39.0 GiB) in  3m 54s, read: 11.4 MiB/s, write: 409.6 KiB/s
+INFO:  17% (6.9 GiB of 39.0 GiB) in  4m 13s, read: 36.6 MiB/s, write: 1.1 MiB/s
+INFO:  18% (7.3 GiB of 39.0 GiB) in  4m 27s, read: 24.6 MiB/s, write: 4.3 MiB/s
+INFO:  19% (7.5 GiB of 39.0 GiB) in  4m 43s, read: 13.8 MiB/s, write: 2.5 MiB/s
+INFO:  20% (7.8 GiB of 39.0 GiB) in  4m 55s, read: 28.0 MiB/s, write: 11.3 MiB/s
+INFO:  21% (8.2 GiB of 39.0 GiB) in  5m 13s, read: 23.3 MiB/s, write: 14.4 MiB/s
+INFO:  22% (8.6 GiB of 39.0 GiB) in  5m 30s, read: 22.8 MiB/s, write: 6.6 MiB/s
+INFO:  23% (9.0 GiB of 39.0 GiB) in  5m 37s, read: 64.6 MiB/s, write: 2.9 MiB/s
+INFO:  24% (9.4 GiB of 39.0 GiB) in  5m 47s, read: 38.0 MiB/s, write: 0 B/s
+INFO:  25% (10.0 GiB of 39.0 GiB) in  5m 50s, read: 206.7 MiB/s, write: 5.3 MiB/s
+INFO:  26% (10.3 GiB of 39.0 GiB) in  6m  3s, read: 20.6 MiB/s, write: 315.1 KiB/s
+INFO:  28% (11.2 GiB of 39.0 GiB) in  6m 12s, read: 108.9 MiB/s, write: 0 B/s
+INFO:  31% (12.1 GiB of 39.0 GiB) in  6m 15s, read: 310.7 MiB/s, write: 5.3 MiB/s
+INFO:  33% (13.2 GiB of 39.0 GiB) in  6m 22s, read: 149.7 MiB/s, write: 1.1 MiB/s
+INFO:  34% (13.4 GiB of 39.0 GiB) in  6m 25s, read: 66.7 MiB/s, write: 0 B/s
+INFO:  35% (13.8 GiB of 39.0 GiB) in  6m 33s, read: 63.0 MiB/s, write: 2.5 MiB/s
+INFO:  36% (14.3 GiB of 39.0 GiB) in  6m 42s, read: 56.0 MiB/s, write: 910.2 KiB/s
+INFO:  38% (15.0 GiB of 39.0 GiB) in  6m 50s, read: 82.5 MiB/s, write: 1.0 MiB/s
+INFO:  39% (15.2 GiB of 39.0 GiB) in  6m 53s, read: 85.3 MiB/s, write: 2.7 MiB/s
+INFO:  40% (15.6 GiB of 39.0 GiB) in  7m  0s, read: 58.3 MiB/s, write: 2.9 MiB/s
+INFO:  41% (16.3 GiB of 39.0 GiB) in  7m  9s, read: 78.2 MiB/s, write: 910.2 KiB/s
+INFO:  44% (17.5 GiB of 39.0 GiB) in  7m 15s, read: 206.0 MiB/s, write: 4.7 MiB/s
+INFO:  45% (17.8 GiB of 39.0 GiB) in  7m 18s, read: 105.3 MiB/s, write: 9.3 MiB/s
+INFO:  46% (18.3 GiB of 39.0 GiB) in  7m 25s, read: 62.9 MiB/s, write: 5.7 MiB/s
+INFO:  47% (18.4 GiB of 39.0 GiB) in  7m 28s, read: 38.7 MiB/s, write: 8.0 MiB/s
+INFO:  48% (18.8 GiB of 39.0 GiB) in  7m 42s, read: 31.1 MiB/s, write: 6.0 MiB/s
+INFO:  49% (19.2 GiB of 39.0 GiB) in  7m 45s, read: 130.7 MiB/s, write: 21.3 MiB/s
+INFO:  50% (19.7 GiB of 39.0 GiB) in  7m 49s, read: 142.0 MiB/s, write: 6.0 MiB/s
+INFO:  52% (20.3 GiB of 39.0 GiB) in  7m 52s, read: 197.3 MiB/s, write: 21.3 MiB/s
+INFO:  53% (20.7 GiB of 39.0 GiB) in  8m  5s, read: 33.5 MiB/s, write: 1.2 MiB/s
+INFO:  54% (21.2 GiB of 39.0 GiB) in  8m 11s, read: 84.7 MiB/s, write: 3.3 MiB/s
+INFO:  55% (21.6 GiB of 39.0 GiB) in  8m 23s, read: 34.7 MiB/s, write: 2.0 MiB/s
+INFO:  58% (22.9 GiB of 39.0 GiB) in  8m 26s, read: 434.7 MiB/s, write: 26.7 MiB/s
+INFO:  61% (24.1 GiB of 39.0 GiB) in  8m 29s, read: 392.0 MiB/s, write: 25.3 MiB/s
+INFO:  62% (24.6 GiB of 39.0 GiB) in  8m 32s, read: 168.0 MiB/s, write: 32.0 MiB/s
+INFO:  63% (24.8 GiB of 39.0 GiB) in  8m 35s, read: 96.0 MiB/s, write: 21.3 MiB/s
+INFO:  64% (25.1 GiB of 39.0 GiB) in  8m 38s, read: 73.3 MiB/s, write: 10.7 MiB/s
+INFO:  65% (25.4 GiB of 39.0 GiB) in  8m 41s, read: 100.0 MiB/s, write: 25.3 MiB/s
+INFO:  66% (25.8 GiB of 39.0 GiB) in  8m 49s, read: 52.5 MiB/s, write: 7.5 MiB/s
+INFO:  67% (26.2 GiB of 39.0 GiB) in  8m 55s, read: 74.0 MiB/s, write: 18.7 MiB/s
+INFO:  68% (26.5 GiB of 39.0 GiB) in  8m 58s, read: 112.0 MiB/s, write: 9.3 MiB/s
+INFO:  69% (27.2 GiB of 39.0 GiB) in  9m  1s, read: 217.3 MiB/s, write: 56.0 MiB/s
+INFO:  70% (27.4 GiB of 39.0 GiB) in  9m  4s, read: 84.0 MiB/s, write: 45.3 MiB/s
+INFO:  71% (27.7 GiB of 39.0 GiB) in  9m  9s, read: 58.4 MiB/s, write: 24.0 MiB/s
+INFO:  72% (28.1 GiB of 39.0 GiB) in  9m 29s, read: 21.2 MiB/s, write: 8.6 MiB/s
+INFO:  73% (28.5 GiB of 39.0 GiB) in  9m 57s, read: 13.4 MiB/s, write: 5.6 MiB/s
+INFO:  74% (28.9 GiB of 39.0 GiB) in 10m 21s, read: 18.5 MiB/s, write: 7.7 MiB/s
+INFO:  75% (29.3 GiB of 39.0 GiB) in 10m 29s, read: 49.5 MiB/s, write: 17.0 MiB/s
+INFO:  76% (29.7 GiB of 39.0 GiB) in 10m 51s, read: 19.6 MiB/s, write: 5.1 MiB/s
+INFO:  77% (30.1 GiB of 39.0 GiB) in 11m 12s, read: 17.9 MiB/s, write: 4.2 MiB/s
+INFO:  78% (30.5 GiB of 39.0 GiB) in 11m 32s, read: 19.2 MiB/s, write: 7.0 MiB/s
+INFO:  79% (30.8 GiB of 39.0 GiB) in 11m 50s, read: 20.2 MiB/s, write: 8.9 MiB/s
+INFO:  80% (31.3 GiB of 39.0 GiB) in 11m 58s, read: 64.5 MiB/s, write: 5.0 MiB/s
+INFO:  81% (31.7 GiB of 39.0 GiB) in 12m 14s, read: 21.5 MiB/s, write: 5.0 MiB/s
+INFO:  82% (32.0 GiB of 39.0 GiB) in 12m 34s, read: 18.6 MiB/s, write: 4.6 MiB/s
+INFO:  83% (32.4 GiB of 39.0 GiB) in 12m 46s, read: 30.3 MiB/s, write: 5.7 MiB/s
+INFO:  84% (32.8 GiB of 39.0 GiB) in 13m  5s, read: 22.5 MiB/s, write: 3.2 MiB/s
+INFO:  85% (33.2 GiB of 39.0 GiB) in 13m 36s, read: 14.2 MiB/s, write: 4.0 MiB/s
+INFO:  86% (33.6 GiB of 39.0 GiB) in 14m 11s, read: 10.3 MiB/s, write: 6.2 MiB/s
+INFO:  87% (33.9 GiB of 39.0 GiB) in 14m 53s, read: 9.0 MiB/s, write: 3.3 MiB/s
+INFO:  88% (34.4 GiB of 39.0 GiB) in 15m 10s, read: 25.6 MiB/s, write: 17.4 MiB/s
+INFO:  89% (34.7 GiB of 39.0 GiB) in 15m 45s, read: 10.9 MiB/s, write: 10.9 MiB/s
+INFO:  90% (35.1 GiB of 39.0 GiB) in 16m  9s, read: 16.2 MiB/s, write: 15.7 MiB/s
+INFO:  91% (35.6 GiB of 39.0 GiB) in 16m 58s, read: 10.3 MiB/s, write: 8.5 MiB/s
+INFO:  92% (35.9 GiB of 39.0 GiB) in 17m 38s, read: 7.3 MiB/s, write: 7.3 MiB/s
+INFO:  93% (36.3 GiB of 39.0 GiB) in 18m 28s, read: 7.8 MiB/s, write: 7.8 MiB/s
+INFO:  94% (36.7 GiB of 39.0 GiB) in 19m 26s, read: 7.0 MiB/s, write: 7.0 MiB/s
+INFO:  95% (37.1 GiB of 39.0 GiB) in 20m 54s, read: 4.5 MiB/s, write: 3.5 MiB/s
+INFO:  96% (37.4 GiB of 39.0 GiB) in 21m 41s, read: 8.6 MiB/s, write: 6.6 MiB/s
+INFO:  97% (37.8 GiB of 39.0 GiB) in 22m 11s, read: 13.3 MiB/s, write: 11.5 MiB/s
+INFO:  98% (38.3 GiB of 39.0 GiB) in 22m 40s, read: 16.1 MiB/s, write: 5.7 MiB/s
+INFO:  99% (38.6 GiB of 39.0 GiB) in 22m 54s, read: 26.0 MiB/s, write: 5.7 MiB/s
+INFO: 100% (39.0 GiB of 39.0 GiB) in 23m 45s, read: 7.1 MiB/s, write: 3.4 MiB/s
+INFO: backup is sparse: 27.82 GiB (71%) total zero data
+INFO: backup was done incrementally, reused 491.76 GiB (98%)
+INFO: transferred 39.00 GiB in 1474 seconds (27.1 MiB/s)
+INFO: Finished Backup of VM 136 (00:25:10)
+INFO: Backup finished at 2021-04-11 13:30:29
+INFO: Starting Backup of VM 137 (qemu)
+INFO: Backup started at 2021-04-11 13:30:29
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-137-disk-0' 2200G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/137/2021-04-11T11:30:29Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+ERROR: VM 137 qmp command 'guest-fsfreeze-thaw' failed - got wrong command id '25315026' (expected 22126031)
+INFO: started backup task '09157780-5eb8-4a2c-98ea-9ac7683a0309'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (15.3 GiB of 2.1 TiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 15.3 GiB dirty of 2.1 TiB total
+INFO:   2% (404.0 MiB of 15.3 GiB) in  3s, read: 134.7 MiB/s, write: 130.7 MiB/s
+INFO:   3% (476.0 MiB of 15.3 GiB) in 40s, read: 1.9 MiB/s, write: 1.9 MiB/s
+INFO:   4% (640.0 MiB of 15.3 GiB) in 54s, read: 11.7 MiB/s, write: 11.7 MiB/s
+INFO:   5% (792.0 MiB of 15.3 GiB) in  1m  9s, read: 10.1 MiB/s, write: 4.8 MiB/s
+INFO:   6% (948.0 MiB of 15.3 GiB) in  1m 59s, read: 3.1 MiB/s, write: 1.9 MiB/s
+INFO:   7% (1.1 GiB of 15.3 GiB) in  2m 15s, read: 10.8 MiB/s, write: 10.5 MiB/s
+INFO:   8% (1.2 GiB of 15.3 GiB) in  3m  1s, read: 3.0 MiB/s, write: 3.0 MiB/s
+INFO:   9% (1.4 GiB of 15.3 GiB) in  3m 11s, read: 16.8 MiB/s, write: 16.8 MiB/s
+INFO:  10% (1.5 GiB of 15.3 GiB) in  3m 21s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  11% (1.7 GiB of 15.3 GiB) in  4m 13s, read: 2.8 MiB/s, write: 2.8 MiB/s
+INFO:  12% (1.8 GiB of 15.3 GiB) in  4m 25s, read: 12.3 MiB/s, write: 12.3 MiB/s
+INFO:  13% (2.0 GiB of 15.3 GiB) in  4m 37s, read: 13.0 MiB/s, write: 13.0 MiB/s
+INFO:  14% (2.1 GiB of 15.3 GiB) in  5m 29s, read: 3.1 MiB/s, write: 3.1 MiB/s
+INFO:  15% (2.3 GiB of 15.3 GiB) in  5m 55s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO:  16% (2.4 GiB of 15.3 GiB) in  6m 47s, read: 3.0 MiB/s, write: 3.0 MiB/s
+INFO:  17% (2.6 GiB of 15.3 GiB) in  7m  3s, read: 9.8 MiB/s, write: 9.8 MiB/s
+INFO:  18% (2.8 GiB of 15.3 GiB) in  7m 16s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  19% (2.9 GiB of 15.3 GiB) in  8m  7s, read: 3.2 MiB/s, write: 3.2 MiB/s
+INFO:  20% (3.1 GiB of 15.3 GiB) in  8m 25s, read: 8.7 MiB/s, write: 8.7 MiB/s
+INFO:  21% (3.2 GiB of 15.3 GiB) in  9m  7s, read: 3.5 MiB/s, write: 3.5 MiB/s
+INFO:  22% (3.4 GiB of 15.3 GiB) in  9m 18s, read: 15.3 MiB/s, write: 15.3 MiB/s
+INFO:  23% (3.5 GiB of 15.3 GiB) in  9m 34s, read: 9.2 MiB/s, write: 9.2 MiB/s
+INFO:  24% (3.7 GiB of 15.3 GiB) in 10m 24s, read: 3.2 MiB/s, write: 3.2 MiB/s
+INFO:  25% (3.8 GiB of 15.3 GiB) in 10m 37s, read: 13.2 MiB/s, write: 13.2 MiB/s
+INFO:  26% (4.0 GiB of 15.3 GiB) in 10m 45s, read: 17.0 MiB/s, write: 17.0 MiB/s
+INFO:  27% (4.1 GiB of 15.3 GiB) in 11m 48s, read: 2.5 MiB/s, write: 2.5 MiB/s
+INFO:  28% (4.3 GiB of 15.3 GiB) in 12m  2s, read: 11.4 MiB/s, write: 11.4 MiB/s
+INFO:  29% (4.4 GiB of 15.3 GiB) in 12m 43s, read: 3.9 MiB/s, write: 3.9 MiB/s
+INFO:  30% (4.6 GiB of 15.3 GiB) in 12m 59s, read: 9.2 MiB/s, write: 9.2 MiB/s
+INFO:  31% (4.7 GiB of 15.3 GiB) in 13m 12s, read: 12.3 MiB/s, write: 12.3 MiB/s
+INFO:  32% (4.9 GiB of 15.3 GiB) in 13m 46s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  33% (5.1 GiB of 15.3 GiB) in 13m 52s, read: 24.7 MiB/s, write: 24.7 MiB/s
+INFO:  34% (5.2 GiB of 15.3 GiB) in 14m 43s, read: 2.8 MiB/s, write: 2.8 MiB/s
+INFO:  35% (5.4 GiB of 15.3 GiB) in 14m 56s, read: 12.3 MiB/s, write: 12.3 MiB/s
+INFO:  36% (5.5 GiB of 15.3 GiB) in 15m  8s, read: 12.3 MiB/s, write: 12.3 MiB/s
+INFO:  37% (5.7 GiB of 15.3 GiB) in 16m 14s, read: 2.4 MiB/s, write: 2.4 MiB/s
+INFO:  38% (5.8 GiB of 15.3 GiB) in 16m 29s, read: 10.9 MiB/s, write: 10.9 MiB/s
+INFO:  39% (6.0 GiB of 15.3 GiB) in 16m 36s, read: 21.7 MiB/s, write: 21.7 MiB/s
+INFO:  40% (6.1 GiB of 15.3 GiB) in 16m 59s, read: 6.4 MiB/s, write: 6.4 MiB/s
+INFO:  41% (6.3 GiB of 15.3 GiB) in 17m 15s, read: 9.8 MiB/s, write: 9.8 MiB/s
+INFO:  42% (6.4 GiB of 15.3 GiB) in 17m 55s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  43% (6.6 GiB of 15.3 GiB) in 18m  2s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO:  44% (6.7 GiB of 15.3 GiB) in 18m 10s, read: 18.0 MiB/s, write: 18.0 MiB/s
+INFO:  45% (6.9 GiB of 15.3 GiB) in 18m 32s, read: 7.8 MiB/s, write: 7.8 MiB/s
+INFO:  46% (7.1 GiB of 15.3 GiB) in 18m 39s, read: 22.9 MiB/s, write: 22.9 MiB/s
+INFO:  47% (7.2 GiB of 15.3 GiB) in 19m 16s, read: 3.7 MiB/s, write: 3.7 MiB/s
+INFO:  48% (7.3 GiB of 15.3 GiB) in 19m 26s, read: 16.4 MiB/s, write: 16.4 MiB/s
+INFO:  49% (7.5 GiB of 15.3 GiB) in 19m 38s, read: 13.3 MiB/s, write: 13.3 MiB/s
+INFO:  50% (7.7 GiB of 15.3 GiB) in 20m  0s, read: 7.5 MiB/s, write: 7.5 MiB/s
+INFO:  51% (7.8 GiB of 15.3 GiB) in 20m  7s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  52% (8.0 GiB of 15.3 GiB) in 20m 16s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  53% (8.1 GiB of 15.3 GiB) in 20m 41s, read: 5.8 MiB/s, write: 5.8 MiB/s
+INFO:  54% (8.3 GiB of 15.3 GiB) in 20m 49s, read: 19.5 MiB/s, write: 19.5 MiB/s
+INFO:  55% (8.4 GiB of 15.3 GiB) in 21m 28s, read: 4.1 MiB/s, write: 4.1 MiB/s
+INFO:  56% (8.6 GiB of 15.3 GiB) in 21m 39s, read: 14.2 MiB/s, write: 14.2 MiB/s
+INFO:  57% (8.7 GiB of 15.3 GiB) in 21m 49s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  58% (8.9 GiB of 15.3 GiB) in 22m 24s, read: 4.3 MiB/s, write: 4.3 MiB/s
+INFO:  59% (9.0 GiB of 15.3 GiB) in 22m 36s, read: 13.0 MiB/s, write: 13.0 MiB/s
+INFO:  60% (9.2 GiB of 15.3 GiB) in 23m 20s, read: 3.6 MiB/s, write: 3.6 MiB/s
+INFO:  61% (9.3 GiB of 15.3 GiB) in 23m 36s, read: 9.5 MiB/s, write: 9.5 MiB/s
+INFO:  62% (9.5 GiB of 15.3 GiB) in 23m 47s, read: 14.9 MiB/s, write: 14.9 MiB/s
+INFO:  63% (9.6 GiB of 15.3 GiB) in 24m 22s, read: 4.6 MiB/s, write: 4.6 MiB/s
+INFO:  64% (9.8 GiB of 15.3 GiB) in 24m 30s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  65% (9.9 GiB of 15.3 GiB) in 24m 39s, read: 16.4 MiB/s, write: 16.4 MiB/s
+INFO:  66% (10.1 GiB of 15.3 GiB) in 25m 25s, read: 3.3 MiB/s, write: 3.3 MiB/s
+INFO:  67% (10.3 GiB of 15.3 GiB) in 25m 43s, read: 9.1 MiB/s, write: 9.1 MiB/s
+INFO:  68% (10.4 GiB of 15.3 GiB) in 26m 33s, read: 3.1 MiB/s, write: 3.1 MiB/s
+INFO:  69% (10.6 GiB of 15.3 GiB) in 26m 45s, read: 12.3 MiB/s, write: 12.3 MiB/s
+INFO:  70% (10.7 GiB of 15.3 GiB) in 26m 56s, read: 15.3 MiB/s, write: 15.3 MiB/s
+INFO:  71% (10.9 GiB of 15.3 GiB) in 27m 32s, read: 4.2 MiB/s, write: 4.2 MiB/s
+INFO:  72% (11.0 GiB of 15.3 GiB) in 27m 41s, read: 16.9 MiB/s, write: 16.9 MiB/s
+INFO:  73% (11.2 GiB of 15.3 GiB) in 28m 15s, read: 4.6 MiB/s, write: 4.6 MiB/s
+INFO:  74% (11.3 GiB of 15.3 GiB) in 28m 25s, read: 17.2 MiB/s, write: 17.2 MiB/s
+INFO:  75% (11.5 GiB of 15.3 GiB) in 28m 35s, read: 15.6 MiB/s, write: 15.6 MiB/s
+INFO:  76% (11.6 GiB of 15.3 GiB) in 29m  6s, read: 4.6 MiB/s, write: 4.6 MiB/s
+INFO:  77% (11.8 GiB of 15.3 GiB) in 29m 14s, read: 22.5 MiB/s, write: 22.5 MiB/s
+INFO:  78% (11.9 GiB of 15.3 GiB) in 29m 19s, read: 28.8 MiB/s, write: 28.8 MiB/s
+INFO:  79% (12.1 GiB of 15.3 GiB) in 30m  0s, read: 3.8 MiB/s, write: 3.8 MiB/s
+INFO:  80% (12.2 GiB of 15.3 GiB) in 30m  8s, read: 18.5 MiB/s, write: 18.5 MiB/s
+INFO:  81% (12.4 GiB of 15.3 GiB) in 30m 50s, read: 3.7 MiB/s, write: 3.7 MiB/s
+INFO:  82% (12.5 GiB of 15.3 GiB) in 31m 13s, read: 6.6 MiB/s, write: 6.6 MiB/s
+INFO:  83% (12.7 GiB of 15.3 GiB) in 31m 26s, read: 12.0 MiB/s, write: 12.0 MiB/s
+INFO:  84% (12.9 GiB of 15.3 GiB) in 32m  6s, read: 4.2 MiB/s, write: 4.2 MiB/s
+INFO:  85% (13.0 GiB of 15.3 GiB) in 32m 15s, read: 16.9 MiB/s, write: 16.9 MiB/s
+INFO:  86% (13.2 GiB of 15.3 GiB) in 32m 54s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  87% (13.3 GiB of 15.3 GiB) in 33m  9s, read: 11.2 MiB/s, write: 9.6 MiB/s
+INFO:  88% (13.5 GiB of 15.3 GiB) in 33m 19s, read: 14.4 MiB/s, write: 13.6 MiB/s
+INFO:  89% (13.6 GiB of 15.3 GiB) in 33m 49s, read: 5.1 MiB/s, write: 5.1 MiB/s
+INFO:  90% (13.8 GiB of 15.3 GiB) in 34m  0s, read: 14.5 MiB/s, write: 14.5 MiB/s
+INFO:  91% (13.9 GiB of 15.3 GiB) in 34m 10s, read: 15.6 MiB/s, write: 15.6 MiB/s
+INFO:  92% (14.1 GiB of 15.3 GiB) in 34m 45s, read: 4.5 MiB/s, write: 4.5 MiB/s
+INFO:  93% (14.2 GiB of 15.3 GiB) in 34m 54s, read: 19.6 MiB/s, write: 19.6 MiB/s
+INFO:  94% (14.4 GiB of 15.3 GiB) in 35m 23s, read: 4.8 MiB/s, write: 4.8 MiB/s
+INFO:  95% (14.6 GiB of 15.3 GiB) in 35m 33s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  96% (14.7 GiB of 15.3 GiB) in 35m 38s, read: 22.4 MiB/s, write: 22.4 MiB/s
+INFO:  97% (14.8 GiB of 15.3 GiB) in 36m  8s, read: 5.1 MiB/s, write: 5.1 MiB/s
+INFO:  98% (15.0 GiB of 15.3 GiB) in 36m 18s, read: 18.4 MiB/s, write: 18.4 MiB/s
+INFO:  99% (15.1 GiB of 15.3 GiB) in 36m 24s, read: 21.3 MiB/s, write: 15.3 MiB/s
+INFO: 100% (15.3 GiB of 15.3 GiB) in 36m 56s, read: 4.9 MiB/s, write: 2.0 MiB/s
+INFO: backup was done incrementally, reused 2.13 TiB (99%)
+INFO: transferred 15.29 GiB in 2260 seconds (6.9 MiB/s)
+INFO: Finished Backup of VM 137 (00:38:22)
+INFO: Backup finished at 2021-04-11 14:08:51
+INFO: Starting Backup of VM 141 (qemu)
+INFO: Backup started at 2021-04-11 14:08:51
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-141-disk-0' 35G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/141/2021-04-11T12:08:51Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '3d1cecc7-8448-46b9-89dc-293b5abb95e6'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.6 GiB of 35.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.6 GiB dirty of 35.0 GiB total
+INFO:  24% (404.0 MiB of 1.6 GiB) in  3s, read: 134.7 MiB/s, write: 129.3 MiB/s
+INFO:  25% (424.0 MiB of 1.6 GiB) in 33s, read: 682.7 KiB/s, write: 682.7 KiB/s
+INFO:  29% (488.0 MiB of 1.6 GiB) in 36s, read: 21.3 MiB/s, write: 20.0 MiB/s
+INFO:  32% (536.0 MiB of 1.6 GiB) in 39s, read: 16.0 MiB/s, write: 12.0 MiB/s
+INFO:  34% (572.0 MiB of 1.6 GiB) in 42s, read: 12.0 MiB/s, write: 9.3 MiB/s
+INFO:  36% (604.0 MiB of 1.6 GiB) in 45s, read: 10.7 MiB/s, write: 6.7 MiB/s
+INFO:  38% (644.0 MiB of 1.6 GiB) in 48s, read: 13.3 MiB/s, write: 1.3 MiB/s
+INFO:  44% (740.0 MiB of 1.6 GiB) in 51s, read: 32.0 MiB/s, write: 26.7 MiB/s
+INFO:  46% (776.0 MiB of 1.6 GiB) in 55s, read: 9.0 MiB/s, write: 6.0 MiB/s
+INFO:  49% (812.0 MiB of 1.6 GiB) in 58s, read: 12.0 MiB/s, write: 5.3 MiB/s
+INFO:  50% (836.0 MiB of 1.6 GiB) in  1m 19s, read: 1.1 MiB/s, write: 585.1 KiB/s
+INFO:  52% (872.0 MiB of 1.6 GiB) in  1m 22s, read: 12.0 MiB/s, write: 9.3 MiB/s
+INFO:  55% (924.0 MiB of 1.6 GiB) in  1m 25s, read: 17.3 MiB/s, write: 6.7 MiB/s
+INFO:  58% (968.0 MiB of 1.6 GiB) in  1m 28s, read: 14.7 MiB/s, write: 9.3 MiB/s
+INFO:  67% (1.1 GiB of 1.6 GiB) in  1m 31s, read: 46.7 MiB/s, write: 21.3 MiB/s
+INFO:  69% (1.1 GiB of 1.6 GiB) in  1m 34s, read: 16.0 MiB/s, write: 10.7 MiB/s
+INFO:  73% (1.2 GiB of 1.6 GiB) in  1m 37s, read: 21.3 MiB/s, write: 8.0 MiB/s
+INFO:  74% (1.2 GiB of 1.6 GiB) in  1m 58s, read: 390.1 KiB/s, write: 0 B/s
+INFO:  76% (1.2 GiB of 1.6 GiB) in  2m  1s, read: 12.0 MiB/s, write: 9.3 MiB/s
+INFO:  82% (1.3 GiB of 1.6 GiB) in  2m  4s, read: 30.7 MiB/s, write: 5.3 MiB/s
+INFO:  85% (1.4 GiB of 1.6 GiB) in  2m  7s, read: 18.7 MiB/s, write: 5.3 MiB/s
+INFO:  89% (1.4 GiB of 1.6 GiB) in  2m 10s, read: 24.0 MiB/s, write: 5.3 MiB/s
+INFO:  92% (1.5 GiB of 1.6 GiB) in  2m 13s, read: 16.0 MiB/s, write: 4.0 MiB/s
+INFO:  93% (1.5 GiB of 1.6 GiB) in  2m 16s, read: 6.7 MiB/s, write: 2.7 MiB/s
+INFO:  99% (1.6 GiB of 1.6 GiB) in  2m 19s, read: 28.0 MiB/s, write: 8.0 MiB/s
+INFO: 100% (1.6 GiB of 1.6 GiB) in  2m 45s, read: 630.2 KiB/s, write: 630.2 KiB/s
+INFO: backup was done incrementally, reused 34.00 GiB (97%)
+INFO: transferred 1.61 GiB in 201 seconds (8.2 MiB/s)
+INFO: Finished Backup of VM 141 (00:03:54)
+INFO: Backup finished at 2021-04-11 14:12:45
+INFO: Starting Backup of VM 142 (lxc)
+INFO: Backup started at 2021-04-11 14:12:45
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/142/2021-04-11T12:12:45Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp22126_142/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 142 --backup-time 1618143165 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/142/2021-04-11T12:12:45Z
+INFO: Client name: pve-dc4-001
+INFO: Starting backup protocol: Sun Apr 11 14:12:49 2021
+INFO: Downloading previous manifest (Sat Apr 10 20:27:42 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp22126_142/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 493.74 MiB of 15.45 GiB in 128.70s, average speed 3.84 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 14.97 GiB (96.9%)
+INFO: Uploaded backup catalog (1.30 MiB)
+INFO: Duration: 153.72s
+INFO: End Time: Sun Apr 11 14:15:22 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 142 (00:02:38)
+INFO: Backup finished at 2021-04-11 14:15:23
+INFO: Starting Backup of VM 144 (lxc)
+INFO: Backup started at 2021-04-11 14:15:23
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/144/2021-04-11T12:15:23Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp22126_144/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 144 --backup-time 1618143323 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/144/2021-04-11T12:15:23Z
+INFO: Client name: pve-dc4-001
+INFO: Starting backup protocol: Sun Apr 11 14:15:23 2021
+INFO: Downloading previous manifest (Sat Apr 10 20:28:52 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp22126_144/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 236.12 MiB of 5.67 GiB in 50.35s, average speed 4.69 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 5.44 GiB (95.9%)
+INFO: Uploaded backup catalog (655.99 KiB)
+INFO: Duration: 71.03s
+INFO: End Time: Sun Apr 11 14:16:34 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 144 (00:01:12)
+INFO: Backup finished at 2021-04-11 14:16:35
+INFO: Starting Backup of VM 145 (qemu)
+INFO: Backup started at 2021-04-11 14:16:35
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-145-disk-0' 83G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/145/2021-04-11T12:16:35Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '5aa163b8-2683-496c-a1c9-e04e17d0e2f0'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (12.1 GiB of 83.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 12.1 GiB dirty of 83.0 GiB total
+INFO:   3% (404.0 MiB of 12.1 GiB) in  3s, read: 134.7 MiB/s, write: 116.0 MiB/s
+INFO:   4% (508.0 MiB of 12.1 GiB) in 30s, read: 3.9 MiB/s, write: 3.9 MiB/s
+INFO:   5% (644.0 MiB of 12.1 GiB) in 36s, read: 22.7 MiB/s, write: 22.7 MiB/s
+INFO:   6% (760.0 MiB of 12.1 GiB) in 44s, read: 14.5 MiB/s, write: 14.0 MiB/s
+INFO:   7% (876.0 MiB of 12.1 GiB) in  1m 12s, read: 4.1 MiB/s, write: 4.1 MiB/s
+INFO:   8% (1000.0 MiB of 12.1 GiB) in  1m 20s, read: 15.5 MiB/s, write: 15.5 MiB/s
+INFO:   9% (1.1 GiB of 12.1 GiB) in  1m 26s, read: 20.7 MiB/s, write: 20.7 MiB/s
+INFO:  10% (1.2 GiB of 12.1 GiB) in  2m  6s, read: 3.0 MiB/s, write: 3.0 MiB/s
+INFO:  11% (1.3 GiB of 12.1 GiB) in  2m 20s, read: 9.7 MiB/s, write: 9.7 MiB/s
+INFO:  12% (1.5 GiB of 12.1 GiB) in  2m 31s, read: 10.2 MiB/s, write: 10.2 MiB/s
+INFO:  13% (1.6 GiB of 12.1 GiB) in  2m 42s, read: 11.6 MiB/s, write: 11.6 MiB/s
+INFO:  14% (1.7 GiB of 12.1 GiB) in  3m 26s, read: 2.8 MiB/s, write: 2.8 MiB/s
+INFO:  15% (1.8 GiB of 12.1 GiB) in  3m 45s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  16% (2.0 GiB of 12.1 GiB) in  3m 57s, read: 10.7 MiB/s, write: 10.7 MiB/s
+INFO:  17% (2.1 GiB of 12.1 GiB) in  4m 19s, read: 6.0 MiB/s, write: 6.0 MiB/s
+INFO:  18% (2.2 GiB of 12.1 GiB) in  4m 25s, read: 20.7 MiB/s, write: 20.7 MiB/s
+INFO:  19% (2.3 GiB of 12.1 GiB) in  4m 33s, read: 15.0 MiB/s, write: 15.0 MiB/s
+INFO:  20% (2.4 GiB of 12.1 GiB) in  4m 55s, read: 5.6 MiB/s, write: 5.6 MiB/s
+INFO:  21% (2.6 GiB of 12.1 GiB) in  5m  1s, read: 22.7 MiB/s, write: 22.7 MiB/s
+INFO:  22% (2.7 GiB of 12.1 GiB) in  5m  6s, read: 22.4 MiB/s, write: 22.4 MiB/s
+INFO:  23% (2.8 GiB of 12.1 GiB) in  5m 32s, read: 4.8 MiB/s, write: 4.8 MiB/s
+INFO:  24% (2.9 GiB of 12.1 GiB) in  5m 38s, read: 20.7 MiB/s, write: 20.7 MiB/s
+INFO:  25% (3.0 GiB of 12.1 GiB) in  5m 43s, read: 24.8 MiB/s, write: 24.0 MiB/s
+INFO:  26% (3.2 GiB of 12.1 GiB) in  5m 48s, read: 24.8 MiB/s, write: 24.8 MiB/s
+INFO:  27% (3.3 GiB of 12.1 GiB) in  6m 11s, read: 5.0 MiB/s, write: 5.0 MiB/s
+INFO:  28% (3.4 GiB of 12.1 GiB) in  6m 18s, read: 18.9 MiB/s, write: 18.9 MiB/s
+INFO:  29% (3.5 GiB of 12.1 GiB) in  6m 27s, read: 14.7 MiB/s, write: 14.7 MiB/s
+INFO:  30% (3.7 GiB of 12.1 GiB) in  6m 48s, read: 5.9 MiB/s, write: 5.9 MiB/s
+INFO:  31% (3.8 GiB of 12.1 GiB) in  6m 55s, read: 17.1 MiB/s, write: 17.1 MiB/s
+INFO:  32% (3.9 GiB of 12.1 GiB) in  7m  2s, read: 17.1 MiB/s, write: 17.1 MiB/s
+INFO:  33% (4.0 GiB of 12.1 GiB) in  7m 23s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  34% (4.1 GiB of 12.1 GiB) in  7m 29s, read: 19.3 MiB/s, write: 19.3 MiB/s
+INFO:  35% (4.3 GiB of 12.1 GiB) in  7m 35s, read: 19.3 MiB/s, write: 19.3 MiB/s
+INFO:  36% (4.4 GiB of 12.1 GiB) in  7m 42s, read: 17.7 MiB/s, write: 17.7 MiB/s
+INFO:  37% (4.5 GiB of 12.1 GiB) in  8m  3s, read: 5.7 MiB/s, write: 5.7 MiB/s
+INFO:  38% (4.6 GiB of 12.1 GiB) in  8m  8s, read: 24.8 MiB/s, write: 24.8 MiB/s
+INFO:  39% (4.7 GiB of 12.1 GiB) in  8m 15s, read: 18.3 MiB/s, write: 18.3 MiB/s
+INFO:  40% (4.9 GiB of 12.1 GiB) in  8m 38s, read: 5.6 MiB/s, write: 5.6 MiB/s
+INFO:  41% (5.0 GiB of 12.1 GiB) in  8m 43s, read: 24.0 MiB/s, write: 23.2 MiB/s
+INFO:  42% (5.1 GiB of 12.1 GiB) in  8m 48s, read: 25.6 MiB/s, write: 25.6 MiB/s
+INFO:  43% (5.2 GiB of 12.1 GiB) in  9m  9s, read: 6.1 MiB/s, write: 6.1 MiB/s
+INFO:  44% (5.3 GiB of 12.1 GiB) in  9m 22s, read: 8.9 MiB/s, write: 8.9 MiB/s
+INFO:  45% (5.5 GiB of 12.1 GiB) in  9m 28s, read: 23.3 MiB/s, write: 23.3 MiB/s
+INFO:  46% (5.6 GiB of 12.1 GiB) in  9m 50s, read: 5.5 MiB/s, write: 5.5 MiB/s
+INFO:  47% (5.7 GiB of 12.1 GiB) in  9m 56s, read: 20.7 MiB/s, write: 20.7 MiB/s
+INFO:  48% (5.8 GiB of 12.1 GiB) in 10m  2s, read: 19.3 MiB/s, write: 19.3 MiB/s
+INFO:  49% (5.9 GiB of 12.1 GiB) in 10m  8s, read: 19.3 MiB/s, write: 19.3 MiB/s
+INFO:  50% (6.1 GiB of 12.1 GiB) in 10m 29s, read: 6.1 MiB/s, write: 6.1 MiB/s
+INFO:  51% (6.2 GiB of 12.1 GiB) in 10m 35s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO:  52% (6.3 GiB of 12.1 GiB) in 10m 39s, read: 28.0 MiB/s, write: 28.0 MiB/s
+INFO:  53% (6.5 GiB of 12.1 GiB) in 10m 59s, read: 6.6 MiB/s, write: 6.4 MiB/s
+INFO:  54% (6.6 GiB of 12.1 GiB) in 11m  3s, read: 31.0 MiB/s, write: 31.0 MiB/s
+INFO:  55% (6.7 GiB of 12.1 GiB) in 11m 10s, read: 20.6 MiB/s, write: 20.6 MiB/s
+INFO:  56% (6.8 GiB of 12.1 GiB) in 11m 29s, read: 5.3 MiB/s, write: 5.3 MiB/s
+INFO:  57% (6.9 GiB of 12.1 GiB) in 11m 36s, read: 18.3 MiB/s, write: 18.3 MiB/s
+INFO:  58% (7.1 GiB of 12.1 GiB) in 11m 40s, read: 33.0 MiB/s, write: 33.0 MiB/s
+INFO:  59% (7.2 GiB of 12.1 GiB) in 11m 47s, read: 14.3 MiB/s, write: 14.3 MiB/s
+INFO:  60% (7.3 GiB of 12.1 GiB) in 12m  4s, read: 8.2 MiB/s, write: 8.2 MiB/s
+INFO:  61% (7.4 GiB of 12.1 GiB) in 12m 10s, read: 22.7 MiB/s, write: 22.7 MiB/s
+INFO:  62% (7.5 GiB of 12.1 GiB) in 12m 14s, read: 27.0 MiB/s, write: 27.0 MiB/s
+INFO:  63% (7.7 GiB of 12.1 GiB) in 12m 35s, read: 5.7 MiB/s, write: 5.7 MiB/s
+INFO:  64% (7.8 GiB of 12.1 GiB) in 12m 41s, read: 26.0 MiB/s, write: 26.0 MiB/s
+INFO:  65% (7.9 GiB of 12.1 GiB) in 12m 46s, read: 18.4 MiB/s, write: 18.4 MiB/s
+INFO:  66% (8.0 GiB of 12.1 GiB) in 13m  9s, read: 5.7 MiB/s, write: 5.7 MiB/s
+INFO:  67% (8.1 GiB of 12.1 GiB) in 13m 16s, read: 17.7 MiB/s, write: 17.7 MiB/s
+INFO:  68% (8.3 GiB of 12.1 GiB) in 13m 23s, read: 18.9 MiB/s, write: 18.9 MiB/s
+INFO:  69% (8.4 GiB of 12.1 GiB) in 13m 46s, read: 5.0 MiB/s, write: 5.0 MiB/s
+INFO:  70% (8.5 GiB of 12.1 GiB) in 13m 51s, read: 27.2 MiB/s, write: 27.2 MiB/s
+INFO:  71% (8.7 GiB of 12.1 GiB) in 13m 59s, read: 16.5 MiB/s, write: 16.5 MiB/s
+INFO:  72% (8.8 GiB of 12.1 GiB) in 14m  8s, read: 11.1 MiB/s, write: 11.1 MiB/s
+INFO:  73% (8.9 GiB of 12.1 GiB) in 14m 29s, read: 6.5 MiB/s, write: 6.5 MiB/s
+INFO:  74% (9.0 GiB of 12.1 GiB) in 14m 34s, read: 23.2 MiB/s, write: 23.2 MiB/s
+INFO:  75% (9.1 GiB of 12.1 GiB) in 14m 40s, read: 23.3 MiB/s, write: 22.7 MiB/s
+INFO:  76% (9.2 GiB of 12.1 GiB) in 15m  0s, read: 5.0 MiB/s, write: 5.0 MiB/s
+INFO:  77% (9.4 GiB of 12.1 GiB) in 15m  5s, read: 24.8 MiB/s, write: 24.8 MiB/s
+INFO:  78% (9.5 GiB of 12.1 GiB) in 15m 11s, read: 22.0 MiB/s, write: 22.0 MiB/s
+INFO:  79% (9.6 GiB of 12.1 GiB) in 15m 29s, read: 6.4 MiB/s, write: 6.4 MiB/s
+INFO:  80% (9.7 GiB of 12.1 GiB) in 15m 35s, read: 22.0 MiB/s, write: 22.0 MiB/s
+INFO:  81% (9.8 GiB of 12.1 GiB) in 15m 42s, read: 18.3 MiB/s, write: 18.3 MiB/s
+INFO:  82% (10.0 GiB of 12.1 GiB) in 15m 49s, read: 16.0 MiB/s, write: 16.0 MiB/s
+INFO:  83% (10.1 GiB of 12.1 GiB) in 16m  8s, read: 7.8 MiB/s, write: 7.8 MiB/s
+INFO:  84% (10.2 GiB of 12.1 GiB) in 16m 16s, read: 13.5 MiB/s, write: 13.0 MiB/s
+INFO:  85% (10.3 GiB of 12.1 GiB) in 16m 20s, read: 32.0 MiB/s, write: 32.0 MiB/s
+INFO:  86% (10.4 GiB of 12.1 GiB) in 16m 38s, read: 6.2 MiB/s, write: 6.2 MiB/s
+INFO:  87% (10.6 GiB of 12.1 GiB) in 16m 45s, read: 20.0 MiB/s, write: 20.0 MiB/s
+INFO:  88% (10.7 GiB of 12.1 GiB) in 16m 51s, read: 22.0 MiB/s, write: 22.0 MiB/s
+INFO:  89% (10.8 GiB of 12.1 GiB) in 17m  9s, read: 6.7 MiB/s, write: 6.4 MiB/s
+INFO:  90% (10.9 GiB of 12.1 GiB) in 17m 14s, read: 21.6 MiB/s, write: 20.0 MiB/s
+INFO:  91% (11.1 GiB of 12.1 GiB) in 17m 18s, read: 35.0 MiB/s, write: 35.0 MiB/s
+INFO:  92% (11.2 GiB of 12.1 GiB) in 17m 34s, read: 7.8 MiB/s, write: 5.2 MiB/s
+INFO:  93% (11.3 GiB of 12.1 GiB) in 17m 38s, read: 27.0 MiB/s, write: 27.0 MiB/s
+INFO:  94% (11.4 GiB of 12.1 GiB) in 17m 42s, read: 37.0 MiB/s, write: 37.0 MiB/s
+INFO:  95% (11.5 GiB of 12.1 GiB) in 17m 46s, read: 28.0 MiB/s, write: 28.0 MiB/s
+INFO:  96% (11.7 GiB of 12.1 GiB) in 18m  3s, read: 7.8 MiB/s, write: 7.8 MiB/s
+INFO:  97% (11.8 GiB of 12.1 GiB) in 18m  6s, read: 50.7 MiB/s, write: 50.7 MiB/s
+INFO:  98% (11.9 GiB of 12.1 GiB) in 18m  9s, read: 32.0 MiB/s, write: 32.0 MiB/s
+INFO:  99% (12.0 GiB of 12.1 GiB) in 18m 31s, read: 5.6 MiB/s, write: 5.6 MiB/s
+INFO: 100% (12.1 GiB of 12.1 GiB) in 18m 36s, read: 20.8 MiB/s, write: 20.8 MiB/s
+INFO: backup was done incrementally, reused 70.99 GiB (85%)
+INFO: transferred 12.14 GiB in 1167 seconds (10.7 MiB/s)
+INFO: Finished Backup of VM 145 (00:19:53)
+INFO: Backup finished at 2021-04-11 14:36:28
+INFO: Starting Backup of VM 150 (qemu)
+INFO: Backup started at 2021-04-11 14:36:28
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-150-disk-0' 9G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/150/2021-04-11T12:36:28Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'f2d5514b-7446-4fd8-a9f3-184821fcf7b0'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.3 GiB of 9.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.3 GiB dirty of 9.0 GiB total
+INFO:  30% (404.0 MiB of 1.3 GiB) in  3s, read: 134.7 MiB/s, write: 105.3 MiB/s
+INFO:  31% (408.0 MiB of 1.3 GiB) in 18s, read: 273.1 KiB/s, write: 0 B/s
+INFO:  32% (428.0 MiB of 1.3 GiB) in 21s, read: 6.7 MiB/s, write: 6.7 MiB/s
+INFO:  34% (460.0 MiB of 1.3 GiB) in 24s, read: 10.7 MiB/s, write: 8.0 MiB/s
+INFO:  35% (472.0 MiB of 1.3 GiB) in 27s, read: 4.0 MiB/s, write: 4.0 MiB/s
+INFO:  38% (512.0 MiB of 1.3 GiB) in 30s, read: 13.3 MiB/s, write: 8.0 MiB/s
+INFO:  43% (576.0 MiB of 1.3 GiB) in 33s, read: 21.3 MiB/s, write: 13.3 MiB/s
+INFO:  48% (640.0 MiB of 1.3 GiB) in 36s, read: 21.3 MiB/s, write: 13.3 MiB/s
+INFO:  49% (656.0 MiB of 1.3 GiB) in 39s, read: 5.3 MiB/s, write: 2.7 MiB/s
+INFO:  58% (768.0 MiB of 1.3 GiB) in 42s, read: 37.3 MiB/s, write: 16.0 MiB/s
+INFO:  61% (812.0 MiB of 1.3 GiB) in 45s, read: 14.7 MiB/s, write: 6.7 MiB/s
+INFO:  63% (836.0 MiB of 1.3 GiB) in  1m  5s, read: 1.2 MiB/s, write: 204.8 KiB/s
+INFO:  68% (900.0 MiB of 1.3 GiB) in  1m  8s, read: 21.3 MiB/s, write: 10.7 MiB/s
+INFO:  76% (1004.0 MiB of 1.3 GiB) in  1m 11s, read: 34.7 MiB/s, write: 17.3 MiB/s
+INFO:  86% (1.1 GiB of 1.3 GiB) in  1m 14s, read: 45.3 MiB/s, write: 22.7 MiB/s
+INFO:  92% (1.2 GiB of 1.3 GiB) in  1m 17s, read: 26.7 MiB/s, write: 13.3 MiB/s
+INFO:  95% (1.2 GiB of 1.3 GiB) in  1m 37s, read: 1.8 MiB/s, write: 614.4 KiB/s
+INFO: 100% (1.3 GiB of 1.3 GiB) in  1m 40s, read: 20.0 MiB/s, write: 9.3 MiB/s
+INFO: backup was done incrementally, reused 8.23 GiB (91%)
+INFO: transferred 1.29 GiB in 126 seconds (10.4 MiB/s)
+INFO: Finished Backup of VM 150 (00:02:29)
+INFO: Backup finished at 2021-04-11 14:38:57
+INFO: Starting Backup of VM 156 (qemu)
+INFO: Backup started at 2021-04-11 14:38:57
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-156-disk-0' 30G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/156/2021-04-11T12:38:57Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'db3a754d-fedb-4866-ab55-16542a5687e3'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.2 GiB of 30.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.2 GiB dirty of 30.0 GiB total
+INFO:  34% (404.0 MiB of 1.2 GiB) in  3s, read: 134.7 MiB/s, write: 124.0 MiB/s
+INFO:  35% (416.0 MiB of 1.2 GiB) in 14s, read: 1.1 MiB/s, write: 0 B/s
+INFO:  41% (496.0 MiB of 1.2 GiB) in 17s, read: 26.7 MiB/s, write: 8.0 MiB/s
+INFO:  47% (568.0 MiB of 1.2 GiB) in 20s, read: 24.0 MiB/s, write: 13.3 MiB/s
+INFO:  58% (692.0 MiB of 1.2 GiB) in 23s, read: 41.3 MiB/s, write: 20.0 MiB/s
+INFO:  62% (744.0 MiB of 1.2 GiB) in 26s, read: 17.3 MiB/s, write: 6.7 MiB/s
+INFO:  70% (832.0 MiB of 1.2 GiB) in 29s, read: 29.3 MiB/s, write: 16.0 MiB/s
+INFO:  77% (916.0 MiB of 1.2 GiB) in 40s, read: 7.6 MiB/s, write: 5.5 MiB/s
+INFO:  89% (1.0 GiB of 1.2 GiB) in 43s, read: 50.7 MiB/s, write: 16.0 MiB/s
+INFO: 100% (1.2 GiB of 1.2 GiB) in 46s, read: 40.0 MiB/s, write: 17.3 MiB/s
+INFO: backup was done incrementally, reused 29.29 GiB (97%)
+INFO: transferred 1.16 GiB in 65 seconds (18.3 MiB/s)
+INFO: Finished Backup of VM 156 (00:01:22)
+INFO: Backup finished at 2021-04-11 14:40:19
+INFO: Starting Backup of VM 157 (qemu)
+INFO: Backup started at 2021-04-11 14:40:19
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-157-disk-0' 500G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/157/2021-04-11T12:40:19Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '9bf568b3-4ed0-4917-9a37-2bdc459d4242'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (52.6 GiB of 500.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 52.6 GiB dirty of 500.0 GiB total
+INFO:   0% (404.0 MiB of 52.6 GiB) in  3s, read: 134.7 MiB/s, write: 122.7 MiB/s
+INFO:   1% (544.0 MiB of 52.6 GiB) in 17s, read: 10.0 MiB/s, write: 10.0 MiB/s
+INFO:   2% (1.1 GiB of 52.6 GiB) in 48s, read: 18.2 MiB/s, write: 18.2 MiB/s
+INFO:   3% (1.6 GiB of 52.6 GiB) in  1m 24s, read: 14.4 MiB/s, write: 14.4 MiB/s
+INFO:   4% (2.1 GiB of 52.6 GiB) in  1m 58s, read: 16.4 MiB/s, write: 13.6 MiB/s
+INFO:   5% (2.6 GiB of 52.6 GiB) in  2m 30s, read: 16.1 MiB/s, write: 16.1 MiB/s
+INFO:   6% (3.2 GiB of 52.6 GiB) in  3m 24s, read: 10.0 MiB/s, write: 10.0 MiB/s
+INFO:   7% (3.7 GiB of 52.6 GiB) in  4m 46s, read: 6.6 MiB/s, write: 6.6 MiB/s
+INFO:   8% (4.2 GiB of 52.6 GiB) in  6m  8s, read: 6.4 MiB/s, write: 6.4 MiB/s
+INFO:   9% (4.8 GiB of 52.6 GiB) in  7m 30s, read: 6.7 MiB/s, write: 6.4 MiB/s
+INFO:  10% (5.3 GiB of 52.6 GiB) in  8m 12s, read: 12.5 MiB/s, write: 6.8 MiB/s
+INFO:  11% (5.8 GiB of 52.6 GiB) in  8m 59s, read: 11.5 MiB/s, write: 5.2 MiB/s
+INFO:  12% (6.3 GiB of 52.6 GiB) in  9m 40s, read: 13.4 MiB/s, write: 4.3 MiB/s
+INFO:  13% (6.8 GiB of 52.6 GiB) in 10m 11s, read: 17.2 MiB/s, write: 9.4 MiB/s
+INFO:  14% (7.4 GiB of 52.6 GiB) in 11m  8s, read: 9.7 MiB/s, write: 6.9 MiB/s
+INFO:  15% (7.9 GiB of 52.6 GiB) in 11m 48s, read: 13.1 MiB/s, write: 7.5 MiB/s
+INFO:  16% (8.4 GiB of 52.6 GiB) in 12m 44s, read: 10.0 MiB/s, write: 5.1 MiB/s
+INFO:  17% (8.9 GiB of 52.6 GiB) in 14m  9s, read: 6.1 MiB/s, write: 3.8 MiB/s
+INFO:  18% (9.5 GiB of 52.6 GiB) in 14m 55s, read: 12.6 MiB/s, write: 7.0 MiB/s
+INFO:  19% (10.0 GiB of 52.6 GiB) in 15m 28s, read: 15.4 MiB/s, write: 15.4 MiB/s
+INFO:  20% (10.5 GiB of 52.6 GiB) in 16m  6s, read: 14.1 MiB/s, write: 14.1 MiB/s
+INFO:  21% (11.1 GiB of 52.6 GiB) in 16m 57s, read: 10.6 MiB/s, write: 10.6 MiB/s
+INFO:  22% (11.6 GiB of 52.6 GiB) in 17m 51s, read: 9.9 MiB/s, write: 9.7 MiB/s
+INFO:  23% (12.1 GiB of 52.6 GiB) in 18m 45s, read: 10.0 MiB/s, write: 7.9 MiB/s
+INFO:  24% (12.6 GiB of 52.6 GiB) in 19m 24s, read: 13.5 MiB/s, write: 6.8 MiB/s
+INFO:  25% (13.2 GiB of 52.6 GiB) in 20m 32s, read: 8.0 MiB/s, write: 4.4 MiB/s
+INFO:  26% (13.7 GiB of 52.6 GiB) in 21m 43s, read: 8.2 MiB/s, write: 4.0 MiB/s
+INFO:  27% (14.2 GiB of 52.6 GiB) in 22m 42s, read: 8.3 MiB/s, write: 4.8 MiB/s
+INFO:  28% (14.7 GiB of 52.6 GiB) in 23m 41s, read: 9.3 MiB/s, write: 3.9 MiB/s
+INFO:  29% (15.3 GiB of 52.6 GiB) in 24m 33s, read: 11.0 MiB/s, write: 4.6 MiB/s
+ERROR: interrupted by signal
+INFO: aborting backup job
+ERROR: Backup of VM 157 failed - interrupted by signal
+INFO: Failed at 2021-04-11 15:05:06
+ERROR: Backup job failed - interrupted by signal
+
+TASK ERROR: interrupted by signal

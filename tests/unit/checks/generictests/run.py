@@ -10,7 +10,7 @@ import freezegun  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
-                         MockHostExtraConf, MockItemState, \
+                         MockHostExtraConf, mock_item_state, \
                          Immutables, assertEqual
 from testlib import MissingCheckInfoError, Check  # type: ignore[import]
 from generictests.checkhandler import checkhandler
@@ -274,9 +274,8 @@ def run(check_info, dataset, write=False):
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
             with \
-                current_host("non-existent-testhost", write_state=False), \
-                value_store.context(CheckPluginName("test"), "unit-test"), \
-                MockItemState(mock_is), \
+                current_host("non-existent-testhost"), \
+                mock_item_state(mock_is), \
                 MockHostExtraConf(check, mock_hec), \
                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 

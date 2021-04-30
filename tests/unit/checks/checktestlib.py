@@ -7,13 +7,12 @@
 import copy
 import os
 import types
-from typing import List
+from typing import Any, Callable, NamedTuple
 
 import mock
 import pytest  # type: ignore[import]
 
 from cmk.base.item_state import MKCounterWrapped
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.check_api import Service
 
 
@@ -351,26 +350,32 @@ class BasicItemState:
         # We want to be able to test time anomalies.
 
 
-class MockItemState:
+class _MockValueStore:
+    def __init__(self, getter: Callable):
+        self._getter = getter
+
+    def get(self, key, default=None):
+        return self._getter(key, default)
+
+    def __setitem__(self, key, value):
+        pass
+
+
+class _MockVSManager(NamedTuple):
+    active_service_interface: _MockValueStore
+
+
+def mock_item_state(mock_state):
     """Mock the calls to item_state API.
-
-    Due to our rather unorthodox import structure, we cannot mock
-    cmk.base.item_state.get_item_state directly (it's a global var
-    in running checks!)
-    Instead, this context manager mocks
-    cmk.base.item_state._cached_item_states.get_item_state.
-
-    This will affect get_rate and get_average as well as
-    get_item_state.
 
     Usage:
 
-    with MockItemState(mock_state):
+    with mock_item_state(mock_state):
         # run your check test here
         mocked_time_diff, mocked_value = \
             cmk.base.item_state.get_item_state('whatever_key', default="IGNORED")
 
-    There are three different types of arguments to pass to MockItemState:
+    There are three different types of arguments to pass to mock_item_state:
 
     1) Callable object:
         The callable object will replace `get_item_state`. It must accept two
@@ -382,38 +387,18 @@ class MockItemState:
 
     3) Anything else:
         All calls to the item_state API behave as if the last state had
-        been `value`, recorded
-        `time_diff` seconds ago.
+        been `mock_state`
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    TARGET = 'cmk.base.item_state._cached_item_states.get_item_state'
+    target = 'cmk.base.api.agent_based.value_store._global_state._active_host_value_store'
 
-    def __init__(self, mock_state):
-        self.context = None
+    getter = (  #
+        mock_state.get if isinstance(mock_state, dict) else
+        (mock_state if callable(mock_state) else  #
+         lambda key, default: mock_state))
 
-        if hasattr(mock_state, '__call__'):
-            self.get_val_function = mock_state
-        elif isinstance(mock_state, dict):
-            self.get_val_function = mock_state.get  # in dict case check values
-        else:
-            self.get_val_function = lambda key, default: mock_state
-
-    def __call__(self, user_key, default=None):
-        val = self.get_val_function(user_key, default)
-        return val
-
-    def __enter__(self):
-        '''The default context: just mock get_item_state'''
-        self.context = mock.patch(
-            MockItemState.TARGET,
-            # I'm the MockObj myself!
-            new_callable=lambda: self)
-        return self.context.__enter__()
-
-    def __exit__(self, *exc_info):
-        assert self.context is not None
-        return self.context.__exit__(*exc_info)
+    return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
 
 
 class assertMKCounterWrapped:
@@ -421,14 +406,14 @@ class assertMKCounterWrapped:
 
     If you can choose to also assert a certain error message:
 
-    with MockItemState((1., -42)):
+    with mock_item_state((1., -42)):
         with assertMKCounterWrapped("value is negative"):
             # do a check that raises such an exception
             run_my_check()
 
     Or you can ignore the exact error message:
 
-    with MockItemState((1., -42)):
+    with mock_item_state((1., -42)):
         with assertMKCounterWrapped():
             # do a check that raises such an exception
             run_my_check()

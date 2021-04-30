@@ -17,6 +17,8 @@ export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
 # is being sent only once to each remote host.
 if [ "$REMOTE_HOST" ]; then
     export REMOTE=$REMOTE_HOST
+elif [ "$REMOTE_ADDR" ]; then
+    export REMOTE=$REMOTE_ADDR
 elif [ "$SSH_CLIENT" ]; then
     export REMOTE=${SSH_CLIENT%% *}
 fi
@@ -145,7 +147,12 @@ fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ $OPENSSL_VERSION -ge 10000 ]; then
+    if [ "$OPENSSL_VERSION" -ge 10101 ]; then
+        echo -n "03"
+        # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
+        # always use key derivation here, as this is suitable for passwords of all lengths.
+        exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "$PASSPHRASE")
+    elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
         echo -n "02"
         exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
     else
@@ -208,10 +215,16 @@ section_labels() {
 
 section_mem() {
     if [ -n "$IS_DOCKERIZED" ]; then
-        echo '<<<docker_container_mem>>>'
-        cat /sys/fs/cgroup/memory/memory.stat
-        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        echo "<<<docker_container_mem$CGROUP_SECTION_SUFFIX>>>"
+        if [ -n "$IS_CGROUP_V2" ]; then
+            cat /sys/fs/cgroup/memory.stat
+            echo "memory.current $(cat /sys/fs/cgroup/memory.current)"
+            echo "memory.max $(cat /sys/fs/cgroup/memory.max)"
+        else
+            cat /sys/fs/cgroup/memory/memory.stat
+            echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+            echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        fi
         grep -F 'MemTotal:' /proc/meminfo
     elif [ -n "$IS_LXC_CONTAINER" ]; then
         echo '<<<mem>>>'
@@ -449,13 +462,18 @@ section_diskstat() {
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
     else
-        echo '<<<docker_container_diskstat>>>'
+        echo "<<<docker_container_diskstat$CGROUP_SECTION_SUFFIX>>>"
         echo "[time]"
         date +%s
-        for F in io_service_bytes io_serviced; do
-            echo "[$F]"
-            cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
-        done
+        if [ -n "$IS_CGROUP_V2" ]; then
+            echo "[io.stat]"
+            cat "/sys/fs/cgroup/io.stat"
+        else
+            for F in io_service_bytes io_serviced; do
+                echo "[$F]"
+                cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+            done
+        fi
         echo "[names]"
         for F in /sys/block/*; do
             echo "${F##*/} $(cat "$F/dev")"
@@ -1054,6 +1072,8 @@ run_liveupdate() {
     if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
         if [ -z "$REMOTE" ]; then
             echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+        elif [ -z "$RTC_SECRET" ] && [ -z "$PASSPHRASE" ] && [ "$ENCRYPTED_RT" != "no" ]; then
+            echo "ERROR: Missing secret for encryping Real-Time Check data,  while encryption is requested. Not starting Real-Time Checks." >&2
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
@@ -1662,7 +1682,7 @@ run_liveupdate
 run_remote_plugin
 
 # MK's runas Executor
-run_mrpe
+run_runas_executor
 
 # Local checks
 run_local_checks

@@ -11,7 +11,6 @@ import functools
 import json
 import pprint
 import time
-import traceback
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set
@@ -26,6 +25,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -64,7 +64,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     toggle_page_menu_entries,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, AjaxPageResult
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
@@ -76,7 +76,7 @@ from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
     cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
-    cmp_string_list, Command, command_registry, CommandGroup, data_source_registry,
+    cmp_string_list, Command, command_registry, CommandGroup, compare_ips, data_source_registry,
     declare_1to1_sorter, declare_simple_sorter, DerivedColumnsSorter, exporter_registry,
     format_plugin_output, get_all_views, get_custom_var, get_linked_visual_request_vars,
     get_perfdata_nth_value, get_permitted_views, get_tag_groups, get_view_infos, group_value,
@@ -85,7 +85,8 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     paint_age, paint_host_list, paint_stalified, Painter, painter_exists, painter_registry,
     PainterOptions, register_command_group, register_legacy_command, register_painter,
     register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
-    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title,
+    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title, CommandExecutor,
+    CommandSpec,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -133,6 +134,7 @@ from cmk.gui.type_defs import (
     Rows,
     ViewSpec,
     Visual,
+    ViewName,
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -393,10 +395,7 @@ class View:
         return sorters
 
     @property
-    def row_limit(self) -> Optional[int]:
-        if self.datasource.ignore_limit:
-            return None
-
+    def row_limit(self):
         return self._row_limit
 
     @row_limit.setter
@@ -650,12 +649,13 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.var("_row_id")])
+                rows = _filter_selected_rows(view_spec, rows,
+                                             [html.request.get_str_input_mandatory("_row_id")])
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(
+                rows = _filter_selected_rows(
                     view_spec, rows,
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
@@ -678,7 +678,8 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
+                rows = _filter_selected_rows(view_spec, rows,
+                                             [html.request.get_str_input_mandatory("_row_id")])
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
@@ -700,8 +701,10 @@ class GUIViewRenderer(ABCViewRenderer):
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
-                if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
-                                                         self.view.row_limit):
+                if cmk.gui.view_utils.row_limit_exceeded(
+                        unfiltered_amount_of_rows,
+                        self.view.row_limit) or cmk.gui.view_utils.row_limit_exceeded(
+                            len(rows), self.view.row_limit):
                     cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
                     del rows[self.view.row_limit:]
                     self.view.process_tracking.amount_rows_after_limit = len(rows)
@@ -710,7 +713,7 @@ class GUIViewRenderer(ABCViewRenderer):
                           show_checkboxes and not html.do_actions())
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
-                selected = filter_selected_rows(
+                selected = _filter_selected_rows(
                     view_spec, rows,
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
@@ -956,8 +959,8 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
         checkboxes_toggleable = self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         yield PageMenuEntry(
-            title=_("Hide checkboxes") if self.view.checkboxes_displayed else _("Show checkboxes"),
-            icon_name="checkbox",
+            title=_("Show checkboxes"),
+            icon_name="checked_checkbox" if self.view.checkboxes_displayed else "checkbox",
             item=make_simple_link(
                 makeuri(
                     global_request,
@@ -979,7 +982,7 @@ class GUIViewRenderer(ABCViewRenderer):
             ]
 
             if self.view.spec["owner"] != config.user.id:
-                url_vars.append(("load_user", self.view.spec["owner"]))
+                url_vars.append(("owner", self.view.spec["owner"]))
 
             url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
 
@@ -1540,7 +1543,7 @@ def view_editor_sorter_specs(view):
         ds_name = view['datasource']
 
         for name, p in sorters_of_datasource(ds_name).items():
-            yield name, get_sorter_title_for_choices(p)
+            yield name, get_plugin_title_for_choices(p)
 
         for painter_spec in view.get('painters', []):
             if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
@@ -1781,9 +1784,9 @@ def page_view():
 
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.get_merged_context(
+            view_spec["context"],
             visuals.get_context_from_uri_vars(datasource.infos,
                                               single_infos=view_spec["single_infos"]),
-            view_spec["context"],
         )
 
         view = View(view_name, view_spec, context)
@@ -1992,12 +1995,10 @@ def _get_view_rows(view: View,
                    all_active_filters: List[Filter],
                    only_count: bool = False) -> _Tuple[int, Rows]:
     with CPUTracker() as fetch_rows_tracker:
-        rows = _fetch_view_rows(view, all_active_filters, only_count)
+        rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(view, rows, view.sorters)
-
-    unfiltered_amount_of_rows = len(rows)
 
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
@@ -2012,7 +2013,8 @@ def _get_view_rows(view: View,
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: bool) -> Rows:
+def _fetch_view_rows(view: View, all_active_filters: List[Filter],
+                     only_count: bool) -> _Tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
     Besides gathering the information from livestatus it also joins the rows with other information.
@@ -2032,9 +2034,20 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
             all_active_filters,
             view,
         )
+        # We test for limit here and not inside view.row_limit, because view.row_limit is used
+        # for rendering limits.
+        query_row_limit = None if view.datasource.ignore_limit else view.row_limit
+        row_data: Union[Rows,
+                        _Tuple[Rows,
+                               int]] = view.datasource.table.query(view, columns, headers,
+                                                                   view.only_sites, query_row_limit,
+                                                                   all_active_filters)
 
-        rows: Rows = view.datasource.table.query(view, columns, headers, view.only_sites,
-                                                 view.row_limit, all_active_filters)
+        if isinstance(row_data, tuple):
+            rows, unfiltered_amount_of_rows = row_data
+        else:
+            rows = row_data
+            unfiltered_amount_of_rows = len(row_data)
 
         # Now add join information, if there are join columns
         if view.join_cells:
@@ -2049,8 +2062,8 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
         if not cmk_version.is_raw_edition():
             _add_sla_data(view, rows)
 
-        return rows
-    return []
+        return rows, unfiltered_amount_of_rows
+    return [], 0
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
@@ -2300,13 +2313,18 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str,
 
     join_filters.append("Or: %d" % len(join_filters))
     headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = slave_ds.table.query(view,
-                                columns=list(
-                                    set([join_master_column, join_slave_column] + join_columns)),
-                                headers=headers,
-                                only_sites=view.only_sites,
-                                limit=None,
-                                all_active_filters=[])
+    row_data = slave_ds.table.query(
+        view,
+        columns=list(set([join_master_column, join_slave_column] + join_columns)),
+        headers=headers,
+        only_sites=view.only_sites,
+        limit=None,
+        all_active_filters=[])
+
+    if isinstance(row_data, tuple):
+        rows, _unfiltered_amount_of_rows = row_data
+    else:
+        rows = row_data
 
     per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, Row]] = {}
     current_key: Optional[JoinMasterKey] = None
@@ -2979,17 +2997,18 @@ def _allowed_for_datasource(collection, ds_name):
     allowed = {}
     for name, plugin_class in collection.items():
         plugin = plugin_class()
-        infos_needed = infos_needed_by_painter(plugin, add_columns)
+        infos_needed = infos_needed_by_plugin(plugin, add_columns)
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = plugin
     return allowed
 
 
-def infos_needed_by_painter(painter, add_columns=None):
+def infos_needed_by_plugin(plugin: Union[Painter, Sorter],
+                           add_columns: Optional[List] = None) -> Set[str]:
     if add_columns is None:
         add_columns = []
 
-    return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
+    return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
 def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
@@ -2997,37 +3016,33 @@ def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
 
 
 def painter_choices_with_params(painters: Dict[str, Painter]) -> List[CascadingDropdownChoice]:
-    return sorted(((name, get_painter_title_for_choices(painter),
+    return sorted(((name, get_plugin_title_for_choices(painter),
                     painter.parameters if painter.parameters else None)
                    for name, painter in painters.items()),
                   key=lambda x: x[1])
 
 
-def get_sorter_title_for_choices(sorter: Sorter) -> str:
+def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
-        for info_name in sorted(infos_needed_by_painter(sorter))
+        for info_name in sorted(infos_needed_by_plugin(plugin))
     ])
 
     # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if sorter.columns == ["site"]:
+    if plugin.columns == ["site"]:
         info_title = _("Site")
 
-    return u"%s: %s" % (info_title, sorter.title)
+    dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+    title: str
+    if isinstance(plugin, Painter):
+        title = plugin.list_title(dummy_cell)
+    else:
+        if callable(plugin.title):
+            title = plugin.title(dummy_cell)
+        else:
+            title = plugin.title
 
-
-def get_painter_title_for_choices(painter: Painter) -> str:
-    info_title = "/".join([
-        visual_info_registry[info_name]().title_plural
-        for info_name in sorted(infos_needed_by_painter(painter))
-    ])
-
-    # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if painter.columns == ["site"]:
-        info_title = _("Site")
-
-    dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
-    return u"%s: %s" % (info_title, painter.list_title(dummy_cell))
+    return u"%s: %s" % (info_title, title)
 
 
 #.
@@ -3088,27 +3103,34 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
     return by_group
 
 
-# Examine the current HTML variables in order determine, which
-# command the user has selected. The fetch ids from a data row
-# (host name, service description, downtime/commands id) and
-# construct one or several core command lines and a descriptive
-# title.
-def core_command(what, row, row_nr, total_rows):
+def core_command(
+        what: str, row: Row, row_nr: int, total_rows: int
+) -> _Tuple[Sequence[CommandSpec], List[_Tuple[str, str]], str, CommandExecutor]:
+    """Examine the current HTML variables in order determine, which command the user has selected.
+    The fetch ids from a data row (host name, service description, downtime/commands id) and
+    construct one or several core command lines and a descriptive title."""
     host = row.get("host_name")
     descr = row.get("service_description")
 
     if what == "host":
-        spec = host
+        assert isinstance(host, str)
+        spec: str = host
         cmdtag = "HOST"
+
     elif what == "service":
+        assert isinstance(host, str)
+        assert isinstance(descr, str)
         spec = "%s;%s" % (host, descr)
         cmdtag = "SVC"
+
     else:
-        spec = row.get(what + "_id")
+        # e.g. downtime_id for downtimes may be int, same for acknowledgements
+        spec = str(row[what + "_id"])
         if descr:
             cmdtag = "SVC"
         else:
             cmdtag = "HOST"
+    assert isinstance(spec, str)
 
     commands, title = None, None
     # Call all command actions. The first one that detects
@@ -3130,7 +3152,7 @@ def core_command(what, row, row_nr, total_rows):
 
     # Some commands return lists of commands, others
     # just return one basic command. Convert those
-    if not isinstance(commands, list):
+    if isinstance(commands, str):
         commands = [commands]
 
     return commands, confirm_options, title, executor
@@ -3139,8 +3161,7 @@ def core_command(what, row, row_nr, total_rows):
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
-# [...] new rows -> Rows actions (shall/have) be performed on
-def do_actions(view, what, action_rows, backurl):
+def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) -> bool:
     if not config.user.may("general.act"):
         html.show_error(
             _("You are not allowed to perform actions. "
@@ -3179,7 +3200,7 @@ def do_actions(view, what, action_rows, backurl):
             len(action_rows),
         )
         for command_entry in core_commands:
-            site = row.get(
+            site: Optional[str] = row.get(
                 "site")  # site is missing for BI rows (aggregations can spawn several sites)
             if (site, command_entry) not in already_executed:
                 # Some command functions return the information about the site per-command (e.g. for BI)
@@ -3188,7 +3209,7 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                executor(command, site)
+                executor(command, SiteId(site) if site else None)
                 already_executed.add((site, command_entry))
                 count += 1
 
@@ -3216,66 +3237,24 @@ def do_actions(view, what, action_rows, backurl):
     return True
 
 
-def filter_selected_rows(view_spec: ViewSpec, rows, selected_ids):
-    action_rows = []
+def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
+    action_rows: Rows = []
     for row in rows:
         if row_id(view_spec, row) in selected_ids:
             action_rows.append(row)
     return action_rows
 
 
-def get_context_link(user, viewname):
-    if viewname in get_permitted_views():
-        return "view.py?view_name=%s" % viewname
-    return None
-
-
 @cmk.gui.pages.register("export_views")
-def ajax_export():
+def ajax_export() -> None:
     for view in get_permitted_views().values():
         view["owner"] = ''
         view["public"] = True
     html.write(pprint.pformat(get_permitted_views()))
 
 
-def get_view_by_name(view_name):
+def get_view_by_name(view_name: ViewName) -> ViewSpec:
     return get_permitted_views()[view_name]
-
-
-#.
-#   .--Plugin Helpers------------------------------------------------------.
-#   |   ____  _             _         _   _      _                         |
-#   |  |  _ \| |_   _  __ _(_)_ __   | | | | ___| |_ __   ___ _ __ ___     |
-#   |  | |_) | | | | |/ _` | | '_ \  | |_| |/ _ \ | '_ \ / _ \ '__/ __|    |
-#   |  |  __/| | |_| | (_| | | | | | |  _  |  __/ | |_) |  __/ |  \__ \    |
-#   |  |_|   |_|\__,_|\__, |_|_| |_| |_| |_|\___|_| .__/ \___|_|  |___/    |
-#   |                 |___/                       |_|                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def register_hook(hook, func):
-    if hook not in view_hooks:
-        view_hooks[hook] = []
-
-    if func not in view_hooks[hook]:
-        view_hooks[hook].append(func)
-
-
-def execute_hooks(hook):
-    for hook_func in view_hooks.get(hook, []):
-        try:
-            hook_func()
-        except Exception:
-            if config.debug:
-                raise MKGeneralException(
-                    _('Problem while executing hook function %s in hook %s: %s') %
-                    (hook_func.__name__, hook, traceback.format_exc()))
-
-
-def docu_link(topic, text):
-    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
 
 #.
@@ -3292,7 +3271,7 @@ def docu_link(topic, text):
 
 
 @cmk.gui.pages.register("ajax_popup_icon_selector")
-def ajax_popup_icon_selector():
+def ajax_popup_icon_selector() -> None:
     varprefix = html.request.var('varprefix')
     value = html.request.var('value')
     allow_empty = html.request.var('allow_empty') == '1'
@@ -3315,7 +3294,8 @@ def ajax_popup_icon_selector():
 #   '----------------------------------------------------------------------'
 
 
-def query_action_data(what, host, site, svcdesc):
+def query_action_data(what: str, host: HostName, site: SiteId,
+                      svcdesc: Optional[ServiceName]) -> Row:
     # Now fetch the needed data from livestatus
     columns = list(iconpainter_columns(what, toplevel=False))
     try:
@@ -3332,9 +3312,9 @@ def query_action_data(what, host, site, svcdesc):
 
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
-def ajax_popup_action_menu():
-    site = html.request.var('site')
-    host = html.request.var('host')
+def ajax_popup_action_menu() -> None:
+    site = html.request.get_str_input_mandatory('site')
+    host = html.request.get_str_input_mandatory('host')
     svcdesc = html.request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
@@ -3389,11 +3369,11 @@ def ajax_popup_action_menu():
 @page_registry.register_page("ajax_reschedule")
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
-    def page(self):
+    def page(self) -> AjaxPageResult:
         request = html.get_request()
         return self._do_reschedule(request)
 
-    def _do_reschedule(self, request):
+    def _do_reschedule(self, request: Dict[str, Any]) -> AjaxPageResult:
         if not config.user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 

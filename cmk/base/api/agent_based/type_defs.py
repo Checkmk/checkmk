@@ -15,7 +15,6 @@ from typing import (
     Generator,
     List,
     Literal,
-    MutableMapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -145,4 +144,3 @@ class SNMPSectionPlugin(NamedTuple):
 
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
-ValueStore = MutableMapping[str, Any]

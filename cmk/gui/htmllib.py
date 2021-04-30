@@ -1455,13 +1455,13 @@ class html(ABCHTMLGenerator):
         if not stripped:
             return HTML("")
 
-        help_text = self._resolve_help_text_macros(stripped)
+        help_text = self.resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
         style = "display:%s;" % ("block" if config.user.show_help else "none")
         return self.render_div(HTML(help_text), class_="help", style=style)
 
-    def _resolve_help_text_macros(self, text: str) -> str:
+    def resolve_help_text_macros(self, text: str) -> str:
         if config.user.language == "de":
             cmk_base_url = "https://checkmk.de"
         else:
@@ -1945,7 +1945,7 @@ class html(ABCHTMLGenerator):
                    style=style,
                    title=title,
                    disabled=disabled,
-                   onclick="location.href=\'%s\'" % href)
+                   onclick="location.href=%s" % json.dumps(href))
 
     def empty_icon_button(self) -> None:
         self.write(self.render_icon("trans", cssclass="iconbutton trans"))
@@ -1994,7 +1994,7 @@ class html(ABCHTMLGenerator):
     def user_error(self, e: MKUserError) -> None:
         assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
         self.open_div(class_="error")
-        self.write("%s" % e.message)
+        self.write_text(str(e))
         self.close_div()
         self.add_user_error(e.varname, e)
 
@@ -2018,7 +2018,8 @@ class html(ABCHTMLGenerator):
     def show_user_errors(self) -> None:
         if self.has_user_errors():
             self.open_div(class_="error")
-            self.write('<br>'.join(self.user_errors.values()))
+            self.write(self.render_br().join(
+                self.render_text(s) for s in self.user_errors.values()))
             self.close_div()
 
     def text_input(self,

@@ -118,15 +118,17 @@ def test_attribute_defaults(mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
     source = TCPSource(hostname, ipaddress, mode=mode)
-    monkeypatch.setattr(source, "file_cache_path", Path("/my/path/"))
+    monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "file_cache": {
+            "hostname": "testhost",
             "disabled": False,
             "max_age": 0,
-            "path": "/my/path",
+            "base_path": "/my/path",
             "simulation": False,
             "use_outdated": False,
         },
+        "cluster": False,
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
         "timeout": 5.0,

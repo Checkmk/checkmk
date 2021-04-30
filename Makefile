@@ -226,8 +226,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent-64.exe \
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
-		windows/python-3.8.zip \
-		windows/python-3.4.zip \
+		windows/python-3.8.cab \
+		windows/python-3.4.cab \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \

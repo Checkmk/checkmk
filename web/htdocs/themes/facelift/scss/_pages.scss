@@ -25,7 +25,7 @@ h4 {
   color: $font-color;
 }
 
-h3 {
+h3:not(.table) {
   font-size: $font-size-large;
   font-weight: normal;
 }
@@ -715,7 +715,8 @@ textarea {
 }
 
 select,
-textarea {
+textarea,
+input[type="file"] {
   // textareas like e.g. comment fields should not have a fixed height
   height: auto;
 }
@@ -1239,7 +1240,7 @@ body.main .popup_menu {
   position: relative;
   width: 100%;
   height: 100%;
-  min-width: 312px;
+  min-width: 392px;
   min-height: 150px;
 
   ul {
@@ -1292,11 +1293,11 @@ body.main .popup_menu {
   }
 
   &.show_names a.icon {
-    width: 100px;
+    width: 180px;
 
     span {
       display: inline-block;
-      width: 62px;
+      width: 142px;
       margin: 0;
       overflow: hidden;
       font-weight: normal;

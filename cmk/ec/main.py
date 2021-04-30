@@ -13,6 +13,7 @@
 
 import abc
 import ast
+import datetime
 import errno
 import json
 from logging import Logger, getLogger
@@ -28,8 +29,10 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
+import dateutil.parser
+import dateutil.tz
 from six import ensure_binary
 
 import cmk.utils.version as cmk_version
@@ -44,16 +47,21 @@ import cmk.utils.regex
 import cmk.utils.debug
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
-import livestatus
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
+from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
+from .host_config import HostConfig, HostInfo
 from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
+
+# TODO: We really, really need a stricter type here, this is *the* central data structure in the EC!
+Event = Dict[str, Any]
 
 
 class SyslogPriority:
@@ -356,110 +364,26 @@ class TimePeriods:
     def __init__(self, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
-        self._periods: Optional[Dict[str, Tuple[str, bool]]] = None
-        self._last_update = 0
+        self._active: Mapping[TimeperiodName, bool] = {}
+        self._cache_timestamp: Optional[Timestamp] = None
 
     def _update(self) -> None:
-        if self._periods is not None and int(time.time() / 60.0) == self._last_update:
-            return  # only update once a minute
         try:
-            table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
-            periods: Dict[str, Tuple[str, bool]] = {}
-            for tpname, alias, isin in table:
-                periods[tpname] = (alias, bool(isin))
-            self._periods = periods
-            self._last_update = int(time.time() / 60.0)
+            timestamp = int(time.time())
+            # update at most once a minute
+            if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
+                self._active = query_timeperiods_in()
+                self._cache_timestamp = timestamp
         except Exception as e:
-            self._logger.exception("Cannot update timeperiod information: %s" % e)
+            self._logger.exception("Cannot update timeperiod information: %s", e)
             raise
 
-    def check(self, tpname: str) -> bool:
+    def active(self, name: TimeperiodName) -> bool:
         self._update()
-        if not self._periods:
-            self._logger.warning("no timeperiod information, assuming %s is active" % tpname)
-            return True
-        if tpname not in self._periods:
-            self._logger.warning("no such timeperiod %s, assuming it is active" % tpname)
-            return True
-        return self._periods[tpname][1]
-
-
-#.
-#   .--Host config---------------------------------------------------------.
-#   |          _   _           _                      __ _                 |
-#   |         | | | | ___  ___| |_    ___ ___  _ __  / _(_) __ _           |
-#   |         | |_| |/ _ \/ __| __|  / __/ _ \| '_ \| |_| |/ _` |          |
-#   |         |  _  | (_) \__ \ |_  | (_| (_) | | | |  _| | (_| |          |
-#   |         |_| |_|\___/|___/\__|  \___\___/|_| |_|_| |_|\__, |          |
-#   |                                                      |___/           |
-#   +----------------------------------------------------------------------+
-#   | Manages the configuration of the hosts of the local monitoring core. |
-#   | It fetches and caches the information during runtine of the EC.      |
-#   '----------------------------------------------------------------------'
-
-
-class HostConfig:
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger
-        self._lock = threading.Lock()
-        self._hosts_by_name: Dict[str, Dict[str, Any]] = {}
-        self._hosts_by_designation: Dict[str, str] = {}
-        self._cache_timestamp = -1  # sentinel, always less than a real timestamp
-
-    def get_config_for_host(self, host_name, deflt):
-        with self._lock:
-            if not self._update_cache_after_core_restart():
-                return deflt
-
-            return self._hosts_by_name.get(host_name, deflt)
-
-    def get_canonical_name(self, event_host_name: str) -> str:
-        with self._lock:
-            if not self._update_cache_after_core_restart():
-                return ""
-
-            return self._hosts_by_designation.get(event_host_name.lower(), "")
-
-    def _update_cache_after_core_restart(self) -> bool:
-        """Once the core reports a restart update the cache
-
-        Returns:
-            False in case the update failed, otherwise True.
-        """
-        try:
-            timestamp = self._get_config_timestamp()
-            if timestamp > self._cache_timestamp:
-                self._update_cache()
-                self._cache_timestamp = timestamp
-        except Exception:
-            self._logger.exception("Failed to get host info from core. Try again later.")
-            return False
-        return True
-
-    def _update_cache(self) -> None:
-        self._logger.debug("Fetching host config from core")
-        self._hosts_by_name.clear()
-        self._hosts_by_designation.clear()
-        for host in self._get_host_configs():
-            host_name = host["name"]
-            self._hosts_by_name[host_name] = host
-            # Note: It is important that we use exactly the same algorithm here as
-            # in the core, see World::loadHosts and World::getHostByDesignation.
-            if host["address"]:
-                self._hosts_by_designation[host["address"].lower()] = host_name
-            if host["alias"]:
-                self._hosts_by_designation[host["alias"].lower()] = host_name
-            self._hosts_by_designation[host_name.lower()] = host_name
-        self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
-
-    def _get_host_configs(self) -> List[Dict[str, Any]]:
-        return livestatus.LocalConnection().query_table_assoc(
-            "GET hosts\n"
-            "Columns: name alias address custom_variables contacts contact_groups")
-
-    def _get_config_timestamp(self) -> livestatus.LivestatusColumn:
-        return livestatus.LocalConnection().query_value("GET status\n"  #
-                                                        "Columns: program_start")
+        if (is_active := self._active.get(name)) is None:
+            self._logger.warning("unknown timeperiod '%s', assuming it is active", name)
+            is_active = True
+        return is_active
 
 
 #.
@@ -1007,11 +931,12 @@ class EventServer(ECServerThread):
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
 
+            host_name: HostName = event["core_host"]
             try:
-                in_downtime = host_downtimes[event["core_host"]]
+                in_downtime = host_downtimes[host_name]
             except KeyError:
-                in_downtime = self._is_host_in_downtime(event)
-                host_downtimes[event["core_host"]] = in_downtime
+                in_downtime = self._is_host_in_downtime(host_name)
+                host_downtimes[host_name] = in_downtime
 
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
@@ -1099,7 +1024,7 @@ class EventServer(ECServerThread):
                     self._history.add(event, "DELAYOVER")
                     if rule:
                         event_has_opened(self._history, self.settings, self._config, self._logger,
-                                         self, self._event_columns, rule, event)
+                                         self.host_config, self._event_columns, rule, event)
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
                             self._history.add(event, "AUTODELETE")
@@ -1263,8 +1188,8 @@ class EventServer(ECServerThread):
             self.rewrite_event(rule, event, {})
             self._event_status.new_event(event)
             self._history.add(event, "COUNTFAILED")
-            event_has_opened(self._history, self.settings, self._config, self._logger, self,
-                             self._event_columns, rule, event)
+            event_has_opened(self._history, self.settings, self._config, self._logger,
+                             self.host_config, self._event_columns, rule, event)
             if rule.get("autodelete"):
                 event["phase"] = "closed"
                 self._history.add(event, "AUTODELETE")
@@ -1434,7 +1359,7 @@ class EventServer(ECServerThread):
         event = self._event_creator.create_event_from_line(line, address)
         self.process_event(event)
 
-    def process_event(self, event):
+    def process_event(self, event: Event) -> None:
         self.do_translate_hostname(event)
 
         # Log all incoming messages into a syslog-like text file if that is enabled
@@ -1528,8 +1453,8 @@ class EventServer(ECServerThread):
                             existing_event["phase"] = "delayed"
                         else:
                             event_has_opened(self._history, self.settings, self._config,
-                                             self._logger, self, self._event_columns, rule,
-                                             existing_event)
+                                             self._logger, self.host_config, self._event_columns,
+                                             rule, existing_event)
 
                         self._history.add(existing_event, "COUNTREACHED")
 
@@ -1553,7 +1478,8 @@ class EventServer(ECServerThread):
                     if self.new_event_respecting_limits(event):
                         if event["phase"] == "open":
                             event_has_opened(self._history, self.settings, self._config,
-                                             self._logger, self, self._event_columns, rule, event)
+                                             self._logger, self.host_config, self._event_columns,
+                                             rule, event)
                             if rule.get("autodelete"):
                                 event["phase"] = "closed"
                                 self._history.add(event, "AUTODELETE")
@@ -1579,32 +1505,22 @@ class EventServer(ECServerThread):
                 "contact_groups_precedence": rule["contact_groups"]["precedence"],
             })
 
-    def add_core_host_to_event(self, event):
-        event["core_host"] = self.host_config.get_canonical_name(event["host"])
+    def add_core_host_to_event(self, event: Event) -> None:
+        name = self.host_config.get_canonical_name(event["host"])
+        event["core_host"] = "" if name is None else name
 
     def _add_core_host_to_new_event(self, event):
         self.add_core_host_to_event(event)
 
         # Add some state dependent information (like host is in downtime etc.)
-        event["host_in_downtime"] = self._is_host_in_downtime(event)
+        event["host_in_downtime"] = self._is_host_in_downtime(event["core_host"])
 
-    def _is_host_in_downtime(self, event):
-        if not event["core_host"]:
+    def _is_host_in_downtime(self, host_name: HostName) -> bool:
+        if not host_name:
             return False  # Found no host in core: Not in downtime!
-
-        query = ("GET hosts\n"
-                 "Columns: scheduled_downtime_depth\n"
-                 "Filter: host_name = %s\n" % (event["core_host"]))
-
         try:
-            return livestatus.LocalConnection().query_value(query) >= 1
-
-        except livestatus.MKLivestatusNotFoundError:
-            return False
-
+            return query_hosts_scheduled_downtime_depth(host_name) >= 1
         except Exception:
-            if cmk.utils.debug.enabled():
-                raise
             return False
 
     # Checks if an event matches a rule. Returns either False (no match)
@@ -1716,7 +1632,7 @@ class EventServer(ECServerThread):
 
         return backedhost
 
-    def do_translate_hostname(self, event):
+    def do_translate_hostname(self, event: Event) -> None:
         try:
             event["host"] = self.translate_hostname(event["host"])
         except Exception as e:
@@ -1724,7 +1640,7 @@ class EventServer(ECServerThread):
                 self._logger.exception('Unable to parse host "%s" (%s)' % (event.get("host"), e))
             event["host"] = ""
 
-    def log_message(self, event):
+    def log_message(self, event: Event) -> None:
         try:
             with get_logfile(self._config, self.settings.paths.messages_dir.value,
                              self._message_period).open(mode='ab') as f:
@@ -1742,14 +1658,15 @@ class EventServer(ECServerThread):
             # diskspace and make things worse by logging that we could
             # not log.
 
-    def get_hosts_with_active_event_limit(self):
+    def get_hosts_with_active_event_limit(self) -> List[str]:
         hosts = []
         for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
-            if count >= self._get_host_event_limit(core_host)[0]:
+            host_config = self.host_config.get_config_for_host(core_host)
+            if count >= self._get_host_event_limit(host_config)[0]:
                 hosts.append(hostname)
         return hosts
 
-    def get_rules_with_active_event_limit(self):
+    def get_rules_with_active_event_limit(self) -> List[str]:
         rule_ids = []
         for rule_id, num_events in self._event_status.num_existing_events_by_rule.items():
             if rule_id is None:
@@ -1758,23 +1675,24 @@ class EventServer(ECServerThread):
                 rule_ids.append(rule_id)
         return rule_ids
 
-    def is_overall_event_limit_active(self):
+    def is_overall_event_limit_active(self) -> bool:
         return self._event_status.num_existing_events \
             >= self._config["event_limit"]["overall"]["limit"]
 
     # protected by self._event_status.lock
-    def new_event_respecting_limits(self, event):
+    def new_event_respecting_limits(self, event: Event) -> bool:
         self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
                          (event["host"], event["rule_id"]))
 
+        host_config = self.host_config.get_config_for_host(event["core_host"])
         with self._event_status.lock:
-            if self._handle_event_limit("overall", event):
+            if self._handle_event_limit("overall", event, host_config):
                 return False
 
-            if self._handle_event_limit("by_host", event):
+            if self._handle_event_limit("by_host", event, host_config):
                 return False
 
-            if self._handle_event_limit("by_rule", event):
+            if self._handle_event_limit("by_rule", event, host_config):
                 return False
 
             self._event_status.new_event(event)
@@ -1789,12 +1707,12 @@ class EventServer(ECServerThread):
 
     # Returns False if the event has been created and actions should be
     # performed on that event
-    def _handle_event_limit(self, ty, event):
+    def _handle_event_limit(self, ty: str, event: Event, host_config: Optional[HostInfo]) -> bool:
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
 
-        limit, action = self._get_event_limit(ty, event)
+        limit, action = self._get_event_limit(ty, event, host_config)
         self._logger.log(VERBOSE, "  Type: %s, already open events: %d, Limit: %d", ty,
                          num_already_open, limit)
 
@@ -1835,25 +1753,26 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            do_notify(self, self._logger, overflow_event)
+            do_notify(self.host_config, self._logger, overflow_event)
 
         return False
 
     # protected by self._event_status.lock
-    def _get_event_limit(self, ty, event):
+    def _get_event_limit(self, ty: str, event: Event,
+                         host_config: Optional[HostInfo]) -> Tuple[int, str]:
         if ty == "overall":
             return self._get_overall_event_limit()
         if ty == "by_rule":
             return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            return self._get_host_event_limit(event["core_host"])
+            return self._get_host_event_limit(host_config)
         raise NotImplementedError()
 
-    def _get_overall_event_limit(self):
+    def _get_overall_event_limit(self) -> Tuple[int, str]:
         return (self._config["event_limit"]["overall"]["limit"],
                 self._config["event_limit"]["overall"]["action"])
 
-    def _get_rule_event_limit(self, rule_id):
+    def _get_rule_event_limit(self, rule_id) -> Tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
         rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
@@ -1862,10 +1781,10 @@ class EventServer(ECServerThread):
         return (self._config["event_limit"]["by_rule"]["limit"],
                 self._config["event_limit"]["by_rule"]["action"])
 
-    def _get_host_event_limit(self, core_host):
+    def _get_host_event_limit(self, host_config: Optional[HostInfo]) -> Tuple[int, str]:
         """Prefer the host individual limit for by_host limit (in case there is some)"""
-        host_config = self.host_config.get_config_for_host(core_host, {})
-        host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+        host_limit = (None if host_config is None else
+                      host_config.custom_variables.get("EC_EVENT_LIMIT"))
         if host_limit:
             limit, action = host_limit.split(":", 1)
             return int(limit), action
@@ -1933,13 +1852,33 @@ class EventServer(ECServerThread):
         return new_event
 
 
+def current_utcoffset_seconds() -> int:
+    utcoffset = datetime.datetime.now(dateutil.tz.tzlocal()).utcoffset()
+    # utcoffset is an 'aware' datetime object (we explicitly passed a timezone above),
+    # but the typing is too weak to express this. As a consequnce, we must help mypy.
+    assert utcoffset is not None
+    return round(utcoffset.total_seconds())
+
+
+# Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
+def fix_broken_sophos_timestamp(timestamp: str) -> str:
+    # Step 1: Fix separator between date and time
+    timestamp = timestamp.replace('-', 'T', 1)
+    # Step 2: Fix separators between date parts
+    timestamp = timestamp.replace(':', '-', 2)
+    # Step 3: Add explicit offset for local time
+    offset = current_utcoffset_seconds()
+    hours, minutes = divmod(abs(offset) // 60, 60)
+    return timestamp + f'{"-" if offset < 0 else "+"}{hours:02}{minutes:02}'
+
+
 class EventCreator:
     def __init__(self, logger: Logger, config: Dict[str, Any]) -> None:
         super().__init__()
         self._logger = logger
         self._config = config
 
-    def create_event_from_line(self, line, address):
+    def create_event_from_line(self, line: str, address: str) -> Event:
         event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
@@ -2022,12 +1961,9 @@ class EventCreator:
 
             # Variant 5
             elif len(line) > 24 and line[10] == 'T':
-                # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-                # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-                # got a good solutuion for this.
-                rfc3339_part, event['host'], line = line.split(' ', 2)
-                event['time'] = time.mktime(time.strptime(rfc3339_part[:19], '%Y-%m-%dT%H:%M:%S'))
-                event.update(self._parse_syslog_info(line))
+                timestamp, event['host'], rest = line.split(' ', 2)
+                event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
+                event.update(self._parse_syslog_info(rest))
 
             # Variant 9
             elif len(line) > 24 and line[12] == "T":
@@ -2035,9 +1971,9 @@ class EventCreator:
 
             # Variant 8
             elif line[10] == '-' and line[19] == ' ':
-                event['host'] = line.split(' ')[1]
-                event['time'] = time.mktime(time.strptime(line.split(' ')[0], '%Y:%m:%d-%H:%M:%S'))
-                rest = " ".join(line.split(' ')[2:])
+                timestamp, event['host'], rest = line.split(' ', 2)
+                timestamp = fix_broken_sophos_timestamp(timestamp)
+                event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 6
@@ -2046,14 +1982,14 @@ class EventCreator:
                 # There is no datetime information in the message, use current time
                 event['time'] = time.time()
                 # There is no host information, use the provided address
-                if address and isinstance(address, tuple):
-                    event["host"] = address[0]
+                event["host"] = address[0] if address and isinstance(address, tuple) else ""
 
             # Variant 10
             elif line[4] == " " and line[:4].isdigit():
                 time_part = line[:20]  # ignoring tz info
                 event["host"], application, line = line[25:].split(" ", 2)
                 event["application"] = application.rstrip(":")
+                event["pid"] = 0
                 event["text"] = line
                 event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
 
@@ -2075,6 +2011,7 @@ class EventCreator:
 
                 # Variant 4
                 if rest.startswith("@"):
+                    # TODO: host gets overwritten, strange... Is this OK?
                     event.update(self._parse_monitoring_info(rest))
 
                 # Variant 1, 2
@@ -2082,7 +2019,7 @@ class EventCreator:
                     event.update(self._parse_syslog_info(rest))
 
                     month = EventServer.month_names[month_name]
-                    day = int(day)
+                    iday = int(day)
 
                     # Nasty: the year is not contained in the message. We cannot simply
                     # assume that the message if from the current year.
@@ -2096,7 +2033,7 @@ class EventCreator:
 
                     # A further problem here: we do not now whether the message is in DST or not
                     event["time"] = time.mktime(
-                        (year, month, day, hours, minutes, seconds, 0, 0, lt.tm_isdst))
+                        (year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
 
             # The event simulator ships the simulated original IP address in the
             # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
@@ -2131,19 +2068,10 @@ class EventCreator:
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
 
-        # There is no 3339 parsing built into python. We do ignore subseconds and timezones
-        # here. This is seems to be ok for the moment - sorry. Please drop a note if you
-        # got a good solutuion for this.
-        event['time'] = time.mktime(time.strptime(timestamp[:19], '%Y-%m-%dT%H:%M:%S'))
-
-        if hostname != "-":
-            event["host"] = hostname
-
-        if app_name != "-":
-            event["application"] = app_name
-
-        if procid != "-":
-            event["pid"] = procid
+        event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
+        event["host"] = "" if hostname == "-" else hostname
+        event["application"] = "" if app_name == "-" else app_name
+        event["pid"] = 0 if procid == "-" else procid
 
         if rest[0] == "[":
             # has stuctured data
@@ -2200,6 +2128,7 @@ class EventCreator:
         event["application"] = service
         event["text"] = message.strip()
         event["host"] = host
+        event["pid"] = 0
         return event
 
     def create_event_from_trap(self, trap, ipaddress):
@@ -2392,7 +2321,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_timeperiod(self, rule, event):
-        if "match_timeperiod" in rule and not self._time_periods.check(rule["match_timeperiod"]):
+        if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info("  did not match, because timeperiod %s is not active" %
                                   rule["match_timeperiod"])
@@ -3030,7 +2959,11 @@ class StatusServer(ECServerThread):
             event["owner"] = user
 
         if action_id == "@NOTIFY":
-            do_notify(self._event_server, self._logger, event, user, is_cancelling=False)
+            do_notify(self._event_server.host_config,
+                      self._logger,
+                      event,
+                      user,
+                      is_cancelling=False)
         else:
             with self._lock_configuration:
                 if action_id not in self._config["action"]:
@@ -3284,9 +3217,12 @@ class EventStatus:
                 self._logger.exception("Error loading event state from %s: %s" % (path, e))
                 raise
 
-        # Add new columns
+        # Add new columns and fix broken events
         for event in self._events:
             event.setdefault("ipaddress", "")
+            event.setdefault("host", "")
+            event.setdefault("application", "")
+            event.setdefault("pid", 0)
 
             if "core_host" not in event:
                 event_server.add_core_host_to_event(event)
@@ -3301,12 +3237,12 @@ class EventStatus:
     def _initialize_event_limit_status(self):
         self.num_existing_events = len(self._events)
 
-        self.num_existing_events_by_host = {}
+        self.num_existing_events_by_host: Dict[Tuple[str, HostName], int] = {}
         self.num_existing_events_by_rule = {}
         for event in self._events:
             self._count_event_add(event)
 
-    def _count_event_add(self, event):
+    def _count_event_add(self, event: Event) -> None:
         host_key = (event["host"], event["core_host"])
         if host_key not in self.num_existing_events_by_host:
             self.num_existing_events_by_host[host_key] = 1
@@ -3318,14 +3254,14 @@ class EventStatus:
         else:
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
-    def _count_event_remove(self, event):
+    def _count_event_remove(self, event: Event) -> None:
         host_key = (event["host"], event["core_host"])
 
         self.num_existing_events -= 1
         self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
-    def new_event(self, event):
+    def new_event(self, event: Event) -> None:
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
@@ -3334,14 +3270,14 @@ class EventStatus:
         self._count_event_add(event)
         self._history.add(event, "NEW")
 
-    def archive_event(self, event):
+    def archive_event(self, event: Event) -> None:
         self._perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
         event["phase"] = "closed"
         self._history.add(event, "ARCHIVED")
 
-    def remove_event(self, event):
+    def remove_event(self, event: Event) -> None:
         try:
             self._events.remove(event)
             self._count_event_remove(event)
@@ -3349,7 +3285,7 @@ class EventStatus:
             self._logger.exception("Cannot remove event %d: not present" % event["id"])
 
     # protected by self.lock
-    def _remove_event_by_nr(self, index):
+    def _remove_event_by_nr(self, index: int) -> None:
         event = self._events.pop(index)
         self._count_event_remove(event)
 
@@ -3366,21 +3302,21 @@ class EventStatus:
             self._remove_oldest_event_of_host(event["host"])
 
     # protected by self.lock
-    def _remove_oldest_event_of_rule(self, rule_id):
+    def _remove_oldest_event_of_rule(self, rule_id) -> None:
         for event in self._events:
             if event["rule_id"] == rule_id:
                 self.remove_event(event)
                 return
 
     # protected by self.lock
-    def _remove_oldest_event_of_host(self, hostname):
+    def _remove_oldest_event_of_host(self, hostname: str) -> None:
         for event in self._events:
             if event["host"] == hostname:
                 self.remove_event(event)
                 return
 
     # protected by self.lock
-    def get_num_existing_events_by(self, ty, event):
+    def get_num_existing_events_by(self, ty: str, event: Event) -> int:
         if ty == "overall":
             return self.num_existing_events
         if ty == "by_rule":
@@ -3425,7 +3361,7 @@ class EventStatus:
                                                  self.settings,
                                                  self._config,
                                                  self._logger,
-                                                 event_server,
+                                                 event_server.host_config,
                                                  event_columns,
                                                  actions,
                                                  event,

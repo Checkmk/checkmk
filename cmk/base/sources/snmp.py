@@ -141,7 +141,8 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
 
     def _make_file_cache(self) -> SNMPFileCache:
         return SNMPFileCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make(force_cache_refresh=self._force_cache_refresh)
@@ -163,6 +164,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             sections=self._make_sections(),
             on_error=self._on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -181,6 +183,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             name: SectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
+                redetect=name in checking_sections and self._needs_redetection(name),
                 fetch_interval=self.host_config.snmp_fetch_interval(name),
             ) for name in (checking_sections | disabled_sections)
         }
@@ -223,6 +226,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             s for s in checking_sections
             if agent_based_register.is_registered_snmp_section_plugin(s)
         }
+
+    @staticmethod
+    def _needs_redetection(section_name: SectionName) -> bool:
+        section = agent_based_register.get_section_plugin(section_name)
+        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
 
     @staticmethod
     def _make_description(

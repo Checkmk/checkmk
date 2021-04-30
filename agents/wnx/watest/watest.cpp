@@ -199,6 +199,6 @@ int wmain(int argc, wchar_t** argv) {
     //::testing::GTEST_FLAG(filter) = "EncryptionT*";
 #endif
     auto r = RUN_ALL_TESTS();
-    if (!r) XLOG::stdio.crit("Win Agent is exited with {}.", r);
+    if (!r) XLOG::stdio("Win Agent is exited with {}.", r);
     return r;
 }

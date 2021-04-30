@@ -134,7 +134,7 @@ def check_proxmox_ve_vm_backup_status(
         )
     yield Result(
         state=State.OK,
-        summary=f"Time: {last_backup.get('started_time')}",
+        summary=f"Time: {started_time}",
     )
     yield Result(
         state=State.OK,
@@ -149,12 +149,16 @@ def check_proxmox_ve_vm_backup_status(
     if all(k in last_backup for k in {'bytes_written_size', 'bytes_written_bandwidth'}):
         bandwidth = last_backup['bytes_written_bandwidth']
     elif all(k in last_backup for k in {'transfer_size', 'transfer_time'}):
+        if last_backup['transfer_time'] == 0:
+            return
         bandwidth = last_backup['transfer_size'] / last_backup['transfer_time']
     elif all(k in last_backup for k in {'upload_amount', 'upload_total', 'upload_time'}):
+        if last_backup['upload_amount'] > 0:
+            dedup_rate = last_backup['upload_total'] / last_backup['upload_amount']
+            yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")
+        if last_backup['upload_time'] == 0:
+            return
         bandwidth = last_backup['upload_amount'] / last_backup['upload_time']
-        yield Result(
-            state=State.OK,
-            summary=f"Dedup rate: {last_backup['upload_total'] / last_backup['upload_amount']:.2f}")
     else:
         return
 

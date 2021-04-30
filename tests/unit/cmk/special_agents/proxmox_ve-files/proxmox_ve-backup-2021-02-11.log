@@ -1,0 +1,896 @@
+INFO: starting new backup job: vzdump --storage pbs-fi-backup1 --all 1 --quiet 1 --mode snapshot --mailnotification always --mailto admin@helloworld.de
+INFO: skip external VMs: 100, 101, 105, 107, 108, 110, 113, 114, 115, 116, 117, 118, 121, 122, 123, 124, 125, 127, 128, 130, 131, 132, 133, 134, 135, 136, 139, 140, 141, 142, 145, 146, 148, 157, 996, 997
+INFO: Starting Backup of VM 102 (qemu)
+INFO: Backup started at 2021-02-11 20:00:02
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-102-disk-0' 9G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/102/2021-02-11T19:00:02Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'c95b7faa-432e-426f-95eb-acf9d21004e3'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: created new
+INFO:  15% (1.4 GiB of 9.0 GiB) in  3s, read: 481.3 MiB/s, write: 45.3 MiB/s
+INFO:  20% (1.8 GiB of 9.0 GiB) in  6s, read: 141.3 MiB/s, write: 4.0 MiB/s
+INFO:  22% (2.1 GiB of 9.0 GiB) in 12s, read: 39.3 MiB/s, write: 682.7 KiB/s
+INFO:  26% (2.4 GiB of 9.0 GiB) in 15s, read: 110.7 MiB/s, write: 5.3 MiB/s
+INFO:  29% (2.7 GiB of 9.0 GiB) in 21s, read: 54.0 MiB/s, write: 0 B/s
+INFO:  40% (3.6 GiB of 9.0 GiB) in 24s, read: 318.7 MiB/s, write: 34.7 MiB/s
+INFO:  41% (3.7 GiB of 9.0 GiB) in 31s, read: 9.1 MiB/s, write: 0 B/s
+INFO:  50% (4.5 GiB of 9.0 GiB) in 34s, read: 276.0 MiB/s, write: 32.0 MiB/s
+INFO:  53% (4.8 GiB of 9.0 GiB) in 42s, read: 39.5 MiB/s, write: 3.0 MiB/s
+INFO:  54% (4.9 GiB of 9.0 GiB) in 45s, read: 30.7 MiB/s, write: 0 B/s
+INFO:  58% (5.3 GiB of 9.0 GiB) in 50s, read: 81.6 MiB/s, write: 1.6 MiB/s
+INFO:  61% (5.5 GiB of 9.0 GiB) in 57s, read: 30.3 MiB/s, write: 585.1 KiB/s
+INFO:  63% (5.7 GiB of 9.0 GiB) in  1m  0s, read: 65.3 MiB/s, write: 0 B/s
+INFO:  72% (6.5 GiB of 9.0 GiB) in  1m  3s, read: 289.3 MiB/s, write: 1.3 MiB/s
+INFO:  75% (6.8 GiB of 9.0 GiB) in  1m  8s, read: 59.2 MiB/s, write: 819.2 KiB/s
+INFO:  77% (6.9 GiB of 9.0 GiB) in  1m 11s, read: 37.3 MiB/s, write: 0 B/s
+INFO:  79% (7.1 GiB of 9.0 GiB) in  1m 14s, read: 68.0 MiB/s, write: 0 B/s
+INFO:  84% (7.6 GiB of 9.0 GiB) in  1m 17s, read: 153.3 MiB/s, write: 5.3 MiB/s
+INFO:  87% (7.8 GiB of 9.0 GiB) in  1m 21s, read: 64.0 MiB/s, write: 6.0 MiB/s
+INFO:  88% (8.0 GiB of 9.0 GiB) in  1m 24s, read: 53.3 MiB/s, write: 5.3 MiB/s
+INFO:  92% (8.3 GiB of 9.0 GiB) in  1m 29s, read: 68.0 MiB/s, write: 11.2 MiB/s
+INFO:  93% (8.4 GiB of 9.0 GiB) in  1m 32s, read: 22.7 MiB/s, write: 6.7 MiB/s
+INFO:  95% (8.6 GiB of 9.0 GiB) in  1m 38s, read: 28.0 MiB/s, write: 9.3 MiB/s
+INFO:  98% (8.9 GiB of 9.0 GiB) in  1m 41s, read: 116.0 MiB/s, write: 33.3 MiB/s
+INFO: 100% (9.0 GiB of 9.0 GiB) in  1m 44s, read: 34.7 MiB/s, write: 0 B/s
+INFO: backup is sparse: 2.92 GiB (32%) total zero data
+INFO: backup was done incrementally, reused 8.32 GiB (92%)
+INFO: transferred 9.00 GiB in 105 seconds (87.8 MiB/s)
+INFO: Finished Backup of VM 102 (00:01:46)
+INFO: Backup finished at 2021-02-11 20:01:48
+INFO: Starting Backup of VM 103 (qemu)
+INFO: Backup started at 2021-02-11 20:01:48
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-103-disk-0' 12492M
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/103/2021-02-11T19:01:48Z'
+INFO: starting kvm to execute backup task
+generating cloud-init ISO
+INFO: started backup task 'f88f280e-f6cb-4a3b-ac73-41cfa0e70523'
+INFO: scsi0: dirty-bitmap status: created new
+INFO:   2% (352.0 MiB of 12.2 GiB) in  3s, read: 117.3 MiB/s, write: 0 B/s
+INFO:   7% (980.0 MiB of 12.2 GiB) in  6s, read: 209.3 MiB/s, write: 0 B/s
+INFO:  17% (2.2 GiB of 12.2 GiB) in  9s, read: 417.3 MiB/s, write: 0 B/s
+INFO:  27% (3.4 GiB of 12.2 GiB) in 12s, read: 417.3 MiB/s, write: 0 B/s
+INFO:  37% (4.6 GiB of 12.2 GiB) in 15s, read: 406.7 MiB/s, write: 0 B/s
+INFO:  52% (6.4 GiB of 12.2 GiB) in 18s, read: 632.0 MiB/s, write: 0 B/s
+INFO:  63% (7.8 GiB of 12.2 GiB) in 21s, read: 454.7 MiB/s, write: 0 B/s
+INFO:  75% (9.2 GiB of 12.2 GiB) in 24s, read: 489.3 MiB/s, write: 0 B/s
+INFO:  86% (10.5 GiB of 12.2 GiB) in 27s, read: 440.0 MiB/s, write: 0 B/s
+INFO:  95% (11.7 GiB of 12.2 GiB) in 30s, read: 413.3 MiB/s, write: 0 B/s
+INFO: 100% (12.2 GiB of 12.2 GiB) in 31s, read: 500.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 2.35 GiB (19%) total zero data
+INFO: backup was done incrementally, reused 12.20 GiB (100%)
+INFO: transferred 12.20 GiB in 31 seconds (403.0 MiB/s)
+INFO: stopping kvm after backup task
+INFO: Finished Backup of VM 103 (00:00:38)
+INFO: Backup finished at 2021-02-11 20:02:26
+INFO: Starting Backup of VM 104 (qemu)
+INFO: Backup started at 2021-02-11 20:02:26
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-104-disk-0' 32G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/104/2021-02-11T19:02:26Z'
+INFO: started backup task '4dbd9b5f-76d5-4cf5-b1d8-be44100c4d89'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (152.0 MiB of 32.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 152.0 MiB dirty of 32.0 GiB total
+INFO: 100% (152.0 MiB of 152.0 MiB) in  3s, read: 50.7 MiB/s, write: 50.7 MiB/s
+INFO: backup was done incrementally, reused 31.85 GiB (99%)
+INFO: transferred 152.00 MiB in 6 seconds (25.3 MiB/s)
+INFO: Finished Backup of VM 104 (00:00:11)
+INFO: Backup finished at 2021-02-11 20:02:37
+INFO: Starting Backup of VM 106 (lxc)
+INFO: Backup started at 2021-02-11 20:02:37
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/106/2021-02-11T19:02:37Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_106/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 106 --backup-time 1613070157 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/106/2021-02-11T19:02:37Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:02:38 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:16:24 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_106/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 337.43 MiB of 11.10 GiB in 39.77s, average speed 8.48 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 10.77 GiB (97.0%)
+INFO: Uploaded backup catalog (1.35 MiB)
+INFO: Duration: 45.74s
+INFO: End Time: Thu Feb 11 20:03:23 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 106 (00:00:47)
+INFO: Backup finished at 2021-02-11 20:03:24
+INFO: Starting Backup of VM 109 (lxc)
+INFO: Backup started at 2021-02-11 20:03:24
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/109/2021-02-11T19:03:24Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_109/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 109 --backup-time 1613070204 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/109/2021-02-11T19:03:24Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:03:24 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:17:01 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_109/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 30.85 MiB of 1.27 GiB in 14.49s, average speed 2.13 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 1.24 GiB (97.6%)
+INFO: Uploaded backup catalog (648.65 KiB)
+INFO: Duration: 21.10s
+INFO: End Time: Thu Feb 11 20:03:45 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 109 (00:00:22)
+INFO: Backup finished at 2021-02-11 20:03:46
+INFO: Starting Backup of VM 111 (qemu)
+INFO: Backup started at 2021-02-11 20:03:46
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-111-disk-0' 200G
+INFO: include disk 'scsi1' 'local-zfs:vm-111-disk-1' 2T
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/111/2021-02-11T19:03:46Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '16882bd6-df0c-4a04-930e-f31da25fc3fc'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (28.6 GiB of 200.0 GiB dirty)
+INFO: scsi1: dirty-bitmap status: OK (7.3 GiB of 2.0 TiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 35.9 GiB dirty of 2.2 TiB total
+INFO:   1% (404.0 MiB of 35.9 GiB) in  3s, read: 134.7 MiB/s, write: 128.0 MiB/s
+INFO:   2% (764.0 MiB of 35.9 GiB) in  8s, read: 72.0 MiB/s, write: 67.2 MiB/s
+INFO:   3% (1.1 GiB of 35.9 GiB) in 22s, read: 24.6 MiB/s, write: 24.6 MiB/s
+INFO:   4% (1.5 GiB of 35.9 GiB) in 34s, read: 32.0 MiB/s, write: 32.0 MiB/s
+INFO:   5% (1.8 GiB of 35.9 GiB) in 45s, read: 33.8 MiB/s, write: 33.8 MiB/s
+INFO:   6% (2.2 GiB of 35.9 GiB) in 56s, read: 31.6 MiB/s, write: 31.6 MiB/s
+INFO:   7% (2.6 GiB of 35.9 GiB) in  1m  6s, read: 40.8 MiB/s, write: 40.8 MiB/s
+INFO:   8% (3.0 GiB of 35.9 GiB) in  1m 15s, read: 44.9 MiB/s, write: 44.9 MiB/s
+INFO:   9% (3.3 GiB of 35.9 GiB) in  1m 23s, read: 40.0 MiB/s, write: 40.0 MiB/s
+INFO:  10% (3.6 GiB of 35.9 GiB) in  1m 32s, read: 38.7 MiB/s, write: 38.7 MiB/s
+INFO:  11% (4.0 GiB of 35.9 GiB) in  1m 38s, read: 64.0 MiB/s, write: 64.0 MiB/s
+INFO:  12% (4.3 GiB of 35.9 GiB) in  1m 57s, read: 18.3 MiB/s, write: 18.3 MiB/s
+INFO:  13% (4.7 GiB of 35.9 GiB) in  2m  2s, read: 72.8 MiB/s, write: 72.8 MiB/s
+INFO:  14% (5.0 GiB of 35.9 GiB) in  2m  9s, read: 54.3 MiB/s, write: 54.3 MiB/s
+INFO:  15% (5.4 GiB of 35.9 GiB) in  2m 17s, read: 47.5 MiB/s, write: 47.5 MiB/s
+INFO:  16% (5.8 GiB of 35.9 GiB) in  2m 24s, read: 54.3 MiB/s, write: 54.3 MiB/s
+INFO:  17% (6.2 GiB of 35.9 GiB) in  2m 34s, read: 37.6 MiB/s, write: 37.6 MiB/s
+INFO:  18% (6.5 GiB of 35.9 GiB) in  2m 43s, read: 36.9 MiB/s, write: 36.9 MiB/s
+INFO:  19% (6.8 GiB of 35.9 GiB) in  2m 53s, read: 36.8 MiB/s, write: 36.8 MiB/s
+INFO:  20% (7.2 GiB of 35.9 GiB) in  2m 58s, read: 80.0 MiB/s, write: 80.0 MiB/s
+INFO:  21% (7.7 GiB of 35.9 GiB) in  3m  1s, read: 149.3 MiB/s, write: 148.0 MiB/s
+INFO:  22% (7.9 GiB of 35.9 GiB) in  3m  9s, read: 35.5 MiB/s, write: 35.5 MiB/s
+INFO:  23% (8.3 GiB of 35.9 GiB) in  3m 20s, read: 35.3 MiB/s, write: 34.5 MiB/s
+INFO:  24% (8.7 GiB of 35.9 GiB) in  3m 30s, read: 34.4 MiB/s, write: 34.4 MiB/s
+INFO:  25% (9.0 GiB of 35.9 GiB) in  3m 38s, read: 41.5 MiB/s, write: 41.5 MiB/s
+INFO:  26% (9.4 GiB of 35.9 GiB) in  3m 48s, read: 38.0 MiB/s, write: 38.0 MiB/s
+INFO:  27% (9.8 GiB of 35.9 GiB) in  4m  0s, read: 33.7 MiB/s, write: 33.0 MiB/s
+INFO:  28% (10.1 GiB of 35.9 GiB) in  4m  5s, read: 63.2 MiB/s, write: 61.6 MiB/s
+INFO:  29% (10.4 GiB of 35.9 GiB) in  4m 11s, read: 61.3 MiB/s, write: 60.7 MiB/s
+INFO:  30% (10.9 GiB of 35.9 GiB) in  4m 16s, read: 89.6 MiB/s, write: 89.6 MiB/s
+INFO:  31% (11.1 GiB of 35.9 GiB) in  4m 24s, read: 37.5 MiB/s, write: 37.5 MiB/s
+INFO:  32% (11.5 GiB of 35.9 GiB) in  4m 35s, read: 35.6 MiB/s, write: 35.3 MiB/s
+INFO:  33% (11.9 GiB of 35.9 GiB) in  4m 43s, read: 42.0 MiB/s, write: 42.0 MiB/s
+INFO:  34% (12.2 GiB of 35.9 GiB) in  4m 53s, read: 35.6 MiB/s, write: 35.6 MiB/s
+INFO:  35% (12.6 GiB of 35.9 GiB) in  5m  2s, read: 41.3 MiB/s, write: 41.3 MiB/s
+INFO:  36% (12.9 GiB of 35.9 GiB) in  5m  7s, read: 72.0 MiB/s, write: 72.0 MiB/s
+INFO:  37% (13.3 GiB of 35.9 GiB) in  5m 18s, read: 34.2 MiB/s, write: 34.2 MiB/s
+INFO:  38% (13.7 GiB of 35.9 GiB) in  5m 30s, read: 32.3 MiB/s, write: 32.3 MiB/s
+INFO:  39% (14.1 GiB of 35.9 GiB) in  5m 40s, read: 40.8 MiB/s, write: 40.8 MiB/s
+INFO:  40% (14.4 GiB of 35.9 GiB) in  5m 48s, read: 41.0 MiB/s, write: 41.0 MiB/s
+INFO:  41% (14.7 GiB of 35.9 GiB) in  5m 58s, read: 34.0 MiB/s, write: 32.8 MiB/s
+INFO:  42% (15.1 GiB of 35.9 GiB) in  6m  8s, read: 38.0 MiB/s, write: 37.6 MiB/s
+INFO:  43% (15.5 GiB of 35.9 GiB) in  6m 18s, read: 42.4 MiB/s, write: 41.2 MiB/s
+INFO:  44% (15.8 GiB of 35.9 GiB) in  6m 26s, read: 37.5 MiB/s, write: 37.0 MiB/s
+INFO:  45% (16.2 GiB of 35.9 GiB) in  6m 34s, read: 45.5 MiB/s, write: 45.0 MiB/s
+INFO:  46% (16.5 GiB of 35.9 GiB) in  6m 40s, read: 61.3 MiB/s, write: 60.7 MiB/s
+INFO:  47% (16.9 GiB of 35.9 GiB) in  6m 53s, read: 29.8 MiB/s, write: 28.3 MiB/s
+INFO:  48% (17.3 GiB of 35.9 GiB) in  7m  4s, read: 38.9 MiB/s, write: 38.9 MiB/s
+INFO:  49% (17.6 GiB of 35.9 GiB) in  7m 14s, read: 29.2 MiB/s, write: 28.4 MiB/s
+INFO:  50% (18.0 GiB of 35.9 GiB) in  7m 24s, read: 38.0 MiB/s, write: 37.6 MiB/s
+INFO:  51% (18.3 GiB of 35.9 GiB) in  7m 34s, read: 36.8 MiB/s, write: 36.4 MiB/s
+INFO:  52% (18.7 GiB of 35.9 GiB) in  7m 44s, read: 36.8 MiB/s, write: 36.8 MiB/s
+INFO:  53% (19.1 GiB of 35.9 GiB) in  7m 50s, read: 64.0 MiB/s, write: 62.0 MiB/s
+INFO:  54% (19.4 GiB of 35.9 GiB) in  7m 58s, read: 43.0 MiB/s, write: 42.0 MiB/s
+INFO:  55% (19.8 GiB of 35.9 GiB) in  8m  8s, read: 36.4 MiB/s, write: 35.2 MiB/s
+INFO:  56% (20.1 GiB of 35.9 GiB) in  8m 16s, read: 47.5 MiB/s, write: 46.5 MiB/s
+INFO:  57% (20.5 GiB of 35.9 GiB) in  8m 24s, read: 48.0 MiB/s, write: 48.0 MiB/s
+INFO:  58% (20.9 GiB of 35.9 GiB) in  8m 36s, read: 31.3 MiB/s, write: 31.3 MiB/s
+INFO:  59% (21.2 GiB of 35.9 GiB) in  8m 48s, read: 28.7 MiB/s, write: 28.7 MiB/s
+INFO:  60% (21.6 GiB of 35.9 GiB) in  9m  0s, read: 33.0 MiB/s, write: 32.7 MiB/s
+INFO:  61% (21.9 GiB of 35.9 GiB) in  9m  8s, read: 40.0 MiB/s, write: 40.0 MiB/s
+INFO:  62% (22.3 GiB of 35.9 GiB) in  9m 17s, read: 46.7 MiB/s, write: 46.7 MiB/s
+INFO:  63% (22.6 GiB of 35.9 GiB) in  9m 27s, read: 34.0 MiB/s, write: 34.0 MiB/s
+INFO:  64% (23.0 GiB of 35.9 GiB) in  9m 35s, read: 43.0 MiB/s, write: 43.0 MiB/s
+INFO:  65% (23.4 GiB of 35.9 GiB) in  9m 43s, read: 48.0 MiB/s, write: 48.0 MiB/s
+INFO:  66% (23.7 GiB of 35.9 GiB) in  9m 52s, read: 39.6 MiB/s, write: 39.6 MiB/s
+INFO:  67% (24.1 GiB of 35.9 GiB) in 10m  0s, read: 50.0 MiB/s, write: 50.0 MiB/s
+INFO:  68% (24.5 GiB of 35.9 GiB) in 10m  8s, read: 51.0 MiB/s, write: 49.5 MiB/s
+INFO:  69% (24.8 GiB of 35.9 GiB) in 10m 18s, read: 28.8 MiB/s, write: 28.4 MiB/s
+INFO:  70% (25.1 GiB of 35.9 GiB) in 10m 29s, read: 35.3 MiB/s, write: 33.5 MiB/s
+INFO:  71% (25.6 GiB of 35.9 GiB) in 10m 40s, read: 42.5 MiB/s, write: 39.6 MiB/s
+INFO:  72% (25.9 GiB of 35.9 GiB) in 10m 48s, read: 33.0 MiB/s, write: 31.5 MiB/s
+INFO:  73% (26.2 GiB of 35.9 GiB) in 10m 56s, read: 45.5 MiB/s, write: 43.0 MiB/s
+INFO:  74% (26.6 GiB of 35.9 GiB) in 11m  6s, read: 35.6 MiB/s, write: 33.6 MiB/s
+INFO:  75% (26.9 GiB of 35.9 GiB) in 11m 16s, read: 38.0 MiB/s, write: 37.2 MiB/s
+INFO:  76% (27.3 GiB of 35.9 GiB) in 11m 24s, read: 45.5 MiB/s, write: 45.5 MiB/s
+INFO:  77% (27.7 GiB of 35.9 GiB) in 11m 32s, read: 53.0 MiB/s, write: 53.0 MiB/s
+INFO:  78% (28.0 GiB of 35.9 GiB) in 11m 48s, read: 21.8 MiB/s, write: 21.2 MiB/s
+INFO:  79% (28.4 GiB of 35.9 GiB) in 11m 56s, read: 44.0 MiB/s, write: 43.0 MiB/s
+INFO:  80% (28.8 GiB of 35.9 GiB) in 12m  6s, read: 38.0 MiB/s, write: 37.2 MiB/s
+INFO:  81% (29.1 GiB of 35.9 GiB) in 12m 15s, read: 36.0 MiB/s, write: 35.1 MiB/s
+INFO:  82% (29.5 GiB of 35.9 GiB) in 12m 23s, read: 57.5 MiB/s, write: 57.5 MiB/s
+INFO:  83% (29.8 GiB of 35.9 GiB) in 12m 28s, read: 56.8 MiB/s, write: 55.2 MiB/s
+INFO:  84% (30.1 GiB of 35.9 GiB) in 12m 33s, read: 70.4 MiB/s, write: 68.0 MiB/s
+INFO:  85% (30.5 GiB of 35.9 GiB) in 12m 41s, read: 46.5 MiB/s, write: 43.0 MiB/s
+INFO:  86% (30.9 GiB of 35.9 GiB) in 12m 50s, read: 46.2 MiB/s, write: 44.9 MiB/s
+INFO:  87% (31.3 GiB of 35.9 GiB) in 12m 55s, read: 70.4 MiB/s, write: 70.4 MiB/s
+INFO:  88% (31.7 GiB of 35.9 GiB) in 13m  1s, read: 68.7 MiB/s, write: 64.0 MiB/s
+INFO:  89% (32.0 GiB of 35.9 GiB) in 13m  8s, read: 49.7 MiB/s, write: 47.4 MiB/s
+INFO:  90% (32.4 GiB of 35.9 GiB) in 13m 15s, read: 52.6 MiB/s, write: 52.0 MiB/s
+INFO:  91% (32.7 GiB of 35.9 GiB) in 13m 20s, read: 70.4 MiB/s, write: 70.4 MiB/s
+INFO:  92% (33.1 GiB of 35.9 GiB) in 13m 25s, read: 77.6 MiB/s, write: 75.2 MiB/s
+INFO:  93% (33.4 GiB of 35.9 GiB) in 13m 30s, read: 64.0 MiB/s, write: 60.8 MiB/s
+INFO:  94% (33.7 GiB of 35.9 GiB) in 13m 38s, read: 43.5 MiB/s, write: 43.5 MiB/s
+INFO:  95% (34.1 GiB of 35.9 GiB) in 13m 46s, read: 51.0 MiB/s, write: 50.0 MiB/s
+INFO:  96% (34.5 GiB of 35.9 GiB) in 13m 55s, read: 41.8 MiB/s, write: 39.6 MiB/s
+INFO:  97% (34.9 GiB of 35.9 GiB) in 14m  5s, read: 41.6 MiB/s, write: 41.6 MiB/s
+INFO:  98% (35.2 GiB of 35.9 GiB) in 14m 12s, read: 40.6 MiB/s, write: 40.6 MiB/s
+INFO:  99% (35.6 GiB of 35.9 GiB) in 14m 19s, read: 53.1 MiB/s, write: 53.1 MiB/s
+INFO: 100% (35.9 GiB of 35.9 GiB) in 14m 26s, read: 49.7 MiB/s, write: 49.7 MiB/s
+INFO: backup was done incrementally, reused 2.16 TiB (98%)
+INFO: transferred 35.89 GiB in 875 seconds (42.0 MiB/s)
+INFO: Finished Backup of VM 111 (00:14:50)
+INFO: Backup finished at 2021-02-11 20:18:36
+INFO: Starting Backup of VM 119 (qemu)
+INFO: Backup started at 2021-02-11 20:18:36
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-119-disk-0' 50G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/119/2021-02-11T19:18:36Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'b330901b-97da-4c6e-b384-c76f76171745'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: created new
+INFO:   1% (784.0 MiB of 50.0 GiB) in  3s, read: 261.3 MiB/s, write: 30.7 MiB/s
+INFO:   2% (1.3 GiB of 50.0 GiB) in  6s, read: 174.7 MiB/s, write: 18.7 MiB/s
+INFO:   3% (1.8 GiB of 50.0 GiB) in  9s, read: 166.7 MiB/s, write: 12.0 MiB/s
+INFO:   4% (2.4 GiB of 50.0 GiB) in 12s, read: 210.7 MiB/s, write: 12.0 MiB/s
+INFO:   6% (3.2 GiB of 50.0 GiB) in 15s, read: 264.0 MiB/s, write: 8.0 MiB/s
+INFO:   8% (4.1 GiB of 50.0 GiB) in 18s, read: 314.7 MiB/s, write: 13.3 MiB/s
+INFO:   9% (4.5 GiB of 50.0 GiB) in 22s, read: 108.0 MiB/s, write: 4.0 MiB/s
+INFO:  10% (5.0 GiB of 50.0 GiB) in 25s, read: 178.7 MiB/s, write: 0 B/s
+INFO:  13% (6.5 GiB of 50.0 GiB) in 28s, read: 504.0 MiB/s, write: 5.3 MiB/s
+INFO:  16% (8.0 GiB of 50.0 GiB) in 32s, read: 387.0 MiB/s, write: 0 B/s
+INFO:  17% (8.5 GiB of 50.0 GiB) in 35s, read: 166.7 MiB/s, write: 6.7 MiB/s
+INFO:  20% (10.3 GiB of 50.0 GiB) in 44s, read: 199.6 MiB/s, write: 3.1 MiB/s
+INFO:  21% (10.5 GiB of 50.0 GiB) in 47s, read: 88.0 MiB/s, write: 44.0 MiB/s
+INFO:  22% (11.3 GiB of 50.0 GiB) in 56s, read: 87.6 MiB/s, write: 20.9 MiB/s
+INFO:  24% (12.1 GiB of 50.0 GiB) in  1m  1s, read: 176.0 MiB/s, write: 1.6 MiB/s
+INFO:  25% (12.5 GiB of 50.0 GiB) in  1m  4s, read: 124.0 MiB/s, write: 0 B/s
+INFO:  26% (13.4 GiB of 50.0 GiB) in  1m  8s, read: 235.0 MiB/s, write: 0 B/s
+INFO:  29% (14.5 GiB of 50.0 GiB) in  1m 11s, read: 370.7 MiB/s, write: 1.3 MiB/s
+INFO:  31% (15.5 GiB of 50.0 GiB) in  1m 14s, read: 340.0 MiB/s, write: 0 B/s
+INFO:  33% (16.5 GiB of 50.0 GiB) in  1m 17s, read: 340.0 MiB/s, write: 2.7 MiB/s
+INFO:  34% (17.4 GiB of 50.0 GiB) in  1m 21s, read: 223.0 MiB/s, write: 1.0 MiB/s
+INFO:  35% (17.6 GiB of 50.0 GiB) in  1m 27s, read: 46.0 MiB/s, write: 0 B/s
+INFO:  37% (18.5 GiB of 50.0 GiB) in  1m 30s, read: 293.3 MiB/s, write: 2.7 MiB/s
+INFO:  39% (19.6 GiB of 50.0 GiB) in  1m 34s, read: 285.0 MiB/s, write: 0 B/s
+INFO:  41% (20.5 GiB of 50.0 GiB) in  1m 37s, read: 304.0 MiB/s, write: 1.3 MiB/s
+INFO:  42% (21.2 GiB of 50.0 GiB) in  1m 40s, read: 254.7 MiB/s, write: 0 B/s
+INFO:  45% (22.5 GiB of 50.0 GiB) in  1m 43s, read: 426.7 MiB/s, write: 2.7 MiB/s
+INFO:  47% (23.6 GiB of 50.0 GiB) in  1m 49s, read: 190.0 MiB/s, write: 0 B/s
+INFO:  49% (24.5 GiB of 50.0 GiB) in  1m 52s, read: 302.7 MiB/s, write: 4.0 MiB/s
+INFO:  52% (26.2 GiB of 50.0 GiB) in  1m 59s, read: 248.0 MiB/s, write: 1.1 MiB/s
+INFO:  57% (28.5 GiB of 50.0 GiB) in  2m  2s, read: 786.7 MiB/s, write: 1.3 MiB/s
+INFO:  59% (30.0 GiB of 50.0 GiB) in  2m  6s, read: 375.0 MiB/s, write: 0 B/s
+INFO:  67% (33.8 GiB of 50.0 GiB) in  2m  9s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  75% (37.9 GiB of 50.0 GiB) in  2m 12s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  84% (42.1 GiB of 50.0 GiB) in  2m 15s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  92% (46.2 GiB of 50.0 GiB) in  2m 18s, read: 1.4 GiB/s, write: 0 B/s
+INFO: 100% (50.0 GiB of 50.0 GiB) in  2m 21s, read: 1.3 GiB/s, write: 0 B/s
+INFO: backup is sparse: 37.04 GiB (74%) total zero data
+INFO: backup was done incrementally, reused 49.27 GiB (98%)
+INFO: transferred 50.00 GiB in 141 seconds (363.1 MiB/s)
+INFO: Finished Backup of VM 119 (00:02:25)
+INFO: Backup finished at 2021-02-11 20:21:01
+INFO: Starting Backup of VM 126 (qemu)
+INFO: Backup started at 2021-02-11 20:21:01
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-126-disk-0' 83G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/126/2021-02-11T19:21:01Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '060351d1-7cbc-43a0-9d86-ba6fe2c7fe43'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: created new
+INFO:   1% (900.0 MiB of 83.0 GiB) in  3s, read: 300.0 MiB/s, write: 26.7 MiB/s
+INFO:   2% (1.7 GiB of 83.0 GiB) in 12s, read: 91.1 MiB/s, write: 10.2 MiB/s
+INFO:   3% (2.6 GiB of 83.0 GiB) in 24s, read: 76.0 MiB/s, write: 5.7 MiB/s
+INFO:   4% (3.4 GiB of 83.0 GiB) in 29s, read: 165.6 MiB/s, write: 1.6 MiB/s
+INFO:   5% (4.4 GiB of 83.0 GiB) in 34s, read: 204.8 MiB/s, write: 6.4 MiB/s
+INFO:   7% (5.8 GiB of 83.0 GiB) in 37s, read: 493.3 MiB/s, write: 8.0 MiB/s
+INFO:   9% (7.9 GiB of 83.0 GiB) in 40s, read: 724.0 MiB/s, write: 10.7 MiB/s
+INFO:  10% (9.0 GiB of 83.0 GiB) in 43s, read: 352.0 MiB/s, write: 76.0 MiB/s
+INFO:  11% (9.7 GiB of 83.0 GiB) in 46s, read: 245.3 MiB/s, write: 61.3 MiB/s
+INFO:  14% (12.3 GiB of 83.0 GiB) in 49s, read: 898.7 MiB/s, write: 21.3 MiB/s
+INFO:  16% (13.6 GiB of 83.0 GiB) in 52s, read: 446.7 MiB/s, write: 5.3 MiB/s
+INFO:  17% (14.9 GiB of 83.0 GiB) in 55s, read: 432.0 MiB/s, write: 13.3 MiB/s
+INFO:  19% (16.2 GiB of 83.0 GiB) in 58s, read: 458.7 MiB/s, write: 0 B/s
+INFO:  21% (17.5 GiB of 83.0 GiB) in  1m  1s, read: 413.3 MiB/s, write: 4.0 MiB/s
+INFO:  22% (18.5 GiB of 83.0 GiB) in  1m  4s, read: 356.0 MiB/s, write: 33.3 MiB/s
+INFO:  23% (19.5 GiB of 83.0 GiB) in  1m  7s, read: 332.0 MiB/s, write: 6.7 MiB/s
+INFO:  26% (22.3 GiB of 83.0 GiB) in  1m 10s, read: 961.3 MiB/s, write: 2.7 MiB/s
+INFO:  31% (26.2 GiB of 83.0 GiB) in  1m 13s, read: 1.3 GiB/s, write: 2.7 MiB/s
+INFO:  36% (30.2 GiB of 83.0 GiB) in  1m 16s, read: 1.3 GiB/s, write: 2.7 MiB/s
+INFO:  40% (34.0 GiB of 83.0 GiB) in  1m 19s, read: 1.3 GiB/s, write: 1.3 MiB/s
+INFO:  45% (37.5 GiB of 83.0 GiB) in  1m 22s, read: 1.2 GiB/s, write: 9.3 MiB/s
+INFO:  49% (41.2 GiB of 83.0 GiB) in  1m 25s, read: 1.2 GiB/s, write: 2.7 MiB/s
+INFO:  54% (45.0 GiB of 83.0 GiB) in  1m 28s, read: 1.3 GiB/s, write: 2.7 MiB/s
+INFO:  58% (48.5 GiB of 83.0 GiB) in  1m 31s, read: 1.2 GiB/s, write: 2.7 MiB/s
+INFO:  60% (50.5 GiB of 83.0 GiB) in  1m 34s, read: 681.3 MiB/s, write: 1.3 MiB/s
+INFO:  61% (51.4 GiB of 83.0 GiB) in  1m 37s, read: 296.0 MiB/s, write: 0 B/s
+INFO:  65% (54.5 GiB of 83.0 GiB) in  1m 40s, read: 1.0 GiB/s, write: 1.3 MiB/s
+INFO:  66% (55.6 GiB of 83.0 GiB) in  1m 43s, read: 376.0 MiB/s, write: 0 B/s
+INFO:  71% (59.6 GiB of 83.0 GiB) in  1m 46s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  76% (63.6 GiB of 83.0 GiB) in  1m 49s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  79% (65.6 GiB of 83.0 GiB) in  1m 52s, read: 677.3 MiB/s, write: 0 B/s
+INFO:  84% (69.8 GiB of 83.0 GiB) in  1m 55s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  89% (73.9 GiB of 83.0 GiB) in  1m 58s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  94% (78.1 GiB of 83.0 GiB) in  2m  1s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  99% (82.3 GiB of 83.0 GiB) in  2m  4s, read: 1.4 GiB/s, write: 0 B/s
+INFO: 100% (83.0 GiB of 83.0 GiB) in  2m  5s, read: 692.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 66.23 GiB (79%) total zero data
+INFO: backup was done incrementally, reused 81.94 GiB (98%)
+INFO: transferred 83.00 GiB in 125 seconds (679.9 MiB/s)
+INFO: Finished Backup of VM 126 (00:02:08)
+INFO: Backup finished at 2021-02-11 20:23:09
+INFO: Starting Backup of VM 129 (lxc)
+INFO: Backup started at 2021-02-11 20:23:09
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/129/2021-02-11T19:23:09Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_129/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 129 --backup-time 1613071389 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/129/2021-02-11T19:23:09Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:23:09 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:37:15 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_129/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 38.04 MiB of 1.31 GiB in 11.49s, average speed 3.31 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 1.28 GiB (97.2%)
+INFO: Uploaded backup catalog (531.57 KiB)
+INFO: Duration: 16.71s
+INFO: End Time: Thu Feb 11 20:23:26 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 129 (00:00:17)
+INFO: Backup finished at 2021-02-11 20:23:26
+INFO: Starting Backup of VM 137 (qemu)
+INFO: Backup started at 2021-02-11 20:23:27
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-137-disk-0' 2200G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/137/2021-02-11T19:23:27Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '55d8ff06-16b0-4854-a48a-1688d159b96e'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.6 GiB of 2.1 TiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 1.6 GiB dirty of 2.1 TiB total
+INFO:  23% (404.0 MiB of 1.6 GiB) in  3s, read: 134.7 MiB/s, write: 134.7 MiB/s
+INFO:  32% (540.0 MiB of 1.6 GiB) in  6s, read: 45.3 MiB/s, write: 45.3 MiB/s
+INFO:  45% (760.0 MiB of 1.6 GiB) in  9s, read: 73.3 MiB/s, write: 73.3 MiB/s
+INFO:  48% (812.0 MiB of 1.6 GiB) in 12s, read: 17.3 MiB/s, write: 17.3 MiB/s
+INFO:  61% (1.0 GiB of 1.6 GiB) in 15s, read: 73.3 MiB/s, write: 73.3 MiB/s
+INFO:  72% (1.2 GiB of 1.6 GiB) in 18s, read: 62.7 MiB/s, write: 62.7 MiB/s
+INFO:  75% (1.2 GiB of 1.6 GiB) in 21s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO:  87% (1.4 GiB of 1.6 GiB) in 24s, read: 64.0 MiB/s, write: 64.0 MiB/s
+INFO:  96% (1.6 GiB of 1.6 GiB) in 27s, read: 53.3 MiB/s, write: 52.0 MiB/s
+INFO: 100% (1.6 GiB of 1.6 GiB) in 30s, read: 18.7 MiB/s, write: 18.7 MiB/s
+INFO: backup was done incrementally, reused 2.15 TiB (99%)
+INFO: transferred 1.64 GiB in 36 seconds (46.8 MiB/s)
+INFO: Finished Backup of VM 137 (00:00:42)
+INFO: Backup finished at 2021-02-11 20:24:09
+INFO: Starting Backup of VM 138 (qemu)
+INFO: Backup started at 2021-02-11 20:24:09
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-138-disk-0' 43G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/138/2021-02-11T19:24:09Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'facb8ea0-8a84-4f4d-bdd4-5ad77438831a'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (864.0 MiB of 43.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 864.0 MiB dirty of 43.0 GiB total
+INFO:  46% (404.0 MiB of 864.0 MiB) in  3s, read: 134.7 MiB/s, write: 134.7 MiB/s
+INFO:  76% (664.0 MiB of 864.0 MiB) in  6s, read: 86.7 MiB/s, write: 86.7 MiB/s
+INFO: 100% (864.0 MiB of 864.0 MiB) in  9s, read: 66.7 MiB/s, write: 66.7 MiB/s
+INFO: backup was done incrementally, reused 42.16 GiB (98%)
+INFO: transferred 864.00 MiB in 10 seconds (86.4 MiB/s)
+INFO: Finished Backup of VM 138 (00:00:15)
+INFO: Backup finished at 2021-02-11 20:24:24
+INFO: Starting Backup of VM 143 (qemu)
+INFO: Backup started at 2021-02-11 20:24:25
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:base-9000-disk-0/vm-143-disk-0' 43212M
+INFO: creating Proxmox Backup Server archive 'vm/143/2021-02-11T19:24:25Z'
+INFO: starting kvm to execute backup task
+generating cloud-init ISO
+INFO: started backup task '14fd549e-efe8-45ea-8655-538a1b366c7e'
+INFO: scsi0: dirty-bitmap status: created new
+INFO:   3% (1.4 GiB of 42.2 GiB) in  3s, read: 480.0 MiB/s, write: 0 B/s
+INFO:   8% (3.7 GiB of 42.2 GiB) in  6s, read: 784.0 MiB/s, write: 0 B/s
+INFO:  17% (7.6 GiB of 42.2 GiB) in  9s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  23% (10.1 GiB of 42.2 GiB) in 12s, read: 860.0 MiB/s, write: 0 B/s
+INFO:  28% (12.1 GiB of 42.2 GiB) in 15s, read: 669.3 MiB/s, write: 0 B/s
+INFO:  34% (14.4 GiB of 42.2 GiB) in 18s, read: 808.0 MiB/s, write: 0 B/s
+INFO:  39% (16.7 GiB of 42.2 GiB) in 21s, read: 780.0 MiB/s, write: 0 B/s
+INFO:  45% (19.0 GiB of 42.2 GiB) in 24s, read: 780.0 MiB/s, write: 0 B/s
+INFO:  49% (21.0 GiB of 42.2 GiB) in 27s, read: 682.7 MiB/s, write: 0 B/s
+INFO:  54% (23.2 GiB of 42.2 GiB) in 30s, read: 736.0 MiB/s, write: 0 B/s
+INFO:  59% (25.1 GiB of 42.2 GiB) in 33s, read: 654.7 MiB/s, write: 0 B/s
+INFO:  68% (28.9 GiB of 42.2 GiB) in 36s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  78% (33.0 GiB of 42.2 GiB) in 39s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  87% (37.1 GiB of 42.2 GiB) in 42s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  97% (41.2 GiB of 42.2 GiB) in 45s, read: 1.4 GiB/s, write: 0 B/s
+INFO: 100% (42.2 GiB of 42.2 GiB) in 46s, read: 972.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 33.58 GiB (79%) total zero data
+INFO: backup was done incrementally, reused 42.20 GiB (100%)
+INFO: transferred 42.20 GiB in 46 seconds (939.4 MiB/s)
+INFO: stopping kvm after backup task
+trying to acquire lock...
+ OK
+INFO: Finished Backup of VM 143 (00:00:51)
+INFO: Backup finished at 2021-02-11 20:25:16
+INFO: Starting Backup of VM 144 (lxc)
+INFO: Backup started at 2021-02-11 20:25:16
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/144/2021-02-11T19:25:16Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_144/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 144 --backup-time 1613071516 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/144/2021-02-11T19:25:16Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:25:17 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:47:08 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_144/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 274.10 MiB of 4.28 GiB in 18.33s, average speed 14.95 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 4.02 GiB (93.8%)
+INFO: Uploaded backup catalog (648.42 KiB)
+INFO: Duration: 23.70s
+INFO: End Time: Thu Feb 11 20:25:40 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 144 (00:00:25)
+INFO: Backup finished at 2021-02-11 20:25:41
+INFO: Starting Backup of VM 147 (lxc)
+INFO: Backup started at 2021-02-11 20:25:41
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/147/2021-02-11T19:25:41Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_147/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 147 --backup-time 1613071541 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/147/2021-02-11T19:25:41Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:25:41 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:47:44 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_147/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 277.61 MiB of 4.28 GiB in 15.34s, average speed 18.09 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 4.01 GiB (93.7%)
+INFO: Uploaded backup catalog (616.83 KiB)
+INFO: Duration: 18.71s
+INFO: End Time: Thu Feb 11 20:26:00 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 147 (00:00:19)
+INFO: Backup finished at 2021-02-11 20:26:00
+INFO: Starting Backup of VM 150 (qemu)
+INFO: Backup started at 2021-02-11 20:26:00
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-150-disk-0' 9G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/150/2021-02-11T19:26:00Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '2947ce0f-c5ec-44c5-a495-57c54f74c294'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (884.0 MiB of 9.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 884.0 MiB dirty of 9.0 GiB total
+INFO:  47% (420.0 MiB of 884.0 MiB) in  3s, read: 140.0 MiB/s, write: 140.0 MiB/s
+INFO:  67% (600.0 MiB of 884.0 MiB) in  6s, read: 60.0 MiB/s, write: 60.0 MiB/s
+INFO:  91% (812.0 MiB of 884.0 MiB) in  9s, read: 70.7 MiB/s, write: 56.0 MiB/s
+INFO: 100% (884.0 MiB of 884.0 MiB) in 12s, read: 24.0 MiB/s, write: 24.0 MiB/s
+INFO: backup was done incrementally, reused 8.18 GiB (90%)
+INFO: transferred 884.00 MiB in 17 seconds (52.0 MiB/s)
+INFO: Finished Backup of VM 150 (00:00:22)
+INFO: Backup finished at 2021-02-11 20:26:22
+INFO: Starting Backup of VM 151 (lxc)
+INFO: Backup started at 2021-02-11 20:26:22
+INFO: status = running
+INFO: CT Name: abc.def.de
+INFO: including mount point rootfs ('/') in backup
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: create storage snapshot 'vzdump'
+INFO: creating Proxmox Backup Server archive 'ct/151/2021-02-11T19:26:22Z'
+INFO: run: lxc-usernsexec -m u:0:100000:65536 -m g:0:100000:65536 -- /usr/bin/proxmox-backup-client backup --crypt-mode=none pct.conf:/var/tmp/vzdumptmp15461_151/etc/vzdump/pct.conf root.pxar:/mnt/vzsnap0 --include-dev /mnt/vzsnap0/./ --skip-lost-and-found --exclude=/tmp/?* --exclude=/var/tmp/?* --exclude=/var/run/?*.pid --backup-type ct --backup-id 151 --backup-time 1613071582 --repository pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:backup1
+INFO: Starting backup: ct/151/2021-02-11T19:26:22Z
+INFO: Client name: pve-dc14-001
+INFO: Starting backup protocol: Thu Feb 11 20:26:22 2021
+INFO: Downloading previous manifest (Thu Feb 11 12:48:50 2021)
+INFO: Upload config file '/var/tmp/vzdumptmp15461_151/etc/vzdump/pct.conf' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as pct.conf.blob
+INFO: Upload directory '/mnt/vzsnap0' to 'pvecluster1@pbs@pbs-fi-dc2-001.helloworld.de:8007:backup1' as root.pxar.didx
+INFO: root.pxar: had to upload 178.49 MiB of 1.50 GiB in 13.05s, average speed 13.68 MiB/s).
+INFO: root.pxar: backup was done incrementally, reused 1.32 GiB (88.4%)
+INFO: Uploaded backup catalog (954.69 KiB)
+INFO: Duration: 16.29s
+INFO: End Time: Thu Feb 11 20:26:38 2021
+INFO: cleanup temporary 'vzdump' snapshot
+INFO: Finished Backup of VM 151 (00:00:17)
+INFO: Backup finished at 2021-02-11 20:26:39
+INFO: Starting Backup of VM 152 (qemu)
+INFO: Backup started at 2021-02-11 20:26:39
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-152-disk-0' 35G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/152/2021-02-11T19:26:39Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '1e5254e9-7e2d-4209-82cf-435b12ffc59e'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (3.4 GiB of 35.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 3.4 GiB dirty of 35.0 GiB total
+INFO:  11% (404.0 MiB of 3.4 GiB) in  3s, read: 134.7 MiB/s, write: 133.3 MiB/s
+INFO:  16% (572.0 MiB of 3.4 GiB) in  6s, read: 56.0 MiB/s, write: 56.0 MiB/s
+INFO:  23% (812.0 MiB of 3.4 GiB) in  9s, read: 80.0 MiB/s, write: 80.0 MiB/s
+INFO:  26% (904.0 MiB of 3.4 GiB) in 12s, read: 30.7 MiB/s, write: 30.7 MiB/s
+INFO:  35% (1.2 GiB of 3.4 GiB) in 15s, read: 105.3 MiB/s, write: 100.0 MiB/s
+INFO:  41% (1.4 GiB of 3.4 GiB) in 18s, read: 73.3 MiB/s, write: 65.3 MiB/s
+INFO:  48% (1.6 GiB of 3.4 GiB) in 21s, read: 74.7 MiB/s, write: 74.7 MiB/s
+INFO:  55% (1.9 GiB of 3.4 GiB) in 24s, read: 84.0 MiB/s, write: 84.0 MiB/s
+INFO:  59% (2.0 GiB of 3.4 GiB) in 27s, read: 45.3 MiB/s, write: 45.3 MiB/s
+INFO:  65% (2.2 GiB of 3.4 GiB) in 30s, read: 62.7 MiB/s, write: 62.7 MiB/s
+INFO:  71% (2.4 GiB of 3.4 GiB) in 33s, read: 68.0 MiB/s, write: 68.0 MiB/s
+INFO:  75% (2.5 GiB of 3.4 GiB) in 36s, read: 49.3 MiB/s, write: 48.0 MiB/s
+INFO:  82% (2.8 GiB of 3.4 GiB) in 39s, read: 76.0 MiB/s, write: 76.0 MiB/s
+INFO:  84% (2.8 GiB of 3.4 GiB) in 42s, read: 25.3 MiB/s, write: 25.3 MiB/s
+INFO:  90% (3.0 GiB of 3.4 GiB) in 45s, read: 70.7 MiB/s, write: 70.7 MiB/s
+INFO:  94% (3.2 GiB of 3.4 GiB) in 48s, read: 41.3 MiB/s, write: 22.7 MiB/s
+INFO:  96% (3.2 GiB of 3.4 GiB) in 51s, read: 29.3 MiB/s, write: 29.3 MiB/s
+INFO: 100% (3.4 GiB of 3.4 GiB) in 54s, read: 37.3 MiB/s, write: 37.3 MiB/s
+INFO: backup was done incrementally, reused 31.75 GiB (90%)
+INFO: transferred 3.35 GiB in 60 seconds (57.2 MiB/s)
+INFO: Finished Backup of VM 152 (00:01:04)
+INFO: Backup finished at 2021-02-11 20:27:43
+INFO: Starting Backup of VM 153 (qemu)
+INFO: Backup started at 2021-02-11 20:27:43
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-153-disk-0' 22G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/153/2021-02-11T19:27:43Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '03cd4287-9532-4779-b72e-4b6d06d49510'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (3.3 GiB of 22.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 3.3 GiB dirty of 22.0 GiB total
+INFO:  11% (404.0 MiB of 3.3 GiB) in  3s, read: 134.7 MiB/s, write: 134.7 MiB/s
+INFO:  14% (480.0 MiB of 3.3 GiB) in  6s, read: 25.3 MiB/s, write: 25.3 MiB/s
+INFO:  20% (704.0 MiB of 3.3 GiB) in  9s, read: 74.7 MiB/s, write: 73.3 MiB/s
+INFO:  24% (812.0 MiB of 3.3 GiB) in 12s, read: 36.0 MiB/s, write: 36.0 MiB/s
+INFO:  29% (992.0 MiB of 3.3 GiB) in 15s, read: 60.0 MiB/s, write: 60.0 MiB/s
+INFO:  35% (1.2 GiB of 3.3 GiB) in 18s, read: 72.0 MiB/s, write: 69.3 MiB/s
+INFO:  36% (1.2 GiB of 3.3 GiB) in 21s, read: 8.0 MiB/s, write: 8.0 MiB/s
+INFO:  42% (1.4 GiB of 3.3 GiB) in 24s, read: 70.7 MiB/s, write: 70.7 MiB/s
+INFO:  48% (1.6 GiB of 3.3 GiB) in 27s, read: 61.3 MiB/s, write: 60.0 MiB/s
+INFO:  51% (1.7 GiB of 3.3 GiB) in 30s, read: 32.0 MiB/s, write: 32.0 MiB/s
+INFO:  58% (1.9 GiB of 3.3 GiB) in 33s, read: 86.7 MiB/s, write: 77.3 MiB/s
+INFO:  66% (2.2 GiB of 3.3 GiB) in 36s, read: 92.0 MiB/s, write: 92.0 MiB/s
+INFO:  75% (2.5 GiB of 3.3 GiB) in 39s, read: 93.3 MiB/s, write: 93.3 MiB/s
+INFO:  85% (2.8 GiB of 3.3 GiB) in 42s, read: 117.3 MiB/s, write: 117.3 MiB/s
+INFO:  92% (3.1 GiB of 3.3 GiB) in 45s, read: 80.0 MiB/s, write: 70.7 MiB/s
+INFO:  96% (3.2 GiB of 3.3 GiB) in 48s, read: 44.0 MiB/s, write: 33.3 MiB/s
+INFO: 100% (3.3 GiB of 3.3 GiB) in 51s, read: 38.7 MiB/s, write: 38.7 MiB/s
+INFO: backup was done incrementally, reused 18.80 GiB (85%)
+INFO: transferred 3.30 GiB in 55 seconds (61.5 MiB/s)
+INFO: Finished Backup of VM 153 (00:01:00)
+INFO: Backup finished at 2021-02-11 20:28:43
+INFO: Starting Backup of VM 154 (qemu)
+INFO: Backup started at 2021-02-11 20:28:43
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-154-disk-0' 9G
+INFO: include disk 'scsi1' 'local-zfs:vm-154-disk-1' 500G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/154/2021-02-11T19:28:43Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'bb70cab5-ecdf-46ce-8d22-47ffa3e3bc5f'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (1.6 GiB of 9.0 GiB dirty)
+INFO: scsi1: dirty-bitmap status: OK (1.5 GiB of 500.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 3.1 GiB dirty of 509.0 GiB total
+INFO:  23% (748.0 MiB of 3.1 GiB) in  3s, read: 249.3 MiB/s, write: 246.7 MiB/s
+INFO:  35% (1.1 GiB of 3.1 GiB) in  6s, read: 117.3 MiB/s, write: 94.7 MiB/s
+INFO:  43% (1.3 GiB of 3.1 GiB) in  9s, read: 92.0 MiB/s, write: 92.0 MiB/s
+INFO:  61% (1.9 GiB of 3.1 GiB) in 12s, read: 185.3 MiB/s, write: 184.0 MiB/s
+INFO:  66% (2.0 GiB of 3.1 GiB) in 15s, read: 46.7 MiB/s, write: 46.7 MiB/s
+INFO:  76% (2.3 GiB of 3.1 GiB) in 18s, read: 109.3 MiB/s, write: 108.0 MiB/s
+INFO:  89% (2.7 GiB of 3.1 GiB) in 21s, read: 130.7 MiB/s, write: 120.0 MiB/s
+INFO:  99% (3.0 GiB of 3.1 GiB) in 24s, read: 105.3 MiB/s, write: 105.3 MiB/s
+INFO: 100% (3.1 GiB of 3.1 GiB) in 27s, read: 9.3 MiB/s, write: 9.3 MiB/s
+INFO: backup was done incrementally, reused 506.05 GiB (99%)
+INFO: transferred 3.06 GiB in 28 seconds (112.0 MiB/s)
+INFO: Finished Backup of VM 154 (00:00:30)
+INFO: Backup finished at 2021-02-11 20:29:13
+INFO: Starting Backup of VM 155 (qemu)
+INFO: Backup started at 2021-02-11 20:29:13
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'ide0' 'local-zfs:vm-155-disk-0' 100G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/155/2021-02-11T19:29:13Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'e62d6f33-4b63-4820-af39-777549995cb0'
+INFO: resuming VM again
+INFO: ide0: dirty-bitmap status: OK (4.6 GiB of 100.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 4.6 GiB dirty of 100.0 GiB total
+INFO:  15% (704.0 MiB of 4.6 GiB) in  3s, read: 234.7 MiB/s, write: 234.7 MiB/s
+INFO:  22% (1.0 GiB of 4.6 GiB) in  6s, read: 112.0 MiB/s, write: 104.0 MiB/s
+INFO:  30% (1.4 GiB of 4.6 GiB) in  9s, read: 122.7 MiB/s, write: 122.7 MiB/s
+INFO:  33% (1.6 GiB of 4.6 GiB) in 12s, read: 60.0 MiB/s, write: 60.0 MiB/s
+INFO:  39% (1.8 GiB of 4.6 GiB) in 15s, read: 88.0 MiB/s, write: 86.7 MiB/s
+INFO:  45% (2.1 GiB of 4.6 GiB) in 18s, read: 92.0 MiB/s, write: 92.0 MiB/s
+INFO:  49% (2.3 GiB of 4.6 GiB) in 21s, read: 68.0 MiB/s, write: 68.0 MiB/s
+INFO:  56% (2.6 GiB of 4.6 GiB) in 24s, read: 105.3 MiB/s, write: 105.3 MiB/s
+INFO:  61% (2.8 GiB of 4.6 GiB) in 27s, read: 73.3 MiB/s, write: 73.3 MiB/s
+INFO:  67% (3.1 GiB of 4.6 GiB) in 30s, read: 102.7 MiB/s, write: 102.7 MiB/s
+INFO:  72% (3.3 GiB of 4.6 GiB) in 33s, read: 74.7 MiB/s, write: 74.7 MiB/s
+INFO:  78% (3.6 GiB of 4.6 GiB) in 36s, read: 94.7 MiB/s, write: 94.7 MiB/s
+INFO:  86% (4.0 GiB of 4.6 GiB) in 39s, read: 121.3 MiB/s, write: 121.3 MiB/s
+INFO:  91% (4.2 GiB of 4.6 GiB) in 42s, read: 74.7 MiB/s, write: 74.7 MiB/s
+INFO:  93% (4.3 GiB of 4.6 GiB) in 45s, read: 41.3 MiB/s, write: 41.3 MiB/s
+INFO:  96% (4.4 GiB of 4.6 GiB) in 48s, read: 33.3 MiB/s, write: 33.3 MiB/s
+INFO: 100% (4.6 GiB of 4.6 GiB) in 51s, read: 61.3 MiB/s, write: 61.3 MiB/s
+INFO: backup was done incrementally, reused 95.46 GiB (95%)
+INFO: transferred 4.57 GiB in 51 seconds (91.8 MiB/s)
+INFO: Finished Backup of VM 155 (00:00:56)
+INFO: Backup finished at 2021-02-11 20:30:09
+INFO: Starting Backup of VM 156 (qemu)
+INFO: Backup started at 2021-02-11 20:30:10
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-156-disk-0' 30G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/156/2021-02-11T19:30:10Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task 'ea9c7616-e5d5-417d-9c4e-7991e5048bae'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: created new
+INFO:   4% (1.5 GiB of 30.0 GiB) in  3s, read: 496.0 MiB/s, write: 53.3 MiB/s
+INFO:   9% (2.8 GiB of 30.0 GiB) in  6s, read: 450.7 MiB/s, write: 25.3 MiB/s
+INFO:  15% (4.7 GiB of 30.0 GiB) in  9s, read: 669.3 MiB/s, write: 8.0 MiB/s
+INFO:  21% (6.5 GiB of 30.0 GiB) in 12s, read: 589.3 MiB/s, write: 6.7 MiB/s
+INFO:  27% (8.2 GiB of 30.0 GiB) in 15s, read: 610.7 MiB/s, write: 6.7 MiB/s
+INFO:  34% (10.5 GiB of 30.0 GiB) in 18s, read: 761.3 MiB/s, write: 14.7 MiB/s
+INFO:  38% (11.5 GiB of 30.0 GiB) in 21s, read: 356.0 MiB/s, write: 33.3 MiB/s
+INFO:  41% (12.4 GiB of 30.0 GiB) in 24s, read: 308.0 MiB/s, write: 90.7 MiB/s
+INFO:  52% (15.6 GiB of 30.0 GiB) in 27s, read: 1.1 GiB/s, write: 1.3 MiB/s
+INFO:  63% (19.2 GiB of 30.0 GiB) in 30s, read: 1.2 GiB/s, write: 2.7 MiB/s
+INFO:  73% (22.1 GiB of 30.0 GiB) in 33s, read: 1005.3 MiB/s, write: 0 B/s
+INFO:  86% (25.9 GiB of 30.0 GiB) in 36s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  99% (29.9 GiB of 30.0 GiB) in 39s, read: 1.3 GiB/s, write: 0 B/s
+INFO: 100% (30.0 GiB of 30.0 GiB) in 40s, read: 100.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 22.45 GiB (74%) total zero data
+INFO: backup was done incrementally, reused 29.29 GiB (97%)
+INFO: transferred 30.00 GiB in 40 seconds (768.0 MiB/s)
+INFO: Finished Backup of VM 156 (00:00:41)
+INFO: Backup finished at 2021-02-11 20:30:51
+INFO: Starting Backup of VM 601 (qemu)
+INFO: Backup started at 2021-02-11 20:30:51
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-601-disk-0' 4G
+INFO: include disk 'scsi1' 'local-zfs:vm-601-disk-1' 100G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/601/2021-02-11T19:30:51Z'
+INFO: skipping guest-agent 'fs-freeze', agent configured but not running?
+INFO: started backup task '234fbb02-d9d2-43dc-be9d-807535566532'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (drive clean)
+INFO: scsi1: dirty-bitmap status: OK (drive clean)
+INFO: using fast incremental mode (dirty-bitmap), 0.0 B dirty of 104.0 GiB total
+INFO: 100% (0.0 B of 0.0 B) in  1s, read: 0 B/s, write: 0 B/s
+INFO: backup was done incrementally, reused 104.00 GiB (100%)
+INFO: Finished Backup of VM 601 (00:00:05)
+INFO: Backup finished at 2021-02-11 20:30:56
+INFO: Starting Backup of VM 602 (qemu)
+INFO: Backup started at 2021-02-11 20:30:56
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-602-disk-1' 4G
+INFO: include disk 'scsi1' 'local-zfs:vm-602-disk-0' 100G
+INFO: creating Proxmox Backup Server archive 'vm/602/2021-02-11T19:30:56Z'
+INFO: starting kvm to execute backup task
+INFO: started backup task 'c622172e-eb59-4943-896a-5798419d0a7d'
+INFO: scsi0: dirty-bitmap status: created new
+INFO: scsi1: dirty-bitmap status: created new
+INFO:   0% (180.0 MiB of 104.0 GiB) in  3s, read: 60.0 MiB/s, write: 0 B/s
+INFO:   1% (1.1 GiB of 104.0 GiB) in 36s, read: 27.5 MiB/s, write: 0 B/s
+INFO:   2% (2.4 GiB of 104.0 GiB) in 39s, read: 445.3 MiB/s, write: 0 B/s
+INFO:   3% (3.7 GiB of 104.0 GiB) in 42s, read: 449.3 MiB/s, write: 0 B/s
+INFO:   4% (4.6 GiB of 104.0 GiB) in 45s, read: 308.0 MiB/s, write: 0 B/s
+INFO:   6% (6.4 GiB of 104.0 GiB) in 48s, read: 622.7 MiB/s, write: 0 B/s
+INFO:   7% (8.1 GiB of 104.0 GiB) in 51s, read: 573.3 MiB/s, write: 0 B/s
+INFO:   9% (9.6 GiB of 104.0 GiB) in 54s, read: 510.7 MiB/s, write: 0 B/s
+INFO:  10% (11.1 GiB of 104.0 GiB) in 57s, read: 510.7 MiB/s, write: 0 B/s
+INFO:  12% (13.4 GiB of 104.0 GiB) in  1m  0s, read: 797.3 MiB/s, write: 0 B/s
+INFO:  16% (17.4 GiB of 104.0 GiB) in  1m  3s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  20% (21.3 GiB of 104.0 GiB) in  1m  6s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  24% (25.2 GiB of 104.0 GiB) in  1m  9s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  27% (28.9 GiB of 104.0 GiB) in  1m 12s, read: 1.2 GiB/s, write: 0 B/s
+INFO:  30% (31.3 GiB of 104.0 GiB) in  1m 15s, read: 817.3 MiB/s, write: 0 B/s
+INFO:  34% (35.5 GiB of 104.0 GiB) in  1m 18s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  38% (39.6 GiB of 104.0 GiB) in  1m 21s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  41% (43.6 GiB of 104.0 GiB) in  1m 24s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  45% (47.8 GiB of 104.0 GiB) in  1m 27s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  49% (51.9 GiB of 104.0 GiB) in  1m 30s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  53% (55.9 GiB of 104.0 GiB) in  1m 33s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  57% (60.1 GiB of 104.0 GiB) in  1m 36s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  61% (63.8 GiB of 104.0 GiB) in  1m 39s, read: 1.2 GiB/s, write: 0 B/s
+INFO:  65% (67.7 GiB of 104.0 GiB) in  1m 42s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  68% (71.6 GiB of 104.0 GiB) in  1m 45s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  72% (75.4 GiB of 104.0 GiB) in  1m 48s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  76% (79.3 GiB of 104.0 GiB) in  1m 51s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  79% (83.2 GiB of 104.0 GiB) in  1m 54s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  83% (87.2 GiB of 104.0 GiB) in  1m 57s, read: 1.3 GiB/s, write: 0 B/s
+INFO:  87% (91.3 GiB of 104.0 GiB) in  2m  0s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  91% (95.4 GiB of 104.0 GiB) in  2m  3s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  95% (99.4 GiB of 104.0 GiB) in  2m  6s, read: 1.4 GiB/s, write: 0 B/s
+INFO:  97% (101.5 GiB of 104.0 GiB) in  2m  9s, read: 700.0 MiB/s, write: 0 B/s
+INFO:  99% (103.1 GiB of 104.0 GiB) in  2m 12s, read: 568.0 MiB/s, write: 0 B/s
+INFO: 100% (104.0 GiB of 104.0 GiB) in  2m 14s, read: 446.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 88.35 GiB (84%) total zero data
+INFO: backup was done incrementally, reused 104.00 GiB (100%)
+INFO: transferred 104.00 GiB in 134 seconds (794.7 MiB/s)
+INFO: stopping kvm after backup task
+INFO: Finished Backup of VM 602 (00:02:17)
+INFO: Backup finished at 2021-02-11 20:33:13
+INFO: Starting Backup of VM 603 (qemu)
+INFO: Backup started at 2021-02-11 20:33:13
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-603-disk-0' 4G
+INFO: include disk 'scsi1' 'local-zfs:vm-603-disk-1' 100G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: snapshots found (not included into backup)
+INFO: creating Proxmox Backup Server archive 'vm/603/2021-02-11T19:33:13Z'
+INFO: skipping guest-agent 'fs-freeze', agent configured but not running?
+INFO: started backup task '43ee3a72-4613-4118-a4ba-d8dc66f6e108'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (drive clean)
+INFO: scsi1: dirty-bitmap status: OK (drive clean)
+INFO: using fast incremental mode (dirty-bitmap), 0.0 B dirty of 104.0 GiB total
+INFO: 100% (0.0 B of 0.0 B) in  1s, read: 0 B/s, write: 0 B/s
+INFO: backup was done incrementally, reused 104.00 GiB (100%)
+INFO: Finished Backup of VM 603 (00:00:05)
+INFO: Backup finished at 2021-02-11 20:33:18
+INFO: Starting Backup of VM 998 (qemu)
+INFO: Backup started at 2021-02-11 20:33:18
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-998-disk-0' 4G
+INFO: creating Proxmox Backup Server archive 'vm/998/2021-02-11T19:33:18Z'
+INFO: starting kvm to execute backup task
+INFO: started backup task '8771732f-e9f9-47b2-b8e6-ee2f95444eb0'
+INFO: scsi0: dirty-bitmap status: created new
+INFO: 100% (4.0 GiB of 4.0 GiB) in  3s, read: 1.3 GiB/s, write: 0 B/s
+INFO: backup is sparse: 4.00 GiB (100%) total zero data
+INFO: backup was done incrementally, reused 4.00 GiB (100%)
+INFO: transferred 4.00 GiB in 3 seconds (1.3 GiB/s)
+INFO: stopping kvm after backup task
+INFO: Finished Backup of VM 998 (00:00:06)
+INFO: Backup finished at 2021-02-11 20:33:24
+INFO: Starting Backup of VM 999 (qemu)
+INFO: Backup started at 2021-02-11 20:33:24
+INFO: status = running
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:vm-999-disk-0' 80G
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating Proxmox Backup Server archive 'vm/999/2021-02-11T19:33:24Z'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '986ac1de-b9b9-4d31-a104-619acdef9455'
+INFO: resuming VM again
+INFO: scsi0: dirty-bitmap status: OK (132.0 MiB of 80.0 GiB dirty)
+INFO: using fast incremental mode (dirty-bitmap), 132.0 MiB dirty of 80.0 GiB total
+INFO: 100% (132.0 MiB of 132.0 MiB) in  2s, read: 66.0 MiB/s, write: 66.0 MiB/s
+INFO: backup was done incrementally, reused 79.87 GiB (99%)
+INFO: transferred 132.00 MiB in 2 seconds (66.0 MiB/s)
+INFO: Finished Backup of VM 999 (00:00:03)
+INFO: Backup finished at 2021-02-11 20:33:27
+INFO: Starting Backup of VM 9000 (qemu)
+INFO: Backup started at 2021-02-11 20:33:27
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: VM Name: abc.def.de
+INFO: include disk 'scsi0' 'local-zfs:base-9000-disk-0' 3G
+INFO: creating Proxmox Backup Server archive 'vm/9000/2021-02-11T19:33:27Z'
+INFO: starting kvm to execute backup task
+generating cloud-init ISO
+INFO: started backup task '7269a247-f696-4194-ba5f-64c1623f1a6a'
+INFO:  44% (1.3 GiB of 3.0 GiB) in  3s, read: 457.3 MiB/s, write: 0 B/s
+INFO: 100% (3.0 GiB of 3.0 GiB) in  5s, read: 850.0 MiB/s, write: 0 B/s
+INFO: backup is sparse: 1.69 GiB (56%) total zero data
+INFO: backup was done incrementally, reused 3.00 GiB (100%)
+INFO: transferred 3.00 GiB in 5 seconds (614.4 MiB/s)
+INFO: stopping kvm after backup task
+INFO: Finished Backup of VM 9000 (00:00:09)
+INFO: Backup finished at 2021-02-11 20:33:36
+INFO: Backup job finished successfully
+TASK OK

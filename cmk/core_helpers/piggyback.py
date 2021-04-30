@@ -15,8 +15,8 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    ServiceState,
     ServiceDetails,
+    ServiceState,
 )
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, NoCache
@@ -28,11 +28,12 @@ class PiggybackFetcher(AgentFetcher):
         self,
         file_cache: NoCache,
         *,
+        cluster: bool,
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: List[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.piggyback"))
+        super().__init__(file_cache, cluster, logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
@@ -48,6 +49,7 @@ class PiggybackFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
+            "cluster": self.cluster,
             "hostname": self.hostname,
             "address": self.address,
             "time_settings": self.time_settings,
@@ -59,12 +61,6 @@ class PiggybackFetcher(AgentFetcher):
 
     def close(self) -> None:
         self._sources.clear()
-
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         return AgentRawData(b"" + self._get_main_section() + self._get_source_labels_section())

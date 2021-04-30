@@ -12,7 +12,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.wato
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import request
 from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
 from cmk.gui.watolib.rulespecs import (
@@ -1817,3 +1817,10 @@ def test_rulespec_groups_have_unique_names(load_plugins):
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
     assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"
+
+
+def test_validate_datatype_timeperiod_valuespec_inner():
+    # make sure TimeperiodValuespec does propagate validate_datatype to its child
+    value_spec = TimeperiodValuespec(TextAscii(title="testing"))
+    with pytest.raises(MKUserError):
+        value_spec.validate_datatype(["not", "a", "string"], "")

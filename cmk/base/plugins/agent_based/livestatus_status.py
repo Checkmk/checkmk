@@ -10,6 +10,8 @@ from .agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
     Metric,
     register,
     render,
@@ -156,12 +158,17 @@ def _generate_livestatus_results(
         ("requests", "Livestatus requests"),
         ("log_messages", "Log messages"),
     ]:
-        value = get_rate(
-            value_store=value_store,
-            key=key,
-            time=this_time,
-            value=float(status[key]),
-        )
+        try:
+            value = get_rate(
+                value_store=value_store,
+                key=key,
+                time=this_time,
+                value=float(status[key]),
+            )
+        except GetRateError as error:
+            yield IgnoreResults(str(error))
+            continue
+
         if key in ("host_checks", "service_checks"):
             yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
         else:
@@ -288,6 +295,25 @@ def _generate_livestatus_results(
         )
 
 
+def cluster_check_livestatus_status(
+    item: str,
+    params: Mapping[str, Any],
+    section_livestatus_status: Mapping[str, LivestatusSection],
+    section_livestatus_ssl_certs: Mapping[str, LivestatusSection],
+) -> CheckResult:
+    this_time = time.time()
+    value_store = get_value_store()
+    for node_name, node_section_status in section_livestatus_status.items():
+        yield from _generate_livestatus_results(
+            item,
+            params,
+            node_section_status,
+            section_livestatus_ssl_certs.get(node_name),
+            value_store,
+            this_time,
+        )
+
+
 register.check_plugin(
     name="livestatus_status",
     sections=["livestatus_status", "livestatus_ssl_certs"],
@@ -296,4 +322,5 @@ register.check_plugin(
     discovery_function=discovery_livestatus_status,
     check_function=check_livestatus_status,
     check_default_parameters=livestatus_status_default_levels,
+    cluster_check_function=cluster_check_livestatus_status,
 )

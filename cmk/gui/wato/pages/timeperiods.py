@@ -309,8 +309,8 @@ class ModeTimeperiods(WatoMode):
                 else:
                     self._action_buttons(name)
 
-                table.text_cell(_("Name"), name)
-                table.text_cell(_("Alias"), timeperiod_spec_alias(timeperiod))
+                table.cell(_("Name"), name)
+                table.cell(_("Alias"), timeperiod_spec_alias(timeperiod))
 
     def _action_buttons(self, name):
         edit_url = watolib.folder_preserving_link([

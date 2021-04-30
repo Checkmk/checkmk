@@ -22,6 +22,15 @@ def parse_checkmk_labels(string_table):
 
 
 def host_label_function_labels(section):
+    """Host label function
+
+    Labels:
+
+        cmk/os_family:
+            This label is set to the operating system as reported by the agent
+            as "AgentOS" (such as "windows" or "linux").
+
+    """
     if 'AgentOS' in section:
         yield HostLabel("cmk/os_family", section['AgentOS'])
 

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import "core-js/stable";
+import "canvas-5-polyfill"; // needed for IE11
 
 import $ from "jquery";
 import * as d3 from "d3";
@@ -93,6 +94,13 @@ try {
     ntop_top_talkers = null;
 }
 
+var ntop_utils;
+try {
+    ntop_utils = require("ntop_utils");
+} catch (e) {
+    ntop_utils = null;
+}
+
 var license_usage_timeseries_graph;
 try {
     license_usage_timeseries_graph = require("license_usage_timeseries_graph");
@@ -159,6 +167,7 @@ export const cmk_export = {
             alerts: ntop_alerts,
             flows: ntop_flows,
             top_talkers: ntop_top_talkers,
+            utils: ntop_utils,
         },
         license_usage: {
             timeseries_graph: license_usage_timeseries_graph,

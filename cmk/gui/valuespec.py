@@ -531,8 +531,7 @@ class Filesize(Integer):
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
-    # TODO: Cleanup this hierarchy problem
-    def value_to_text(self, value: int) -> str:  # type: ignore[override]
+    def value_to_text(self, value: int) -> str:
         exp, count = self.get_exponent(value)
         return "%s %s" % (count, self._names[exp])
 
@@ -562,6 +561,7 @@ class TextAscii(ValueSpec):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -590,6 +590,7 @@ class TextAscii(ValueSpec):
         self._regex_error = regex_error if regex_error is not None else \
             _("Your input does not match the required format.")
         self._minlen = minlen
+        self._maxlen = maxlen
         self._onkeyup = onkeyup
         self._autocomplete = autocomplete
         self._hidden = hidden
@@ -601,7 +602,6 @@ class TextAscii(ValueSpec):
     def canonical_value(self) -> str:
         return ""
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if self._label:
             html.span(self._label, class_="vs_floating_text")
@@ -619,7 +619,6 @@ class TextAscii(ValueSpec):
             placeholder=self._placeholder,
         )
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def value_to_text(self, value: str) -> str:
         if not value:
             return self._empty_text
@@ -642,7 +641,6 @@ class TextAscii(ValueSpec):
                 varprefix,
                 _("The value must be of type str, but it has type %s") % _type_name(value))
 
-    # NOTE: Class hierarchy is broken, we can get Unicode here!
     def _validate_value(self, value: str, varprefix: str) -> None:
         try:
             if isinstance(value, bytes):
@@ -668,6 +666,9 @@ class TextAscii(ValueSpec):
         if self._minlen is not None and len(value) < self._minlen:
             raise MKUserError(varprefix,
                               _("You need to provide at least %d characters.") % self._minlen)
+        if self._maxlen is not None and len(value) > self._maxlen:
+            raise MKUserError(varprefix,
+                              _("You must not provide more than %d characters.") % self._maxlen)
 
 
 class UUID(TextAscii):
@@ -685,8 +686,7 @@ class UUID(TextAscii):
 
 
 class TextUnicode(TextAscii):
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def from_html_vars(self, varprefix: str) -> str:  # type: ignore[override]
+    def from_html_vars(self, varprefix: str) -> str:
         return html.request.get_unicode_input_mandatory(varprefix, "").strip()
 
     def validate_datatype(self, value: str, varprefix: str) -> None:
@@ -755,6 +755,7 @@ class RegExp(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -778,6 +779,7 @@ class RegExp(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -883,6 +885,7 @@ class EmailAddress(TextUnicode):
         forbidden_chars: str = "",
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -934,6 +937,7 @@ class EmailAddress(TextUnicode):
                              re.I | re.UNICODE),
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1058,6 +1062,7 @@ class TextAsciiAutocomplete(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         hidden: bool = False,
         placeholder: _Optional[str] = None,
@@ -1086,6 +1091,7 @@ class TextAsciiAutocomplete(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=False,
             hidden=hidden,
@@ -1236,6 +1242,7 @@ class HostAddress(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1259,6 +1266,7 @@ class HostAddress(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1384,6 +1392,7 @@ class Url(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1407,6 +1416,7 @@ class Url(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1525,6 +1535,7 @@ class TextAreaUnicode(TextUnicode):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1548,6 +1559,7 @@ class TextAreaUnicode(TextUnicode):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -1568,8 +1580,7 @@ class TextAreaUnicode(TextUnicode):
             return "%s" % html.render_pre(HTML(value), class_="ve_textarea")
         return escaping.escape_attribute(value).replace("\n", "<br>")
 
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def render_input(self, varprefix: str, value: str) -> None:  # type: ignore[override]
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
@@ -1596,8 +1607,7 @@ class TextAreaUnicode(TextUnicode):
                        **attrs)
 
     # Overridden because we do not want to strip() here and remove '\r'
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def from_html_vars(self, varprefix: str) -> str:  # type: ignore[override]
+    def from_html_vars(self, varprefix: str) -> str:
         text = html.request.get_unicode_input_mandatory(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
@@ -1628,6 +1638,7 @@ class Filename(TextAscii):
         regex: Union[None, str, Pattern[str]] = None,
         regex_error: _Optional[str] = None,
         minlen: _Optional[int] = None,
+        maxlen: _Optional[int] = None,
         onkeyup: _Optional[str] = None,
         autocomplete: bool = True,
         hidden: bool = False,
@@ -1651,6 +1662,7 @@ class Filename(TextAscii):
             regex=regex,
             regex_error=regex_error,
             minlen=minlen,
+            maxlen=maxlen,
             onkeyup=onkeyup,
             autocomplete=autocomplete,
             hidden=hidden,
@@ -3763,7 +3775,8 @@ class AbsoluteDate(ValueSpec):
                 _("The type of the timestamp must be int or float, but is %s") % _type_name(value))
 
     def _validate_value(self, value, varprefix):
-        if (not self._allow_empty and value is None) or value < 0 or int(value) > (2**31 - 1):
+        if (not self._allow_empty and value is None) or (value is not None and
+                                                         (value < 0 or int(value) > (2**31 - 1))):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
@@ -5457,6 +5470,9 @@ class ImageUpload(FileUpload):
         super().__init__(**kwargs)
 
     def render_input(self, varprefix: str, value: bytes) -> None:
+        if isinstance(value, str):
+            # since latin_1 only uses one byte, we can use it for str->byte conversion
+            value = value.encode("latin_1")
         if self._show_current_image and value:
             html.open_table()
             html.open_tr()
@@ -6119,40 +6135,46 @@ def ColorWithThemeAndMetricDefault(
     )
 
 
+SSHKeyPairValue = _Tuple[str, str]
+
+
 class SSHKeyPair(ValueSpec):
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]):
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
             html.write(_("Key pair will be generated when you save."))
 
-    def value_to_text(self, value):
+    def value_to_text(self, value: SSHKeyPairValue) -> str:
         return self._get_key_fingerprint(value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
         if html.request.has_var(varprefix):
-            return self._decode_key_from_url(html.request.var(varprefix))
+            return self._decode_key_from_url(html.request.get_ascii_input_mandatory(varprefix))
         return self._generate_ssh_key(varprefix)
 
     @staticmethod
-    def _encode_key_for_url(value):
+    def _encode_key_for_url(value: SSHKeyPairValue) -> str:
         return "|".join(value)
 
     @staticmethod
-    def _decode_key_from_url(text):
-        return text.split("|")
+    def _decode_key_from_url(text: str) -> SSHKeyPairValue:
+        parts = text.split("|")
+        if len(parts) != 2:
+            raise ValueError("Invalid value: %r" % text)
+        return parts[0], parts[1]
 
     @classmethod
-    def _generate_ssh_key(cls, varprefix):
+    def _generate_ssh_key(cls, varprefix: str) -> SSHKeyPairValue:
         key = RSA.generate(4096)
-        private_key = key.exportKey('PEM')
+        private_key = key.exportKey('PEM').decode("ascii")
         pubkey = key.publickey()
-        public_key = pubkey.exportKey('OpenSSH')
+        public_key = pubkey.exportKey('OpenSSH').decode("ascii")
         return (private_key, public_key)
 
     @classmethod
-    def _get_key_fingerprint(cls, value):
+    def _get_key_fingerprint(cls, value: SSHKeyPairValue) -> str:
         _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode('ascii'))
         fp_plain = hashlib.md5(key).hexdigest()
@@ -6336,8 +6358,7 @@ class RuleComment(TextAreaUnicode):
             cols=80,
         )
 
-    # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def render_input(self, varprefix: str, value: str) -> None:  # type: ignore[override]
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         html.open_div(style="white-space: nowrap;")
 
         super().render_input(varprefix, value)

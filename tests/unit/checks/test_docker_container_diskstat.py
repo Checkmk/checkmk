@@ -13,7 +13,7 @@ from cmk.base.check_api import MKCounterWrapped
 from checktestlib import (
     DiscoveryResult,
     assertDiscoveryResultsEqual,
-    MockItemState,
+    mock_item_state,
 )
 
 pytestmark = pytest.mark.checks
@@ -83,7 +83,7 @@ def test_docker_container_diskstat_wrapped():
     with pytest.raises(MKCounterWrapped):
         check.run_check("SUMMARY", {}, parsed)
 
-    with MockItemState((0, 0)):
+    with mock_item_state((0, 0)):
         # raise MKCounterWrapped anyway, because counters are missing in info
         with pytest.raises(MKCounterWrapped):
             check.run_check("SUMMARY", {}, parsed)

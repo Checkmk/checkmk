@@ -6,22 +6,12 @@
 
 import abc
 import logging
+import os
 import time
-from typing import (
-    cast,
-    Dict,
-    final,
-    Final,
-    Iterable,
-    List,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from pathlib import Path
+from typing import cast, Dict, final, Final, List, MutableMapping, Optional, Tuple, Union
 
-from six import ensure_binary, ensure_str
+from six import ensure_binary
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
@@ -29,11 +19,9 @@ import cmk.utils.misc
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.misc import normalize_ip_addresses
-from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
-from cmk.utils.translations import translate_piggyback_host, TranslationOptions
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import (
     AgentRawData,
-    AgentRawDataSection,
     AgentTargetVersion,
     ExitSpec,
     HostName,
@@ -45,9 +33,10 @@ from cmk.utils.type_defs import (
 from cmk.utils.werks import parse_check_mk_version
 
 from ._base import Fetcher, Parser, Summarizer
+from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, FileCacheFactory, SectionStore
 from .host_sections import HostSections
-from .type_defs import Mode, NO_SELECTION, SectionNameCollection
+from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
 AgentHostSections = HostSections[AgentRawDataSection]
 
@@ -58,6 +47,14 @@ class AgentFileCache(FileCache[AgentRawData]):
 
 class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
+    def cache_read(mode: Mode) -> bool:
+        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
+
+    @staticmethod
+    def cache_write(mode: Mode) -> bool:
+        return True
+
+    @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
 
@@ -66,14 +63,19 @@ class DefaultAgentFileCache(AgentFileCache):
         # TODO: This does not seem to be needed
         return ensure_binary(raw_data)
 
+    def make_path(self, mode: Mode) -> Path:
+        return self.base_path / self.hostname
+
 
 class NoCache(AgentFileCache):
     """Noop cache for fetchers that do not cache."""
-    def read(self) -> None:
-        return None
+    @staticmethod
+    def cache_read(mode: Mode) -> bool:
+        return False
 
-    def write(self, raw_data: AgentRawData) -> None:
-        pass
+    @staticmethod
+    def cache_write(mode: Mode) -> bool:
+        return False
 
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
@@ -83,13 +85,17 @@ class NoCache(AgentFileCache):
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         return ensure_binary(raw_data)
 
+    def make_path(self, mode: Mode):
+        return Path(os.devnull)
+
 
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
     # force_cache_refresh is currently only used by SNMP. It's probably less irritating
     # to implement it here anyway:
     def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
         return DefaultAgentFileCache(
-            path=self.path,
+            self.hostname,
+            base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
@@ -102,7 +108,8 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
     # to implement it here anyway. At the time of this writing NoCache does nothing either way.
     def make(self, *, force_cache_refresh: bool = False) -> NoCache:
         return NoCache(
-            path=self.path,
+            self.hostname,
+            base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
@@ -114,138 +121,11 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
-class PiggybackMarker(NamedTuple):
-    hostname: HostName
-
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
-                not PiggybackMarker.is_footer(line))
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<<>>>>'
-
-    @classmethod
-    def from_headerline(
-        cls,
-        line: bytes,
-        translation: TranslationOptions,
-        *,
-        encoding_fallback: str,
-    ) -> "PiggybackMarker":
-        hostname = ensure_str(line.strip()[4:-4])
-        assert hostname
-        hostname = translate_piggyback_host(
-            hostname,
-            translation,
-            encoding_fallback=encoding_fallback,
-        )
-        # Protect Checkmk against unallowed host names. Normally source scripts
-        # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Checkmk code.
-        return cls(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname))
-
-
-class SectionMarker(NamedTuple):
-    name: SectionName
-    cached: Optional[Tuple[int, int]]
-    encoding: str
-    nostrip: bool
-    persist: Optional[int]
-    separator: Optional[str]
-
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        line = line.strip()
-        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not SectionMarker.is_footer(line) and not PiggybackMarker.is_header(line) and
-                not PiggybackMarker.is_footer(line))
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<>>>'
-
-    @classmethod
-    def default(cls, name: SectionName):
-        return cls(name, None, "ascii", True, None, None)
-
-    @classmethod
-    def from_headerline(cls, headerline: bytes) -> "SectionMarker":
-        def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
-            for option in elems:
-                if "(" not in option:
-                    continue
-                name, value = option.split("(", 1)
-                assert value[-1] == ")", value
-                yield name, value[:-1]
-
-        if not SectionMarker.is_header(headerline):
-            raise ValueError(headerline)
-
-        headerparts = ensure_str(headerline[3:-3]).split(":")
-        options = dict(parse_options(headerparts[1:]))
-        cached: Optional[Tuple[int, int]]
-        try:
-            cached_ = tuple(map(int, options["cached"].split(",")))
-            cached = cached_[0], cached_[1]
-        except KeyError:
-            cached = None
-
-        encoding = options.get("encoding", "utf-8")
-        nostrip = options.get("nostrip") is not None
-
-        persist: Optional[int]
-        try:
-            persist = int(options["persist"])
-        except KeyError:
-            persist = None
-
-        separator: Optional[str]
-        try:
-            separator = chr(int(options["sep"]))
-        except KeyError:
-            separator = None
-
-        return SectionMarker(
-            name=SectionName(headerparts[0]),
-            cached=cached,
-            encoding=encoding,
-            nostrip=nostrip,
-            persist=persist,
-            separator=separator,
-        )
-
-    def __str__(self) -> str:
-        opts: MutableMapping[str, str] = {}
-        if self.cached:
-            opts["cached"] = ",".join(str(c) for c in self.cached)
-        if self.encoding != "utf-8":
-            opts["encoding"] = self.encoding
-        if self.nostrip:
-            opts["nostrip"] = ""
-        if self.persist is not None:
-            opts["persist"] = str(self.persist)
-        if self.separator is not None:
-            opts["sep"] = str(ord(self.separator))
-        if not opts:
-            return f"<<<{self.name}>>>"
-        return "<<<%s:%s>>>" % (self.name, ":".join("%s(%s)" % (k, v) for k, v in opts.items()))
-
-    def cache_info(self, cached_at: int) -> Optional[Tuple[int, int]]:
-        # If both `persist` and `cached` are present, `cached` has priority
-        # over `persist`.  I do not know whether this is correct.
-        if self.cached:
-            return self.cached
-        if self.persist is not None:
-            return cached_at, self.persist - cached_at
-        return None
-
-
 class ParserState(abc.ABC):
     """Base class for the state machine.
 
     .. uml::
+
         state FSM {
 
         state "NOOPState" as noop
@@ -329,7 +209,12 @@ class ParserState(abc.ABC):
         self,
         section_header: SectionMarker,
     ) -> "HostSectionParser":
-        self._logger.debug("Transition %s -> %s", type(self).__name__, HostSectionParser.__name__)
+        self._logger.debug(
+            "%s / Transition %s -> %s",
+            section_header,
+            type(self).__name__,
+            HostSectionParser.__name__,
+        )
         return HostSectionParser(
             self.hostname,
             self.host_sections,
@@ -345,7 +230,12 @@ class ParserState(abc.ABC):
         self,
         header: PiggybackMarker,
     ) -> "PiggybackParser":
-        self._logger.debug("Transition %s -> %s", type(self).__name__, PiggybackParser.__name__)
+        self._logger.debug(
+            "%s / Transition %s -> %s",
+            header,
+            type(self).__name__,
+            PiggybackParser.__name__,
+        )
         return PiggybackParser(
             self.hostname,
             self.host_sections,
@@ -363,7 +253,9 @@ class ParserState(abc.ABC):
         section_header: SectionMarker,
     ) -> "PiggybackSectionParser":
         self._logger.debug(
-            "Transition %s -> %s",
+            "%r %r / Transition %s -> %s",
+            piggyback_header,
+            section_header,
             type(self).__name__,
             PiggybackSectionParser.__name__,
         )

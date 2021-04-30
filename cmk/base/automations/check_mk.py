@@ -129,7 +129,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             raise MKAutomationError(
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME")
 
-        mode = args[0]
+        mode = discovery.DiscoveryMode.from_str(args[0])
         hostnames = args[1:]
 
         config_cache = config.get_config_cache()
@@ -175,15 +175,20 @@ class AutomationTryDiscovery(Automation):
                 # this dict deduplicates label names!
                 return DiscoveredHostLabels(*{l.name: l for l in labels}.values()).to_dict()
 
-            new_labels = make_discovered_host_labels(host_label_result.new)
+            changed_labels = make_discovered_host_labels([
+                l for l in host_label_result.vanished
+                if l.name in make_discovered_host_labels(host_label_result.new)
+            ])
+
             return {
                 "output": buf.getvalue(),
                 "check_table": check_preview_table,
                 "host_labels": make_discovered_host_labels(host_label_result.present),
-                "new_labels": new_labels,
-                "vanished_labels": make_discovered_host_labels(host_label_result.vanished),
-                "changed_labels": make_discovered_host_labels(
-                    [l for l in host_label_result.vanished if l.name in new_labels.keys()]),
+                "new_labels": make_discovered_host_labels(
+                    [l for l in host_label_result.new if l.name not in changed_labels]),
+                "vanished_labels": make_discovered_host_labels(
+                    [l for l in host_label_result.vanished if l.name not in changed_labels]),
+                "changed_labels": changed_labels,
             }
 
     def _execute_discovery(
@@ -703,7 +708,7 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        with plugin_contexts.current_host(hostname, write_state=False):
+        with plugin_contexts.current_host(hostname):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
                     description = config.active_check_service_description(
@@ -740,8 +745,8 @@ automations.register(AutomationAnalyseHost())
 
 class AutomationDeleteHosts(Automation):
     cmd = "delete-hosts"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_config = False
+    needs_checks = False
 
     def execute(self, args: List[str]) -> None:
         for hostname in args:
@@ -1331,7 +1336,7 @@ class AutomationActiveCheck(Automation):
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
-        with plugin_contexts.current_host(hostname, write_state=False):
+        with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
                 description = config.active_check_service_description(hostname, plugin, params)
                 if description != item:

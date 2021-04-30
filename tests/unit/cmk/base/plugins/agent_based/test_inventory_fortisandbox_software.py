@@ -22,10 +22,11 @@ SECTION = [
 
 
 def test_parse_fortisandbox_software_inv():
-    assert list(
-        parse_fortisandbox_software([
-            ['5.2.50534', '2.4.20034', '3.2.279', '4.478', '14.613', '', ''],
-        ])) == SECTION
+    parsed = parse_fortisandbox_software([
+        ['5.2.50534', '2.4.20034', '3.2.279', '4.478', '14.613', '', ''],
+    ])
+    assert parsed is not None
+    assert list(parsed) == SECTION
 
 
 def test_inventory_fortisandbox_software():

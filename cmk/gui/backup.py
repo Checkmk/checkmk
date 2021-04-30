@@ -467,7 +467,7 @@ class Jobs(BackupEntityCollection):
 
                     html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
-                table.cell(_("Name"), html.render_text(job.title()))
+                table.cell(_("Name"), job.title())
 
                 css = "state0"
                 state_txt = job.state_name(state["state"])
@@ -1031,8 +1031,8 @@ class Target(BackupEntity):
                 else:
                     from_info += " (Version: %s)" % info["cma_version"]
 
-                table.cell(_("Backup-ID"), html.render_text(backup_ident))
-                table.cell(_("From"), html.render_text(from_info))
+                table.cell(_("Backup-ID"), backup_ident)
+                table.cell(_("From"), from_info)
                 table.cell(_("Finished"), render.date_and_time(info["finished"]))
                 table.cell(_("Size"), render.fmt_bytes(info["size"]))
                 table.cell(_("Encrypted"))
@@ -1103,7 +1103,7 @@ class Targets(BackupEntityCollection):
                     html.icon_button(edit_url, _("Edit this backup target"), "edit")
                     html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-                table.cell(_("Title"), html.render_text(target.title()))
+                table.cell(_("Title"), target.title())
 
                 target_class = target.type_class()
                 vs_target = target_class(target.type_params()).valuespec()

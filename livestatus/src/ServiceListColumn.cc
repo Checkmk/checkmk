@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <iterator>
 
+#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include <memory>
@@ -23,9 +25,7 @@
 #else
 #include <unordered_map>
 
-#include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
-#include "auth.h"
 #endif
 
 void ServiceListColumn::output(Row row, RowRenderer &r,
@@ -57,15 +57,19 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
     }
 }
 
+/// \sa Apart from the lambda, the code is the same in
+///    * CommentColumn::getValue()
+///    * DowntimeColumn::getValue()
+///    * ServiceGroupMembersColumn::getValue()
+///    * ServiceListColumn::getValue()
 std::vector<std::string> ServiceListColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     auto entries = getEntries(row, auth_user);
-    std::vector<std::string> descriptions;
-    std::transform(entries.begin(), entries.end(),
-                   std::back_inserter(descriptions),
+    std::vector<std::string> values;
+    std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) { return entry.description; });
-    return descriptions;
+    return values;
 }
 
 #ifndef CMC
@@ -89,10 +93,10 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    (void)_mc;  // HACK
     if (const auto *mem = columnData<Host::services_t>(row)) {
         for (const auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(auth_user)) {
+            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+                                      svc.get())) {
                 entries.emplace_back(
                     svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),
@@ -109,9 +113,8 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (auth_user == nullptr ||
-                is_authorized_for(_mc->serviceAuthorization(), auth_user,
-                                  svc->host_ptr, svc)) {
+            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+                                      svc)) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),

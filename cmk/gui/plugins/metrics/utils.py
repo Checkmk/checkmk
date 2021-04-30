@@ -906,6 +906,14 @@ def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
     return "#%02x%02x%02x" % (red, green, blue)
 
 
+def hex_color_to_rgb_color(color: str) -> Tuple[int, int, int]:
+    """Convert '#112233' to (17, 34, 51)"""
+    try:
+        return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+    except Exception:
+        raise MKGeneralException(_("Invalid color specification '%s'") % color)
+
+
 # These colors are also used in the CSS stylesheets, do not change one without changing the other.
 MONITORING_STATUS_COLORS = {
     "critical/down": rgb_color_to_hex_color(255, 50, 50),
@@ -1004,15 +1012,10 @@ def render_color(color_rgb: Tuple[float, float, float]) -> str:
     )
 
 
-# "#ff0080" -> (1.0, 0.0, 0.5)
 def parse_color(color: str) -> Tuple[float, float, float]:
-    def _hex_to_float(a):
-        return int(color[a:a + 2], 16) / 255.0
-
-    try:
-        return _hex_to_float(1), _hex_to_float(3), _hex_to_float(5)
-    except Exception:
-        raise MKGeneralException(_("Invalid color specification '%s'") % color)
+    """Convert '#ff0080' to (1.5, 0.0, 0.5)"""
+    rgb = hex_color_to_rgb_color(color)
+    return rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0
 
 
 def fade_color(rgb, v):
@@ -1048,9 +1051,12 @@ def _mix_colors(a, b):
 
 
 def render_color_icon(color):
-    return html.render_div('',
-                           class_="color",
-                           style="background-color: %s4c; border-color: %s;" % (color, color))
+    return html.render_div(
+        '',
+        class_="color",
+        # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)
+        style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;" %
+        (*hex_color_to_rgb_color(color), color))
 
 
 @MemoizeCache

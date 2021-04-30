@@ -9,7 +9,7 @@ from testlib import Check  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
 import pytest  # type: ignore[import]
-from checktestlib import CheckResult, assertCheckResultsEqual, MockItemState
+from checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks
@@ -111,7 +111,7 @@ def test_df_check():
         ('trend', 2551581.1594836353, None, None, 0, 87412.16666666667),
     ])
 
-    with freezegun.freeze_time("2020-07-31 07:00:00"), MockItemState((1596100000, 42)):
+    with freezegun.freeze_time("2020-07-31 07:00:00"), mock_item_state((1596100000, 42)):
         _, trend_result = check.run_check(item_1st, params, parsed)
 
     assertCheckResultsEqual(CheckResult(trend_result), CheckResult(expected_result))

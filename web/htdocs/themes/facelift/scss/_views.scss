@@ -786,26 +786,26 @@ table.data.availability {
 
 table.data td.flapping,
 table.timeline td.flapping,
-div.avlegend.timeline div.state.flapping {
+div.avlegend.timeline div.state.flapping span {
   background-color: rgb(255, 0, 255);
 }
 
 table.data td.downtime,
 table.timeline td.downtime,
-div.avlegend.timeline div.state.downtime {
+div.avlegend.timeline div.state.downtime span {
   background-color: rgb(0, 170, 255);
 }
 
 table.data tr.data > td.hostdown,
 table.timeline td.hostdown,
-div.avlegend.timeline div.state.hostdown {
+div.avlegend.timeline div.state.hostdown span {
   color: $white;
   background-color: $hostdown-bg-color;
 }
 
 table.data tr.data td.unmonitored,
 table.timeline td.unmonitored,
-div.avlegend.timeline div.state.unmonitored {
+div.avlegend.timeline div.state.unmonitored span {
   color: $unmonitored-font-color;
   background-color: $unmonitored-bg-color;
 }
@@ -821,7 +821,8 @@ table.data.availability tr td {
 }
 
 table.timeline td.ooservice,
-div.avlegend.timeline div.state.ooservice {
+div.avlegend.timeline div.state.ooservice span {
+  color: $black;
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
@@ -942,23 +943,26 @@ div.avlegend {
   padding: 5px 15px;
   margin-top: 10px;
   text-align: right;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: $headline-color;
   border-radius: 5px;
 
   h3 {
     margin-top: 0;
-    color: rgb(0, 0, 0);
   }
 
   div {
     display: inline-block;
-    width: 50px;
-    margin-right: 5px;
+    margin-right: $spacing-half;
     white-space: nowrap;
 
     &.state {
       padding: 2px 0;
       text-align: center;
+
+      span {
+        padding: 2px $spacing-half;
+        border-radius: $theme-border-radius;
+      }
     }
 
     &:last-child {
@@ -966,16 +970,10 @@ div.avlegend {
     }
   }
 
-  &.levels div.level {
-    margin-right: 15px;
-    color: rgb(0, 0, 0);
-  }
-
-  &.timeline div.state {
-    width: 75px;
-
-    &.ooservice {
-      color: rgb(0, 0, 0);
+  &.levels div.level,
+  &.timeline div {
+    &:not(:last-child) {
+      margin-right: $spacing;
     }
   }
 }
@@ -1323,13 +1321,29 @@ td.rule_conditions table td.title {
   background-color: $color-table-background;
 }
 
-table.agents tbody > tr.data > td {
-  line-height: 20px;
-  vertical-align: top;
+table.agents tbody > tr {
+  &.data > td {
+    vertical-align: top;
 
-  &.agent_config {
-    line-height: normal;
-    vertical-align: middle;
+    &.agent_config {
+      min-width: 50%;
+    }
+
+    &.agent_download {
+      text-align: center;
+      font-size: $font-size-small;
+      width: 66px;
+
+      img {
+        margin-bottom: 3px;
+      }
+    }
+  }
+
+  th.header_agent_download,
+  td.agent_download:not(.state):not(.hstate) {
+    text-align: center;
+    padding: 2px 4px;
   }
 }
 

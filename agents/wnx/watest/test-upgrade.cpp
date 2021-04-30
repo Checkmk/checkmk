@@ -465,13 +465,13 @@ TEST(UpgradeTest, LoggingSupport) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     cma::OnStartTest();
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
 
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
 
     // without
-    ASSERT_TRUE(temp_fs.createRootFile(
+    ASSERT_TRUE(temp_fs->createRootFile(
         install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
 
     auto [lwa_dir, pd_dir] = CreateInOut();
@@ -511,12 +511,12 @@ TEST(UpgradeTest, UserIniPackagedAgent) {
     namespace fs = std::filesystem;
 
     cma::OnStartTest();
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
 
     // #TODO (sk): make an API in TempCfgFs
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
-    ASSERT_TRUE(temp_fs.createRootFile(
+    ASSERT_TRUE(temp_fs->createRootFile(
         install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
 
     auto [lwa_dir, pd_dir] = CreateInOut();
@@ -644,11 +644,11 @@ TEST(UpgradeTest, UserIniWatoAgent) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
     // make temporary filesystem
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     // simulate WATO installation
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
-    ASSERT_TRUE(temp_fs.createRootFile(install_yml, "# Doesn't matter"));
+    ASSERT_TRUE(temp_fs->createRootFile(install_yml, "# Doesn't matter"));
 
     auto [lwa_dir, pd_dir] = CreateInOut();
 
@@ -754,12 +754,12 @@ TEST(UpgradeTest, LoadIni) {
     namespace fs = std::filesystem;
     cma::OnStartTest();
 
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
 
     // #TODO (sk): make an API in TempCfgFs
-    ASSERT_TRUE(temp_fs.createRootFile(
+    ASSERT_TRUE(temp_fs->createRootFile(
         install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
 
     fs::path temp_dir = cma::cfg::GetTempDir();
@@ -913,7 +913,7 @@ static auto a2 =
 TEST(UpgradeTest, CopyFolders) {
     namespace fs = std::filesystem;
 
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto [lwa_path, tgt] = tst::CreateInOut();
     fs::create_directory(lwa_path / "config");
     fs::create_directory(lwa_path / "plugins");
@@ -961,7 +961,7 @@ TEST(UpgradeTest, CopyFolders) {
 
 TEST(UpgradeTest, CopyFiles) {
     namespace fs = std::filesystem;
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto [lwa_path, tgt] = tst::CreateInOut();
     fs::create_directory(lwa_path / "config");
     fs::create_directory(lwa_path / "plugins");

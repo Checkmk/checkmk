@@ -121,6 +121,13 @@ class DT_AGGR_WARN:
     pass
 
 
+config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
+
+
+def get_storage_format() -> 'store.StorageFormat':
+    return store.StorageFormat.from_str(config_storage_format)
+
+
 # Has to be declared here once since the functions can be assigned in
 # bi.py and also in multisite.mk. "Double" declarations are no problem
 # here since this is a dict (List objects have problems with duplicate
@@ -173,9 +180,14 @@ def load_config() -> None:
     # Set default values for all user-changable configuration settings
     _initialize_with_default_config()
 
-    # Initialze sites with default site configuration. Need to do it here to
+    # Initialize sites with default site configuration. Need to do it here to
     # override possibly deleted sites
     sites = default_single_site_configuration()
+
+    # Load assorted experimental parameters if any
+    experimental_config = cmk.utils.paths.make_experimental_config_file()
+    if experimental_config.exists():
+        _load_config_file(str(experimental_config))
 
     # First load main file
     _load_config_file(cmk.utils.paths.default_config_dir + "/multisite.mk")
@@ -1233,7 +1245,7 @@ def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
     return site_choices({
         site_id: site
         for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
-        if site_is_local(site_id) or site.get("replication_ec", False)
+        if site_is_local(site_id) or site.get("replicate_ec", False)
     })
 
 

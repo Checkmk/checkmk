@@ -8,7 +8,6 @@ import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.cisco_mem_asa import (
     parse_cisco_mem_asa,
-    parse_cisco_mem_asa64,
     discovery_cisco_mem,
     _idem_check_cisco_mem,
 )
@@ -23,22 +22,30 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
     (
-        [[['System memory', '319075344', '754665920', '731194056']],
-         [['MEMPOOL_DMA', '41493248', '11754752', '11743928']]],
+        [
+            [['System memory', '319075344', '754665920', '731194056']],
+            [['MEMPOOL_DMA', '41493248', '11754752', '11743928']],
+        ],
         {
             "System memory": ['319075344', '754665920', '731194056'],
             "MEMPOOL_DMA": ['41493248', '11754752', '11743928'],
         },
     ),
-])
-def test_parse_cisco_mem_asa(string_table, expected_parsed_data):
-    assert parse_cisco_mem_asa(string_table) == expected_parsed_data
-
-
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
     (
-        [[['System memory', '1251166290', '3043801006'], ['MEMPOOL_DMA', '0', '0'],
-          ['MEMPOOL_GLOBAL_SHARED', '0', '0']]],
+        [
+            [['System memory', '319075344', '754665920', '731194056']],
+            [[]],
+        ],
+        {
+            "System memory": ['319075344', '754665920', '731194056'],
+        },
+    ),
+    (
+        [[
+            ['System memory', '1251166290', '3043801006'],
+            ['MEMPOOL_DMA', '0', '0'],
+            ['MEMPOOL_GLOBAL_SHARED', '0', '0'],
+        ]],
         {
             "System memory": ['1251166290', '3043801006'],
             "MEMPOOL_DMA": ['0', '0'],
@@ -46,8 +53,8 @@ def test_parse_cisco_mem_asa(string_table, expected_parsed_data):
         },
     ),
 ])
-def test_parse_cisco_mem_asa64(string_table, expected_parsed_data):
-    assert parse_cisco_mem_asa64(string_table) == expected_parsed_data
+def test_parse_cisco_mem_asa(string_table, expected_parsed_data):
+    assert parse_cisco_mem_asa(string_table) == expected_parsed_data
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -94,4 +101,12 @@ def test_check_cisco_mem(check_args, expected_result):
 
 
 if __name__ == "__main__":
-    pytest.main(["-vvsx", "-T", "unit", __file__])
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import os
+    from testlib.utils import cmk_path  # type: ignore[import]
+    assert not pytest.main([
+        "--doctest-modules",
+        os.path.join(cmk_path(), "cmk/base/plugins/agent_based/cisco_mem_asa.py")
+    ])
+    pytest.main(["-T=unit", "-vvsx", __file__])

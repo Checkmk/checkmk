@@ -356,6 +356,7 @@ def test_check_mssql_counters_cache_hits(item, section, expected_results):
 
 @pytest.mark.parametrize("item,section,expected_results", [
     ('MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         Result(state=state.OK, summary='[node1] 99.51%'),
@@ -417,6 +418,7 @@ def test_check_mssql_counters_file_sizes(item, params, section, expected_results
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         Result(state=state.OK, summary='[node1] Data files: 161 MiB'),
@@ -527,6 +529,7 @@ def test_check_mssql_locks(item, params, section, expected_results):
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012:Locks _Total lock_requests/sec", {}, {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),
@@ -590,6 +593,7 @@ def test_check_mssql_counters_pageactivity(item, params, section, expected_resul
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),
@@ -646,6 +650,7 @@ def test_check_mssql_counters_sqlstats(item, params, section, expected_results):
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),
@@ -703,6 +708,7 @@ def test_check_mssql_counters_transactions(item, params, section, expected_resul
 
 @pytest.mark.parametrize("item,params,section,expected_results", [
     ("MSSQL_VEEAMSQL2012 tempdb transactions/sec", {}, {
+        "node0": {},  # make sure we still get the result of the other node
         "node1": big_parsed_data
     }, [
         IgnoreResults(value="Cannot calculate rates yet"),

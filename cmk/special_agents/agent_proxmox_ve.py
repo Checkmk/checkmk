@@ -21,12 +21,13 @@ information about VMs and nodes:
 # - https://pve.proxmox.com/pve-docs/api-viewer/apidoc.js
 # - https://pypi.org/project/proxmoxer/
 """
+# pylint: disable=isinstance-second-argument-not-valid-type
 
 import logging
 import re
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Any, List, Dict, Union, Optional, Tuple, Sequence
+from typing import Any, Mapping, Iterable, Dict, Union, Optional, Tuple, Sequence
 
 import requests
 
@@ -41,10 +42,10 @@ from cmk.special_agents.utils.misc import to_bytes, JsonCachedData
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
-ListOrDict = Union[List[Dict[str, Any]], Dict[str, Any]]
-TaskInfo = Dict[str, Any]
-BackupInfo = Dict[str, Any]
-LogData = Sequence[Dict[str, Any]]  # [{"d": int, "t": str}, {}, ..]
+RequestStructure = Union[Sequence[Mapping[str, Any]], Mapping[str, Any]]
+TaskInfo = Mapping[str, Any]
+BackupInfo = Mapping[str, Any]
+LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 
 LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 
@@ -64,6 +65,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         default=2,
         help="Fetch logs N weeks back in time",
     )
+    parser.add_argument("--dump-logs", action="store_true", help="dump all backup logs to disk")
     parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
@@ -83,32 +85,56 @@ class BackupTask:
     class LogParseWarning(LogParseError):
         """Less critical version of LogParseError"""
 
-    def __init__(self, task: TaskInfo, logs: LogData, strict: bool) -> None:
+    def __init__(
+        self,
+        task: TaskInfo,
+        logs: LogData,
+        strict: bool,
+        dump_logs: bool = False,
+        dump_erroneous_logs: bool = True,
+    ) -> None:
         self.upid, self.type, self.starttime, self.status = "", "", 0, ""
         self.__dict__.update(task)
+
+        if dump_logs:
+            with (LogCacheFilePath / (f"{task['upid']}.log")).open("w") as file:
+                LOGGER.debug("wrote log to: %s", file.name)
+                file.write("\n".join(line["t"] for line in logs))
 
         try:
             self.backup_data, errors = self._extract_logs(self._to_lines(logs), strict)
         except self.LogParseError as exc:
+            # Note: this way of error handling is not ideal. In case a log file could not be
+            #       parsed, all gathered data will be ignored and a error message get's written
+            #       to the console.
+            #       Crashing on the other hand is also bad since we don't have a way to gracefully
+            #       handle unknown log file formats.
+            #       An option would be to write error data to each VM being mentioned by the
+            #       backup.
+            #       I don't handle this issue in this change because further communication is
+            #       needed and improving testability is still worth it.
+            if strict:
+                raise
             self.backup_data, errors = {}, [(exc.line, str(exc))]
 
-        if errors:
-            erroneous_log_file = LogCacheFilePath / ("erroneous-%s.log" % task["upid"])
-            LOGGER.error(
-                "Parsing the log for UPID=%r resulted in a error(s) - "
-                "write log content to %r", task["upid"], erroneous_log_file)
-            with erroneous_log_file.open("w") as file:
+        if errors and dump_erroneous_logs:
+            with (LogCacheFilePath / (f"erroneous-{task['upid']}.log")).open("w") as file:
+                LOGGER.error(
+                    "Parsing the log for UPID=%r resulted in a error(s) - "
+                    "write log content to %r", task["upid"], file.name)
                 file.write("\n".join(line["t"] for line in logs))
                 for linenr, text in errors:
                     file.write("PARSE-ERROR: %d: %s\n" % (linenr, text))
 
     @staticmethod
-    def _to_lines(lines_with_numbers: LogData) -> Sequence[str]:
-        """ Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
-        Returns List of lines only"""
+    def _to_lines(lines_with_numbers: LogData) -> Iterable[str]:
+        """Extract line data from list of dicts containing redundant line numbers and line data
+        >>> list(BackupTask._to_lines([{"n": 1, "t": "line1"}, {"n": 2, "t": "line2"}]))
+        ['line1', 'line2']
+        """
         # this has been true all the time and is left here for documentation
         # assert all((int(elem["n"]) - 1 == i) for i, elem in enumerate(lines_with_numbers))
-        return tuple(  #
+        return (  #
             line  #
             for elem in lines_with_numbers  #
             for line in (elem["t"],)  #
@@ -123,9 +149,9 @@ class BackupTask:
 
     @staticmethod
     def _extract_logs(
-        logs: Sequence[str],
+        logs: Iterable[str],
         strict: bool,
-    ) -> Tuple[Dict[str, BackupInfo], List[Tuple[int, str]]]:
+    ) -> Tuple[Mapping[str, BackupInfo], Iterable[Tuple[int, str]]]:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE) for key, pat in (
                 # not yet used - might be interesting for consistency
@@ -150,6 +176,10 @@ class BackupTask:
                 (
                     "error_vm",
                     r"^ERROR: Backup of VM (\d+) failed - (.*)$",
+                ),
+                (
+                    "failed_job",
+                    r"^INFO: Failed at (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$",
                 ),
                 (
                     "create_archive",
@@ -179,10 +209,9 @@ class BackupTask:
             {'started_time', 'total_duration', 'upload_amount', 'upload_time', 'upload_total'},
         )
 
-        #required_keys = {"transfer_time", "archive_name", "archive_size", "started_time"}
-        result: Dict[str, BackupInfo] = {}
+        result: Dict[str, Dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]
         current_vmid = ""
-        current_dataset: BackupInfo = {}
+        current_dataset: Dict[str, Any] = {}  #   mutable Mapping[str, Any]
         errors = []
 
         def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Optional[Sequence[str]]:
@@ -253,7 +282,7 @@ class BackupTask:
                             (error_vmid, current_vmid),
                         )
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
-                    result[current_vmid] = {**current_dataset, **{"error": error_msg}}
+                    result[error_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
                     continue
 
@@ -265,6 +294,14 @@ class BackupTask:
                             "Found start date while no VM was active",
                         )
                     current_dataset["started_time"] = started_time
+                    continue
+
+                failed_at_time = extract_single_value(line, "failed_job")
+                if failed_at_time:
+                    # in case a backup job fails we store the time it failed as
+                    # 'started_time' in order to be able to sort backup jobs
+                    for backup_data in result.values():
+                        backup_data.setdefault("started_time", failed_at_time)
                     continue
 
                 bytes_written = extract_tuple(line, "bytes_written", 2)
@@ -328,56 +365,64 @@ class BackupTask:
         return result, errors
 
 
-def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
-                      nodes: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, BackupInfo]:
+    backup_data: Dict[str, BackupInfo] = {}
+    for task in backup_tasks:
+        LOGGER.info("%s", task)
+        LOGGER.debug("%r", task.backup_data)
+        # Look for the latest backup for a given VMID in all backup task logs.
+        for vmid, bdata in task.backup_data.items():
+            # skip if we have a already newer backup
+            if vmid in backup_data and backup_data[vmid]['started_time'] > bdata['started_time']:
+                continue
+            backup_data[vmid] = bdata
+    return backup_data
+
+
+def fetch_backup_data(
+    args: Args,
+    session: "ProxmoxVeAPI",
+    nodes: Iterable[Mapping[str, Any]],
+) -> Mapping[str, BackupInfo]:
     """Since the Proxmox API does not provide us with information about past backups we read the
     information we need from log entries created for each backup process"""
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
-    with JsonCachedData(LogCacheFilePath / args.hostname / "upid.log.cache.json",
-                        cutoff_condition=lambda k, v: v[0] < cutoff_date) as cached:
+    with JsonCachedData(
+            LogCacheFilePath / args.hostname / "upid.log.cache.json",
+            cutoff_condition=lambda k, v: bool(v[0] < cutoff_date),
+    ) as cached:
 
-        def fetch_backup_log(task, node):
+        def fetch_backup_log(task: TaskInfo, node: str) -> Tuple[str, LogData]:
             """Make a call to session.get_tree() to get a log only if it's not cached
             Note: this is just a closure to make the call below less complicated - it could
             also be part of the generator"""
             # todo: specify type, date in request
-            return cached(
+            timestamp, logs = cached(
                 task["upid"],
                 lambda t=task, n=node: (
                     t["starttime"],
                     session.get_tree({"nodes": {
-                        n["node"]: {
+                        n: {
                             "tasks": {
                                 t["upid"]: {
                                     "log": []
                                 }
                             }
                         }
-                    }})["nodes"][n["node"]]["tasks"][t["upid"]]["log"],
+                    }})["nodes"][n]["tasks"][t["upid"]]["log"],
                 ))
+            return timestamp, logs
 
         # todo: check vmid, typefilter source
         #       https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/tasks
-        backup_tasks = (
-            BackupTask(task, backup_log, strict=args.debug)
+        return collect_vm_backup_info(
+            BackupTask(task, backup_log, strict=args.debug, dump_logs=args.dump_logs)
             for node in nodes
             for task in node["tasks"]
             if (task["type"] == "vzdump" and int(task["starttime"]) >= cutoff_date)  #
-            for _timestamp, backup_log in (fetch_backup_log(task, node),))
-
-        # keep the indentation - otherwise caching will not work (backup_tasks is a generator)
-        backup_data: Dict[str, BackupInfo] = {}
-        for task in backup_tasks:
-            LOGGER.info("%s", task)
-            LOGGER.debug("%r", task.backup_data)
-            for vmid, bdata in task.backup_data.items():
-                if vmid in backup_data and backup_data[vmid]['started_time'] > bdata['started_time']:
-                    continue
-                backup_data[vmid] = bdata
-
-        return backup_data
+            for _timestamp, backup_log in (fetch_backup_log(task, node["node"]),))
 
 
 def agent_proxmox_ve_main(args: Args) -> None:
@@ -499,7 +544,7 @@ class ProxmoxVeSession:
         def __init__(
             self,
             base_url: str,
-            credentials: Dict[str, str],
+            credentials: Mapping[str, str],
             timeout: int,
             verify_ssl: bool,
         ) -> None:
@@ -523,7 +568,7 @@ class ProxmoxVeSession:
     def __init__(
         self,
         endpoint: Tuple[str, int],
-        credentials: Dict[str, str],
+        credentials: Mapping[str, str],
         timeout: int,
         verify_ssl: bool,
     ) -> None:
@@ -602,36 +647,35 @@ class ProxmoxVeAPI:
         self._session.__exit__(*args, **kwargs)
         self._session.close()
 
-    def get(self, path: Union[str, List[str], Tuple[str]]) -> Any:
+    def get(self, path: Union[str, Iterable[str]]) -> Any:
         """Handle request items in form of 'path/to/item' or ['path', 'to', 'item'] """
-        return self._session.get_api_element("/".join(
-            str(p) for p in path) if isinstance(path, (list, tuple)) else path)
+        return self._session.get_api_element(
+            path if isinstance(path, str) else "/".join(map(str, path)))
 
-    def get_tree(self, requested_structure: ListOrDict) -> Any:
+    def get_tree(self, requested_structure: RequestStructure) -> Any:
         def rec_get_tree(
             element_name: Optional[str],
-            requested_structure: ListOrDict,
-            path: Sequence[str],
+            requested_structure: RequestStructure,
+            path: Iterable[str],
         ) -> Any:
             """Recursively fetch data from API to match <requested_structure>"""
-            def is_list_of_subtree_names(data: ListOrDict) -> bool:
+            def is_list_of_subtree_names(data: RequestStructure) -> bool:
                 """Return True if given data is a list of dicts containing names of subtrees,
                 e.g [{'name': 'log'}, {'name': 'options'}, ...]"""
                 return bool(data) and all(
-                    isinstance(elem, dict) and tuple(elem) in {("name",), ("subdir",), ("cmd",)}
+                    isinstance(elem, Mapping) and tuple(elem) in {("name",), ("subdir",), ("cmd",)}
                     for elem in data)
 
-            def extract_request_subtree(request_tree: ListOrDict) -> ListOrDict:
+            def extract_request_subtree(request_tree: RequestStructure) -> RequestStructure:
                 """If list if given return first (and only) element return the provided data tree"""
-                return (request_tree  #
-                        if not isinstance(request_tree, list) else  #
+                return (request_tree if isinstance(request_tree, Mapping) else  #
                         next(iter(request_tree)) if len(request_tree) > 0 else  #
                         {})
 
-            def extract_variable(st: ListOrDict) -> Optional[Dict[str, Any]]:
+            def extract_variable(st: RequestStructure) -> Optional[Mapping[str, Any]]:
                 """Check if there is exactly one root element with a variable name,
                 e.g. '{node}' and return its stripped name"""
-                if not isinstance(st, dict):
+                if not isinstance(st, Mapping):
                     return None
                 if len(st) != 1 or not next(iter(st)).startswith("{"):
                     # we have either exactly one variable or no variables at all
@@ -646,11 +690,12 @@ class ProxmoxVeAPI:
             variable = extract_variable(subtree)
             response = self._session.get_api_element("/".join(next_path))
 
-            if isinstance(response, list):
+            if isinstance(response, Sequence):
                 # Handle subtree stubs like [{'name': 'log'}, {'name': 'options'}, ...]
                 if is_list_of_subtree_names(response):
                     assert variable is None
-                    assert not isinstance(requested_structure, list) and isinstance(subtree, dict)
+                    assert (not isinstance(requested_structure, Sequence) and
+                            isinstance(subtree, Mapping))
                     assert subtree
                     subdir_names = ((elem[next(identifier
                                                for identifier in ("name", "subdir", "cmd")
@@ -664,15 +709,15 @@ class ProxmoxVeAPI:
 
                 # Handle case when response is a list of arbitrary datasets
                 #  e.g [{'uptime': 12345}, 'id': 'server-1', ...}, ...]"""
-                if all(isinstance(elem, dict) for elem in response):
+                if all(isinstance(elem, Mapping) for elem in response):
                     if variable is None:
-                        assert isinstance(subtree, dict)
+                        assert isinstance(subtree, Mapping)
                         return ({
                             key: rec_get_tree(key, subtree[key], next_path)  #
                             for key in subtree
-                        } if isinstance(requested_structure, dict) else response)
+                        } if isinstance(requested_structure, Mapping) else response)
 
-                    assert isinstance(requested_structure, list)
+                    assert isinstance(requested_structure, Sequence)
                     return [{
                         **elem,
                         **(rec_get_tree(

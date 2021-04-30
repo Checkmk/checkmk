@@ -43,7 +43,8 @@ class PiggybackSource(AgentSource):
 
     def _make_file_cache(self) -> NoCache:
         return NoCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()
@@ -51,6 +52,7 @@ class PiggybackSource(AgentSource):
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,

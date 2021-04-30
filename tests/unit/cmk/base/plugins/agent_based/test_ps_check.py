@@ -12,9 +12,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
 from cmk.base.plugins.agent_based import ps_section
@@ -284,6 +281,7 @@ def test_inventory_common():
         ps_section.parse_ps(info),
         None,
         None,
+        None,
     )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
             "")  # type: ignore[attr-defined]
 
@@ -388,7 +386,9 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, notice="Youngest running for: 2 hours 37 minutes"),
+        Metric("age_youngest", 9459.0),
         Result(state=state.OK, notice="Oldest running for: 3 hours 54 minutes"),
+        Metric('age_oldest', 14050.0),
         Result(
             state=state.OK,
             notice=(
@@ -468,6 +468,7 @@ check_results = [
         ),
         Metric("process_handles", 1204, levels=(1000, 2000)),
         Result(state=state.OK, notice="Youngest running for: 12 seconds"),
+        Metric("age_youngest", 12.0),
         Result(
             state=state.WARN,
             notice=(
@@ -475,6 +476,7 @@ check_results = [
                 " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"
             ),
         ),
+        Metric("age_oldest", 4300.0, levels=(3600.0, 7200.0)),
     ],
     [
         Result(state=state.OK, summary="Processes: 1"),
@@ -504,15 +506,14 @@ def test_check_ps_common(inv_item, reference):
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item.parameters)
-        with value_store.context(CheckPluginName("ps"), "unit-test"):
-            test_result = list(ps_utils.check_ps_common(
-                label="Processes",
-                item=inv_item.item,
-                params=factory_defaults,  # type: ignore[arg-type]
-                process_lines=parsed,
-                cpu_cores=1,
-                total_ram=total_ram,
-            ))
+        test_result = list(ps_utils.check_ps_common(
+            label="Processes",
+            item=inv_item.item,
+            params=factory_defaults,  # type: ignore[arg-type]
+            process_lines=parsed,
+            cpu_cores=1,
+            total_ram=total_ram,
+        ))
         assert test_result == reference
 
 
@@ -573,11 +574,10 @@ def test_check_ps_common_cpu(data):
     if data.cpu_rescale_max is not None:
         service.parameters.update({"cpu_rescale_max": data.cpu_rescale_max})
 
-    with value_store.context(CheckPluginName("ps"), "unit-test"):
-        # Initialize counters
-        time_info(service, data.agent_info, 0, 0, data.cpu_cores)
-        # Check_cpu_utilization
-        output = time_info(service, data.agent_info, 60, data.cputime, data.cpu_cores)
+    # Initialize counters
+    time_info(service, data.agent_info, 0, 0, data.cpu_cores)
+    # Check_cpu_utilization
+    output = time_info(service, data.agent_info, 60, data.cputime, data.cpu_cores)
 
     assert output[:6] == [
         Result(state=state.OK, summary="Processes: 1"),
@@ -614,15 +614,14 @@ def test_check_ps_common_count(levels, reference):
         "levels": levels,
     }
 
-    with value_store.context(CheckPluginName("pstest"), "unit-test"):
-        output = list(ps_utils.check_ps_common(
-            label="Processes",
-            item='empty',
-            params=params,  # type: ignore[arg-type]
-            process_lines=lines_with_node_name,
-            cpu_cores=1,
-            total_ram=None,
-        ))
+    output = list(ps_utils.check_ps_common(
+        label="Processes",
+        item='empty',
+        params=params,  # type: ignore[arg-type]
+        process_lines=lines_with_node_name,
+        cpu_cores=1,
+        total_ram=None,
+    ))
     assert output == reference
 
 
@@ -680,21 +679,20 @@ def test_subset_patterns():
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None)  # type: ignore[arg-type]
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)  # type: ignore[arg-type]
     assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):
         assert isinstance(service.item, str)
-        with value_store.context(CheckPluginName("ps"), "unit-test"):
-            output = list(ps_utils.check_ps_common(
-                label="Processes",
-                item=service.item,
-                params=service.parameters,  # type: ignore[arg-type]
-                process_lines=[
-                    (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
-                cpu_cores=1,
-                total_ram=None,
-            ))
+        output = list(ps_utils.check_ps_common(
+            label="Processes",
+            item=service.item,
+            params=service.parameters,  # type: ignore[arg-type]
+            process_lines=[
+                (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
+            cpu_cores=1,
+            total_ram=None,
+        ))
         assert output[0] == Result(state=state.OK, summary="Processes: %s" % count)
 
 
@@ -731,11 +729,10 @@ def test_cpu_util_single_process_levels(cpu_cores):
                 total_ram=None,
             ))
 
-    with value_store.context(CheckPluginName("ps"), "unit-test"):
-        # CPU utilization is a counter, initialize it
-        run_check_ps_common_with_elapsed_time(0, 0)
-        # CPU utilization is a counter, after 60s time, one process consumes 2 min of CPU
-        output = run_check_ps_common_with_elapsed_time(60, 2)
+    # CPU utilization is a counter, initialize it
+    run_check_ps_common_with_elapsed_time(0, 0)
+    # CPU utilization is a counter, after 60s time, one process consumes 2 min of CPU
+    output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
     cpu_util_s = ps_utils.render.percent(cpu_util)
@@ -754,7 +751,9 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
         Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.00%'),
         Result(state=state.OK, notice='Youngest running for: 6 minutes 57 seconds'),
+        Metric("age_youngest", 417.0),
         Result(state=state.OK, notice='Oldest running for: 26 minutes 58 seconds'),
+        Metric("age_oldest", 1618.0),
         Result(state=state.OK, notice="\r\n".join([
             'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
             ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',

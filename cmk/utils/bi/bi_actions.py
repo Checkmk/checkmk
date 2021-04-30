@@ -19,6 +19,7 @@ from cmk.utils.bi.bi_lib import (
     ReqConstant,
     ReqString,
     ReqNested,
+    BIHostSearchMatch,
 )
 
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
@@ -166,16 +167,19 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
                 bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         host_re = replace_macros(self.host_regex, search_result)
         service_re = replace_macros(self.service_regex, search_result)
-        host_matches, _match_groups = bi_searcher.get_host_name_matches(
+        matched_hosts, match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), host_re)
 
+        host_search_matches = [BIHostSearchMatch(x, match_groups[x.name]) for x in matched_hosts]
+
         action_results: List[ABCBICompiledNode] = []
-        service_matches = bi_searcher.get_service_description_matches(host_matches, service_re)
+        service_matches = bi_searcher.get_service_description_matches(host_search_matches,
+                                                                      service_re)
         for service_match in service_matches:
             action_results.append(
                 BICompiledLeaf(
-                    site_id=service_match.host.site_id,
-                    host_name=service_match.host.name,
+                    site_id=service_match.host_match.host.site_id,
+                    host_name=service_match.host_match.host.name,
                     service_description=service_match.service_description,
                 ))
 

@@ -154,7 +154,9 @@ TEST_F(WmiWrapperFixture, Table) {
     EXPECT_EQ(line1.size(), line2.size());
     EXPECT_EQ(line1.size(), header_array.size());
     auto last_line = cma::tools::SplitString(table[table.size() - 1], L",");
-    EXPECT_EQ(line1.size(), last_line.size());
+    EXPECT_EQ(line1.size(), last_line.size()) << "line1     = \n"
+                                              << table[1] << "last_line = \n"
+                                              << table[table.size() - 1];
 }
 
 }  // namespace wtools
@@ -183,8 +185,8 @@ TEST(WmiProviderTest, OhmCtor) {
 }
 
 TEST(WmiProviderTest, OhmIntegration) {
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     Wmi ohm(kOhm, ohm::kSepChar);
     EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
     tst::EnableSectionsNode(provider::kOhm, true);

@@ -6,7 +6,9 @@
 
 import json
 import time
+import itertools
 from typing import List, Optional, Tuple, Dict, Any, Set, Type
+from dataclasses import dataclass, field, asdict
 
 import livestatus
 from cmk.gui.node_vis_lib import BILayoutManagement
@@ -50,7 +52,6 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.utils.bi.bi_computer import BIAggregationFilter
 from cmk.utils.bi.bi_lib import NodeResultBundle
 
-TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
 Meshes = List[Mesh]
 
@@ -61,6 +62,32 @@ class MKGrowthExceeded(MKGeneralException):
 
 class MKGrowthInterruption(MKGeneralException):
     pass
+
+
+@dataclass
+class TopologySettings:
+    growth_root_nodes: Set[HostName] = field(default_factory=set)  # Growth starts from here
+    growth_forbidden_nodes: Set[HostName] = field(default_factory=set)  # Growth stops here
+    growth_continue_nodes: Set[HostName] = field(default_factory=set)  # Growth continues here
+    display_mode: str = "parent_child"
+    max_nodes: int = 400
+    mesh_depth: int = 0
+    growth_auto_max_nodes: int = 400
+    overlays_config: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
+
+class TopologySettingsJSON(TopologySettings):
+    @classmethod
+    def from_json(cls, serialized: Dict[str, Any]) -> "TopologySettingsJSON":
+        for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
+            serialized[key] = set(serialized[key])
+        return cls(**serialized)
+
+    def to_json(self) -> Dict[str, Any]:
+        value = asdict(self)
+        for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
+            value[key] = list(value[key])
+        return value
 
 
 @page_registry.register_page("parent_child_topology")
@@ -85,75 +112,58 @@ class ParentChildTopologyPage(Page):
         """ Determines the hosts to be shown """
         config.user.need_permission("general.parent_child_topology")
 
-        growth_auto_max_nodes = None
-
-        # Jump this number of hops from the root node(s)
-        mesh_depth = html.request.get_integer_input_mandatory("topology_mesh_depth", 0)
-
-        # Maximum number of nodes allowed to render
-        max_nodes = html.request.get_integer_input_mandatory("topology_max_nodes", 400)
-
+        topology_settings = TopologySettings()
         if html.request.var("filled_in"):
-            # Search in filter form
-            hostnames = self._get_hostnames_from_filters()
-
-        elif html.request.var("host_regex"):
-            # Set by "Host Parent/Child topology" icon. One explicit host (ugly)
-            host_regex_var = html.request.get_str_input_mandatory("host_regex")
-            hostnames = [host_regex_var[1:-1]]
-
+            # Parameters from the check_mk filters
+            topology_settings.growth_root_nodes = self._get_hostnames_from_filters()
+        elif html.request.var("host_name"):
+            # Explicit host_name. Used by icon linking to Topology
+            topology_settings.growth_root_nodes = {
+                html.request.get_str_input_mandatory("host_name")
+            }
         else:
-            # Initial page rendering of network topology
-            growth_auto_max_nodes = 200
-            mesh_depth = 5
-            hostnames = self._get_default_view_hostnames(growth_auto_max_nodes)
+            # Default page without further context
+            topology_settings.growth_root_nodes = self._get_default_view_hostnames(
+                topology_settings.growth_auto_max_nodes)
 
-        self.show_topology(hostnames,
-                           mode="parent_child",
-                           growth_auto_max_nodes=growth_auto_max_nodes,
-                           mesh_depth=mesh_depth,
-                           max_nodes=max_nodes)
+        if html.request.has_var("topology_settings"):
+            # These parameters are usually generated within javascript through user interactions
+            try:
+                settings_from_var = json.loads(
+                    html.request.get_str_input_mandatory("topology_settings"))
+                for key, value in settings_from_var.items():
+                    setattr(topology_settings, key, value)
+            except (TypeError, ValueError):
+                raise MKGeneralException(_("Invalid topology_settings %r") % topology_settings)
 
-    def _get_default_view_hostnames(self, growth_auto_max_nodes: int) -> List[HostName]:
+        self.show_topology(topology_settings)
+
+    def _get_default_view_hostnames(self, max_nodes: int) -> Set[HostName]:
         """ Returns all hosts without any parents """
         query = "GET hosts\nColumns: name\nFilter: parents ="
-        sites.live().set_prepend_site(True)
-        only_site = html.request.var("site")
-        if only_site:
-            sites.live().set_only_sites([only_site])
-        hosts = [(x[0], x[1]) for x in sites.live().query(query)]
-        sites.live().set_only_sites(None)
-        sites.live().set_prepend_site(False)
+        with sites.prepend_site(), sites.only_sites(html.request.var("site")):
+            hosts = [(x[0], x[1]) for x in sites.live().query(query)]
 
         # If no explicit site is set and the number of initially displayed hosts
         # exceeds the auto growth range, only the hosts of the master site are shown
-        if len(hosts) > growth_auto_max_nodes:
-            hostnames = [x[1] for x in hosts if x[0] == config.omd_site()]
+        if len(hosts) > max_nodes:
+            hostnames = {x[1] for x in hosts if x[0] == config.omd_site()}
         else:
-            hostnames = [x[1] for x in hosts]
+            hostnames = {x[1] for x in hosts}
 
         return hostnames
 
-    def _get_hostnames_from_filters(self) -> List[str]:
+    def _get_hostnames_from_filters(self) -> Set[str]:
         # Determine hosts from filters
         filter_headers = self._get_filter_headers()
         query = "GET hosts\nColumns: name"
         if filter_headers:
             query += "\n%s" % filter_headers
-        only_site = html.request.var("site")
-        try:
-            if only_site:
-                sites.live().set_only_sites([only_site])
-            return [x[0] for x in sites.live().query(query)]
-        finally:
-            sites.live().set_only_sites(None)
 
-    def show_topology(self,
-                      hostnames: List[HostName],
-                      mode: str,
-                      growth_auto_max_nodes: Optional[int] = None,
-                      mesh_depth: int = 0,
-                      max_nodes: int = 400) -> None:
+        with sites.only_sites(html.request.var("site")):
+            return {x[0] for x in sites.live().query(query)}
+
+    def show_topology(self, topology_settings: TopologySettings) -> None:
         visual_spec = ParentChildTopologyPage.visual_spec()
         breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
                                            PagetypeTopics.get_topic(visual_spec["topic"]))
@@ -161,37 +171,19 @@ class ParentChildTopologyPage(Page):
         page_menu = PageMenu(breadcrumb=breadcrumb)
         self._extend_display_dropdown(page_menu, visual_spec["name"])
         html.header(visual_spec["title"], breadcrumb, page_menu)
-        self.show_topology_content(hostnames,
-                                   mode,
-                                   growth_auto_max_nodes=growth_auto_max_nodes,
-                                   mesh_depth=mesh_depth,
-                                   max_nodes=max_nodes)
+        self.show_topology_content(topology_settings=topology_settings)
 
-    def show_topology_content(self,
-                              hostnames: List[HostName],
-                              mode: str,
-                              growth_auto_max_nodes: Optional[int] = None,
-                              max_nodes: int = 400,
-                              mesh_depth: int = 0) -> None:
+    def show_topology_content(self, topology_settings: TopologySettings) -> None:
         div_id = "node_visualization"
         html.div("", id_=div_id)
         html.javascript(
-            "topology_instance = new cmk.node_visualization.TopologyVisualization(%s, %s);" %
-            (json.dumps(div_id), json.dumps(mode)))
+            "topology_instance = new cmk.node_visualization.TopologyVisualization(%s);" %
+            json.dumps(div_id))
 
-        if growth_auto_max_nodes:
-            html.javascript("topology_instance.set_growth_auto_max_nodes(%d)" %
-                            growth_auto_max_nodes)
-        html.javascript("topology_instance.set_max_nodes(%d)" % max_nodes)
-        html.javascript("topology_instance.set_mesh_depth(%d)" % mesh_depth)
-        overlay_config = self._get_overlay_config()
-        if overlay_config:
-            html.javascript("topology_instance.set_initial_overlays_config(%s)" %
-                            json.dumps(overlay_config))
+        html.javascript("topology_instance.show_topology(%s)" %
+                        json.dumps(TopologySettingsJSON(**asdict(topology_settings)).to_json()))
 
-        html.javascript("topology_instance.show_topology(%s)" % json.dumps(hostnames))
-
-    def _get_overlay_config(self) -> List:
+    def _get_overlays_config(self) -> List:
         return []
 
     def _get_filter_headers(self) -> FilterHeaders:
@@ -493,13 +485,13 @@ class AjaxFetchTopology(AjaxPage):
         # growth_forbidden: block further traversal at the given nodes
         # growth_continue_nodes: expand these nodes, event if the depth has been reached
 
-        topology_config_var = html.request.get_ascii_input_mandatory("topology_config")
+        topology_config_var = html.request.get_str_input_mandatory("topology_settings")
         try:
-            topology_config = json.loads(topology_config_var)
+            topology_settings = TopologySettingsJSON.from_json(json.loads(topology_config_var))
         except (TypeError, ValueError):
             raise MKGeneralException(_("Invalid topology_config %r") % topology_config_var)
 
-        topology = self._get_topology_instance(topology_config)
+        topology = self._topology_instance_factory(topology_settings)
         meshes = topology.compute()
         topology_info: Dict[str, Any] = {
             "topology_meshes": {},
@@ -510,35 +502,32 @@ class AjaxFetchTopology(AjaxPage):
             "mesh_depth": topology.mesh_depth,
         }
 
+        # Convert mesh information into a node visualization compatible format
         for mesh in meshes:
             if not mesh:
                 continue
 
             # Pick root host
-            growth_roots = sorted(mesh.intersection(set(topology_config["growth_root_nodes"])))
+            growth_roots = sorted(mesh.intersection(set(topology_settings.growth_root_nodes)))
             if growth_roots:
                 mesh_root = growth_roots[0]
             else:
                 mesh_root = list(mesh)[0]
             mesh_info = topology.get_info_for_host(mesh_root, mesh)
 
-            mesh.remove(mesh_root)
-            sorted_mesh = sorted(list(mesh))
-            sorted_mesh.insert(0, mesh_root)
-
-            if sorted_mesh:
-                mesh_info["children"] = []
-                mesh_info["children"].extend(
-                    [topology.get_info_for_host(x, mesh) for x in sorted_mesh[1:]])
+            sorted_children = sorted([x for x in mesh if x != mesh_root])
+            mesh_info["children"] = list(
+                topology.get_info_for_host(x, mesh) for x in sorted_children)
+            sorted_mesh = [mesh_root] + sorted_children
 
             mesh_links = set()
-            # Incoming connections
             for idx, hostname in enumerate(sorted_mesh):
+                # Incoming connections
                 for child in topology.get_host_incoming(hostname):
                     if child in sorted_mesh:
                         mesh_links.add((sorted_mesh.index(child), idx))
-            # Outgoing connections
-            for idx, hostname in enumerate(sorted_mesh):
+
+                # Outgoing connections
                 for parent in topology.get_host_outgoing(hostname):
                     if parent in sorted_mesh:
                         mesh_links.add((idx, sorted_mesh.index(parent)))
@@ -559,17 +548,17 @@ class AjaxFetchTopology(AjaxPage):
 
         return topology_info
 
-    def _get_topology_instance(self, topology_config: TopologyConfig) -> 'Topology':
-        topology_class = topology_registry.get(topology_config["mode"])
+    def _topology_instance_factory(self, topology_settings: TopologySettings) -> 'Topology':
+        topology_class = topology_registry.get(topology_settings.display_mode)
         if topology_class is None:
             raise Exception("unknown topology")
-        return topology_class(topology_config)
+        return topology_class(topology_settings)
 
 
 class Topology:
-    def __init__(self, topology_config: TopologyConfig) -> None:
+    def __init__(self, topology_settings: TopologySettings) -> None:
         super(Topology, self).__init__()
-        self._config = topology_config
+        self._settings = topology_settings
 
         # Hosts with complete data
         self._known_hosts: Dict[str, Any] = {}
@@ -577,11 +566,6 @@ class Topology:
         # Child/parent hosts at the depth boundary
         self._border_hosts: Set[HostName] = set()
 
-        # Nodes without a parent
-        self._actual_root_nodes: Set[HostName] = set()
-
-        # Nodes without child or parent
-        self._single_hosts: Set[HostName] = set()
         self._errors: List[str] = []
         self._meshes: Meshes = []
 
@@ -620,10 +604,10 @@ class Topology:
         return self._known_hosts[hostname]["outgoing"]
 
     def is_growth_root(self, hostname: HostName) -> bool:
-        return hostname in self._config["growth_root_nodes"]
+        return hostname in self._settings.growth_root_nodes
 
     def is_growth_continue(self, hostname: HostName) -> bool:
-        return hostname in self._config.get("growth_continue_nodes", [])
+        return hostname in self._settings.growth_continue_nodes
 
     def may_grow(self, hostname: HostName, mesh_hosts: Mesh) -> bool:
         known_host = self._known_hosts.get(hostname)
@@ -634,7 +618,7 @@ class Topology:
         return len(unknown_hosts) > 0
 
     def growth_forbidden(self, hostname: HostName) -> bool:
-        return hostname in self._config.get("growth_forbidden_nodes", set())
+        return hostname in self._settings.growth_forbidden_nodes
 
     def add_error(self, error: str) -> None:
         self._errors.append(error)
@@ -643,9 +627,8 @@ class Topology:
         return self._errors
 
     def compute(self) -> Meshes:
-        if not self._config["growth_root_nodes"]:
+        if not self._settings.growth_root_nodes:
             return []
-        self._border_hosts = set(self._config["growth_root_nodes"])
 
         self._meshes = []
         try:
@@ -665,12 +648,13 @@ class Topology:
         return meshes
 
     def _grow(self) -> None:
+        self._fetch_root_nodes()
         self._growth_to_depth()
         self._growth_to_parents()
         self._growth_to_continue_nodes()
 
-    def _check_mesh_size(self, meshes: Meshes) -> None:
-        total_nodes = sum(map(len, meshes))
+    def _check_mesh_size(self) -> None:
+        total_nodes = sum(map(len, self._meshes))
         if total_nodes > self.max_nodes:
             raise MKGrowthExceeded(
                 _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes))
@@ -680,32 +664,32 @@ class Topology:
 
     @property
     def max_nodes(self) -> int:
-        return int(self._config.get("max_nodes", 500))
+        return self._settings.max_nodes
 
     @property
     def growth_auto_max_nodes(self) -> int:
-        return self._config.get("growth_auto_max_nodes") or 100000
+        return self._settings.growth_auto_max_nodes
 
     @property
     def mesh_depth(self) -> int:
-        return int(self._config.get("mesh_depth", 0))
+        return self._settings.mesh_depth
+
+    def _fetch_root_nodes(self):
+        self._compute_meshes(self._settings.growth_root_nodes)
 
     def _growth_to_depth(self) -> None:
-        while self._current_iteration <= self.mesh_depth:
+        while self._current_iteration < self.mesh_depth:
             self._current_iteration += 1
-            new_meshes = self._compute_meshes(self._border_hosts)
-            self._check_mesh_size(new_meshes)
-            self._meshes = new_meshes
+            self._compute_meshes(self._border_hosts)
 
     def _growth_to_parents(self) -> None:
-        all_parents: Set[str] = set()
         while True:
             combined_mesh = set()
             for mesh in self._meshes:
                 combined_mesh.update(mesh)
 
             combined_mesh -= self._border_hosts
-            all_parents = set()
+            all_parents: Set[str] = set()
             for node_name in combined_mesh:
                 all_parents.update(set(self._known_hosts[node_name]["outgoing"]))
 
@@ -713,12 +697,10 @@ class Topology:
             if not missing_parents:
                 break
 
-            new_meshes = self._compute_meshes(missing_parents)
-            self._check_mesh_size(new_meshes)
-            self._meshes = new_meshes
+            self._compute_meshes(missing_parents)
 
     def _growth_to_continue_nodes(self) -> None:
-        growth_continue_nodes = set(self._config.get("growth_continue_nodes", []))
+        growth_continue_nodes = set(self._settings.growth_continue_nodes)
         while growth_continue_nodes:
             growth_nodes = growth_continue_nodes.intersection(set(self._known_hosts.keys()))
             if not growth_nodes:
@@ -729,15 +711,19 @@ class Topology:
                 border_hosts.update(set(self._known_hosts[node_name]["incoming"]))
                 border_hosts.update(set(self._known_hosts[node_name]["outgoing"]))
 
-            new_meshes = self._compute_meshes(border_hosts)
-            self._check_mesh_size(new_meshes)
-            self._meshes = new_meshes
+            self._compute_meshes(border_hosts)
             growth_continue_nodes -= growth_nodes
 
-    def _compute_meshes(self, hostnames: Set[HostName]) -> Meshes:
-        hostnames.update(self._known_hosts.keys())  # pylint: disable=dict-keys-not-iterating
+    def _compute_meshes(self, hostnames: Set[HostName]) -> None:
+        new_hosts = self._query_data(hostnames)
+        self._update_meshes(new_hosts)
+        self._check_mesh_size()
 
-        new_hosts = []
+    def _query_data(self, hostnames: Set[HostName]) -> List[Dict[str, Any]]:
+        if not hostnames:
+            return []
+
+        new_hosts: List[Dict[str, Any]] = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
             if len(mandatory_keys - set(host_data.keys())) > 0:
@@ -746,10 +732,7 @@ class Topology:
                     (mandatory_keys - set(host_data.keys())))
             # Mandatory keys in host_data: name, outgoing, incoming
             new_hosts.append(host_data)
-
-        meshes = self._generate_meshes(new_hosts)
-        self._update_depth_information(meshes)
-        return meshes
+        return new_hosts
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         return meshes
@@ -758,68 +741,47 @@ class Topology:
         raise NotImplementedError()
 
     def is_root_node(self, hostname: HostName) -> bool:
-        return hostname in self._actual_root_nodes
+        return len(self._known_hosts[hostname]["outgoing"]) == 0
 
     def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
-    def _generate_meshes(self, new_hosts: List[Dict[str, Any]]) -> Meshes:
+    def _update_meshes(self, new_hosts: List[Dict[HostName, Any]]):
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent
-        incoming_nodes = {}
-        outgoing_nodes = {}
         self._border_hosts = set()
 
+        # Update known hosts
         for new_host in new_hosts:
+            new_host["mesh_depth"] = self._current_iteration
             hostname = new_host["name"]
             self._known_hosts[hostname] = new_host
 
+        # Update meshes and border hosts
+        new_meshes = []
+        for new_host in new_hosts:
+            hostname = new_host["name"]
+            known_mesh_hosts = set([hostname])
+
+            adjacent_hosts = new_host["outgoing"] + new_host["incoming"]
+            known_mesh_hosts.update(x for x in adjacent_hosts if x in self._known_hosts)
             if not self.growth_forbidden(hostname):
-                outgoing = new_host["outgoing"]
-                incoming = new_host["incoming"]
-                for entry in outgoing + incoming:
-                    self._border_hosts.add(entry)
+                self._border_hosts.update(x for x in adjacent_hosts if x not in self._known_hosts)
+            new_meshes.append(known_mesh_hosts)
 
-            if not outgoing and not incoming:
-                self._single_hosts.add(hostname)
+        self._integrate_new_meshes(new_meshes)
 
-            if not outgoing:
-                self._actual_root_nodes.add(hostname)
-
-            incoming_nodes[hostname] = incoming
-            outgoing_nodes[hostname] = outgoing
-
-        # Determine core and border hosts
-        for hostname in self._known_hosts:
-            if hostname in self._border_hosts:
-                self._border_hosts.remove(hostname)
-
-        meshes = []
-        for hostname in self._known_hosts:
-            meshes.append(set([hostname] + incoming_nodes[hostname] + outgoing_nodes[hostname]))
-        self._combine_meshes_inplace(meshes)
-
-        return meshes
-
-    def _combine_meshes_inplace(self, meshes: Meshes) -> None:
+    def _integrate_new_meshes(self, new_meshes: List[Set[HostName]]) -> None:
         """ Combines meshes with identical items """
-        while True:
-            changed_meshes = False
-            for idx in range(0, len(meshes) - 1):
-                current_bundle = meshes[idx]
-                for check_bundle in meshes[idx + 1:len(meshes)]:
-                    if current_bundle.intersection(check_bundle):
-                        new_bundle = current_bundle.union(check_bundle)
-                        meshes[idx] = new_bundle
-                        meshes.remove(check_bundle)
-                        changed_meshes = True
-                        break
-                if changed_meshes:
-                    break
+        self._meshes.extend(new_meshes)
+        all_hosts = set(itertools.chain.from_iterable(self._meshes))
+        for hostname in all_hosts:
+            common_meshes = [x for x in self._meshes if hostname in x]
+            for mesh in common_meshes:
+                self._meshes.remove(mesh)
 
-            if not changed_meshes:
-                break
+            self._meshes.append(set(itertools.chain.from_iterable(common_meshes)))
 
     def _update_depth_information(self, meshes: Meshes) -> None:
         for mesh_hosts in meshes:
@@ -912,7 +874,7 @@ class ParentChildNetworkTopology(Topology):
             combinator_mesh.update(set(settings["incoming"]))
 
         meshes.append(combinator_mesh)
-        self._combine_meshes_inplace(meshes)
+        self._integrate_new_meshes(meshes)
 
         return meshes
 

@@ -40,6 +40,14 @@ def parse_docker_node_info(string_table: StringTable) -> Section:
 
 
 def host_labels_docker_node_info(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:node :
+            This Label is set, if the corresponding host is a docker node.
+
+    """
     if section:
         yield HostLabel(u"cmk/docker_object", u"node")
 

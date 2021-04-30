@@ -37,3 +37,8 @@ from .rule_packs import (
     override_rule_pack_proxy,
     release_packaged_rule_packs,
 )
+
+from .forward import (
+    SyslogMessage,
+    SyslogForwarderUnixSocket,
+)

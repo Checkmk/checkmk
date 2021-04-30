@@ -27,11 +27,11 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "cmc.h"
 #else
-#include "auth.h"
 #include "nagios.h"
 #endif
 
@@ -229,22 +229,26 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
     return true;
 }
 
+namespace {
+bool rowWithoutHost(const LogRow *lr) {
+    auto clazz = lr->entry->_class;
+    return clazz == LogEntry::Class::info ||
+           clazz == LogEntry::Class::program ||
+           clazz == LogEntry::Class::ext_command;
+}
+
+}  // namespace
+
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     const auto *lr = rowData<LogRow>(row);
-    service *svc = lr->svc;
-    host *hst = lr->hst;
-
-    if (hst != nullptr || svc != nullptr) {
-        return is_authorized_for(core()->serviceAuthorization(), ctc, hst, svc);
-        // suppress entries for messages that belong to hosts that do not exist
-        // anymore.
-    }
-    auto clazz = lr->entry->_class;
-    return !(clazz == LogEntry::Class::alert ||
-             clazz == LogEntry::Class::hs_notification ||
-             clazz == LogEntry::Class::passivecheck ||
-             clazz == LogEntry::Class::alert_handlers ||
-             clazz == LogEntry::Class::state);
+    // If we have an AuthUser, suppress entries for messages with hosts that do
+    // not exist anymore.
+    return lr->hst == nullptr  //
+               ? ctc == no_auth_user() || rowWithoutHost(lr)
+               : lr->svc == nullptr
+                     ? is_authorized_for_hst(ctc, lr->hst)
+                     : is_authorized_for_svc(core()->serviceAuthorization(),
+                                             ctc, lr->svc);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

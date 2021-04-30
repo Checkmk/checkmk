@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_discovery_systemd_units_services_rules():
     return Dictionary(
-        title=_("Systemd single services siscovery"),
+        title=_("Systemd single services discovery"),
         elements=[
             ('descriptions', ListOfStrings(title=_("Descriptions"))),
             ('names', ListOfStrings(title=_("Service unit names"))),

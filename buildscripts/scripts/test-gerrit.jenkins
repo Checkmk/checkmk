@@ -4,10 +4,11 @@ properties([
 ])
 
 def NODE = ''
-withFolderProperties{
+
+withFolderProperties {
     NODE = env.BUILD_NODE
     // There is no way to determine the Docker Tag by branch or build in Gerrit jobs
-    // Therefor the Folder Tag is selected directly
+    // Therefore the folder tag is selected directly
     TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
@@ -17,19 +18,14 @@ node (NODE) {
 
     try {
         stage("Auschecken: Checkmk") {
-            print("Git Status before checkout")
-            sh("git status || exit 0")
-            print("Git log before checkout")
-            sh("git log --oneline -n10 || exit 0")
             checkout(scm)
-            sh "rm -rf ${RESULTS}; mkdir ${RESULTS}"
+            sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
             gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
-
             str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
             withFolderProperties{
                 TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
             }
-         }
+        }
 
         // Creates a \n separated list of changed files
         // We get realpaths here. However, the scripts/find-python-files calls
@@ -48,12 +44,15 @@ node (NODE) {
         // Gather the list of changed agent plugins
         def CHANGED_AGENT_PLUGINS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
+        // Gather the list of changed agent plugins unit tests
+        def CHANGED_AGENT_PLUGINS_TESTS = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
         // Gather the list of changed livestatus / core files
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // Gather the list of changed JavaScript and CSS files in raw and enterprise edition
-        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
@@ -61,6 +60,7 @@ node (NODE) {
 
         print "Changed Python files: ${CHANGED_PYTHON_FILES}"
         print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
+        print "Changed agent plugins tests: ${CHANGED_AGENT_PLUGINS_TESTS}"
         print "Changed core files: ${CHANGED_CORE_FILES}"
         print "Changed JS files: ${CHANGED_JS_FILES}"
         print "Changed CSS files: ${CHANGED_CSS_FILES}"
@@ -145,7 +145,7 @@ node (NODE) {
 
         gerrit_stages.run(
             NAME: 'Agent Plugin Unit Tests',
-            CONDITION: CHANGED_AGENT_PLUGINS != "",
+            CONDITION: CHANGED_AGENT_PLUGINS != "" || CHANGED_AGENT_PLUGINS_TESTS != "",
             DIR: 'tests',
             ENV_VARS: [
             "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-junit.xml",
@@ -240,16 +240,30 @@ node (NODE) {
         throw e
     } finally {
         stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang(pattern: "results/*-tidy.txt")
-            def GCC = scanForIssues tool: gcc(pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/python-yapf.txt")
-            def PYLINT = scanForIssues tool: pyLint(pattern: "results/pylint.txt")
-            def MYPY = scanForIssues tool: myPy(pattern: "results/mypy.xml")
-            def CPPCHECK = scanForIssues tool: cppCheck(pattern: 'results/cppcheck-*.xml')
+            def CLANG = scanForIssues(tool: clang(
+                pattern: "results/*-tidy.txt"))
+            def GCC = scanForIssues(tool: gcc(
+                pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/python-yapf.txt"))
+            def PYLINT = scanForIssues(tool: pyLint(
+                pattern: "results/pylint.txt"))
+            def MYPY = scanForIssues(tool: myPy(
+                pattern: "results/mypy.xml"))
+            def CPPCHECK = scanForIssues(tool: cppCheck(
+                pattern: 'results/cppcheck-*.xml'))
 
-            publishIssues issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-            xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: false, failIfNotNew: true, pattern: "results/*junit.xml", skipNoTestFiles: true, stopProcessingIfError: true)])
+            publishIssues(
+                issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]])
+            xunit([Custom(
+                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                deleteOutputFiles: false,
+                failIfNotNew: true,
+                pattern: "results/*junit.xml",
+                skipNoTestFiles: true,
+                stopProcessingIfError: true)])
 
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'results/*'
+            archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*')
         }
     }
 }

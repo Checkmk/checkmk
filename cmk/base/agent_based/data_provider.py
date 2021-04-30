@@ -7,6 +7,7 @@
 from typing import (
     Any,
     Dict,
+    Final,
     Iterable,
     Iterator,
     List,
@@ -114,14 +115,11 @@ class ParsedSectionsBroker(Mapping[HostKey, SectionsParser]):
     """
     def __init__(
         self,
-        data: Mapping[HostKey, HostSections],
+        data: Mapping[HostKey, SectionsParser],
     ) -> None:
         super().__init__()
-        # TODO: rename _data
-        self._data = {
-            host_key: SectionsParser(host_sections=host_sections)
-            for host_key, host_sections in data.items()
-        }
+        # TODO: rename _data (coming soon!)
+        self._data: Final = data
 
         # This holds the result of the superseding section along with the
         # cache info of the raw section that was used (by parsed section name!)
@@ -293,7 +291,7 @@ def _collect_host_sections(
     use source.get_summary_result() to get the state, output and perfdata of the agent execution
     or source.exception to get the exception object.
     """
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+    console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
     flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
 
@@ -373,8 +371,8 @@ def make_broker(
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         # Note: `fetch_all(sources)` is almost always called in similar
         #       code in discovery and inventory.  The only two exceptions
-        #       are `cmk.base.checking.do_check(...)` and
-        #       `cmk.base.discovery.check_discovery(...)`.
+        #       are `cmk.base.agent_based.checking.do_check(...)` and
+        #       `cmk.base.agent_based.discovery.check_discovery(...)`.
         #       This does not seem right.
         fetcher_messages = list(fetch_all(
             nodes=nodes,
@@ -387,4 +385,7 @@ def make_broker(
         fetcher_messages=fetcher_messages,
         selected_sections=selected_sections,
     )
-    return ParsedSectionsBroker(collected_host_sections), results
+    return ParsedSectionsBroker({
+        host_key: SectionsParser(host_sections=host_sections)
+        for host_key, host_sections in collected_host_sections.items()
+    }), results

@@ -1268,7 +1268,7 @@ def should_notify(context: EventContext, entry: NotificationTableEntry) -> bool:
 
     # Check notification number (in case of repeated notifications/escalations)
     if "escalation" in entry:
-        assert isinstance(entry["escalation"], list)
+        assert isinstance(entry["escalation"], tuple)
         from_number, to_number = entry["escalation"]
         assert isinstance(from_number, (int, float))
         assert isinstance(to_number, (int, float))

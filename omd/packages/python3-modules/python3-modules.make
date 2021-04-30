@@ -30,7 +30,7 @@ PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
-PYTHON3_MODULES_LIST += PyYAML-5.3.1.tar.gz # needed by vcrpy
+PYTHON3_MODULES_LIST += PyYAML-5.4.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.12.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += yarl-1.6.0.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += multidict-4.7.6.tar.gz # needed by yarl
@@ -40,7 +40,7 @@ PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock 
 PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
 PYTHON3_MODULES_LIST += cffi-1.14.3.tar.gz # needed by PyNaCl, cryptography, bcrypt
 PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
-PYTHON3_MODULES_LIST += cryptography-3.3.1.tar.gz # needed by paramiko, pyOpenSSL
+PYTHON3_MODULES_LIST += cryptography-3.3.2.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 
@@ -63,7 +63,7 @@ PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
 PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
-PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += Jinja2-2.11.3.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
 PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
 PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
@@ -92,12 +92,12 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-7.2.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-8.1.2.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
 PYTHON3_MODULES_LIST += numpy-1.18.4.tar.gz # needed by GUI (forecast graphs)
-PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += reportlab-3.5.66.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
@@ -124,7 +124,7 @@ PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.0.1.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
-PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.3.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency

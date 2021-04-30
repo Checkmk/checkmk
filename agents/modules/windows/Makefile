@@ -3,7 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-# Builds CPython for Windows as zip file
+# Builds CPython for Windows as a cab file
 # Expected some Python installed, used by python build toolchain
 # Expected python.exe is python3 reasonably updated
 #
@@ -31,7 +31,7 @@ SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\$(PY_VER)
 
 # names
 OMD_PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
-PYTHON_MODULE_NAME := python-$(PY_VER).zip
+PYTHON_MODULE_NAME := python-$(PY_VER).cab
 
 # files
 PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
@@ -112,7 +112,7 @@ venv: python_install $(PYTHON_PIPFILE_LOCK) ## venv building
 	exec_cmd.bat patch_environment.cmd $(PY_VER) $(PY_SUBVER)
 	
 	
-$(PYTHON_MODULE): venv ## zipping venv
+$(PYTHON_MODULE): venv ## compressing venv
 	@powershell Write-Host "+Target $@" -foreground white
 	@powershell Write-Host "*CAB*" -foreground white
 	python_to_cab.cmd $(PYTHON_TMP_DIR) $(PYTHON_MODULE_NAME) to_save

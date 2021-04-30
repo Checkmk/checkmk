@@ -61,6 +61,9 @@ PACKAGES := \
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise
 endif
+ifeq ($(EDITION),free)
+PACKAGES += enterprise
+endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += managed
@@ -84,7 +87,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
@@ -293,7 +296,7 @@ setversion:
 # NEW_VERSION should be set on the command line.  Replace all '/' since sed
 # tries to interpret them '/' might occur in custom branches filenames and sed
 # arguments should not contain '/'
-	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
+	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT) ; \
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
@@ -309,7 +312,8 @@ $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
-	@if [ -n "$(DEMO_SUFFIX)" ]; then \
+
+	@if [ "$(EDITION)" = "free" ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 

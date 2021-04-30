@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     DropdownChoice,
     Dictionary,
+    ListOf,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
 from cmk.gui.type_defs import Choices
@@ -84,7 +85,7 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Network Address")
+        return _("Network address")
 
     @property
     def sort_index(self):
@@ -95,11 +96,11 @@ class HostAttributeTopicAddress(HostAttributeTopic):
 class HostAttributeTopicDataSources(HostAttributeTopic):
     @property
     def ident(self):
-        return "data_sources"
+        return "monitoring_agents"
 
     @property
     def title(self):
-        return _("Data sources")
+        return _("Monitoring agents")
 
     @property
     def sort_index(self):
@@ -144,7 +145,7 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
 
     @property
     def title(self):
-        return _("Management Board")
+        return _("Management board")
 
     @property
     def sort_index(self):
@@ -357,7 +358,7 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
 
     def get_tag_groups(self, value: Any) -> Dict[str, str]:
         """Each attribute may set multiple tag groups for a host
-        This is used for calculating the effective host tags when writing the hosts.mk"""
+        This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
 
     @property
@@ -634,7 +635,10 @@ def declare_custom_host_attrs():
             # Hack: The API does not perform validate_datatype and we can currently not enable
             # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
             # As a local workaround we use a custom validate function here to ensure we only get ascii characters
-            vs = TextAscii(title=attr['title'], help=attr['help'], validate=_validate_is_ascii)
+            vs = TextAscii(title=attr['title'],
+                           help=attr['help'],
+                           validate=_validate_is_ascii,
+                           attrencode=False)
         else:
             raise NotImplementedError()
 
@@ -695,15 +699,15 @@ def _transform_attribute_topic_title_to_id(topic_title):
     _topic_title_to_id_map = {
         u"Basic settings": "basic",
         u"Address": "address",
-        u"Data sources": "data_sources",
-        u"Management Board": "management_board",
+        u"Monitoring agents": "monitoring_agents",
+        u"Management board": "management_board",
         u"Network Scan": "network_scan",
         u"Custom attributes": "custom_attributes",
         u"Host tags": "custom_attributes",
         u"Tags": "custom_attributes",
         u"Grundeinstellungen": "basic",
         u"Adresse": "address",
-        u"Datenquellen": "data_sources",
+        u"Monitoringagenten": "monitoring_agents",
         u"Management-Board": "management_board",
         u"Netzwerk-Scan": "network_scan",
         u"Eigene Attribute": "custom_attributes",
@@ -809,7 +813,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         # which is not escaped). For Dictionary we know that it cares about
         # escaping it's values. For this reason it is OK to wrap it into HTML
         # to prevent escaping during rendering.
-        if isinstance(vs, Dictionary):
+        if isinstance(vs, (ListOf, Dictionary)):
             content = HTML(content)
 
         return "", content
@@ -890,6 +894,9 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
     def get_tag_groups(self, value):
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
+
+    def is_show_more(self) -> bool:
+        return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):

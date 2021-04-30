@@ -32,6 +32,7 @@ from cmk.gui.plugins.dashboard.utils import (
     DashletConfig,
     DashletId,
     macro_mapping_from_context,
+    make_mk_missing_data_error,
 )
 from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
@@ -253,9 +254,8 @@ class GraphDashlet(Dashlet):
             graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
         except MKMissingDataError:
             raise
-        except livestatus.MKLivestatusNotFoundError as livestatus_excpt:
-            raise MKMissingDataError(
-                _("Missing data needed to render this graph. Details: %s") % livestatus_excpt)
+        except livestatus.MKLivestatusNotFoundError:
+            raise make_mk_missing_data_error()
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
@@ -384,8 +384,10 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 {
     var nr = handler_data;
     var container = document.getElementById('dashlet_graph_' + nr);
-    container.innerHTML = response_body;
-    cmk.utils.execute_javascript_by_object(container);
+    if (container) {
+        container.innerHTML = response_body;
+        cmk.utils.execute_javascript_by_object(container);
+    }
 }
 
 """

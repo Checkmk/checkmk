@@ -206,6 +206,26 @@ div#service_container {
         min-width: 250px;
         overflow-wrap: break-word;
       }
+
+      &.labelstate {
+        width: 130px;
+        max-width: 130px;
+        min-width: 130px;
+        overflow-wrap: break-word;
+      }
+
+      &.expanding {
+        width: 100%;
+        min-width: 500px;
+      }
+
+      &.plugins {
+        min-width: 200px;
+      }
+
+      a {
+        line-height: 20px;
+      }
     }
   }
 
@@ -216,49 +236,49 @@ div#service_container {
       position: relative;
     }
   }
+}
 
-  div#fixall {
-    background-color: $headline-color;
-    border-radius: 2px;
+div#fixall_container {
+  background-color: $headline-color;
+  border-radius: 2px;
 
-    img {
-      float: left;
-      margin: 10px 0 0 10px;
-    }
+  img {
+    float: left;
+    margin: 10px 0 0 10px;
+  }
 
-    ul {
-      float: left;
-      list-style: none;
-      margin: 15px 0 0 0;
-      padding-left: 10px;
-    }
+  ul {
+    float: left;
+    list-style: none;
+    margin: 15px 0 0 0;
+    padding-left: 10px;
+  }
 
-    li {
-      display: inline-block;
-      padding: 0 10px;
-      border-right: 1px solid $font-color;
-    }
+  li {
+    display: inline-block;
+    padding: 0 10px;
+    border-right: 1px solid $font-color;
+  }
 
-    li:last-child {
-      border-right: none;
-    }
+  li:last-child {
+    border-right: none;
+  }
 
-    span {
-      padding: 2px;
-    }
+  span {
+    padding: 2px;
+  }
 
-    span.changed {
-      color: $success;
-      font-weight: $font-weight-bold;
-    }
+  span.changed {
+    color: $success;
+    font-weight: $font-weight-bold;
+  }
 
-    input.button {
-      height: 25px;
-      padding: 5px 10px;
-      margin-left: 10px;
-      background-color: $success;
-      color: $black;
-    }
+  input.button {
+    height: 25px;
+    padding: 5px 10px;
+    margin-left: 10px;
+    background-color: $success;
+    color: $black;
   }
 }
 
@@ -674,7 +694,7 @@ div.filter_buttons {
   body.main .popup_menu & span {
     display: block;
     width: 330px;
-    height: 80px;
+    height: 70px;
     margin: 0 8px 8px 0;
     background: $bg-color-secondary;
     border: 1px solid $color-table-border;
@@ -690,7 +710,7 @@ div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 $spacing;
+    padding: $spacing 0 0;
     border: $wato-a-border;
   }
 
@@ -710,7 +730,7 @@ div.filter_buttons {
       top: 20px;
       left: 72px;
       width: 234px;
-      padding: 16px 0;
+      padding: 16px 0 0;
       overflow: hidden;
       font-size: $font-size-small;
       font-weight: 500;
@@ -723,7 +743,7 @@ div.filter_buttons {
 
   img {
     position: absolute;
-    top: 16px;
+    top: 22px;
     left: 16px;
     width: 36px;
     height: 36px;

@@ -10,24 +10,154 @@ import re
 import socket
 import subprocess
 import threading
-from typing import NamedTuple, List, Tuple
+import time
+import traceback
+from typing import TYPE_CHECKING, NamedTuple, List, Tuple, Dict, Optional, Any
 
+from cmk.utils import store
 from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.translations import translate_hostname
 
+from cmk.gui.log import logger
+from cmk.gui import config, userdb
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
+from cmk.gui.watolib import init_wato_datastructures
+from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     Host,
+    update_metadata,
 )
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
 
+NetworkScanFoundHosts = List[Tuple[HostName, HostAddress]]
+NetworkScanResult = Dict[str, Any]
 NetworkScanRequest = NamedTuple("NetworkScanRequest", [("folder_path", str)])
+
+if TYPE_CHECKING:
+    from cmk.gui.watolib.hosts_and_folders import CREFolder
+
+
+def execute_network_scan_job() -> None:
+    """Executed by the multisite cron job once a minute. Is only executed in the
+    central site. Finds the next folder to scan and starts it via WATO
+    automation. The result is written to the folder in the master site."""
+    init_wato_datastructures(with_wato_lock=True)
+
+    if config.is_wato_slave_site():
+        return  # Don't execute this job on slaves.
+
+    folder = _find_folder_to_scan()
+    if not folder:
+        return  # Nothing to do.
+
+    # We need to have the context of the user. The jobs are executed when
+    # config.set_user_by_id() has not been executed yet. So there is no user context
+    # available. Use the run_as attribute from the job config and revert
+    # the previous state after completion.
+    old_user = config.user.id
+    run_as = folder.attribute("network_scan")["run_as"]
+    if not userdb.user_exists(run_as):
+        raise MKGeneralException(
+            _("The user %s used by the network "
+              "scan of the folder %s does not exist.") % (run_as, folder.title()))
+    config.set_user_by_id(folder.attribute("network_scan")["run_as"])
+
+    result: NetworkScanResult = {
+        "start": time.time(),
+        "end": True,  # means currently running
+        "state": None,
+        "output": "The scan is currently running.",
+    }
+
+    # Mark the scan in progress: Is important in case the request takes longer than
+    # the interval of the cron job (1 minute). Otherwise the scan might be started
+    # a second time before the first one finished.
+    _save_network_scan_result(folder, result)
+
+    try:
+        if config.site_is_local(folder.site_id()):
+            found = _do_network_scan(folder)
+        else:
+            found = do_remote_automation(config.site(folder.site_id()), "network-scan",
+                                         [("folder", folder.path())])
+
+        if not isinstance(found, list):
+            raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
+
+        _add_scanned_hosts_to_folder(folder, found)
+
+        result.update({
+            "state": True,
+            "output": _("The network scan found %d new hosts.") % len(found),
+        })
+    except Exception as e:
+        result.update({
+            "state": False,
+            "output": _("An exception occured: %s") % e,
+        })
+        logger.error("Exception in network scan:\n%s", traceback.format_exc())
+
+    result["end"] = time.time()
+
+    _save_network_scan_result(folder, result)
+
+    if old_user:
+        config.set_user_by_id(old_user)
+
+
+def _find_folder_to_scan() -> Optional['CREFolder']:
+    """Find the folder which network scan is longest waiting and return the folder object."""
+    folder_to_scan = None
+    for folder in Folder.all_folders().values():
+        scheduled_time = folder.next_network_scan_at()
+        if scheduled_time is not None and scheduled_time < time.time():
+            if folder_to_scan is None:
+                folder_to_scan = folder
+            elif folder_to_scan.next_network_scan_at() > folder.next_network_scan_at():
+                folder_to_scan = folder
+    return folder_to_scan
+
+
+def _add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHosts) -> None:
+    network_scan_properties = folder.attribute("network_scan")
+
+    translation = network_scan_properties.get("translate_names", {})
+
+    entries = []
+    for host_name, ipaddr in found:
+        host_name = translate_hostname(translation, host_name)
+
+        attrs = update_metadata({}, created_by=_("Network scan"))
+
+        if "tag_criticality" in network_scan_properties:
+            attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
+
+        if network_scan_properties.get("set_ipaddress", True):
+            attrs["ipaddress"] = ipaddr
+
+        if not Host.host_exists(host_name):
+            entries.append((host_name, attrs, None))
+
+    with store.lock_checkmk_configuration():
+        folder.create_hosts(entries)
+        folder.save()
+
+
+def _save_network_scan_result(folder: 'CREFolder', result: NetworkScanResult) -> None:
+    # Reload the folder, lock WATO before to protect against concurrency problems.
+    with store.lock_checkmk_configuration():
+        # A user might have changed the folder somehow since starting the scan. Load the
+        # folder again to get the current state.
+        write_folder = Folder.folder(folder.path())
+        write_folder.set_attribute("network_scan_result", result)
+        write_folder.save()
 
 
 @automation_command_registry.register
@@ -43,13 +173,13 @@ class AutomationNetworkScan(AutomationCommand):
 
     def execute(self, request):
         folder = Folder.folder(request.folder_path)
-        return do_network_scan(folder)
+        return _do_network_scan(folder)
 
 
 # This is executed in the site the host is assigned to.
 # A list of tuples is returned where each tuple represents a new found host:
 # [(hostname, ipaddress), ...]
-def do_network_scan(folder):
+def _do_network_scan(folder):
     ip_addresses = _ip_addresses_to_scan(folder)
     return _scan_ip_addresses(folder, ip_addresses)
 

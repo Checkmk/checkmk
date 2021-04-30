@@ -9,22 +9,18 @@ from testlib import ActiveCheck  # type: ignore[import]
 
 
 @pytest.mark.parametrize('params, result', [
-    (("DESCR", {}), ['-H', 'DESCR', '-s', '$HOSTADDRESS$']),
+    (("DESCR", {}), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-L']),
     (("DESCR", {
-        "expected_address": "1.2.3.4,5.6.7.8",
-    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4,5.6.7.8']),
+        "expected_addresses_list": ["1.2.3.4", "5.6.7.8"],
+    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-L', '-a', '1.2.3.4', '-a', '5.6.7.8']),
     (("DESCR", {
-        "expected_address": "5.6.7.8,1.2.3.4",
-    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4,5.6.7.8']),
+        "expect_all_addresses": True,
+        "expected_addresses_list": ["5.6.7.8", "1.2.3.4"],
+    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-L', '-a', '5.6.7.8', '-a', '1.2.3.4']),
     (("DESCR", {
-        "expected_address": ["1.2.3.4,5.6.7.8"],
-    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4,5.6.7.8']),
-    (("DESCR", {
-        "expected_address": ["5.6.7.8,1.2.3.4"],
-    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4,5.6.7.8']),
-    (("DESCR", {
-        "expected_address": ["1.2.3.4", "5.6.7.8,4.3.2.1"],
-    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4', '-a', '4.3.2.1,5.6.7.8']),
+        "expect_all_addresses": False,
+        "expected_addresses_list": ["1.2.3.4", "5.6.7.8"],
+    }), ['-H', 'DESCR', '-s', '$HOSTADDRESS$', '-a', '1.2.3.4', '-a', '5.6.7.8']),
 ])
 def test_ac_check_dns_expected_addresses(params, result):
     active_check = ActiveCheck("check_dns")

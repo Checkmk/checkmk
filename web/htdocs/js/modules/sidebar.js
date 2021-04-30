@@ -962,18 +962,17 @@ function show_speed(percentage) {
     if (!context) return;
 
     if (percentage > 100.0) percentage = 100.0;
-
-    const orig_x = 124;
-    const orig_y = 181;
-    const angle_0 = 226.0;
+    const orig_x = 115;
+    const orig_y = 165;
+    const angle_0 = 225.0;
     const angle_100 = 314.0;
     const angle = angle_0 + ((angle_100 - angle_0) * percentage) / 100.0;
     const angle_rad = (angle / 360.0) * Math.PI * 2;
-    const length = 120;
+    const length = 115;
     const end_x = orig_x + Math.cos(angle_rad) * length;
     const end_y = orig_y + Math.sin(angle_rad) * length;
 
-    context.clearRect(0, 0, 228, 146);
+    context.clearRect(0, 0, 240, 146);
     context.beginPath();
     context.moveTo(orig_x, orig_y);
     context.lineTo(end_x, end_y);

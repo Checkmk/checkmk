@@ -6,7 +6,36 @@
 
 import time
 
-from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter
+import pytest  # type: ignore[import]
+
+from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter, DiscoveryMode
+
+
+class TestDiscoveryMode:
+    @staticmethod
+    def test_modes_wato():
+        # these are special, in the sense that they might be contained in
+        # users configs, so they must be created from 0-3.
+        assert DiscoveryMode(0) is DiscoveryMode.NEW
+        assert DiscoveryMode(1) is DiscoveryMode.REMOVE
+        assert DiscoveryMode(2) is DiscoveryMode.FIXALL
+        assert DiscoveryMode(3) is DiscoveryMode.REFRESH
+
+    @staticmethod
+    def test_modes_invalid():
+        invalid = len(DiscoveryMode)
+        assert DiscoveryMode(invalid) is DiscoveryMode.FALLBACK
+        with pytest.raises(KeyError):
+            _ = DiscoveryMode.from_str("UNKNOWN")
+
+    @staticmethod
+    def test_modes_automation():
+        # these strings are used by (remote) automation calls, and must not be changed!
+        assert DiscoveryMode.from_str("new") is DiscoveryMode.NEW
+        assert DiscoveryMode.from_str("remove") is DiscoveryMode.REMOVE
+        assert DiscoveryMode.from_str("fixall") is DiscoveryMode.FIXALL
+        assert DiscoveryMode.from_str("refresh") is DiscoveryMode.REFRESH
+        assert DiscoveryMode.from_str("only-host-labels") == DiscoveryMode.ONLY_HOST_LABELS
 
 
 def test_time_limit_filter_iterates():

@@ -431,7 +431,7 @@ class Section:
         self._piggytargets = list(piggytargets)
         self._cont = []
         section_options = ':'.join(['sep(%d)' % separator] + options)
-        self._title = '<<<%s:%s>>>\n' % (self._cleanse_section_header(name), section_options)
+        self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -450,14 +450,11 @@ class Section:
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % self._cleanse_section_header(piggytarget))
+                sys.stdout.write(f'<<<<{piggytarget}>>>>\n')
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')
             sys.stdout.flush()
-
-    def _cleanse_section_header(self, section_name):
-        return section_name.replace('-', '_')
 
 
 class AzureSection(Section):

@@ -67,7 +67,7 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 echo '<<<uptime>>>'
 echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
 
-echo "<<<mem>>>"
+echo "<<<openbsd_mem>>>"
 MEM_FREE=$(vmstat | tail -n1 | awk '{ print $5 }')
 MEM_TOTAL=$(sysctl hw.usermem | cut -d= -f2)
 MEM_TOTAL=$(echo $MEM_TOTAL/1024 | bc)

@@ -25,11 +25,12 @@ class ProgramFetcher(AgentFetcher):
         self,
         file_cache: DefaultAgentFileCache,
         *,
+        cluster: bool,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.program"))
+        super().__init__(file_cache, cluster, logging.getLogger("cmk.helper.program"))
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
@@ -45,6 +46,7 @@ class ProgramFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
+            "cluster": self.cluster,
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": self.is_cmc,
@@ -120,12 +122,6 @@ class ProgramFetcher(AgentFetcher):
         self._process.stdout.close()
         self._process.stderr.close()
         self._process = None
-
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:

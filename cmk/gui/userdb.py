@@ -350,8 +350,10 @@ def on_end_of_request(user_id: UserId) -> None:
 
     assert user_id == session.user_id
     session_infos = _load_session_infos(user_id, lock=True)
-    _refresh_session(user_id, session.session_info)
-    session_infos[session.session_info.session_id] = session.session_info
+    if session_infos:
+        _refresh_session(user_id, session.session_info)
+        session_infos[session.session_info.session_id] = session.session_info
+
     _save_session_infos(user_id, session_infos)
 
 
@@ -524,6 +526,14 @@ def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
     }
 
 
+def _convert_start_url(value: str) -> str:
+    # TODO in Version 2.0.0 and 2.0.0p1 the value was written without repr(),
+    # remove the if condition one day
+    if value.startswith("'") and value.endswith("'"):
+        return ast.literal_eval(value)
+    return value
+
+
 #.
 #   .-Users----------------------------------------------------------------.
 #   |                       _   _                                          |
@@ -610,13 +620,19 @@ def declare_user_attribute(name: str,
             )
 
 
-def load_users(lock: bool = False) -> Users:
-    filename = _root_dir() + "contacts.mk"
+def load_contacts() -> Dict[str, Any]:
+    return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
 
+
+def _contacts_filepath() -> str:
+    return _root_dir() + "contacts.mk"
+
+
+def load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        store.aquire_lock(filename)
+        store.aquire_lock(_contacts_filepath())
 
     if 'users' in g:
         return g.users
@@ -624,10 +640,9 @@ def load_users(lock: bool = False) -> Users:
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
-    contacts = store.load_from_mk_file(filename, "contacts", {})
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
-    filename = _multisite_dir() + "users.mk"
     users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
@@ -672,8 +687,7 @@ def load_users(lock: bool = False) -> Users:
             return []
 
     # FIXME TODO: Consolidate with htpasswd user connector
-    filename = cmk.utils.paths.htpasswd_file
-    for line in readlines(filename):
+    for line in readlines(cmk.utils.paths.htpasswd_file):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]
@@ -725,7 +739,7 @@ def load_users(lock: bool = False) -> Users:
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
-                    ('start_url', lambda x: None if x == "None" else x),
+                    ('start_url', _convert_start_url),
                     ('ui_theme', lambda x: x),
                     ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
@@ -876,7 +890,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
             remove_custom_attr(user_id, "idle_timeout")
 
         if user.get("start_url") is not None:
-            save_custom_attr(user_id, "start_url", user["start_url"])
+            save_custom_attr(user_id, "start_url", repr(user["start_url"]))
         else:
             remove_custom_attr(user_id, "start_url")
 

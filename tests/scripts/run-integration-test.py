@@ -21,6 +21,7 @@ import pipes
 import subprocess
 import logging
 import shutil
+from contextlib import suppress
 from pathlib import Path
 
 # Make the testlib available
@@ -50,11 +51,21 @@ def main(args):
                           update_from_git=version == "git",
                           install_test_python_modules=True)
 
+    site = sf.get_existing_site("test")
+
     if os.environ.get("REUSE"):
-        logger.info("Reuse existing site")
-        site = sf.get_existing_site("test")
-        site.start()
+        logger.info("Reuse previously existing site in case it exists (REUSE=1)")
+        if not site.exists():
+            logger.info("Creating new site")
+            site = sf.get_site("test")
+        else:
+            logger.info("Reuse existing site")
+            site.start()
     else:
+        if site.exists():
+            logger.info("Remove previously existing site (REUSE=0)")
+            site.rm()
+
         logger.info("Creating new site")
         site = sf.get_site("test")
 
@@ -71,8 +82,12 @@ def main(args):
             if os.path.exists("/results"):
                 shutil.rmtree("/results")
                 os.mkdir("/results")
-            shutil.copy(site.path("junit.xml"), "/results")
-            shutil.copytree(site.path("var/log"), "/results/logs")
+
+            with suppress(FileNotFoundError):
+                shutil.copy(site.path("junit.xml"), "/results")
+
+            with suppress(FileNotFoundError):
+                shutil.copytree(site.path("var/log"), "/results/logs")
 
 
 def _is_dockerized():
@@ -99,6 +114,8 @@ def _execute_as_site_user(site, args):
         site.path("local/bin/pytest"),
         "-p",
         "no:cov",
+        "--log-cli-level=DEBUG",
+        "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
         "--junitxml",
         site.path("junit.xml"),
         "-T",

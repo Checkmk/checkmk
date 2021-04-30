@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
+from cmk.gui.valuespec import (Integer, TextAscii, Tuple, Dictionary)
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -24,10 +20,14 @@ def _item_spec_ups_out_load():
 
 
 def _parameter_valuespec_ups_out_load():
-    return Tuple(elements=[
-        Integer(title=_("warning at"), unit=u"%", default_value=85),
-        Integer(title=_("critical at"), unit=u"%", default_value=90),
-    ],)
+    return Dictionary(
+        elements=[("levels",
+                   Tuple(elements=[
+                       Integer(title=_("warning at"), unit=u"%", default_value=85),
+                       Integer(title=_("critical at"), unit=u"%", default_value=90),
+                   ],))],
+        optional_keys=False,
+    )
 
 
 rulespec_registry.register(

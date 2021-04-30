@@ -13,7 +13,6 @@ from cmk.special_agents import agent_vsphere
 DEFAULT_AGRS = {
     "debug": False,
     "direct": False,
-    "agent": False,
     "timeout": 60,
     "port": 443,
     "hostname": None,
@@ -41,12 +40,6 @@ DEFAULT_AGRS = {
     }),
     (['-D'], {
         "direct": True
-    }),
-    (['--agent'], {
-        "agent": True
-    }),
-    (['-a'], {
-        "agent": True
     }),
     (['--timeout', '23'], {
         "timeout": 23

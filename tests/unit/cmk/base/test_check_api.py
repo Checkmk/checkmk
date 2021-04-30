@@ -294,13 +294,13 @@ def test_get_effective_service_level(monkeypatch):
                 parameters={},
             )):
 
-        with plugin_contexts.current_host("testhost1", write_state=False):
+        with plugin_contexts.current_host("testhost1"):
             assert check_api.get_effective_service_level() == 33
 
-        with plugin_contexts.current_host("testhost2", write_state=False):
+        with plugin_contexts.current_host("testhost2"):
             assert check_api.get_effective_service_level() == 10
 
-        with plugin_contexts.current_host("testhost3", write_state=False):
+        with plugin_contexts.current_host("testhost3"):
             assert check_api.get_effective_service_level() == 0
 
 

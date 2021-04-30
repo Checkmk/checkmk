@@ -13,12 +13,12 @@ from .utils.fortinet import DETECT_FORTIMAIL
 Section = Mapping[str, float]
 
 
-def parse_fortimail_cpu_load(string_table: StringTable) -> Section:
+def parse_fortimail_cpu_load(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortimail_cpu_load([["5"]])
     {'cpu_load': 5.0}
     """
-    return {"cpu_load": float(string_table[0][0])}
+    return {"cpu_load": float(string_table[0][0])} if string_table else None
 
 
 def discovery_fortimail_cpu_load(section: Section) -> DiscoveryResult:

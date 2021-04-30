@@ -21,8 +21,7 @@ properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
-    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise, free or managed' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
     string(name: 'DOCKER_TAG_BUILD', defaultValue: '', description: 'DOCKER_TAG_BUILD: Custom Docker Tag to use for this build. Leave empty for default' ),
     booleanParam(name: 'FAKE_WINDOWS_ARTIFACTS', defaultValue: false, description: 'Use faked windows agent artifacts instead of building them'),
@@ -48,8 +47,6 @@ def DOCKER_BUILDS = [:]
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def BRANCH_VERSION
-def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
-def RELEASE_KEY_PATH = '/bauwelt/git/release/release.key'
 def UPLOAD_URL = 'deploy@archive.tribe29.com'
 def UPLOAD_DEST = "${UPLOAD_URL}:/var/downloads/checkmk/"
 
@@ -96,7 +93,7 @@ node(NODE) {
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                     }
 
-                    versioning.patch_git_after_checkout(EDITION, DEMO, CMK_VERS)
+                    versioning.patch_git_after_checkout(EDITION, CMK_VERS)
                     BRANCH_VERSION = versioning.get_branch_version()
 
                     DOCKER_REGISTRY_NO_HTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
@@ -147,7 +144,7 @@ node(NODE) {
         notify.notify_error(e)
     }
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
+        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(WORKSPACE, CMK_VERS)
 
@@ -165,7 +162,6 @@ node(NODE) {
                 NAME: "source",
                 FILE_PATH: FINAL_SOURCE_PACKAGE_PATH,
                 FILE_NAME: SOURCE_PACKAGE_NAME,
-                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
                 CMK_VERS: CMK_VERS,
                 UPLOAD_DEST: UPLOAD_DEST,
                 SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
@@ -198,8 +194,8 @@ node(NODE) {
                             }
                         }
 
-                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro -v ${GPG_KEY_DIR}:${GPG_KEY_DIR}:ro") {
-                            def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO)
+                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                            def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                             def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
 
@@ -213,7 +209,6 @@ node(NODE) {
                                 NAME: DISTRO,
                                 FILE_PATH: FINAL_PACKAGE_PATH,
                                 FILE_NAME: PACKAGE_NAME,
-                                RELEASE_KEY_PATH: RELEASE_KEY_PATH,
                                 CMK_VERS: CMK_VERS,
                                 UPLOAD_DEST: UPLOAD_DEST,
                                 SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
@@ -228,14 +223,14 @@ node(NODE) {
         notify.notify_error(e)
     }finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS)
+            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                upload_artifacts.create_and_upload_hashes(ARCHIVE_DIR, scm, shall_publish_package(scm, JOB_BASE_NAME), UPLOAD_DEST, CMK_VERS)
             }
         }
         if (shall_publish_package(scm, JOB_BASE_NAME)) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -v ${RELEASE_KEY_PATH}:${RELEASE_KEY_PATH}:ro") {
-                    deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH)
+                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                    upload_artifacts.deploy_to_website(UPLOAD_URL, CMK_VERS)
                 }
             }
         } else {
@@ -338,7 +333,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent"
                 sh "touch ${WORKSPACE}/agents/cmk-update-agent-32"
             }
-            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip,python-3.4.zip}"
+            sh "touch ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.cab,python-3.4.cab}"
         }
 
         dir("git") {
@@ -346,7 +341,7 @@ def create_source_package(WORKSPACE, CMK_VERS) {
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${WORKSPACE}/agents/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.zip,python-3.4.zip} agents/windows"
+            sh "cp ${WORKSPACE}/agents/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,python-3.8.cab,python-3.4.cab} agents/windows"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }
@@ -402,10 +397,10 @@ def build_package(DISTRO, OMD_ENV_VARS) {
     }
 }
 
-def get_package_name(WORKSPACE, DISTRO, CMK_VERS, DEMO) {
+def get_package_name(WORKSPACE, DISTRO, CMK_VERS) {
     def BASE_DIR = WORKSPACE + "/git"
     def PACKAGE_NAME = sh(script: """
-        PATTERN_ROOT=check-mk-$EDITION-${CMK_VERS}${DEMO=="yes" ? ".demo" : ""}
+        PATTERN_ROOT=check-mk-$EDITION-${CMK_VERS}
         case ${DISTRO} in
             centos*|rh*|sles*|opensuse*)
                 RESULT_FILE_PATTERN=\${PATTERN_ROOT}-*.rpm
@@ -436,6 +431,10 @@ def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {
 
 def sign_package(PACKAGE_PATH, DISTRO, WORKSPACE) {
     stage(DISTRO + ' sign package') {
+        withCredentials([file(credentialsId: 'Check_MK_Release_Key', variable: 'GPG_KEY')]) {
+            // --batch is needed to awoid ioctl error
+            sh "gpg --batch --import ${GPG_KEY}"
+        }
         withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
             sh "${WORKSPACE}/git/buildscripts/scripts/sign-packages.sh ${PACKAGE_PATH}"
         }
@@ -464,27 +463,3 @@ def clean_venv() {
     sh('rm -rf git/.venv')
 }
 
-def create_and_upload_hashes(ARCHIVE_DIR, scm, JOB_BASE_NAME, RELEASE_KEY_PATH, UPLOAD_DEST, CMK_VERS) {
-    stage("Create and upload file hashes") {
-        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
-        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
-        upload_artifacts.upload(
-            NAME: "hashes",
-            FILE_PATH: HASHES_PATH,
-            FILE_NAME: "HASHES",
-            RELEASE_KEY_PATH: RELEASE_KEY_PATH,
-            CMK_VERS: CMK_VERS,
-            UPLOAD_DEST: UPLOAD_DEST,
-            SHALL_PUBLISH: shall_publish_package(scm, JOB_BASE_NAME),
-        )
-    }
-}
-
-def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
-    stage("Deploy to Website") {
-        sh """
-            ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
-                ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
-        """
-    }
-}

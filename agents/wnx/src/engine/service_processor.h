@@ -107,7 +107,7 @@ public:
     std::future<bool> kick(
         std::launch mode,             // type of execution
         const std::string& cmd_line,  // command line, first is Ip address
-        const AnswerId Tp,            // expected id
+        AnswerId Tp,                  // expected id
         ServiceProcessor* processor   // hosting object
     ) {
         engine_.registerOwner(processor);
@@ -144,7 +144,7 @@ public:
     // to obtain maximally correct results
     bool directCall(
         const std::string& cmd_line,  // command line, first is Ip address
-        const AnswerId timestamp,     // expected id
+        AnswerId timestamp,           // expected id
         const std::string& port_name  // port to report results
     ) {
         engine_.loadConfig();
@@ -194,7 +194,7 @@ public:
     ServiceProcessor(std::chrono::milliseconds Delay, thread_callback Callback)
         : delay_(Delay), callback_(Callback), external_port_(this) {}
     ServiceProcessor() : external_port_(this) {
-        using namespace std::chrono;
+        using namespace std::chrono_literals;
         delay_ = 1000ms;
     }
     ~ServiceProcessor() { ohm_process_.stop(); }
@@ -206,23 +206,19 @@ public:
     ServiceProcessor& operator=(ServiceProcessor&& Rhs) = delete;
 
     // Standard Windows API to Service
-    // our callbacks withing processor:
     void stopService();
-
-    // Called only from the service
-    void cleanupOnStop() override;
-
-    // true will generate one call without external port usage
     void startService();
-    void startServiceAsLegacyTest();
     void pauseService();
     void shutdownService();
     void continueService();
 
-    // we are good engineers
-    const wchar_t* getMainLogName() const { return cma::srv::kMainLogName; }
+    // \brief - serves test in command line
+    void startServiceAsLegacyTest();
 
-    // internal port means internal transport
+    void cleanupOnStop() override;
+
+    const wchar_t* getMainLogName() const { return kMainLogName; }
+
     const std::string getInternalPort() const noexcept {
         return internal_port_;
     }
@@ -403,8 +399,7 @@ private:
         return true;
     }
 
-    void kickWinPerf(const AnswerId answer_id, const std::string& ip_addr);
-    void kickPlugins(const AnswerId Tp, const std::string& Ip);
+    void kickWinPerf(AnswerId answer_id, const std::string& ip_addr);
 
     template <typename T>
     std::string generate() {
@@ -415,10 +410,12 @@ private:
         return section.generateContent();
     }
 
-    // Answer must be build in specific order:
-    // <pre sections[s]> - usually Check_MK
-    // body from answer
-    // <post sections[s]>- usually system time
+    /// \brief wraps resulting data with CheckMk and SystemTime sections
+    ///
+    /// Answer must be build in specific order:
+    /// pre sections[s] - usually Check_MK
+    /// body from answer
+    /// post sections[s]- usually SystemTime
     AnswerDataBlock wrapResultWithStaticSections(const AnswerDataBlock& block) {
         // pre sections generation
         auto pre = generate<provider::CheckMk>();
@@ -465,17 +462,16 @@ private:
                   answer_.getStopWatch().getUsCount() / 1000);
     }
 
-    // We wait here for all answers from all providers, internal and
-    // external. The call is *blocking* #TODO break waiting
-    cma::srv::AsyncAnswer::DataBlock getAnswer(int Count) {
+    /// \brief wait for all answers from all providers
+    /// The call is *blocking*
+    AsyncAnswer::DataBlock getAnswer(int count) {
         using namespace std::chrono;
         XLOG::t.i("waiting futures(only start)");
-        int count = Count;
 
         int future_count = 0;
-        auto p = steady_clock::now();
+        auto start_point = steady_clock::now();
 
-        // here we are starting futures, i.e. just fire all
+        // NOTE: here we are starting futures, i.e. just fire all
         // futures in C++ kind of black magic, do not care too much
         for_each(vf_.begin(), vf_.end(),  // scan future array
                  [&future_count](std::future<bool>& x) {
@@ -484,29 +480,25 @@ private:
                      ++future_count;
                  });
 
-        auto p1 = steady_clock::now();
+        auto end_point = steady_clock::now();
         XLOG::t.i("futures ready in {} milliseconds",
-                  (int)duration_cast<milliseconds>(p1 - p).count());
+                  duration_cast<milliseconds>(end_point - start_point).count());
 
         // set count of started to await for answer
         // count is from startProviders
         answer_.exeKickedCount(count);
-
-        // now wait for answers
         auto success = answer_.waitAnswer(seconds(max_wait_time_));
         logAnswerProcessing(success);
-
         auto result = std::move(answer_.getDataAndClear());
         return wrapResultWithStaticSections(result);
     }
 
-    // over simplified section provider
     class SectionProviderText {
     public:
-        SectionProviderText(const std::string Name, const std::string Text)
+        SectionProviderText(const std::string& Name, const std::string& Text)
             : name_(Name), text_(Text) {}
 
-        std::future<bool> kick(const AnswerId Tp, ServiceProcessor* Proc) {
+        std::future<bool> kick(AnswerId Tp, ServiceProcessor* Proc) {
             return std::async(
                 std::launch::async,
                 [this](const AnswerId Tp, ServiceProcessor* Proc) {
@@ -653,11 +645,6 @@ private:
         return kickExe(async, exe_name, answer_id, service_processor,
                        segment_name, timeout, command_line, {});
     }
-#if 0
-    SectionProviderText txt_provider_{"Text", "<<<IAMSECTIONTOO>>>"};
-    SectionProviderFile file_provider_{
-        "File", L"test_files\\sections\\test_output.txt"};
-#endif
 
     // Dynamic Internal sections
     SectionProvider<provider::UptimeAsync> uptime_provider_;

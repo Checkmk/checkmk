@@ -515,29 +515,29 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
-        mc, false, DowntimeColumn::info::none));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        DowntimeColumn::verbosity::none, mc));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, mc, false, DowntimeColumn::info::medium));
-    table->addColumn(std::make_unique<DowntimeColumn>(
+        offsets, DowntimeColumn::verbosity::medium, mc));
+    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, mc, false, DowntimeColumn::info::full));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, DowntimeColumn::verbosity::full, mc));
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, mc, false, false, false));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::none, mc));
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, mc, false, true, false));
-    table->addColumn(std::make_unique<CommentColumn>(
+        offsets, CommentColumn::verbosity::info, mc));
+    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, mc, false, true, true));
+        offsets, CommentColumn::verbosity::extra_info, mc));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
@@ -601,11 +601,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }), mc,
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
         false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
         false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<RRDColumn<host>>>(
         prefix + "rrddata",
@@ -825,8 +825,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core()->serviceAuthorization(), ctc,
-                             rowData<host>(row), nullptr);
+    return is_authorized_for_hst(ctc, rowData<host>(row));
 }
 
 Row TableHosts::get(const std::string &primary_key) const {

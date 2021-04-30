@@ -40,6 +40,26 @@ def check_k8s_replicas(_no_item, _params, parsed):
     ready, total = parsed['ready_replicas'], parsed['replicas']
     paused, strategy = parsed['paused'], parsed['strategy_type']
 
+    if total is None or ready is None:
+        first_unavailable_time = get_item_state("unavailable")
+        if first_unavailable_time:
+            age = time.time() - first_unavailable_time
+            if age > 600:  # setting 10 minutes as default threshold for missing replica data
+                yield check_levels(
+                    age,
+                    None,
+                    (None, 600),
+                    human_readable_func=get_age_human_readable,
+                    infoname="The replicas data has been missing",
+                )
+                return
+        set_item_state("unavailable", time.time())
+        raise MKCounterWrapped("The replicas data is currently unavailable")
+
+    # previously missing but now complete data
+    if get_item_state("unavailable"):
+        set_item_state("unavailable", None)
+
     if paused or strategy == 'Recreate':
         crit, crit_lower = None, None
     elif strategy == 'RollingUpdate':

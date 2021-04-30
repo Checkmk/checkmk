@@ -342,6 +342,18 @@ metric_info["cmk_services_critical"] = {
     "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
+metric_info["age_oldest"] = {
+    "title": _("Oldest age"),
+    "unit": "s",
+    "color": "35/a",
+}
+
+metric_info["age_youngest"] = {
+    "title": _("Youngest age"),
+    "unit": "s",
+    "color": "21/a",
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -551,6 +563,7 @@ graph_info["cmk_hosts_not_up"] = {
             "stack",
         ),
     ],
+    "omit_zero_metrics": True,
 }
 
 graph_info["cmk_services_total"] = {
@@ -592,4 +605,5 @@ graph_info["cmk_services_not_ok"] = {
             "stack",
         ),
     ],
+    "omit_zero_metrics": True,
 }

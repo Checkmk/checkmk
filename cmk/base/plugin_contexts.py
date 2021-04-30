@@ -11,9 +11,7 @@
 from contextlib import contextmanager
 from typing import Optional
 
-from cmk.base.api.agent_based import value_store
 from cmk.base.check_utils import Service
-import cmk.base.item_state as item_state
 
 # Is set before check/discovery function execution
 # Host currently being checked
@@ -24,7 +22,7 @@ _service_description: Optional[str] = None
 
 
 @contextmanager
-def current_host(host_name_: str, *, write_state: bool):
+def current_host(host_name_: str):
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -34,15 +32,10 @@ def current_host(host_name_: str, *, write_state: bool):
     # we do not encourage nested contexts at all -- but it should work.
     previous_host_name = _hostname
     _hostname = host_name_
-    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
     try:
-        item_state.load(host_name_)
         yield
     finally:
         _hostname = previous_host_name
-        if write_state:
-            item_state.save(host_name_)
-        item_state.cleanup_item_states()
 
 
 @contextmanager
@@ -53,7 +46,6 @@ def current_service(service: Service):
     set_service is needed for predictive levels!
     This is used for both legacy and agent_based API.
     """
-    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
     global _check_type, _service_description
     previous_check_type = _check_type
     previous_service_description = _service_description
@@ -61,8 +53,7 @@ def current_service(service: Service):
     try:
         _check_type = str(service.check_plugin_name)
         _service_description = service.description
-        with value_store.context(service.check_plugin_name, service.item):
-            yield
+        yield
     finally:
         _check_type = previous_check_type
         _service_description = previous_service_description

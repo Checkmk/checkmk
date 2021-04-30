@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple
+from typing import Mapping, NamedTuple, Optional
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .agent_based_api.v1 import (
     exists,
@@ -24,8 +24,8 @@ class Section(NamedTuple):
     serial: str
 
 
-def parse_quantum_storage_info(string_table: StringTable) -> Section:
-    return Section(*string_table[0])
+def parse_quantum_storage_info(string_table: StringTable) -> Optional[Section]:
+    return Section(*string_table[0]) if string_table else None
 
 
 register.snmp_section(

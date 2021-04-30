@@ -26,7 +26,9 @@ SHELL_FILES := \
 	agents/check_mk_agent.linux \
 	agents/check_mk_caching_agent.linux
 
-PYTHON_VERSIONS := 2.6 2.7 3.3 3.4 3.5 3.6 3.7 3.8
+# Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
+# until we have a feasible solution or we drop the support for 2.6 completly.
+PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
  # Optionally forward the job result to a result file when executed via CI
 REDIRECT =
@@ -182,7 +184,7 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-format-js:
-	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/js/**/*.js"
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js

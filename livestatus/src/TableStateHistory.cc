@@ -30,6 +30,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep
@@ -43,19 +44,18 @@
 #define STATE_CRITICAL 2
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
+#include "cmc.h"
 #else
 #include <unordered_map>
 
-#include "auth.h"
 #include "nagios.h"
 #endif
 
 namespace {
 constexpr unsigned classmask_statehist =
-    (1U << static_cast<int>(LogEntry::Class::alert)) |    //
-    (1U << static_cast<int>(LogEntry::Class::program)) |  //
-    (1U << static_cast<int>(LogEntry::Class::state)) |    //
-    (1U << static_cast<int>(LogEntry::Class::text));
+    (1U << static_cast<int>(LogEntry::Class::alert)) |
+    (1U << static_cast<int>(LogEntry::Class::program)) |
+    (1U << static_cast<int>(LogEntry::Class::state));
 }  // namespace
 
 #ifndef CMC
@@ -892,10 +892,12 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
 
 bool TableStateHistory::isAuthorized(Row row, const contact *ctc) const {
     const auto *entry = rowData<HostServiceState>(row);
-    service *svc = entry->_service;
-    host *hst = entry->_host;
-    return (hst != nullptr || svc != nullptr) &&
-           is_authorized_for(core()->serviceAuthorization(), ctc, hst, svc);
+    return entry->_host == nullptr  // TODO(sp): Can this ever happen???
+               ? ctc == no_auth_user()
+               : entry->_service == nullptr
+                     ? is_authorized_for_hst(ctc, entry->_host)
+                     : is_authorized_for_svc(core()->serviceAuthorization(),
+                                             ctc, entry->_service);
 }
 
 std::shared_ptr<Column> TableStateHistory::column(std::string colname) const {

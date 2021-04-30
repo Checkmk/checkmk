@@ -76,6 +76,7 @@ td.hstate span {
 .bibox_box.state0,
 span.content.state0,
 b.state0,
+td.count.state0,
 .state0 span,
 .hstate0 span {
   &,
@@ -93,6 +94,7 @@ b.state0,
 .bibox_box.state1,
 span.content.state1,
 b.state1,
+td.count.state1,
 .state1 span {
   &,
   a {
@@ -105,6 +107,7 @@ b.state1,
 .bibox_box.state2,
 span.content.state2,
 b.state2,
+td.count.state2,
 .state2 span,
 .hstate1 span {
   &,
@@ -118,6 +121,7 @@ b.state2,
 .bibox_box.state3,
 span.content.state3,
 b.state3,
+td.count.state3,
 .state3 span,
 .hstate2 span {
   &,
@@ -422,13 +426,15 @@ img.tabicon {
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
-/* TODO: Reproduce this html element */
 table.data div.objectlist div {
   float: left;
-  padding: 2px 6px;
-  margin: 2px;
-  border: none;
-  border-radius: $theme-border-radius;
+  margin: 2px $spacing-half 3px 0;
+
+  span {
+    display: inline-block;
+    padding: 2px $spacing-half;
+    border-radius: $theme-border-radius;
+  }
 }
 
 /*

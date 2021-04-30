@@ -4,20 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
+from typing import Optional, Sequence
 import sys
 import requests
-import urllib3  # type: ignore[import]
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.agent_common import special_agent_main
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
-
-    args = parse_arguments(argv)
-
+def agent_elasticsearch_main(args: Args) -> None:
     sys.stdout.write('<<<check_mk>>>\n')
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
@@ -59,10 +53,9 @@ def main(argv=None):
                 raise
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = create_default_argument_parser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
     parser.add_argument("-s", "--password", default=None, help="Password for easticsearch login")
@@ -84,10 +77,6 @@ def parse_arguments(argv):
         help=
         "Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)"
     )
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help="Debug mode: let Python exceptions come through")
-
     parser.add_argument(
         "hosts",
         metavar="HOSTNAME",
@@ -160,3 +149,8 @@ def handle_stats(response):
             sys.stdout.write("%s %s %s\n" %
                              (indice, sum(all_counts) / len(all_counts),
                               sum(all_sizes) / len(all_sizes)))  # fixed: true-division
+
+
+def main():
+    """Main entry point to be used """
+    special_agent_main(parse_arguments, agent_elasticsearch_main)

@@ -6,6 +6,8 @@
 
 import copy
 
+from typing import Any, Mapping
+
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -471,6 +473,27 @@ rulespec_registry.register(
     ))
 
 
+def _transform_check_dns_settings(params: Mapping[str, Any]) -> Mapping[str, Any]:
+    """
+        >>> _transform_check_dns_settings({'expected_address': '1.2.3.4,C0FE::FE11'})
+        {'expect_all_addresses': True, 'expected_addresses_list': ['1.2.3.4', 'C0FE::FE11']}
+        >>> _transform_check_dns_settings({'expected_address': ['A,B', 'C']})
+        {'expect_all_addresses': True, 'expected_addresses_list': ['A', 'B', 'C']}
+
+    """
+    legacy_addresses = params.get("expected_address")
+    if legacy_addresses is None:
+        return params
+
+    return {
+        "expect_all_addresses": True,
+        "expected_addresses_list":
+            (legacy_addresses.split(',') if isinstance(legacy_addresses, str) else sum(
+                (entry.split(',') for entry in legacy_addresses), [])),
+        **{k: v for k, v in params.items() if k != "expected_address"},
+    }
+
+
 def _valuespec_active_checks_dns():
     return Tuple(
         title=_("Check DNS service"),
@@ -480,7 +503,7 @@ def _valuespec_active_checks_dns():
             TextAscii(title=_("Queried Hostname or IP address"),
                       allow_empty=False,
                       help=_('The name or IPv4 address you want to query')),
-            Dictionary(
+            Transform(Dictionary(
                 title=_("Optional parameters"),
                 elements=[
                     ("name",
@@ -502,19 +525,21 @@ def _valuespec_active_checks_dns():
                                  allow_empty=False,
                                  help=_("Optional DNS server you want to use for the lookup")),
                          ])),
-                    (
-                        "expected_address",
-                        Transform(
-                            ListOfStrings(
-                                title=_("Expected DNS answers"),
-                                help=_("List all allowed expected answers here. If query for an "
-                                       "IP address then the answer will be host names, that end "
-                                       "with a dot. Multiple IP addresses within one answer must "
-                                       "be separated by comma."),
-                            ),
-                            forth=lambda old: isinstance(old, str) and [old] or old,
-                        ),
-                    ),
+                    ("expect_all_addresses",
+                     DropdownChoice(
+                         title=_("Address matching"),
+                         choices=[
+                             (True, _("Expect all of the addresses")),
+                             (False, _("Expect at least one of the addresses")),
+                         ],
+                     )),
+                    ("expected_addresses_list",
+                     ListOfStrings(
+                         title=_("Expected DNS answers"),
+                         help=_("List all allowed expected answers here. If query for an "
+                                "IP address then the answer will be host names, that end "
+                                "with a dot."),
+                     )),
                     ("expected_authority",
                      FixedValue(
                          value=True,
@@ -534,6 +559,7 @@ def _valuespec_active_checks_dns():
                          default_value=10,
                      )),
                 ]),
+                      forth=_transform_check_dns_settings),
         ])
 
 
@@ -897,7 +923,7 @@ def _active_checks_http_proxyspec():
 def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
-        help=_("Usually Check_MK will nail this check to the primary IP address of the host"
+        help=_("Usually Checkmk will nail this check to the primary IP address of the host"
                " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
                " default port (80/443). With this option you can override either of these"
                " parameters. By default no virtual host is set and HTTP/1.0 will be used."
@@ -1118,6 +1144,7 @@ def _valuespec_active_checks_http():
                                                     RegExp(
                                                         label=_("Regular expression: "),
                                                         mode=RegExp.infix,
+                                                        maxlen=1023,
                                                     ),
                                                     Checkbox(label=_("Case insensitive")),
                                                     Checkbox(label=_(

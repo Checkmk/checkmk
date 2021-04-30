@@ -504,6 +504,27 @@ def _kubernetes_connection_elements():
     ]
 
 
+def _filter_kubernetes_namespace_element():
+    return (
+        "namespace_include_patterns",
+        ListOf(
+            RegExp(
+                mode=RegExp.complete,
+                title=_("Pattern"),
+                allow_empty=False,
+            ),
+            title=_("Monitor namespaces matching"),
+            add_label=_("Add new pattern"),
+            allow_empty=False,
+            help=_("If your cluster has multiple namespaces, you can specify "
+                   "a list of regex patterns. Only matching namespaces will "
+                   "be monitored. Note that this concerns everything which "
+                   "is part of the matching namespaces such as pods for "
+                   "example."),
+        ),
+    )
+
+
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
@@ -587,11 +608,12 @@ def _valuespec_special_agents_kubernetes():
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
+                _filter_kubernetes_namespace_element(),
             ],
-            optional_keys=["port", "url-prefix", "path-prefix"],
+            optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
             title=_("Kubernetes"),
             help=
-            _("This rule selects the Kubenetes special agent for an existing Checkmk host. "
+            _("This rule selects the Kubernetes special agent for an existing Checkmk host. "
               "If you want to monitor multiple Kubernetes clusters "
               "we strongly recommend to set up "
               "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
@@ -635,19 +657,6 @@ def _valuespec_generic_metrics_prometheus():
             ],
         ))
 
-    filter_namespace_element = ("namespace_include_patterns",
-                                ListOf(
-                                    RegExp(mode=RegExp.complete, title=_("Pattern")),
-                                    title=_("Filter namespaces"),
-                                    add_label=_("Add new pattern"),
-                                    allow_empty=False,
-                                    help=_(
-                                        "If your cluster has multiple namespaces, you can specify "
-                                        "a list of regex patterns. Only matching namespaces will "
-                                        "be monitored. Note that this concerns everything which "
-                                        "is part of the matching namespaces such as pods for "
-                                        "example."),
-                                ))
     return Dictionary(
         elements=[
             ("connection",
@@ -749,7 +758,7 @@ def _valuespec_generic_metrics_prometheus():
                                     ),
                                )),
                               namespace_element,
-                              filter_namespace_element,
+                              _filter_kubernetes_namespace_element(),
                               ("entities",
                                ListChoice(
                                    choices=[
@@ -804,7 +813,7 @@ def _valuespec_generic_metrics_prometheus():
                                                        _("Long - Use the full docker container ID")
                                                       ),
                                                       ("name",
-                                                       _("Name - Use the containers' name")),
+                                                       _("Name - Use the name of the container")),
                                                   ],
                                               ))],
                                             optional_keys=[],
@@ -833,14 +842,14 @@ def _valuespec_generic_metrics_prometheus():
                                                        _("Long - Use the full docker container ID")
                                                       ),
                                                       ("name",
-                                                       _("Name - Use the containers' name")),
+                                                       _("Name - Use the name of the container")),
                                                   ],
                                               )), namespace_element],
                                             optional_keys=[],
                                         )),
                                    ],
                                )),
-                              filter_namespace_element,
+                              _filter_kubernetes_namespace_element(),
                               (
                                   "entities",
                                   ListChoice(
@@ -994,11 +1003,14 @@ def _factory_default_special_agents_vsphere():
 def _transform_agent_vsphere(params):
     params.setdefault("skip_placeholder_vms", True)
     params.setdefault("ssl", False)
-    params.setdefault("use_pysphere", False)
+    params.pop("use_pysphere", None)
     params.setdefault("spaces", "underscore")
 
     if "snapshots_on_host" not in params:
         params["snapshots_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
+
+    if isinstance(params["direct"], str):
+        params["direct"] = "hostsystem" in params["direct"]
 
     return params
 
@@ -1007,9 +1019,8 @@ def _valuespec_special_agents_vsphere():
     return Transform(Dictionary(
         title=_("VMWare ESX via vSphere"),
         help=_(
-            "This rule selects the vSphere agent instead of the normal Check_MK Agent and allows "
-            "monitoring of VMWare ESX via the vSphere API. You can configure your connection "
-            "settings here.",),
+            "This rule allows monitoring of VMWare ESX via the vSphere API. "
+            "You can configure your connection settings here.",),
         elements=[
             ("user", TextAscii(
                 title=_("vSphere User name"),
@@ -1024,12 +1035,8 @@ def _valuespec_special_agents_vsphere():
                  title=_("Type of query"),
                  choices=[
                      (True, _("Queried host is a host system")),
-                     ("hostsystem_agent",
-                      _("Queried host is a host system with Checkmk Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Checkmk Agent installed")),
                  ],
-                 default_value=True,
              )),
             ("tcp_port",
              Integer(
@@ -1606,14 +1613,28 @@ def _factory_default_special_agents_innovaphone():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _special_agents_innovaphone_transform(value):
+    if isinstance(value, tuple):
+        return {
+            'auth_basic': {
+                'username': value[0],
+                'password': ('password', value[1]),
+            },
+        }
+    return value
+
+
 def _valuespec_special_agents_innovaphone():
-    return Tuple(
-        title=_("Innovaphone Gateways"),
-        help=_("Please specify the user and password needed to access the xml interface"),
-        elements=[
-            TextAscii(title=_("Username")),
-            Password(title=_("Password")),
-        ],
+    return Transform(
+        Dictionary(
+            title=_("Innovaphone Gateways"),
+            help=_("Please specify the user and password needed to access the xml interface"),
+            elements=connection_set(
+                options=['protocol', 'ssl_verify'],
+                auth_option='basic',
+            ),
+            optional_keys=['protocol', 'no-cert-check']),
+        forth=_special_agents_innovaphone_transform,
     )
 
 
@@ -1877,7 +1898,7 @@ def _valuespec_special_agents_siemens_plc():
                                   'is used to name the resulting services.'))),
                          ('host_address',
                           TextAscii(
-                              title=_('Network Address'),
+                              title=_('Network address'),
                               allow_empty=False,
                               help=
                               _('Specify the hostname or IP address of the PLC to communicate with.'
@@ -3158,6 +3179,7 @@ def _valuespec_special_agents_zerto():
                 allow_empty=False,
             )),
         ],
+        required_keys=['username', 'password'],
         title=_("Zerto"),
         help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
 

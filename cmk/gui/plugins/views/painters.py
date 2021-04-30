@@ -16,6 +16,7 @@ from cmk.utils.render import approx_age
 import cmk.utils.man_pages as man_pages
 from cmk.utils.defines import short_service_state_name, short_host_state_name
 from cmk.utils.type_defs import Timestamp
+import cmk.utils.version as cmk_version
 
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
@@ -76,6 +77,8 @@ from cmk.gui.plugins.views.graphs import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -189,7 +192,7 @@ def _paint_custom_var(what: str,
         custom_val = custom_vars[key]
         if choices:
             custom_val = dict(choices).get(int(custom_val), custom_val)
-        return key, escaping.escape_attribute(custom_val)
+        return key, custom_val
 
     return key, ""
 
@@ -339,7 +342,7 @@ class PainterSiteIcon(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row.get("site") and config.use_siteicons:
-            return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
+            return None, html.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
         return None, ""
 
 
@@ -381,7 +384,7 @@ class PainterSitealias(Painter):
         return ['site']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(config.site(row["site"])["alias"]))
+        return (None, config.site(row["site"])["alias"])
 
 
 #.
@@ -517,9 +520,12 @@ class PainterSvcLongPluginOutput(Painter):
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        return paint_stalified(
-            row,
-            format_plugin_output(long_output, row).replace('\\n', '<br>').replace('\n', '<br>'))
+        content = format_plugin_output(long_output, row)
+
+        # In long output we get newlines which should also be displayed in the GUI
+        content.value = content.value.replace('\\n', '<br>').replace('\n', '<br>')
+
+        return paint_stalified(row, content)
 
 
 @painter_registry.register
@@ -569,8 +575,34 @@ class PainterSvcMetrics(Painter):
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
-        return "", metrics.render_metrics_table(translated_metrics, row["host_name"],
-                                                row["service_description"])
+        with html.plugged():
+            self._show_metrics_table(translated_metrics, row["host_name"],
+                                     row["service_description"])
+            return "", HTML(html.drain())
+
+    def _show_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
+                            service_description: str) -> None:
+        html.open_table(class_="metricstable")
+        for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
+            html.open_tr()
+            html.td(render_color_icon(metric["color"]), class_="color")
+            html.td("%s:" % metric["title"])
+            html.td(metric["unit"]["render"](metric["value"]), class_="value")
+            if not cmk_version.is_raw_edition():
+                html.td(
+                    html.render_popup_trigger(
+                        html.render_icon("menu",
+                                         title=_("Add this metric to dedicated graph"),
+                                         cssclass="iconbutton"),
+                        ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
+                        method=MethodAjax(endpoint="add_metric_to_graph",
+                                          url_vars=[
+                                              ("host", host_name),
+                                              ("service", service_description),
+                                              ("metric", metric_name),
+                                          ])))
+            html.close_tr()
+        html.close_table()
 
 
 # TODO: Use a parameterized painter for this instead of 10 painter classes
@@ -662,7 +694,7 @@ class PainterSvcCheckCommand(Painter):
         return ['service_check_command']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["service_check_command"]))
+        return (None, row["service_check_command"])
 
 
 @painter_registry.register
@@ -682,7 +714,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ['service_check_command_expanded']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["service_check_command_expanded"]))
+        return (None, row["service_check_command_expanded"])
 
 
 @painter_registry.register
@@ -1396,18 +1428,17 @@ class PainterCheckManpage(Painter):
         if page is None:
             return "", _("Man page %s not found.") % checktype
 
-        description = page["header"]["description"]
-        return "", description.replace("<", "&lt;") \
-                              .replace(">", "&gt;") \
-                              .replace("{", "<b>") \
-                              .replace("}", "</b>") \
-                              .replace("&lt;br&gt;", "<br>")
+        description = escaping.escape_attribute(page["header"]["description"]) \
+            .replace("{", "<b>")  \
+            .replace("}", "</b>")  \
+            .replace("&lt;br&gt;", "<br>")
+        return "", HTML(description)
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
-    text = ", ".join(
-        ["<i>%s</i>: %s" % (a, escaping.escape_attribute(c)) for _id, a, c in comments])
+    text = HTML(", ").join(
+        [html.render_i(a) + ": %s" % escaping.escape_attribute(c) for _id, a, c in comments])
     return "", text
 
 
@@ -1600,7 +1631,7 @@ def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) ->
     for varname, value in items:
         if varname not in blacklist:
             rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
-    return '', "%s" % html.render_table(HTML().join(rows))
+    return '', html.render_table(HTML().join(rows))
 
 
 @painter_registry.register
@@ -2319,7 +2350,7 @@ class PainterHostBlack(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["host_state"]
         if state != 0:
-            return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
+            return "nobr", html.render_div(row["host_name"], class_="hostdown")
         return "nobr", row["host_name"]
 
 
@@ -2437,7 +2468,7 @@ class PainterAlias(Painter):
         return ['host_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["host_alias"]))
+        return ("", row["host_alias"])
 
 
 @painter_registry.register
@@ -2815,7 +2846,7 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
         else:
             css = "statep"
 
-        h += html.render_div(html.render_a(text, link), class_=css)
+        h += html.render_div(html.render_span(html.render_a(text, link)), class_=css)
 
     return "", html.render_div(h, class_="objectlist")
 
@@ -2890,6 +2921,10 @@ class PainterHostParents(Painter):
     def columns(self) -> List[ColumnName]:
         return ['host_parents']
 
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_list(row["site"], row["host_parents"])
 
@@ -2909,6 +2944,10 @@ class PainterHostChilds(Painter):
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_childs']
+
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_list(row["site"], row["host_childs"])
@@ -2932,6 +2971,10 @@ class PainterHostGroupMemberlist(Painter):
 
     def group_by(self, row):
         return tuple(row["host_groups"])
+
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         links = []
@@ -3543,7 +3586,7 @@ class PainterHgAlias(Painter):
         return ['hostgroup_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["hostgroup_alias"]))
+        return (None, row["hostgroup_alias"])
 
 
 #    ____                  _
@@ -3731,7 +3774,7 @@ class PainterSgAlias(Painter):
         return ['servicegroup_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["servicegroup_alias"]))
+        return (None, row["servicegroup_alias"])
 
 
 #     ____                                     _
@@ -4209,7 +4252,7 @@ class PainterLogMessage(Painter):
         return ['log_message']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["log_message"]))
+        return ("", row["log_message"])
 
 
 @painter_registry.register
@@ -4234,7 +4277,7 @@ class PainterLogPluginOutput(Painter):
         if output:
             return "", format_plugin_output(output, row)
         if comment:
-            return "", escaping.escape_attribute(comment)
+            return "", comment
         log_type = row["log_type"]
         lst = row["log_state_type"]
         if "FLAPPING" in log_type:
@@ -4335,7 +4378,7 @@ class PainterLogStateInfo(Painter):
         if not info:
             info = row["log_state_type"]
 
-        return ("", escaping.escape_attribute(info))
+        return ("", info)
 
 
 @painter_registry.register
@@ -4375,7 +4418,22 @@ class PainterLogContactName(Painter):
         return ['log_contact_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("nowrap", row["log_contact_name"])
+        target_view_name = ("mobile_contactnotifications"
+                            if html.is_mobile() else "contactnotifications")
+        return (
+            "nowrap",
+            HTML(", ").join(
+                html.render_a(
+                    contact,
+                    makeuri_contextless(
+                        request,
+                        [
+                            ("view_name", target_view_name),
+                            ("log_contact_name", contact),
+                        ],
+                        filename="view.py",
+                    )) for contact in row["log_contact_name"].split(",")),
+        )
 
 
 @painter_registry.register
@@ -4517,7 +4575,7 @@ class PainterLogOptions(Painter):
         return ['log_options']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["log_options"]))
+        return ("", row["log_options"])
 
 
 @painter_registry.register
@@ -4541,7 +4599,7 @@ class PainterLogComment(Painter):
         if ';' in msg:
             parts = msg.split(';')
             if len(parts) > 6:
-                return ("", escaping.escape_attribute(parts[-1]))
+                return ("", parts[-1])
         return ("", "")
 
 
@@ -4800,7 +4858,7 @@ class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
-        return "", "<br>".join(["%s: %s" % e for e in sorted(entries)])
+        return "", html.render_br().join(["%s: %s" % e for e in sorted(entries)])
 
     def _get_entries(self, row):
         entries = []
@@ -4901,7 +4959,7 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def title(self, cell: Cell) -> str:
-        return _("Labels")
+        return _("Host labels")
 
     def short_title(self, cell: Cell) -> str:
         return _("Labels")
@@ -4931,7 +4989,7 @@ class PainterServiceLabels(Painter):
         return "service_labels"
 
     def title(self, cell: Cell) -> str:
-        return _("Labels")
+        return _("Service labels")
 
     def short_title(self, cell: Cell) -> str:
         return _("Labels")
@@ -5026,6 +5084,9 @@ class AbstractPainterSpecificMetric(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return self._title_with_parameters(cell.painter_parameters())
+
+    def list_title(self, cell: Cell) -> str:
+        return _("Metric")
 
     def _title_with_parameters(self, parameters):
         try:

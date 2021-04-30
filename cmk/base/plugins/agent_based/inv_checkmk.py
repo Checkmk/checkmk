@@ -9,14 +9,14 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import Attributes, register, TableRow
 
 
-def _service_status(status: Dict[str, List[str]], service_name: str):
+def _service_status(status: Mapping[str, Sequence[str]], service_name: str):
     """
     >>> status={'stopped':['cmd', 'dcd'], 'existing':['crontab','cmd']}
     >>> _service_status(status, 'cmd')
@@ -38,9 +38,9 @@ def _service_status(status: Dict[str, List[str]], service_name: str):
 
 
 def merge_sections(
-    section_livestatus_status: Dict[str, Dict[str, str]],
-    section_omd_status: Dict[str, Dict],
-    section_omd_info: Dict[str, Dict[str, Dict]],
+    section_livestatus_status: Mapping[str, Mapping[str, str]],
+    section_omd_status: Mapping[str, Mapping],
+    section_omd_info: Mapping[str, Mapping[str, Mapping]],
 ) -> Dict[str, Dict]:
 
     merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
@@ -117,32 +117,40 @@ def merge_sections(
 
     merged_section["check_mk"]["num_sites"] = num_sites
 
-    # SECTION: omd_info
-    # Section may not be available in agent output (e.g. when using old linux agent)
-    if section_omd_info:
-        versions = section_omd_info.get('versions', {})
-        sites = section_omd_info.get('sites', {})
+    pre_versions = section_omd_info.get('versions', {})
+    pre_sites = section_omd_info.get('sites', {})
+    if not (pre_versions or pre_sites):
+        return merged_section
 
-        for version in versions.values():
-            version.setdefault('num_sites', 0)
-            version['demo'] = (version['demo'] == "1")
-            version.pop("version", None)
+    versions = {
+        name: {
+            'num_sites': 0,
+            **{k: v for k, v in version.items() if k != "version"},
+            'demo': (version['demo'] == "1"),
+        } for name, version in pre_versions.items()
+    }
 
-        for site_dict in sites.values():
-            site_dict['autostart'] = (site_dict['autostart'] == "1")
-            version_dict = versions.get(site_dict['used_version'])
-            if version_dict:
-                version_dict['num_sites'] += 1
+    sites = {
+        name: {
+            **site_dict,
+            'autostart': (site_dict['autostart'] == "1"),
+        } for name, site_dict in pre_sites.items()
+    }
 
-        merged_section["versions"] = versions
-        for site, values in sites.items():
-            values.pop("site", None)
-            merged_section["sites"].setdefault(site, {
-                "inventory_columns": {},
-                "status_columns": {}
-            })["inventory_columns"].update(values)
+    for site_dict in sites.values():
+        version_dict = versions.get(site_dict['used_version'])
+        if version_dict:
+            version_dict['num_sites'] += 1
 
-        merged_section["check_mk"]["num_versions"] = len(versions)
+    merged_section["versions"] = versions
+    for site, values in sites.items():
+        values.pop("site", None)
+        merged_section["sites"].setdefault(site, {
+            "inventory_columns": {},
+            "status_columns": {}
+        })["inventory_columns"].update(values)
+
+    merged_section["check_mk"]["num_versions"] = len(versions)
 
     return merged_section
 

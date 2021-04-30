@@ -46,7 +46,7 @@ def parse_site_object_counts(string_table: type_defs.StringTable) -> Section:
                 cmds_or_tags,
                 {k: int(v) for k, v in zip(header.split(), counts.split(";"))},
             )
-    return parsed
+    return {k: v for k, v in parsed.items() if v}
 
 
 register.agent_section(

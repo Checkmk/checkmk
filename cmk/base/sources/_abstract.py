@@ -76,7 +76,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
-        self.file_cache_path: Final[Path] = cache_dir / self.hostname
+        self.file_cache_base_path: Final[Path] = cache_dir
         self.file_cache_max_age: int = 0
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
 

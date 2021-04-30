@@ -9,6 +9,7 @@
 #include <shellapi.h>
 #endif
 
+#include <ranges>
 #include <string>
 #include <tuple>
 
@@ -311,6 +312,7 @@ uint64_t GetWstringAsUint64(IWbemClassObject *wmi_object,
 }
 
 std::string ProducePsWmi(bool use_full_path) {
+    namespace rs = std::ranges;
     // auto processes = GetProcessListFromWmi();
     wtools::WmiWrapper wmi;
 
@@ -343,6 +345,11 @@ std::string ProducePsWmi(bool use_full_path) {
         auto process_owner = GetProcessOwner(process_id);
 
         auto process_name = BuildProcessName(object, use_full_path);
+
+        // some process name includes trash output which includes carriage
+        // return. Example: is pascom client crash handler.
+        rs::replace(process_name, L'\n', L' ');
+        rs::replace(process_name, L'\r', L' ');
 
         auto uptime = CalculateUptime(object);
 

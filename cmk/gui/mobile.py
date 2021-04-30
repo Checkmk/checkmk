@@ -22,6 +22,7 @@ from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     command_registry,
+    CommandSpec,
     data_source_registry,
     PainterOptions,
 )
@@ -283,8 +284,8 @@ def page_view() -> None:
 
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
         view_spec["context"],
+        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
     )
 
     view = views.View(view_name, view_spec, context)
@@ -478,7 +479,7 @@ def do_commands(what: str, rows: Rows) -> bool:
         return r is None  # Show commands on negative answer
 
     count = 0
-    already_executed: Set[str] = set()
+    already_executed: Set[CommandSpec] = set()
     for nr, row in enumerate(rows):
         nagios_commands, _confirm_options, title, executor = views.core_command(
             what,

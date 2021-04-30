@@ -1605,7 +1605,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     html.icon(icon, msg)
 
                 table.cell(_("ID"), id_)
-                table.cell(_("Title"), html.render_text(rule_pack["title"]))
+                table.cell(_("Title"), rule_pack["title"])
 
                 if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
@@ -1617,7 +1617,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                            css="number")
 
                 hits = rule_pack.get('hits')
-                table.cell(_("Hits"), hits is not None and hits or '', css="number")
+                table.cell(_("Hits"), str(hits) if hits else '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
         found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
@@ -1964,7 +1964,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     dict(cmk.gui.mkeventd.service_levels()).get(rule["sl"]["value"],
                                                                 rule["sl"]["value"]))
                 hits = rule.get('hits')
-                table.cell(_("Hits"), hits is not None and hits or '', css="number")
+                table.cell(_("Hits"), str(hits) if hits else '', css="number")
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))
@@ -2691,11 +2691,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.row()
 
                 if is_custom_dir:
-                    table.cell("<input type=button class=checkgroup name=_toggle_group"
-                               " onclick=\"cmk.selection.toggle_all_rows();\" value=\"%s\" />" %
-                               _('X'),
-                               sortable=False,
-                               css="buttons")
+                    table.cell(
+                        html.render_input("_toggle_group",
+                                          type_="button",
+                                          class_="checkgroup",
+                                          onclick="cmk.selection.toggle_all_rows();",
+                                          value='X'))
                     html.checkbox("_c_mib_%s" % filename, deflt=False)
 
                 table.cell(_("Actions"), css="buttons")
@@ -2706,12 +2707,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                         filename)
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-                table.text_cell(_("Filename"), filename)
-                table.text_cell(_("MIB"), mib.get("name", ""))
-                table.text_cell(_("Organization"), mib.get("organization", ""))
-                table.text_cell(_("Size"),
-                                cmk.utils.render.fmt_bytes(mib.get("size", 0)),
-                                css="number")
+                table.cell(_("Filename"), filename)
+                table.cell(_("MIB"), mib.get("name", ""))
+                table.cell(_("Organization"), mib.get("organization", ""))
+                table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css="number")
 
         if is_custom_dir:
             html.hidden_fields()
@@ -4520,7 +4519,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def is_affected_by_change(change_action_name: str) -> bool:
         # rule packs: new-rule-pack, edit-rule-pack, ...
         # rules within rule packs: new-rule, edit-rule, ...
-        return "rule" in change_action_name
+        return "rule" in change_action_name or change_action_name.endswith("-package")
 
     @property
     def is_localization_dependent(self) -> bool:

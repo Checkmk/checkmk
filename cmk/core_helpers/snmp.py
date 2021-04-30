@@ -117,18 +117,21 @@ class SectionMeta:
     """Metadata for the section names."""
     checking: bool
     disabled: bool
-    fetch_interval: Optional[int]  # time / sec
+    redetect: bool
+    fetch_interval: Optional[int]
 
     def __init__(
         self,
         *,
         checking: bool,
         disabled: bool,
+        redetect: bool,
         fetch_interval: Optional[int],
     ) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
         self.disabled = disabled
+        self.redetect = redetect
         self.fetch_interval = fetch_interval
 
     def serialize(self) -> Dict[str, Any]:
@@ -141,6 +144,30 @@ class SectionMeta:
 
 class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
+    def cache_read(mode: Mode) -> bool:
+        """Decide whether to try to read data from cache
+
+        Fetching for SNMP data is special in that we have to list the sections to fetch
+        in advance, unlike for agent data, where we parse the data and see what we get.
+
+        For discovery, we must not fetch the pre-configured sections (which are the ones
+        in the cache), but all sections for which the detection spec evaluates to true,
+        which can be many more.
+        """
+        return mode is not Mode.FORCE_SECTIONS
+
+    @staticmethod
+    def cache_write(mode: Mode) -> bool:
+        """Decide whether to write data to cache
+
+        If we write the fetching result for SNMP, we also "override" the resulting
+        sections for the next call that uses the cache. Since we use the cache for
+        DISCOVERY only, we must only write it if we're dealing with the right
+        sections for discovery.
+        """
+        return True
+
+    @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
         return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 
@@ -148,11 +175,17 @@ class SNMPFileCache(FileCache[SNMPRawData]):
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
+    def make_path(self, mode: Mode) -> Path:
+        if mode is Mode.DISCOVERY:
+            return self.base_path / mode.name.lower() / self.hostname
+        return self.base_path / "checking" / self.hostname
+
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
     def make(self, *, force_cache_refresh: bool = False) -> SNMPFileCache:
         return SNMPFileCache(
-            path=self.path,
+            self.hostname,
+            base_path=self.base_path,
             max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.disabled,
@@ -171,6 +204,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self,
         file_cache: SNMPFileCache,
         *,
+        cluster: bool,
         sections: Dict[SectionName, SectionMeta],
         on_error: str,
         missing_sys_description: bool,
@@ -178,7 +212,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_store_path: Union[Path, str],
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.snmp"))
+        super().__init__(file_cache, cluster, logging.getLogger("cmk.helper.snmp"))
         self.sections: Final = sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
@@ -214,6 +248,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         return cls(
             file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
+            cluster=serialized["cluster"],
             sections={
                 SectionName(s): SectionMeta.deserialize(m)
                 for s, m in serialized["sections"].items()
@@ -228,6 +263,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
+            "cluster": self.cluster,
             "sections": {str(s): m.serialize() for s, m in self.sections.items()},
             "on_error": self.on_error,
             "missing_sys_description": self.missing_sys_description,
@@ -259,32 +295,11 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """
         return mode is Mode.CHECKING
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        """Decide whether to try to read data from cache
-
-        Fetching for SNMP data is special in that we have to list the sections to fetch
-        in advance, unlike for agent data, where we parse the data and see what we get.
-
-        For discovery, we must not fetch the pre-configured sections (which are the ones
-        in the cache), but all sections for which the detection spec evaluates to true,
-        which can be many more.
-        """
-        return mode is Mode.DISCOVERY
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        """Decide whether to write data to cache
-
-        If we write the fetching result for SNMP, we also "override" the resulting
-        sections for the next call that uses the cache. Since we use the cache for
-        DISCOVERY only, we must only write it if we're dealing with the right
-        sections for discovery.
-        """
-        return mode is Mode.DISCOVERY
-
     def _get_selection(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return self.checking_sections - self.disabled_sections
+            return {name for name in self.checking_sections if not self.sections[name].redetect
+                   } - self.disabled_sections
 
         if mode is Mode.FORCE_SECTIONS:
             return self.checking_sections
@@ -293,7 +308,12 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
     def _get_detected_sections(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched after successful detection"""
-        if mode is Mode.INVENTORY or (mode is Mode.CHECKING and self.do_status_data_inventory):
+        if mode is Mode.CHECKING:
+            return ({name for name in self.checking_sections if self.sections[name].redetect} |
+                    (self.inventory_sections if self.do_status_data_inventory else set())
+                   ) - self.disabled_sections
+
+        if mode is Mode.INVENTORY:
             return self.inventory_sections - self.disabled_sections
 
         if mode is Mode.DISCOVERY:
@@ -347,7 +367,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     raise LookupError(section_name)
             except LookupError:
                 self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
-                section = [
+
+                fetched_data[section_name] = [
                     snmp_table.get_snmp_table(
                         section_name=section_name,
                         tree=tree,
@@ -355,9 +376,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         backend=self._backend,
                     ) for tree in self.plugin_store[section_name].trees
                 ]
-
-                if any(section):
-                    fetched_data[section_name] = section
 
         walk_cache.save()
 

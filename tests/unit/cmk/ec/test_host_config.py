@@ -7,7 +7,7 @@
 import logging
 import pytest  # type: ignore[import]
 
-from cmk.ec.main import HostConfig
+from cmk.ec.host_config import HostConfig, HostInfo
 
 
 @pytest.fixture(name="host_config")
@@ -64,9 +64,23 @@ def fixture_livestatus(mock_livestatus):
 
 
 @pytest.mark.parametrize("search_term, result", [
-    ("heute", _heute_config()),
-    ("HEUTE", {}),
-    ("127.0.0.1", {}),
+    ("heute",
+     HostInfo(
+         name='heute',
+         alias='heute alias',
+         address='127.0.0.1',
+         custom_variables={
+             "FILENAME": "/wato/hosts.mk",
+             "ADDRESS_FAMILY": "4",
+             "ADDRESS_4": "127.0.0.1",
+             "ADDRESS_6": "",
+             "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+         },
+         contacts=set(),
+         contact_groups=set(['all']),
+     )),
+    ("HEUTE", None),
+    ("127.0.0.1", None),
 ])
 def test_host_config(host_config, live, search_term, result):
     with live(expect_status_query=False):
@@ -76,10 +90,10 @@ def test_host_config(host_config, live, search_term, result):
             "Columns: name alias address custom_variables contacts contact_groups",
             "ColumnHeaders: on",
         ])
-        assert host_config.get_config_for_host(search_term, {}) == result
+        assert host_config.get_config_for_host(search_term) == result
         # Data is cached and not queried twice.
         live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
-        assert host_config.get_config_for_host(search_term, {}) == result
+        assert host_config.get_config_for_host(search_term) == result
 
 
 @pytest.mark.parametrize("search_term, result", [
@@ -88,7 +102,7 @@ def test_host_config(host_config, live, search_term, result):
     ('127.0.0.1', 'heute'),
     ('server.example.com', 'example.com'),
     ('SERVER.example.com', 'example.com'),
-    ('not-matching', ''),
+    ('not-matching', None),
     ('heute alias', 'heute'),
 ])
 def test_host_config_get_canonical_name(host_config, live, search_term, result):
@@ -127,7 +141,7 @@ def test_host_config_get_canonical_name_is_cached_updated(host_config, live):
             "Columns: name alias address custom_variables contacts contact_groups",
             "ColumnHeaders: on",
         ])
-        assert host_config.get_canonical_name("heute alias") == ""
+        assert host_config.get_canonical_name("heute alias") is None
 
         live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])
         assert host_config.get_canonical_name("new alias") == "heute"

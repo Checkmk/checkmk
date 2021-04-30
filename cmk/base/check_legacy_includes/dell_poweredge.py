@@ -259,10 +259,12 @@ def inventory_dell_poweredge_amperage_current(info):
 
 
 def check_dell_poweredge_amperage(item, _no_params, info):
-    for _chassisIndex, _Index, _StateSettings, Status, Reading, ProbeType, LocationName, \
+    for _chassisIndex, _Index, StateSettings, Status, Reading, ProbeType, LocationName, \
         UpperCritical, UpperNonCritical in info:
 
         if item == LocationName:
+            if StateSettings == '1':  # unknown
+                return 3, "Object's state is unknown"
             state_table = {
                 "1": ("other", 1),
                 "2": ("unknown", 1),

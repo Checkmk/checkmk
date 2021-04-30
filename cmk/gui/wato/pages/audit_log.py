@@ -14,6 +14,7 @@ import cmk.utils.render as render
 import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
+from cmk.gui.htmllib import HTML
 from cmk.gui import escaping
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
 from cmk.gui.userdb import UserSelection
@@ -182,8 +183,8 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Hide details") if self._show_details else _("Show details"),
-                        icon_name="checkbox",
+                        title=_("Show details"),
+                        icon_name="checked_checkbox" if self._show_details else "checkbox",
                         item=make_simple_link(
                             html.makeactionuri([
                                 ("show_details", "0" if self._show_details else "1"),
@@ -275,19 +276,20 @@ class ModeAuditLog(WatoMode):
                            html.render_nobr(render.date_and_time(float(entry.time))),
                            css="narrow")
                 user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
-                table.cell(_("User"), html.render_text(user), css="nobreak narrow")
+                table.cell(_("User"), user, css="nobreak narrow")
 
                 table.cell(_("Object type"),
                            entry.object_ref.object_type.name if entry.object_ref else "",
                            css="narrow")
                 table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css="narrow")
 
-                text = escaping.escape_text(entry.text).replace("\n", "<br>\n")
+                text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
                 table.cell(_("Summary"), text)
 
                 if self._show_details:
-                    diff_text = escaping.escape_text(entry.diff_text).replace(
-                        "\n", "<br>\n") if entry.diff_text else ""
+                    diff_text = HTML(
+                        escaping.escape_text(entry.diff_text).replace("\n", "<br>\n") if entry.
+                        diff_text else "")
                     table.cell(_("Details"), diff_text)
 
     def _get_next_daily_paged_log(self, log):

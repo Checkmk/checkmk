@@ -882,18 +882,18 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "service_authorization") {
                 if (right == "strict") {
-                    fl_authorization._service = AuthorizationKind::strict;
+                    fl_authorization._service = ServiceAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._service = AuthorizationKind::loose;
+                    fl_authorization._service = ServiceAuthorization::loose;
                 } else {
                     Warning(logger) << "invalid service authorization mode, "
                                        "allowed are strict and loose";
                 }
             } else if (left == "group_authorization") {
                 if (right == "strict") {
-                    fl_authorization._group = AuthorizationKind::strict;
+                    fl_authorization._group = GroupAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._group = AuthorizationKind::loose;
+                    fl_authorization._group = GroupAuthorization::loose;
                 } else {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";

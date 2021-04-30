@@ -243,7 +243,7 @@ div.speedometer {
 }
 
 img#speedometerbg {
-  width: 260px;
+  width: $theme-snapin-width;
   height: auto;
 }
 
@@ -604,26 +604,35 @@ div.spacertop {
 #snapin_cmc_stats {
   color: $font-color;
 
-  select {
-    margin-bottom: 2px;
-  }
-}
+  table.cmc_stats {
+    width: $snapin-cmc-table-width;
+    border-spacing: 0 4px;
+    box-sizing: border-box;
 
-table.cmc_stats {
-  width: $snapin-cmc-table-width;
-  border-spacing: 0 4px;
-  box-sizing: border-box;
+    tr {
+      &.dark {
+        background-color: lighten($navbar-color, 1%);
+      }
 
-  td {
-    padding: 0;
-    font-weight: $font-weight-default;
-    letter-spacing: $letter-spacing-table;
+      &.light {
+        background-color: lighten($navbar-color, 3%);
+      }
+    }
 
-    &.right {
-      padding: 0;
-      padding-right: 1px;
-      text-align: right;
-      white-space: nowrap;
+    td {
+      padding: 0 4px;
+      height: 20px;
+      font-weight: $font-weight-default;
+      font-size: $font-size-normal;
+      letter-spacing: $letter-spacing-table;
+
+      &.right {
+        padding: 0;
+        padding-right: 1px;
+        text-align: right;
+        white-space: nowrap;
+        font-weight: $font-weight-bold;
+      }
     }
   }
 }

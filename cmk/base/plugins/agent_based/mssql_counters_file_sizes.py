@@ -17,7 +17,13 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
 )
 
-from .utils.mssql_counters import Section, discovery_mssql_counters_generic, get_int, get_item
+from .utils.mssql_counters import (
+    accumulate_node_results,
+    discovery_mssql_counters_generic,
+    get_int,
+    get_item,
+    Section,
+)
 
 
 def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
@@ -125,8 +131,11 @@ def cluster_check_mssql_counters_file_sizes(
     Result(state=<State.OK: 0>, summary='Log files used: 8.56 MiB')
     Metric('log_files_used', 8978432.0, boundaries=(0.0, None))
     """
-    for node_name, node_section in section.items():
-        yield from _check_mssql_file_sizes("[%s] " % node_name, item, params, node_section)
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_mssql_file_sizes(
+            "[%s] " % node_name, item, params, node_section),
+        section=section,
+    )
 
 
 register.check_plugin(

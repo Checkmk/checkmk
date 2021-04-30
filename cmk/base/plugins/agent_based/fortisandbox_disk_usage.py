@@ -7,6 +7,7 @@
 from typing import (
     Any,
     Mapping,
+    Optional,
 )
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -28,7 +29,7 @@ from .utils.fortinet import DETECT_FORTISANDBOX
 Section = Mapping[str, int]
 
 
-def parse_fortisandbox_disk(string_table: StringTable) -> Section:
+def parse_fortisandbox_disk(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortisandbox_disk([["1000", "2000"]])
     {'used': 1000, 'cap': 2000}
@@ -36,7 +37,7 @@ def parse_fortisandbox_disk(string_table: StringTable) -> Section:
     return {
         "used": int(string_table[0][0]),
         "cap": int(string_table[0][1]),
-    }
+    } if string_table else None
 
 
 def discover_fortisandbox_disk(section: Section) -> DiscoveryResult:

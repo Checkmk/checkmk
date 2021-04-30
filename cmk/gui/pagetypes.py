@@ -92,7 +92,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
-SubPagesSpec = _Optional[List[Tuple[str, str, str]]]
+SubPagesSpec = List[Tuple[str, str, str]]
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -645,13 +645,17 @@ class Overridable(Base):
         return config.user.may('general.edit_foreign_%s' % self.type_name())
 
     def edit_url(self):
-        owner = ("&owner=%s" % self.owner()) if not self.is_mine() else ""
-        return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
+        http_vars: HTTPVariables = [("load_name", self.name())]
+        if not self.is_mine():
+            http_vars.append(("owner", self.owner()))
+
+        return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self):
         backurl = html.urlencode(makeuri(request, []))
-        return "edit_%s.py?load_user=%s&load_name=%s&mode=clone&back=%s" \
-                    % (self.type_name(), self.owner(), self.name(), backurl)
+        return makeuri_contextless(request, [("owner", self.owner()), ("load_name", self.name()),
+                                             ("mode", "clone"), ("back", backurl)],
+                                   filename="edit_%s.py" % self.type_name())
 
     def delete_url(self):
         add_vars: HTTPVariables = [('_delete', self.name())]
@@ -756,7 +760,7 @@ class Overridable(Base):
                 section=PermissionSectionGeneral,
                 name="edit_foreign_" + cls.type_name(),
                 title=_l("Edit foreign %s") % cls.phrase("title_plural"),
-                description=_("Allows to edit %s created by other users.") %
+                description=_("Allows to view and edit %s created by other users.") %
                 cls.phrase("title_plural"),
                 defaults=["admin"],
             ))
@@ -1197,15 +1201,14 @@ class Overridable(Base):
         # "edit"   -> edit existing page
         mode = html.request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
-            page_name = None
+            page_name = ""
             title = cls.phrase("create")
             page_dict = {
                 "name": cls.default_name(),
                 "topic": cls.default_topic(),
             }
         else:
-            # Load existing page. visual from disk - and create a copy if 'load_user' is set
-            page_name = html.request.var("load_name")
+            page_name = html.request.get_str_input_mandatory("load_name")
             if mode == "edit":
                 title = cls.phrase("edit")
 
@@ -1226,17 +1229,20 @@ class Overridable(Base):
 
                 # TODO FIXME: Looks like a hack
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
+
+                page_dict = page.internal_representation()
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.request.get_unicode_input(
-                    "load_user")  # FIXME: Change varname to "owner"
+                owner_id = html.request.get_unicode_input_mandatory("owner")
 
                 try:
-                    page = cls.instance((load_user, page_name))
+                    page = cls.instance((owner_id, page_name))
                 except KeyError:
                     raise MKUserError(None,
                                       _("The requested %s does not exist") % cls.phrase("title"))
-            page_dict = page.internal_representation()
+
+                page_dict = page.internal_representation().copy()
+                page_dict["name"] += "_clone"
 
         breadcrumb = cls.breadcrumb(title, mode)
         page_menu = make_edit_form_page_menu(
@@ -1246,10 +1252,11 @@ class Overridable(Base):
             type_title=cls.phrase("title"),
             type_title_plural=cls.phrase("title_plural"),
             ident_attr_name="name",
-            sub_pages=None,
+            sub_pages=[],
             form_name="edit",
             visualname=page_name,
         )
+
         html.header(title, breadcrumb, page_menu)
 
         parameters, keys_by_topic = cls._collect_parameters(mode)
@@ -1415,7 +1422,7 @@ def PublishTo(title: _Optional[str] = None,
 
 def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: str, type_title: str,
                              type_title_plural, ident_attr_name: str, sub_pages: SubPagesSpec,
-                             form_name: str, visualname: _Optional[str]) -> PageMenu:
+                             form_name: str, visualname: str) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -1503,9 +1510,6 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
         is_suggested=True,
     )
 
-    if not sub_pages:
-        return
-
     for nr, (title, _pagename, _icon) in enumerate(sub_pages):
         yield PageMenuEntry(
             title=title,
@@ -1515,18 +1519,13 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
 
 
 def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, ident_attr_name: str,
-                                 visualname: _Optional[str]) -> Iterator[PageMenuEntry]:
+                                 visualname: str) -> Iterator[PageMenuEntry]:
     """Extra links to sub modules
 
     These are used for things to edit about this visual that are more complex to be done in one
     value spec."""
-    if not sub_pages:
-        return
-
     if mode != "edit":
         return
-
-    assert visualname is not None
 
     for title, pagename, icon in sub_pages:
         yield PageMenuEntry(

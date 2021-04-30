@@ -13,10 +13,13 @@ from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard
 
 def parse_ups_cps_inphase(info):
     parsed = {}
-    parsed["1"] = {}
-    parsed["1"]["voltage"] = float(info[0][0]) / 10
-    parsed["1"]["frequency"] = float(info[0][1]) / 10
-    return parsed
+    for index, stat_name in enumerate(("voltage", "frequency")):
+        try:
+            parsed[stat_name] = float(info[0][index]) / 10
+        except ValueError:
+            continue
+
+    return parsed and {"1": parsed}
 
 
 def inventory_ups_cps_inphase(parsed):

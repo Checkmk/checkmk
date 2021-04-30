@@ -24,6 +24,7 @@ from typing import (
     Union,
 )
 
+from cmk.utils.check_utils import worst_service_state
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -154,7 +155,7 @@ def do_inv_check(
         old_tree = _save_inventory_tree(hostname, trees.inventory)
     else:
         old_tree, sources_state = None, 1
-        status = max(status, sources_state)
+        status = worst_service_state(status, sources_state, default=3)
         infotexts.append("Cannot update tree%s" % state_markers[sources_state])
 
     _run_inventory_export_hooks(host_config, trees.inventory)

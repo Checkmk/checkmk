@@ -36,17 +36,15 @@ if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
     from cmk.gui.type_defs import CSSSpec
 
-TableHeader = NamedTuple(
-    "TableHeader",
-    [
-        ("title", Union[int, HTML, str]),  # basically HTMLContent without None
-        ("css", 'CSSSpec'),
-        ("help_txt", Optional[str]),
-        ("sortable", bool),
-    ])
+TableHeader = NamedTuple("TableHeader", [
+    ("title", HTML),
+    ("css", 'CSSSpec'),
+    ("help_txt", Optional[str]),
+    ("sortable", bool),
+])
 
 CellSpec = NamedTuple("CellSpec", [
-    ("content", str),
+    ("content", HTML),
     ("css", 'CSSSpec'),
     ("colspan", Optional[int]),
 ])
@@ -186,22 +184,6 @@ class Table:
         self._finish_previous()
         self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
-    def text_cell(
-        self,
-        title: 'HTMLContent' = "",
-        text: 'HTMLContent' = "",
-        css: 'CSSSpec' = None,
-        help_txt: Optional[str] = None,
-        colspan: Optional[int] = None,
-        sortable: bool = True,
-    ):
-        self.cell(title=title,
-                  text=text,
-                  css=css,
-                  help_txt=help_txt,
-                  colspan=colspan,
-                  escape_text=True)
-
     def cell(
         self,
         title: 'HTMLContent' = "",
@@ -210,16 +192,16 @@ class Table:
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
-        escape_text: bool = False,
     ):
         self._finish_previous()
-        self.next_func = lambda: self._add_cell(title=title,
-                                                text=text,
-                                                css=css,
-                                                help_txt=help_txt,
-                                                colspan=colspan,
-                                                sortable=sortable,
-                                                escape_text=escape_text)
+        self.next_func = lambda: self._add_cell(
+            title=title,
+            text=text,
+            css=css,
+            help_txt=help_txt,
+            colspan=colspan,
+            sortable=sortable,
+        )
 
     def _finish_previous(self) -> None:
         self.next_func()
@@ -253,22 +235,20 @@ class Table:
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
-        escape_text: bool = False,
     ):
-        if escape_text:
-            cell_text = escaping.escape_text(text)
+        if isinstance(text, HTML):
+            content = text
         else:
-            if isinstance(text, HTML):
-                cell_text = "%s" % text
-            elif not isinstance(text, str):
-                cell_text = str(text)
-            else:
-                cell_text = text
+            content = html.render_text(str(text) if not isinstance(text, str) else text)
 
-        htmlcode: str = cell_text + html.drain()
+        htmlcode: HTML = content + HTML(html.drain())
 
-        if title is None:
-            title = ""
+        if isinstance(title, HTML):
+            header_title = title
+        else:
+            if title is None:
+                title = ""
+            header_title = html.render_text(str(title) if not isinstance(title, str) else title)
 
         if self.options["collect_headers"] is True:
             # small helper to make sorting introducion easier. Cells which contain
@@ -276,7 +256,7 @@ class Table:
             if css and 'buttons' in css and sortable:
                 sortable = False
             self.headers.append(
-                TableHeader(title=title, css=css, help_txt=help_txt, sortable=sortable))
+                TableHeader(title=header_title, css=css, help_txt=help_txt, sortable=sortable))
 
         current_row = self.rows[-1]
         assert isinstance(current_row, TableRow)
@@ -307,7 +287,7 @@ class Table:
                                               title=html.render_h3(self.title,
                                                                    class_=["treeangle", "title"]))
             else:
-                html.open_h3()
+                html.open_h3(class_="table")
                 html.write(self.title)
                 html.close_h3()
 
@@ -556,8 +536,7 @@ class Table:
                 continue
 
             if header.help_txt:
-                header_title: Union[int, HTML, str] = html.render_span(header.title,
-                                                                       title=header.help_txt)
+                header_title: HTML = html.render_span(header.title, title=header.help_txt)
             else:
                 header_title = header.title
 
@@ -590,7 +569,7 @@ class Table:
                 first_col = False
                 if actions_enabled:
                     if not header_title:
-                        header_title = "&nbsp;"  # Fixes layout problem with white triangle
+                        header_title = HTML("&nbsp;")  # Fixes layout problem with white triangle
 
                     if actions_visible:
                         state = '0'
@@ -632,7 +611,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             # Filter out buttons
             if cell.css is not None and "buttons" in cell.css:
                 continue
-            if match_regex.search(cell.content):
+            if match_regex.search(str(cell.content)):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
     return filtered_rows

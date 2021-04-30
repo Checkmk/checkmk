@@ -94,7 +94,8 @@ class ProgramSource(AgentSource):
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()
@@ -102,6 +103,7 @@ class ProgramSource(AgentSource):
     def _make_fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             cmdline=self.cmdline,
             stdin=self.stdin,
             is_cmc=config.is_cmc(),

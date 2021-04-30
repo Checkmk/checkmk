@@ -11,7 +11,7 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Union, Iterator
+from typing import Any, Dict, Union, Iterator, List
 
 from six import ensure_str
 
@@ -28,6 +28,7 @@ from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
+from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
     Timerange,
@@ -624,10 +625,10 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
     return werk_table_options
 
 
-def render_werk_id(werk, with_link):
+def render_werk_id(werk, with_link) -> Union[HTML, str]:
     if with_link:
-        url = makeuri(request, [("werk", werk["id"])], filename="werk.py")
-        return html.render_a(render_werk_id(werk, with_link=False), url)
+        url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
+        return html.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
@@ -635,7 +636,7 @@ def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
-def render_werk_title(werk):
+def render_werk_title(werk) -> Union[HTML, str]:
     title = werk["title"]
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
@@ -645,61 +646,70 @@ def render_werk_title(werk):
     return title
 
 
-def render_werk_description(werk):
-    html_code = "<p>"
-    in_list = False
-    in_code = False
-    for line in werk["body"]:
-        if line.startswith("LI:"):
-            if not in_list:
-                html_code += "<ul>"
-                in_list = True
-            html_code += "<li>%s</li>\n" % line[3:]
-        else:
-            if in_list:
-                html_code += "</ul>"
-                in_list = False
-
-            if line.startswith("H2:"):
-                html_code += "<h3>%s</h3>\n" % line[3:]
-            elif line.startswith("C+:"):
-                html_code += "<pre class=code>"
-                in_code = True
-            elif line.startswith("F+:"):
-                file_name = line[3:]
-                if file_name:
-                    html_code += "<div class=filename>%s</div>" % file_name
-                html_code += "<pre class=file>"
-                in_code = True
-            elif line.startswith("C-:") or line.startswith("F-:"):
-                html_code += "</pre>"
-                in_code = False
-            elif line.startswith("OM:"):
-                html_code += "OMD[mysite]:~$ <b>" + line[3:] + "</b>\n"
-            elif line.startswith("RP:"):
-                html_code += "root@myhost:~# <b>" + line[3:] + "</b>\n"
-            elif not line.strip() and not in_code:
-                html_code += "</p><p>"
+def render_werk_description(werk) -> HTML:
+    with html.plugged():
+        html.open_p()
+        in_list = False
+        in_code = False
+        for line in werk["body"]:
+            if line.startswith("LI:"):
+                if not in_list:
+                    html.open_ul()
+                    in_list = True
+                html.li(line[3:])
             else:
-                html_code += line + "\n"
+                if in_list:
+                    html.close_ul()
+                    in_list = False
 
-    if in_list:
-        html_code += "</ul>"
+                if line.startswith("H2:"):
+                    html.h3(line[3:])
+                elif line.startswith("C+:"):
+                    html.open_pre(class_="code")
+                    in_code = True
+                elif line.startswith("F+:"):
+                    file_name = line[3:]
+                    if file_name:
+                        html.div(file_name, class_="filename")
+                    html.open_pre(class_="file")
+                    in_code = True
+                elif line.startswith("C-:") or line.startswith("F-:"):
+                    html.close_pre()
+                    in_code = False
+                elif line.startswith("OM:"):
+                    html.write_text("OMD[mysite]:~$ ")
+                    html.b(line[3:])
+                elif line.startswith("RP:"):
+                    html.write_text("root@myhost:~# ")
+                    html.b(line[3:])
+                elif not line.strip() and not in_code:
+                    html.p("")
+                else:
+                    html.write_text(line + "\n")
 
-    html_code = html_code.replace("<script>",
-                                  "&lt;script&gt;").replace("</script>", "&lt;/script&gt;")
+        if in_list:
+            html.close_ul()
 
-    html_code += "</p>"
-    return html_code
+        html.close_p()
+        return HTML(html.drain())
 
 
-def insert_manpage_links(text):
+def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
-    new_parts = []
+    new_parts: List[Union[str, HTML]] = []
     check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(cmk.utils.paths.check_manpages_dir + "/" +
-                                                      part):
-            part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
-        new_parts.append(part)
-    return " ".join(new_parts)
+        if (check_regex.match(part) and
+                os.path.exists(cmk.utils.paths.check_manpages_dir + "/" + part)):
+            url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "check_manpage"),
+                    ("check_type", part),
+                ],
+                filename="wato.py",
+            )
+            new_parts.append(html.render_a(content=part, href=url))
+        else:
+            new_parts.append(part)
+    return HTML(" ").join(new_parts)

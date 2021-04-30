@@ -14,8 +14,6 @@
 import time
 import re
 
-from cmk.base.check_api import clear_item_states_by_full_keys
-from cmk.base.check_api import get_all_item_states
 from cmk.base.check_api import host_name
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.check_api import host_extra_conf
@@ -45,41 +43,6 @@ diskstat_inventory = []
 # ]
 
 diskstat_diskless_pattern = re.compile("x?[shv]d[a-z]*[0-9]+")
-
-
-def with_unused_counter_removal(plugin_name):
-    '''Return decorator to clean up unused counters
-
-    The decorated parse function will clean up all couters for that plugin which are more
-    than ten times older than the youngest one to avoid growing up the item state.
-    '''
-    def is_plugin_counter_with_age(ident, value):
-        if not isinstance(value, tuple):
-            return False
-        if isinstance(ident, tuple):
-            return ident[0] == plugin_name
-        elif hasattr(ident, "startswith"):
-            return ident.startswith('%s.' % plugin_name)
-        return False
-
-    def decorator(parse_function):
-        def wrapped_parse_function(info):
-            this_time = time.time()
-
-            age_counters = [(this_time - value[0], ident)
-                            for (ident, value) in get_all_item_states().items()
-                            if is_plugin_counter_with_age(ident, value)]
-
-            if age_counters:
-                age_limit = 10 * min(age_counters)[0]
-                counters_to_delete = [ident for (age, ident) in age_counters if age >= age_limit]
-                clear_item_states_by_full_keys(counters_to_delete)
-
-            return parse_function(info)
-
-        return wrapped_parse_function
-
-    return decorator
 
 
 # ==================================================================================================

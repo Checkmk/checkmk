@@ -13,7 +13,7 @@ import datetime as dt
 import freezegun  # type: ignore[import]
 import pytest  # type: ignore[import]
 
-from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
+from checktestlib import mock_item_state, assertCheckResultsEqual, CheckResult
 
 
 @pytest.mark.parametrize(
@@ -252,7 +252,7 @@ def test_check_temperature_trend(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
@@ -284,7 +284,7 @@ def test_check_temperature_called(test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             # Assuming atmospheric pressure...
             result = check_temperature(

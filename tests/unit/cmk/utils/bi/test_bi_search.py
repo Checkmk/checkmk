@@ -100,7 +100,7 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
 
-    # Regex match hit
+    # Regex match hit without match group
     schema_config = search_class.schema()().dump(
         {"conditions": {
             "host_choice": {
@@ -112,7 +112,24 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
     results = search.execute({}, bi_searcher_with_sample_config)
     hostnames = {x["$HOSTNAME$"] for x in results}
     assert len(hostnames) == 1
+    assert results[0]["$1$"] == ""
     assert "heute_clone" in hostnames
+
+    # Regex match hit with match group
+    schema_config = search_class.schema()().dump(
+        {"conditions": {
+            "host_choice": {
+                "type": "host_name_regex",
+                "pattern": "(heute_cl).*"
+            }
+        }})
+    search = search_class(schema_config)
+    results = search.execute({}, bi_searcher_with_sample_config)
+    hostnames = {x["$HOSTNAME$"] for x in results}
+    assert len(hostnames) == 1
+    assert results[0]["$1$"] == "heute_cl"
+    assert results[0]["$HOST_MG_0$"] == "heute_cl"
+    assert results[0]["$HOSTNAME$"] == "heute_clone"
 
     # Regex match miss
     schema_config = search_class.schema()().dump(

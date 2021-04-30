@@ -769,6 +769,7 @@ check_metrics["check_mk-sap_hana_diskusage"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-nimble_volumes"] = df_translation
+check_metrics["check_mk-ceph_df"] = df_translation
 
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {
@@ -910,32 +911,23 @@ if_translation = {
         "name": "if_out_non_unicast"
     },
 }
-check_metrics["check_mk-esx_vsphere_counters"] = if_translation
+check_metrics["check_mk-interfaces"] = if_translation
+check_metrics["check_mk-aws_ec2_network_io"] = if_translation
+check_metrics["check_mk-aws_rds_network_io"] = if_translation
+check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-esx_vsphere_counters_if"] = if_translation
+check_metrics["check_mk-esx_vsphere_counters"] = if_translation
 check_metrics["check_mk-fritz"] = if_translation
 check_metrics["check_mk-fritz_wan_if"] = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
-check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
-check_metrics["check_mk-if64_tplink"] = if_translation
-check_metrics["check_mk-if_lancom"] = if_translation
-check_metrics["check_mk-if_brocade"] = if_translation
-check_metrics["check_mk-if"] = if_translation
+check_metrics["check_mk-huawei_osn_if"] = if_translation
+check_metrics["check_mk-if64"] = if_translation
+check_metrics["check_mk-k8s_stats_network"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
-check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
-check_metrics["check_mk-statgrab_net"] = if_translation
-check_metrics["check_mk-ucs_bladecenter_if"] = if_translation
-check_metrics["check_mk-vms_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
-check_metrics["check_mk-emc_vplex_if"] = if_translation
-check_metrics["check_mk-huawei_osn_if"] = if_translation
-check_metrics["check_mk-if_fortigate"] = if_translation
-check_metrics["check_mk-aix_if"] = if_translation
-check_metrics["check_mk-k8s_stats_network"] = if_translation
-check_metrics["check_mk-aws_ec2_network_io"] = if_translation
-check_metrics["check_mk-aws_rds_network_io"] = if_translation
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
         "name": "fc_rx_bytes",
@@ -1262,13 +1254,16 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {
-        "name": "util"
+        "name": "util",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 60s": {
-        "name": "util1"
+        "name": "util1",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 5m": {
-        "name": "util5"
+        "name": "util5",
+        "deprecated": "2.0.0p4"
     },
 }
 check_metrics["check_mk-ibm_svc_nodestats_cache"] = {

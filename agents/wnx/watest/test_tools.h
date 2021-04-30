@@ -167,25 +167,33 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
     }
 }
 
-constexpr std::string_view zip_to_test = "unzip_test.zip";
-constexpr std::string_view cab_to_test = "uncab_test.zip";  // cab! file
+constexpr std::string_view install_cab_to_test = "install_test.cab";
+constexpr std::string_view cab_to_test = "uncab_test.cab";
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
 
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
-public:
+private:
     enum class Mode { standard, no_io };
-    TempCfgFs() : TempCfgFs(Mode::standard) {}
-    TempCfgFs(Mode mode);
+
+public:
+    using ptr = std::unique_ptr<TempCfgFs>;
+
+    static std::unique_ptr<TempCfgFs> CreateNoIo() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::no_io));
+    }
+
+    static std::unique_ptr<TempCfgFs> Create() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::standard));
+    }
+    ~TempCfgFs();
 
     TempCfgFs(const TempCfgFs&) = delete;
     TempCfgFs(TempCfgFs&&) = delete;
     TempCfgFs& operator=(const TempCfgFs&) = delete;
     TempCfgFs& operator=(TempCfgFs&&) = delete;
-
-    ~TempCfgFs();
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
 
@@ -203,6 +211,7 @@ public:
     const std::filesystem::path data() const { return data_; }
 
 private:
+    TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
         const std::filesystem::path& filepath,
         const std::filesystem::path& filepath_base, const std::string& content);
@@ -212,6 +221,7 @@ private:
     std::filesystem::path data_;
     std::filesystem::path base_;
     Mode mode_;
+    YAML::Node yaml_;
 };
 
 const extern std::filesystem::path G_SolutionPath;
@@ -239,6 +249,8 @@ public:
 private:
     std::wstring argv0_;
 };
+
+constexpr inline int TestPort() { return 64531; }
 
 }  // namespace tst
 #endif  // test_tools_h__

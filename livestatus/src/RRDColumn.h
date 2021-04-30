@@ -21,7 +21,7 @@
 #include "Renderer.h"
 #include "Row.h"
 #if defined(CMC)
-#include "cmc.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif
@@ -37,8 +37,8 @@ public:
         unsigned long step{};
         std::vector<double> values;
     };
-    RRDDataMaker(MonitoringCore *mc, const RRDColumnArgs &args)
-        : _mc{mc}, _args{args} {}
+    RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
+        : _mc{mc}, _args{std::move(args)} {}
 
     template <class T>
     [[nodiscard]] Data operator()(const T &row) const {

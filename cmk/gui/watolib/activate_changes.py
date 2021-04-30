@@ -26,9 +26,10 @@ import multiprocessing
 import traceback
 import subprocess
 import hashlib
+from itertools import filterfalse
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any
+from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any, Callable
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
@@ -1249,11 +1250,17 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
             return 1
 
     def _get_queued_jobs(self) -> 'List[ActivateChangesSite]':
-        queued_jobs = []
+        queued_jobs: List[ActivateChangesSite] = []
+
+        file_filter_func = None
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
+            file_filter_func = managed_snapshots.customer_user_files_filter()
+
         for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
                                                  key=lambda e: e[0]):
             site_job = ActivateChangesSite(site_id, snapshot_settings, self._activation_id,
-                                           self._prevent_activate)
+                                           self._prevent_activate, file_filter_func)
             site_job.load()
             if site_job.lock_activation():
                 queued_jobs.append(site_job)
@@ -1266,12 +1273,14 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                  site_id: SiteId,
                  snapshot_settings: SnapshotSettings,
                  activation_id: str,
-                 prevent_activate: bool = False) -> None:
+                 prevent_activate: bool = False,
+                 file_filter_func: Optional[Callable[[str], bool]] = None) -> None:
         super(ActivateChangesSite, self).__init__()
         self._site_id = site_id
         self._site_changes: List = []
         self._activation_id = activation_id
         self._snapshot_settings = snapshot_settings
+        self._file_filter_func = file_filter_func
         self.daemon = True
         self._prevent_activate = prevent_activate
 
@@ -1513,15 +1522,15 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._logger.debug("Received %d file infos from remote", len(remote_file_infos))
 
         # In case we experience performance issues here, we could postpone the hashing of the
-        # central files to only be done ad-hoc in _get_file_names_to_sync when the other attributes
+        # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
         # are not enough to detect a differing file.
         site_config_dir = Path(self._snapshot_settings.work_dir)
         central_file_infos = _get_config_sync_file_infos(replication_paths, site_config_dir)
         self._logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
 
         self._set_sync_state(_("Computing differences"))
-        to_sync_new, to_sync_changed, to_delete = _get_file_names_to_sync(
-            self._logger, central_file_infos, remote_file_infos)
+        to_sync_new, to_sync_changed, to_delete = get_file_names_to_sync(
+            self._logger, central_file_infos, remote_file_infos, self._file_filter_func)
 
         self._logger.debug("New files to be synchronized: %r", to_sync_new)
         self._logger.debug("Changed files to be synchronized: %r", to_sync_changed)
@@ -2012,9 +2021,11 @@ def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[Repl
     return new_paths
 
 
-def _get_file_names_to_sync(
-        site_logger: Logger, central_file_infos: 'Dict[str, ConfigSyncFileInfo]',
-        remote_file_infos: 'Dict[str, ConfigSyncFileInfo]'
+def get_file_names_to_sync(
+    site_logger: Logger,
+    central_file_infos: 'Dict[str, ConfigSyncFileInfo]',
+    remote_file_infos: 'Dict[str, ConfigSyncFileInfo]',
+    file_filter_func: Optional[Callable[[str], bool]],
 ) -> Tuple[List[str], List[str], List[str]]:
     """Compare the response with the site_config directory of the site
 
@@ -2041,6 +2052,10 @@ def _get_file_names_to_sync(
     # Files to be deleted
     to_delete = list(remote_files - central_files)
 
+    if file_filter_func is not None:
+        to_sync_new = list(filterfalse(file_filter_func, to_sync_new))
+        to_sync_changed = list(filterfalse(file_filter_func, to_sync_changed))
+        to_delete = list(filterfalse(file_filter_func, to_delete))
     return to_sync_new, to_sync_changed, to_delete
 
 

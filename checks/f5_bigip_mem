@@ -42,17 +42,16 @@ def parse_f5_bigip_mem(info):
     return parsed
 
 
-def inventory_f5_bigip_mem(parsed):
-    if parsed.get("total"):
-        return [("total", {})]
+def discover_f5_bigip_mem(parsed):
+    if 'total' in parsed:
+        yield 'total', {}
 
 
-@get_parsed_item_data
-def check_f5_bigip_mem(_item, params, data):
-    if isinstance(params, tuple):
-        params = {"levels": ("perc_used", params)}
+def check_f5_bigip_mem(_item, params, parsed):
+    if 'total' not in parsed:
+        return
 
-    mem_total, mem_used = data
+    mem_total, mem_used = parsed['total']
     return check_memory_element(
         "Usage",
         mem_used,
@@ -64,7 +63,7 @@ def check_f5_bigip_mem(_item, params, data):
 
 check_info['f5_bigip_mem'] = {
     'parse_function': parse_f5_bigip_mem,
-    'inventory_function': inventory_f5_bigip_mem,
+    'inventory_function': discover_f5_bigip_mem,
     'check_function': check_f5_bigip_mem,
     'service_description': 'Memory',
     'has_perfdata': True,
@@ -81,9 +80,29 @@ check_info['f5_bigip_mem'] = {
     'group': 'memory_simple',
 }
 
+
+def discover_f5_bigip_mem_tmm(parsed):
+    if parsed.get('TMM', (0, 0))[0] > 0:
+        yield 'TMM', {}
+
+
+def check_f5_bigip_mem_tmm(_item, params, parsed):
+    if 'TMM' not in parsed:
+        return
+
+    mem_total, mem_used = parsed['TMM']
+    return check_memory_element(
+        "Usage",
+        mem_used,
+        mem_total,
+        params.get("levels"),
+        metric_name="memory_used",
+    )
+
+
 check_info['f5_bigip_mem.tmm'] = {
-    'inventory_function': discover(lambda key, value: key == "TMM" and value[0] > 0.0),
-    'check_function': check_f5_bigip_mem,
+    'inventory_function': discover_f5_bigip_mem_tmm,
+    'check_function': check_f5_bigip_mem_tmm,
     'service_description': 'Memory',
     'has_perfdata': True,
     'default_levels_variable': 'f5_bigip_mem_default_levels',

@@ -354,6 +354,10 @@ def cleanup_fs_used_marker_flag(log):
         os.remove(old_config_flag)
 
 
+def _load_config_file(file_to_load: Union[str, Path], variables: Dict[str, Any]) -> None:
+    exec(open(file_to_load).read(), variables, variables)
+
+
 def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
     helper_vars = {
         "FOLDER_PATH": None,
@@ -367,6 +371,11 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
 
     global_dict = globals()
     global_dict.update(helper_vars)
+
+    # Load assorted experimental parameters if any
+    experimental_config = cmk.utils.paths.make_experimental_config_file()
+    if experimental_config.exists():
+        _load_config_file(experimental_config, global_dict)
 
     cleanup_fs_used_marker_flag(console.info)  # safety cleanup for 1.6->1.7 update
 
@@ -394,7 +403,13 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> None:
             all_hosts.set_current_path(current_path)
             clusters.set_current_path(current_path)
 
-            exec(open(_f).read(), global_dict, global_dict)
+            if Path(_f).suffix == store.StorageFormat.RAW.extension():
+                loader = store.RawStorageLoader()
+                loader.read(Path(_f))
+                loader.parse()
+                loader.apply(global_dict)
+            else:
+                _load_config_file(_f, global_dict)
 
             if not isinstance(all_hosts, SetFolderPathList):
                 raise MKGeneralException(
@@ -487,7 +502,8 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
 def _get_config_file_paths(with_conf_d: bool) -> List[Path]:
     list_of_files = [Path(cmk.utils.paths.main_config_file)]
     if with_conf_d:
-        list_of_files += sorted(Path(cmk.utils.paths.check_mk_config_dir).glob("**/*.mk"),
+        all_files = Path(cmk.utils.paths.check_mk_config_dir).rglob("*")
+        list_of_files += sorted([p for p in all_files if p.suffix in {".mk", ".cfg"}],
                                 key=cmk.utils.key_config_paths)
     for path in [Path(cmk.utils.paths.final_config_file), Path(cmk.utils.paths.local_config_file)]:
         if path.exists():
@@ -937,6 +953,7 @@ _old_service_descriptions = {
     "barracuda_mailqueues": lambda item: (False, "Mail Queue"),
     "brocade_sys_mem": "Memory used",
     "casa_cpu_temp": "Temperature %s",
+    "cisco_asa_failover": "Cluster Status",
     "cisco_mem": "Mem used %s",
     "cisco_mem_asa": "Mem used %s",
     "cisco_mem_asa64": "Mem used %s",
@@ -2015,6 +2032,13 @@ def _extract_check_plugins(
         if check_info_dict.get("service_description") is None:
             continue
         try:
+            if agent_based_register.is_registered_check_plugin(
+                    CheckPluginName(maincheckify(check_plugin_name))):
+                # implemented here instead of the agent based register so that new API code does not
+                # need to include any handling of legacy cases
+                raise ValueError(
+                    f'Legacy check plugin still exists for check plugin {check_plugin_name}. '
+                    'Please remove legacy plugin.')
             agent_based_register.add_check_plugin(
                 create_check_plugin_from_legacy(
                     check_plugin_name,
@@ -2530,11 +2554,25 @@ class HostConfig:
             return None
         return entries[0]
 
+    def _is_host_snmp_v1(self) -> bool:
+        """Determines is host snmp-v1 using a bit Heuristic algorithm"""
+        if isinstance(self._snmp_credentials(), tuple):
+            return False  # v3
+
+        if self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts):
+            return False
+
+        return not self._config_cache.in_binary_hostlist(self.hostname, snmpv2c_hosts)
+
+    def _is_inline_backend_supported(self) -> bool:
+        return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
+
+    def _is_pysnmp_backend_supported(self) -> bool:
+        return "pysnmp" in sys.modules and not cmk_version.is_raw_edition()
+
     def _get_snmp_backend(self) -> SNMPBackendEnum:
-        has_netsnmp = "netsnmp" in sys.modules
-        has_pysnmp = "pysnmp" in sys.modules
-        with_inline_snmp = has_netsnmp and not cmk_version.is_raw_edition()
-        with_pysnmp = has_pysnmp and not cmk_version.is_raw_edition()
+        with_inline_snmp = self._is_inline_backend_supported()
+        with_pysnmp = self._is_pysnmp_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
@@ -2549,10 +2587,16 @@ class HostConfig:
                 return SNMPBackendEnum.CLASSIC
             raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
 
+        # TODO(sk): remove this when netsnmp is fixed
+        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
+        if self._is_host_snmp_v1():
+            return SNMPBackendEnum.CLASSIC
+
         if with_pysnmp and snmp_backend_default == "pysnmp":
             return SNMPBackendEnum.PYSNMP
         if with_inline_snmp and snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
+
         return SNMPBackendEnum.CLASSIC
 
     def _is_cluster(self) -> bool:
@@ -3915,3 +3959,7 @@ class CEEHostConfig(HostConfig):
     def lnx_remote_alert_handlers(self) -> List[Dict[str, str]]:
         return self._config_cache.host_extra_conf(self.hostname,
                                                   agent_config.get("lnx_remote_alert_handlers", []))
+
+
+def get_storage_format() -> 'store.StorageFormat':
+    return store.StorageFormat.from_str(config_storage_format)

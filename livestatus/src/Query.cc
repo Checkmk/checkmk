@@ -69,7 +69,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _renderer_query(nullptr)
     , _table(table)
     , _keepalive(false)
-    , _auth_user(nullptr)
+    , _auth_user(no_auth_user())
     , _wait_timeout(0)
     , _wait_trigger(Triggers::Kind::all)
     , _wait_object(nullptr)
@@ -651,7 +651,8 @@ bool Query::processDataset(Row row) {
     }
 
     if (_filter->accepts(row, _auth_user, _timezone_offset) &&
-        (_auth_user == nullptr || _table.isAuthorized(row, _auth_user))) {
+        (_auth_user == no_auth_user() ||
+         _table.isAuthorized(row, _auth_user))) {
         _current_line++;
         if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
             return false;

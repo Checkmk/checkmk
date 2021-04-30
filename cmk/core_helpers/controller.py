@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import signal
+import sys
 import traceback
 from pathlib import Path
 from types import FrameType
@@ -18,6 +19,8 @@ import cmk.utils.cleanup
 import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
+from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
+from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.type_defs import ConfigSerial, HostName, result
 
 from . import FetcherType, protocol
@@ -112,12 +115,23 @@ class Command(NamedTuple):
         )
 
 
-def process_command(command: Command) -> None:
+def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
     with _confirm_command_processed():
-        global_config = load_global_config(command.serial)
-        logging.getLogger().setLevel(global_config.log_level)
-        SNMPFetcher.plugin_store = global_config.snmp_plugin_store
-        run_fetchers(**command._asdict())
+        serial: ConfigSerial = ConfigSerial("")
+        host_name: HostName = ""
+        try:
+            command = Command.from_str(raw_command)
+            serial = command.serial
+            host_name = command.host_name
+            global_config = load_global_config(command.serial)
+            logging.getLogger().setLevel(global_config.log_level)
+            SNMPFetcher.plugin_store = global_config.snmp_plugin_store
+            run_fetchers(**command._asdict())
+            observer.check_resources(raw_command)
+        except Exception as e:
+            crash_info = create_fetcher_crash_dump(serial=serial, host=host_name)
+            logger.critical("Exception is '%s' (%s)", e, crash_info)
+            sys.exit(15)
 
 
 @contextlib.contextmanager

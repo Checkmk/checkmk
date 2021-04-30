@@ -50,7 +50,8 @@ class IPMISource(AgentSource):
 
     def _make_file_cache(self) -> DefaultAgentFileCache:
         return DefaultAgentFileCacheFactory(
-            path=self.file_cache_path,
+            self.hostname,
+            base_path=self.file_cache_base_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
         ).make()
@@ -61,6 +62,7 @@ class IPMISource(AgentSource):
 
         return IPMIFetcher(
             self._make_file_cache(),
+            cluster=self.host_config.is_cluster,
             address=self.ipaddress,
             username=self.credentials.get("username"),
             password=self.credentials.get("password"),

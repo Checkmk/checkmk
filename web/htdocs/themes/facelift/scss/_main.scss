@@ -488,7 +488,7 @@ div.really {
 
 div.success {
   color: $primary-font-color;
-  background-color: $base-color;
+  background-color: $headline-color;
 }
 
 div.message {
@@ -923,8 +923,9 @@ div#hover_menu {
   }
 
   .graph_container {
+    display: block;
+    float: left;
     margin: 0 2px 2px 0;
-
     color: $graph-hover-popup-font-color;
     background-color: $graph-hover-popup-bg-color;
     border: $graph-hover-popup-border;
@@ -1564,4 +1565,9 @@ div#row_info {
   padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;
+}
+
+/* Inside a foldable, we need a different color here in order to see a difference w.r.t. the title*/
+div.foldable div.success {
+  background-color: $base-color;
 }

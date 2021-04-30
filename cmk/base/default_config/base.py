@@ -275,3 +275,5 @@ status_data_inventory: _List = []
 legacy_checks: _List = []
 
 logwatch_rules: _List = []
+
+config_storage_format = "standard"  # new in 2.1. Possible also: "raw"

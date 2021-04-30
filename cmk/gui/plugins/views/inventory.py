@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import time
 import abc
 from typing import Dict, List, Tuple, Union, Callable, Any
@@ -28,6 +30,7 @@ from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
@@ -60,17 +63,24 @@ from cmk.gui.plugins.views import (
     declare_1to1_sorter,
     cmp_simple_number,
     render_labels,
+    Cell,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.type_defs import Row
+from cmk.gui.view_utils import CellSpec
 
 PaintResult = Tuple[str, Union[str, HTML]]
+InventoryPath = str
+ParsedPath = List[Union[str, int]]
 
 
-def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
+def paint_host_inventory_tree(row: Row,
+                              invpath: InventoryPath = ".",
+                              column: str = "host_inventory") -> CellSpec:
     hostname = row.get("host_name")
+    assert isinstance(hostname, str)
     sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
-
     if len(sites_with_same_named_hosts) > 1:
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
@@ -80,6 +90,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
+    assert isinstance(struct_tree, StructuredDataTree)
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
@@ -106,7 +117,8 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
-def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
+def _paint_host_inventory_tree_children(struct_tree: StructuredDataTree, parsed_path: ParsedPath,
+                                        tree_renderer: NodeRenderer) -> CellSpec:
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:
@@ -116,12 +128,13 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     with html.plugged():
         for child in children:
             child.show(tree_renderer)
-        code = html.drain()
+        code = HTML(html.drain())
     return "invtree", code
 
 
-def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                     attribute_keys):
+def _paint_host_inventory_tree_value(struct_tree: StructuredDataTree, parsed_path: ParsedPath,
+                                     tree_renderer: NodeRenderer, invpath: InventoryPath,
+                                     attribute_keys: List[str]) -> CellSpec:
     if attribute_keys == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
@@ -140,7 +153,7 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
-        code = html.drain()
+        code = HTML(html.drain())
     return "", code
 
 
@@ -301,7 +314,7 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_inventory_tree(row)
 
 
@@ -342,7 +355,7 @@ class ABCRowTable(RowTable):
             for subrow in self._get_rows(hostrow):
                 subrow.update(hostrow)
                 rows.append(subrow)
-        return rows
+        return rows, len(data)
 
     def _get_raw_data(self, only_sites, query):
         sites.live().set_only_sites(only_sites)
@@ -960,16 +973,18 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
-        vi = visual_info_registry.get(this_tablename)
-        ds = data_source_registry.get(this_tablename)
-        if ds is None or vi is None:
+        visual_info_class = visual_info_registry.get(this_tablename)
+        data_source_class = data_source_registry.get(this_tablename)
+        if data_source_class is None or visual_info_class is None:
             errors.append("Missing declare_invtable_view for inventory table view '%s'" %
                           this_tablename)
             continue
-        assert isinstance(ds, ABCDataSourceInventory)
+
+        assert issubclass(data_source_class, ABCDataSourceInventory)
+        ds = data_source_class()
         info_names.append(ds.ident)
         invpaths.append(ds.inventory_path)
-        titles.append(vi.title)
+        titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
     ds_class = type(
@@ -1331,7 +1346,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'datasource': 'hosts',
     "topic": "inventory",
     "sort_index": 10,
-    'title': _('CPU Related Inventory of all Hosts'),
+    'title': _('CPU inventory of all hosts'),
     'description': _('A list of all hosts with some CPU related inventory data'),
     'public': True,
     'hidden': False,
@@ -1502,7 +1517,7 @@ class PainterInvhistTime(Painter):
     def painter_options(self):
         return ['ts_format', 'ts_date']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["invhist_time"], True, 60 * 10)
 
 
@@ -1519,7 +1534,7 @@ class PainterInvhistDelta(Painter):
     def columns(self):
         return ['invhist_deltainvhist_time']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_inventory_tree(row, column="invhist_delta")
 
 
@@ -1546,7 +1561,7 @@ class PainterInvhistRemoved(Painter):
     def columns(self):
         return ['invhist_removed']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "removed")
 
 
@@ -1566,7 +1581,7 @@ class PainterInvhistNew(Painter):
     def columns(self):
         return ['invhist_new']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "new")
 
 
@@ -1586,7 +1601,7 @@ class PainterInvhistChanged(Painter):
     def columns(self):
         return ['invhist_changed']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "changed")
 
 
@@ -1920,6 +1935,9 @@ class DeltaNodeRenderer(NodeRenderer):
 def ajax_inv_render_tree():
     site_id = html.request.var("site")
     hostname = html.request.var("host")
+    if not inventory.may_see(hostname, site_id):
+        raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % hostname)
+
     invpath = html.request.var("path")
     tree_id = html.request.var("treeid", "")
     show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))

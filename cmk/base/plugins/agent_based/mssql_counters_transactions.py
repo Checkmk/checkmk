@@ -15,6 +15,7 @@ from .agent_based_api.v1 import (
 )
 
 from .utils.mssql_counters import (
+    accumulate_node_results,
     Section,
     discovery_mssql_counters_generic,
     get_rate_or_none,
@@ -131,8 +132,11 @@ def _cluster_check_base(
     Result(state=<State.OK: 0>, summary='[node1] Tracked Transactions: 1.0/s')
     Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
-    for node_name, node_section in section.items():
-        yield from _check_common(value_store, time_point, node_name, item, params, node_section)
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_common(
+            value_store, time_point, node_name, item, params, node_section),
+        section=section,
+    )
 
 
 def cluster_check_mssql_counters_transactions(

@@ -1,5 +1,5 @@
 OPENSSL := openssl
-OPENSSL_VERS := 1.1.1d
+OPENSSL_VERS := 1.1.1k
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 
 OPENSSL_UNPACK := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-unpack
@@ -30,7 +30,8 @@ $(OPENSSL_BUILD): $(OPENSSL_UNPACK)
 	    ./config --prefix=$(OMD_ROOT) \
                  --openssldir=$(OMD_ROOT)/etc/ssl \
                  -Wl,-rpath,$(OMD_ROOT)/lib \
-                 enable-md2
+                 enable-md2 \
+                 no-tests
 	$(MAKE) -C $(OPENSSL_BUILD_DIR) -j6
 	$(TOUCH) $@
 endif

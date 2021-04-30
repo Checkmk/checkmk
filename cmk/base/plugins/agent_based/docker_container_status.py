@@ -56,26 +56,51 @@ def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
 
 
 def host_labels_docker_container_status(section) -> HostLabelGenerator:
-    """
-    >>> from pprint import pprint as pp
-    >>> list(host_labels_docker_container_status({}))
-    [HostLabel('cmk/docker_object', 'container')]
-    >>> list(host_labels_docker_container_status({"ImageTags": []}))
-    [HostLabel('cmk/docker_object', 'container')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'doctor:strange'),
-     HostLabel('cmk/docker_image_name', 'doctor'),
-     HostLabel('cmk/docker_image_version', 'strange')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'fiction/doctor:strange'),
-     HostLabel('cmk/docker_image_name', 'doctor'),
-     HostLabel('cmk/docker_image_version', 'strange')]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]})))
-    [HostLabel('cmk/docker_object', 'container'),
-     HostLabel('cmk/docker_image', 'library:8080/fiction/doctor'),
-     HostLabel('cmk/docker_image_name', 'doctor')]
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:container :
+            This label is set if the corresponding host is a docker container.
+
+        cmk/docker_image:
+            This label is set to the docker image if the corresponding host is
+            a docker container.
+            For instance: "docker.io/library/nginx:latest"
+
+        cmk/docker_image_name:
+            This label is set to the docker image name if the corresponding host
+            is a docker container. For instance: "nginx".
+
+        cmk/docker_image_version:
+            This label is set to the docker images version if the corresponding
+            host is a docker container. For instance: "latest".
+
+    Examples:
+
+        >>> from pprint import pprint
+        >>> def show(gen):
+        ...     for l in gen: print(':'.join(l))
+        ...
+        >>> show(host_labels_docker_container_status({}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": []}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:fiction/doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]}))
+        cmk/docker_object:container
+        cmk/docker_image:library:8080/fiction/doctor
+        cmk/docker_image_name:doctor
+
     """
     yield HostLabel("cmk/docker_object", "container")
 

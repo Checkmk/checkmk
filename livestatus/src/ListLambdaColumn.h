@@ -9,7 +9,10 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
 #include "Column.h"
@@ -21,7 +24,7 @@ class Aggregator;
 class RowRenderer;
 
 struct ListColumn : Column {
-    using column_type = std::vector<std::string>;
+    using value_type = std::vector<std::string>;
     class Constant;
     class Reference;
     template <class T>
@@ -43,63 +46,75 @@ struct ListColumn : Column {
 
     // TODO(sp) What we actually want here is a stream of strings, not a
     // concrete container.
-    virtual column_type getValue(
-        Row row, const contact* auth_user,
-        std::chrono::seconds timezone_offset) const = 0;
+    virtual value_type getValue(Row row, const contact* auth_user,
+                                std::chrono::seconds timezone_offset) const = 0;
 };
 
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
 template <class T>
 class ListColumn::Callback : public ListColumn {
+    using f0_t = std::function<value_type(const T&)>;
+    using f1_t = std::function<value_type(const T&, const contact*)>;
+    using function_type = std::variant<f0_t, f1_t>;
+
 public:
     Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             std::function<column_type(const T&)> f)
+             const ColumnOffsets& offsets, function_type f)
         : ListColumn{name, description, offsets}, f_{std::move(f)} {}
     ~Callback() override = default;
 
-    column_type getValue(
-        Row row, const contact* /*auth_user*/,
+    value_type getValue(
+        Row row, const contact* auth_user,
         std::chrono::seconds /*timezone_offset*/) const override {
         const T* data = columnData<T>(row);
-        return data == nullptr ? column_type{} : f_(*data);
+        if (std::holds_alternative<f0_t>(f_)) {
+            return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
+        }
+        if (std::holds_alternative<f1_t>(f_)) {
+            return data == nullptr ? Default
+                                   : std::get<f1_t>(f_)(*data, auth_user);
+        }
+        throw std::runtime_error("unreachable");
     }
 
 private:
-    std::function<column_type(const T&)> f_;
+    const value_type Default{};
+    function_type f_;
 };
 
 class ListColumn::Constant : public ListColumn {
 public:
+    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
-             const column_type& x)
-        : ListColumn{name, description, {}}, x_{x} {}
+             // cppcheck-suppress passedByValue
+             value_type x)
+        : ListColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;
-    column_type getValue(Row /*row*/, const contact* /*auth_user*/,
-                         std::chrono::seconds /*timezone_offset*/
+    value_type getValue(Row /*row*/, const contact* /*auth_user*/,
+                        std::chrono::seconds /*timezone_offset*/
     ) const override {
         return x_;
     }
 
 private:
-    const column_type x_;
+    const value_type x_;
 };
 
 class ListColumn::Reference : public ListColumn {
 public:
     Reference(const std::string& name, const std::string& description,
-              const column_type& x)
+              const value_type& x)
         : ListColumn{name, description, {}}, x_{x} {}
     ~Reference() override = default;
-    column_type getValue(Row /*row*/, const contact* /*auth_user*/,
-                         std::chrono::seconds /*timezone_offset*/
+    value_type getValue(Row /*row*/, const contact* /*auth_user*/,
+                        std::chrono::seconds /*timezone_offset*/
     ) const override {
         return x_;
     }
 
 private:
-    const column_type& x_;
+    const value_type& x_;
 };
 
 #endif

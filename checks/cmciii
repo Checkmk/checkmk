@@ -41,28 +41,124 @@ def cmciii_temp_get_item(container, device):
     return itemname
 
 
-def cmciii_phase_get_item_and_key(container, device, var_type):
+def cmciii_phase_get_key(container, var_type):
+    if var_type != "2":
+        return " ".join(container[3:])
+
+    key = "_".join(container[3:]).lower()
+    if key == "power_apparent":
+        key = "appower"
+    elif key.endswith("_active"):
+        key = key.replace("_active", "")
+    return key
+
+
+def cmciii_phase_get_item(container, device):
     itemname = [device]
     if container[1]:
         itemname.append(container[1])
-    itemname += [ "Phase", container[2].replace("Phase", "")\
-                                       .replace("L", "").strip() ]
-    itemname = " ".join(itemname)
-    if var_type == "2":
-        key = "_".join(container[3:]).lower()
-        if key == "power_apparent":
-            key = "appower"
-        elif key.endswith("_active"):
-            key = key.replace("_active", "")
-    else:
-        key = " ".join(container[3:])
-    return itemname, key
+    itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
+    return " ".join(itemname)
+
+
+def cmciii_container(location, variable_splitted):
+    container = [location] + variable_splitted[:-1]
+    if len(container) == 2:
+        container += [""]
+    if container[1].startswith("Phase"):
+        container = [container[0], ""] + container[1:]
+    return container
+
+
+def sensor_type(container):
+    if container[1].startswith("PSM_") and "Unit" in container:
+        return "psm_current"
+    if container[1].startswith("PSM_") and container[2].startswith("Plug"):
+        return "psm_plugs"
+    if container[1].startswith("Input") or container[1].startswith("Output"):
+        return "io"
+    if "Access" in container:
+        return "access"
+    if "Humidity" in container:
+        return "humidity"
+    if ("Temperature" in container or "Dew Point" in container or
+            container[2].endswith("Temperature")):
+        return "temp"
+    if "Leakage" in container:
+        return "leakage"
+    if container[2].startswith("CAN") and container[2].endswith("Current"):
+        return "can_current"
+    # NOTE: Phase sensors introduce an empty element in the second position of
+    # the container so we need to shift the index here.
+    if container[2].startswith("Phase") or (len(container) > 3 and
+                                            container[3].startswith("Phase")):
+        return "phase"
+    return None
+
+
+def sensor_item(table, container, device):
+    if table == "temp":
+        return cmciii_temp_get_item(container, device)
+    if table == "phase":
+        return cmciii_phase_get_item(container, device)
+    if table in ("psm_plugs", "can_current"):
+        return "%s %s" % (device, ".".join(container[1:]))
+    return "%s %s" % (device, container[1])
+
+
+def sensor_key(table, container, var_type, variable_splitted):
+    if table == "phase":
+        return cmciii_phase_get_key(container, var_type)
+    return variable_splitted[-1]
+
+
+def sensor_value(value_str, value_int, scale, var_type, var_unit, container):
+    if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
+        return value_str
+
+    # neg. scale: "-X" => "/ X"
+    # pos. scale: "X"  => "* X"
+    # else:            => "* 1"
+    value = int(value_int)
+    if scale:
+        if (int_scale := int(scale)) < 0:
+            value = float(value_int) * (-1.0 / float(scale))
+        elif int_scale > 0:
+            value = float(value_int) * float(scale)
+
+    if "Power" in container or "Energy" in container:
+        if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
+            value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
+    return value
+
+
+def parse_devices_and_states(device_table):
+    devices, states = {}, {}
+    for num, (endoid, name, alias, status) in enumerate(device_table, start=1):
+        # no blanks in names since we use blanks in items
+        # later to split between unit_name and item_name
+        dev_name = alias.replace(" ", "_")
+        if not dev_name:
+            dev_name = name + "-" + str(num)
+
+        if dev_name in states:
+            dev_name = "%s %s" % (alias, endoid)
+
+        devices.setdefault(endoid, dev_name)
+
+        if dev_name in states and states[dev_name]["_location_"] != endoid:
+            dev_name += " %s" % endoid
+
+        states.setdefault(dev_name, {"status": status, "_location_": endoid})
+    return devices, states
 
 
 def parse_cmciii(info):
-    devices = {}
+    device_table, var_table = info
+    devices, states = parse_devices_and_states(device_table)
+
     parsed = {
-        "state": {},
+        "state": states,
         "psm_current": {},
         "psm_plugs": {},
         "io": {},
@@ -72,122 +168,41 @@ def parse_cmciii(info):
         "can_current": {},
         "humidity": {},
         "phase": {},
+        "leakage": {},
     }
-
-    dev_table, var_table = info
-
-    num = 0
-    for endoid, name, alias, status in dev_table:
-        # no blanks in names since we use blanks in items
-        # later to split between unit_name and item_name
-        dev_name = alias.replace(" ", "_")
-        num += 1
-        if not dev_name:
-            dev_name = name + "-" + str(num)
-
-        if dev_name in parsed["state"]:
-            dev_name = "%s %s" % (alias, endoid)
-
-        devices.setdefault(endoid, dev_name)
-
-        if dev_name in parsed["state"] and \
-           parsed["state"][dev_name]["_location_"] != endoid:
-            dev_name += " %s" % endoid
-
-        parsed["state"].setdefault(dev_name, {
-            "status": status,
-            "_location_": endoid,
-        })
 
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")
         variable_splitted = variable.split(".")
-        device = devices.get(location)
-        container = [location] + variable_splitted[:-1]
-        if len(container) == 2:
-            container += [""]
+        container = cmciii_container(location, variable_splitted)
 
-        key = variable_splitted[-1]
-        if container[1].startswith("PSM_") and "Unit" in container:
-            this_table = "psm_current"
-            itemname = "%s %s" % (device, container[1])
-
-        elif container[1].startswith("PSM_") and container[2].startswith("Plug"):
-            this_table = "psm_plugs"
-            itemname = "%s %s" % (device, ".".join(container[1:]))
-
-        elif container[1].startswith("Input") or container[1].startswith("Output"):
-            this_table = "io"
-            itemname = "%s %s" % (device, container[1])
-
-        elif "Access" in container:
-            this_table = "access"
-            itemname = "%s %s" % (device, container[1])
-
-        elif "Humidity" in container:
-            this_table = "humidity"
-            itemname = "%s %s" % (device, container[1])
-
-        elif "Temperature" in container or "Dew Point" in container or \
-             container[2].endswith("Temperature"):
-            this_table = "temp"
-            itemname = cmciii_temp_get_item(container, device)
-
-        elif container[2].startswith("CAN") and container[2].endswith("Current"):
-            this_table = "can_current"
-            itemname = "%s %s" % (device, ".".join(container[1:]))
-
-        elif container[1].startswith("Phase"):
-            this_table = "phase"
-            container = [container[0], ""] + container[1:]
-            itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
-
-        elif container[2].startswith("Phase"):
-            this_table = "phase"
-            itemname, key = cmciii_phase_get_item_and_key(container, device, var_type)
-
-        else:
-            this_table = None
-
-        if this_table is None:
+        type_ = sensor_type(container)
+        if type_ is None:
             continue
 
-        if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
-            value = value_str
+        device = devices.get(location)
+        item = sensor_item(type_, container, device)
+        if item in parsed[type_] and parsed[type_][item]["_location_"] != location:
+            item += " %s" % location
+        parsed[type_].setdefault(item, {"_device_": device, "_location_": location})
 
-        else:
-            # neg. scale: "-X" => "/ X"
-            # pos. scale: "X"  => "* X"
-            # else:            => "* 1"
-            value = int(value_int)
-            if scale:
-                if (int_scale := int(scale)) < 0:
-                    value = float(value_int) * (-1.0 / float(scale))
-                elif int_scale > 0:
-                    value = float(value_int) * float(scale)
-
-        if "Power" in container or "Energy" in container:
-            if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
-                value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
-
-        if itemname in parsed[this_table] and \
-           parsed[this_table][itemname]["_location_"] != location:
-            itemname += " %s" % location
-
-        parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
-        parsed[this_table][itemname].setdefault(key, value)
+        key = sensor_key(type_, container, var_type, variable_splitted)
+        value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
+        parsed[type_][item].setdefault(key, value)
 
     for entry, attrs in parsed.get("temp", {}).items():
         found_temp_in_out = False
         for attr, val in attrs.items():
             if attr.startswith("In-") or attr.startswith("Out-"):
-                parsed["temp_in_out"].setdefault("%s %s" % \
-                    (entry, attr.replace("-", " ")\
-                                .replace("Bot", "Bottom")\
-                                .replace("Mid", "Middle")), {
-                    "Value"      : val,
-                    "_device_"   : device,
-                    "_location_" : location})
+                parsed["temp_in_out"].setdefault(
+                    "%s %s" % (entry, attr.replace("-", " ").replace("Bot", "Bottom").replace(
+                        "Mid", "Middle")),
+                    {
+                        "Value": val,
+                        "_device_": device,
+                        "_location_": location
+                    },
+                )
                 found_temp_in_out = True
         if found_temp_in_out:
             del parsed["temp"][entry]
@@ -638,4 +653,44 @@ check_info['cmciii.phase'] = {
     "service_description": "Input %s",
     "has_perfdata": True,
     "group": "el_inphase",
+}
+
+#   .--leakage-------------------------------------------------------------.
+#   |                  _            _                                      |
+#   |                 | | ___  __ _| | ____ _  __ _  ___                   |
+#   |                 | |/ _ \/ _` | |/ / _` |/ _` |/ _ \                  |
+#   |                 | |  __/ (_| |   < (_| | (_| |  __/                  |
+#   |                 |_|\___|\__,_|_|\_\__,_|\__, |\___|                  |
+#   |                                         |___/                        |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+#.
+
+
+def inventory_cmciii_leakage(parsed):
+    for entry in parsed["leakage"]:
+        yield entry, {}
+
+
+def check_cmciii_leakage(item, _no_params, parsed):
+    entry = parsed["leakage"].get(item)
+    if not entry:
+        return
+
+    # We do not take entry["Position"] into account. It detects leaks but does
+    # not account for the delay. The delay is the time after which the status
+    # message changes.
+    # The leakage status is a readable text for notAvail(1), ok(4), alarm(5),
+    # probeOpen(24). All numeric values are defined in cmcIIIMsgStatus.
+    status = entry["Status"]
+    yield 2 if status != "OK" else 0, "Status: %s" % status
+    yield 0, "Delay: %s" % entry["Delay"]
+
+
+check_info['cmciii.leakage'] = {
+    "inventory_function": inventory_cmciii_leakage,
+    "check_function": check_cmciii_leakage,
+    "service_description": "%s",
+    "has_perfdata": True,
 }

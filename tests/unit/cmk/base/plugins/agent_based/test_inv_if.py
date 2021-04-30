@@ -289,9 +289,18 @@ SECTION_INV_IF = SectionInvIf(
                   oper_status=2,
                   phys_address='74:DA:88:58:16:11',
                   admin_status=1,
+                  last_change=0.0),
+        Interface(index='49181',
+                  descr='gigabitEthernet 1/0/28',
+                  alias='',
+                  type='6',
+                  speed=0,
+                  oper_status=2,
+                  phys_address='74:DA:88:58:16:11',
+                  admin_status=None,
                   last_change=0.0)
     ],
-    n_interfaces_total=31,
+    n_interfaces_total=32,
 )
 
 
@@ -417,6 +426,10 @@ def test_parse_inv_if():
             ],
             [
                 '49180', 'gigabitEthernet 1/0/28', '', '6', '0', '0', '2', '1',
+                [116, 218, 136, 88, 22, 17], '0'
+            ],
+            [
+                '49181', 'gigabitEthernet 1/0/28', '', '6', '0', '0', '2', '',
                 [116, 218, 136, 88, 22, 17], '0'
             ],
         ],
@@ -832,11 +845,24 @@ def test_inventory_if():
                          'available': True
                      },
                      status_columns={'last_change': 1593648000}),
+            TableRow(path=['networking', 'interfaces'],
+                     key_columns={'index': 49181},
+                     inventory_columns={
+                         'description': 'gigabitEthernet 1/0/28',
+                         'alias': '',
+                         'speed': 0,
+                         'phys_address': '74:DA:88:58:16:11',
+                         'oper_status': 2,
+                         'admin_status': None,
+                         'port_type': 6,
+                         'available': True
+                     },
+                     status_columns={'last_change': 1593648000}),
             Attributes(path=['networking'],
                        inventory_attributes={
-                           'available_ethernet_ports': 19,
-                           'total_ethernet_ports': 30,
-                           'total_interfaces': 31
+                           'available_ethernet_ports': 20,
+                           'total_ethernet_ports': 31,
+                           'total_interfaces': 32
                        },
                        status_attributes={}),
         ]

@@ -73,24 +73,24 @@ body.login {
   }
 
   #label_user {
-    top: 80px;
+    top: 86px;
   }
 
   #input_user {
-    top: 76px;
+    top: 79px;
   }
 
   #label_pass {
-    top: 120px;
+    top: 126px;
   }
 
   #input_pass {
-    top: 116px;
+    top: 119px;
   }
 
   #input_user,
   #input_pass {
-    left: 146px;
+    left: 135px;
     width: 183px;
     height: $input-field-height;
     background-repeat: no-repeat;
@@ -101,8 +101,7 @@ body.login {
 
   #_login {
     position: absolute;
-    right: 15px;
-    bottom: 40px;
+    bottom: 29px;
     left: 40px;
     width: calc(100% - 80px);
     height: 29px;
@@ -114,11 +113,11 @@ body.login {
 
   #login_error {
     position: absolute;
-    bottom: 4px;
+    bottom: 6px;
     left: 92px;
     z-index: 100;
     width: 180px;
-    height: 30px;
+    height: 16px;
     padding: 0;
     margin: 0;
     color: $lightgrey;
@@ -127,16 +126,16 @@ body.login {
     background-repeat: no-repeat;
     border: 1px solid $color-state-error-border;
     border-radius: $theme-border-radius;
-  }
 
-  #login_error div.error {
-    padding: 8px 0 0;
-    margin: 0;
-    color: $lightgrey;
-    background-color: transparent;
-    border-style: none;
-    border-radius: 0;
-    box-shadow: 0 0 0;
+    div.error {
+      padding: 1px 0 0;
+      margin: 0;
+      color: $lightgrey;
+      background-color: transparent;
+      border-style: none;
+      border-radius: 0;
+      box-shadow: 0 0 0;
+    }
   }
 
   #foot {

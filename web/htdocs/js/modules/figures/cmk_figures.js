@@ -356,8 +356,7 @@ export class FigureBase {
         })
             .then(json_data => this._process_api_response(json_data))
             .catch(e => {
-                console.error(e);
-                this._show_error_info("Error fetching data");
+                this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
     }
@@ -371,7 +370,7 @@ export class FigureBase {
         //      },
         // }}
         if (api_response.result_code != 0) {
-            this._show_error_info(api_response.result);
+            this._show_error_info(api_response.result, api_response.severity);
             return;
         }
         this._clear_error_info();
@@ -390,14 +389,22 @@ export class FigureBase {
         this._call_post_render_hooks(data);
     }
 
-    _show_error_info(error_info) {
-        let error = this._div_selection.selectAll("label#figure_error").data([null]);
-        error = error.enter().append("label").attr("id", "figure_error").merge(error);
-        error.text(error_info);
+    _show_error_info(error_info, div_class) {
+        this._div_selection
+            .selectAll("div#figure_error")
+            .data([null])
+            .join("div")
+            .attr("id", "figure_error")
+            .attr("class", div_class)
+            .text(error_info);
+        if (!this.svg) return;
+        this.svg.style("display", "none");
     }
 
     _clear_error_info() {
         this._div_selection.select("#figure_error").remove();
+        if (!this.svg) return;
+        this.svg.style("display", null);
     }
 
     _call_pre_render_hooks(data) {
@@ -567,30 +574,26 @@ export class FigureTooltip {
     update_position(event) {
         if (!this.active()) return;
 
-        let ev = "sourceEvent" in event ? event.sourceEvent : event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
         this._tooltip
             .style("left", () => {
-                if (!render_to_the_left) return ev.layerX + 20 + "px";
-                return "auto";
+                return !render_to_the_left ? x + 20 + "px" : "auto";
             })
             .style("right", () => {
-                if (render_to_the_left) return this.plot_size.width - ev.layerX + 75 + "px";
-                return "auto";
+                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
             })
             .style("bottom", () => {
-                if (render_upwards) return "6px";
-                return "auto";
+                return render_upwards ? "6px" : "auto";
             })
             .style("top", () => {
-                if (!render_upwards) return ev.layerY - 20 + "px";
-                return "auto";
+                return !render_upwards ? y - 20 + "px" : "auto";
             })
             .style("pointer-events", "none")
             .style("opacity", 1);
@@ -635,43 +638,50 @@ export class FigureTooltip {
 }
 
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, state) {
-    if (!getIn(state, "draw")) {
+export function state_component(figurebase, params) {
+    const paint_style = getIn(params, "paint");
+    let status_cls = svc_status_css(paint_style, params);
+    if (!(paint_style && status_cls)) {
         figurebase.svg.selectAll(".state_component").remove();
         return;
     }
     //hard fix for the moment
-    var border_width = 2;
-    let font_size = 16;
-
+    let font_size = 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
-        .data([state])
+        .data([params])
         .join("g")
-        .classed("state_component", true);
-    let the_rect = state_component
-        .selectAll("rect")
+        .classed("state_component", true)
+        .attr(
+            "transform",
+            "translate(" +
+                (figurebase.figure_size.width - font_size * 8) / 2 +
+                ", " +
+                (figurebase.figure_size.height - font_size * 2) +
+                ")"
+        );
+    let label_box = state_component
+        .selectAll("rect.status_label")
         .data(d => [d])
-        .join("rect");
-    the_rect
-        .attr("x", border_width / 2)
-        .attr("y", border_width / 2)
-        .attr("width", figurebase.figure_size.width - border_width)
-        .attr("height", figurebase.figure_size.height - border_width)
-        .attr("class", d => d.style)
-        .style("fill", "none")
-        .style("stroke-width", border_width);
+        .join("rect")
+        .attr("class", `status_label ${status_cls}`)
+        // status_label css class is also defined for WATO and not encapsulated
+        // it predifines other sizes, we use thus style instead of attr for size
+        // to override that
+        .style("width", font_size * 8)
+        .style("height", font_size * 1.5)
+        .attr("rx", 2);
 
     let the_text = state_component
         .selectAll("text")
         .data(d => [d])
-        .join("text");
-    the_text
-        .attr("x", figurebase.figure_size.width / 2)
-        .attr("y", figurebase.figure_size.height - font_size)
+        .join("text")
         .attr("text-anchor", "middle")
+        .attr("dx", font_size * 4)
+        .attr("dy", font_size * 1.2)
         .style("font-size", font_size + "px")
-        .attr("class", d => d.style)
+        .style("fill", "black")
+        .style("font-weight", "bold")
         .text(d => d.msg);
 }
 
@@ -734,9 +744,12 @@ export function background_status_component(selection, params, rect_size) {
         selection.selectAll("rect.status_background").remove();
     }
 }
+
 export function metric_value_component(selection, value, attr, style) {
     let css_class = svc_status_css("text", style);
     if (!css_class) css_class = "single_value";
+
+    const font_size = clamp(style.font_size, [12, 50]);
 
     let link = selection
         .selectAll("a.single_value")
@@ -752,13 +765,16 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
-        .attr("class", css_class)
-        .style("font-size", style.font_size + "px");
+        //.attr("class", css_class)
+        .style("font-weight", "bold")
+        .style("font-size", font_size + "px");
 
     let unit = text
         .selectAll("tspan")
         .data(d => [d])
         .join("tspan")
-        .style("font-size", style.font_size / 2 + "px")
+        .style("font-size", font_size / 2 + "px")
+        .style("font-weight", "lighter")
         .text(d => d.unit);
+    if (value.unit !== "%") unit.attr("x", attr.x).attr("dy", "1em");
 }

@@ -519,11 +519,11 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.open_div(class_="avlegend levels")
         html.h3(_("Availability levels"))
 
-        html.div(_("OK"), class_="state state0")
+        html.div(html.render_span(_("OK")), class_="state state0")
         html.div("> %.3f%%" % warn, class_="level")
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
         html.div("> %.3f%%" % crit, class_="level")
-        html.div(_("CRIT"), class_="state state2")
+        html.div(html.render_span(_("CRIT")), class_="state state2")
         html.div("< %.3f%%" % crit, class_="level")
 
         html.close_div()
@@ -617,21 +617,22 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.open_div(class_="avlegend timeline")
 
     html.h3(_('Timeline colors'))
-    html.div(_("UP") if what == "host" else _("OK"), class_="state state0")
+    html.div(html.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
 
     if what != "host":
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
 
-    html.div(_("DOWN") if what == "host" else _("CRIT"), class_="state state2")
-    html.div(_("UNREACH") if what == "host" else _("UNKNOWN"), class_="state state3")
-    html.div(_("Flapping"), class_="state flapping")
+    html.div(html.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2")
+    html.div(html.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")),
+             class_="state state3")
+    html.div(html.render_span(_("Flapping")), class_="state flapping")
 
     if what != "host":
-        html.div(_("H.Down"), class_="state hostdown")
+        html.div(html.render_span(_("H.Down")), class_="state hostdown")
 
-    html.div(_("Downtime"), class_="state downtime")
-    html.div(_("OO/Service"), class_="state ooservice")
-    html.div(_("unmonitored"), class_="state unmonitored")
+    html.div(html.render_span(_("Downtime")), class_="state downtime")
+    html.div(html.render_span(_("OO/Service")), class_="state ooservice")
+    html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
 
     html.close_div()
 
@@ -677,7 +678,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
             # Columns with the actual availability data
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-                table.cell(title, text, css=css, help_txt=help_txt)
+                table.cell(title, html.render_span(text), css=css, help_txt=help_txt)
 
         if "summary" in av_table:
             table.row(css="summary", fixed=True)
@@ -690,7 +691,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 table.cell("", "")
 
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-                table.cell(title, text, css="heading " + css, help_txt=help_txt)
+                table.cell(title, html.render_span(text), css="heading " + css, help_txt=help_txt)
 
 
 def render_timeline_bar(timeline_layout, style, timeline_nr=0):
@@ -1319,24 +1320,24 @@ def _output_availability_timeline_csv(what: AVObjectType, av_entry: AVEntry, avo
         for row in timeline_layout["table"]:
             table.row()
 
-            table.text_cell("object_type", what)
+            table.cell("object_type", what)
             for cell_index, objectcell in enumerate(object_cells):
-                table.text_cell("object_name_%d" % cell_index, objectcell[0])
+                table.cell("object_name_%d" % cell_index, objectcell[0])
 
-            table.text_cell("object_title", availability.object_title(what, av_entry))
-            table.text_cell("from", row["from"])
-            table.text_cell("from_text", row["from_text"])
-            table.text_cell("until", row["until"])
-            table.text_cell("until_text", row["until_text"])
-            table.text_cell("state", row["state"])
-            table.text_cell("state_name", row["state_name"])
-            table.text_cell("duration_text", row["duration_text"])
+            table.cell("object_title", availability.object_title(what, av_entry))
+            table.cell("from", row["from"])
+            table.cell("from_text", row["from_text"])
+            table.cell("until", row["until"])
+            table.cell("until_text", row["until_text"])
+            table.cell("state", row["state"])
+            table.cell("state_name", row["state_name"])
+            table.cell("duration_text", row["duration_text"])
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
-                table.text_cell("log_output", row.get("log_output", ""))
+                table.cell("log_output", row.get("log_output", ""))
 
             if "timeline_long_output" in avoptions["labelling"]:
-                table.text_cell("long_log_output", row.get("long_log_output", ""))
+                table.cell("long_log_output", row.get("long_log_output", ""))
 
 
 def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:

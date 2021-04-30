@@ -309,17 +309,7 @@ class ModeEditHost(ABCHostMode):
                         ),
                         PageMenuTopic(
                             title=_("For all hosts on site %s") % self._host.site_id(),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Update DNS cache"),
-                                    icon_name="update",
-                                    item=make_simple_link(
-                                        html.makeactionuri([("_update_dns_cache", "1")])),
-                                    shortcut_title=_("Update site DNS cache"),
-                                    is_shortcut=True,
-                                    is_suggested=True,
-                                ),
-                            ],
+                            entries=list(page_menu_all_hosts_entries(self._should_use_dns_cache())),
                         ),
                     ],
                 ),
@@ -332,7 +322,7 @@ class ModeEditHost(ABCHostMode):
         if not html.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
-        if html.request.var("_update_dns_cache"):
+        if html.request.var("_update_dns_cache") and self._should_use_dns_cache():
             config.user.need_permission("wato.update_dns_cache")
             num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
                                                                     "update-dns-cache", [])
@@ -362,10 +352,30 @@ class ModeEditHost(ABCHostMode):
                          _start_on_load="1"))
         return redirect(mode_url("folder", folder=folder.path()))
 
+    def _should_use_dns_cache(self) -> bool:
+        site = self._host.effective_attribute("site")
+        return watolib.sites.get_effective_global_setting(
+            site,
+            config.is_wato_slave_site(),
+            "use_dns_cache",
+        )
+
     def _vs_host_name(self):
         return FixedValue(
             self._host.name(),
             title=_("Hostname"),
+        )
+
+
+def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenuEntry]:
+    if should_use_dns_cache:
+        yield PageMenuEntry(
+            title=_("Update DNS cache"),
+            icon_name="update",
+            item=make_simple_link(html.makeactionuri([("_update_dns_cache", "1")])),
+            shortcut_title=_("Update site DNS cache"),
+            is_shortcut=True,
+            is_suggested=True,
         )
 
 
@@ -568,7 +578,7 @@ class ModeCreateHost(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        return _("Create new host")
+        return _("Add host")
 
     @classmethod
     def _init_new_host_object(cls):
@@ -603,7 +613,7 @@ class ModeCreateCluster(CreateHostMode):
     def title(self):
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
-        return _("Create new cluster")
+        return _("Create cluster")
 
     @classmethod
     def _init_new_host_object(cls):

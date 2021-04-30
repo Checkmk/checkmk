@@ -8,6 +8,8 @@ import socket
 import shutil
 import logging
 from pathlib import Path
+from unittest import mock
+from typing import Any, Mapping, NamedTuple
 
 from fakeredis import FakeRedis  # type: ignore[import]
 import pytest
@@ -272,3 +274,17 @@ def use_fakeredis_client(monkeypatch):
         "Redis",
         FakeRedis,
     )
+
+
+class _MockVSManager(NamedTuple):
+    active_service_interface: Mapping[str, Any]
+
+
+@pytest.fixture(scope="function")
+def initialised_item_state():
+    mock_vs = _MockVSManager({})
+    with mock.patch(
+            "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+            mock_vs,
+    ):
+        yield

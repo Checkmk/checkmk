@@ -134,7 +134,9 @@ Once done, you are ready for the next chapter.
 
 1. Create your feature branch
 
-    The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
+    The number one rule is to *put each piece of work on its own branch*. Please note that in
+    general, we only accept changes which are based on the *master* branch. There is one (rare)
+    exception, namely bugfixes which *only* affect older branches. So lets start like this:
 
     ```console
     $ git checkout master
@@ -1037,7 +1039,14 @@ one name for one thing and use it consistently in all translations.
 ## Copyright and Licensing
 
 The open source part of Checkmk is licensed under the terms of the [GNU GPLv2
-License](COPYING). Any code brought in must be compatible with those terms.
+License](COPYING). Any new code must be compatible with those terms.
 
-You need to make sure that the code you send us in your pull request is GPLv2
-compatible.
+To ensure that, please always add our current licensing information to any new
+files you want to contribute. The licensing information can be found at the beginning
+of already existing files and looks something like
+
+```python
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+```

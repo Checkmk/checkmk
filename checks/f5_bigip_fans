@@ -52,15 +52,16 @@ def parse_f5_bigip_fans(info):
 
 
 def inventory_f5_bigip_fans(parsed):
-    inventory = []
     for item in parsed.keys():
         yield item, "f5_bigip_fans_default_levels"
 
 
 def check_f5_bigip_fans(item, params, parsed):
     fanspeed = parsed.get(item)
-    if not fanspeed:
-        yield 3, "could not detect speed"
+    if fanspeed is None:
+        # do not change this to if not fanspeed! fanspeed could be 0.
+        yield 3, "Could not detect speed"
+        return
 
     yield check_fan(fanspeed, params)
 

@@ -35,3 +35,8 @@ def clear_config_caches(monkeypatch):
     ts = Scenario()
     ts.add_host("non-existent-testhost")
     ts.apply(monkeypatch)
+
+
+@pytest.fixture(autouse=True)
+def _autouse_initialised_item_state(initialised_item_state):
+    pass

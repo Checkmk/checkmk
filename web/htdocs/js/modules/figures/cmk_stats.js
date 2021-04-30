@@ -11,7 +11,8 @@ export class HostStats extends cmk_figures.FigureBase {
 
         this._table_div = this._div_selection.append("div").classed("stats_table", true);
         this.svg = this._div_selection.append("svg");
-        this._hexagon_box = this.svg.append("g").classed("hexagons", true);
+        // NOTE: for IE11 support we set the attribute here and do not use a CSS class
+        this._hexagon_box = this.svg.append("g").attr("transform", "translate(60, 95)");
         this._max_radius = 48;
     }
 

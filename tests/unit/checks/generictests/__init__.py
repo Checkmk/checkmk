@@ -59,7 +59,7 @@ Some more advanced ones are
                            `MockHostExtraConf`
                        as defined in checktestlib module.
   * `mock_item_state`: [sc-dict] If present, its values are passed to
-                           `MockItemState`
+                           `mock_item_state`
                        as defined in checktestlib module.
 """
 from generictests.checkhandler import checkhandler

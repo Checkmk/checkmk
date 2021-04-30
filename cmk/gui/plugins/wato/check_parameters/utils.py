@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple
+from typing import List, Tuple as _Tuple, Union
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
-    Optional,
     Percentage,
     TextAscii,
     Transform,
@@ -46,7 +45,13 @@ def match_dual_level_type(value):
     return 0
 
 
-def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
+def get_free_used_dynamic_valuespec(
+        what,
+        name,
+        default_value=(80.0, 90.0),
+        *,
+        maxvalue: Union[None, int, float] = 101.0,
+):
     if what == "used":
         title = _("used space")
         course = _("above")
@@ -62,11 +67,13 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
                       title=_("Warning if %s") % course,
                       unit="%",
                       minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
                   ),
                   Percentage(
                       title=_("Critical if %s") % course,
                       unit="%",
                       minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
                   ),
               ]),
         Tuple(title=_("Absolute %s") % title,
@@ -260,14 +267,20 @@ fs_magic_elements = [
            ]))
 ]
 
+TREND_RANGE_DEFAULT = 24
+
+
+def _transform_trend_range_not_none(params):
+    return TREND_RANGE_DEFAULT if params is None else params
+
+
 size_trend_elements = [
     ("trend_range",
-     Optional(Integer(title=_("Time Range for trend computation"),
-                      default_value=24,
-                      minvalue=1,
-                      unit=_("hours")),
-              title=_("Trend computation"),
-              label=_("Enable trend computation"))),
+     Transform(Integer(title=_("Time Range for trend computation"),
+                       default_value=TREND_RANGE_DEFAULT,
+                       minvalue=1,
+                       unit=_("hours")),
+               forth=_transform_trend_range_not_none)),
     ("trend_mb",
      Tuple(title=_("Levels on trends in MB per time range"),
            elements=[

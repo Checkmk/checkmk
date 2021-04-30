@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Optional, Type
+
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.escaping as escaping
@@ -22,6 +24,9 @@ from cmk.gui.plugins.views import (
     PainterOption,
     painter_registry,
     Painter,
+    CellSpec,
+    Cell,
+    Row,
 )
 
 from cmk.gui.utils.urls import makeuri
@@ -191,7 +196,7 @@ class PainterAggrIcons(Painter):
     def printable(self):
         return False
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         single_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
                                                        ("aggr_name", row["aggr_name"])])
         avail_url = single_url + "&mode=availability"
@@ -216,7 +221,7 @@ class PainterAggrIcons(Painter):
             if not row["aggr_effective_state"]["in_service_period"]:
                 html.icon("outof_serviceperiod",
                           _("This aggregation is currently out of its service period."))
-            code = html.drain()
+            code = HTML(html.drain())
         return "buttons", code
 
 
@@ -233,7 +238,7 @@ class PainterAggrInDowntime(Painter):
     def columns(self):
         return ['aggr_effective_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
 
 
@@ -250,7 +255,7 @@ class PainterAggrAcknowledged(Painter):
     def columns(self):
         return ['aggr_effective_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
@@ -280,7 +285,7 @@ class PainterAggrState(Painter):
     def columns(self):
         return ['aggr_effective_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_effective_state"],
                                        row["aggr_effective_state"] != row["aggr_state"])
 
@@ -301,7 +306,7 @@ class PainterAggrStateNum(Painter):
     def columns(self):
         return ['aggr_effective_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", str(row["aggr_effective_state"]['state']))
 
 
@@ -321,7 +326,7 @@ class PainterAggrRealState(Painter):
     def columns(self):
         return ['aggr_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_state"])
 
 
@@ -341,7 +346,7 @@ class PainterAggrAssumedState(Painter):
     def columns(self):
         return ['aggr_assumed_state']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
@@ -361,7 +366,7 @@ class PainterAggrGroup(Painter):
     def columns(self):
         return ['aggr_group']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", escaping.escape_attribute(row["aggr_group"])
 
 
@@ -381,7 +386,7 @@ class PainterAggrName(Painter):
     def columns(self):
         return ['aggr_name']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return "", escaping.escape_attribute(row["aggr_name"])
 
 
@@ -401,7 +406,7 @@ class PainterAggrOutput(Painter):
     def columns(self):
         return ['aggr_output']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["aggr_output"])
 
 
@@ -429,7 +434,7 @@ class PainterAggrHosts(Painter):
     def columns(self):
         return ['aggr_hosts']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggr_hosts(row, "aggr_host")
 
 
@@ -449,7 +454,7 @@ class PainterAggrHostsServices(Painter):
     def columns(self):
         return ['aggr_hosts']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggr_hosts(row, "host")
 
 
@@ -531,7 +536,9 @@ class PainterOptionAggrWrap(PainterOption):
         )
 
 
-def paint_aggregated_tree_state(row, force_renderer_cls=None):
+def paint_aggregated_tree_state(
+        row: Row,
+        force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None) -> CellSpec:
     if html.is_api_call():
         return bi.render_tree_json(row)
 
@@ -583,7 +590,7 @@ class PainterAggrTreestate(Painter):
     def painter_options(self):
         return ['aggr_expand', 'aggr_onlyproblems', 'aggr_treetype', 'aggr_wrap']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row)
 
 
@@ -603,5 +610,5 @@ class PainterAggrTreestateBoxed(Painter):
     def columns(self):
         return ['aggr_treestate', 'aggr_hosts']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes)

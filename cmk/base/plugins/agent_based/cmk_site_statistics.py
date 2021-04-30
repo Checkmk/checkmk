@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, fields
-from typing import Dict, Mapping, Optional, Sequence, Tuple, Union
+from typing import Dict, Generator, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.livestatus_status import LivestatusSection
 
 
@@ -92,7 +92,7 @@ def discover_cmk_site_statistics(
         yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)
 
 
-def _host_results(host_stats: HostStatistics) -> CheckResult:
+def _host_results(host_stats: HostStatistics) -> Iterable[Result]:
     n_hosts_not_up = host_stats.down + host_stats.unreachable + host_stats.in_downtime
     n_hosts_total = n_hosts_not_up + host_stats.up
     yield Result(
@@ -111,7 +111,7 @@ def _host_results(host_stats: HostStatistics) -> CheckResult:
     )
 
 
-def _service_results(service_stats: ServiceStatistics) -> CheckResult:
+def _service_results(service_stats: ServiceStatistics) -> Iterable[Result]:
     n_services_not_ok = (service_stats.in_downtime + service_stats.on_down_hosts +
                          service_stats.warning + service_stats.unknown + service_stats.critical)
     n_services_total = n_services_not_ok + service_stats.ok
@@ -136,7 +136,7 @@ def _service_results(service_stats: ServiceStatistics) -> CheckResult:
 def _metrics_from_stats(
     stats: Union[HostStatistics, ServiceStatistics],
     metrics_prefix: str,
-) -> CheckResult:
+) -> Iterable[Metric]:
     for field in fields(stats):
         yield Metric(
             f"{metrics_prefix}_{field.name}",
@@ -148,7 +148,7 @@ def check_cmk_site_statistics(
     item: str,
     section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
     section_livestatus_status: Optional[LivestatusSection],
-) -> CheckResult:
+) -> Generator[Union[Metric, Result], None, None]:
     if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return
     host_stats, service_stats = section_cmk_site_statistics[item]
@@ -167,10 +167,24 @@ def check_cmk_site_statistics(
         )
 
 
+def cluster_check_cmk_site_statistics(
+    item: str,
+    section_cmk_site_statistics: Mapping[str, CMKSiteStatisticsSection],
+    section_livestatus_status: Mapping[str, LivestatusSection],
+) -> Generator[Union[Metric, Result], None, None]:
+    for node_name, node_section in section_cmk_site_statistics.items():
+        yield from check_cmk_site_statistics(
+            item,
+            node_section,
+            section_livestatus_status.get(node_name),
+        )
+
+
 register.check_plugin(
     name="cmk_site_statistics",
     sections=["cmk_site_statistics", "livestatus_status"],
     service_name="Site %s statistics",
     discovery_function=discover_cmk_site_statistics,
     check_function=check_cmk_site_statistics,
+    cluster_check_function=cluster_check_cmk_site_statistics,
 )

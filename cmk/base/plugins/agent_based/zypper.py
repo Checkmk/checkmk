@@ -26,7 +26,7 @@ def parse_zypper(string_table: type_defs.StringTable) -> Section:
     updates: int = 0
     locks: List[str] = []
 
-    firstline = " ".join(string_table[0])
+    firstline = " ".join(string_table[0]) if string_table else ""
     if re.match("ERROR:", firstline):
         return Section(error=firstline)
 

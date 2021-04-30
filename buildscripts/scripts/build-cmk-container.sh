@@ -13,6 +13,7 @@ die() { log "$@"; exit 1; }
 docker_push () {
     REGISTRY=$1
     FOLDER=$2
+
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
 
@@ -31,8 +32,8 @@ docker_push () {
     fi
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ]; then
-    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG] [DEMO]"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
+    echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG]"
     echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no"
     echo
     exit 1
@@ -42,13 +43,11 @@ BRANCH=$1
 EDITION=$2
 VERSION=$3
 SET_LATEST_TAG=$4
-DEMO=''
-if [ $5 == yes ]; then
-    DEMO='.demo'
-fi
 
 if [ $EDITION = raw ]; then
     SUFFIX=.cre
+elif [ $EDITION = free ]; then
+    SUFFIX=.cfe
 elif [ $EDITION = enterprise ]; then
     SUFFIX=.cee
 elif [ $EDITION = managed ]; then

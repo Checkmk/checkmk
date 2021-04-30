@@ -185,16 +185,17 @@ export class LayeredIconOverlay extends node_visualization_viewport_utils.Layere
     update_gui() {
         let nodes = [];
         this.viewport.get_all_nodes().forEach(node => {
-            if (!node.data.icon) return;
+            if (!node.data.icon_image) return;
             nodes.push(node);
         });
 
         let icons = this.div_selection.selectAll("img").data(nodes, d => d.data.id);
+
         icons.exit().remove();
         icons = icons
             .enter()
             .append("img")
-            .attr("src", d => d.data.icon)
+            .attr("src", d => "themes/facelift/images/icon_" + d.data.icon_image + ".svg")
             .classed("node_icon", true)
             .style("position", "absolute")
             .style("pointer-events", "none")

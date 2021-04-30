@@ -22,7 +22,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
 from cmk.gui.globals import g, html, request
 from cmk.gui.i18n import _, _u
@@ -252,8 +252,8 @@ class Dashlet(metaclass=abc.ABCMeta):
             return None
 
         return visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(self.infos(), self.single_infos()),
             self._dashboard["context"],
+            visuals.get_context_from_uri_vars(self.infos(), self.single_infos()),
             self._dashlet_spec["context"],
         )
 
@@ -600,6 +600,8 @@ class FigureDashletPage(AjaxPage):
         raw_properties = html.request.get_str_input_mandatory("properties")
         properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
         context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+        # Inject the infos because the datagenerator is a separate instance to dashlet
+        settings["infos"] = dashlet_type.infos()
         response_data = dashlet_type.generate_response_data(properties, context, settings)
         return create_figures_response(response_data)
 
@@ -705,13 +707,9 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         assert isinstance(dashlet_params, Dictionary)  # help mypy
         dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
 
-        context = visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
-            self._dashlet_spec["context"])
-
         args: HTTPVariables = []
         args.append(("settings", json.dumps(dashlet_settings)))
-        args.append(("context", json.dumps(context)))
+        args.append(("context", json.dumps(self.context)))
         args.append(("properties", json.dumps(dashlet_properties)))
 
         return args
@@ -992,7 +990,8 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
 
 
 def service_table_query(properties, context, column_generator):
-    filter_headers, only_sites = visuals.get_filter_headers("log", ["host", "service"], context)
+    filter_headers, only_sites = visuals.get_filter_headers("services", ["host", "service"],
+                                                            context)
     columns = column_generator(properties, context)
 
     query = ("GET services\n"
@@ -1078,3 +1077,7 @@ def purge_metric_for_js(metric):
         "bounds": metric.get("scalar", {}),
         "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
     }
+
+
+def make_mk_missing_data_error() -> MKMissingDataError:
+    return MKMissingDataError(_("No data was found with the current parameters of this dashlet."))

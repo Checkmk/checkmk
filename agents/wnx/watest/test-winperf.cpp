@@ -52,8 +52,8 @@ TEST(WinPerf, GetPerformanceFrequency) {
 TEST(WinPerf, ValidateFabricConfig) {
     namespace groups = cma::cfg::groups;
     namespace vars = cma::cfg::vars;
-    tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
-    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+    auto temp_fs(tst::TempCfgFs::CreateNoIo());
+    ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
     auto cfg = cma::cfg::GetLoadedConfig();
@@ -103,11 +103,12 @@ TEST(WinPerf, ValidateFabricConfig) {
 }
 
 TEST(WinPerf, BuildCommandLine) {
-    tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+    auto temp_fs(tst::TempCfgFs::CreateNoIo());
+    ASSERT_TRUE(temp_fs->loadContent("global:\n  enabled: yes\n"));
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
     EXPECT_TRUE(cmd_line.empty()) << cmd_line;
 
-    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+    ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
     cmd_line = cfg::groups::winperf.buildCmdLine();
     EXPECT_EQ(cmd_line, L"234:phydisk 510:if 238:processor")
         << "validate fabric yaml";

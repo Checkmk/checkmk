@@ -213,19 +213,20 @@ class ModeRoles(RoleManagement, WatoMode):
                     html.icon_button(delete_url, _("Delete this role"), "delete")
 
                 # ID
-                table.text_cell(_("Name"), rid)
+                table.cell(_("Name"), rid)
 
                 # Alias
-                table.text_cell(_("Alias"), role["alias"])
+                table.cell(_("Alias"), role["alias"])
 
                 # Type
                 table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
 
                 # Modifications
                 table.cell(
-                    _("Modifications"), "<span title='%s'>%s</span>" %
-                    (_("That many permissions do not use the factory defaults."),
-                     len(role["permissions"])))
+                    _("Modifications"),
+                    html.render_span(
+                        str(len(role["permissions"])),
+                        title=_("That many permissions do not use the factory defaults.")))
 
                 # Users
                 table.cell(
@@ -450,17 +451,23 @@ class ModeRoleMatrix(WatoMode):
         role_list = sorted(userdb_utils.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
         for section in permission_section_registry.get_sorted_sections():
-            html.begin_foldable_container("perm_matrix",
-                                          section.name,
-                                          section.name == "general",
-                                          section.title,
-                                          indent=True)
+            with table_element(
+                    section.name,
+                    section.title,
+                    foldable=True,
+            ) as table:
 
-            with table_element(section.name) as table:
+                permission_list = permission_registry.get_sorted_permissions(section)
 
-                for perm in permission_registry.get_sorted_permissions(section):
+                if not permission_list:
+                    table.row()
+                    table.cell(_("Permission"), _("No entries"), css="wide")
+                    continue
+
+                for perm in permission_list:
                     table.row()
                     table.cell(_("Permission"), perm.title, css="wide")
+
                     html.help(perm.description)
                     for role_id, role in role_list:
                         base_on_id = role.get('basedon', role_id)
@@ -476,7 +483,5 @@ class ModeRoleMatrix(WatoMode):
                         table.cell(role_id, css="center")
                         if icon_name:
                             html.icon(icon_name)
-
-            html.end_foldable_container()
 
         html.close_table()

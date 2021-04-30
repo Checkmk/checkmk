@@ -5,8 +5,12 @@
 
 #include "auth.h"
 
-#include "contact_fwd.h"
+#ifdef CMC
+#include "Host.h"  // IWYU pragma: keep
+#include "cmc.h"
+#endif
 
+#ifndef CMC
 namespace {
 bool host_has_contact(const host *hst, const contact *ctc) {
     // Older Nagios headers are not const-correct... :-P
@@ -27,6 +31,7 @@ bool service_has_contact(ServiceAuthorization service_auth, const service *svc,
             host_has_contact(svc->host_ptr, ctc));
 }
 }  // namespace
+#endif
 
 bool is_authorized_for_hst(const contact *ctc, const host *hst) {
     if (ctc == nullptr) {
@@ -35,7 +40,11 @@ bool is_authorized_for_hst(const contact *ctc, const host *hst) {
     if (ctc == unknown_auth_user()) {
         return false;
     }
+#ifdef CMC
+    return hst->hasContact(ctc);
+#else
     return host_has_contact(hst, ctc);
+#endif
 }
 
 bool is_authorized_for_svc(ServiceAuthorization service_auth,
@@ -46,9 +55,15 @@ bool is_authorized_for_svc(ServiceAuthorization service_auth,
     if (ctc == unknown_auth_user()) {
         return false;
     }
+#ifdef CMC
+    (void)service_auth;  // TODO(sp) Change API below to use this!
+    return svc->hasContact(ctc);
+#else
     return service_has_contact(service_auth, svc, ctc);
+#endif
 }
 
+#ifndef CMC
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
@@ -111,3 +126,4 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
     }
     return true;
 }
+#endif

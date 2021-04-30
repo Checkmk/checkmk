@@ -22,7 +22,7 @@
 #include "Host.h"
 #include "Object.h"
 #include "ObjectGroup.h"
-#include "cmc.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif

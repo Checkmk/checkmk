@@ -17,7 +17,6 @@
 #include "Host.h"
 #include "LogEntry.h"
 #include "State.h"
-#include "cmc.h"
 #else
 #include "auth.h"
 #include "nagios.h"

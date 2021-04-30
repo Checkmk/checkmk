@@ -24,7 +24,7 @@ class RowRenderer;
 enum class ServiceState;
 
 #ifdef CMC
-#include "cmc.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif

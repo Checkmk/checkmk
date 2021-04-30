@@ -21,7 +21,11 @@
 #include "StringColumn.h"
 #include "Table.h"
 #include "TimeColumn.h"
+#ifdef CMC
+#include "contact_fwd.h"
+#else
 #include "nagios.h"
+#endif
 class ColumnOffsets;
 class Query;
 class Row;

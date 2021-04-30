@@ -21,7 +21,7 @@
 #include "Renderer.h"
 #include "Row.h"
 #if defined(CMC)
-#include "cmc.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif

@@ -10,7 +10,6 @@
 #ifdef CMC
 #include "Object.h"
 #include "ObjectGroup.h"
-#include "cmc.h"
 #else
 #include "MonitoringCore.h"
 #include "auth.h"

@@ -44,6 +44,7 @@
 #define STATE_CRITICAL 2
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define STATE_UNKNOWN 3
+#include "cmc.h"
 #else
 #include <unordered_map>
 

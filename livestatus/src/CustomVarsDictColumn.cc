@@ -12,10 +12,6 @@
 #include "Row.h"
 class Aggregator;
 
-#ifdef CMC
-#include "cmc.h"
-#endif
-
 void CustomVarsDictColumn::output(
     Row row, RowRenderer &r, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {

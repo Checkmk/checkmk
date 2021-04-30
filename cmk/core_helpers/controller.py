@@ -183,11 +183,12 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     except KeyError as exc:
         return protocol.FetcherMessage.error(fetcher_type, exc)
 
-    try:
-        with CPUTracker() as tracker, fetcher_type.from_json(fetcher_params) as fetcher:
-            raw_data = fetcher.fetch(mode)
-    except Exception as exc:
-        raw_data = result.Error(exc)
+    with CPUTracker() as tracker:
+        try:
+            with fetcher_type.from_json(fetcher_params) as fetcher:
+                raw_data = fetcher.fetch(mode)
+        except Exception as exc:
+            raw_data = result.Error(exc)
 
     return protocol.FetcherMessage.from_raw_data(
         raw_data,

@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import itertools
 import logging
 from pathlib import Path
 from types import TracebackType
@@ -42,11 +41,11 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         simulation: bool,
     ) -> None:
         super().__init__()
-        self.base_path: Final[Path] = Path(base_path)
-        self.max_age: Final[int] = max_age
-        self.disabled: Final[bool] = disabled
-        self.use_outdated: Final[bool] = use_outdated
-        self.simulation: Final[bool] = simulation
+        self.base_path: Final = Path(base_path)
+        self.max_age = max_age
+        self.disabled = disabled
+        self.use_outdated = use_outdated
+        self.simulation = simulation
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
@@ -58,14 +57,6 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
             self.use_outdated,
             self.simulation,
         )
-
-    def __hash__(self) -> int:
-        *_rest, last = itertools.accumulate(
-            (self.base_path, self.max_age, self.disabled, self.use_outdated, self.simulation),
-            lambda acc, elem: acc ^ hash(elem),
-            initial=0,
-        )
-        return last
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
@@ -116,23 +107,29 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     def read(self, mode: Mode) -> Optional[TRawData]:
-        if not (self.simulation or self.cache_read(mode)):
-            return None
-
-        raw_data = self._read(self.make_path(mode))
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-        return raw_data
-
-    def _read(self, path: Path) -> Optional[TRawData]:
-        if not path.exists():
-            self._logger.debug("Not using cache (Does not exist)")
-            return None
-
         if self.disabled:
             self._logger.debug("Not using cache (Cache usage disabled)")
             return None
 
+        path = self.make_path(mode)
+        if not path.exists():
+            self._logger.debug("Not using cache (Does not exist)")
+            return None
+
+        if not (self.simulation or self.cache_read(mode)):
+            self._logger.debug("Not using cache (Mode %s)", mode)
+            return None
+
+        raw_data = self._read(path)
+        if raw_data is None and self.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
+
+        if raw_data is not None:
+            self._logger.debug("Got %r bytes data from cache", len(raw_data))
+
+        return raw_data
+
+    def _read(self, path: Path) -> Optional[TRawData]:
         may_use_outdated = self.simulation or self.use_outdated
         cachefile_age = cmk.utils.cachefile_age(path)
         if not may_use_outdated and cachefile_age > self.max_age:
@@ -243,11 +240,12 @@ class ABCFetcher(Generic[TRawData], metaclass=abc.ABCMeta):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
-                           self.__class__.__name__, self.file_cache,
-                           self.file_cache.cache_read(mode))
-
         # TODO(ml): EAFP would significantly simplify the code.
+        self._logger.debug(
+            "[%s] Fetch with cache settings: %r",
+            self.__class__.__name__,
+            self.file_cache,
+        )
         raw_data = self.file_cache.read(mode)
         if raw_data:
             self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)

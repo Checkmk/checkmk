@@ -11,23 +11,24 @@ import pytest  # type: ignore[import]
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.type_defs import ConfigSerial
 
-from cmk.fetchers import FetcherType
 from cmk.fetchers.controller import (
     GlobalConfig,
     make_global_config_path,
     make_local_config_path,
-    run_fetcher,
     write_bytes,
 )
 from cmk.fetchers.protocol import CMCMessage
 from cmk.fetchers.snmp import SNMPPluginStore
-from cmk.fetchers.type_defs import Mode
 
 
 class TestGlobalConfig:
     @pytest.fixture
     def global_config(self):
-        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
+        return GlobalConfig(
+            cmc_log_level=5,
+            cluster_max_cachefile_age=90,
+            snmp_plugin_store=SNMPPluginStore(),
+        )
 
     def test_deserialization(self, global_config):
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config
@@ -43,34 +44,15 @@ class TestControllerApi:
     def test_controller_end_of_reply(self):
         assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
 
-    def test_local_config_path(self):
+    def test_make_local_config_path(self):
         assert make_local_config_path(
             serial=ConfigSerial("_serial_"),
-            host_name="buzz",
-        ) == (core_helper_config_dir / "_serial_" / "fetchers" / "hosts" / "buzz.json")
+            host_name="host",
+        ) == core_helper_config_dir / "_serial_" / "fetchers" / "hosts" / "host.json"
 
-    def test_global_config_path(self):
+    def test_make_global_config_path(self):
         assert make_global_config_path(serial=ConfigSerial(
-            "_serial_")) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
-
-    def test_run_fetcher_with_failure(self):
-        message = run_fetcher(
-            {
-                "fetcher_type": "SNMP",
-                "trash": 1
-            },
-            Mode.CHECKING,
-        )
-        assert message.header.fetcher_type is FetcherType.SNMP
-        assert message.header.status == 50
-        assert message.header.payload_length == (len(message) - len(message.header) -
-                                                 message.header.stats_length)
-        assert type(message.raw_data.error) is KeyError  # pylint: disable=C0123
-        assert str(message.raw_data.error) == repr("fetcher_params")
-
-    def test_run_fetcher_with_exception(self):
-        with pytest.raises(RuntimeError):
-            run_fetcher({"trash": 1}, Mode.CHECKING)
+            "_serial_"),) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
 
     def test_write_bytes(self, capfdbinary):
         write_bytes(b"123")

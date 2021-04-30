@@ -1152,10 +1152,10 @@ class DiscoveryPageRenderer:
             TableGroupEntry(
                 table_group=DiscoveryState.MANUAL,
                 show_bulk_actions=False,
-                title=_("Manual checks"),
+                title=_("Enforced services"),
                 help_text=_(
                     "These services have not been found by the discovery but have been added "
-                    "manually by a rule in the WATO module <i>Manual checks</i>."),
+                    "manually by a Setup rule <i>Enforced services</i>."),
             ),
             # TODO: Were removed in 1.6 from base. Keeping this for
             # compatibility with older remote sites. Remove with 1.7.

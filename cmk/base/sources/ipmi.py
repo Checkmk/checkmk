@@ -63,6 +63,7 @@ class IPMISource(AgentSource):
         return IPMIFetcher(
             self._make_file_cache(),
             cluster=self.host_config.is_cluster,
+            cluster_nodes=self.host_config.nodes or (),
             address=self.ipaddress,
             username=self.credentials.get("username"),
             password=self.credentials.get("password"),

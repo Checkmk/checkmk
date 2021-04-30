@@ -7,7 +7,19 @@
 import abc
 import logging
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Literal, Optional, Tuple, Type, TypeVar
+from typing import (
+    Any,
+    Dict,
+    final,
+    Final,
+    Generic,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import cmk.utils
 from cmk.utils.exceptions import (
@@ -22,6 +34,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
+    HostName,
     result,
     ServiceDetails,
     ServiceState,
@@ -41,10 +54,17 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     """Interface to the data fetchers."""
-    def __init__(self, file_cache: FileCache, cluster: bool, logger: logging.Logger) -> None:
+    def __init__(
+        self,
+        file_cache: FileCache,
+        cluster: bool,
+        cluster_nodes: Sequence[HostName],
+        logger: logging.Logger,
+    ) -> None:
         super().__init__()
         self.file_cache: Final[FileCache[TRawData]] = file_cache
         self.cluster: Final = cluster
+        self.cluster_nodes: Final = cluster_nodes
         self._logger = logger
 
     @final

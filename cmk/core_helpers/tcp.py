@@ -7,7 +7,7 @@
 import logging
 import socket
 from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, Final, List, Mapping, Optional, Sequence, Tuple, TYPE_CHECKING
 
 import cmk.utils.debug
 from cmk.utils.encryption import (
@@ -16,7 +16,7 @@ from cmk.utils.encryption import (
     OPENSSL_SALTED_MARKER,
 )
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
@@ -32,13 +32,14 @@ class TCPFetcher(AgentFetcher):
         file_cache: DefaultAgentFileCache,
         *,
         cluster: bool,
+        cluster_nodes: Sequence[HostName],
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
         timeout: float,
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
-        super().__init__(file_cache, cluster, logging.getLogger("cmk.helper.tcp"))
+        super().__init__(file_cache, cluster, cluster_nodes, logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
@@ -60,6 +61,7 @@ class TCPFetcher(AgentFetcher):
         return {
             "file_cache": self.file_cache.to_json(),
             "cluster": self.cluster,
+            "cluster_nodes": self.cluster_nodes,
             "family": self.family,
             "address": self.address,
             "timeout": self.timeout,

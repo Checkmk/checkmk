@@ -104,6 +104,7 @@ class ProgramSource(AgentSource):
         return ProgramFetcher(
             self._make_file_cache(),
             cluster=self.host_config.is_cluster,
+            cluster_nodes=self.host_config.nodes or (),
             cmdline=self.cmdline,
             stdin=self.stdin,
             is_cmc=config.is_cmc(),

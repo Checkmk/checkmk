@@ -211,6 +211,7 @@ class TestIPMIFetcher:
         return IPMIFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             address="1.2.3.4",
             username="us3r",
             password="secret",
@@ -234,6 +235,7 @@ class TestIPMIFetcher:
             with IPMIFetcher(
                     file_cache,
                     cluster=False,
+                    cluster_nodes=(),
                     address="127.0.0.1",
                     username="",
                     password="",
@@ -270,6 +272,7 @@ class TestPiggybackFetcher:
         return PiggybackFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             hostname="host",
             address="1.2.3.4",
             time_settings=[],
@@ -300,6 +303,7 @@ class TestProgramFetcher:
         return ProgramFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             cmdline="/bin/true",
             stdin=None,
             is_cmc=False,
@@ -406,6 +410,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -434,6 +439,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -463,6 +469,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -703,6 +710,7 @@ class TestTCPFetcher:
         return TCPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
             timeout=0.1,
@@ -725,6 +733,7 @@ class TestTCPFetcher:
         fetcher = TCPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -739,6 +748,7 @@ class TestTCPFetcher:
         fetcher = TCPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -755,6 +765,7 @@ class TestTCPFetcher:
         fetcher = TCPFetcher(
             file_cache,
             cluster=False,
+            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -803,6 +814,7 @@ class TestFetcherCaching:
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),
             cluster=False,
+            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,

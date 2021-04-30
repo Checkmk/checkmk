@@ -91,7 +91,6 @@ def fixup_unit_info() -> None:
 
 def fixup_perfometer_info() -> None:
     _convert_legacy_tuple_perfometers(perfometer_info)
-    _precalculate_some_perfometer_caches(perfometer_info)
 
 
 # During implementation of the metric system the perfometers were first defined using
@@ -136,21 +135,38 @@ def _convert_legacy_tuple_perfometers(
             perfometers.pop(index)
 
 
-def _precalculate_some_perfometer_caches(
-        perfometers: List[Union[LegacyPerfometer, Perfometer]]) -> None:
-    for perfometer in perfometers:
-        if not isinstance(perfometer, dict):
-            raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
+def _lookup_required_expressions(
+        perfometer: Union[LegacyPerfometer, Perfometer]) -> List[PerfometerExpression]:
 
-        # Precalculate the list of metric expressions of the perfometers
-        required_expressions = _perfometer_expressions(perfometer)
+    if not isinstance(perfometer, dict):
+        raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
-        # And also precalculate the trivial metric names that can later be used to filter
-        # perfometers without the need to evaluate the expressions.
-        required_trivial_metric_names = _required_trivial_metric_names(required_expressions)
+    try:
+        return perfometer["_required"]
+    except KeyError:
+        pass
 
-        perfometer["_required"] = required_expressions
-        perfometer["_required_names"] = required_trivial_metric_names
+    # calculate the list of metric expressions of the perfometers
+    return perfometer.setdefault("_required", _perfometer_expressions(perfometer))
+
+
+def _lookup_required_names(
+        perfometer: Union[LegacyPerfometer, Perfometer]) -> Optional[RequiredMetricNames]:
+
+    if not isinstance(perfometer, dict):
+        raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
+
+    try:
+        return perfometer["_required_names"]
+    except KeyError:
+        pass
+
+    # calculate the trivial metric names that can later be used to filter
+    # perfometers without the need to evaluate the expressions.
+    return perfometer.setdefault(
+        "_required_names",
+        _required_trivial_metric_names(_lookup_required_expressions(perfometer)),
+    )
 
 
 def _perfometer_expressions(perfometer: Perfometer) -> List[PerfometerExpression]:
@@ -277,11 +293,11 @@ class Perfometers:
         if not translated_metrics:
             return False
 
-        if self._skip_perfometer_by_trivial_metrics(perfometer["_required_names"],
-                                                    translated_metrics):
+        required_names = _lookup_required_names(perfometer)
+        if self._skip_perfometer_by_trivial_metrics(required_names, translated_metrics):
             return False
 
-        for req in perfometer["_required"]:
+        for req in _lookup_required_expressions(perfometer):
             try:
                 evaluate(req, translated_metrics)
             except Exception:
@@ -300,8 +316,11 @@ class Perfometers:
 
         return True
 
-    def _skip_perfometer_by_trivial_metrics(self, required_metric_names: RequiredMetricNames,
-                                            translated_metrics: TranslatedMetrics) -> bool:
+    def _skip_perfometer_by_trivial_metrics(
+        self,
+        required_metric_names: Optional[RequiredMetricNames],
+        translated_metrics: TranslatedMetrics,
+    ) -> bool:
         """Whether or not a perfometer can be skipped by simple metric name matching instead of expression evaluation
 
         Performance optimization: Try to reduce the amount of perfometers to evaluate by

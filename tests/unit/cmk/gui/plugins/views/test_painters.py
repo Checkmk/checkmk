@@ -349,6 +349,7 @@ def test_registered_painters():
         'inv_software_kernel_config',
         'inv_software_os',
         'inv_software_os_arch',
+        'inv_software_os_build',
         'inv_software_os_install_date',
         'inv_software_os_kernel_version',
         'inv_software_os_name',

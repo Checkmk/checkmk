@@ -340,12 +340,7 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
                 ('SMS_checked', ('/sms/checked/.*', '')),
             ],
         ],
-        [
-            (0, 'Count: 0', [('count', 0, None, None)]),
-            (0, 'Size: 0 B', [('size', 0, None, None)]),
-            (0, '\n'
-             'Include patterns: /sms/checked/.*, '),
-        ],
+        [(3, 'No group pattern found.')],
     ),
     (
         'random_item',
@@ -360,6 +355,7 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
         [(3, 'No group pattern found.')],
     ),
 ])
+@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_patterns_host_extra_conf(item, host_rulesets, expected_result):
     fileinfo_groups_check = Check('fileinfo.groups')
 

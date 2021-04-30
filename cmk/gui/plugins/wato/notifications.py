@@ -290,6 +290,12 @@ class NotificationParameterMail(NotificationParameter):
         return elements
 
 
+def _slack_add_proxy(value):
+    # introduced with 2.0.0p4 werk #12857
+    value.setdefault("proxy_url", ('no_proxy', None))
+    return value
+
+
 @notification_parameter_registry.register
 class NotificationParameterSlack(NotificationParameter):
     @property
@@ -298,30 +304,34 @@ class NotificationParameterSlack(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix"],
-            elements=[
-                ("webhook_url",
-                 CascadingDropdown(
-                     title=_("Webhook-URL"),
-                     help=
-                     _("Webhook URL. Setup Slack Webhook " +
-                       "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
-                       "<br />For Mattermost follow the documentation "
-                       "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Checkmk."
-                      ),
-                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
-                                                                        allow_empty=False)),
-                              ("store", _("URL from password store"),
-                               DropdownChoice(
-                                   sorted=True,
-                                   choices=passwordstore_choices,
-                               ))],
-                 )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-            ],
+        return Transform(
+            Dictionary(
+                title=_("Create notification with the following parameters"),
+                optional_keys=["url_prefix", "proxy_url"],
+                elements=[
+                    ("webhook_url",
+                     CascadingDropdown(
+                         title=_("Webhook-URL"),
+                         help=
+                         _("Webhook URL. Setup Slack Webhook " +
+                           "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
+                           "<br />For Mattermost follow the documentation "
+                           "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
+                           "<br />This URL can also be collected from the Password Store from Checkmk."
+                          ),
+                         choices=[("webhook_url", _("Webhook URL"),
+                                   HTTPUrl(size=80, allow_empty=False)),
+                                  ("store", _("URL from password store"),
+                                   DropdownChoice(
+                                       sorted=True,
+                                       choices=passwordstore_choices,
+                                   ))],
+                     )),
+                    ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                    ("proxy_url", HTTPProxyReference()),
+                ],
+            ),
+            forth=_slack_add_proxy,
         )
 
 

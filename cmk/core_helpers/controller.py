@@ -32,6 +32,7 @@ logger = logging.getLogger("cmk.helper")
 
 class GlobalConfig(NamedTuple):
     cmc_log_level: int
+    cluster_max_cachefile_age: int
     snmp_plugin_store: SNMPPluginStore
 
     @property
@@ -59,6 +60,7 @@ class GlobalConfig(NamedTuple):
         try:
             return cls(
                 cmc_log_level=fetcher_config["cmc_log_level"],
+                cluster_max_cachefile_age=fetcher_config["cluster_max_cachefile_age"],
                 snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
             )
         except (LookupError, TypeError, ValueError) as exc:
@@ -68,6 +70,7 @@ class GlobalConfig(NamedTuple):
         return {
             "fetcher_config": {
                 "cmc_log_level": self.cmc_log_level,
+                "cluster_max_cachefile_age": self.cluster_max_cachefile_age,
                 "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             },
         }
@@ -151,7 +154,11 @@ def load_global_config(serial: ConfigSerial) -> GlobalConfig:
             return GlobalConfig.deserialize(json.load(f))
     except FileNotFoundError:
         logger.warning("fetcher global config %s is absent", serial)
-        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
+        return GlobalConfig(
+            cmc_log_level=5,
+            cluster_max_cachefile_age=90,
+            snmp_plugin_store=SNMPPluginStore(),
+        )
 
 
 def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:

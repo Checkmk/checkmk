@@ -24,7 +24,11 @@ from cmk.core_helpers.snmp import SNMPPluginStore
 class TestGlobalConfig:
     @pytest.fixture
     def global_config(self):
-        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
+        return GlobalConfig(
+            cmc_log_level=5,
+            cluster_max_cachefile_age=90,
+            snmp_plugin_store=SNMPPluginStore(),
+        )
 
     def test_deserialization(self, global_config):
         assert GlobalConfig.deserialize(global_config.serialize()) == global_config

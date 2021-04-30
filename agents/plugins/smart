@@ -108,8 +108,19 @@ if which smartctl > /dev/null 2>&1 ; then
             continue
         fi
 
-        # Exlude Removable Media
-        [ $(< /sys/class/block/$N/removable) == "1" ] && continue
+        # Exclude removable media
+        if which udevadm > /dev/null 2>&1; then
+            TMP_FILE=$(mktemp)
+            udevadm info /dev/$N > $TMP_FILE
+            if grep -Fxq "E: ID_CDROM_CD=1" $TMP_FILE; then
+                rm $TMP_FILE
+                continue
+            else
+                rm $TMP_FILE
+            fi
+        else
+            [ $(< /sys/class/block/$N/removable) == "1" ] && continue
+        fi
 
         # Avoid duplicate entries for same device
         if [ "${SEEN//.$N./}" != "$SEEN" ] ; then

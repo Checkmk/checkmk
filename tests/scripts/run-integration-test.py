@@ -51,11 +51,21 @@ def main(args):
                           update_from_git=version == "git",
                           install_test_python_modules=True)
 
+    site = sf.get_existing_site("test")
+
     if os.environ.get("REUSE"):
-        logger.info("Reuse existing site")
-        site = sf.get_existing_site("test")
-        site.start()
+        logger.info("Reuse previously existing site in case it exists (REUSE=1)")
+        if not site.exists():
+            logger.info("Creating new site")
+            site = sf.get_site("test")
+        else:
+            logger.info("Reuse existing site")
+            site.start()
     else:
+        if site.exists():
+            logger.info("Remove previously existing site (REUSE=0)")
+            site.rm()
+
         logger.info("Creating new site")
         site = sf.get_site("test")
 

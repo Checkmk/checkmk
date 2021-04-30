@@ -5,14 +5,14 @@
 
 #include "HostGroupsColumn.h"
 
+#include "MonitoringCore.h"
 #include "Row.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "Object.h"
 #include "ObjectGroup.h"
 #else
-#include "MonitoringCore.h"
-#include "auth.h"
 #include "nagios.h"
 #endif
 
@@ -23,9 +23,10 @@ std::vector<std::string> HostGroupsColumn::getValue(
 #ifdef CMC
     (void)_mc;  // HACK
     if (const auto *object = columnData<Object>(row)) {
-        for (const auto &og : object->_groups) {
-            if (og->isContactAuthorized(auth_user)) {
-                group_names.push_back(og->name());
+        for (const auto &hg : object->_groups) {
+            if (is_authorized_for_host_group(_mc->groupAuthorization(), hg,
+                                             auth_user)) {
+                group_names.push_back(hg->name());
             }
         }
     }

@@ -14,6 +14,10 @@ class Host;  // IWYU pragma: keep
 using host = Host;
 class Service;  // IWYU pragma: keep
 using service = Service;
+// IWYU pragma: no_include "ObjectGroup.h"
+class ObjectGroup;  // IWYU pragma: keep
+using hostgroup = ObjectGroup;
+using servicegroup = ObjectGroup;
 #else
 #include "nagios.h"
 #endif
@@ -39,13 +43,11 @@ inline contact *unknown_auth_user() {
 bool is_authorized_for_hst(const contact *ctc, const host *hst);
 bool is_authorized_for_svc(ServiceAuthorization service_auth,
                            const contact *ctc, const service *svc);
-#ifndef CMC
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc);
 bool is_authorized_for_service_group(GroupAuthorization group_auth,
                                      ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc);
-#endif
 
 #endif  // auth_h

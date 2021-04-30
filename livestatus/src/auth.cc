@@ -6,7 +6,11 @@
 #include "auth.h"
 
 #ifdef CMC
+#include <algorithm>
+
 #include "Host.h"  // IWYU pragma: keep
+#include "Object.h"
+#include "ObjectGroup.h"  // IWYU pragma: keep
 #include "cmc.h"
 #endif
 
@@ -63,7 +67,6 @@ bool is_authorized_for_svc(ServiceAuthorization service_auth,
 #endif
 }
 
-#ifndef CMC
 bool is_authorized_for_host_group(GroupAuthorization group_auth,
                                   const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
@@ -72,7 +75,12 @@ bool is_authorized_for_host_group(GroupAuthorization group_auth,
     if (ctc == unknown_auth_user()) {
         return false;
     }
-
+#ifdef CMC
+    auto has_contact = [=](Object *obj) { return obj->hasContact(ctc); };
+    return group_auth == GroupAuthorization::loose
+               ? std::any_of(hg->begin(), hg->end(), has_contact)
+               : std::all_of(hg->begin(), hg->end(), has_contact);
+#else
     auto has_contact = [=](hostsmember *mem) {
         return is_authorized_for_hst(ctc, mem->host_ptr);
     };
@@ -92,6 +100,7 @@ bool is_authorized_for_host_group(GroupAuthorization group_auth,
         }
     }
     return true;
+#endif
 }
 
 bool is_authorized_for_service_group(GroupAuthorization group_auth,
@@ -104,7 +113,13 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
     if (ctc == unknown_auth_user()) {
         return false;
     }
-
+#ifdef CMC
+    (void)service_auth;  // TODO(sp) Change API below to use this!
+    auto has_contact = [=](Object *obj) { return obj->hasContact(ctc); };
+    return group_auth == GroupAuthorization::loose
+               ? std::any_of(sg->begin(), sg->end(), has_contact)
+               : std::all_of(sg->begin(), sg->end(), has_contact);
+#else
     auto has_contact = [=](servicesmember *mem) {
         return is_authorized_for_svc(service_auth, ctc, mem->service_ptr);
     };
@@ -125,5 +140,5 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
         }
     }
     return true;
-}
 #endif
+}

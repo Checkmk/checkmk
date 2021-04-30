@@ -1,0 +1,12 @@
+Title: slack: Add option to configure proxy
+Knowledge: undoc
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p24
+Date: 1619775632
+
+The option "HTTP proxy" was added for notification method "Slack or Mattermost".

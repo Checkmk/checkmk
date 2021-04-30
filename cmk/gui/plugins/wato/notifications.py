@@ -227,6 +227,12 @@ class NotificationParameterMail(NotificationParameter):
         return elements
 
 
+def _slack_add_proxy(value):
+    # introduced with 2.0.0p4 werk #12857
+    value.setdefault("proxy_url", ('no_proxy', None))
+    return value
+
+
 @notification_parameter_registry.register
 class NotificationParameterSlack(NotificationParameter):
     @property
@@ -235,56 +241,63 @@ class NotificationParameterSlack(NotificationParameter):
 
     @property
     def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix"],
-            elements=[
-                ("webhook_url",
-                 CascadingDropdown(
-                     title=_("Webhook-URL"),
-                     help=
-                     _("Webhook URL. Setup Slack Webhook " +
-                       "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
-                       "<br />For Mattermost follow the documentation "
-                       "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Check_MK."
-                      ),
-                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
-                                                                        allow_empty=False)),
-                              ("store", _("URL from password store"),
-                               DropdownChoice(
-                                   sorted=True,
-                                   choices=passwordstore_choices,
-                               ))],
-                 )),
-                ("url_prefix",
-                 Transform(CascadingDropdown(
-                     title=_("URL prefix for links to Check_MK"),
-                     help=_(
-                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
-                         "host and service links within the notification mail "
-                         "is filled automatically. "
-                         "If you specify an URL prefix here, then several parts of the "
-                         "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
-                         "the recipient of the message can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                     choices=[
-                         ("automatic_http", _("Automatic HTTP")),
-                         ("automatic_https", _("Automatic HTTPs")),
-                         ("manual", _("Specify URL prefix"),
-                          TextAscii(
-                              regex="^(http|https)://.*/check_mk/$",
-                              regex_error=_("The URL must begin with <tt>http</tt> or "
-                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                              size=64,
-                              default_value=local_site_url,
-                          )),
-                     ],
-                 ),
-                           forth=transform_forth_html_mail_url_prefix,
-                           back=transform_back_html_mail_url_prefix)),
-            ],
+        return Transform(
+            Dictionary(
+                title=_("Create notification with the following parameters"),
+                optional_keys=["url_prefix", "proxy_url"],
+                elements=[
+                    ("webhook_url",
+                     CascadingDropdown(
+                         title=_("Webhook-URL"),
+                         help=
+                         _("Webhook URL. Setup Slack Webhook " +
+                           "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
+                           "<br />For Mattermost follow the documentation "
+                           "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
+                           "<br />This URL can also be collected from the Password Store from Check_MK."
+                          ),
+                         choices=[("webhook_url", _("Webhook URL"),
+                                   HTTPUrl(size=80, allow_empty=False)),
+                                  ("store", _("URL from password store"),
+                                   DropdownChoice(
+                                       sorted=True,
+                                       choices=passwordstore_choices,
+                                   ))],
+                     )),
+                    ("url_prefix",
+                     Transform(
+                         CascadingDropdown(
+                             title=_("URL prefix for links to Check_MK"),
+                             help=
+                             _("If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                               "host and service links within the notification mail "
+                               "is filled automatically. "
+                               "If you specify an URL prefix here, then several parts of the "
+                               "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                               "the recipient of the message can directly visit the host or "
+                               "service in question in Check_MK. Specify an absolute URL including "
+                               "the <tt>.../check_mk/</tt>"),
+                             choices=[
+                                 ("automatic_http", _("Automatic HTTP")),
+                                 ("automatic_https", _("Automatic HTTPs")),
+                                 ("manual", _("Specify URL prefix"),
+                                  TextAscii(
+                                      regex="^(http|https)://.*/check_mk/$",
+                                      regex_error=_(
+                                          "The URL must begin with <tt>http</tt> or "
+                                          "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                                      size=64,
+                                      default_value=local_site_url,
+                                  )),
+                             ],
+                         ),
+                         forth=transform_forth_html_mail_url_prefix,
+                         back=transform_back_html_mail_url_prefix,
+                     )),
+                    ("proxy_url", HTTPProxyReference()),
+                ],
+            ),
+            forth=_slack_add_proxy,
         )
 
 

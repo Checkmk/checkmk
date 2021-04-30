@@ -343,12 +343,7 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
                 ('SMS_checked', ('/sms/checked/.*', '')),
             ],
         ],
-        [
-            (0, 'Count: 0', [('count', 0, None, None)]),
-            (0, 'Size: 0 B', [('size', 0, None, None)]),
-            (0, '\n'
-             'Include patterns: /sms/checked/.*, '),
-        ],
+        [(3, 'No group pattern found.')],
     ),
     (
         'random_item',

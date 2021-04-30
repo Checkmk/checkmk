@@ -26,7 +26,6 @@
 # "maxage"  : ( 6000, 12000 ), in seconds
 
 import collections
-import contextlib
 import typing
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 
@@ -383,11 +382,10 @@ def _define_fileinfo_group_check(files_matching, date_inclusion):
 
 
 def _get_group_patterns_from_extra_conf(item):
-    with contextlib.suppress(StopIteration):
-        # first rule matching the item wins
-        return next(rule for e in host_extra_conf(host_name(), fileinfo_groups)
-                    for rule_name, rule in e if rule_name == item)
-    return None
+    try:
+        return collections.OrderedDict(host_extra_conf(host_name(), fileinfo_groups)[0]).get(item)
+    except IndexError:
+        return None
 
 
 def check_fileinfo_groups(item, params, parsed):

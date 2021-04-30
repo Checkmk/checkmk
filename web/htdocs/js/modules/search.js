@@ -111,16 +111,37 @@ export function on_input_search(id) {
             current_search.execute_search();
             resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
         }, 300);
+        remove_class(document.getElementById("content_inner_" + id + "_search"), "extended_topic");
     }
 }
 
-export function on_click_show_all_results(topic, popup_menu_id) {
-    let topic_results = document.getElementById(topic).getElementsByTagName("li");
-    add_class(window.event.target, "hidden");
+export function on_click_show_all_topics(topic) {
+    let current_topic = document.getElementById(topic);
+    let topic_results = current_topic.getElementsByTagName("li");
+    remove_class(current_topic, "extended");
+    add_class(current_topic, "extendable");
+    remove_class(current_topic.closest(".content, .inner, .search"), "extended_topic");
     topic_results.forEach(li => {
-        li.className == "hidden" && remove_class(li, "hidden");
+        if (li.dataset.extended == "true") {
+            li.dataset.extended = "false";
+            add_class(li, "hidden");
+        }
     });
+    resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
+}
 
+export function on_click_show_all_results(topic, popup_menu_id) {
+    let current_topic = document.getElementById(topic);
+    let topic_results = current_topic.getElementsByTagName("li");
+    remove_class(current_topic, "extendable");
+    add_class(current_topic, "extended");
+    add_class(current_topic.closest(".content, .inner, .search"), "extended_topic");
+    topic_results.forEach(li => {
+        if (li.dataset.extended == "false") {
+            li.dataset.extended = "true";
+            remove_class(li, "hidden");
+        }
+    });
     resize_mega_menu_popup(document.getElementById(popup_menu_id));
 }
 
@@ -148,6 +169,7 @@ export function on_click_reset(id) {
         current_search.display_menu_items();
         remove_class(document.getElementById(current_search.clear_id), "clearable");
     }
+    remove_class(document.getElementById("content_inner_" + id + "_search"), "extended_topic");
     resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
 export function on_key_down(id) {

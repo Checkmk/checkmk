@@ -21,13 +21,12 @@ RUN apt-get update \
     libssl-dev \
     make \
     nullmailer \
-    python-dev \
-    python-dev \
+    python3-dev \
     python3-pip \
     rrdtool \
     strace \
     vim \
-    && pip3 install --upgrade setuptools \
+    && pip3 install  --upgrade 'setuptools<51' \
     && pip3 install importlib_resources==1.5.0 importlib_metadata==1.6.0 git+https://github.com/pypa/pipenv.git@v2020.6.2 \
     && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs \

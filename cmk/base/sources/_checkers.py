@@ -224,7 +224,7 @@ def make_nodes(
 ) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
-    return _make_piggyback_nodes(mode, config_cache, host_config)
+    return _make_cluster_nodes(mode, config_cache, host_config)
 
 
 def fetch_all(
@@ -253,7 +253,7 @@ def fetch_all(
             )
 
 
-def _make_piggyback_nodes(
+def _make_cluster_nodes(
     mode: Mode,
     config_cache: config.ConfigCache,
     host_config: HostConfig,

@@ -11,9 +11,7 @@ import math
 import os
 import time
 from typing import (
-    Any,
     Callable,
-    Dict,
     Final,
     List,
     NamedTuple,
@@ -38,6 +36,7 @@ from cmk.utils.prediction import (
     RRDColumnFunction,
     PredictionData,
     PredictionInfo,
+    PredictionParameters as _PredictionParameters,
     ConsolidationFunctionName,
     EstimatedLevels,
     save_predictions,
@@ -47,7 +46,6 @@ logger = logging.getLogger("cmk.prediction")
 
 _GroupByFunction = Callable[[Timestamp], Tuple[Timegroup, Timestamp]]
 _TimeSlices = List[Tuple[Timestamp, Timestamp]]
-_PredictionParameters = Dict[str, Any]
 
 
 class _PeriodInfo(NamedTuple):
@@ -203,13 +201,13 @@ def _calculate_data_for_prediction(
 
     descriptors = _data_stats(slices)
 
-    return {
-        u"columns": [u"average", u"min", u"max", u"stdev"],
-        u"points": descriptors,
-        u"num_points": len(descriptors),
-        u"data_twindow": list(twindow[:2]),
-        u"step": twindow[2],
-    }
+    return PredictionData(
+        columns=[u"average", u"min", u"max", u"stdev"],
+        points=descriptors,
+        num_points=len(descriptors),
+        data_twindow=list(twindow[:2]),
+        step=twindow[2],
+    )
 
 
 def _std_dev(point_line: List[float], average: float) -> float:
@@ -240,12 +238,12 @@ def _is_prediction_up_to_date(
 
     period_info = _PREDICTION_PERIODS[params["period"]]
     now = time.time()
-    if last_info["time"] + period_info.valid * period_info.slice < now:
+    if last_info.time + period_info.valid * period_info.slice < now:
         logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return False
 
     jsonized_params = json.loads(json.dumps(params))
-    if last_info.get('params') != jsonized_params:
+    if last_info.params != jsonized_params:
         logger.log(VERBOSE, "Prediction parameters have changed.")
         return False
 
@@ -290,19 +288,19 @@ def get_levels(
 
         data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
-        info: PredictionInfo = {
-            u"time": now,
-            u"range": time_windows[0],
-            u"cf": cf,
-            u"dsname": dsname,
-            u"slice": period_info.slice,
-            u"params": params,
-        }
+        info = PredictionInfo(
+            time=now,
+            range=time_windows[0],
+            cf=cf,
+            dsname=dsname,
+            slice=period_info.slice,
+            params=params,
+        )
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred["step"])  # fixed: true-division
-    reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
+    index = int(rel_time / data_for_pred.step)  # fixed: true-division
+    reference = dict(zip(data_for_pred.columns, data_for_pred.points[index]))
 
     return reference["average"], cmk.utils.prediction.estimate_levels(
         reference_value=reference["average"],

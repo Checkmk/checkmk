@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
 import json
 import logging
 import os
 import time
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterator,
@@ -16,7 +18,6 @@ from typing import (
     Literal,
     Optional,
     Tuple,
-    TypedDict,
 )
 
 from six import ensure_str
@@ -38,18 +39,28 @@ ConsolidationFunctionName = str
 Timegroup = str
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
+PredictionParameters = Dict[str, Any]  # TODO: improve this type
 
 _DataStatValue = Optional[float]
 _DataStat = List[_DataStatValue]
 DataStats = List[_DataStat]
 
-PredictionInfo = Dict  # TODO: improve this type
-
 _LevelsType = Literal["absolute", "relative", "stdev"]
 _LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
 
 
-class PredictionData(TypedDict, total=False):
+@dataclass(frozen=True)
+class PredictionInfo:
+    time: int
+    range: Tuple[Timestamp, Timestamp]
+    cf: ConsolidationFunctionName
+    dsname: MetricName
+    slice: int
+    params: PredictionParameters
+
+
+@dataclass(frozen=True)
+class PredictionData:
     columns: List[str]
     points: DataStats
     num_points: int

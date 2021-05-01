@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import asdict
 from datetime import datetime
 import json
 import time
@@ -219,14 +220,13 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
                                                (repo_path(), timezone, timegroup))
 
     assert isinstance(expected_reference, dict)
-    assert sorted(data_for_pred) == sorted(expected_reference)
-    for key in data_for_pred:
+    assert sorted(asdict(data_for_pred)) == sorted(expected_reference)
+    for key in expected_reference:
         if key == "points":
-            for cal, ref in zip(data_for_pred['points'], expected_reference['points']):
+            for cal, ref in zip(data_for_pred.points, expected_reference['points']):
                 assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
         else:
-            # TypedDict key must be a string literal
-            assert data_for_pred[key] == expected_reference[key]  # type: ignore[misc]
+            assert getattr(data_for_pred, key) == expected_reference[key]
 
 
 @pytest.mark.parametrize('timerange, result', [

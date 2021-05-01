@@ -7,7 +7,14 @@
 import os
 import time
 import json
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import livestatus
 import cmk.utils.paths
@@ -51,10 +58,10 @@ def _load_prediction_information(
         current_tg_name = f[:-5]
         timegroups.append((current_tg_name, tg_info))
         if current_tg_name == tg_name or (tg_name is None and
-                                          (tg_info["range"][0] <= now <= tg_info["range"][1])):
+                                          (tg_info.range[0] <= now <= tg_info.range[1])):
             selected_timegroup = (current_tg_name, tg_info)
 
-    timegroups.sort(key=lambda x: x[1]["range"][0])
+    timegroups.sort(key=lambda x: x[1].range[0])
 
     choices: List[Tuple[str, str]] = [(name, name.title()) for name, _tg_info in timegroups]
 
@@ -97,7 +104,7 @@ def page_graph():
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 
-    swapped = swap_and_compute_levels(tg_data, timegroup['params'])
+    swapped = swap_and_compute_levels(tg_data, timegroup.params)
     vertical_range = compute_vertical_range(swapped)
     legend = [
         ("#000000", _("Reference")),
@@ -108,28 +115,28 @@ def page_graph():
     if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
-    create_graph(tg_name, graph_size, timegroup["range"], vertical_range, legend)
+    create_graph(tg_name, graph_size, timegroup.range, vertical_range, legend)
 
-    if "levels_upper" in timegroup['params']:
+    if "levels_upper" in timegroup.params:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
         render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
 
-    if "levels_lower" in timegroup['params']:
+    if "levels_lower" in timegroup.params:
         render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
         render_area(swapped["lower_crit"], "#ff0000", 0.1)
 
     vscala_low = vertical_range[0]
     vscala_high = vertical_range[1]
     vert_scala = compute_vertical_scala(vscala_low, vscala_high)
-    time_scala = [[timegroup["range"][0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
+    time_scala = [[timegroup.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
     render_coordinates(vert_scala, time_scala)
 
-    if "levels_lower" in timegroup['params']:
+    if "levels_lower" in timegroup.params:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
         render_curve(swapped["lower_warn"], "#e0e000", square=True)
         render_curve(swapped["lower_crit"], "#f0b0a0", square=True)
 
-    if "levels_upper" in timegroup['params']:
+    if "levels_upper" in timegroup.params:
         render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
         render_curve(swapped["upper_warn"], "#e0e000", square=True)
         render_curve(swapped["upper_crit"], "#f0b0b0", square=True)
@@ -137,7 +144,7 @@ def page_graph():
     render_curve(swapped["average"], "#000000")  # repetition makes line bolder
 
     # Try to get current RRD data and render it also
-    from_time, until_time = timegroup["range"]
+    from_time, until_time = timegroup.range
     now = time.time()
     if from_time <= now <= until_time:
         timeseries = prediction.get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
@@ -145,8 +152,8 @@ def page_graph():
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - prediction.timezone_at(now)) % timegroup["slice"]
-            render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
+            rel_time = (now - prediction.timezone_at(now)) % timegroup.slice
+            render_point(timegroup.range[0] + rel_time, current_value, "#0000ff")
 
     html.footer()
 

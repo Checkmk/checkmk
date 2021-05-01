@@ -27198,9 +27198,6 @@ msgstr ""
 msgid "Manual check"
 msgstr ""
 
-msgid "Manual checks"
-msgstr ""
-
 msgid "Manual page for this check type"
 msgstr ""
 
@@ -34482,6 +34479,12 @@ msgstr ""
 msgid ""
 "Please use only a-z, A-Z, 0-9, space, underscore, dot, hyphen and slash for "
 "your service description"
+msgstr ""
+
+msgid ""
+"Please use this option if you have multiple sites in a distributed setup "
+"which send their notifications to the same ServiceNow instance. The site ID "
+"will be used as prefix for the problem ID on incident creation."
 msgstr ""
 
 msgid "Plesk Backups"
@@ -46976,7 +46979,7 @@ msgstr ""
 
 msgid ""
 "These services have not been found by the discovery but have been added "
-"manually by a rule in the WATO module <i>Manual checks</i>."
+"manually by a Setup rule <i>Enforced services</i>."
 msgstr ""
 
 msgid ""
@@ -52560,6 +52563,13 @@ msgid "Use short title in reports header"
 msgstr ""
 
 msgid "Use single quotes, escape contained quotes with backslash"
+msgstr ""
+
+#, fuzzy
+msgid "Use site ID"
+msgstr "foloseste numele portului"
+
+msgid "Use site ID prefix"
 msgstr ""
 
 msgid "Use specific times"

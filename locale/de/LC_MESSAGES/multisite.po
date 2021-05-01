@@ -28435,9 +28435,6 @@ msgstr "Manueller Check"
 msgid "Manual check"
 msgstr "Manueller Check"
 
-msgid "Manual checks"
-msgstr "Manuelle Checks"
-
 msgid "Manual page for this check type"
 msgstr "Dokumentation für diesen Checktyp"
 
@@ -35599,6 +35596,16 @@ msgid ""
 msgstr ""
 "Gültige Werte für Service-Beschreibung: a-z, A-Z, 0-9, Leerzeichen, <tt>_</"
 "tt>, <tt>.</tt>, <tt>-</tt> und <tt>/</tt>."
+
+#, fuzzy
+msgid ""
+"Please use this option if you have multiple sites in a distributed setup "
+"which send their notifications to the same ServiceNow instance. The site ID "
+"will be used as prefix for the problem ID on incident creation."
+msgstr ""
+"Die numerische ID des JIRA-Benutzerfeldes für Sites. Bitte verwenden Sie "
+"diese Option, wenn Sie mehrere Standorte in einer verteilten Einrichtung "
+"haben, die ihre Benachrichtigungen an dieselbe JIRA-Instanz senden."
 
 msgid "Plesk Backups"
 msgstr "Plesk Backups"
@@ -49080,9 +49087,10 @@ msgstr ""
 "Diese Services wurden auf diesem Host gefunden aber mithilfe des Regelsatzes "
 "<i>Geclusterte Services</i> einem Cluster zugeordnet."
 
+#, fuzzy
 msgid ""
 "These services have not been found by the discovery but have been added "
-"manually by a rule in the WATO module <i>Manual checks</i>."
+"manually by a Setup rule <i>Enforced services</i>."
 msgstr ""
 "Diese Services wurden nicht automatisch erkannt, sondern manuell hinzugefügt "
 "über eine Regel im WATO-Modul <i>Manuelle Checks</i>."
@@ -55685,6 +55693,14 @@ msgid "Use single quotes, escape contained quotes with backslash"
 msgstr ""
 "Einfache Anführungszeichen verwenden, enthaltene Anführungszeichen mit "
 "Backslash ausnehmen"
+
+#, fuzzy
+msgid "Use site ID"
+msgstr "Instanz ID"
+
+#, fuzzy
+msgid "Use site ID prefix"
+msgstr "Namensraum-Präfix verwenden"
 
 msgid "Use specific times"
 msgstr "Bestimmte Tageszeiten verwenden"
@@ -62732,6 +62748,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Manual checks"
+#~ msgstr "Manuelle Checks"
 
 #~ msgid "Adaptable"
 #~ msgstr "Anpassungsfähig"

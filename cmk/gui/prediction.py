@@ -228,7 +228,9 @@ def swap_and_compute_levels(tg_data, tg_info):
             upper_0, upper_1, lower_0, lower_1 = prediction.estimate_levels(
                 reference_value=row["average"],
                 stdev=row["stdev"],
-                params=tg_info,
+                levels_lower=tg_info.get("levels_lower"),
+                levels_upper=tg_info.get("levels_upper"),
+                levels_upper_lower_bound=tg_info.get("levels_upper_min"),
                 levels_factor=1.0,
             )
             swapped.setdefault("upper_warn", []).append(upper_0 or 0)

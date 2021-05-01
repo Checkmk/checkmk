@@ -76,13 +76,44 @@ def test_time_series_downsampling(rrddata, twindow, cf, downsampled):
     assert ts.downsample(twindow, cf) == downsampled
 
 
-@pytest.mark.parametrize("ref_value, stdev, sig, params, levels_factor, result", [
-    (2, 0.5, 1, ("absolute", (3, 5)), 0.5, (3.5, 4.5)),
-    (2, 0.5, -1, ("relative", (20, 50)), 0.5, (1.6, 1)),
-    (2, 0.5, -1, ("stdev", (2, 4)), 0.5, (1, 0)),
-])
-def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, result):
-    assert prediction.estimate_level_bounds(ref_value, stdev, sig, params, levels_factor) == result
+def test__get_reference_deviation_absolute():
+    factor = 3.1415
+    assert prediction._get_reference_deviation(
+        levels_type="absolute",
+        reference_value=42.0,
+        stdev=None,
+        levels_factor=factor,
+    ) == factor
+
+
+def test__get_reference_deviation_relative():
+    reference_value = 42.0
+    assert prediction._get_reference_deviation(
+        levels_type="relative",
+        reference_value=reference_value,
+        stdev=None,
+        levels_factor=3.1415,
+    ) == reference_value / 100.0
+
+
+def test__get_reference_deviation_stdev_good():
+    stdev = 23.0
+    assert prediction._get_reference_deviation(
+        levels_type="stdev",
+        reference_value=42.0,
+        stdev=stdev,
+        levels_factor=3.1415,
+    ) == stdev
+
+
+def test__get_reference_deviation_stdev_bad():
+    with pytest.raises(TypeError):
+        _ = prediction._get_reference_deviation(
+            levels_type="stdev",
+            reference_value=42.0,
+            stdev=None,
+            levels_factor=3.1415,
+        )
 
 
 @pytest.mark.parametrize(
@@ -129,6 +160,8 @@ def test_estimate_levels(reference_value, reference_deviation, params, levels_fa
     assert prediction.estimate_levels(
         reference_value=reference_value,
         stdev=reference_deviation,
-        params=params,
+        levels_lower=params.get("levels_lower"),
+        levels_upper=params.get("levels_upper"),
+        levels_upper_lower_bound=params.get("levels_upper_min"),
         levels_factor=levels_factor,
     ) == result

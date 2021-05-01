@@ -8,7 +8,15 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Callable, List, Optional, Tuple, Iterator
+from typing import (
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+)
 
 from six import ensure_str
 
@@ -30,6 +38,9 @@ Timegroup = str
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
 PredictionInfo = Dict  # TODO: improve this type
+
+_LevelsType = Literal["absolute", "relative", "stdev"]
+_LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
 
 
 def is_dst(timestamp: float) -> bool:
@@ -304,59 +315,78 @@ def estimate_levels(
     *,
     reference_value: Optional[float],
     stdev: Optional[float],
-    params: Dict,
+    levels_lower: Optional[_LevelsSpec],
+    levels_upper: Optional[_LevelsSpec],
+    levels_upper_lower_bound: Optional[Tuple[float, float]],
     levels_factor: float,
 ) -> EstimatedLevels:
     if not reference_value:  # No reference data available
         return (None, None, None, None)
 
-    return (_get_levels_from_params("upper", 1, params, reference_value, stdev, levels_factor) +
-            _get_levels_from_params("lower", -1, params, reference_value, stdev, levels_factor))
+    estimated_upper_warn, estimated_upper_crit = _get_levels_from_params(
+        levels=levels_upper,
+        sig=1,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    ) if levels_upper else (None, None)
+
+    estimated_lower_warn, estimated_lower_crit = _get_levels_from_params(
+        levels=levels_lower,
+        sig=-1,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    ) if levels_lower else (None, None)
+
+    if levels_upper_lower_bound:
+        estimated_upper_warn = None if estimated_upper_warn is None else max(
+            levels_upper_lower_bound[0], estimated_upper_warn)
+        estimated_upper_crit = None if estimated_upper_crit is None else max(
+            levels_upper_lower_bound[1], estimated_upper_crit)
+
+    return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
 
 
 def _get_levels_from_params(
-    what: str,
-    sig: int,
-    params: Dict,
-    ref_value: float,
+    *,
+    levels: _LevelsSpec,
+    sig: Literal[1, -1],
+    reference_value: float,
     stdev: Optional[float],
-    levels_factor: float,
-) -> Tuple[EstimatedLevel, EstimatedLevel]:
-    p = "levels_" + what
-    if p not in params:
-        return None, None
-
-    this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
-    if what == "upper" and "levels_upper_min" in params:
-        limit_warn, limit_crit = params["levels_upper_min"]
-        this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-    return this_levels
-
-
-def estimate_level_bounds(
-    ref_value: float,
-    stdev: Optional[float],
-    sig: int,
-    params: Tuple[str, Tuple[float, float]],
     levels_factor: float,
 ) -> Tuple[float, float]:
-    how, (warn, crit) = params
-    if how == "absolute":
-        return (
-            ref_value + (sig * warn * levels_factor),
-            ref_value + (sig * crit * levels_factor),
-        )
-    if how == "relative":
-        return (
-            ref_value + sig * (ref_value * warn / 100.0),
-            ref_value + sig * (ref_value * crit / 100.0),
-        )
 
-    # how == "stdev":
+    levels_type, (warn, crit) = levels
+
+    reference_deviation = _get_reference_deviation(
+        levels_type=levels_type,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    )
+
+    estimated_warn = reference_value + sig * warn * reference_deviation
+    estimated_crit = reference_value + sig * crit * reference_deviation
+
+    return estimated_warn, estimated_crit
+
+
+def _get_reference_deviation(
+    *,
+    levels_type: _LevelsType,
+    reference_value: float,
+    stdev: Optional[float],
+    levels_factor: float,
+) -> float:
+    if levels_type == "absolute":
+        return levels_factor
+
+    if levels_type == "relative":
+        return reference_value / 100.0
+
+    # levels_type == "stdev":
     if stdev is None:  # just make explicit what would have happend anyway:
         raise TypeError("stdev is None")
 
-    return (
-        ref_value + sig * (stdev * warn),
-        ref_value + sig * (stdev * crit),
-    )
+    return stdev

@@ -10,7 +10,17 @@ import logging
 import math
 import os
 import time
-from typing import Any, Callable, Dict, Final, List, NamedTuple, Optional, Tuple, TypedDict
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Final,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    TypedDict,
+)
 
 import cmk.utils.debug
 import cmk.utils
@@ -327,6 +337,8 @@ def get_levels(
     return reference["average"], cmk.utils.prediction.estimate_levels(
         reference_value=reference["average"],
         stdev=reference["stdev"],
-        params=params,
+        levels_lower=params.get("levels_lower"),
+        levels_upper=params.get("levels_upper"),
+        levels_upper_lower_bound=params.get("levels_upper_min"),
         levels_factor=levels_factor,
     )

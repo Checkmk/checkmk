@@ -41,7 +41,7 @@ def _load_prediction_information(
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
-        tg_info = prediction.retrieve_data_for_prediction(
+        tg_info = prediction.retrieve_info_for_prediction(
             pred_dir + "/" + f,
             "<unknown>" if selected_timegroup is None else str(selected_timegroup[1]),
         )

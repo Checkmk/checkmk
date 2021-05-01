@@ -234,7 +234,7 @@ def _is_prediction_up_to_date(
     - the prediction from the last time is outdated
     - the prediction from the last time was made with other parameters
     """
-    last_info = cmk.utils.prediction.retrieve_data_for_prediction(pred_file + ".info", timegroup)
+    last_info = cmk.utils.prediction.retrieve_info_for_prediction(pred_file + ".info", timegroup)
     if last_info is None:
         return False
 
@@ -277,10 +277,7 @@ def get_levels(
 
     data_for_pred: Optional[PredictionData] = None
     if _is_prediction_up_to_date(pred_file, timegroup, params):
-        # Suppression: I am not sure how to check what this function returns
-        #              For now I hope this is compatible.
-        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(  # type: ignore[assignment]
-            pred_file, timegroup)
+        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
 
     if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)

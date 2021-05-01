@@ -323,8 +323,19 @@ def clean_prediction_files(pred_file: str, force: bool = False) -> None:
 
 # TODO: We should really *parse* the loaded data, currently the type signature
 # is a blatant lie!
-# (mo) And, in fact, this function returns at least 2 different types of dataset.
-def retrieve_data_for_prediction(info_file: str, timegroup: Timegroup) -> Optional[PredictionInfo]:
+def retrieve_info_for_prediction(info_file: str, timegroup: Timegroup) -> Optional[PredictionInfo]:
+    assert info_file.endswith('.info')
+    return _retrieve_for_prediction(info_file, timegroup)  # type: ignore[return-value]
+
+
+# TODO: We should really *parse* the loaded data, currently the type signature
+# is a blatant lie!
+def retrieve_data_for_prediction(info_file: str, timegroup: Timegroup) -> Optional[PredictionData]:
+    assert not info_file.endswith('.info')
+    return _retrieve_for_prediction(info_file, timegroup)  # type: ignore[return-value]
+
+
+def _retrieve_for_prediction(info_file: str, timegroup: Timegroup) -> object:
     try:
         return json.loads(open(info_file).read())
     except IOError:

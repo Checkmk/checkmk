@@ -323,4 +323,10 @@ def get_levels(
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred["step"])  # fixed: true-division
     reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
-    return cmk.utils.prediction.estimate_levels(reference, params, levels_factor)
+
+    return reference["average"], cmk.utils.prediction.estimate_levels(
+        reference_value=reference["average"],
+        stdev=reference["stdev"],
+        params=params,
+        levels_factor=levels_factor,
+    )

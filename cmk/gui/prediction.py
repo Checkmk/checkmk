@@ -225,7 +225,12 @@ def swap_and_compute_levels(tg_data, tg_info):
         for k, v in row.items():
             swapped[k].append(v)
         if row["average"] is not None and row["stdev"] is not None:
-            _, (upper_0, upper_1, lower_0, lower_1) = prediction.estimate_levels(row, tg_info, 1.0)
+            upper_0, upper_1, lower_0, lower_1 = prediction.estimate_levels(
+                reference_value=row["average"],
+                stdev=row["stdev"],
+                params=tg_info,
+                levels_factor=1.0,
+            )
             swapped.setdefault("upper_warn", []).append(upper_0 or 0)
             swapped.setdefault("upper_crit", []).append(upper_1 or 0)
             swapped.setdefault("lower_warn", []).append(lower_0 or 0)

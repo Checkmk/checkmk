@@ -301,19 +301,17 @@ def retrieve_data_for_prediction(info_file: str, timegroup: Timegroup) -> Option
 
 
 def estimate_levels(
-    reference: Dict[str, Optional[float]],
+    *,
+    reference_value: Optional[float],
+    stdev: Optional[float],
     params: Dict,
     levels_factor: float,
-) -> Tuple[Optional[float], EstimatedLevels]:
-    ref_value = reference["average"]
-    if not ref_value:  # No reference data available
-        return ref_value, (None, None, None, None)
+) -> EstimatedLevels:
+    if not reference_value:  # No reference data available
+        return (None, None, None, None)
 
-    stdev = reference["stdev"]
-
-    levels_upper = _get_levels_from_params("upper", 1, params, ref_value, stdev, levels_factor)
-    levels_lower = _get_levels_from_params("lower", -1, params, ref_value, stdev, levels_factor)
-    return ref_value, levels_upper + levels_lower
+    return (_get_levels_from_params("upper", 1, params, reference_value, stdev, levels_factor) +
+            _get_levels_from_params("lower", -1, params, reference_value, stdev, levels_factor))
 
 
 def _get_levels_from_params(

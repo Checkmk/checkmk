@@ -85,50 +85,50 @@ def test_estimate_level_bounds(ref_value, stdev, sig, params, levels_factor, res
     assert prediction.estimate_level_bounds(ref_value, stdev, sig, params, levels_factor) == result
 
 
-@pytest.mark.parametrize("reference, params, levels_factor, result", [
-    (
-        {
-            'average': 5,
-            'stdev': 2
-        },
-        {
-            'levels_lower': ('absolute', (2, 4))
-        },
-        1,
-        (5, (None, None, 3, 1)),
-    ),
-    (
-        {
-            'average': 15,
-            'stdev': 2,
-        },
-        {
-            'levels_upper': ('stddev', (2, 4)),
-            'levels_lower': ('stddev', (3, 5)),
-        },
-        1,
-        (15, (19, 23, 9, 5)),
-    ),
-    (
-        {
-            'average': 2,
-            'stdev': 3,
-        },
-        {
-            'levels_upper': ('relative', (20, 40)),
-            'levels_upper_min': (2, 4),
-        },
-        1,
-        (2, (2.4, 4, None, None)),
-    ),
-    (
-        {
-            'average': None
-        },
-        {},
-        1,
-        (None, (None, None, None, None)),
-    ),
-])
-def test_estimate_levels(reference, params, levels_factor, result):
-    assert prediction.estimate_levels(reference, params, levels_factor) == result
+@pytest.mark.parametrize(
+    "reference_value, reference_deviation, params, levels_factor, result",
+    [
+        (
+            5,
+            2,
+            {
+                'levels_lower': ('absolute', (2, 4))
+            },
+            1,
+            (None, None, 3, 1),
+        ),
+        (
+            15,
+            2,
+            {
+                'levels_upper': ('stddev', (2, 4)),
+                'levels_lower': ('stddev', (3, 5)),
+            },
+            1,
+            (19, 23, 9, 5),
+        ),
+        (
+            2,
+            3,
+            {
+                'levels_upper': ('relative', (20, 40)),
+                'levels_upper_min': (2, 4),
+            },
+            1,
+            (2.4, 4, None, None),
+        ),
+        (
+            None,
+            object(),  # should never be used
+            {},
+            1,
+            (None, None, None, None),
+        ),
+    ])
+def test_estimate_levels(reference_value, reference_deviation, params, levels_factor, result):
+    assert prediction.estimate_levels(
+        reference_value=reference_value,
+        stdev=reference_deviation,
+        params=params,
+        levels_factor=levels_factor,
+    ) == result

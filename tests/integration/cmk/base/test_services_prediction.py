@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
+import json
 import time
 
 import pytest  # type: ignore[import]
@@ -169,6 +170,10 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
     assert result == reference
 
 
+def _load_expected_result(path: str) -> object:
+    return json.loads(open(path).read())
+
+
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
@@ -210,14 +215,18 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
                                                         "MAX")
     data_for_pred = prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
-    path = "%s/tests/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
-    reference = cmk.utils.prediction.retrieve_data_for_prediction(path, timegroup)
-    data_points = data_for_pred.pop('points')
-    assert reference is not None
-    ref_points = reference.pop('points')
-    for cal, ref in zip(data_points, ref_points):
-        assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
-    assert data_for_pred == reference
+    expected_reference = _load_expected_result("%s/tests/integration/cmk/base/test-files/%s/%s" %
+                                               (repo_path(), timezone, timegroup))
+
+    assert isinstance(expected_reference, dict)
+    assert sorted(data_for_pred) == sorted(expected_reference)
+    for key in data_for_pred:
+        if key == "points":
+            for cal, ref in zip(data_for_pred['points'], expected_reference['points']):
+                assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)
+        else:
+            # TypedDict key must be a string literal
+            assert data_for_pred[key] == expected_reference[key]  # type: ignore[misc]
 
 
 @pytest.mark.parametrize('timerange, result', [

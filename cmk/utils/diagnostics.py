@@ -6,9 +6,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Any, NamedTuple, Set, Tuple
-#TODO included in typing since Python >= 3.8
-from typing_extensions import TypedDict
+from typing import Dict, List, Optional, Any, NamedTuple, Set, Tuple, TypedDict
 from enum import Enum
 
 import cmk.utils.paths

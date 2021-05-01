@@ -19,7 +19,6 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
-    TypedDict,
 )
 
 import cmk.utils.debug
@@ -27,43 +26,28 @@ import cmk.utils
 import cmk.utils.defines as defines
 import cmk.utils.store as store
 from cmk.utils.log import VERBOSE
-import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName, ServiceName, MetricName
 from cmk.utils.prediction import (
+    DataStats,
     Timestamp,
     Timegroup,
     TimeSeriesValues,
     Seconds,
     TimeWindow,
     RRDColumnFunction,
+    PredictionData,
     PredictionInfo,
     ConsolidationFunctionName,
     EstimatedLevels,
+    save_predictions,
 )
 
 logger = logging.getLogger("cmk.prediction")
 
 _GroupByFunction = Callable[[Timestamp], Tuple[Timegroup, Timestamp]]
 _TimeSlices = List[Tuple[Timestamp, Timestamp]]
-_DataStatValue = Optional[float]
-_DataStat = List[_DataStatValue]
-_DataStats = List[_DataStat]
 _PredictionParameters = Dict[str, Any]
-
-# TODO: This is somehow related to cmk.utils.prediction.PreditionInfo,
-# but using this *instead* of PredicionInfo (==Dict) is not possible.
-_PredictionData = TypedDict(
-    '_PredictionData',
-    {
-        "columns": List[str],
-        "points": _DataStats,
-        "num_points": int,
-        "data_twindow": List[Timestamp],
-        "step": Seconds,
-    },
-    total=False,
-)
 
 
 class _PeriodInfo(NamedTuple):
@@ -190,10 +174,10 @@ def _retrieve_grouped_data_from_rrd(
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 
 
-def _data_stats(slices: List[TimeSeriesValues]) -> _DataStats:
+def _data_stats(slices: List[TimeSeriesValues]) -> DataStats:
     "Statistically summarize all the upsampled RRD data"
 
-    descriptors: _DataStats = []
+    descriptors: DataStats = []
 
     for time_column in zip(*slices):
         point_line = [x for x in time_column if x is not None]
@@ -214,7 +198,7 @@ def _data_stats(slices: List[TimeSeriesValues]) -> _DataStats:
 def _calculate_data_for_prediction(
     time_windows: _TimeSlices,
     rrd_datacolumn: RRDColumnFunction,
-) -> _PredictionData:
+) -> PredictionData:
     twindow, slices = _retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     descriptors = _data_stats(slices)
@@ -226,17 +210,6 @@ def _calculate_data_for_prediction(
         u"data_twindow": list(twindow[:2]),
         u"step": twindow[2],
     }
-
-
-def _save_predictions(
-    pred_file: str,
-    info: PredictionInfo,
-    data_for_pred: _PredictionData,
-) -> None:
-    with open(pred_file + '.info', "w") as fname:
-        json.dump(info, fname)
-    with open(pred_file, "w") as fname:
-        json.dump(data_for_pred, fname)
 
 
 def _std_dev(point_line: List[float], average: float) -> float:
@@ -302,7 +275,7 @@ def get_levels(
     pred_file = os.path.join(pred_dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
-    data_for_pred: Optional[_PredictionData] = None
+    data_for_pred: Optional[PredictionData] = None
     if _is_prediction_up_to_date(pred_file, timegroup, params):
         # Suppression: I am not sure how to check what this function returns
         #              For now I hope this is compatible.
@@ -328,7 +301,7 @@ def get_levels(
             u"slice": period_info.slice,
             u"params": params,
         }
-        _save_predictions(pred_file, info, data_for_pred)
+        save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred["step"])  # fixed: true-division

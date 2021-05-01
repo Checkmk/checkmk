@@ -16,6 +16,7 @@ from typing import (
     Literal,
     Optional,
     Tuple,
+    TypedDict,
 )
 
 from six import ensure_str
@@ -37,10 +38,23 @@ ConsolidationFunctionName = str
 Timegroup = str
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
+
+_DataStatValue = Optional[float]
+_DataStat = List[_DataStatValue]
+DataStats = List[_DataStat]
+
 PredictionInfo = Dict  # TODO: improve this type
 
 _LevelsType = Literal["absolute", "relative", "stdev"]
 _LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
+
+
+class PredictionData(TypedDict, total=False):
+    columns: List[str]
+    points: DataStats
+    num_points: int
+    data_twindow: List[Timestamp]
+    step: Seconds
 
 
 def is_dst(timestamp: float) -> bool:
@@ -284,6 +298,17 @@ def predictions_dir(hostname: HostName, service_description: ServiceName,
     return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
                         cmk.utils.pnp_cleanup(ensure_str(service_description)),
                         cmk.utils.pnp_cleanup(dsname))
+
+
+def save_predictions(
+    pred_file: str,
+    info: PredictionInfo,
+    data_for_pred: PredictionData,
+) -> None:
+    with open(pred_file + '.info', "w") as fname:
+        json.dump(info, fname)
+    with open(pred_file, "w") as fname:
+        json.dump(data_for_pred, fname)
 
 
 def clean_prediction_files(pred_file: str, force: bool = False) -> None:

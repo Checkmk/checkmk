@@ -83,7 +83,6 @@ class ABCConfigDomain(abc.ABC):
             return {}
 
         try:
-            # TODO: Can be changed to text IO with Python 3
             with filename.open("rb") as f:
                 exec(f.read(), settings, settings)
 

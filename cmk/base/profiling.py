@@ -33,7 +33,6 @@ def output_profile() -> None:
     _profile.dump_stats(str(_profile_path))
     show_profile = _profile_path.with_name("show_profile.py")
 
-    # TODO Change shebang as soon as we migrate to Python 3
     with show_profile.open("w") as f:
         f.write("""#!/usr/bin/env python3
 import sys

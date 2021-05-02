@@ -50,7 +50,6 @@ class KeypairStore:
             return {}
 
         variables: Dict[str, Any] = {self._attr: {}}
-        # TODO: Can be changed to text IO with Python 3
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
         return variables[self._attr]

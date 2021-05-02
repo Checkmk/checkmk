@@ -13,7 +13,6 @@ from collections import OrderedDict
 from itertools import chain
 from typing import (
     Any,
-    AnyStr,
     Callable,
     Container,
     Dict,
@@ -28,7 +27,7 @@ from typing import (
     Union,
 )
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 import livestatus
 
@@ -278,13 +277,9 @@ def _float_or_int(val):
             return None
 
 
-# TODO: Slightly funny typing, fix this when we use Python 3.
-def _split_perf_data(perf_data_string: AnyStr) -> List[AnyStr]:
-    "Split the perf data string into parts. Preserve quoted strings!"
-    parts = shlex.split(ensure_str(perf_data_string))
-    if isinstance(perf_data_string, bytes):
-        return [ensure_binary(s) for s in parts]
-    return [ensure_str(s) for s in parts]
+def _split_perf_data(perf_data_string: str) -> List[str]:
+    """Split the perf data string into parts. Preserve quoted strings!"""
+    return shlex.split(perf_data_string)
 
 
 def perfvar_translation(perfvar_name, check_command):

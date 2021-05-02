@@ -27,7 +27,6 @@ from testlib.utils import (
     cmc_path,
     virtualenv_path,
     current_base_branch_name,
-    api_str_type,
 )
 from testlib.web_session import CMKWebSession
 from testlib.version import CMKVersion
@@ -714,11 +713,7 @@ class Site:
                         {
                             'condition': {},
                             'options': {},
-                            # TODO: This should obviously be 'str' in Python 3, but the GUI is
-                            # currently in Python 2 and expects byte strings. Change this once
-                            # the GUI is based on Python 3.
-                            'value': [(api_str_type('TESTGROUP'),
-                                       (api_str_type('*gwia*'), api_str_type('')))]
+                            'value': [('TESTGROUP', ('*gwia*', ''))]
                         },
                     ],
                 }

@@ -68,7 +68,7 @@ class RuleConditions:
         self.host_folder = host_folder
         self.host_tags = host_tags or {}
         self.host_labels = host_labels or {}
-        self.host_name = self._fixup_unicode_hosts(host_name)
+        self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels or {}
 
@@ -76,26 +76,10 @@ class RuleConditions:
         self.host_folder = conditions.get("host_folder", self.host_folder)
         self.host_tags = conditions.get("host_tags", {})
         self.host_labels = conditions.get("host_labels", {})
-        self.host_name = self._fixup_unicode_hosts(conditions.get("host_name"))
+        self.host_name = conditions.get("host_name")
         self.service_description = conditions.get("service_description")
         self.service_labels = conditions.get("service_labels", {})
         return self
-
-    # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
-    # strings.  After reading the config into the GUI ensure we really
-    # process the host names as str. TODO: Can be removed with Python 3.
-    def _fixup_unicode_hosts(self, host_conditions: HostNameConditions) -> HostNameConditions:
-        if not host_conditions:
-            return host_conditions
-
-        if isinstance(host_conditions, list):
-            return [str(h) if isinstance(h, str) else h for h in host_conditions]
-
-        if isinstance(host_conditions, dict) and "$nor" in host_conditions:
-            assert len(host_conditions) == 1
-            return {"$nor": [str(h) if isinstance(h, str) else h for h in host_conditions["$nor"]]}
-
-        raise NotImplementedError()
 
     def to_config_with_folder_macro(self):
         """Create serializable data structure for the conditions

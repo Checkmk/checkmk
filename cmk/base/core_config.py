@@ -558,10 +558,8 @@ def get_service_attributes(
                                                         check_plugin_name, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
-    # TODO: Remove ignore once we are on Python 3
     attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
                                      "LABEL"))
-    # TODO: Remove ignore once we are on Python 3
     attrs.update(
         _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
                             "LABELSOURCE"))

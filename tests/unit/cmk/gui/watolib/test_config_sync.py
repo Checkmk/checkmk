@@ -7,11 +7,10 @@
 import time
 import tarfile
 import shutil
-from io import IOBase
+from io import BufferedIOBase
 from typing import Dict, List
 from pathlib import Path
 
-from six import ensure_str
 import pytest  # type: ignore[import]
 import responses  # type: ignore[import]
 
@@ -219,12 +218,12 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         "etc/htpasswd",
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
-        ensure_str('var/check_mk/web/%s' % user_id),
-        ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
-        ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
-        ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
-        ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
-        ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
+        'var/check_mk/web/%s' % user_id,
+        'var/check_mk/web/%s/cached_profile.mk' % user_id,
+        'var/check_mk/web/%s/enforce_pw_change.mk' % user_id,
+        'var/check_mk/web/%s/last_pw_change.mk' % user_id,
+        'var/check_mk/web/%s/num_failed_logins.mk' % user_id,
+        'var/check_mk/web/%s/serial.mk' % user_id,
     ]
 
     if with_local:
@@ -682,8 +681,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
         False)
     assert list(kwargs.keys()) == ["files"]
     assert list(kwargs["files"].keys()) == ["snapshot"]
-    # TODO: Add correct type once we are on Python 3 only
-    assert isinstance(kwargs["files"]["snapshot"], IOBase)
+    assert isinstance(kwargs["files"]["snapshot"], BufferedIOBase)
 
     file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
     assert file_name == snapshot_settings.snapshot_path

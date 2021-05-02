@@ -584,7 +584,7 @@ class StandardHostsStorage(ABCHostsStorage):
                 self.save("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
 
     def save_attributes(self, attribute_mappings: List[AttributeType]):
-        for _, cmk_base_varname, dictionary, title in attribute_mappings:
+        for _host_attr, cmk_base_varname, dictionary, title in attribute_mappings:
             if dictionary:
                 self.save("\n# %s\n" % title)
                 self.save("%s.update(" % cmk_base_varname)
@@ -667,7 +667,7 @@ class RawHostsStorage(ABCHostsStorage):
 
     def save_attributes(self, attribute_mappings: List[AttributeType]):
         self.save("    'attributes': {\n")
-        for _, cmk_base_varname, dictionary, _ in attribute_mappings:
+        for _host_attr, cmk_base_varname, dictionary, _title in attribute_mappings:
             if dictionary:
                 self.save("        '%s': %s,\n" % (
                     cmk_base_varname,
@@ -894,18 +894,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         nodes_of = {}
         for cluster_with_tags, nodes in variables["clusters"].items():
             variables["all_hosts"].append(cluster_with_tags)
-            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
-            # strings.  After reading the config into the GUI ensure we really
-            # process the host names as str. TODO: Can be removed with Python 3.
-            nodes_of[str(cluster_with_tags.split('|')[0])] = list(map(str, nodes))
+            nodes_of[cluster_with_tags.split('|')[0]] = list(map(str, nodes))
 
         # Build list of individual hosts
         for host_name_with_tags in variables["all_hosts"]:
             parts = host_name_with_tags.split('|', 1)
-            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
-            # strings.  After reading the config into the GUI ensure we really
-            # process the host names as str. TODO: Can be removed with Python 3.
-            host_name = str(parts[0])
+            host_name = parts[0]
             host = self._create_host_from_variables(host_name, nodes_of, variables)
             self._hosts[host_name] = host
 

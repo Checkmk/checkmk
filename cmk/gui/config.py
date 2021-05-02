@@ -147,8 +147,7 @@ aggregation_functions: Dict[str, Callable] = {}
 #   '----------------------------------------------------------------------'
 
 
-def initialize():
-    # type () -> None
+def initialize() -> None:
     clear_user_login()
     load_config()
     log.set_log_levels(log_levels)
@@ -158,9 +157,8 @@ def initialize():
 def _load_config_file(path: str) -> None:
     """Load the given GUI configuration file"""
     try:
-        # TODO: Can be changed to text IO with Python 3
         with Path(path).open("rb") as f:
-            exec(f.read(), globals(), globals())  # yapf: disable
+            exec(f.read(), globals(), globals())
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise

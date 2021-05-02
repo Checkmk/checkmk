@@ -1761,7 +1761,6 @@ class _PYCHeader():
         return cls(*struct.unpack("4s3I", raw_bytes))
 
 
-# TODO: Check if this totally non-portable Kung Fu still works with Python 3!
 def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
     """Loads the given check or check include plugin into the given
     check context.

@@ -126,10 +126,8 @@ class CrashReportStore:
 
 class ABCCrashReport(metaclass=abc.ABCMeta):
     """Base class for the component specific crash report types"""
-
-    # TODO: Can not use this with python 2
-    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 

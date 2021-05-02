@@ -1136,8 +1136,8 @@ class TextAsciiAutocomplete(TextAscii):
 
         return result_data
 
-    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractmethod
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         raise NotImplementedError()
 

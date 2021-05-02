@@ -435,10 +435,8 @@ class PageCrash(ABCCrashReportPage):
 
 class ABCReportRenderer(metaclass=abc.ABCMeta):
     """Render crash type individual GUI elements"""
-
-    # TODO: Can not use this with python 2
-    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 

@@ -11,7 +11,7 @@ import os
 import copy
 import json
 from types import ModuleType
-from typing import Set, Any, AnyStr, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Set, Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from pathlib import Path
 import time
 
@@ -1048,13 +1048,12 @@ def _migrate_pre_16_socket_config(site_cfg: Dict[str, Any]) -> None:
         site_cfg["socket"] = _migrate_string_encoded_socket(socket)
 
 
-def _migrate_string_encoded_socket(value: AnyStr) -> Tuple[str, Union[Dict]]:
-    str_value = ensure_str(value)
-    family_txt, address = str_value.split(":", 1)
+def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
+    family_txt, address = value.split(":", 1)
 
     if family_txt == "unix":
         return "unix", {
-            "path": str_value.split(":", 1)[1],
+            "path": value.split(":", 1)[1],
         }
 
     if family_txt in ["tcp", "tcp6"]:

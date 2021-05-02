@@ -12,9 +12,7 @@ import io
 import gzip
 import re
 import pprint
-from typing import AnyStr, Dict, List, Optional
-
-from six import ensure_str
+from typing import Dict, List, Optional
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -74,16 +72,14 @@ class StructuredDataTree:
         parent = self._create_hierarchy(path[:-1])
         return parent.add_child(path[-1], child, tuple(path)).get_child_data()
 
-    def _validate_tree_path(self, tree_path: AnyStr) -> None:
+    def _validate_tree_path(self, tree_path: str) -> None:
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
-        # TODO: Check if bytes/ensure_str is necessary.
-        if not isinstance(tree_path, (bytes, str)):
+        if not isinstance(tree_path, str):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
-        tp = ensure_str(tree_path)
-        if not tp.endswith((":", ".")):
+        if not tree_path.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
-        if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tp)):
+        if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
             raise MKGeneralException("Specified tree path contains unexpected characters.")
 
     def _parse_tree_path(self, tree_path):

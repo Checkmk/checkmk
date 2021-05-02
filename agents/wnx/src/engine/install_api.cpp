@@ -5,6 +5,8 @@
 
 #include "install_api.h"
 
+#include <msi.h>
+
 #include <filesystem>
 #include <string>
 
@@ -14,8 +16,43 @@
 #include "logger.h"
 #include "tools/_process.h"  // start process
 
+#pragma comment(lib, "msi.lib")
+
 namespace cma::install {
 bool g_use_script_to_install{true};
+
+std::filesystem::path FindProductMsi(std::wstring_view product_name) {
+    constexpr size_t buf_size{500};
+    for (auto i = 0;; ++i) {
+        wchar_t product_id[buf_size];
+        auto ret = ::MsiEnumProductsW(i, product_id);
+        if (ret != 0) {
+            break;
+        }
+        wchar_t product_name[500];
+        DWORD len{buf_size};
+        ret = ::MsiGetProductInfoW(product_id,
+                                   INSTALLPROPERTY_INSTALLEDPRODUCTNAME,
+                                   product_name, &len);
+        if (ret == 0 && std::wstring{product_name} == product_name) {
+            wchar_t local_package[500] = L"";
+            len = buf_size;
+            ret = ::MsiGetProductInfoW(product_id, INSTALLPROPERTY_LOCALPACKAGE,
+                                       local_package, &len);
+            if (ret == 0) {
+                XLOG::d.i("Package found '{}' msi is '{}'",
+                          wtools::ToUtf8(product_name),
+                          wtools::ToUtf8(local_package));
+                return {local_package};
+            }
+            XLOG::l("Package found '{}' but error reading local_package",
+                    wtools::ToUtf8(product_name), ret);
+            break;
+        }
+    }
+    XLOG::l("Package not found '{}'", wtools::ToUtf8(product_name));
+    return {};
+}
 
 bool UseScriptToInstall() { return g_use_script_to_install; }
 

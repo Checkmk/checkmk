@@ -21,6 +21,8 @@ namespace cma {
 namespace install {
 bool UseScriptToInstall();
 
+std::filesystem::path FindProductMsi(std::wstring_view product_name);
+
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
 InstallMode GetInstallMode();

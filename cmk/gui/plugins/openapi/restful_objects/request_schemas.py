@@ -8,7 +8,7 @@ import urllib.parse
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import fields
 from cmk.gui.livestatus_utils.commands.downtimes import (
     schedule_host_downtime,
     schedule_service_downtime,
@@ -20,7 +20,8 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     acknowledge_hostgroup_problem,
 )
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
@@ -848,10 +849,10 @@ class DeleteDowntimeById(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByName(DeleteDowntimeBase):
-    host_name = fields.String(
+    host_name = fields.HostField(
         required=True,
+        should_exist=None,  # we don't care
         description="If set alone, then all downtimes of the host will be removed.",
-        pattern=fields.HOST_NAME_REGEXP,
         example="example.com",
     )
     service_descriptions = fields.List(

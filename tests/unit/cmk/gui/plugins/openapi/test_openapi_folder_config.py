@@ -10,8 +10,8 @@ import uuid
 
 import pytest
 
-from cmk.gui.plugins.openapi.fields import FOLDER_PATTERN, FolderField
-from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.gui.fields import FOLDER_PATTERN, FolderField
+from cmk.gui.fields.utils import BaseSchema
 
 
 @pytest.mark.parametrize(

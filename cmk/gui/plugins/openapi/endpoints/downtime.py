@@ -39,20 +39,19 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 
-from cmk.gui import sites
+from cmk.gui import fields, sites
+from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import BaseSchema, problem
+from cmk.gui.plugins.openapi.utils import problem
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
                        'service_by_query']
@@ -67,10 +66,10 @@ SERVICE_DESCRIPTION_SHOW = {
 }
 
 HOST_NAME_SHOW = {
-    'host_name': fields.String(
+    'host_name': fields.HostField(
         description=
         "The host name. No exception is raised when the specified host name does not exist",
-        pattern=HOST_NAME_REGEXP,
+        should_exist=None,  # we do not care
         example="example.com",
         required=False,
     )

@@ -25,8 +25,7 @@ from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services
 
-from cmk.gui import sites
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import fields, sites
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME

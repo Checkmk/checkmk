@@ -21,7 +21,7 @@ from marshmallow import Schema  # type: ignore[import]
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import fields
 from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
@@ -333,8 +333,8 @@ def to_dict(schema: Schema) -> Dict[str, str]:
 
     Examples:
 
+        >>> from cmk.gui.fields.utils import BaseSchema
         >>> from marshmallow import fields
-        >>> from cmk.gui.plugins.openapi.utils import BaseSchema
         >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
         ...      message2 = fields.String(example="Hello Bob!")
@@ -415,7 +415,7 @@ def code_samples(
         >>> _endpoint = Endpoint()
         >>> import os
         >>> from unittest import mock
-        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "heute"}):
+        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}):
         ...     samples = code_samples(_endpoint, [], [], [])
 
         >>> assert len(samples)

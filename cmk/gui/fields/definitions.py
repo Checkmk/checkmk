@@ -25,17 +25,11 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 
-from cmk.gui import sites, valuespec, watolib
-from cmk.gui.exceptions import MKUserError
+from cmk.gui import sites, watolib
+from cmk.gui.fields.base import BaseSchema
+from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import load_group_information
-from cmk.gui.plugins.openapi.utils import (
-    attr_openapi_schema,
-    BaseSchema,
-    collect_attributes,
-    ObjectContext,
-    ObjectType,
-)
 from cmk.gui.sites import allsites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
@@ -890,10 +884,7 @@ class HostField(String):
     def _validate(self, value):
         super()._validate(value)
 
-        try:
-            valuespec.Hostname().validate_value(value, self.name)
-        except MKUserError as e:
-            raise self.make_error("invalid_name", host_name=value, invalid_reason=str(e))
+        # Regex gets checked through the `pattern` of the String instance
 
         if self._should_exist is not None:
             host = watolib.Host.host(value)
@@ -971,6 +962,7 @@ def attributes_field(object_type: ObjectType,
 
 
 class SiteField(_fields.String):
+    """A field representing a site name."""
     default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
 
     def _validate(self, value):
@@ -1191,40 +1183,22 @@ class PasswordShare(String):
             raise self.make_error("invalid", name=value)
 
 
-Boolean = _fields.Boolean
-Decimal = _fields.Decimal
-DateTime = _fields.DateTime
-Dict = _fields.Dict
-Constant = _fields.Constant
-Time = _fields.Time
-Date = _fields.Date
-Field = _fields.Field
-
-# Shortcuts
-Int = Integer
-Bool = Boolean
-Str = String
-
 __all__ = [
-    'Bool',
-    'Boolean',
-    'Constant',
-    'DateTime',
-    'Date',
-    'Decimal',
-    'Dict',
-    'Int',
+    'attributes_field',
+    'customer_field',
+    'column_field',
+    'ExprSchema',
+    'FolderField',
+    'FOLDER_PATTERN',
+    'GroupField',
+    'HostField',
     'Integer',
     'List',
     'Nested',
-    'Str',
-    'String',
-    'Time',
-    'Field',
-    'ExprSchema',
-    'FolderField',
-    'HostField',
-    'FOLDER_PATTERN',
+    'PasswordIdent',
+    'PasswordOwner',
+    'PasswordShare',
     'query_field',
-    'attributes_field',
+    'SiteField',
+    'String',
 ]

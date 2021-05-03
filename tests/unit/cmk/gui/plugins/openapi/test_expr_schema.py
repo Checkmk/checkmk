@@ -8,7 +8,7 @@ from marshmallow import Schema, ValidationError
 
 from cmk.utils.livestatus_helpers.tables import Hosts
 
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import fields
 
 
 @pytest.fixture(name='schema', scope='module')

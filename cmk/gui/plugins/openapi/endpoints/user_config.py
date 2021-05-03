@@ -10,10 +10,9 @@ import time
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
-import cmk.gui.userdb as userdb
+from cmk.gui import fields, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,

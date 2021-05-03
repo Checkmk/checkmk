@@ -20,8 +20,8 @@ from typing import Any, Dict
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 import cmk.gui.watolib as watolib
+from cmk.gui import fields
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,

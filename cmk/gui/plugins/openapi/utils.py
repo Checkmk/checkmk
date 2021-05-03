@@ -3,40 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import collections
-import functools
 import json
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    List,
-    Literal,
-    NamedTuple,
-    Optional,
-    Type,
-    TypedDict,
-    TypeVar,
-)
+from typing import Any, cast, Dict, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
-from marshmallow import Schema
-from marshmallow.decorators import post_load
-from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import HTTPException
 
 from livestatus import SiteId
 
 from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
-from cmk.gui import watolib
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.sites import sitenames
-from cmk.gui.watolib.tags import load_tag_config
 
 
 def problem(
@@ -101,13 +79,6 @@ class ProblemException(HTTPException):
             type_=self.type,
             ext=self.ext,
         )
-
-
-class BaseSchema(Schema):
-    """The Base Schema for all request and response schemas."""
-    class Meta:
-        """Holds configuration for marshmallow"""
-        ordered = True  # we want to have documentation in definition-order
 
 
 def param_description(
@@ -210,203 +181,3 @@ def create_url(site: SiteId, query: Query) -> str:
         url += f"?query={query_string_value}"
 
     return url
-
-
-class Attr(NamedTuple):
-    name: str
-    mandatory: bool
-    section: str
-    description: str
-    enum: Optional[List[Optional[str]]] = None
-
-
-ObjectType = Literal['host', 'folder', 'cluster']
-ObjectContext = Literal['create', 'update']
-
-
-def collect_attributes(
-    object_type: ObjectType,
-    context: ObjectContext,
-) -> List[Attr]:
-    """Collect all attributes for a specific use case
-
-    Use cases can be host or folder creation or updating.
-
-    Args:
-        object_type:
-            Either 'host', 'folder' or 'cluster'
-
-        context:
-            Either 'create' or 'update'
-
-    Returns:
-        A list of attribute describing named-tuples.
-
-    Examples:
-
-        >>> attrs = collect_attributes('host', 'create')
-        >>> assert len(attrs) > 10
-
-        >>> attrs = collect_attributes('host', 'update')
-        >>> assert len(attrs) > 10
-
-        >>> attrs = collect_attributes('cluster', 'create')
-        >>> assert len(attrs) > 10
-
-        >>> attrs = collect_attributes('cluster', 'update')
-        >>> assert len(attrs) > 10
-
-        >>> attrs = collect_attributes('folder', 'create')
-        >>> assert len(attrs) > 10
-
-        >>> attrs = collect_attributes('folder', 'update')
-        >>> assert len(attrs) > 10
-
-    To check the content of the list, uncomment this one.
-
-        # >>> import pprint
-        # >>> pprint.pprint(attrs)
-
-    """
-    something = TypeVar('something')
-
-    def _ensure(optional: Optional[something]) -> something:
-        if optional is None:
-            raise ValueError
-        return optional
-
-    result = []
-    new = context == 'create'
-    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(object_type, new):
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
-            if not attr.is_visible(object_type, new):
-                continue
-            help_text: str = attr.help() or ""
-            # TODO: what to do with attr.depends_on_tags()?
-            attr_entry = Attr(
-                name=attr.name(),
-                description=help_text,
-                section=topic_title,
-                mandatory=attr.is_mandatory(),
-            )
-            result.append(attr_entry)
-
-    tag_config = load_tag_config()
-    tag_config += BuiltinTagConfig()
-
-    def _format(tag_id: Optional[str]) -> str:
-        if tag_id is None:
-            return "`null`"
-        return f'`"{tag_id}"`'
-
-    tag_group: TagGroup
-    for tag_group in tag_config.tag_groups:
-        description: List[str] = []
-        if tag_group.help:
-            description.append(tag_group.help)
-
-        if tag_group.tags:
-            description.append("Choices:")
-            for tag in tag_group.tags:
-                description.append(f" * {_format(tag.id)}: {tag.title}")
-
-        result.append(
-            Attr(
-                name=_ensure(f"tag_{tag_group.id}"),
-                section=tag_group.topic or "No topic",
-                mandatory=False,
-                description="\n\n".join(description),
-                enum=[tag.id for tag in tag_group.tags],
-            ))
-
-    return result
-
-
-@functools.lru_cache
-def attr_openapi_schema(
-    object_type: ObjectType,
-    context: ObjectContext,
-) -> Type[BaseSchema]:
-    """
-
-    Examples:
-
-        Known attributes are allowed through:
-
-            >>> schema_class = attr_openapi_schema("host", "create")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-            >>> schema_class = attr_openapi_schema("folder", "update")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-            >>> schema_class = attr_openapi_schema("cluster", "create")
-            >>> schema_obj = schema_class()
-            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
-            {'tag_address_family': 'ip-v4-only'}
-
-        Unknown attributes lead to an error:
-
-            >>> import pytest
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'foo': 'bar'})
-
-        Wrong values on tag groups also lead to an error:
-
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'tag_address_family': 'ip-v5-only'})
-
-    Args:
-        object_type:
-            Either "host", "folder" or "cluster".
-
-        context:
-            Either "create" or "update"
-
-    Returns:
-        A marshmallow schema with the attributes as fields.
-
-    """
-    def site_exists(site_name: SiteId) -> None:
-        if site_name not in sitenames():
-            raise ValidationError(f"Site {site_name!r} does not exist.")
-
-    validators = {
-        'site': site_exists,
-    }
-
-    class FieldParams(TypedDict, total=False):
-        description: str
-        mandatory: bool
-        enum: List[Optional[str]]
-        validate: Callable[[Any], Any]
-        allow_none: bool
-
-    schema = collections.OrderedDict()
-    for attr in collect_attributes(object_type, context):
-        kwargs: FieldParams = {
-            'description': attr.description,
-            'mandatory': attr.mandatory,
-        }
-        # If we would assign enum=None, this would lead to a broken OpenApi specification!
-        if attr.enum is not None:
-            kwargs['enum'] = attr.enum
-            if None in attr.enum:
-                kwargs['allow_none'] = True
-
-        if attr.name in validators:
-            kwargs['validate'] = validators[attr.name]
-
-        schema[attr.name] = fields.String(**kwargs)
-
-    # This is a post-load hook to cast the OrderedDict instances to normal dicts. This would lead
-    # to problems with the *.mk file persisting logic otherwise.
-    def cast_to_dict(self, data, **kwargs):
-        return dict(data)
-
-    schema['remove_ordered_dict'] = post_load(cast_to_dict)
-    class_name = f'{object_type.title()}{context.title()}Attribute'
-    return type(class_name, (BaseSchema,), schema)

@@ -14,9 +14,9 @@ You can find an introduction to services including service discovery in the
 import json
 from typing import List
 
-from cmk.gui import watolib
+from cmk.gui import fields, watolib
+from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.restful_objects.constructors import (
     collection_href,
@@ -25,7 +25,6 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
     object_property,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.gui.watolib.services import (
     checkbox_id,
     CheckTable,

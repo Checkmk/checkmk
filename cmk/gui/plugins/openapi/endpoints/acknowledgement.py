@@ -19,7 +19,7 @@ from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts, Services
 
-from cmk.gui import http, sites
+from cmk.gui import fields, http, sites
 from cmk.gui.globals import user
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -27,7 +27,6 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
 from cmk.gui.plugins.openapi.utils import ProblemException
 

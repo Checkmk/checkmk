@@ -44,10 +44,9 @@ import operator
 from typing import Iterable
 
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import watolib
+from cmk.gui import fields, watolib
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,

@@ -25,8 +25,8 @@ from werkzeug.utils import import_string
 
 from cmk.utils import store
 
+from cmk.gui import fields
 from cmk.gui.globals import config, request
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.parameters import (

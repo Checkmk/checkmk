@@ -7,10 +7,9 @@
 """
 from typing import List
 
-from cmk.gui.plugins.openapi.livestatus_helpers import tables
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_command
-
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.queries import Query
 
 
 def acknowledge_service_problem(
@@ -54,7 +53,7 @@ def acknowledge_service_problem(
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     acknowledge_service_problem(live, 'example.com', 'drain')
@@ -177,7 +176,7 @@ def acknowledge_host_problem(
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     acknowledge_host_problem(live, 'example.com')

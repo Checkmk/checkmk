@@ -7,7 +7,7 @@ import json
 
 import pytest  # type: ignore[import]
 
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.parametrize(

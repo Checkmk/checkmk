@@ -3,14 +3,13 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import datetime as dt
 
 import pytest  # type: ignore[import]
 import pytz
 
-import cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes as downtimes
 from cmk.gui import sites
+import cmk.gui.livestatus_utils.commands.downtimes as downtimes
 
 
 @pytest.fixture(name='dates')
@@ -19,7 +18,7 @@ def _dates():
             dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC")))
 
 
-def test_host_downtime(mock_livestatus, register_builtin_html, dates):
+def test_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:
@@ -38,7 +37,7 @@ def test_host_downtime(mock_livestatus, register_builtin_html, dates):
         )
 
 
-def test_host_downtime_with_services(mock_livestatus, register_builtin_html, dates):
+def test_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:
@@ -68,7 +67,7 @@ def test_host_downtime_with_services(mock_livestatus, register_builtin_html, dat
         )
 
 
-def test_hostgroup_host_downtime(mock_livestatus, register_builtin_html, dates):
+def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:
@@ -97,7 +96,7 @@ def test_hostgroup_host_downtime(mock_livestatus, register_builtin_html, dates):
         )
 
 
-def test_hostgroup_host_downtime_with_services(mock_livestatus, register_builtin_html, dates):
+def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:
@@ -145,7 +144,7 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, register_builtin
         )
 
 
-def test_servicegroup_service_downtime(mock_livestatus, register_builtin_html, dates):
+def test_servicegroup_service_downtime(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:
@@ -177,7 +176,7 @@ def test_servicegroup_service_downtime(mock_livestatus, register_builtin_html, d
         )
 
 
-def test_servicegroup_service_downtime_and_hosts(mock_livestatus, register_builtin_html, dates):
+def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_context, dates):
     start_time, end_time = dates
 
     with mock_livestatus(expect_status_query=True) as live:

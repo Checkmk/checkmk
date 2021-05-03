@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, Generator, List, Optional, Tuple, Type, cast
 
-from cmk.gui.plugins.openapi.livestatus_helpers import tables
-from cmk.gui.plugins.openapi.livestatus_helpers.base import BaseQuery
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.base import BaseQuery
+from cmk.utils.livestatus_helpers.expressions import (
     And,
     BinaryExpression,
     NothingExpression,
@@ -15,7 +15,7 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
     QueryExpression,
     Not,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.types import Column, expr_to_tree, Table
+from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, Table
 
 # TODO: Support Stats headers in Query() class
 
@@ -92,7 +92,7 @@ def _get_column(table_class: Type[Table], col: str) -> Column:
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts, Services
         >>> _get_column(Hosts, "host_name")
         Column(hosts.name: string)
 
@@ -129,7 +129,7 @@ class Query(BaseQuery):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Not
+        >>> from cmk.utils.livestatus_helpers.expressions import Not
 
         First you have defined Tables, these can be found in the `tables` package.
 
@@ -247,7 +247,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> from cmk.gui.livestatus_utils.testing import simple_expect
             >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
             ...    Query([Hosts.parents], Hosts.name == "heute").first_value(live)
@@ -291,7 +291,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> from cmk.gui.livestatus_utils.testing import simple_expect
 
             >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = heute")
@@ -334,7 +334,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> from cmk.gui.livestatus_utils.testing import simple_expect
             >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
             ...    Query([Hosts.parents], Hosts.name == "heute").value(live)
@@ -381,7 +381,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> from cmk.gui.livestatus_utils.testing import simple_expect
             >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
             ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
@@ -415,7 +415,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> from cmk.gui.livestatus_utils.testing import simple_expect
             >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
             ...    Query([Hosts.name, Hosts.parents]).to_dict(live)
@@ -658,7 +658,7 @@ def _parse_line(
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> _parse_line(Hosts, "Filter: name !>= value")
         Filter(name !>= value)
 

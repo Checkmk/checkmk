@@ -1900,7 +1900,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
 
 
 def _add_rest_api_menu_entries(view_renderer, queries):
-    from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+    from cmk.utils.livestatus_helpers.queries import Query
     from cmk.gui.plugins.openapi.utils import create_url
     entries = []
     for text_query in queries:

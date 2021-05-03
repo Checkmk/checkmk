@@ -6,7 +6,7 @@
 """This module contains helpers to set comments for host and service.
 """
 
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_command
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 
 
 def add_host_comment(
@@ -35,7 +35,7 @@ def add_host_comment(
         user:
 
     Examples:
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] ADD_HOST_COMMENT;example.com;0;;test"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     add_host_comment(live, 'example.com', 'test')
@@ -60,7 +60,7 @@ def del_host_comment(connection, comment_id: int):
             The id of the host comment
 
     Examples:
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] DEL_HOST_COMMENT;1234"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     del_host_comment(live, 1234)
@@ -103,7 +103,7 @@ def add_service_comment(
         user:
 
     Examples:
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] ADD_SVC_COMMENT;example.com;CPU Load;0;;test"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     add_service_comment(live, 'example.com', 'CPU Load', 'test')
@@ -129,7 +129,7 @@ def del_service_comment(connection, comment_id: int):
             The id of the service comment
 
     Examples:
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] DEL_SVC_COMMENT;1234"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     del_service_comment(live, 1234)

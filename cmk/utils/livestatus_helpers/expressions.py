@@ -370,7 +370,7 @@ class Not(QueryExpression):
 
 
 def lookup_column(table_name, column_name) -> UnaryExpression:
-    from cmk.gui.plugins.openapi.livestatus_helpers import tables
+    from cmk.utils.livestatus_helpers import tables
     if isinstance(table_name, str):
         table_class = getattr(tables, table_name.title())
     else:
@@ -419,7 +419,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
                                             'right': 'example.com'}}})
         Not(Not(Filter(name = example.com)))
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
         Not(Filter(name = example.com))
 
@@ -450,7 +450,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
         #   locally defined class ends up having a relative dotted path, like for example
         #       <class 'expressions.BinaryExpression'>
         #   instead of
-        #       <class 'cmk.gui.plugins.openapi.livestatus_helpers.expressions.BinaryExpression'>
+        #       <class 'cmk.utils.livestatus_helpers.expressions.BinaryExpression'>
         #   While these classes are actually the same, Python treats them distinct, so we can't
         #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
         return cast(QueryExpression, filter_dict)

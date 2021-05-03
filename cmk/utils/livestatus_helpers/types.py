@@ -6,7 +6,7 @@
 import abc
 from typing import List, Literal, Optional, Type, Any, Dict
 
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
+from cmk.utils.livestatus_helpers.expressions import (
     BinaryExpression,
     BoolExpression,
     ListExpression,
@@ -209,8 +209,8 @@ def expr_to_tree(
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.expressions import And
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> expr_to_tree(Hosts, Not(And(Hosts.name == 'heute', Hosts.alias == 'heute')))
         {'op': 'not', 'expr': {'op': 'and', 'expr': [\
 {'op': '=', 'left': 'hosts.name', 'right': 'heute'}, \

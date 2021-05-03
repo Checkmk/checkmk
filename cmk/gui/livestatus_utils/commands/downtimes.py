@@ -7,18 +7,17 @@
 from typing import Dict, List, Literal, Optional, Union
 import datetime as dt
 
-from cmk.gui.plugins.openapi.livestatus_helpers import tables
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_command
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.type_defs import LivestatusCommand
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timestamp
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
+from cmk.gui.livestatus_utils.commands.utils import to_timestamp
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
+from cmk.utils.livestatus_helpers.tables.services import Services
+from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 
 # TODO: Test duration option
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or, QueryExpression
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
-from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
-from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
-
 
 RecurMode = Literal[
     "fixed",  # TODO: Rename to "non_recurring"
@@ -49,7 +48,7 @@ def del_host_downtime(connection, downtime_id: int):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis") as live:
         ...     del_host_downtime(live, 1)
 
@@ -69,7 +68,7 @@ def del_service_downtime(connection, downtime_id: int):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis") as live:
         ...     del_service_downtime(live, 1)
 
@@ -206,7 +205,7 @@ def schedule_service_downtime(
         >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     schedule_service_downtime(live,
@@ -524,7 +523,7 @@ def schedule_host_downtime(
         >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     schedule_host_downtime(live,

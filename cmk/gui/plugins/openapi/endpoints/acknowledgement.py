@@ -17,15 +17,15 @@ from urllib.parse import unquote
 
 from cmk.gui import config, sites, http
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
+from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Services
+from cmk.utils.livestatus_helpers.expressions import And
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hosts, Services
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,

@@ -7,8 +7,8 @@
 """
 import datetime as dt
 
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.lowlevel import send_command
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timestamp
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+from cmk.gui.livestatus_utils.commands.utils import to_timestamp
 
 
 def force_schedule_host_check(connection, host_name: str, check_time: dt.datetime):
@@ -28,7 +28,7 @@ def force_schedule_host_check(connection, host_name: str, check_time: dt.datetim
         >>> import pytz
         >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;example.com;0"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     force_schedule_host_check(live, 'example.com', _check_time)
@@ -59,7 +59,7 @@ def force_schedule_service_check(connection, host_name: str, service_description
         >>> import pytz
         >>> _check_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;example.com;CPU Load;0"
         >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     force_schedule_service_check(live,'example.com', 'CPU Load', _check_time)

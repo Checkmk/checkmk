@@ -23,9 +23,9 @@ definition on GitHub.
 """
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
+from cmk.utils.livestatus_helpers.expressions import And
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     constructors,

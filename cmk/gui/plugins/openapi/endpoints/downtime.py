@@ -38,11 +38,11 @@ from cmk.gui import config, sites
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
-from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import QueryException
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
+from cmk.gui.livestatus_utils.commands.downtimes import QueryException
+from cmk.utils.livestatus_helpers.expressions import And, Or
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
     request_schemas,

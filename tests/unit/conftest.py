@@ -26,7 +26,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.default_permissions
 
 # No stub file
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import mock_livestatus
+from cmk.gui.livestatus_utils.testing import mock_livestatus
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
 # No stub file
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
@@ -57,7 +57,7 @@ def fixture_edition_short(monkeypatch, request):
 @pytest.fixture(autouse=True, scope="function")
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    monkeypatch.setattr(cmk_version, "omd_site", lambda: "NO_SITE")
+    cmk_version.omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
     store.makedirs(cmk.utils.paths.autochecks_dir)
@@ -73,6 +73,9 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
     _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
     _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
+
+    yield
+    cmk_version.omd_site.cache_clear()
 
 
 def _touch(path):
@@ -210,8 +213,8 @@ class FixPluginLegacy:
         return self._check_variables
 
 
-@pytest.fixture(scope="session")
-def fix_register():
+@pytest.fixture(scope="session", name='fix_register')
+def fix_register_fixture():
     yield FixRegister()
 
 

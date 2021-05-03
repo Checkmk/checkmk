@@ -92,6 +92,7 @@ from cmk.gui.watolib.changes import (
 from cmk.gui.plugins.watolib import ABCConfigDomain
 
 # TODO: Make private
+Phase = str  # TODO: Make dedicated type
 PHASE_INITIALIZED = "initialized"  # Process has been initialized (not in thread yet)
 PHASE_QUEUED = "queued"  # Process queued by site scheduler
 PHASE_STARTED = "started"  # Process just started, nothing happened yet
@@ -102,6 +103,7 @@ PHASE_DONE = "done"  # Done (with good or bad result)
 
 # PHASE_DONE can have these different states:
 
+State = str  # TODO: Make dedicated type
 STATE_SUCCESS = "success"  # Everything is ok
 STATE_ERROR = "error"  # Something went really wrong
 STATE_WARNING = "warning"  # e.g. in case of core config warnings
@@ -1293,9 +1295,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._time_started: Optional[float] = None
         self._time_updated: Optional[float] = None
         self._time_ended: Optional[float] = None
-        self._phase = None
-        self._state = None
-        self._status_text = None
+        self._phase: Optional[Phase] = None
+        self._state: Optional[State] = None
+        self._status_text: Optional[str] = None
         self._status_details: Optional[str] = None
         self._pid: Optional[int] = None
         self._expected_duration = 10.0
@@ -1697,7 +1699,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         finally:
             site_changes.write(changes)
 
-    def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
+    def _set_result(self,
+                    phase: Phase,
+                    status_text: str,
+                    status_details: Optional[str] = None,
+                    state: State = STATE_SUCCESS):
         """Stores the current state for displaying in the GUI
 
         Args:
@@ -1733,7 +1739,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 "_pid": self._pid,
             })
 
-    def _set_status_details(self, phase, status_details):
+    def _set_status_details(self, phase: Phase, status_details: Optional[str]) -> None:
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
             self._status_details = _("Queued for update")

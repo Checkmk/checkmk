@@ -520,13 +520,14 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                  add_label=_("Add new IP range"),
                  text_if_empty=_("No IP range configured"),
              )),
-            ("exclude_ranges",
-             ListOf(
-                 self._vs_ip_range(),
-                 title=_("IP ranges to exclude"),
-                 add_label=_("Add new IP range"),
-                 text_if_empty=_("No exclude range configured"),
-             )),
+            (
+                "exclude_ranges",
+                ListOf(
+                    self._vs_ip_range(with_regexp=True),  # regexp only used when excluding
+                    title=_("IP ranges to exclude"),
+                    add_label=_("Add new IP range"),
+                    text_if_empty=_("No exclude range configured"),
+                )),
             (
                 "scan_interval",
                 Age(
@@ -603,8 +604,9 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                      default_value="offline",
                  ))]
 
-    def _vs_ip_range(self):
-        return CascadingDropdown(choices=[
+    def _vs_ip_range(self, with_regexp=False):
+        # NOTE: The `ip_regex_list` choice is only used in the `exclude_ranges` key.
+        options = [
             ("ip_range", _("IP-Range"),
              Tuple(
                  elements=[
@@ -634,14 +636,20 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                  valuespec=IPv4Address(),
                  orientation="horizontal",
              )),
-            ("ip_regex_list", _("List of patterns to exclude"),
-             ListOfStrings(
-                 valuespec=RegExp(mode=RegExp.prefix,),
-                 orientation="horizontal",
-                 help=_("A list of regular expressions which are matched against the found "
-                        "IP addresses to exclude them. The matched addresses are excluded."),
-             )),
-        ])
+        ]
+        regexp_exclude = (
+            "ip_regex_list",
+            _("List of patterns to exclude"),
+            ListOfStrings(
+                valuespec=RegExp(mode=RegExp.prefix,),
+                orientation="horizontal",
+                help=_("A list of regular expressions which are matched against the found "
+                       "IP addresses to exclude them. The matched addresses are excluded."),
+            ),
+        )
+        if with_regexp:
+            options.append(regexp_exclude)
+        return CascadingDropdown(choices=options)
 
 
 @host_attribute_registry.register

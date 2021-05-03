@@ -19,6 +19,8 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/docker_image_version",
     "cmk/docker_object:container",
     "cmk/docker_object:node",
+    "cmk/kubernetes_object:endpoint",
+    "cmk/kubernetes:yes",
     "cmk/os_family",
     "cmk/vsphere_object",
 }

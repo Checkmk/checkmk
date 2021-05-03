@@ -101,7 +101,7 @@ def sensor_key(table, var_type, variable):
     return key
 
 
-def sensor_value(value_str, value_int, scale, var_type, var_unit, container):
+def sensor_value(value_str, value_int, scale, var_type, var_unit):
     if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
         return value_str
 
@@ -115,9 +115,8 @@ def sensor_value(value_str, value_int, scale, var_type, var_unit, container):
         elif int_scale > 0:
             value = float(value_int) * float(scale)
 
-    if "Power" in container or "Energy" in container:
-        if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
-            value = value * 1000  # Convert from kW, kWh, kVA to W, Wh, VA
+    if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
+        value *= 1000  # Convert from kW, kWh, kVA to W, Wh, VA
     return value
 
 
@@ -163,7 +162,6 @@ def parse_cmciii(info):
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")
         sanitized_variable = sanitize_variable(variable)
-        container = [location] + sanitized_variable[:-1]
 
         type_ = sensor_type(sanitized_variable)
         if type_ is None:
@@ -176,7 +174,7 @@ def parse_cmciii(info):
         parsed[type_].setdefault(item, {"_device_": device, "_location_": location})
 
         key = sensor_key(type_, var_type, sanitized_variable)
-        value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
+        value = sensor_value(value_str, value_int, scale, var_type, var_unit)
         parsed[type_][item].setdefault(key, value)
 
     for entry, attrs in parsed.get("temp", {}).items():

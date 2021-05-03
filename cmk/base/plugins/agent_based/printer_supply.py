@@ -132,7 +132,8 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
 
     color_info = ""
     if supply.color and supply.color.lower() not in item.lower():
-        color_info = "[%s] " % supply.color
+        # fix trailing zero byte in output (seen on HP Jetdirect 153)
+        color_info = "[%s] " % supply.color.rstrip('\0')
 
     warn, crit = params["levels"]
 

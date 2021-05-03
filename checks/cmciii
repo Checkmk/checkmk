@@ -64,26 +64,26 @@ def sensor_type(variable):
     return None
 
 
-def sensor_item(table, container, device):
+def sensor_item(table, variable, device):
     if table == "temp":
         device = device.replace("Liquid_Cooling_Package", "LCP")
-        itemname = container[1].replace("Temperature", "")
+        itemname = variable[0].replace("Temperature", "")
         if itemname == "":
             itemname = "Ambient"
         if device is not None:
             itemname += " %s" % device
-        if container[-1].startswith("In-") or container[-1].startswith("Out-"):
-            itemname += " %s" % container[-1].split("-")[0]
+        if variable[-1].startswith("In-") or variable[-1].startswith("Out-"):
+            itemname += " %s" % variable[-1].split("-")[0]
         return itemname
     if table == "phase":
         itemname = [device]
-        if container[1]:
-            itemname.append(container[1])
-        itemname += ["Phase", container[2].replace("Phase", "").replace("L", "").strip()]
+        if variable[0]:
+            itemname.append(variable[0])
+        itemname += ["Phase", variable[1].replace("Phase", "").replace("L", "").strip()]
         return " ".join(itemname)
     if table in ("psm_plugs", "can_current"):
-        return "%s %s" % (device, ".".join(container[1:]))
-    return "%s %s" % (device, container[1])
+        return "%s %s" % (device, ".".join(variable))
+    return "%s %s" % (device, variable[0])
 
 
 def sensor_key(table, container, var_type, variable_end):
@@ -170,7 +170,7 @@ def parse_cmciii(info):
             continue
 
         device = devices.get(location)
-        item = sensor_item(type_, container, device)
+        item = sensor_item(type_, sanitized_variable[:-1], device)
         if item in parsed[type_] and parsed[type_][item]["_location_"] != location:
             item += " %s" % location
         parsed[type_].setdefault(item, {"_device_": device, "_location_": location})

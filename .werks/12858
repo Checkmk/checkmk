@@ -1,0 +1,13 @@
+Title: Clearer naming of host and service labels and tags in headings
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1620027716
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p4
+
+Headings for host and service labels and tags are now better displayed. So far,
+the same heading was used for both types of labels and tags.

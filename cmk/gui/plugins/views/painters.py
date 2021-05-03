@@ -4806,7 +4806,7 @@ class PainterHostTags(Painter):
         return _("Host tags")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Tags")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4861,7 +4861,7 @@ class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
         return _("Host tags (with titles)")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Tags")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4879,10 +4879,10 @@ class PainterServiceTags(Painter):
         return "service_tags"
 
     def title(self, cell: Cell) -> str:
-        return _("Tags")
+        return _("Service tags")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Tags")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4907,10 +4907,10 @@ class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
         return "service_tags_with_titles"
 
     def title(self, cell: Cell) -> str:
-        return _("Tags (with titles)")
+        return _("Service tags (with titles)")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Tags")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4931,7 +4931,7 @@ class PainterHostLabels(Painter):
         return _("Host labels")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Labels")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4961,7 +4961,7 @@ class PainterServiceLabels(Painter):
         return _("Service labels")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Labels")
+        return self.title(cell)
 
     @property
     def columns(self) -> List[ColumnName]:

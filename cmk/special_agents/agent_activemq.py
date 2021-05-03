@@ -18,7 +18,7 @@ from cmk.special_agents.utils.request_helper import (
 def usage():
     print("Usage:")
     print(
-        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}]\n"
+        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}] [--protocol {http|https}]\n"
     )
 
 
@@ -27,7 +27,7 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     short_options = ""
-    long_options = ["piggyback", "servername=", "port=", "username=", "password="]
+    long_options = ["piggyback", "servername=", "port=", "username=", "password=", "protocol="]
 
     try:
         opts, _args = getopt.getopt(sys_argv, short_options, long_options)

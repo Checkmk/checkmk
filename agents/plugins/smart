@@ -88,6 +88,7 @@ if which smartctl > /dev/null 2>&1 ; then
     fi
 
     echo '<<<smart>>>'
+    INPATH_UDEVADM=$(inpath udevadm && echo present)
     SEEN=
     for D in /dev/disk/by-id/{scsi,ata,nvme}-*; do
         [ "$D" != "${D%scsi-\*}" ] && continue
@@ -115,10 +116,8 @@ if which smartctl > /dev/null 2>&1 ; then
         fi
 
         # Exclude removable media
-        if inpath udevadm; then
-            if sh -c "udevadm info /dev/$N | grep -Fxq 'E: ID_CDROM_CD=1'"; then
-                continue
-            fi
+        if [ "$INPATH_UDEVADM" == "present" ] && udevadm info /dev/$N | grep -Fxq 'E: ID_CDROM_CD=1'; then
+            continue
         fi
 
         # Avoid duplicate entries for same device

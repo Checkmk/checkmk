@@ -15,8 +15,7 @@ You can find an introduction to the acknowledgement of problems in the
 # TODO: List acknowledgments
 from urllib.parse import unquote
 
-from cmk.gui import config, sites, http
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import config, fields, sites, http
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,

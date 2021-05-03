@@ -22,7 +22,7 @@ import cmk.gui.watolib as watolib
 
 from cmk.gui.http import Response
 
-from cmk.gui.plugins.openapi import fields
+from cmk.gui import fields
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.tags import (save_tag_group, load_tag_config, edit_tag_group, load_tag_group,

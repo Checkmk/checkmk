@@ -39,28 +39,27 @@ def sanitize_variable(variable):
     return start + [end]
 
 
-def sensor_type(container):
-    if container[1].startswith("PSM_") and "Unit" in container:
+def sensor_type(variable):
+    if variable[0].startswith("PSM_") and "Unit" in variable:
         return "psm_current"
-    if container[1].startswith("PSM_") and container[2].startswith("Plug"):
+    if variable[0].startswith("PSM_") and variable[1].startswith("Plug"):
         return "psm_plugs"
-    if container[1].startswith("Input") or container[1].startswith("Output"):
+    if variable[0].startswith("Input") or variable[0].startswith("Output"):
         return "io"
-    if "Access" in container:
+    if "Access" in variable:
         return "access"
-    if "Humidity" in container:
+    if "Humidity" in variable:
         return "humidity"
-    if ("Temperature" in container or "Dew Point" in container or
-            container[2].endswith("Temperature")):
+    if ("Temperature" in variable or "Dew Point" in variable or
+            variable[1].endswith("Temperature")):
         return "temp"
-    if "Leakage" in container:
+    if "Leakage" in variable:
         return "leakage"
-    if container[2].startswith("CAN") and container[2].endswith("Current"):
+    if variable[1].startswith("CAN") and variable[1].endswith("Current"):
         return "can_current"
     # NOTE: Phase sensors introduce an empty element in the second position of
-    # the container so we need to shift the index here.
-    if container[2].startswith("Phase") or (len(container) > 3 and
-                                            container[3].startswith("Phase")):
+    # the variable so we need to shift the index here.
+    if variable[1].startswith("Phase") or (len(variable) > 2 and variable[2].startswith("Phase")):
         return "phase"
     return None
 
@@ -166,7 +165,7 @@ def parse_cmciii(info):
         sanitized_variable = sanitize_variable(variable)
         container = [location] + sanitized_variable[:-1]
 
-        type_ = sensor_type(container)
+        type_ = sensor_type(sanitized_variable)
         if type_ is None:
             continue
 

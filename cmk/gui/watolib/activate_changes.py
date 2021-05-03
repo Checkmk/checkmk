@@ -419,12 +419,10 @@ class ActivateChanges:
     def _is_activate_needed(self, site_id):
         return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
-    # This function returns the last known persisted activation state
-    def _last_activation_state(self, site_id):
-        manager = ActivateChangesManager()
-        site_state_path = os.path.join(manager.activation_persisted_dir,
-                                       manager.site_filename(site_id))
-        return store.load_object_from_file(site_state_path, {})
+    def _last_activation_state(self, site_id: SiteId):
+        """This function returns the last known persisted activation state"""
+        return store.load_object_from_file(
+            ActivateChangesManager.persisted_site_state_path(site_id), {})
 
     def _get_last_change_id(self) -> str:
         return self._changes[-1][1]["id"]
@@ -831,16 +829,23 @@ class ActivateChangesManager(ActivateChanges):
         }
 
     def get_site_state(self, site_id):
-        return store.load_object_from_file(self.site_state_path(site_id), {})
-
-    def site_state_path(self, site_id):
         if self._activation_id is None:
             raise Exception("activation ID is not set")
-        return os.path.join(self.activation_tmp_base_dir, self._activation_id,
-                            self.site_filename(site_id))
+        return store.load_object_from_file(
+            ActivateChangesManager.site_state_path(self._activation_id, site_id), {})
 
-    @classmethod
-    def site_filename(cls, site_id):
+    @staticmethod
+    def persisted_site_state_path(site_id: SiteId) -> str:
+        return os.path.join(ActivateChangesManager.activation_persisted_dir,
+                            ActivateChangesManager.site_filename(site_id))
+
+    @staticmethod
+    def site_state_path(activation_id: ActivationId, site_id: SiteId) -> str:
+        return os.path.join(ActivateChangesManager.activation_tmp_base_dir, activation_id,
+                            ActivateChangesManager.site_filename(site_id))
+
+    @staticmethod
+    def site_filename(site_id):
         return "site_%s.mk" % site_id
 
 
@@ -1391,11 +1396,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._unlock_activation()
 
             # Create a copy of last result in the persisted dir
-            manager = ActivateChangesManager()
-            manager.load()
-            manager.load_activation(self._activation_id)
-            source_path = manager.site_state_path(self._site_id)
-            shutil.copy(source_path, manager.activation_persisted_dir)
+            shutil.copy(ActivateChangesManager.site_state_path(self._activation_id, self._site_id),
+                        ActivateChangesManager.persisted_site_state_path(self._site_id))
 
     def _activate_until_change_id(self):
         manager = ActivateChangesManager()
@@ -1743,10 +1745,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._status_details += "<br>%s" % status_details
 
     def _save_state(self):
-        state_path = os.path.join(ActivateChangesManager.activation_tmp_base_dir,
-                                  self._activation_id,
-                                  ActivateChangesManager.site_filename(self._site_id))
-
+        state_path = ActivateChangesManager.site_state_path(self._activation_id, self._site_id)
         return store.save_object_to_file(
             state_path, {
                 "_site_id": self._site_id,

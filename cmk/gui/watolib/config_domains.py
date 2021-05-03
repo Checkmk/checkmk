@@ -121,7 +121,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 with pidfile.open(encoding="utf-8") as f:
                     pid = int(f.read().strip())
 
-                os.kill(pid, signal.SIGUSR1)
+                os.kill(pid, signal.SIGHUP)
             except OSError as e:
                 # ENOENT: No liveproxyd running: No reload needed.
                 # ESRCH: PID in pidfiles does not exist: No reload needed.

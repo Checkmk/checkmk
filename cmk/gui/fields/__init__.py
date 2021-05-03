@@ -41,6 +41,19 @@ from cmk.gui.fields.definitions import (
     SiteField,
     String,
 )
+from cmk.gui.fields.attributes import (
+    IPMIParameters,
+    SNMPCredentials,
+    NetworkScan,
+    NetworkScanResult,
+    MetaData,
+)
+from cmk.gui.fields.validators import (
+    ValidateAnyOfValidators,
+    ValidateIPv4,
+    ValidateIPv4Network,
+    ValidateIPv6,
+)
 
 __all__ = [
     'attributes_field',
@@ -67,10 +80,15 @@ __all__ = [
     'IPv6',
     'IPv6Interface',
     'List',
+    'MetaData',
     'Nested',
     'query_field',
     'SiteField',
     'Str',
     'String',
     'Time',
+    'ValidateIPv4',
+    'ValidateIPv4Network',
+    'ValidateIPv6',
+    'ValidateAnyOfValidators',
 ]

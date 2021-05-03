@@ -8,7 +8,7 @@ import functools
 import typing
 from typing import NamedTuple, Optional, List, Literal, TypeVar, TypedDict, Callable, Any, Type
 
-from marshmallow import ValidationError, post_load
+from marshmallow import ValidationError
 
 from cmk.gui import watolib, config, fields
 from cmk.gui.fields.base import BaseSchema
@@ -213,13 +213,8 @@ def _field_from_attr(attr):
 
 
 def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:
-    # This is a post-load hook to cast the OrderedDict instances to normal dicts. This would lead
-    # to problems with the *.mk file persisting logic otherwise.
-    def cast_to_dict(self, data, **kwargs):
-        return dict(data)
-
     dict_ = schema_dict.copy()
-    dict_['remove_ordered_dict'] = post_load(cast_to_dict)
+    dict_['cast_to_dict'] = True
     return type(name, (BaseSchema,), dict_)
 
 

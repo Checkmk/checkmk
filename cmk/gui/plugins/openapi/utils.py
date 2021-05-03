@@ -19,7 +19,7 @@ from werkzeug.exceptions import HTTPException
 from cmk.gui import watolib, config
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.queries import Query
 from cmk.gui.watolib.tags import load_tag_config
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 from livestatus import SiteId

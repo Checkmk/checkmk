@@ -1846,7 +1846,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
 
 
 def _add_rest_api_menu_entries(view_renderer, queries: List[str]):
-    from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+    from cmk.utils.livestatus_helpers.queries import Query
     from cmk.gui.plugins.openapi.utils import create_url
     entries: List[PageMenuEntry] = []
     for text_query in set(queries):

@@ -31,6 +31,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     Serializable,
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.utils import version
 
 
 @contextlib.contextmanager
@@ -43,6 +44,8 @@ def _request_context(secure=True):
         protocol = 'https'
     else:
         protocol = 'http'
+    # Previous tests already set the site to "heute", which makes this test fail.
+    version.omd_site.cache_clear()
     with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}), \
             request_context(create_environ(base_url=f"{protocol}://localhost:5000/")):
         yield

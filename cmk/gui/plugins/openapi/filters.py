@@ -18,7 +18,7 @@ from typing import Tuple
 import dateutil.parser
 import pyparsing as pp  # type: ignore
 
-from cmk.gui.plugins.openapi.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers import tables
 
 
 class Node:

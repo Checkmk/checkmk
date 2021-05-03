@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 
 import cmk.gui.config as config
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

@@ -16,11 +16,11 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.gui import watolib, valuespec as valuespec, sites, config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_group_information
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
+from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
     NothingExpression
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
-from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
+from cmk.utils.livestatus_helpers.types import Table, Column
 from cmk.gui.plugins.openapi.utils import (
     attr_openapi_schema,
     BaseSchema,
@@ -574,7 +574,7 @@ class NotExprSchema(BaseSchema):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> input_expr = {'op': '=', 'left': 'hosts.name', 'right': 'foo'}
         >>> q = {'op': 'not', 'expr': input_expr}
         >>> result = NotExprSchema(context={'table': Hosts}).load(q)
@@ -617,7 +617,7 @@ class ExprSchema(OneOfSchema):
         ...         },
         ...     ]}
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> schema = ExprSchema(context={'table': Hosts})
         >>> assert schema.load(q) == schema.load(json.dumps(q))
 
@@ -760,7 +760,7 @@ class _ListOfColumns(List):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> cols = _ListOfColumns(
         ...     _LiveStatusColumn(table=Hosts),
         ...     table=Hosts,
@@ -816,7 +816,7 @@ class _LiveStatusColumn(String):
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> from cmk.utils.livestatus_helpers.tables import Hosts
         >>> _LiveStatusColumn(table=Hosts).deserialize('name')
         'name'
 

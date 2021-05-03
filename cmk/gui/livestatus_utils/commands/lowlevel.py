@@ -7,7 +7,7 @@ import time
 from typing import Any, List
 
 from cmk.gui import config
-from cmk.gui.plugins.openapi.livestatus_helpers.commands.type_defs import LivestatusCommand
+from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 # TODO: typing of connection when livestatus.py is on pypi
 
@@ -32,7 +32,7 @@ def send_command(
 
     Examples:
 
-        >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+        >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> with simple_expect(
         ...         "COMMAND [...] ADD_HOST_COMMENT", match_type="ellipsis") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [])

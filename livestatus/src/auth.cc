@@ -80,26 +80,26 @@ bool is_authorized_for_host_group(GroupAuthorization group_auth,
         return false;
     }
 #ifdef CMC
-    auto has_contact = [=](Object *obj) { return obj->hasContact(ctc); };
+    auto is_authorized_for = [=](const Object *obj) {
+        return is_authorized_for_hst(ctc, static_cast<const Host *>(obj));
+    };
     return group_auth == GroupAuthorization::loose
-               ? std::any_of(hg->begin(), hg->end(), has_contact)
-               : std::all_of(hg->begin(), hg->end(), has_contact);
+               ? std::any_of(hg->begin(), hg->end(), is_authorized_for)
+               : std::all_of(hg->begin(), hg->end(), is_authorized_for);
 #else
-    auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for_hst(ctc, mem->host_ptr);
+    auto is_authorized_for = [=](const host *hst) {
+        return is_authorized_for_hst(ctc, hst);
     };
     if (group_auth == GroupAuthorization::loose) {
-        // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-            if (has_contact(mem)) {
+            if (is_authorized_for(mem->host_ptr)) {
                 return true;
             }
         }
         return false;
     }
-    // TODO(sp) Need an iterator here, "strict" means "all_of"
     for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-        if (!has_contact(mem)) {
+        if (!is_authorized_for(mem->host_ptr)) {
             return false;
         }
     }
@@ -118,28 +118,27 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
         return false;
     }
 #ifdef CMC
-    (void)service_auth;  // TODO(sp) Change API below to use this!
-    auto has_contact = [=](Object *obj) { return obj->hasContact(ctc); };
+    auto is_authorized_for = [=](const Object *obj) {
+        return is_authorized_for_svc(service_auth, ctc,
+                                     static_cast<const Service *>(obj));
+    };
     return group_auth == GroupAuthorization::loose
-               ? std::any_of(sg->begin(), sg->end(), has_contact)
-               : std::all_of(sg->begin(), sg->end(), has_contact);
+               ? std::any_of(sg->begin(), sg->end(), is_authorized_for)
+               : std::all_of(sg->begin(), sg->end(), is_authorized_for);
 #else
-    auto has_contact = [=](servicesmember *mem) {
-        return is_authorized_for_svc(service_auth, ctc, mem->service_ptr);
+    auto is_authorized_for = [=](const service *svc) {
+        return is_authorized_for_svc(service_auth, ctc, svc);
     };
     if (group_auth == GroupAuthorization::loose) {
-        // TODO(sp) Need an iterator here, "loose" means "any_of"
-        for (servicesmember *mem = sg->members; mem != nullptr;
-             mem = mem->next) {
-            if (has_contact(mem)) {
+        for (const auto *mem = sg->members; mem != nullptr; mem = mem->next) {
+            if (is_authorized_for(mem->service_ptr)) {
                 return true;
             }
         }
         return false;
     }
-    // TODO(sp) Need an iterator here, "strict" means "all_of"
-    for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
-        if (!has_contact(mem)) {
+    for (const auto *mem = sg->members; mem != nullptr; mem = mem->next) {
+        if (!is_authorized_for(mem->service_ptr)) {
             return false;
         }
     }

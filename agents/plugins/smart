@@ -11,6 +11,12 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0i1"
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # This will be called on LSI based raidcontrollers and accesses
 # the SMART data of SATA disks attached to a SAS Raid HBA via
 # SCSI protocol interface.
@@ -109,17 +115,10 @@ if which smartctl > /dev/null 2>&1 ; then
         fi
 
         # Exclude removable media
-        if which udevadm > /dev/null 2>&1; then
-            TMP_FILE=$(mktemp)
-            udevadm info /dev/$N > $TMP_FILE
-            if grep -Fxq "E: ID_CDROM_CD=1" $TMP_FILE; then
-                rm $TMP_FILE
+        if inpath udevadm; then
+            if sh -c "udevadm info /dev/$N | grep -Fxq 'E: ID_CDROM_CD=1'"; then
                 continue
-            else
-                rm $TMP_FILE
             fi
-        else
-            [ $(< /sys/class/block/$N/removable) == "1" ] && continue
         fi
 
         # Avoid duplicate entries for same device

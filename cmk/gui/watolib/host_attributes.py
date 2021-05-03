@@ -9,6 +9,7 @@ hosts. Examples are the IP address and the host tags."""
 import abc
 import functools
 import re
+from marshmallow import fields
 from typing import Any, Dict, List, Optional, Set, Tuple, Type
 
 import cmk.utils.plugin_registry
@@ -503,6 +504,8 @@ def declare_host_attribute(a,
         "from_config": lambda self: self._from_config,
     })
 
+    attrs['openapi_field'] = lambda: fields.String(description=a.help())
+
     # Apply the left over missing attributes that we get from the function arguments
     # by creating the final concrete class of this attribute
     final_class = type("%sConcrete" % a.__name__, (a,), attrs)
@@ -793,6 +796,10 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     """An attribute using the generic ValueSpec mechanism"""
     @abc.abstractmethod
     def valuespec(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def openapi_field(self) -> fields.Field:
         raise NotImplementedError()
 
     def title(self):

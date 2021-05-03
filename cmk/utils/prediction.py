@@ -8,11 +8,13 @@ from dataclasses import dataclass
 import json
 import logging
 import os
+from pathlib import Path
 import time
 from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     Iterator,
     List,
     Literal,
@@ -304,11 +306,25 @@ def rrd_datacolum(hostname: HostName, service_description: ServiceName, varname:
     return time_boundaries
 
 
-def predictions_dir(hostname: HostName, service_description: ServiceName,
-                    dsname: MetricName) -> str:
-    return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
-                        cmk.utils.pnp_cleanup(ensure_str(service_description)),
-                        cmk.utils.pnp_cleanup(dsname))
+class PredictionStore:
+    def __init__(self, host_name: HostName, service_description: ServiceName,
+                 dsname: MetricName) -> None:
+        self._dir = Path(
+            cmk.utils.paths.var_dir,
+            "prediction",
+            host_name,
+            cmk.utils.pnp_cleanup(service_description),
+            cmk.utils.pnp_cleanup(dsname),
+        )
+
+    @property  # TODO: this is intermediate! drop this!
+    def dir(self) -> str:
+        return str(self._dir)
+
+    def available_predictions(self) -> Iterable[Tuple[str, PredictionInfo]]:
+        return ((f.stem, tg_info)
+                for f in self._dir.glob('*.info')
+                if (tg_info := retrieve_info_for_prediction(str(f))) is not None)
 
 
 def save_predictions(

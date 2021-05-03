@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import time
 import json
 from typing import (
@@ -34,25 +33,12 @@ graph_size = 2000, 700
 def _load_prediction_information(
     *,
     tg_name: Optional[str],
-    pred_dir: str,
+    prediction_store: prediction.PredictionStore,
 ) -> Tuple[Tuple[str, prediction.PredictionInfo], Sequence[Tuple[str, str]]]:
-    # Load all prediction information, sort by time of generation
-    if not os.path.exists(pred_dir):
-        raise MKGeneralException(
-            _("There is currently no prediction information "
-              "available for this service."))
-
     selected_timegroup: Optional[Tuple[str, prediction.PredictionInfo]] = None
     timegroups: List[Tuple[str, prediction.PredictionInfo]] = []
     now = time.time()
-    for f in os.listdir(pred_dir):
-        if not f.endswith(".info"):
-            continue
-        tg_info = prediction.retrieve_info_for_prediction(pred_dir + "/" + f)
-        if tg_info is None:
-            continue
-
-        current_tg_name = f[:-5]
+    for current_tg_name, tg_info in prediction_store.available_predictions():
         timegroups.append((current_tg_name, tg_info))
         if current_tg_name == tg_name or (tg_name is None and
                                           (tg_info.range[0] <= now <= tg_info.range[1])):
@@ -60,14 +46,13 @@ def _load_prediction_information(
 
     timegroups.sort(key=lambda x: x[1].range[0])
 
-    choices: List[Tuple[str, str]] = [(name, name.title()) for name, _tg_info in timegroups]
-
     if selected_timegroup is None:
         if not timegroups:
-            raise MKGeneralException(_("Missing prediction information."))
+            raise MKGeneralException(
+                _("There is currently no prediction information available for this service."))
         selected_timegroup = timegroups[0]
 
-    return selected_timegroup, choices
+    return selected_timegroup, [(name, name.title()) for name, _tg_info in timegroups]
 
 
 @cmk.gui.pages.register("prediction_graph")
@@ -82,11 +67,11 @@ def page_graph():
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = prediction.predictions_dir(host, service, dsname)
+    prediction_store = prediction.PredictionStore(host, service, dsname)
 
     (tg_name, timegroup), choices = _load_prediction_information(
         tg_name=html.request.var("timegroup"),
-        pred_dir=pred_dir,
+        prediction_store=prediction_store,
     )
 
     html.begin_form("prediction")
@@ -96,7 +81,7 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    path = pred_dir + "/" + tg_name
+    path = prediction_store.dir + "/" + tg_name
     tg_data = prediction.retrieve_data_for_prediction(path)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))

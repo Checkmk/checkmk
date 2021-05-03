@@ -266,10 +266,10 @@ def get_levels(
 
     timegroup, rel_time = period_info.groupby(now)
 
-    pred_dir = cmk.utils.prediction.predictions_dir(hostname, service_description, dsname)
-    store.makedirs(pred_dir)
+    prediction_store = cmk.utils.prediction.PredictionStore(hostname, service_description, dsname)
+    store.makedirs(prediction_store.dir)
 
-    pred_file = os.path.join(pred_dir, timegroup)
+    pred_file = os.path.join(prediction_store.dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
     data_for_pred: Optional[PredictionData] = None

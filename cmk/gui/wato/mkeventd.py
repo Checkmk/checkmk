@@ -1335,7 +1335,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Reset all rule hit counteres
         elif html.request.has_var("_reset_counters"):
-            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
+            for site in _get_event_console_sync_sites():
+                cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=site)
             self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
 
         # Copy rules from master

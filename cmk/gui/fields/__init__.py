@@ -23,6 +23,13 @@ from marshmallow.fields import (
     Time,
 )
 
+from cmk.gui.fields.attributes import (
+    IPMIParameters,
+    MetaData,
+    NetworkScan,
+    NetworkScanResult,
+    SNMPCredentials,
+)
 from cmk.gui.fields.definitions import (
     attributes_field,
     column_field,
@@ -41,6 +48,12 @@ from cmk.gui.fields.definitions import (
     query_field,
     SiteField,
     String,
+)
+from cmk.gui.fields.validators import (
+    ValidateAnyOfValidators,
+    ValidateIPv4,
+    ValidateIPv4Network,
+    ValidateIPv6,
 )
 
 __all__ = [
@@ -68,10 +81,15 @@ __all__ = [
     'IPv6',
     'IPv6Interface',
     'List',
+    'MetaData',
     'Nested',
     'query_field',
     'SiteField',
     'Str',
     'String',
     'Time',
+    'ValidateIPv4',
+    'ValidateIPv4Network',
+    'ValidateIPv6',
+    'ValidateAnyOfValidators',
 ]

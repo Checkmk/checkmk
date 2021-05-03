@@ -8,10 +8,11 @@
 #ifdef CMC
 #include <algorithm>
 
-#include "Host.h"  // IWYU pragma: keep
-#include "Object.h"
+#include "Host.h"
 #include "ObjectGroup.h"  // IWYU pragma: keep
+#include "Service.h"
 #include "cmc.h"
+class Object;
 #endif
 
 namespace {

@@ -73,8 +73,8 @@ public:
         , _logictype(logictype) {}
 #ifdef CMC
     int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
-        auto v = value_type(g._objects.size());
-        for (const auto &e : g._objects) {
+        auto v = value_type(g.size());
+        for (const auto &e : g) {
             v.emplace(dynamic_cast<value_type::value_type>(e));
         }
         return (*this)(v, auth_user);

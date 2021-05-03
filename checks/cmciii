@@ -175,8 +175,8 @@ def parse_cmciii(info):
         value = sensor_value(value_str, value_int, scale, var_type, var_unit)
         parsed[type_][item].setdefault(key, value)
 
+    to_delete = set()
     for item, attrs in parsed.get("temp", {}).items():
-        found_temp_in_out = False
         for attr, val in attrs.items():
             if attr.startswith("In-") or attr.startswith("Out-"):
                 item_in_out = "%s %s" % (item, attr.replace("-", " ").replace(
@@ -189,9 +189,9 @@ def parse_cmciii(info):
                         "_location_": location
                     },
                 )
-                found_temp_in_out = True
-        if found_temp_in_out:
-            del parsed["temp"][item]
+                to_delete.add(item)
+    for item in to_delete:
+        del parsed["temp"][item]
 
     return parsed
 

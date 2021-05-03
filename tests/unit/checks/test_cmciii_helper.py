@@ -8,22 +8,22 @@ from testlib import Check  # type: ignore[import]
 import pytest
 
 
-@pytest.mark.parametrize("variable_splitted, expected", [
-    (["one", "two"], ["loc", "one", ""]),
-    (["one", "two", "three"], ["loc", "one", "two"]),
-    (["Phase", "two"], ["loc", "", "Phase", ""]),
-    (["Phase", "two", "three"], ["loc", "", "Phase", "two"]),
+@pytest.mark.parametrize("variable, expected", [
+    ("one.two", ["one", "", "two"]),
+    ("one.two.three", ["one", "two", "three"]),
+    ("Phase.two", ["", "Phase", "", "two"]),
+    ("Phase.two.three", ["", "Phase", "two", "three"]),
 ])
-def test_cmciii_container(variable_splitted, expected):
-    cmciii_container = Check('cmciii').context['cmciii_container']
-    assert cmciii_container("loc", variable_splitted) == expected
+def test_cmciii_container(variable, expected):
+    sanitize_variable = Check('cmciii').context['sanitize_variable']
+    assert sanitize_variable(variable) == expected
 
 
-@pytest.mark.parametrize("variable_splitted", [
-    [],
-    ["one"],
+@pytest.mark.parametrize("variable", [
+    "",
+    "one",
 ])
-def test_cmciii_container_raises(variable_splitted):
-    cmciii_container = Check('cmciii').context['cmciii_container']
+def test_cmciii_container_raises(variable):
+    sanitize_variable = Check('cmciii').context['sanitize_variable']
     with pytest.raises(IndexError):
-        cmciii_container("loc", variable_splitted)
+        sanitize_variable(variable)

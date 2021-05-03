@@ -29,13 +29,14 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # this complicated way :(
 
 
-def cmciii_container(location, variable_splitted):
-    variable_part = variable_splitted[:-1]
-    if len(variable_part) == 1:
-        variable_part += [""]
-    if variable_part[0].startswith("Phase"):
-        variable_part = [""] + variable_part
-    return [location] + variable_part
+def sanitize_variable(variable):
+    variable_splitted = variable.split(".")
+    start, end = variable_splitted[:-1], variable_splitted[-1]
+    if len(start) == 1:
+        start += [""]
+    if start[0].startswith("Phase"):
+        start = [""] + start
+    return start + [end]
 
 
 def sensor_type(container):
@@ -86,9 +87,9 @@ def sensor_item(table, container, device):
     return "%s %s" % (device, container[1])
 
 
-def sensor_key(table, container, var_type, variable_splitted):
+def sensor_key(table, container, var_type, variable_end):
     if table != "phase":
-        return variable_splitted[-1]
+        return variable_end
 
     if var_type != "2":
         return " ".join(container[3:])
@@ -162,8 +163,8 @@ def parse_cmciii(info):
 
     for oidend, variable, var_type, var_unit, scale, value_str, value_int in var_table:
         location, _index = oidend.split(".")
-        variable_splitted = variable.split(".")
-        container = cmciii_container(location, variable_splitted)
+        sanitized_variable = sanitize_variable(variable)
+        container = [location] + sanitized_variable[:-1]
 
         type_ = sensor_type(container)
         if type_ is None:
@@ -175,7 +176,7 @@ def parse_cmciii(info):
             item += " %s" % location
         parsed[type_].setdefault(item, {"_device_": device, "_location_": location})
 
-        key = sensor_key(type_, container, var_type, variable_splitted)
+        key = sensor_key(type_, container, var_type, sanitized_variable[-1])
         value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
         parsed[type_][item].setdefault(key, value)
 
@@ -324,9 +325,9 @@ def check_cmciii_psm_current(item, params, parsed):
             state = 2
 
         return state, "Current: %s (%s/%s), Type: %s, Serial: %s, Position: %s" % \
-               (current, min_current, max_current, attrs["Unit Type"], \
-                attrs["Serial Number"], attrs["Mounting Position"]), \
-               [( "current", current, 0, 0, min_current, max_current)]
+            (current, min_current, max_current, attrs["Unit Type"],
+             attrs["Serial Number"], attrs["Mounting Position"]), \
+            [("current", current, 0, 0, min_current, max_current)]
 
 
 check_info['cmciii.psm_current'] = {
@@ -450,9 +451,9 @@ def check_cmciii_access(item, params, parsed):
             state = 2
 
         return state, "%s: %s, Delay: %s, Sensitivity: %s" % \
-               (attrs["DescName"], state_readable, \
-                attrs["Delay"], \
-                attrs["Sensitivity"])
+            (attrs["DescName"], state_readable,
+             attrs["Delay"],
+             attrs["Sensitivity"])
 
 
 check_info['cmciii.access'] = {
@@ -568,8 +569,8 @@ def check_cmciii_can_current(item, params, parsed):
             state = 2
 
         return state, "Status: %s, Current: %s mA (warn/crit at %s/%s mA)" % \
-               (state_readable, value, warn, crit), \
-               [("current", value / 1000.0, warn, crit )]
+            (state_readable, value, warn, crit), \
+            [("current", value / 1000.0, warn, crit)]
 
 
 check_info['cmciii.can_current'] = {

@@ -6,10 +6,32 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, Metric, State
-from cmk.base.plugins.agent_based.printer_supply import (parse_printer_supply,
-                                                         discovery_printer_supply,
-                                                         check_printer_supply)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.printer_supply import (
+    check_printer_supply,
+    discovery_printer_supply,
+    parse_printer_supply,
+    PrinterSupply,
+)
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_result",
+    [
+        pytest.param(
+            [
+                [['1.1', 'black\x00']],
+                [['Patrone Schwarz 508A HP CF360A\x00', '19', '100', '9', '3', '1']],
+            ],
+            {
+                "Patrone Schwarz 508A HP CF360A": PrinterSupply("%", 100, 9, "3", "black"),
+            },
+            id="with null bytes",
+        ),
+    ],
+)
+def test_parse_printer_supply(string_table, expected_result):
+    assert parse_printer_supply(string_table) == expected_result
 
 
 @pytest.mark.parametrize("info, expected_result", [([

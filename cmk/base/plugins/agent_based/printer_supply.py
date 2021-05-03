@@ -86,8 +86,9 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
             if color:
                 name = "%s %s" % (color.title(), name)
 
-        # fix trailing zero bytes (seen on HP Jetdirect 143)
+        # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")
+        color = color.rstrip("\0")
         unit = get_unit(unit_info)
 
         parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)

@@ -1,0 +1,14 @@
+Title: Fix "Reset Counter" option in distributed setups
+Level: 1
+Component: ec
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p25
+Date: 1620034589
+Class: fix
+
+If you used the option "Reset Counter" in distributed setups, only the rule
+counters for the local event console were reseted.
+
+If you used this option before, please check if you have to reset counters for
+all sites again.

@@ -1236,7 +1236,8 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"
                  ))
             if c:
-                cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
+                for site in _get_event_console_sync_sites():
+                    cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=site)
                 self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c is False:
                 return ""

@@ -177,20 +177,22 @@ def parse_cmciii(info):
         parsed[this_table].setdefault(itemname, {"_device_": device, "_location_": location})
         parsed[this_table][itemname].setdefault(key, value)
 
+    to_delete = set()
     for entry, attrs in parsed.get("temp", {}).items():
-        found_temp_in_out = False
         for attr, val in attrs.items():
             if attr.startswith("In-") or attr.startswith("Out-"):
-                parsed["temp_in_out"].setdefault("%s %s" % \
-                    (entry, attr.replace("-", " ")\
-                                .replace("Bot", "Bottom")\
-                                .replace("Mid", "Middle")), {
-                    "Value"      : val,
-                    "_device_"   : device,
-                    "_location_" : location})
-                found_temp_in_out = True
-        if found_temp_in_out:
-            del parsed["temp"][entry]
+                parsed["temp_in_out"].setdefault(
+                    "%s %s" % (entry, attr.replace("-", " ").replace("Bot", "Bottom").replace(
+                        "Mid", "Middle")),
+                    {
+                        "Value": val,
+                        "_device_": device,
+                        "_location_": location
+                    },
+                )
+                to_delete.add(entry)
+    for entry in to_delete:
+        del parsed["temp"][entry]
 
     return parsed
 

@@ -29,11 +29,11 @@ def test_cmciii_container_raises(variable):
         sanitize_variable(variable)
 
 
-@pytest.mark.parametrize("table, container, var_type, variable_end, expected", [
-    ("not_phase", [], "", "var_end", "var_end"),
-    ("phase", ["ONE", "TWO", "THREE", "FOUR", "FIVE"], "2", "", "four_five"),
-    ("phase", ["ONE", "TWO", "THREE", "FOUR", "FIVE"], "not 2", "", "FOUR FIVE"),
+@pytest.mark.parametrize("table, var_type, variable, expected", [
+    ("not_phase", "", ["var_end"], "var_end"),
+    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "four_five"),
+    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "FOUR FIVE"),
 ])
-def test_sensor_key(table, container, var_type, variable_end, expected):
+def test_sensor_key(table, var_type, variable, expected):
     sensor_key = Check('cmciii').context['sensor_key']
-    assert sensor_key(table, container, var_type, variable_end) == expected
+    assert sensor_key(table, var_type, variable) == expected

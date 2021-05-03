@@ -86,14 +86,14 @@ def sensor_item(table, variable, device):
     return "%s %s" % (device, variable[0])
 
 
-def sensor_key(table, container, var_type, variable_end):
+def sensor_key(table, var_type, variable):
     if table != "phase":
-        return variable_end
+        return variable[-1]
 
     if var_type != "2":
-        return " ".join(container[3:])
+        return " ".join(variable[3:-1])
 
-    key = "_".join(container[3:]).lower()
+    key = "_".join(variable[3:-1]).lower()
     if key == "power_apparent":
         key = "appower"
     elif key.endswith("_active"):
@@ -175,7 +175,7 @@ def parse_cmciii(info):
             item += " %s" % location
         parsed[type_].setdefault(item, {"_device_": device, "_location_": location})
 
-        key = sensor_key(type_, container, var_type, sanitized_variable[-1])
+        key = sensor_key(type_, var_type, sanitized_variable)
         value = sensor_value(value_str, value_int, scale, var_type, var_unit, container)
         parsed[type_][item].setdefault(key, value)
 

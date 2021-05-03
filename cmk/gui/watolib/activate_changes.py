@@ -136,7 +136,8 @@ ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, st
 ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
 ConfigWarnings = Dict[ConfigDomainName, List[str]]
 ActivationId = str
-ActivationState = Dict[str, Dict[str, Any]]
+SiteActivationState = Dict[str, Any]
+ActivationState = Dict[str, SiteActivationState]
 
 
 def get_trial_expired_message() -> str:
@@ -1718,7 +1719,19 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._time_ended = self._time_updated
             self._state = state
 
-        self._save_state()
+        self._save_state(
+            self._activation_id, self._site_id, {
+                "_site_id": self._site_id,
+                "_phase": self._phase,
+                "_state": self._state,
+                "_status_text": self._status_text,
+                "_status_details": self._status_details,
+                "_time_started": self._time_started,
+                "_time_updated": self._time_updated,
+                "_time_ended": self._time_ended,
+                "_expected_duration": self._expected_duration,
+                "_pid": self._pid,
+            })
 
     def _set_status_details(self, phase, status_details):
         # As long as the site is in queue, there is no time started
@@ -1744,21 +1757,10 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if status_details:
             self._status_details += "<br>%s" % status_details
 
-    def _save_state(self):
-        state_path = ActivateChangesManager.site_state_path(self._activation_id, self._site_id)
-        return store.save_object_to_file(
-            state_path, {
-                "_site_id": self._site_id,
-                "_phase": self._phase,
-                "_state": self._state,
-                "_status_text": self._status_text,
-                "_status_details": self._status_details,
-                "_time_started": self._time_started,
-                "_time_updated": self._time_updated,
-                "_time_ended": self._time_ended,
-                "_expected_duration": self._expected_duration,
-                "_pid": self._pid,
-            })
+    def _save_state(self, activation_id: ActivationId, site_id: SiteId,
+                    state: SiteActivationState) -> None:
+        state_path = ActivateChangesManager.site_state_path(activation_id, site_id)
+        store.save_object_to_file(state_path, state)
 
     def _load_expected_duration(self):
         times = self.get_activation_times(self._site_id)

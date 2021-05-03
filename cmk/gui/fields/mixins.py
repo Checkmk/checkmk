@@ -23,8 +23,6 @@ class Converter(metaclass=abc.ABCMeta):
 class CheckmkTuple:
     """This is a helper mixin for tuples with a regular structure.
 
-    An example for an irregular structure would be the SNMP community tuples.
-
     Just add this mixin to your form class like so,
 
         class MyTupleForm(Schema, CheckmkTuple):

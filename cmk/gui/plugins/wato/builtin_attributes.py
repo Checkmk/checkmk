@@ -11,6 +11,7 @@ from cmk.utils.type_defs import HostName, List
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+from cmk.gui import fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
@@ -127,6 +128,12 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             allow_ipv6_address=False,
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(
+            description="An IPv4 address.",
+            validate=fields.ValidateIPv4(),
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
@@ -165,6 +172,12 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             allow_ipv4_address=False,
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(
+            description="An IPv6 address.",
+            validate=fields.ValidateIPv6(),
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
@@ -199,6 +212,12 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             title=_("Additional IPv4 addresses"),
             help=_("Here you can specify additional IPv4 addresses. "
                    "These can be used in some active checks like ICMP."),
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.List(
+            fields.String(validate=fields.ValidateIPv4()),
+            description="A list of IPv4 addresses.",
         )
 
 
@@ -237,6 +256,12 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
                    "These can be used in some active checks like ICMP."),
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.List(
+            fields.String(validate=fields.ValidateIPv6()),
+            description="A list of IPv6 addresses.",
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
@@ -273,6 +298,16 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
                 " the monitoring server without being actively triggered."),
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(
+            enum=["pull-agent", "push-agent"],
+            description=
+            ("This configures the communication direction of this host.\n"
+             " * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
+             " * `push-agent` - the host is expected to send the data to the monitoring server without being triggered\n"
+            ),
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
@@ -304,6 +339,13 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
               "a community here, this will override the community defined by the rules.") %
             "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(
+            fields.SNMPCredentials,
+            description=("The SNMP access configuration. A configured SNMP v1/v2 community here "
+                         "will have precedence over any configured SNMP community rule."),
         )
 
 
@@ -340,6 +382,12 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
                    "manually.<br><br>In a distributed setup make sure that the host and all "
                    "of its parents are monitored by the same site."),
             orientation="horizontal",
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.List(
+            fields.HostField(should_exist=True),
+            description="A list of parents of this host.",
         )
 
     def is_visible(self, for_what, new):
@@ -443,6 +491,15 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                    "it's hostname, when resolvable via DNS, or by it's IP address."),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(
+            fields.NetworkScan,
+            description=("Configuration for automatic network scan. Pings will be"
+                         "sent to each IP address in the configured ranges to check"
+                         "if a host is up or down. Each found host will be added to"
+                         "the folder by it's hostname (if possible) or IP address."),
         )
 
     def _network_scan_elements(self):
@@ -608,6 +665,10 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def editable(self):
         return False
 
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(fields.NetworkScanResult,
+                             description="Read only access to the network scan result")
+
     def valuespec(self):
         return Dictionary(
             elements=[
@@ -702,6 +763,14 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             allow_empty=False,
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.String(
+            description='Address (IPv4 or IPv6) under which the management board can be reached.',
+            validate=fields.ValidateAnyOfValidators([
+                fields.ValidateIPv4(),
+                fields.ValidateIPv6(),
+            ]))
+
 
 @host_attribute_registry.register
 class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
@@ -733,6 +802,20 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
             ],
         )
 
+    def openapi_field(self) -> fields.Field:
+        from_disk = {None: 'none'}
+        to_disk = {'none': None}
+        return fields.Function(
+            description=("The protocol used to connect to the management board.\n\n"
+                         "Valid options are:\n\n"
+                         " * `none` - No management board\n"
+                         " * `snmp` - Connect using SNMP\n"
+                         " * `ipmi` - Connect using IPMI\n"),
+            enum=['none', 'snmp', 'ipmi'],
+            serialize=lambda key: from_disk.get(key, default=key),
+            deserialize=lambda key: to_disk.get(key, default=key),
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
@@ -755,6 +838,13 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
     def valuespec(self):
         return SNMPCredentials(
             default_value=None,
+            allow_none=True,
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(
+            fields.SNMPCredentials,
+            description="SNMP credentials",
             allow_none=True,
         )
 
@@ -796,6 +886,13 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             default_value=None,
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(
+            fields.IPMIParameters,
+            description="IPMI credentials",
+            required=False,
+        )
+
 
 @host_attribute_registry.register
 class HostAttributeSite(ABCHostAttributeValueSpec):
@@ -829,6 +926,9 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
                                    "local site. But this may make the host be monitored from "
                                    "multiple sites."),
         )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.SiteField(description="The site that should monitor this host.")
 
     def get_tag_groups(self, value):
         # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
@@ -881,6 +981,9 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             forth=tuple,
             back=list,
         )
+
+    def openapi_field(self) -> fields.Field:
+        pass
 
 
 class LockedByValuespec(Tuple):
@@ -942,6 +1045,12 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
             DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
             text_if_empty=_("Not locked"),
+        )
+
+    def openapi_field(self) -> fields.Field:
+        return fields.List(
+            fields.String(),
+            description="Attributes which are locked.",
         )
 
 
@@ -1020,6 +1129,10 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
             optional_keys=[],
         )
 
+    def openapi_field(self) -> fields.Field:
+        return fields.Nested(fields.MetaData,
+                             description="Read only access to configured metadata.")
+
 
 @host_attribute_registry.register
 class HostAttributeLabels(ABCHostAttributeValueSpec):
@@ -1051,6 +1164,9 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
+
+    def openapi_field(self) -> fields.Field:
+        return fields.Dict(description=self.help(),)
 
     def filter_matches(self, crit, value, hostname):
         return set(value).issuperset(set(crit))

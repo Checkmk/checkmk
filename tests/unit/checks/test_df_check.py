@@ -520,3 +520,452 @@ def test_df_check_with_parse(item, params, info, expected_result):
     actual = CheckResult(check.run_check(item, params, parse_df(info)))
     expected = CheckResult(expected_result)
     assertCheckResultsEqual(actual, expected)
+
+
+#.
+#   .--groups--------------------------------------------------------------.
+#   |                                                                      |
+#   |                    __ _ _ __ ___  _   _ _ __  ___                    |
+#   |                   / _` | '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | (_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \__, |_|  \___/ \__,_| .__/|___/                   |
+#   |                   |___/                |_|                           |
+#   '----------------------------------------------------------------------'
+
+info_df_groups = [
+    ['/dev/sda1', 'ext4', '100', '60', '10', '1%', '/'],
+    ['/dev/sda2', 'ext4', '110', '61', '11', '2%', '/foo'],
+    ['/dev/sda3', 'ext4', '120', '62', '12', '3%', '/bar'],
+    ['/dev/sdb1', 'btrfs', '130', '63', '13', '4%', '/one'],
+    ['/dev/sdb1', 'btrfs', '130', '63', '13', '4%', '/two'],
+]
+
+
+@pytest.mark.parametrize(
+    "inventory_df_rules, filesystem_groups, expected_result",
+    [
+        # no groups
+        (
+            {},
+            [],
+            [
+                (
+                    '/',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    '/foo',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    '/bar',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    'btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": False,
+            },
+            [],
+            [
+                (
+                    '/',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    '/foo',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    '/bar',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    'btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": True,
+            },
+            [],
+            [
+                (
+                    '/dev/sda1 /',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda2 /foo',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": (True, "volume_name_and_mountpoint"),
+            },
+            [],
+            [
+                (
+                    '/dev/sda1 /',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda2 /foo',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+        # groups
+        (
+            {},
+            [[{
+                'group_name': 'my-group',
+                'patterns_include': ['/', '/foo'],
+                'patterns_exclude': ['/bar']
+            }]],
+            [
+                (
+                    'my-group',
+                    {
+                        "include_volume_name": False,
+                        "grouping_behaviour": "mountpoint",
+                        "patterns": (['/', '/foo'], ['/bar']),
+                    },
+                ),
+                (
+                    '/bar',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+                (
+                    'btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": False,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": (True, "mountpoint"),
+            },
+            [[{
+                'group_name': 'my-group',
+                'patterns_include': ['/', '/foo'],
+                'patterns_exclude': ['/bar']
+            }]],
+            [
+                (
+                    'my-group',
+                    {
+                        "include_volume_name": True,
+                        "grouping_behaviour": "mountpoint",
+                        "patterns": (['/', '/foo'], ['/bar']),
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": (True, "mountpoint"),
+            },
+            # groups do not apply
+            [[{
+                'group_name': 'my-group',
+                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
+                'patterns_exclude': ['/dev/sda3 /bar']
+            }]],
+            [
+                (
+                    '/dev/sda1 /',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda2 /foo',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": (True, "volume_name_and_mountpoint"),
+            },
+            [[{
+                'group_name': 'my-group',
+                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
+                'patterns_exclude': ['/dev/sda3 /bar']
+            }]],
+            [
+                (
+                    'my-group',
+                    {
+                        "include_volume_name": True,
+                        "grouping_behaviour": "volume_name_and_mountpoint",
+                        "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+        (
+            {
+                "include_volume_name": (True, "volume_name_and_mountpoint"),
+            },
+            # groups do not apply
+            [[{
+                'group_name': 'my-group',
+                'patterns_include': ['/', '/foo'],
+                'patterns_exclude': ['/bar']
+            }]],
+            [
+                (
+                    '/dev/sda1 /',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda2 /foo',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sda3 /bar',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+                (
+                    '/dev/sdb1 btrfs /dev/sdb1',
+                    {
+                        "include_volume_name": True,
+                    },
+                ),
+            ],
+        ),
+    ])
+def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, expected_result):
+    check = Check('df')
+
+    def mocked_host_extra_conf_merged(_hostname, ruleset):
+        if ruleset is check.context.get("inventory_df_rules"):
+            return inventory_df_rules
+        raise AssertionError(
+            "Unknown/unhandled ruleset 'inventory_df_rules' used in mock of host_extra_conf_merged")
+
+    def mocked_host_extra_conf(_hostname, ruleset):
+        if ruleset is check.context.get("filesystem_groups"):
+            return filesystem_groups
+        raise AssertionError(
+            "Unknown/unhandled ruleset 'filesystem_groups' used in mock of host_extra_conf")
+
+    with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
+        with MockHostExtraConf(check, mocked_host_extra_conf, "host_extra_conf"):
+            raw_discovery_result = check.run_discovery(parse_df(info_df_groups))
+            discovery_result = DiscoveryResult(raw_discovery_result)
+
+    expected_result = DiscoveryResult(expected_result)
+    assertDiscoveryResultsEqual(check, discovery_result, expected_result)
+
+
+@pytest.mark.parametrize(
+    "add_params, expected_result",
+    [
+        ({
+            "grouping_behaviour": "mountpoint",
+            "patterns": (['/', '/foo'], ['/bar']),
+        }, [
+            (2, "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)", [
+                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                ('fs_size', 0.205078125, None, None, None, None),
+                ('fs_used_percent', 90.0, None, None, None, None),
+            ]),
+            (0, "2 filesystems", []),
+        ]),
+        ({
+            "include_volume_name": False,
+            "grouping_behaviour": "mountpoint",
+            "patterns": (['/', '/foo'], ['/bar']),
+        }, [
+            (2, '90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)', [
+                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                ('fs_size', 0.205078125, None, None, None, None),
+                ('fs_used_percent', 90.0, None, None, None, None),
+            ]),
+            (0, "2 filesystems", []),
+        ]),
+        ({
+            "include_volume_name": True,
+            "grouping_behaviour": "volume_name_and_mountpoint",
+            "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
+        }, [
+            (2, "90.0% used (189.00 of 210.00 kB, warn/crit at 80.00%/90.00%)", [
+                ('fs_used', 0.1845703125, 0.1640625, 0.1845703125, 0, 0.205078125),
+                ('fs_size', 0.205078125, None, None, None, None),
+                ('fs_used_percent', 90.0, None, None, None, None),
+            ]),
+            (0, "2 filesystems", []),
+        ]),
+        # unknowns; only happens if patterns are adapted without discovery
+        ({
+            "include_volume_name": False,
+            "grouping_behaviour": "mountpoint",
+            "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
+        }, [
+            (3, "No filesystem matching the patterns", []),
+        ]),
+        ({
+            "include_volume_name": True,
+            "grouping_behaviour": "volume_name_and_mountpoint",
+            "patterns": (['/', '/foo'], ['/bar']),
+        }, [
+            (3, "No filesystem matching the patterns", []),
+        ]),
+        # mixed btrfs and mps
+        ({
+            "include_volume_name": False,
+            "grouping_behaviour": "mountpoint",
+            "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
+        }, [
+            (2, "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)", [
+                ('fs_used', 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
+                ('fs_size', 0.224609375, None, None, None, None),
+                ('fs_used_percent', 90.0, None, None, None, None),
+            ]),
+            (0, "2 filesystems", []),
+        ]),
+        ({
+            "include_volume_name": True,
+            "grouping_behaviour": "volume_name_and_mountpoint",
+            "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
+                         ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
+        }, [
+            (2, "90.0% used (207.00 of 230.00 kB, warn/crit at 80.00%/90.00%)", [
+                ('fs_used', 0.2021484375, 0.1796875, 0.2021484375, 0, 0.224609375),
+                ('fs_size', 0.224609375, None, None, None, None),
+                ('fs_used_percent', 90.0, None, None, None, None),
+            ]),
+            (0, "2 filesystems", []),
+        ]),
+        # unknowns; only happens if patterns are adapted without discovery
+        ({
+            "include_volume_name": False,
+            "grouping_behaviour": "mountpoint",
+            "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
+                         ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
+        }, [
+            (3, "No filesystem matching the patterns", []),
+        ]),
+        ({
+            "include_volume_name": True,
+            "grouping_behaviour": "volume_name_and_mountpoint",
+            "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
+        }, [
+            (3, "No filesystem matching the patterns", []),
+        ]),
+    ])
+def test_df_check_groups_with_parse(add_params, expected_result):
+    check = Check('df')
+    params = df_params
+    params.update(add_params)
+
+    actual = CheckResult(check.run_check("my-group", params, parse_df(info_df_groups)))
+    expected = CheckResult(expected_result)
+    assertCheckResultsEqual(actual, expected)

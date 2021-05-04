@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
@@ -32,12 +37,8 @@ from cmk.gui.valuespec import (
     ListOf,
     MonitoringState,
     TextAscii,
+    Transform,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
 )
 
 
@@ -141,26 +142,35 @@ def _item_spec_ups_outphase():
                      help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
 
 
+def _transform_parameter_valuespec_ups_outphase(params):
+    changed_keys = {"load": "output_load"}
+    return {changed_keys.get(k, k): v for k, v in params.items()}
+
+
 def _parameter_valuespec_ups_outphase():
-    return Dictionary(
-        help=_("This rule allows you to specify levels for the voltage, current, load, power "
-               "and apparent power of your device. The levels will only be applied if the device "
-               "actually supplies values for these parameters."),
-        elements=_phase_elements() + [
-            ("load",
-             Tuple(title=_("Load"),
-                   elements=[
-                       Integer(title=_("warning at"), unit=u"%", default_value=80),
-                       Integer(title=_("critical at"), unit=u"%", default_value=90),
-                   ])),
-            ("map_device_states",
-             ListOf(
-                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
-                 title=_("Map device state"),
-                 help=_("Here you can enter either device state number (eg. from SNMP devices) "
-                        "or exact device state name and the related monitoring state."),
-             )),
-        ],
+    return Transform(
+        Dictionary(
+            help=_(
+                "This rule allows you to specify levels for the voltage, current, load, power "
+                "and apparent power of your device. The levels will only be applied if the device "
+                "actually supplies values for these parameters."),
+            elements=_phase_elements() + [
+                ("output_load",
+                 Tuple(title=_("Load"),
+                       elements=[
+                           Integer(title=_("warning at"), unit=u"%", default_value=80),
+                           Integer(title=_("critical at"), unit=u"%", default_value=90),
+                       ])),
+                ("map_device_states",
+                 ListOf(
+                     Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                     title=_("Map device state"),
+                     help=_("Here you can enter either device state number (eg. from SNMP devices) "
+                            "or exact device state name and the related monitoring state."),
+                 )),
+            ],
+        ),
+        forth=_transform_parameter_valuespec_ups_outphase,
     )
 
 

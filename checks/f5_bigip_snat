@@ -15,14 +15,22 @@ def parse_f5_bigip_snat(info):
     snats = {}
     for line in info:
         name = line[0]
-        snats.setdefault(name, {})
-        snats[name].setdefault("if_in_pkts", []).append(int(line[1]))
-        snats[name].setdefault("if_out_pkts", []).append(int(line[2]))
-        snats[name].setdefault("if_in_octets", []).append(int(line[3]))
-        snats[name].setdefault("if_out_octets", []).append(int(line[4]))
-        snats[name].setdefault("connections_rate", []).append(int(line[5]))
-        snats[name].setdefault("connections", []).append(int(line[6]))
-    return snats
+        snat_info = snats.setdefault(name, {})
+        for index, stat in enumerate((
+                "if_in_pkts",
+                "if_out_pkts",
+                "if_in_octets",
+                "if_out_octets",
+                "connections_rate",
+                "connections",
+        ),
+                                     start=1):
+            try:
+                stat_value = int(line[index])
+            except ValueError:
+                continue
+            snat_info.setdefault(stat, []).append(stat_value)
+    return {name: stats for name, stats in snats.items() if stats}
 
 
 def inventory_f5_bigip_snat(parsed):
@@ -45,6 +53,8 @@ def check_f5_bigip_snat(item, params, parsed):
                 "connections_rate",
         ]:
             summed_values.setdefault(what, 0)
+            if what not in snat:
+                continue
             for idx, entry in enumerate(snat[what]):
                 rate = get_rate("%s.%s" % (what, idx), now, entry)
                 summed_values[what] += rate

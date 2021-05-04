@@ -180,7 +180,7 @@ def _get_activation_manager(monkeypatch, remote_site="unit_remote_1"):
 def _generate_sync_snapshot(activation_manager, snapshot_data_collector_class, tmp_path,
                             is_pre_17_site, remote_site):
     site_snapshot_settings = activation_manager._get_site_snapshot_settings(
-        activation_manager._sites)
+        activation_manager._activation_id, activation_manager._sites)
     snapshot_settings = site_snapshot_settings[remote_site]
 
     assert not Path(snapshot_settings.snapshot_path).exists()

@@ -298,16 +298,6 @@ def _load_replication_status(lock=False):
     return {site_id: _load_site_replication_status(site_id, lock=lock) for site_id in config.sites}
 
 
-def remove_site_config_directory(site_id: SiteId) -> None:
-    work_dir = cmk.utils.paths.site_config_dir / site_id
-
-    try:
-        shutil.rmtree(str(work_dir))
-    except OSError as e:
-        if e.errno != errno.ENOENT:  # No such file or directory
-            raise
-
-
 class ActivateChanges:
     def __init__(self):
         self._repstatus = {}
@@ -562,11 +552,13 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
-        self._site_snapshot_settings = self._get_site_snapshot_settings(self._sites)
+        self._activation_id = self._new_activation_id()
+
+        self._site_snapshot_settings = self._get_site_snapshot_settings(
+            self._activation_id, self._sites)
         self._activate_until = (self._get_last_change_id()
                                 if activate_until is None else activate_until)
         self._comment = comment
-        self._activation_id = self._new_activation_id()
         self._time_started = time.time()
         self._prevent_activate = prevent_activate
 
@@ -755,14 +747,15 @@ class ActivateChangesManager(ActivateChanges):
 
         logger.debug("Finished all snapshots")
 
-    def _get_site_snapshot_settings(self, sites: List[SiteId]) -> Dict[SiteId, SnapshotSettings]:
+    def _get_site_snapshot_settings(self, activation_id: ActivationId,
+                                    sites: List[SiteId]) -> Dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 
         for site_id in sites:
             self._check_snapshot_creation_permissions(site_id)
 
             site_config = config.sites[site_id]
-            work_dir = cmk.utils.paths.site_config_dir / site_id
+            work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
             site_status = self._get_site_status(site_id, site_config)[0]
             is_pre_17_site = cmk.gui.watolib.utils.is_pre_17_remote_site(site_status)
@@ -1126,22 +1119,28 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
                 if not delete:
                     continue
 
-                activation_dir = os.path.join(ActivateChangesManager.activation_tmp_base_dir,
-                                              activation_id)
-                try:
-                    shutil.rmtree(activation_dir)
-                except Exception:
-                    self._logger.error("  Failed to delete the activation directory '%s'" %
-                                       activation_dir,
-                                       exc_info=True)
+                for base_dir in (str(cmk.utils.paths.site_config_dir),
+                                 ActivateChangesManager.activation_tmp_base_dir):
+                    activation_dir = os.path.join(base_dir, activation_id)
+                    try:
+                        shutil.rmtree(activation_dir)
+                    except FileNotFoundError:
+                        pass
+                    except Exception:
+                        self._logger.error("  Failed to delete the activation directory '%s'" %
+                                           activation_dir,
+                                           exc_info=True)
 
     def _existing_activation_ids(self):
-        try:
-            files = os.listdir(ActivateChangesManager.activation_tmp_base_dir)
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
-            files = []
+        files = set()
+
+        for base_dir in (str(cmk.utils.paths.site_config_dir),
+                         ActivateChangesManager.activation_tmp_base_dir):
+            try:
+                files.update(os.listdir(base_dir))
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
 
         ids = []
         for activation_id in files:

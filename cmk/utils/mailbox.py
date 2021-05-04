@@ -147,7 +147,7 @@ def verified_result(
                 raise RuntimeError("Server responded %r, %r" % (data[0], data[1]))
             return data[1]
         if isinstance(data[0], bytes):
-            if not data[0] == b"+OK":
+            if not data[0].startswith(b"+OK"):
                 raise RuntimeError("Server responded %r, %r" % (data[0], data[1]))
             assert isinstance(data[1], list)
             return data[1]

@@ -767,8 +767,7 @@ class ActivateChangesManager(ActivateChanges):
             site_status = self._get_site_status(site_id, site_config)[0]
             is_pre_17_site = cmk.gui.watolib.utils.is_pre_17_remote_site(site_status)
 
-            snapshot_components = _get_replication_components(str(work_dir), site_config,
-                                                              is_pre_17_site)
+            snapshot_components = _get_replication_components(site_config, is_pre_17_site)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -1929,7 +1928,7 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> Dict:
     return site_globals
 
 
-def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
+def _get_replication_components(site_config: SiteConfiguration,
                                 is_pre_17_site: bool) -> List[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
@@ -1940,9 +1939,6 @@ def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
         "Replication path" or "replication component" or "snapshot component" are the same concept.
 
     Args:
-        work_dir:
-            Something no longer used apparently.
-
         site_config:
             The site configuration. Specifically the following keys on it are used:
 

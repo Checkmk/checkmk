@@ -23,7 +23,7 @@ from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.type_defs import ConfigSerial, HostName, result
 
-from . import FetcherType, protocol
+from . import Fetcher, FetcherType, protocol
 from .snmp import SNMPFetcher, SNMPPluginStore
 from .type_defs import Mode
 
@@ -154,24 +154,12 @@ def load_global_config(serial: ConfigSerial) -> GlobalConfig:
         return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
 
 
-def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
+def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
     """ Entrypoint to obtain data from fetcher objects.    """
-
-    try:
-        fetcher_type = FetcherType[entry["fetcher_type"]]
-    except KeyError as exc:
-        raise RuntimeError from exc
-
-    logger.debug("Executing fetcher: %s", entry["fetcher_type"])
-
-    try:
-        fetcher_params = entry["fetcher_params"]
-    except KeyError as exc:
-        return protocol.FetcherMessage.error(fetcher_type, exc)
-
+    logger.debug("Fetch from %s", fetcher)
     with CPUTracker() as tracker:
         try:
-            with fetcher_type.from_json(fetcher_params) as fetcher:
+            with fetcher:
                 raw_data = fetcher.fetch(mode)
         except Exception as exc:
             raw_data = result.Error(exc)
@@ -179,8 +167,18 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     return protocol.FetcherMessage.from_raw_data(
         raw_data,
         tracker.duration,
-        fetcher_type,
+        FetcherType.from_fetcher(fetcher),
     )
+
+
+def _parse_fetcher_config(serial: ConfigSerial, host_name: HostName) -> Iterator[Fetcher]:
+    with make_local_config_path(serial=serial, host_name=host_name).open() as f:
+        data = json.load(f)
+
+    # Hard crash on parser errors: The interface is versioned and internal.
+    # Crashing on error really *is* the best way to catch bonehead mistakes.
+    yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
+                for entry in data["fetchers"])
 
 
 def _run_fetchers_from_file(
@@ -197,37 +195,24 @@ def _run_fetchers_from_file(
     1     End of reply  empty                 End IO
 
     """
-    with make_local_config_path(serial=serial, host_name=host_name).open() as f:
-        data = json.load(f)
-
-    fetchers = data["fetchers"]
-
-    # CONTEXT: AT the moment we call fetcher-executors sequentially (due to different reasons).
-    # Possibilities:
-    # Sequential: slow fetcher may block other fetchers.
-    # Asyncio: every fetcher must be asyncio-aware. This is ok, but even estimation requires time
-    # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
-    # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
-    # functionality of the Microcore.
-
     messages: List[protocol.FetcherMessage] = []
     with timeout_control(
             timeout,
             message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
     ):
+        fetchers = tuple(_parse_fetcher_config(serial, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
-            for entry in fetchers:
-                messages.append(run_fetcher(entry, mode))
+            for fetcher in fetchers:
+                messages.append(_run_fetcher(fetcher, mode))
         except MKTimeout as exc:
             # fill missing entries with timeout errors
-            messages.extend([
+            messages.extend(
                 protocol.FetcherMessage.timeout(
-                    FetcherType[entry["fetcher_type"]],
+                    FetcherType.from_fetcher(fetcher),
                     exc,
                     Snapshot.null(),
-                ) for entry in fetchers[len(messages):]
-            ])
+                ) for fetcher in fetchers[len(messages):])
 
     logger.debug("Produced %d messages", len(messages))
     write_bytes(bytes(protocol.CMCMessage.result_answer(*messages)))

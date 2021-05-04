@@ -838,9 +838,13 @@ class TestFetcherCaching:
 
 
 class TestFetcherType:
-    def test_factory(self):
-        assert FetcherType.IPMI.make() is IPMIFetcher
-        assert FetcherType.PIGGYBACK.make() is PiggybackFetcher
-        assert FetcherType.PROGRAM.make() is ProgramFetcher
-        assert FetcherType.SNMP.make() is SNMPFetcher
-        assert FetcherType.TCP.make() is TCPFetcher
+    @pytest.mark.parametrize("factory, cls", (
+        (FetcherType.IPMI, IPMIFetcher),
+        (FetcherType.PIGGYBACK, PiggybackFetcher),
+        (FetcherType.PROGRAM, ProgramFetcher),
+        (FetcherType.SNMP, SNMPFetcher),
+        (FetcherType.TCP, TCPFetcher),
+    ))
+    def test_factory(self, factory, cls):
+        assert factory.make() is cls
+        assert factory.from_fetcher(cls) is factory

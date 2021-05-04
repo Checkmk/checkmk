@@ -7,7 +7,7 @@
 import os
 import time
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import livestatus
 import cmk.utils.paths
@@ -24,26 +24,17 @@ from cmk.gui.exceptions import MKGeneralException
 graph_size = 2000, 700
 
 
-@cmk.gui.pages.register("prediction_graph")
-def page_graph():
-    host = html.request.get_str_input_mandatory("host")
-    service = html.request.get_str_input_mandatory("service")
-    dsname = html.request.get_str_input_mandatory("dsname")
-
-    breadcrumb = make_service_breadcrumb(host, service)
-    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname), breadcrumb)
-
-    # Get current value from perf_data via Livestatus
-    current_value = get_current_perfdata(host, service, dsname)
-
-    pred_dir = prediction.predictions_dir(host, service, dsname)
+def _load_prediction_information(
+    *,
+    tg_name: Optional[str],
+    pred_dir: str,
+) -> Tuple[str, prediction.PredictionInfo, Sequence[Tuple[str, str]]]:
+    # Load all prediction information, sort by time of generation
     if not os.path.exists(pred_dir):
         raise MKGeneralException(
             _("There is currently no prediction information "
               "available for this service."))
 
-    # Load all prediction information, sort by time of generation
-    tg_name = html.request.var("timegroup")
     timegroup = None
     timegroups: List[prediction.PredictionInfo] = []
     now = time.time()
@@ -73,6 +64,28 @@ def page_graph():
         tg_name = choices[0][0]
     if tg_name is None:
         raise Exception("should not happen")
+
+    return tg_name, timegroup, choices
+
+
+@cmk.gui.pages.register("prediction_graph")
+def page_graph():
+    host = html.request.get_str_input_mandatory("host")
+    service = html.request.get_str_input_mandatory("service")
+    dsname = html.request.get_str_input_mandatory("dsname")
+
+    breadcrumb = make_service_breadcrumb(host, service)
+    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname), breadcrumb)
+
+    # Get current value from perf_data via Livestatus
+    current_value = get_current_perfdata(host, service, dsname)
+
+    pred_dir = prediction.predictions_dir(host, service, dsname)
+
+    tg_name, timegroup, choices = _load_prediction_information(
+        tg_name=html.request.var("timegroup"),
+        pred_dir=pred_dir,
+    )
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))

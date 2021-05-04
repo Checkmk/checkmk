@@ -12,7 +12,7 @@ RUN yum -y --enablerepo=extras install \
     && yum -y install \
     centos-release-scl-rh \
     && yum -y install \
-    rsync \
+    http://mirror.ghettoforge.org/distributions/gf/archive/el/6/plus/x86_64/rsync-3.1.2-1.gf.el6.x86_64.rpm \
     && yum -y install \
     dpkg \
     enchant \

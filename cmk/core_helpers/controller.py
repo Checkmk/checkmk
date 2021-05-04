@@ -73,29 +73,18 @@ class GlobalConfig(NamedTuple):
         }
 
 
-def _disable_timeout() -> None:
-    """ Disable alarming and remove any running alarms"""
-
-    signal.signal(signal.SIGALRM, signal.SIG_IGN)
-    signal.alarm(0)
-
-
-def _enable_timeout(host_name: HostName, timeout: int) -> None:
-    """ Raises MKTimeout exception after timeout seconds"""
+@contextlib.contextmanager
+def timeout_control(timeout: int, *, message: str) -> Iterator[None]:
     def _handler(signum: int, frame: Optional[FrameType]) -> None:
-        raise MKTimeout(f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds")
+        raise MKTimeout(message)
 
     signal.signal(signal.SIGALRM, _handler)
     signal.alarm(timeout)
-
-
-@contextlib.contextmanager
-def timeout_control(host_name: HostName, timeout: int) -> Iterator[None]:
-    _enable_timeout(host_name, timeout)
     try:
         yield
     finally:
-        _disable_timeout()
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+        signal.alarm(0)
 
 
 class Command(NamedTuple):
@@ -222,7 +211,10 @@ def _run_fetchers_from_file(
     # functionality of the Microcore.
 
     messages: List[protocol.FetcherMessage] = []
-    with timeout_control(host_name, timeout):
+    with timeout_control(
+            timeout,
+            message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
+    ):
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:

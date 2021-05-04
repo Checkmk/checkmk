@@ -41,7 +41,7 @@ RUN rm -rf /bin/systemctl \
 # We avoid rebuild of the whole previous steps this way
 RUN apt-get update \
     && apt-get install -y \
-    python2-dev \
+    python-dev \
     joe \
     iputils-ping \
     vim \

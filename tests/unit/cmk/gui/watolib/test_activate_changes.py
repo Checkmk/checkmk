@@ -118,8 +118,6 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
 
-    work_dir = cmk.utils.paths.omd_root
-
     if is_pre_17_remote_site:
         for repl_path in expected:
             if repl_path.ident in {
@@ -151,7 +149,7 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
         ]
 
     assert sorted(
-        activate_changes._get_replication_components(work_dir, partial_site_config,
+        activate_changes._get_replication_components(partial_site_config,
                                                      is_pre_17_remote_site)) == sorted(expected)
 
 

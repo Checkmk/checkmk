@@ -28,44 +28,42 @@ def _load_prediction_information(
     *,
     tg_name: Optional[str],
     pred_dir: str,
-) -> Tuple[str, prediction.PredictionInfo, Sequence[Tuple[str, str]]]:
+) -> Tuple[Tuple[str, prediction.PredictionInfo], Sequence[Tuple[str, str]]]:
     # Load all prediction information, sort by time of generation
     if not os.path.exists(pred_dir):
         raise MKGeneralException(
             _("There is currently no prediction information "
               "available for this service."))
 
-    timegroup = None
-    timegroups: List[prediction.PredictionInfo] = []
+    selected_timegroup: Optional[Tuple[str, prediction.PredictionInfo]] = None
+    timegroups: List[Tuple[str, prediction.PredictionInfo]] = []
     now = time.time()
     for f in os.listdir(pred_dir):
         if not f.endswith(".info"):
             continue
         tg_info = prediction.retrieve_data_for_prediction(
-            pred_dir + "/" + f, "<unknown>" if timegroup is None else timegroup)
+            pred_dir + "/" + f,
+            "<unknown>" if selected_timegroup is None else str(selected_timegroup[1]),
+        )
         if tg_info is None:
             continue
 
-        tg_info["name"] = f[:-5]
-        timegroups.append(tg_info)
-        if tg_info["name"] == tg_name or (tg_name is None and
+        current_tg_name = f[:-5]
+        timegroups.append((current_tg_name, tg_info))
+        if current_tg_name == tg_name or (tg_name is None and
                                           (tg_info["range"][0] <= now <= tg_info["range"][1])):
-            timegroup = tg_info
-            tg_name = tg_info["name"]
+            selected_timegroup = (current_tg_name, tg_info)
 
-    timegroups.sort(key=lambda x: x["range"][0])
+    timegroups.sort(key=lambda x: x[1]["range"][0])
 
-    choices = [(tg_info_["name"], tg_info_["name"].title()) for tg_info_ in timegroups]
+    choices: List[Tuple[str, str]] = [(name, name.title()) for name, _tg_info in timegroups]
 
-    if not timegroup:
+    if selected_timegroup is None:
         if not timegroups:
             raise MKGeneralException(_("Missing prediction information."))
-        timegroup = timegroups[0]
-        tg_name = choices[0][0]
-    if tg_name is None:
-        raise Exception("should not happen")
+        selected_timegroup = timegroups[0]
 
-    return tg_name, timegroup, choices
+    return selected_timegroup, choices
 
 
 @cmk.gui.pages.register("prediction_graph")
@@ -82,7 +80,7 @@ def page_graph():
 
     pred_dir = prediction.predictions_dir(host, service, dsname)
 
-    tg_name, timegroup, choices = _load_prediction_information(
+    (tg_name, timegroup), choices = _load_prediction_information(
         tg_name=html.request.var("timegroup"),
         pred_dir=pred_dir,
     )
@@ -94,7 +92,7 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    path = pred_dir + "/" + timegroup["name"]
+    path = pred_dir + "/" + tg_name
     tg_data = prediction.retrieve_data_for_prediction(path, tg_name)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
@@ -110,7 +108,7 @@ def page_graph():
     if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
-    create_graph(timegroup["name"], graph_size, timegroup["range"], vertical_range, legend)
+    create_graph(tg_name, graph_size, timegroup["range"], vertical_range, legend)
 
     if "levels_upper" in timegroup['params']:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)

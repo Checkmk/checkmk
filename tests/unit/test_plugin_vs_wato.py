@@ -543,7 +543,6 @@ class ErrorReporter:
         ('check', 'ups_out_voltage', 'checkgroup_parameters:evolt'),
         ('check', 'ups_power', 'checkgroup_parameters:epower'),
         ('check', 'ups_socomec_in_voltage', 'checkgroup_parameters:evolt'),
-        ('check', 'ups_socomec_outphase', 'checkgroup_parameters:ups_outphase'),
         ('check', 'ups_socomec_out_voltage', 'checkgroup_parameters:evolt'),
         ('check', 'ups_test', 'checkgroup_parameters:ups_test'),
         ('check', 'veeam_tapejobs', 'checkgroup_parameters:veeam_tapejobs'),

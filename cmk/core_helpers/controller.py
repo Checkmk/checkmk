@@ -145,15 +145,12 @@ def _confirm_command_processed() -> Iterator[None]:
 
 def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
-    # check that file is present, because lack of the file is not an error at the moment
-    local_config_path = make_local_config_path(serial=serial, host_name=host_name)
-
-    if not local_config_path.exists():
+    try:
+        # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
+        _run_fetchers_from_file(serial, host_name, mode=mode, timeout=timeout)
+    except FileNotFoundError:
+        # Not an error.
         logger.warning("fetcher file for host %r and %s is absent", host_name, serial)
-        return
-
-    # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(host_name, file_name=local_config_path, mode=mode, timeout=timeout)
 
     # Cleanup different things (like object specific caches)
     cmk.utils.cleanup.cleanup_globals()
@@ -197,17 +194,21 @@ def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     )
 
 
-def _run_fetchers_from_file(host_name: HostName, file_name: Path, mode: Mode, timeout: int) -> None:
+def _run_fetchers_from_file(
+    serial: ConfigSerial,
+    host_name: HostName,
+    mode: Mode,
+    timeout: int,
+) -> None:
     """ Writes to the stdio next data:
     Count Answer        Content               Action
     ----- ------        -------               ------
     1     Result        Fetcher Blob          Send to the checker
     0..n  Log           Message to be logged  Log
     1     End of reply  empty                 End IO
-    *) Fetcher blob contains all answers from all fetcher objects including failed
-    **) file_name is serial/host_name.json
-    ***) timeout is not used at the moment"""
-    with file_name.open() as f:
+
+    """
+    with make_local_config_path(serial=serial, host_name=host_name).open() as f:
         data = json.load(f)
 
     fetchers = data["fetchers"]

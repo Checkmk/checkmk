@@ -11,7 +11,6 @@ import pprint
 import re
 from typing import Dict, Any, Optional, Type, Iterable
 
-from cmk.gui.htmllib import Choices
 import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
@@ -31,6 +30,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
     transform_pre_16_host_topics,

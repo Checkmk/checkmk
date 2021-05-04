@@ -34,7 +34,7 @@ from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -60,6 +60,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     mode_url,
 )
+from cmk.gui.type_defs import Choices
 
 
 class RoleManagement:

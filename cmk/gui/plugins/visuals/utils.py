@@ -23,8 +23,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, Row, Rows, VisualContext
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices, ColumnName, Row, Rows, VisualContext
 from cmk.gui.page_menu import PageMenuEntry
 
 

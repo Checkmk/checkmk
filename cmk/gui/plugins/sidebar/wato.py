@@ -17,10 +17,10 @@ import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
+from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuTopic, TopicMenuItem
 from cmk.gui.globals import html
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,

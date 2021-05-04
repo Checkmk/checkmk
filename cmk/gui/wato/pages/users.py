@@ -24,7 +24,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import Choices, HTML
+from cmk.gui.htmllib import HTML
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
@@ -69,7 +69,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     mode_url,
 )
-
+from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if cmk_version.is_managed_edition():

@@ -47,19 +47,20 @@ import abc
 import pprint
 from contextlib import contextmanager
 from typing import (
-    Union,
-    Optional,
-    List,
-    Dict,
-    Tuple,
     Any,
-    Iterator,
     cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
     Mapping,
-    Set,
+    Optional,
     Sequence,
+    Set,
+    Tuple,
     TYPE_CHECKING,
     TypeVar,
+    Union,
 )
 from pathlib import Path
 import urllib.parse
@@ -140,7 +141,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.type_defs import (
     CSSSpec,
     Icon,
-    Choices,
+    Choice,
     ChoiceGroup,
     GroupedChoices,
 )
@@ -2220,7 +2221,7 @@ class html(ABCHTMLGenerator):
     # and the default value must be of type None, str or unicode.
     def dropdown(self,
                  varname: str,
-                 choices: Union[Choices, GroupedChoices],
+                 choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],
                  deflt: DefaultChoice = '',
                  ordered: bool = False,
                  label: Optional[str] = None,

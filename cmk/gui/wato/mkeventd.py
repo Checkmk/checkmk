@@ -59,6 +59,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
     TextUnicode,
@@ -90,7 +91,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
     Permission,

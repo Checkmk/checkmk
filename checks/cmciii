@@ -89,9 +89,9 @@ def sensor_key(table, var_type, variable):
         return variable[-1]
 
     if var_type != "2":
-        return " ".join(variable[3:-1])
+        return " ".join(variable[2:-1])
 
-    key = "_".join(variable[3:-1]).lower()
+    key = "_".join(variable[2:-1]).lower()
     if key == "power_apparent":
         key = "appower"
     elif key.endswith("_active"):

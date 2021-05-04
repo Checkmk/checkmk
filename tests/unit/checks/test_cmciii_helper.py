@@ -31,8 +31,8 @@ def test_cmciii_container_raises(variable):
 
 @pytest.mark.parametrize("table, var_type, variable, expected", [
     ("not_phase", "", ["var_end"], "var_end"),
-    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "four_five"),
-    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "FOUR FIVE"),
+    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "three_four_five"),
+    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "THREE FOUR FIVE"),
 ])
 def test_sensor_key(table, var_type, variable, expected):
     sensor_key = Check('cmciii').context['sensor_key']

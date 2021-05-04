@@ -534,6 +534,7 @@ class LogwatchIcon(Icon):
         if what != "service" or row[what + "_check_command"] not in [
                 'check_mk-logwatch',
                 'check_mk-logwatch.groups',
+                'check_mk-logwatch_groups',
         ]:
             return
 

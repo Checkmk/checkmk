@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from contextlib import suppress
 import json
 import logging
@@ -60,6 +60,22 @@ class PredictionInfo:
     slice: int
     params: PredictionParameters
 
+    @classmethod
+    def loads(cls, raw: str) -> 'PredictionInfo':
+        data = json.loads(raw)
+        range_ = data["range"]
+        return cls(
+            time=int(data["time"]),
+            range=(Timestamp(range_[0]), Timestamp(range_[1])),
+            cf=ConsolidationFunctionName(data["cf"]),
+            dsname=MetricName(data["dsname"]),
+            slice=int(data["slice"]),
+            params=dict(data["params"]),
+        )
+
+    def dumps(self) -> str:
+        return json.dumps(asdict(self))
+
 
 @dataclass(frozen=True)
 class PredictionData:
@@ -68,6 +84,20 @@ class PredictionData:
     num_points: int
     data_twindow: List[Timestamp]
     step: Seconds
+
+    @classmethod
+    def loads(cls, raw: str) -> 'PredictionData':
+        data = json.loads(raw)
+        return cls(
+            columns=[str(e) for e in data["columns"]],
+            points=[[None if e is None else float(e) for e in elist] for elist in data["points"]],
+            num_points=int(data["num_points"]),
+            data_twindow=[Timestamp(e) for e in data["data_twindow"]],
+            step=Seconds(data["step"]),
+        )
+
+    def dumps(self) -> str:
+        return json.dumps(asdict(self))
 
 
 def is_dst(timestamp: float) -> bool:
@@ -307,8 +337,12 @@ def rrd_datacolum(hostname: HostName, service_description: ServiceName, varname:
 
 
 class PredictionStore:
-    def __init__(self, host_name: HostName, service_description: ServiceName,
-                 dsname: MetricName) -> None:
+    def __init__(
+        self,
+        host_name: HostName,
+        service_description: ServiceName,
+        dsname: MetricName,
+    ) -> None:
         self._dir = Path(
             cmk.utils.paths.var_dir,
             "prediction",
@@ -336,9 +370,9 @@ class PredictionStore:
     ) -> None:
         self._dir.mkdir(exist_ok=True, parents=True)
         with self._info_file(timegroup).open("w") as fname:
-            json.dump(info, fname)
+            fname.write(info.dumps())
         with self._data_file(timegroup).open("w") as fname:
-            json.dump(data_for_pred, fname)
+            fname.write(data_for_pred.dumps())
 
     def clean_prediction_files(self, timegroup: Timegroup, force: bool = False) -> None:
         # In previous versions it could happen that the files were created with 0 bytes of size
@@ -350,19 +384,18 @@ class PredictionStore:
                     file_path.unlink()
                     logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
 
-    # TODO: We should really *parse* the loaded data, currently the type signature
-    # is a blatant lie!
     def get_info(self, timegroup: Timegroup) -> Optional[PredictionInfo]:
-        return self._retrieve_raw_content(self._info_file(timegroup))  # type: ignore[return-value]
+        raw = self._read_file(self._info_file(timegroup))
+        return None if raw is None else PredictionInfo.loads(raw)
 
-    # TODO: We should really *parse* the loaded data, currently the type signature
-    # is a blatant lie!
     def get_data(self, timegroup: Timegroup) -> Optional[PredictionData]:
-        return self._retrieve_raw_content(self._data_file(timegroup))  # type: ignore[return-value]
+        raw = self._read_file(self._data_file(timegroup))
+        return None if raw is None else PredictionData.loads(raw)
 
-    def _retrieve_raw_content(self, file_path: Path) -> object:
+    def _read_file(self, file_path: Path) -> Optional[str]:
         try:
-            return json.loads(file_path.open().read())
+            with file_path.open() as fh:
+                return fh.read()
         except IOError:
             logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
         except ValueError:

@@ -1,6 +1,8 @@
 import os
 import pytest
 
+from cmk_base.check_api import get_percent_human_readable, check_levels
+
 execfile(os.path.join(os.path.dirname(__file__), '../../../checks/elphase.include'))
 
 
@@ -52,8 +54,8 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/elphase.includ
             [
                 (
                     1,
-                    'Voltage: 231.0 V (warn/crit below 250/200 V)',
-                    [('voltage', 231.0)],
+                    'Voltage: 231.0 V (warn/crit below 250.0 V/200.0 V)',
+                    [('voltage', 231.0, None, None)],
                 ),
                 (
                     0,
@@ -61,9 +63,9 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/elphase.includ
                     [('current', 10.0)],
                 ),
                 (
-                    0,
-                    'Load: 4.0%',
-                    [('output_load', 4.0)],
+                    2,
+                    'Load: 4.0% (warn/crit at 0%/2.0%)',
+                    [('output_load', 4.0, 0.0, 2.0)],
                 ),
             ],
             id="with parameters",
@@ -82,13 +84,13 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/elphase.includ
             },
             [
                 (
-                    0,
-                    'Current: 10.0 A',
-                    [('current', 10.0, 10, 15)],
+                    1,
+                    'Current: 10.0 A (warn/crit at 10.0 A/15.0 A)',
+                    [('current', 10.0, 10.0, 15.0)],
                 ),
                 (
-                    1,
-                    'Differential current AC: 100 mA (warn/crit at 90/100 mA)',
+                    2,
+                    'Differential current AC: 100.0 mA (warn/crit at 90.0 mA/100.0 mA)',
                     [('differential_current_ac', 0.1, 0.09, 0.1)],
                 ),
             ],

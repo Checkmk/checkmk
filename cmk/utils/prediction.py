@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from contextlib import suppress
 import json
 import logging
-import os
 from pathlib import Path
 import time
 from typing import (
@@ -317,14 +317,10 @@ class PredictionStore:
             cmk.utils.pnp_cleanup(dsname),
         )
 
-    @property  # TODO: this is intermediate! drop this!
-    def dir(self) -> str:
-        return str(self._dir)
-
     def available_predictions(self) -> Iterable[Tuple[str, PredictionInfo]]:
         return ((f.stem, tg_info)
                 for f in self._dir.glob('*.info')
-                if (tg_info := retrieve_info_for_prediction(str(f))) is not None)
+                if (tg_info := self.get_info(f.stem)) is not None)
 
     def _data_file(self, timegroup: Timegroup) -> Path:
         return self._dir / timegroup
@@ -344,42 +340,35 @@ class PredictionStore:
         with self._data_file(timegroup).open("w") as fname:
             json.dump(data_for_pred, fname)
 
+    def clean_prediction_files(self, timegroup: Timegroup, force: bool = False) -> None:
+        # In previous versions it could happen that the files were created with 0 bytes of size
+        # which was never handled correctly so that the prediction could never be used again until
+        # manual removal of the files. Clean this up.
+        for file_path in [self._data_file(timegroup), self._info_file(timegroup)]:
+            with suppress(FileNotFoundError):
+                if force or file_path.stat().st_size == 0:
+                    file_path.unlink()
+                    logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
 
-def clean_prediction_files(pred_file: str, force: bool = False) -> None:
-    # In previous versions it could happen that the files were created with 0 bytes of size
-    # which was never handled correctly so that the prediction could never be used again until
-    # manual removal of the files. Clean this up.
-    for file_path in [pred_file, pred_file + '.info']:
-        if os.path.exists(file_path) and (os.stat(file_path).st_size == 0 or force):
-            logger.log(VERBOSE, "Removing obsolete prediction %s", os.path.basename(file_path))
-            os.remove(file_path)
+    # TODO: We should really *parse* the loaded data, currently the type signature
+    # is a blatant lie!
+    def get_info(self, timegroup: Timegroup) -> Optional[PredictionInfo]:
+        return self._retrieve_raw_content(self._info_file(timegroup))  # type: ignore[return-value]
 
+    # TODO: We should really *parse* the loaded data, currently the type signature
+    # is a blatant lie!
+    def get_data(self, timegroup: Timegroup) -> Optional[PredictionData]:
+        return self._retrieve_raw_content(self._data_file(timegroup))  # type: ignore[return-value]
 
-# TODO: We should really *parse* the loaded data, currently the type signature
-# is a blatant lie!
-def retrieve_info_for_prediction(info_file: str) -> Optional[PredictionInfo]:
-    assert info_file.endswith('.info')
-    return _retrieve_for_prediction(info_file)  # type: ignore[return-value]
-
-
-# TODO: We should really *parse* the loaded data, currently the type signature
-# is a blatant lie!
-def retrieve_data_for_prediction(info_file: str) -> Optional[PredictionData]:
-    assert not info_file.endswith('.info')
-    return _retrieve_for_prediction(info_file)  # type: ignore[return-value]
-
-
-def _retrieve_for_prediction(info_file: str) -> object:
-    try:
-        return json.loads(open(info_file).read())
-    except IOError:
-        logger.log(VERBOSE, "No previous prediction for group %s available.",
-                   os.path.basename(info_file))
-    except ValueError:
-        logger.log(VERBOSE, "Invalid prediction file %s, old format", info_file)
-        pred_file = info_file[:-5] if info_file.endswith(".info") else info_file
-        clean_prediction_files(pred_file, force=True)
-    return None
+    def _retrieve_raw_content(self, file_path: Path) -> object:
+        try:
+            return json.loads(file_path.open().read())
+        except IOError:
+            logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
+        except ValueError:
+            logger.log(VERBOSE, "Invalid prediction file %s, old format", file_path)
+            self.clean_prediction_files(file_path.stem, force=True)
+        return None
 
 
 def estimate_levels(

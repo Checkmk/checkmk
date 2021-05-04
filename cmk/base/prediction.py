@@ -8,7 +8,6 @@
 import json
 import logging
 import math
-import os
 import time
 from typing import (
     Callable,
@@ -36,6 +35,7 @@ from cmk.utils.prediction import (
     PredictionData,
     PredictionInfo,
     PredictionParameters as _PredictionParameters,
+    PredictionStore,
     ConsolidationFunctionName,
     EstimatedLevels,
 )
@@ -219,7 +219,8 @@ def _std_dev(point_line: List[float], average: float) -> float:
 
 
 def _is_prediction_up_to_date(
-    pred_file: str,
+    last_info: Optional[PredictionInfo],
+    timegroup: Timegroup,
     params: _PredictionParameters,
 ) -> bool:
     """Check, if we need to (re-)compute the prediction file.
@@ -229,14 +230,13 @@ def _is_prediction_up_to_date(
     - the prediction from the last time is outdated
     - the prediction from the last time was made with other parameters
     """
-    last_info = cmk.utils.prediction.retrieve_info_for_prediction(pred_file + ".info")
     if last_info is None:
         return False
 
     period_info = _PREDICTION_PERIODS[params["period"]]
     now = time.time()
     if last_info.time + period_info.valid * period_info.slice < now:
-        logger.log(VERBOSE, "Prediction of %s outdated", os.path.basename(pred_file))
+        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return False
 
     jsonized_params = json.loads(json.dumps(params))
@@ -264,18 +264,20 @@ def get_levels(
 
     timegroup, rel_time = period_info.groupby(now)
 
-    prediction_store = cmk.utils.prediction.PredictionStore(hostname, service_description, dsname)
-
-    pred_file = os.path.join(prediction_store.dir, timegroup)
-    cmk.utils.prediction.clean_prediction_files(pred_file)
+    prediction_store = PredictionStore(hostname, service_description, dsname)
+    prediction_store.clean_prediction_files(timegroup)
 
     data_for_pred: Optional[PredictionData] = None
-    if _is_prediction_up_to_date(pred_file, params):
-        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file)
+    if _is_prediction_up_to_date(
+            last_info=prediction_store.get_info(timegroup),
+            timegroup=timegroup,
+            params=params,
+    ):
+        data_for_pred = prediction_store.get_data(timegroup)
 
     if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
-        cmk.utils.prediction.clean_prediction_files(pred_file, force=True)
+        prediction_store.clean_prediction_files(timegroup, force=True)
 
         time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 

@@ -81,8 +81,7 @@ def page_graph():
     html.end_form()
 
     # Get prediction data
-    path = prediction_store.dir + "/" + tg_name
-    tg_data = prediction.retrieve_data_for_prediction(path)
+    tg_data = prediction_store.get_data(tg_name)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 

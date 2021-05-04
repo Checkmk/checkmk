@@ -39205,6 +39205,10 @@ msgid "Service tags"
 msgstr "Grup nou"
 
 #, fuzzy
+msgid "Service tags (with titles)"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Service unit names"
 msgstr "Numele Elementului"
 
@@ -43320,9 +43324,6 @@ msgstr ""
 
 msgid "Tags"
 msgstr "Tag-uri"
-
-msgid "Tags (with titles)"
-msgstr ""
 
 #, python-format
 msgid "Tags IDs must be unique. You've used \"%s\" twice."

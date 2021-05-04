@@ -40148,6 +40148,10 @@ msgstr "Servicestatus"
 msgid "Service tags"
 msgstr "Service-Tags"
 
+#, fuzzy
+msgid "Service tags (with titles)"
+msgstr "Hostmerkmake (mit Titeln)"
+
 msgid "Service unit names"
 msgstr "Unit Name des Service"
 
@@ -44375,9 +44379,6 @@ msgstr "Merkmal: %s"
 
 msgid "Tags"
 msgstr "Merkmale"
-
-msgid "Tags (with titles)"
-msgstr "Merkmake (mit Titeln)"
 
 #, python-format
 msgid "Tags IDs must be unique. You've used \"%s\" twice."
@@ -62748,6 +62749,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Tags (with titles)"
+#~ msgstr "Merkmake (mit Titeln)"
 
 #~ msgid "Manual checks"
 #~ msgstr "Manuelle Checks"

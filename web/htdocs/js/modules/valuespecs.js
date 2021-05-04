@@ -759,7 +759,11 @@ function select2_ajax_vs_autocomplete(elem, ident, params) {
                         : "",
             }),
         processResults: resp => ({
-            results: resp.result.choices.map(x => ({id: x[0], text: x[1]})),
+            results: resp.result.choices.map(x => ({
+                id: x[0],
+                text: x[1],
+                disabled: x[0] === null, // Reached max limit message non selectable
+            })),
         }),
     };
 }

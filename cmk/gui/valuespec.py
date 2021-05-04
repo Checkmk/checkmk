@@ -2600,14 +2600,14 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choic
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
     with sites.set_limit(limit):
-        choices = sorted(sites.live().query_column_unique(query))
+        choices = [(h, h) for h in sorted(sites.live().query_column_unique(query))]
+
     if len(choices) > limit:
-        choices.append(_("(Max limit reached, be more specific)"))
+        choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))
 
-    if value not in choices and params["strict"] == "False":
-        choices.insert(0, value)  # User is allowed to enter anything they want
-
-    return [(h, h) for h in choices]
+    if (value, value) not in choices and params["strict"] == "False":
+        choices.insert(0, (value, value))  # User is allowed to enter anything they want
+    return choices
 
 
 # TODO: Cleanup kwargs

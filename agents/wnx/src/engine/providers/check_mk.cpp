@@ -20,6 +20,8 @@
 #include "common/version.h"
 #include "onlyfrom.h"
 
+using namespace std::string_literals;
+
 namespace cma::provider {
 
 // function to provide format compatibility for monitoring site
@@ -101,8 +103,6 @@ std::string MakeDirs() {
 }  // namespace
 
 std::string CheckMk::makeBody() {
-    using namespace std::string_literals;
-
     auto out = MakeInfo();
     out += MakeDirs();
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;

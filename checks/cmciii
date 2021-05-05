@@ -254,41 +254,6 @@ check_info['cmciii'] = {
     ],
 }
 
-#.
-#   .--sensors-------------------------------------------------------------.
-#   |                                                                      |
-#   |                  ___  ___ _ __  ___  ___  _ __ ___                   |
-#   |                 / __|/ _ \ '_ \/ __|/ _ \| '__/ __|                  |
-#   |                 \__ \  __/ | | \__ \ (_) | |  \__ \                  |
-#   |                 |___/\___|_| |_|___/\___/|_|  |___/                  |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_cmciii_sensor(parsed):
-    return []
-
-
-def check_cmciii_sensor(item, params, parsed):
-    # Older check plugin versions worked as follows:
-    # We've generated items out of device table for the service
-    # cmciii and if device name starts with "CMCIII-SEN", we added
-    # an additional service cmciii.sensor. Then we connected these
-    # names with data from the first variables table (by OID) and took
-    # the status from there. We got:
-    # 1 service cmciii:        'State Zugang_Rack_1_LCP_1_hinten'  (OK)
-    # 1 service cmciii.sensor: 'Zugang_Rack_1_LCP_1_hinten Sensor' (Open)
-    # But device table sends already its status, thus we had one service
-    # overmuch (with different readable status).
-    return 1, "This check is deprecated. Please rediscover the services of that host."
-
-
-check_info['cmciii.sensor'] = {
-    "inventory_function": inventory_cmciii_sensor,
-    "check_function": check_cmciii_sensor,
-    "service_description": "%s",
-}
-
 #.}
 #   .--PSM current---------------------------------------------------------.
 #   |       ____  ____  __  __                                  _          |

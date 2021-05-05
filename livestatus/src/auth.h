@@ -15,9 +15,10 @@ using host = Host;
 class Service;  // IWYU pragma: keep
 using service = Service;
 // IWYU pragma: no_include "ObjectGroup.h"
+template <typename T>
 class ObjectGroup;  // IWYU pragma: keep
-using hostgroup = ObjectGroup;
-using servicegroup = ObjectGroup;
+using hostgroup = ObjectGroup<Host>;
+using servicegroup = ObjectGroup<Service>;
 #else
 #include "nagios.h"
 #endif

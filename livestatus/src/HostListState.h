@@ -19,10 +19,9 @@
 #ifdef CMC
 #include <unordered_set>
 
-#include "Host.h"
-#include "Object.h"
 #include "ObjectGroup.h"
 #include "contact_fwd.h"
+class Host;
 #else
 #include "nagios.h"
 #endif
@@ -72,7 +71,8 @@ public:
         : _get_service_auth{std::move(get_service_auth)}
         , _logictype(logictype) {}
 #ifdef CMC
-    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
+    int32_t operator()(const ObjectGroup<Host> &g,
+                       const contact *auth_user) const {
         auto v = value_type(g.size());
         for (const auto &e : g) {
             v.emplace(dynamic_cast<value_type::value_type>(e));

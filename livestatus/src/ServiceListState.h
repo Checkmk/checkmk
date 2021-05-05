@@ -20,10 +20,9 @@
 #include <unordered_set>
 
 #include "Host.h"
-#include "Object.h"
 #include "ObjectGroup.h"
-#include "Service.h"
 #include "contact_fwd.h"
+class Service;
 #else
 #include "nagios.h"
 #endif
@@ -72,7 +71,8 @@ public:
         }
         return (*this)(v, auth_user);
     }
-    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
+    int32_t operator()(const ObjectGroup<Service> &g,
+                       const contact *auth_user) const {
         auto v = value_type(g.size());
         for (const auto &e : g) {
             v.emplace(dynamic_cast<value_type::value_type>(e));

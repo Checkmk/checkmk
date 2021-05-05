@@ -8,6 +8,7 @@
 #ifdef CMC
 #include <memory>
 
+#include "Host.h"
 #include "State.h"
 #endif
 

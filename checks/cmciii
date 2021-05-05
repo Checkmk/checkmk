@@ -32,10 +32,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 def sanitize_variable(variable):
     variable_splitted = variable.split(".")
     start, end = variable_splitted[:-1], variable_splitted[-1]
-    if len(start) == 1:
-        start += [""]
-    if start[0].startswith("Phase"):
-        start = [""] + start
+    start += max(0, 2 - len(start)) * ['']  # ensures that the sensor type can always be parsed
     return start + [end]
 
 
@@ -59,9 +56,7 @@ def sensor_type(variable):
         return "leakage"
     if variable[1].startswith("CAN") and variable[1].endswith("Current"):
         return "can_current"
-    # NOTE: Phase sensors introduce an empty element in the second position of
-    # the variable so we need to shift the index here.
-    if variable[1].startswith("Phase") or (len(variable) > 2 and variable[2].startswith("Phase")):
+    if variable[0].startswith("Phase") or variable[1].startswith("Phase"):
         return "phase"
     return None
 
@@ -76,11 +71,11 @@ def sensor_item(sensor_type, variable, device):
             item += " %s" % variable[-1].split("-")[0]
         return item
     if sensor_type == "phase":
-        item = [device]
-        if variable[0]:
-            item.append(variable[0])
-        item += ["Phase", variable[1].replace("Phase", "").replace("L", "").strip()]
-        return " ".join(item)
+        return "%s %s %s" % (
+            device,
+            "Phase",
+            variable[0].replace("Phase", "").replace("L", "").strip(),
+        )
     if sensor_type in ["psm_plugs", "can_current"]:
         return "%s %s" % (device, ".".join(variable))
     return "%s %s" % (device, variable[0])
@@ -91,9 +86,9 @@ def sensor_key(sensor_type, var_type, variable):
         return variable[-1]
 
     if var_type != "2":
-        return " ".join(variable[2:-1])
+        return " ".join(variable[1:-1])
 
-    key = "_".join(variable[2:-1]).lower()
+    key = "_".join(variable[1:-1]).lower()
     if key == "power_apparent":
         key = "appower"
     elif key.endswith("_active"):

@@ -9,30 +9,20 @@ import pytest
 
 
 @pytest.mark.parametrize("variable, expected", [
+    ("", ["", "", ""]),
+    ("one", ["", "", "one"]),
     ("one.two", ["one", "", "two"]),
     ("one.two.three", ["one", "two", "three"]),
-    ("Phase.two", ["", "Phase", "", "two"]),
-    ("Phase.two.three", ["", "Phase", "two", "three"]),
 ])
 def test_sanitize_variable(variable, expected):
     sanitize_variable = Check('cmciii').context['sanitize_variable']
     assert sanitize_variable(variable) == expected
 
 
-@pytest.mark.parametrize("variable", [
-    "",
-    "one",
-])
-def test_sanitize_variable_raises(variable):
-    sanitize_variable = Check('cmciii').context['sanitize_variable']
-    with pytest.raises(IndexError):
-        sanitize_variable(variable)
-
-
 @pytest.mark.parametrize("table, var_type, variable, expected", [
     ("not_phase", "", ["var_end"], "var_end"),
-    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "three_four_five"),
-    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "FIVE", "END"], "THREE FOUR FIVE"),
+    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "END"], "two_three_four"),
+    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "TWO THREE FOUR"),
 ])
 def test_sensor_key(table, var_type, variable, expected):
     sensor_key = Check('cmciii').context['sensor_key']
@@ -43,8 +33,7 @@ def test_sensor_key(table, var_type, variable, expected):
     ("temp", ["FooTemperature", "Var"], "Foo device"),
     ("temp", ["Temperature", "In-Var"], "Ambient device In"),
     ("temp", ["Temperature", "Out-Var"], "Ambient device Out"),
-    ("phase", ["", "Phase L A"], "device Phase A"),
-    ("phase", ["one", "Phase L A"], "device one Phase A"),
+    ("phase", ["Phase L A"], "device Phase A"),
     ("psm_plugs", ["one", "two"], "device one.two"),
     ("can_current", ["one", "two"], "device one.two"),
     ("other_sensors", ["one"], "device one"),

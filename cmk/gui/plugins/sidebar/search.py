@@ -74,6 +74,7 @@ class LivestatusResult:
     url: str
     row: Row
     display_text: str
+    context: str = ""
 
 
 @unique
@@ -464,12 +465,12 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
             for shortname, text in element.text_tokens:
                 if shortname in ["h", "al"] and text not in element.display_text:
-                    element.display_text += " <b>%s</b>" % text
+                    element.context = text
                     break
             else:
-                element.display_text += " <b>%s</b>" % hostname
+                element.context = hostname
 
-        return [SearchResult(title=e.display_text, url=e.url) for e in elements]
+        return [SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements]
 
     def _element_texts_unique(self, elements: List[LivestatusResult]) -> bool:
         used_texts: Set[str] = set()
@@ -742,7 +743,10 @@ class QuicksearchResultRenderer:
                 html.div(match_topic, class_="topic")
 
             for result in sorted(results, key=lambda x: x.title):
-                html.a(result.title, id="result_%s" % query, href=result.url, target="main")
+                html.open_a(id_="result_%s" % query, href=result.url, target="main")
+                html.write_text(result.title +
+                                (" %s" % html.render_b(result.context) if result.context else ""))
+                html.close_a()
 
 
 #   .--Quicksearch Plugins-------------------------------------------------.
@@ -1383,9 +1387,10 @@ class MenuSearchResultsRenderer:
             target="main",
             onclick=
             f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
-            title=result.title,
+            title=result.title + (" %s" % result.context if result.context else ""),
         )
-        html.write_text(result.title)
+        html.write_text(result.title +
+                        (" %s" % html.render_b(result.context) if result.context else ""))
         html.close_a()
         html.close_li()
 

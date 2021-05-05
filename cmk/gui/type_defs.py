@@ -187,6 +187,7 @@ class SearchResult:
     """Representation of a single result"""
     title: str
     url: str
+    context: str = ""
 
 
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]

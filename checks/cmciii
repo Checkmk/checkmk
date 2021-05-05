@@ -50,6 +50,8 @@ def sensor_type(variable):
         return "access"
     if "Humidity" in variable:
         return "humidity"
+    if variable[0] == "Air" and variable[1] == "Temperature":
+        return "temp_in_out"
     if ("Temperature" in variable or "Dew Point" in variable or
             variable[1].endswith("Temperature")):
         return "temp"
@@ -65,7 +67,7 @@ def sensor_type(variable):
 
 
 def sensor_item(table, variable, device):
-    if table == "temp":
+    if table in ["temp", "temp_in_out"]:
         item = variable[0].replace("Temperature", "")
         if item == "":
             item = "Ambient"
@@ -79,7 +81,7 @@ def sensor_item(table, variable, device):
             item.append(variable[0])
         item += ["Phase", variable[1].replace("Phase", "").replace("L", "").strip()]
         return " ".join(item)
-    if table in ("psm_plugs", "can_current"):
+    if table in ["psm_plugs", "can_current"]:
         return "%s %s" % (device, ".".join(variable))
     return "%s %s" % (device, variable[0])
 
@@ -139,6 +141,22 @@ def parse_devices_and_states(device_table):
     return devices, states
 
 
+def split_temp_in_out_sensors(sensors):
+    # the manual page of cmciii_temp_in_out explains why the sensors are split
+    in_out_sensors = {}
+    in_out_values = {'In-Bot', 'In-Mid', 'In-Top', 'Out-Bot', 'Out-Mid', 'Out-Top'}
+    for item, sensor in sensors.items():
+        template = {k: v for k, v in sensor.items() if k not in in_out_values}
+        for value in in_out_values:
+            in_out_item = "%s %s" % (
+                item,
+                value.replace('-', ' ').replace('Bot', 'Bottom').replace('Mid', 'Middle'),
+            )
+            in_out_sensors[in_out_item] = template.copy()
+            in_out_sensors[in_out_item]['Value'] = sensor[value]
+    return in_out_sensors
+
+
 def parse_cmciii(info):
     device_table, var_table = info
     devices, states = parse_devices_and_states(device_table)
@@ -175,23 +193,7 @@ def parse_cmciii(info):
         value = sensor_value(value_str, value_int, scale, var_type, var_unit)
         parsed[type_][item].setdefault(key, value)
 
-    to_delete = set()
-    for item, attrs in parsed.get("temp", {}).items():
-        for attr, val in attrs.items():
-            if attr.startswith("In-") or attr.startswith("Out-"):
-                item_in_out = "%s %s" % (item, attr.replace("-", " ").replace(
-                    "Bot", "Bottom").replace("Mid", "Middle"))
-                parsed["temp_in_out"].setdefault(
-                    item_in_out,
-                    {
-                        "Value": val,
-                        "_device_": device,
-                        "_location_": location
-                    },
-                )
-                to_delete.add(item)
-    for item in to_delete:
-        del parsed["temp"][item]
+    parsed['temp_in_out'] = split_temp_in_out_sensors(parsed.pop('temp_in_out'))
 
     return parsed
 

@@ -96,6 +96,7 @@ agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
+local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_notifications_dir = _local_path(notifications_dir)
 local_inventory_dir = _local_path(inventory_dir)
 local_check_manpages_dir = _local_path(check_manpages_dir)

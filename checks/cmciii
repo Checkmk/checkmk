@@ -66,8 +66,8 @@ def sensor_type(variable):
     return None
 
 
-def sensor_item(table, variable, device):
-    if table in ["temp", "temp_in_out"]:
+def sensor_item(sensor_type, variable, device):
+    if sensor_type in ["temp", "temp_in_out"]:
         item = variable[0].replace("Temperature", "")
         if item == "":
             item = "Ambient"
@@ -75,19 +75,19 @@ def sensor_item(table, variable, device):
         if variable[-1].startswith("In-") or variable[-1].startswith("Out-"):
             item += " %s" % variable[-1].split("-")[0]
         return item
-    if table == "phase":
+    if sensor_type == "phase":
         item = [device]
         if variable[0]:
             item.append(variable[0])
         item += ["Phase", variable[1].replace("Phase", "").replace("L", "").strip()]
         return " ".join(item)
-    if table in ["psm_plugs", "can_current"]:
+    if sensor_type in ["psm_plugs", "can_current"]:
         return "%s %s" % (device, ".".join(variable))
     return "%s %s" % (device, variable[0])
 
 
-def sensor_key(table, var_type, variable):
-    if table != "phase":
+def sensor_key(sensor_type, var_type, variable):
+    if sensor_type != "phase":
         return variable[-1]
 
     if var_type != "2":

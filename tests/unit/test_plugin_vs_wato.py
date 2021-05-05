@@ -439,7 +439,6 @@ class ErrorReporter:
         ('check', 'fortigate_antivirus', 'checkgroup_parameters:fortigate_antivirus'),
         ('check', 'fortigate_ips', 'checkgroup_parameters:fortigate_ips'),
         ('check', 'fortigate_ipsecvpn', 'checkgroup_parameters:ipsecvpn'),
-        ('check', 'fortigate_memory_base', 'checkgroup_parameters:memory'),
         ('check', 'fortigate_memory', 'checkgroup_parameters:memory'),
         ('check', 'fortigate_node_sessions', 'checkgroup_parameters:fortigate_node_sessions'),
         ('check', 'fortigate_sessions_base', 'checkgroup_parameters:fortigate_sessions'),

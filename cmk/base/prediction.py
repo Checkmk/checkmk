@@ -222,7 +222,6 @@ def _std_dev(point_line: List[float], average: float) -> float:
 
 def _is_prediction_up_to_date(
     pred_file: str,
-    timegroup: Timegroup,
     params: _PredictionParameters,
 ) -> bool:
     """Check, if we need to (re-)compute the prediction file.
@@ -232,14 +231,14 @@ def _is_prediction_up_to_date(
     - the prediction from the last time is outdated
     - the prediction from the last time was made with other parameters
     """
-    last_info = cmk.utils.prediction.retrieve_info_for_prediction(pred_file + ".info", timegroup)
+    last_info = cmk.utils.prediction.retrieve_info_for_prediction(pred_file + ".info")
     if last_info is None:
         return False
 
     period_info = _PREDICTION_PERIODS[params["period"]]
     now = time.time()
     if last_info.time + period_info.valid * period_info.slice < now:
-        logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
+        logger.log(VERBOSE, "Prediction of %s outdated", os.path.basename(pred_file))
         return False
 
     jsonized_params = json.loads(json.dumps(params))
@@ -274,8 +273,8 @@ def get_levels(
     cmk.utils.prediction.clean_prediction_files(pred_file)
 
     data_for_pred: Optional[PredictionData] = None
-    if _is_prediction_up_to_date(pred_file, timegroup, params):
-        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
+    if _is_prediction_up_to_date(pred_file, params):
+        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file)
 
     if data_for_pred is None:
         logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)

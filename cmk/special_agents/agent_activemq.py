@@ -7,12 +7,14 @@
 import getopt
 import sys
 import xml.etree.ElementTree as ET
+from argparse import ArgumentError
+from typing import Optional, Sequence
 
 from requests.auth import HTTPBasicAuth
-from cmk.special_agents.utils.request_helper import (
-    create_api_connect_session,
-    parse_api_url,
-)
+
+from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
 
 
 def usage():
@@ -22,55 +24,63 @@ def usage():
     )
 
 
-def main(sys_argv=None):
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
-
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     short_options = ""
     long_options = ["piggyback", "servername=", "port=", "username=", "password="]
 
     try:
-        opts, _args = getopt.getopt(sys_argv, short_options, long_options)
+        opts, _args = getopt.getopt(
+            list(argv) if argv else [],
+            short_options,
+            long_options,
+        )
     except getopt.GetoptError as err:
         usage()
         sys.stderr.write("%s\n" % err)
-        return 1
+        raise ArgumentError
 
-    opt_servername = None
-    opt_port = None
-    opt_username = None
-    opt_password = None
-    opt_piggyback_mode = False
-    opt_protocol = "http"
+    args = Args(
+        opt_servername=None,
+        opt_port=None,
+        opt_username=None,
+        opt_password=None,
+        opt_piggyback_mode=False,
+        opt_protocol="http",
+        verbose=False,
+    )
 
     for o, a in opts:
         if o in ['--piggyback']:
-            opt_piggyback_mode = True
+            args.opt_piggyback_mode = True
         elif o in ['--servername']:
-            opt_servername = a
+            args.opt_servername = a
         elif o in ['--port']:
-            opt_port = a
+            args.opt_port = a
         elif o in ['--username']:
-            opt_username = a
+            args.opt_username = a
         elif o in ['--password']:
-            opt_password = a
+            args.opt_password = a
         elif o in ['--protocol']:
-            opt_protocol = a
+            args.opt_protocol = a
 
-    if not opt_servername or not opt_port:
+    if not args.opt_servername or not args.opt_port:
         usage()
-        return 1
+        raise ArgumentError
 
+    return args
+
+
+def agent_activemq_main(args: Args) -> None:
     api_url = parse_api_url(
-        server_address=opt_servername,
+        server_address=args.opt_servername,
         api_path="/admin/xml/",
-        port=opt_port,
-        protocol=opt_protocol,
+        port=args.opt_port,
+        protocol=args.opt_protocol,
     )
 
     auth = None
-    if opt_username:
-        auth = HTTPBasicAuth(opt_username, opt_password)
+    if args.opt_username:
+        auth = HTTPBasicAuth(args.opt_username, args.opt_password)
 
     session = create_api_connect_session(api_url, auth=auth)
 
@@ -83,18 +93,18 @@ def main(sys_argv=None):
         data = ET.fromstring(xml)
     except Exception as e:
         sys.stderr.write("Unable to connect. Credentials might be incorrect: %s\n" % e)
-        return 1
+        return
 
     attributes = ['size', 'consumerCount', 'enqueueCount', 'dequeueCount']
     count = 0
     output_lines = []
     try:
-        if not opt_piggyback_mode:
+        if not args.opt_piggyback_mode:
             output_lines.append("<<<mq_queues>>>")
 
         for line in data:
             count += 1
-            if opt_piggyback_mode:
+            if args.opt_piggyback_mode:
                 output_lines.append("<<<<%s>>>>" % line.get('name'))
                 output_lines.append("<<<mq_queues>>>")
             output_lines.append("[[%s]]" % line.get('name'))
@@ -104,12 +114,20 @@ def main(sys_argv=None):
                 values += "%s " % stats[0].get(job)
             output_lines.append(values)
 
-        if opt_piggyback_mode:
+        if args.opt_piggyback_mode:
             output_lines.append("<<<<>>>>")
             output_lines.append("<<<local:sep(0)>>>")
             output_lines.append("0 Active_MQ - Found %s Queues in total" % count)
     except Exception as e:  # Probably an IndexError
         sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)
-        return 1
+        return
 
     print("\n".join(output_lines))
+
+
+def main() -> None:
+    """Main entry point to be used """
+    special_agent_main(
+        parse_arguments,
+        agent_activemq_main,
+    )

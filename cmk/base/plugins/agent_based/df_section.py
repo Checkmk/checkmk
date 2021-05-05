@@ -10,14 +10,7 @@ from contextlib import suppress
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 
-DfBlock = NamedTuple("DfBlock", [
-    ("device", str),
-    ("fs_type", Optional[str]),
-    ("size_mb", float),
-    ("avail_mb", float),
-    ("reserved_mb", float),
-    ("mountpoint", str),
-])
+from cmk.base.plugins.agent_based.utils.df import DfBlock
 
 DfInode = NamedTuple("DfInode", [
     ("device", Optional[str]),
@@ -65,7 +58,7 @@ def _processed(
         if device in seen_btrfs_devices:
             return None
         seen_btrfs_devices.add(device)
-        mountpoint = "btrfs " + device
+        mountpoint = ""
     else:
         # Windows \ is replaced with /
         mountpoint = " ".join(rest).replace('\\', '/')
@@ -142,7 +135,7 @@ def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsect
     ...   for l in s:
     ...     print(l)
     ==
-    DfBlock(device='/dev/mapper/vgsystem-lvroot', fs_type='btrfs', size_mb=20480.0, avail_mb=9660.4375, reserved_mb=426.4375, mountpoint='btrfs /dev/mapper/vgsystem-lvroot')
+    DfBlock(device='/dev/mapper/vgsystem-lvroot', fs_type='btrfs', size_mb=20480.0, avail_mb=9660.4375, reserved_mb=426.4375, mountpoint='')
     DfBlock(device='tmpfs', fs_type='tmpfs', size_mb=3193.125, avail_mb=3190.4375, reserved_mb=0.0, mountpoint='/run')
     DfBlock(device='/dev/nvme0n1p1', fs_type='vfat', size_mb=510.984375, avail_mb=504.94140625, reserved_mb=0.0, mountpoint='/boot/efi')
     ==

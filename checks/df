@@ -15,6 +15,8 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+from cmk.base.plugins.agent_based.utils.df import DfBlock
+
 inventory_df_rules = []
 inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
 
@@ -59,6 +61,33 @@ def _prepare_item_name(entry, include_device_name):
     return entry.mountpoint
 
 
+def _handle_btrfs(df_blocks):
+    # TODO What about df_inodes?
+    # Not sure but it seems that inodes of btrfs FS are always zero (seen in our data pool):
+    # /dev/sda1      btrfs         0     0      0     - /.snapshots
+    # /dev/sda1      btrfs         0     0      0     - /var/tm
+    # ...
+    handled_df_blocks = []
+    for df_block in df_blocks:
+        if df_block.fs_type == "btrfs":
+            # This particular bit of magic originated in Werk #2671 and has the purpose
+            # of avoiding duplicate checks.
+            # Compatibility: Before filtering/grouping/... we use '"btrfs " + device' as
+            # mountpoint - regardless which field for mountpoint is set in df_section.
+            # (there: it's just for identification).
+            df_block = DfBlock(
+                device=df_block.device,
+                fs_type=df_block.fs_type,
+                size_mb=df_block.size_mb,
+                avail_mb=df_block.avail_mb,
+                reserved_mb=df_block.reserved_mb,
+                mountpoint="btrfs " + df_block.device,
+            )
+
+        handled_df_blocks.append(df_block)
+    return handled_df_blocks
+
+
 def inventory_df(parsed):
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
     include_volume_name_settings = inventory_options.get("include_volume_name", False)
@@ -76,6 +105,7 @@ def inventory_df(parsed):
             grouping_behaviour = include_volume_name_settings[1]
 
     df_blocks, _df_inodes = parsed
+    df_blocks = _handle_btrfs(df_blocks)
     filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
 
     include_device_name = include_volume_name and grouping_behaviour == "volume_name_and_mountpoint"
@@ -121,6 +151,7 @@ def _get_mountpoint_from_item(item, params, df_blocks):
 
 def check_df(item, params, parsed):
     df_blocks, df_inodes = parsed
+    df_blocks = _handle_btrfs(df_blocks)
 
     include_device_name = False
     if "include_volume_name" not in params:

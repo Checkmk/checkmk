@@ -16,6 +16,7 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    NamedTuple,
 )
 import fnmatch
 from ..agent_based_api.v1.type_defs import CheckResult
@@ -27,6 +28,15 @@ from ..agent_based_api.v1 import (
     State,
 )
 from .size_trend import size_trend
+
+DfBlock = NamedTuple("DfBlock", [
+    ("device", str),
+    ("fs_type", Optional[str]),
+    ("size_mb", float),
+    ("avail_mb", float),
+    ("reserved_mb", float),
+    ("mountpoint", str),
+])
 
 FSBlock = Tuple[str, float, float, float]
 FSBlocks = Sequence[FSBlock]

@@ -1,0 +1,14 @@
+Title: slack: Fix ignored proxy option
+Level: 1
+Component: notifications
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p25
+Date: 1620206289
+Class: fix
+
+With werk #12857 the option to configure a proxy for notification method "Slack
+or Mattermost" was added.
+
+However, this option was not taken into account in version 1.6.0p24 when
+processing the notification.

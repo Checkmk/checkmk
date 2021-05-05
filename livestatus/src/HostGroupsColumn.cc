@@ -10,7 +10,7 @@
 #include "auth.h"
 
 #ifdef CMC
-#include "Object.h"
+#include "Host.h"
 #include "ObjectGroup.h"
 #else
 #include "nagios.h"
@@ -21,8 +21,8 @@ std::vector<std::string> HostGroupsColumn::getValue(
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> group_names;
 #ifdef CMC
-    if (const auto *object = columnData<Object>(row)) {
-        for (const auto &hg : object->_groups) {
+    if (const auto *host = columnData<Host>(row)) {
+        for (const auto &hg : host->_groups) {
             if (is_authorized_for_host_group(_mc->groupAuthorization(), hg,
                                              auth_user)) {
                 group_names.push_back(hg->name());

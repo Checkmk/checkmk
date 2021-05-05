@@ -30,6 +30,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
+    local_agent_based_plugins_dir,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
@@ -835,9 +836,15 @@ class AutomationRestart(Automation):
             return core_config.get_configuration_warnings()
 
     def _check_plugins_have_changed(self) -> bool:
-        this_time = self._last_modification_in_dir(local_checks_dir)
         last_time = self._time_of_last_core_restart()
-        return this_time > last_time
+        for checks_path in [
+                local_checks_dir,
+                local_agent_based_plugins_dir,
+        ]:
+            this_time = self._last_modification_in_dir(checks_path)
+            if this_time > last_time:
+                return True
+        return False
 
     def _last_modification_in_dir(self, dir_path: Path) -> float:
         max_time = os.stat(dir_path).st_mtime

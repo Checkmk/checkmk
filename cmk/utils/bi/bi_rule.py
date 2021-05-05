@@ -29,6 +29,7 @@ from cmk.utils.bi.bi_lib import (
     create_nested_schema_for_class,
     ABCWithSchema,
     ABCBISearcher,
+    ActionArgument,
 )
 
 from cmk.utils.bi.bi_rule_interface import (
@@ -106,7 +107,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
     def num_nodes(self) -> int:
         return len(self.nodes)
 
-    def compile(self, extern_arguments: List[str],
+    def compile(self, extern_arguments: ActionArgument,
                 bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         if self.computation_options.disabled:
             return []

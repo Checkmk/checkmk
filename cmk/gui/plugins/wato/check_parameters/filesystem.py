@@ -5,14 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
+
 from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
     ListOf,
     ListOfStrings,
     Transform,
-    CascadingDropdown,
     DropdownChoice,
     TextAscii,
     TextOrRegExpUnicode,
@@ -28,48 +29,81 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
 
+def _validate_discovery_filesystem_params(value, varprefix):
+    if (value.get("item_appearance") == "mountpoint" and
+            value.get("grouping_behaviour") != "mountpoint"):
+        raise MKUserError(
+            varprefix,
+            _("You cannot use mountpoint as item and grouping based on"
+              " volume name and mountpoint."))
+
+
+def _transform_discovery_filesystem_params(params):
+    include_volume_name = params.pop("include_volume_name", None)
+
+    if isinstance(include_volume_name, tuple):
+        params["item_appearance"] = "volume_name_and_mountpoint"
+        params["grouping_behaviour"] = include_volume_name[1]
+        return params
+
+    if include_volume_name is True:
+        params["item_appearance"] = "volume_name_and_mountpoint"
+        params["grouping_behaviour"] = "mountpoint"
+        return params
+
+    if include_volume_name is False:
+        params["item_appearance"] = "mountpoint"
+        params["grouping_behaviour"] = "mountpoint"
+        return params
+
+    return params
+
+
 def _valuespec_inventory_df_rules():
-    return Dictionary(
-        title=_("Filesystem discovery"),
-        elements=[
-            ("include_volume_name",
-             Transform(
-                 CascadingDropdown(
-                     title=_("Service description format"),
-                     choices=
-                     [(False, _("Name of mount point")),
-                      (True, _("Name of volume and name of mount point"),
-                       DropdownChoice(
-                           label=_("Filesystem grouping"),
-                           choices=[
-                               ('mountpoint', _('Grouping pattern applies to mount point only')),
-                               ('volume_name_and_mountpoint',
-                                _('Grouping pattern applies to volume name and mount point')),
-                           ],
-                           help=_(
-                               "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a> "
-                               "feature processes this filesystem."),
-                       ))]),
-                 forth=lambda x: (True, "mountpoint") if x is True else x,
-             )),
-            ("ignore_fs_types",
-             ListChoice(title=_("Filesystem types to ignore"),
-                        choices=[
-                            ("tmpfs", "tmpfs"),
-                            ("nfs", "nfs"),
-                            ("smbfs", "smbfs"),
-                            ("cifs", "cifs"),
-                            ("iso9660", "iso9660"),
-                        ],
-                        default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
-            ("never_ignore_mountpoints",
-             ListOf(
-                 TextOrRegExpUnicode(),
-                 title=_("Mountpoints to never ignore"),
-                 help=_(
-                     "Regardless of filesystem type, these mountpoints will always be discovered."
-                     "Regular expressions are supported."))),
-        ],
+    return Transform(
+        Dictionary(
+            title=_("Filesystem discovery"),
+            elements=[
+                ("item_appearance",
+                 DropdownChoice(
+                     title=_("Item appaerance"),
+                     choices=[
+                         ("mountpoint", _("Use mountpoint")),
+                         ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
+                     ],
+                 )),
+                ("grouping_behaviour",
+                 DropdownChoice(
+                     title=_("Grouping applies to"),
+                     choices=[
+                         ("mountpoint", _("mountpoint only")),
+                         ("volume_name_and_mountpoint", _("volume name and mountpoint")),
+                     ],
+                     help=_(
+                         "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a>"
+                         " feature processes this filesystem."),
+                 )),
+                ("ignore_fs_types",
+                 ListChoice(title=_("Filesystem types to ignore"),
+                            choices=[
+                                ("tmpfs", "tmpfs"),
+                                ("nfs", "nfs"),
+                                ("smbfs", "smbfs"),
+                                ("cifs", "cifs"),
+                                ("iso9660", "iso9660"),
+                            ],
+                            default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
+                ("never_ignore_mountpoints",
+                 ListOf(
+                     TextOrRegExpUnicode(),
+                     title=_("Mountpoints to never ignore"),
+                     help=_(
+                         "Regardless of filesystem type, these mountpoints will always be discovered."
+                         "Regular expressions are supported."))),
+            ],
+            validate=_validate_discovery_filesystem_params,
+        ),
+        forth=_transform_discovery_filesystem_params,
     )
 
 

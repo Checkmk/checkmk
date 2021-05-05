@@ -21,19 +21,19 @@ discovery = {
         (
             'C:\\\\ C://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         (
             'SQL_Database_[GROUPME] D://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         (
             'Scratch_Volume_[GROUPME] E://',
             {
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
     ],
@@ -53,7 +53,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -79,7 +79,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -105,7 +105,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': True
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [
                 (
@@ -124,4 +124,4 @@ checks = {
 
 mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}  # old-style rule spec
 
-mock_host_conf_merged = {'': {'include_volume_name': True}}
+mock_host_conf_merged = {'': {"item_appearance": "volume_name_and_mountpoint",}}

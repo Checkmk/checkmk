@@ -103,31 +103,31 @@ discovery = {
             'group1',
             {'patterns': (['/opt/omd/sites/*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
         ),
         (
             'group2',
             {'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
         ),
         (
             'group3',
             {'patterns': (['*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
         ),
         (
             'group4',
             {'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
         ),
         (
             'group5',
             {'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
         ),
     ],
 }
@@ -138,7 +138,7 @@ checks = {
             'group1',
             {'patterns': (['/opt/omd/sites/*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
             [
                 (0,
                  '0.08% used (52.38 MB of 61.81 GB)',
@@ -157,7 +157,7 @@ checks = {
             'group2',
             {'patterns': (['/opt/omd/sites/site[12]/*', '/opt/omd/sites/site[3]/*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
             [
                 (0,
                  '0.08% used (18.95 MB of 23.18 GB)',
@@ -176,7 +176,7 @@ checks = {
             'group3',
             {'patterns': (['*'], []),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
             [
                 (0,
                  '22.24% used (69.64 of 313.09 GB)',
@@ -195,7 +195,7 @@ checks = {
             'group4',
             {'patterns': (['/opt/omd/sites/*'], ['/opt/omd/sites/site[2,4]/*']),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
             [
                 (0,
                  '0.08% used (39.75 MB of 46.36 GB)',
@@ -214,7 +214,7 @@ checks = {
             'group5',
             {'patterns': (['/opt/omd/sites/site1*', ''], ['/opt/omd/sites/site10/*', '']),
              'grouping_behaviour': 'mountpoint',
-             'include_volume_name': False},
+             "item_appearance": "mountpoint",},
             [
                 (0,
                  '0.08% used (6.31 MB of 7.73 GB)',

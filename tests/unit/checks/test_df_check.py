@@ -154,7 +154,7 @@ info_empty_inodes = [
                 (
                     '/',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -167,12 +167,12 @@ info_empty_inodes = [
                 (
                     '/',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
             {
-                "include_volume_name": False
+                "item_appearance": "mountpoint",
             },
         ),
         # Linux w/ volume name option:
@@ -182,12 +182,12 @@ info_empty_inodes = [
                 (
                     '/dev/sda4 /',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
             {
-                "include_volume_name": True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         # Windows:
@@ -197,19 +197,19 @@ info_empty_inodes = [
                 (
                     'E:/',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     'F:/',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     'C:/',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -222,24 +222,24 @@ info_empty_inodes = [
                 (
                     'New_Volume E:/',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     'New_Volume F:/',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     'C:\\ C:/',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
             {
-                "include_volume_name": True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         # Ignoring tmpfs:
@@ -263,7 +263,7 @@ info_empty_inodes = [
                 (
                     '/opt/omd/sites/heute/tmp',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -279,13 +279,13 @@ info_empty_inodes = [
                 (
                     '/opt/omd/sites/heute/tmp',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/dev/shm',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -300,19 +300,19 @@ info_empty_inodes = [
                 (
                     'tmpfs /opt/omd/sites/heute/tmp',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     'tmpfs /dev/shm',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
             {
                 "ignore_fs_types": ['nfs', 'smbfs', 'cifs', 'iso9660'],
-                "include_volume_name": True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         # Including only check mk tmpfs via regex
@@ -322,13 +322,13 @@ info_empty_inodes = [
                 (
                     'tmpfs /opt/omd/sites/heute/tmp',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
             {
                 "ignore_fs_types": ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
-                "include_volume_name": True,
+                "item_appearance": "volume_name_and_mountpoint",
                 "never_ignore_mountpoints": ['~.*/omd/sites/[^/]+/tmp$']
             },
         ),
@@ -340,7 +340,7 @@ info_empty_inodes = [
                 (
                     'btrfs /dev/sda1',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -353,12 +353,12 @@ info_empty_inodes = [
                 (
                     '/dev/sda1 btrfs /dev/sda1',
                     {
-                        "include_volume_name": True
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
             {
-                "include_volume_name": True
+                "item_appearance": "volume_name_and_mountpoint",
             },
         ),
         # empty inodes:
@@ -370,13 +370,13 @@ info_empty_inodes = [
                 (
                     '/var/lib/docker',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/var/lib/docker-latest',
                     {
-                        "include_volume_name": False
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
@@ -552,121 +552,121 @@ info_df_groups = [
                 (
                     '/',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/foo',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/bar',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": False,
+                "item_appearance": "mountpoint",
             },
             [],
             [
                 (
                     '/',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/foo',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     '/bar',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": True,
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [],
             [
                 (
                     '/dev/sda1 /',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": (True, "volume_name_and_mountpoint"),
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [],
             [
                 (
                     '/dev/sda1 /',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
@@ -683,7 +683,7 @@ info_df_groups = [
                 (
                     'my-group',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                         "grouping_behaviour": "mountpoint",
                         "patterns": (['/', '/foo'], ['/bar']),
                     },
@@ -691,20 +691,20 @@ info_df_groups = [
                 (
                     '/bar',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
-                        "include_volume_name": False,
+                        "item_appearance": "mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": (True, "mountpoint"),
+                "item_appearance": "volume_name_and_mountpoint",
             },
             [[{
                 'group_name': 'my-group',
@@ -715,7 +715,7 @@ info_df_groups = [
                 (
                     'my-group',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "mountpoint",
                         "patterns": (['/', '/foo'], ['/bar']),
                     },
@@ -723,20 +723,20 @@ info_df_groups = [
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": (True, "mountpoint"),
+                "item_appearance": "volume_name_and_mountpoint",
             },
             # groups do not apply
             [[{
@@ -748,32 +748,33 @@ info_df_groups = [
                 (
                     '/dev/sda1 /',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": (True, "volume_name_and_mountpoint"),
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
             },
             [[{
                 'group_name': 'my-group',
@@ -784,7 +785,7 @@ info_df_groups = [
                 (
                     'my-group',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "volume_name_and_mountpoint",
                         "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
                     },
@@ -792,20 +793,21 @@ info_df_groups = [
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
         ),
         (
             {
-                "include_volume_name": (True, "volume_name_and_mountpoint"),
+                "item_appearance": "volume_name_and_mountpoint",
+                "grouping_behaviour": "volume_name_and_mountpoint",
             },
             # groups do not apply
             [[{
@@ -817,25 +819,25 @@ info_df_groups = [
                 (
                     '/dev/sda1 /',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
-                        "include_volume_name": True,
+                        "item_appearance": "volume_name_and_mountpoint",
                     },
                 ),
             ],
@@ -880,7 +882,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             (0, "2 filesystems", []),
         ]),
         ({
-            "include_volume_name": False,
+            "item_appearance": "mountpoint",
             "grouping_behaviour": "mountpoint",
             "patterns": (['/', '/foo'], ['/bar']),
         }, [
@@ -892,7 +894,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             (0, "2 filesystems", []),
         ]),
         ({
-            "include_volume_name": True,
+            "item_appearance": "volume_name_and_mountpoint",
             "grouping_behaviour": "volume_name_and_mountpoint",
             "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
         }, [
@@ -905,14 +907,14 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
         ]),
         # unknowns; only happens if patterns are adapted without discovery
         ({
-            "include_volume_name": False,
+            "item_appearance": "mountpoint",
             "grouping_behaviour": "mountpoint",
             "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
         }, [
             (3, "No filesystem matching the patterns", []),
         ]),
         ({
-            "include_volume_name": True,
+            "item_appearance": "volume_name_and_mountpoint",
             "grouping_behaviour": "volume_name_and_mountpoint",
             "patterns": (['/', '/foo'], ['/bar']),
         }, [
@@ -920,7 +922,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
         ]),
         # mixed btrfs and mps
         ({
-            "include_volume_name": False,
+            "item_appearance": "mountpoint",
             "grouping_behaviour": "mountpoint",
             "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
         }, [
@@ -932,7 +934,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             (0, "2 filesystems", []),
         ]),
         ({
-            "include_volume_name": True,
+            "item_appearance": "volume_name_and_mountpoint",
             "grouping_behaviour": "volume_name_and_mountpoint",
             "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
                          ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
@@ -946,7 +948,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
         ]),
         # unknowns; only happens if patterns are adapted without discovery
         ({
-            "include_volume_name": False,
+            "item_appearance": "mountpoint",
             "grouping_behaviour": "mountpoint",
             "patterns": (['/dev/sda1 /', '/dev/sdb1 btrfs /dev/sdb1'
                          ], ['/dev/sda2 /foo', '/dev/sda3 /bar']),
@@ -954,7 +956,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
             (3, "No filesystem matching the patterns", []),
         ]),
         ({
-            "include_volume_name": True,
+            "item_appearance": "volume_name_and_mountpoint",
             "grouping_behaviour": "volume_name_and_mountpoint",
             "patterns": (['/', 'btrfs /dev/sdb1'], ['/foo', '/bar']),
         }, [

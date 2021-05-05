@@ -24,13 +24,13 @@ discovery = {
         (
             '/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
             },
         ),
         (
             '/boot',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
             },
         ),
     ]
@@ -380,7 +380,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
             },
             [
                 (
@@ -414,7 +414,7 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
             },
             [
                 (

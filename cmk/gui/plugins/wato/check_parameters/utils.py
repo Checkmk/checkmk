@@ -334,14 +334,31 @@ filesystem_elements: List[_Tuple[str, ValueSpec]] = fs_levels_elements \
                     + size_trend_elements
 
 
+def _transform_discovered_filesystem_params(params):
+    include_volume_name = params.pop("include_volume_name", None)
+    if include_volume_name is True:
+        params["item_appearance"] = "volume_name_and_mountpoint"
+    elif include_volume_name is False:
+        params["item_appearance"] = "mountpoint"
+    return params
+
+
 def vs_filesystem(extra_elements=None):
     if extra_elements is None:
         extra_elements = []
-    return Dictionary(
-        help=_("This ruleset allows to set parameters for space and inodes usage"),
-        elements=filesystem_elements + extra_elements,
-        hidden_keys=["flex_levels"],
-        ignored_keys=["patterns", "include_volume_name"],
+    return Transform(
+        Dictionary(
+            help=_("This ruleset allows to set parameters for space and inodes usage"),
+            elements=filesystem_elements + extra_elements,
+            hidden_keys=["flex_levels"],
+            ignored_keys=[
+                "patterns",
+                "include_volume_name",
+                "item_appearance",
+                "grouping_behaviour",
+            ],
+        ),
+        forth=_transform_discovered_filesystem_params,
     )
 
 

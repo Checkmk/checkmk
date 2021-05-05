@@ -31,7 +31,6 @@ class TCPFetcher(AgentFetcher):
         self,
         file_cache: DefaultAgentFileCache,
         *,
-        cluster: bool,
         cluster_nodes: Sequence[HostName],
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
@@ -39,7 +38,7 @@ class TCPFetcher(AgentFetcher):
         encryption_settings: Mapping[str, str],
         use_only_cache: bool,
     ) -> None:
-        super().__init__(file_cache, cluster, cluster_nodes, logging.getLogger("cmk.helper.tcp"))
+        super().__init__(file_cache, cluster_nodes, logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
@@ -60,7 +59,6 @@ class TCPFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "cluster": self.cluster,
             "cluster_nodes": self.cluster_nodes,
             "family": self.family,
             "address": self.address,

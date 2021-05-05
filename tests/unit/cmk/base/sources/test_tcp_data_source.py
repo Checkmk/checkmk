@@ -128,7 +128,6 @@ def test_attribute_defaults(mode, monkeypatch):
             "simulation": False,
             "use_outdated": False,
         },
-        "cluster": False,
         "cluster_nodes": (),
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),

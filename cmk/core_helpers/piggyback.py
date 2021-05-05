@@ -28,7 +28,6 @@ class PiggybackFetcher(AgentFetcher):
         self,
         file_cache: NoCache,
         *,
-        cluster: bool,
         cluster_nodes: Sequence[HostName],
         hostname: HostName,
         address: Optional[HostAddress],
@@ -36,7 +35,6 @@ class PiggybackFetcher(AgentFetcher):
     ) -> None:
         super().__init__(
             file_cache,
-            cluster,
             cluster_nodes,
             logging.getLogger("cmk.helper.piggyback"),
         )
@@ -55,7 +53,6 @@ class PiggybackFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "cluster": self.cluster,
             "cluster_nodes": self.cluster_nodes,
             "hostname": self.hostname,
             "address": self.address,

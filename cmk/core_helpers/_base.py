@@ -57,15 +57,18 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     def __init__(
         self,
         file_cache: FileCache,
-        cluster: bool,
         cluster_nodes: Sequence[HostName],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.file_cache: Final[FileCache[TRawData]] = file_cache
-        self.cluster: Final = cluster
         self.cluster_nodes: Final = cluster_nodes
         self._logger = logger
+
+    @property
+    def cluster(self) -> bool:
+        # The GUI takes care that there is no empty cluster.
+        return bool(self.cluster_nodes)
 
     @final
     @classmethod

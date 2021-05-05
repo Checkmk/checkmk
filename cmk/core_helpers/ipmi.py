@@ -48,13 +48,12 @@ class IPMIFetcher(AgentFetcher):
         self,
         file_cache: DefaultAgentFileCache,
         *,
-        cluster: bool,
         cluster_nodes: Sequence[HostName],
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],
         password: Optional[str],
     ) -> None:
-        super().__init__(file_cache, cluster, cluster_nodes, logging.getLogger("cmk.helper.ipmi"))
+        super().__init__(file_cache, cluster_nodes, logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
@@ -70,7 +69,6 @@ class IPMIFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "cluster": self.cluster,
             "cluster_nodes": self.cluster_nodes,
             "address": self.address,
             "username": self.username,

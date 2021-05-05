@@ -1500,7 +1500,7 @@ body.main.visible div.foldable .title {
 .hot body.main .popup_menu span,
 body.main .popup_menu .hot span {
   color: $hot-font-color;
-  background-color: $hot-bg-color;
+  background-color: $hot-bg-color !important;
   border-color: $color-nuance-16;
 }
 

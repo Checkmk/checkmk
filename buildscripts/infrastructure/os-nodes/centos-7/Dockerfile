@@ -13,7 +13,6 @@ RUN yum -y --enablerepo=extras install \
     dpkg \
     enchant \
     gcc \
-    gcc-c++ \
     git \
     krb5-devel \
     make \

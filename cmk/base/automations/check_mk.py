@@ -22,13 +22,27 @@ from six import ensure_binary
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
-import cmk.utils.paths
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException, MKBailOut
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.paths import (
+    autochecks_dir,
+    counters_dir,
+    data_source_cache_dir,
+    discovered_host_labels_dir,
+    local_checks_dir,
+    logwatch_dir,
+    nagios_startscript,
+    omd_root,
+    precompiled_hostchecks_dir,
+    snmpwalks_dir,
+    tcp_cache_dir,
+    tmp_dir,
+    var_dir,
+)
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -345,7 +359,7 @@ class AutomationRenameHosts(Automation):
 
     def _core_is_running(self) -> bool:
         if config.monitoring_core == "nagios":
-            command = cmk.utils.paths.nagios_startscript + " status >/dev/null 2>&1"
+            command = nagios_startscript + " status >/dev/null 2>&1"
         else:
             command = "omd status cmc >/dev/null 2>&1"
         code = os.system(command)  # nosec
@@ -354,47 +368,46 @@ class AutomationRenameHosts(Automation):
     def _rename_host_files(self, oldname: HistoryFile, newname: HistoryFile) -> List[str]:
         actions = []
 
-        if self._rename_host_file(cmk.utils.paths.autochecks_dir, oldname + ".mk", newname + ".mk"):
+        if self._rename_host_file(autochecks_dir, oldname + ".mk", newname + ".mk"):
             actions.append("autochecks")
 
-        if self._rename_host_file(str(cmk.utils.paths.discovered_host_labels_dir), oldname + ".mk",
+        if self._rename_host_file(str(discovered_host_labels_dir), oldname + ".mk",
                                   newname + ".mk"):
             actions.append("host-labels")
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
-            if self._rename_host_file(cmk.utils.paths.tmp_dir + "/" + d + "/", oldname, newname):
+            if self._rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
                 actions.append(d)
 
-        if self._rename_host_dir(cmk.utils.paths.tmp_dir + "/piggyback/", oldname, newname):
+        if self._rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
             actions.append("piggyback-load")
 
         # Rename piggy files *created* by the host
-        piggybase = cmk.utils.paths.tmp_dir + "/piggyback/"
+        piggybase = tmp_dir + "/piggyback/"
         if os.path.exists(piggybase):
             for piggydir in os.listdir(piggybase):
                 if self._rename_host_file(piggybase + piggydir, oldname, newname):
                     actions.append("piggyback-pig")
 
         # Logwatch
-        if self._rename_host_dir(cmk.utils.paths.logwatch_dir, oldname, newname):
+        if self._rename_host_dir(logwatch_dir, oldname, newname):
             actions.append("logwatch")
 
         # SNMP walks
-        if self._rename_host_file(cmk.utils.paths.snmpwalks_dir, oldname, newname):
+        if self._rename_host_file(snmpwalks_dir, oldname, newname):
             actions.append("snmpwalk")
 
         # HW/SW-Inventory
-        if self._rename_host_file(cmk.utils.paths.var_dir + "/inventory", oldname, newname):
-            self._rename_host_file(cmk.utils.paths.var_dir + "/inventory", oldname + ".gz",
-                                   newname + ".gz")
+        if self._rename_host_file(var_dir + "/inventory", oldname, newname):
+            self._rename_host_file(var_dir + "/inventory", oldname + ".gz", newname + ".gz")
             actions.append("inv")
 
-        if self._rename_host_dir(cmk.utils.paths.var_dir + "/inventory_archive", oldname, newname):
+        if self._rename_host_dir(var_dir + "/inventory_archive", oldname, newname):
             actions.append("invarch")
 
         # Baked agents
-        baked_agents_dir = cmk.utils.paths.var_dir + "/agents/"
+        baked_agents_dir = var_dir + "/agents/"
         have_renamed_agent = False
         if os.path.exists(baked_agents_dir):
             for opsys in os.listdir(baked_agents_dir):
@@ -404,7 +417,7 @@ class AutomationRenameHosts(Automation):
             actions.append("agent")
 
         # Agent deployment
-        deployment_dir = cmk.utils.paths.var_dir + "/agent_deployment/"
+        deployment_dir = var_dir + "/agent_deployment/"
         if self._rename_host_file(deployment_dir, oldname, newname):
             actions.append("agent_deployment")
 
@@ -434,33 +447,30 @@ class AutomationRenameHosts(Automation):
         actions = []
 
         # Temporarily stop processing of performance data
-        npcd_running = os.path.exists(cmk.utils.paths.omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+        npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
         if npcd_running:
             os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
 
-        rrdcache_running = os.path.exists(cmk.utils.paths.omd_root + "/tmp/run/rrdcached.sock")
+        rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
         if rrdcache_running:
             os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
         try:
             # Fix pathnames in XML files
             self.rename_host_in_files(
-                os.path.join(cmk.utils.paths.omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
+                os.path.join(omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
                 "/perfdata/%s/" % oldregex, "/perfdata/%s/" % newname)
 
             # RRD files
-            if self._rename_host_dir(cmk.utils.paths.omd_root + "/var/pnp4nagios/perfdata", oldname,
-                                     newname):
+            if self._rename_host_dir(omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
                 actions.append("rrd")
 
             # RRD files
-            if self._rename_host_dir(cmk.utils.paths.omd_root + "/var/check_mk/rrd", oldname,
-                                     newname):
+            if self._rename_host_dir(omd_root + "/var/check_mk/rrd", oldname, newname):
                 actions.append("rrd")
 
             # entries of rrdcached journal
-            if self.rename_host_in_files(os.path.join(cmk.utils.paths.omd_root,
-                                                      "var/rrdcached/rrd.journal.*"),
+            if self.rename_host_in_files(os.path.join(omd_root, "var/rrdcached/rrd.journal.*"),
                                          "/(perfdata|rrd)/%s/" % oldregex,
                                          "/\\1/%s/" % newname,
                                          extended_regex=True):
@@ -469,11 +479,11 @@ class AutomationRenameHosts(Automation):
             # Spoolfiles of NPCD
             if (  #
                     self.rename_host_in_files(
-                        "%s/var/pnp4nagios/perfdata.dump" % cmk.utils.paths.omd_root,
+                        "%s/var/pnp4nagios/perfdata.dump" % omd_root,
                         "HOSTNAME::%s    " % oldregex,  #
                         "HOSTNAME::%s    " % newname) or  #
                     self.rename_host_in_files(
-                        "%s/var/pnp4nagios/spool/perfdata.*" % cmk.utils.paths.omd_root,
+                        "%s/var/pnp4nagios/spool/perfdata.*" % omd_root,
                         "HOSTNAME::%s    " % oldregex,  #
                         "HOSTNAME::%s    " % newname)):
                 actions.append("pnpspool")
@@ -488,7 +498,7 @@ class AutomationRenameHosts(Automation):
 
         # State retention (important for Downtimes, Acknowledgements, etc.)
         if config.monitoring_core == "nagios":
-            if self.rename_host_in_files("%s/var/nagios/retention.dat" % cmk.utils.paths.omd_root,
+            if self.rename_host_in_files("%s/var/nagios/retention.dat" % omd_root,
                                          "^host_name=%s$" % oldregex,
                                          "host_name=%s" % newname,
                                          extended_regex=True):
@@ -498,12 +508,11 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            open(cmk.utils.paths.var_dir + "/core/renamed_hosts",
-                 "w").write("%s\n%s\n" % (oldname, newname))
+            open(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
             actions.append("retention")
 
         # NagVis maps
-        if self.rename_host_in_files("%s/etc/nagvis/maps/*.cfg" % cmk.utils.paths.omd_root,
+        if self.rename_host_in_files("%s/etc/nagvis/maps/*.cfg" % omd_root,
                                      "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
                                      "host_name=%s" % newname,
                                      extended_regex=True):
@@ -537,7 +546,7 @@ class AutomationRenameHosts(Automation):
 
         file_paths: List[str] = []
         for path_pattern in path_patterns:
-            file_paths += glob.glob("%s/%s" % (cmk.utils.paths.omd_root, path_pattern))
+            file_paths += glob.glob("%s/%s" % (omd_root, path_pattern))
         return file_paths
 
     def _rename_host_in_core_history_files(self, file_paths: List[str], oldname: str,
@@ -761,20 +770,20 @@ class AutomationDeleteHosts(Automation):
 
         # single files
         for path in [
-                "%s/%s" % (cmk.utils.paths.precompiled_hostchecks_dir, hostname),
-                "%s/%s.py" % (cmk.utils.paths.precompiled_hostchecks_dir, hostname),
-                "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname),
-                "%s/%s" % (cmk.utils.paths.counters_dir, hostname),
-                "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname),
-                "%s/persisted/%s" % (cmk.utils.paths.var_dir, hostname),
-                "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname),
-                "%s/inventory/%s.gz" % (cmk.utils.paths.var_dir, hostname),
-                "%s/agent_deployment/%s" % (cmk.utils.paths.var_dir, hostname),
+                "%s/%s" % (precompiled_hostchecks_dir, hostname),
+                "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
+                "%s/%s.mk" % (autochecks_dir, hostname),
+                "%s/%s" % (counters_dir, hostname),
+                "%s/%s" % (tcp_cache_dir, hostname),
+                "%s/persisted/%s" % (var_dir, hostname),
+                "%s/inventory/%s" % (var_dir, hostname),
+                "%s/inventory/%s.gz" % (var_dir, hostname),
+                "%s/agent_deployment/%s" % (var_dir, hostname),
         ]:
             self._delete_if_exists(path)
 
         try:
-            ds_directories = os.listdir(cmk.utils.paths.data_source_cache_dir)
+            ds_directories = os.listdir(data_source_cache_dir)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 ds_directories = []
@@ -782,21 +791,20 @@ class AutomationDeleteHosts(Automation):
                 raise
 
         for data_source_name in ds_directories:
-            filename = "%s/%s/%s" % (cmk.utils.paths.data_source_cache_dir, data_source_name,
-                                     hostname)
+            filename = "%s/%s/%s" % (data_source_cache_dir, data_source_name, hostname)
             self._delete_if_exists(filename)
 
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code
-        baked_agents_dir = cmk.utils.paths.var_dir + "/agents/"
+        baked_agents_dir = var_dir + "/agents/"
         if os.path.exists(baked_agents_dir):
             for folder in os.listdir(baked_agents_dir):
                 self._delete_if_exists("%s/%s" % (folder, hostname))
 
         # logwatch and piggyback folders
         for what_dir in [
-                "%s/%s" % (cmk.utils.paths.logwatch_dir, hostname),
-                "%s/piggyback/%s" % (cmk.utils.paths.tmp_dir, hostname),
+                "%s/%s" % (logwatch_dir, hostname),
+                "%s/piggyback/%s" % (tmp_dir, hostname),
         ]:
             try:
                 shutil.rmtree(what_dir)
@@ -842,21 +850,21 @@ class AutomationRestart(Automation):
             return core_config.get_configuration_warnings()
 
     def _check_plugins_have_changed(self) -> bool:
-        this_time = self._last_modification_in_dir(str(cmk.utils.paths.local_checks_dir))
+        this_time = self._last_modification_in_dir(local_checks_dir)
         last_time = self._time_of_last_core_restart()
         return this_time > last_time
 
-    def _last_modification_in_dir(self, dir_path: str) -> float:
+    def _last_modification_in_dir(self, dir_path: Path) -> float:
         max_time = os.stat(dir_path).st_mtime
         for file_name in os.listdir(dir_path):
-            max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
+            max_time = max(max_time, os.stat(str(dir_path) + "/" + file_name).st_mtime)
         return max_time
 
     def _time_of_last_core_restart(self) -> float:
         if config.monitoring_core == "cmc":
-            pidfile_path = cmk.utils.paths.omd_root + "/tmp/run/cmc.pid"
+            pidfile_path = omd_root + "/tmp/run/cmc.pid"
         else:
-            pidfile_path = cmk.utils.paths.omd_root + "/tmp/lock/nagios.lock"
+            pidfile_path = omd_root + "/tmp/lock/nagios.lock"
 
         if os.path.exists(pidfile_path):
             return os.stat(pidfile_path).st_mtime
@@ -1353,7 +1361,7 @@ class AutomationActiveCheck(Automation):
 
     def _load_resource_file(self, macros: Dict[str, str]) -> None:
         try:
-            for line in open(cmk.utils.paths.omd_root + "/etc/nagios/resource.cfg"):
+            for line in open(omd_root + "/etc/nagios/resource.cfg"):
                 line = line.strip()
                 if not line or line[0] == '#':
                     continue

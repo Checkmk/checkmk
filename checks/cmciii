@@ -211,6 +211,10 @@ def inventory_cmciii_state(parsed):
 
 
 def check_cmciii_state(item, params, parsed):
+    entry = parsed["state"].get(item)
+    if not entry:
+        return
+
     map_states = {
         '1': (3, "not available"),
         '2': (0, "OK"),
@@ -220,9 +224,8 @@ def check_cmciii_state(item, params, parsed):
         '6': (2, "error"),
     }
 
-    if item in parsed["state"]:
-        state, state_readable = map_states[parsed["state"][item]["status"]]
-        return state, "Status: %s" % state_readable
+    state, state_readable = map_states[entry["status"]]
+    return state, "Status: %s" % state_readable
 
 
 check_info['cmciii'] = {
@@ -271,21 +274,19 @@ def inventory_cmciii_psm_current(parsed):
 
 
 def check_cmciii_psm_current(item, params, parsed):
-    if item in parsed.get("psm_current", {}):
-        attrs = parsed["psm_current"][item]
-        current = attrs["Value"]
-        min_current = attrs["SetPtHighAlarm"]
-        max_current = attrs["SetPtLowAlarm"]
+    entry = parsed["psm_current"].get(item)
+    if not entry:
+        return
 
-        if attrs["Status"] == "OK":
-            state = 0
-        else:
-            state = 2
+    current = entry["Value"]
+    min_current = entry["SetPtHighAlarm"]
+    max_current = entry["SetPtLowAlarm"]
 
-        return state, "Current: %s (%s/%s), Type: %s, Serial: %s, Position: %s" % \
-            (current, min_current, max_current, attrs["Unit Type"],
-             attrs["Serial Number"], attrs["Mounting Position"]), \
-            [("current", current, 0, 0, min_current, max_current)]
+    state = 0 if entry["Status"] == "OK" else 2
+    return state, "Current: %s (%s/%s), Type: %s, Serial: %s, Position: %s" % \
+        (current, min_current, max_current, entry["Unit Type"],
+            entry["Serial Number"], entry["Mounting Position"]), \
+        [("current", current, 0, 0, min_current, max_current)]
 
 
 check_info['cmciii.psm_current'] = {
@@ -312,13 +313,13 @@ def inventory_cmciii_psm_plugs(parsed):
 
 
 def check_cmciii_psm_plugs(item, params, parsed):
-    if item in parsed.get("psm_plugs", {}):
-        state_readable = parsed["psm_plugs"][item]["Status"]
-        if state_readable == "OK":
-            state = 0
-        else:
-            state = 2
-        return state, "Status: %s" % state_readable
+    entry = parsed["psm_plugs"].get(item)
+    if not entry:
+        return
+
+    state_readable = entry["Status"]
+    state = 0 if state_readable == "OK" else 0
+    return state, "Status: %s" % state_readable
 
 
 check_info['cmciii.psm_plugs'] = {
@@ -344,23 +345,23 @@ def inventory_cmciii_io(parsed):
 
 
 def check_cmciii_io(item, params, parsed):
-    if item not in parsed.get("io", {}):
+    entry = parsed["io"].get(item)
+    if not entry:
         return
 
-    attrs = parsed["io"][item]
-    state_readable = attrs["Status"]
+    state_readable = entry["Status"]
 
     infotext = "Status: %s" % state_readable
     for key in ["Logic", "Delay", "Relay"]:
-        if key in attrs:
-            infotext += ", %s: %s" % (key, attrs[key])
+        if key in entry:
+            infotext += ", %s: %s" % (key, entry[key])
 
     if state_readable in ["Open", "Closed"]:
         # Some door sensors have been mapped to Input instead of Access
         # by the vendor
         return {"Open": 1, "Closed": 0}[state_readable], infotext
 
-    if "Relay" in attrs:
+    if "Relay" in entry:
         if state_readable == "OK":
             return 0, infotext
         return 2, infotext
@@ -397,21 +398,24 @@ def inventory_cmciii_access(parsed):
 
 
 def check_cmciii_access(item, params, parsed):
-    if item in parsed.get("access", {}):
-        attrs = parsed["access"][item]
-        state_readable = attrs["Status"]
+    entry = parsed["access"].get(item)
+    if not entry:
+        return
 
-        if state_readable == "Closed":
-            state = 0
-        elif state_readable == "Open":
-            state = 1
-        else:
-            state = 2
+    state_readable = entry["Status"]
+    if state_readable == "Closed":
+        state = 0
+    elif state_readable == "Open":
+        state = 1
+    else:
+        state = 2
 
-        return state, "%s: %s, Delay: %s, Sensitivity: %s" % \
-            (attrs["DescName"], state_readable,
-             attrs["Delay"],
-             attrs["Sensitivity"])
+    return state, "%s: %s, Delay: %s, Sensitivity: %s" % (
+        entry["DescName"],
+        state_readable,
+        entry["Delay"],
+        entry["Sensitivity"],
+    )
 
 
 check_info['cmciii.access'] = {
@@ -443,20 +447,24 @@ def inventory_cmciii_temp(parsed):
 def check_cmciii_temp(item, params, parsed):
     # Fields from table 8.3.2 Temperature in "Assembly and operating instructions"
     # for software version V3.07.03.
-    if item in parsed.get("temp", {}):
-        attrs = parsed["temp"][item]
-        state, infotext, perfdata = check_temperature(
-            attrs["Value"],
-            params,
-            "cmciii.temp.%s" % item,
-            dev_levels=(attrs.get("SetPtHighWarning"), attrs.get("SetPtHighAlarm")),
-            dev_levels_lower=(attrs.get("SetPtLowWarning"), attrs.get("SetPtLowAlarm")),
-            dev_status_name=attrs.get("Status"))
+    entry = parsed["temp"].get(item)
+    if not entry:
+        return
 
-        descr = attrs.get("DescName", "").replace("Temperature", "")
-        if descr and descr not in item:
-            infotext = "[%s] %s" % (descr, infotext)
-        return state, infotext, perfdata
+    entry = parsed["temp"][item]
+    state, infotext, perfdata = check_temperature(
+        entry["Value"],
+        params,
+        "cmciii.temp.%s" % item,
+        dev_levels=(entry.get("SetPtHighWarning"), entry.get("SetPtHighAlarm")),
+        dev_levels_lower=(entry.get("SetPtLowWarning"), entry.get("SetPtLowAlarm")),
+        dev_status_name=entry.get("Status"),
+    )
+
+    descr = entry.get("DescName", "").replace("Temperature", "")
+    if descr and descr not in item:
+        infotext = "[%s] %s" % (descr, infotext)
+    return state, infotext, perfdata
 
 
 check_info['cmciii.temp'] = {
@@ -484,9 +492,10 @@ def inventory_cmciii_temp_in_out(parsed):
 
 
 def check_cmciii_temp_in_out(item, params, parsed):
-    if item in parsed.get("temp_in_out", {}):
-        attrs = parsed["temp_in_out"][item]
-        return check_temperature(attrs["Value"], params, "cmciii.temp_in_out.%s" % item)
+    entry = parsed["temp_in_out"].get(item)
+    if not entry:
+        return
+    return check_temperature(entry["Value"], params, "cmciii.temp_in_out.%s" % item)
 
 
 check_info['cmciii.temp_in_out'] = {
@@ -514,21 +523,19 @@ def inventory_cmciii_can_current(parsed):
 
 
 def check_cmciii_can_current(item, params, parsed):
-    if item in parsed.get("can_current", {}):
-        attrs = parsed["can_current"][item]
-        state_readable = attrs["Status"]
-        value = attrs["Value"]
-        warn = attrs["SetPtHighWarning"]
-        crit = attrs["SetPtHighAlarm"]
+    entry = parsed["can_current"].get(item)
+    if not entry:
+        return
 
-        if state_readable == "OK":
-            state = 0
-        else:
-            state = 2
+    state_readable = entry["Status"]
+    value = entry["Value"]
+    warn = entry["SetPtHighWarning"]
+    crit = entry["SetPtHighAlarm"]
 
-        return state, "Status: %s, Current: %s mA (warn/crit at %s/%s mA)" % \
-            (state_readable, value, warn, crit), \
-            [("current", value / 1000.0, warn, crit)]
+    state = 0 if state_readable == "OK" else 2
+    return state, "Status: %s, Current: %s mA (warn/crit at %s/%s mA)" % \
+        (state_readable, value, warn, crit), \
+        [("current", value / 1000.0, warn, crit)]
 
 
 check_info['cmciii.can_current'] = {
@@ -555,17 +562,14 @@ def inventory_cmciii_humidity(parsed):
 
 
 def check_cmciii_humidity(item, params, parsed):
-    if item in parsed.get("humidity", {}):
-        attrs = parsed["humidity"][item]
-        state_readable = attrs["Status"]
+    entry = parsed["humidity"].get(item)
+    if not entry:
+        return
 
-        if state_readable == "OK":
-            state = 0
-        else:
-            state = 2
-
-        yield state, "Status: %s" % state_readable
-        yield check_humidity(attrs["Value"], params)
+    state_readable = entry["Status"]
+    state = 0 if state_readable == "OK" else 2
+    yield state, "Status: %s" % state_readable
+    yield check_humidity(entry["Value"], params)
 
 
 check_info['cmciii.humidity'] = {

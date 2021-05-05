@@ -86,8 +86,9 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
             if color:
                 name = "%s %s" % (color.title(), name)
 
-        # fix trailing zero bytes (seen on HP Jetdirect 143)
+        # fix trailing zero bytes (seen on HP Jetdirect 143 and 153)
         description = name.split(" S/N:")[0].strip("\0")
+        color = color.rstrip("\0")
         unit = get_unit(unit_info)
 
         parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)
@@ -132,8 +133,7 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
 
     color_info = ""
     if supply.color and supply.color.lower() not in item.lower():
-        # fix trailing zero byte in output (seen on HP Jetdirect 153)
-        color_info = "[%s] " % supply.color.rstrip('\0')
+        color_info = "[%s] " % supply.color
 
     warn, crit = params["levels"]
 

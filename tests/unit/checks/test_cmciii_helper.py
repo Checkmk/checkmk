@@ -14,7 +14,7 @@ import pytest
     ("Phase.two", ["", "Phase", "", "two"]),
     ("Phase.two.three", ["", "Phase", "two", "three"]),
 ])
-def test_cmciii_container(variable, expected):
+def test_sanitize_variable(variable, expected):
     sanitize_variable = Check('cmciii').context['sanitize_variable']
     assert sanitize_variable(variable) == expected
 
@@ -23,7 +23,7 @@ def test_cmciii_container(variable, expected):
     "",
     "one",
 ])
-def test_cmciii_container_raises(variable):
+def test_sanitize_variable_raises(variable):
     sanitize_variable = Check('cmciii').context['sanitize_variable']
     with pytest.raises(IndexError):
         sanitize_variable(variable)
@@ -37,3 +37,24 @@ def test_cmciii_container_raises(variable):
 def test_sensor_key(table, var_type, variable, expected):
     sensor_key = Check('cmciii').context['sensor_key']
     assert sensor_key(table, var_type, variable) == expected
+
+
+@pytest.mark.parametrize("sensor_type, variable, expected", [
+    ("temp", ["FooTemperature", "Var"], "Foo device"),
+    ("temp", ["Temperature", "In-Var"], "Ambient device In"),
+    ("temp", ["Temperature", "Out-Var"], "Ambient device Out"),
+    ("phase", ["", "Phase L A"], "device Phase A"),
+    ("phase", ["one", "Phase L A"], "device one Phase A"),
+    ("psm_plugs", ["one", "two"], "device one.two"),
+    ("can_current", ["one", "two"], "device one.two"),
+    ("other_sensors", ["one"], "device one"),
+    ("other_sensors", ["one", "two"], "device one"),
+])
+def test_sensor_item(sensor_type, variable, expected):
+    sensor_item = Check('cmciii').context['sensor_item']
+    assert sensor_item(sensor_type, variable, "device") == expected
+
+
+def test_sensor_item_temp_in_out():
+    sensor_item = Check('cmciii').context['sensor_item']
+    assert sensor_item('temp_in_out', ['Air'], 'Liquid_Cooling_Package') == 'Air LCP'

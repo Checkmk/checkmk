@@ -10,6 +10,8 @@
 #include "auth.h"
 
 #ifdef CMC
+#include <unordered_set>
+
 #include "Host.h"
 #include "ObjectGroup.h"
 #else

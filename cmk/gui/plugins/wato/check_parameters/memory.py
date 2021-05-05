@@ -23,6 +23,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
     match_dual_level_type,)
 
 
+# if you refactor this: grep for "DualMemoryLevels"
 def _parameter_valuespec_memory():
     return Transform(
         Dictionary(
@@ -57,8 +58,8 @@ def _parameter_valuespec_memory():
                                     Tuple(
                                         title=_("Specify levels in absolute values"),
                                         elements=[
-                                            Integer(title=_("Warning at"), unit=_("MB")),
-                                            Integer(title=_("Critical at"), unit=_("MB"))
+                                            Integer(title=_("Warning at"), unit=_("MiB")),
+                                            Integer(title=_("Critical at"), unit=_("MiB"))
                                         ],
                                     ),
                                 ],
@@ -81,8 +82,8 @@ def _parameter_valuespec_memory():
                                     Tuple(
                                         title=_("Specify levels in absolute values"),
                                         elements=[
-                                            Integer(title=_("Warning if below"), unit=_("MB")),
-                                            Integer(title=_("Critical if below"), unit=_("MB"))
+                                            Integer(title=_("Warning if below"), unit=_("MiB")),
+                                            Integer(title=_("Critical if below"), unit=_("MiB"))
                                         ],
                                     ),
                                 ],),

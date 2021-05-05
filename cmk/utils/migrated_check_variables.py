@@ -32,6 +32,10 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
 # hr_mem (amongst others)
 memused_default_levels = (150.0, 200.0)
 
+fortigate_memory_base_default_levels = {
+    "levels": (70.0, 80.0),
+}
+
 # hp_proliant_power: see werk 10857
 hp_prolaint_power_default_levels = None  # yes, P R O L A I N T
 

@@ -64,7 +64,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
 
-    def webapi_request(self) -> Dict[str, str]:
+    def webapi_request(self) -> Dict[str, Any]:
         return html.get_request()
 
     @abc.abstractmethod

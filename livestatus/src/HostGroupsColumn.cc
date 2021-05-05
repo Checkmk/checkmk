@@ -24,7 +24,7 @@ std::vector<std::string> HostGroupsColumn::getValue(
     std::vector<std::string> group_names;
 #ifdef CMC
     if (const auto *host = columnData<Host>(row)) {
-        for (const auto &hg : host->_groups) {
+        for (const auto *hg : host->groups()) {
             if (is_authorized_for_host_group(_mc->groupAuthorization(), hg,
                                              auth_user)) {
                 group_names.push_back(hg->name());

@@ -164,15 +164,14 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
-        return "".join((
-            f"{type(self).__name__}(",
+        return f"{type(self).__name__}(" + ", ".join((
             f"{self.hostname}",
             f"base_path={self.base_path}",
             f"max_age={self.max_age}",
             f"disabled={self.disabled}",
             f"use_outdated={self.use_outdated}",
             f"simulation={self.simulation}",
-        ))
+        )) + ")"
 
     def __hash__(self) -> int:
         *_rest, last = itertools.accumulate(

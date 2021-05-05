@@ -37,6 +37,7 @@ RUN apt-get update \
     build-essential \
     chrpath \
     curl \
+    default-jdk \
     devscripts \
     dnsutils \
     dpatch \

@@ -591,6 +591,9 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation-quick
 endif
 
+sw-documentation-docker:
+	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
+
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really

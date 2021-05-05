@@ -54,6 +54,8 @@ node (NODE) {
         def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
         def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
+        def CHANGED_SW_DOC_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
         def WORKDIR="${WORKSPACE}/tmp"
@@ -64,6 +66,7 @@ node (NODE) {
         print "Changed core files: ${CHANGED_CORE_FILES}"
         print "Changed JS files: ${CHANGED_JS_FILES}"
         print "Changed CSS files: ${CHANGED_CSS_FILES}"
+        print "Changed SW Documentation files: ${CHANGED_SW_DOC_FILES}"
 
         //Add description to the build
         gerrit_stages.desc_init()
@@ -235,6 +238,15 @@ node (NODE) {
             COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt",
             TEXT_ON_SKIP: 'No core files changed. Skipping.'
          )
+
+        gerrit_stages.run(
+            NAME: 'Software Documentation Generation',
+            CONDITION: CHANGED_SW_DOC_FILES != "",
+            DIR: '',
+            ENV_VARS: [],
+            COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt",
+            TEXT_ON_SKIP: 'No SW Documentation files changed. Skipping.'
+        )
     } catch (e) {
         currentBuild.result = "FAILED"
         throw e

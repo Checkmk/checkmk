@@ -28,6 +28,7 @@ class Service;
 #endif
 
 class ServiceListState {
+    // TODO(sp) Actually we want an input_range of services.
 #ifdef CMC
     using value_type = std::unordered_set<const Service *>;
 #else
@@ -73,11 +74,7 @@ public:
     }
     int32_t operator()(const ObjectGroup<Service> &g,
                        const contact *auth_user) const {
-        auto v = value_type(g.size());
-        for (const auto &e : g) {
-            v.emplace(dynamic_cast<value_type::value_type>(e));
-        }
-        return (*this)(v, auth_user);
+        return (*this)(value_type{g.begin(), g.end()}, auth_user);
     }
 #else
     int32_t operator()(const host &hst, const contact *auth_user) const {

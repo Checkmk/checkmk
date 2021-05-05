@@ -8,11 +8,10 @@
 #ifdef CMC
 #include <algorithm>
 
-#include "Host.h"
+#include "Host.h"         // IWYU pragma: keep
 #include "ObjectGroup.h"  // IWYU pragma: keep
-#include "Service.h"
+#include "Service.h"      // IWYU pragma: keep
 #include "cmc.h"
-class Object;
 #endif
 
 namespace {
@@ -80,17 +79,14 @@ bool is_authorized_for_host_group(GroupAuthorization group_auth,
     if (ctc == unknown_auth_user()) {
         return false;
     }
-#ifdef CMC
-    auto is_authorized_for = [=](const Object *obj) {
-        return is_authorized_for_hst(ctc, static_cast<const Host *>(obj));
+    auto is_authorized_for = [=](const host *hst) {
+        return is_authorized_for_hst(ctc, hst);
     };
+#ifdef CMC
     return group_auth == GroupAuthorization::loose
                ? std::any_of(hg->begin(), hg->end(), is_authorized_for)
                : std::all_of(hg->begin(), hg->end(), is_authorized_for);
 #else
-    auto is_authorized_for = [=](const host *hst) {
-        return is_authorized_for_hst(ctc, hst);
-    };
     if (group_auth == GroupAuthorization::loose) {
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
             if (is_authorized_for(mem->host_ptr)) {
@@ -118,18 +114,14 @@ bool is_authorized_for_service_group(GroupAuthorization group_auth,
     if (ctc == unknown_auth_user()) {
         return false;
     }
-#ifdef CMC
-    auto is_authorized_for = [=](const Object *obj) {
-        return is_authorized_for_svc(service_auth, ctc,
-                                     static_cast<const Service *>(obj));
+    auto is_authorized_for = [=](const service *svc) {
+        return is_authorized_for_svc(service_auth, ctc, svc);
     };
+#ifdef CMC
     return group_auth == GroupAuthorization::loose
                ? std::any_of(sg->begin(), sg->end(), is_authorized_for)
                : std::all_of(sg->begin(), sg->end(), is_authorized_for);
 #else
-    auto is_authorized_for = [=](const service *svc) {
-        return is_authorized_for_svc(service_auth, ctc, svc);
-    };
     if (group_auth == GroupAuthorization::loose) {
         for (const auto *mem = sg->members; mem != nullptr; mem = mem->next) {
             if (is_authorized_for(mem->service_ptr)) {

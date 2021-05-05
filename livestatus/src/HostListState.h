@@ -27,6 +27,7 @@ class Host;
 #endif
 
 class HostListState {
+    // TODO(sp) Actually we want an input_range of hosts.
 #ifdef CMC
     using value_type = std::unordered_set<const Host *>;
 #else
@@ -73,11 +74,7 @@ public:
 #ifdef CMC
     int32_t operator()(const ObjectGroup<Host> &g,
                        const contact *auth_user) const {
-        auto v = value_type(g.size());
-        for (const auto &e : g) {
-            v.emplace(dynamic_cast<value_type::value_type>(e));
-        }
-        return (*this)(v, auth_user);
+        return (*this)(value_type{g.begin(), g.end()}, auth_user);
     }
 #else
     int32_t operator()(const hostgroup &g, const contact *auth_user) const {

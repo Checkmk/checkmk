@@ -27795,11 +27795,11 @@ msgstr "Lookups/sek"
 msgid "Loop duration"
 msgstr "Dauer der Schleife"
 
-msgid "Loose - Contacts for hosts see all services"
-msgstr "Lasch - Kontakte von Hosts können alle Services sehen"
+msgid "Loose - Visible if at least one member is visible"
+msgstr ""
 
-msgid "Loose - Sufficient to be contact for one member"
-msgstr "Lasch - Es genügt von einem Mitglied Kontakt zu sein"
+msgid "Loose - Visible if user is contact for the service or its host"
+msgstr ""
 
 msgid "Loss of signal errors"
 msgstr "Signalverlust-Fehler"
@@ -43655,10 +43655,12 @@ msgstr "Straßenname"
 msgid "Street number"
 msgstr "Hausnummer"
 
-msgid "Strict - Must be contact of all members"
+#, fuzzy
+msgid "Strict - Visible if all members are visible"
 msgstr "Strikt - Muss Kontakt von allen Mitgliedern sein"
 
-msgid "Strict - Must be explicit contact of a service"
+#, fuzzy
+msgid "Strict - Visible if user is contact for the service"
 msgstr "Strikt - Muss explizit Kontakt vom Service sein"
 
 msgid "String"
@@ -49109,9 +49111,10 @@ msgstr ""
 "Intervall verteilt, um einen stoßartigen Verbrauch von Ressourcen zu "
 "vermeiden."
 
+#, fuzzy
 msgid ""
-"These settings control under which circumstances a user is allowed to see a "
-"host or service in the user interface. <b>Note:</b> This has <b>no</b> "
+"These settings control under which circumstances a user is allowed to see "
+"services and groups in the user interface. <b>Note:</b> This has <b>no</b> "
 "impact on notifications."
 msgstr ""
 "Diese Einstellungen legen fest, unter welchen Umständen ein Benutzer einen "
@@ -62749,6 +62752,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Loose - Contacts for hosts see all services"
+#~ msgstr "Lasch - Kontakte von Hosts können alle Services sehen"
+
+#~ msgid "Loose - Sufficient to be contact for one member"
+#~ msgstr "Lasch - Es genügt von einem Mitglied Kontakt zu sein"
 
 #~ msgid "Tags (with titles)"
 #~ msgstr "Merkmake (mit Titeln)"

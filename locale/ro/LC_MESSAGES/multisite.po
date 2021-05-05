@@ -26523,10 +26523,10 @@ msgstr ""
 msgid "Loop duration"
 msgstr ""
 
-msgid "Loose - Contacts for hosts see all services"
+msgid "Loose - Visible if at least one member is visible"
 msgstr ""
 
-msgid "Loose - Sufficient to be contact for one member"
+msgid "Loose - Visible if user is contact for the service or its host"
 msgstr ""
 
 msgid "Loss of signal errors"
@@ -42538,10 +42538,10 @@ msgstr ""
 msgid "Street number"
 msgstr ""
 
-msgid "Strict - Must be contact of all members"
+msgid "Strict - Visible if all members are visible"
 msgstr ""
 
-msgid "Strict - Must be explicit contact of a service"
+msgid "Strict - Visible if user is contact for the service"
 msgstr ""
 
 msgid "String"
@@ -46991,8 +46991,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"These settings control under which circumstances a user is allowed to see a "
-"host or service in the user interface. <b>Note:</b> This has <b>no</b> "
+"These settings control under which circumstances a user is allowed to see "
+"services and groups in the user interface. <b>Note:</b> This has <b>no</b> "
 "impact on notifications."
 msgstr ""
 

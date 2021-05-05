@@ -337,7 +337,14 @@ node_modules: package.json package-lock.json
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
         fi ; \
-	npm install --audit=false --unsafe-perm $$REGISTRY
+	if npm install --audit=false --unsafe-perm $$REGISTRY; then \
+           echo "Node Packages installed sucessfully"; \
+        else \
+            echo "If Node tries to compile the SASS Package,"; \
+	    echo "make sure the needed SASS Version exists in the Registry:"; \
+            echo "Version overview: https://www.npmjs.com/package/node-sass"; \
+            exit 1; \
+        fi
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)

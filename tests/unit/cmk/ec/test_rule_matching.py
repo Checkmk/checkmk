@@ -171,14 +171,13 @@ def test_match_outcome(m, rule, match_groups, match_priority, result):
         "match_site": []
     }),
     (True, {
-        "match_site": ["ding"]
+        "match_site": ["NO_SITE"]
     }),
     (False, {
         "match_site": ["dong"]
     }),
 ])
-def test_match_site(m, rule, result, monkeypatch):
-    monkeypatch.setattr(cmk_version, "omd_site", lambda: "ding")
+def test_match_site(m, rule, result):
     assert m.event_rule_matches_site(rule, {}) == result
 
 

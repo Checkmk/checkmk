@@ -17,6 +17,7 @@ from typing import (
     Dict,
     Type,
     Tuple,
+    Iterable,
 )
 
 from cmk.utils.bi.bi_schema import Schema
@@ -41,6 +42,9 @@ ReqNested = partial(Nested, required=True)
 ReqBoolean = partial(Boolean, required=True)
 
 SearchResult = Dict[str, str]
+SearchResults = List[SearchResult]
+ActionArgument = Tuple[str, ...]
+ActionArguments = List[ActionArgument]
 
 import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.macros import (
@@ -451,8 +455,21 @@ class ABCBIAction(metaclass=abc.ABCMeta):
     def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
+    def _generate_action_arguments(self, search_results: List[Dict[str, str]],
+                                   macros: MacroMapping) -> ActionArguments:
+        raise NotImplementedError()
+
+    def execute_search_results(self, search_results, macros: MacroMapping,
+                               bi_searcher) -> Iterable[ABCBICompiledNode]:
+        action_arguments = self._generate_action_arguments(search_results, macros)
+        for argument in self._deduplicate_action_arguments(action_arguments):
+            yield from self.execute(argument, bi_searcher)
+
+    def _deduplicate_action_arguments(self, arguments: ActionArguments) -> ActionArguments:
+        return list(dict.fromkeys(arguments).keys())
+
     @abc.abstractmethod
-    def execute(self, search_result: Dict[str, str],
+    def execute(self, argument: ActionArgument,
                 bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 

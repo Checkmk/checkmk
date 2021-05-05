@@ -31,12 +31,18 @@ def test_state_of_host_execute(host_regex, num_results, num_results_unknown,
                                bi_searcher_with_sample_config):
     schema_config = BIStateOfHostAction.schema()().dump({"host_regex": host_regex})
     action = BIStateOfHostAction(schema_config)
-    results = action.execute({"$HOSTNAME$": "heute"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "heute"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == num_results
     for result in results:
         assert isinstance(result, BICompiledLeaf)
 
-    results = action.execute({"$HOSTNAME$": "unkown"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "unkown"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == num_results_unknown
     for result in results:
         assert isinstance(result, BICompiledLeaf)
@@ -55,13 +61,19 @@ def test_state_of_service_execute(host_regex, num_results, num_results_unknown,
         "service_regex": "Uptime"
     })
     action = BIStateOfServiceAction(schema_config)
-    results = action.execute({"$HOSTNAME$": "heute"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "heute"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == num_results
     for result in results:
         assert isinstance(result, BICompiledLeaf)
         assert result.service_description == "Uptime"
 
-    results = action.execute({"$HOSTNAME$": "unknown"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "unknown"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == num_results_unknown
     for result in results:
         assert isinstance(result, BICompiledLeaf)
@@ -72,7 +84,7 @@ def test_call_a_rule_execute(dummy_bi_rule, bi_searcher_with_sample_config):
     # noqa: F811 # pylint: disable=unused-import
     schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id})
     action = BICallARuleAction(schema_config)
-    results = action.execute({}, bi_searcher_with_sample_config)
+    results = list(action.execute_search_results([{}], {}, bi_searcher_with_sample_config))
     assert len(results) == 1
     assert isinstance(results[0], BICompiledRule)
 
@@ -89,12 +101,18 @@ def test_state_of_remaining(host_regex, num_host_matches, num_host_matches_unkno
     #       this requires a more complicated setup -> bi_aggregation_test
     schema_config = BIStateOfRemainingServicesAction.schema()().dump({"host_regex": host_regex})
     action = BIStateOfRemainingServicesAction(schema_config)
-    results = action.execute({"$HOSTNAME$": "heute"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "heute"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == 1
     assert isinstance(results[0], BIRemainingResult)
     assert len(results[0].host_names) == num_host_matches
 
-    results = action.execute({"$HOSTNAME$": "unkown"}, bi_searcher_with_sample_config)
+    results = list(
+        action.execute_search_results([{
+            "$HOSTNAME$": "unkown"
+        }], {}, bi_searcher_with_sample_config))
     assert len(results) == 1
     assert isinstance(results[0], BIRemainingResult)
     assert len(results[0].host_names) == num_host_matches_unknown

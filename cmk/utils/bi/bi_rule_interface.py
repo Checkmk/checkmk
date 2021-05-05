@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Dict, Any, Type, Sequence
+from typing import List, Dict, Any, Type, Sequence, Tuple
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,
@@ -15,6 +15,7 @@ from cmk.utils.bi.bi_lib import (
     ReqBoolean,
     ReqDict,
     ABCWithSchema,
+    ActionArgument,
 )
 
 from cmk.utils.bi.bi_node_generator_interface import ABCBINodeGenerator
@@ -105,7 +106,7 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: List[str],
+    def compile(self, extern_arguments: ActionArgument,
                 bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 

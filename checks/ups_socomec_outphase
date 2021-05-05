@@ -35,7 +35,7 @@ def check_ups_socomec_outphase(item, params, parsed):
 
 check_info['ups_socomec_outphase'] = {
     "parse_function": parse_ups_socomec_outphase,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_ups_socomec_outphase,
     "default_levels_variable": "socomec_outphase_default_levels",
     "service_description": "Output %s",

@@ -117,16 +117,12 @@ check_info['orion_system.charging'] = {
 }
 
 
-def inventory_orion_system_electrical(parsed):
-    return inventory_elphase(parsed["electrical"])
-
-
 def check_orion_system_electrical(item, params, parsed):
     return check_elphase(item, params, parsed["electrical"])
 
 
 check_info['orion_system.dc'] = {
-    'inventory_function': inventory_orion_system_electrical,
+    'inventory_function': lambda parsed: discover()(parsed["electrical"]),
     'check_function': check_orion_system_electrical,
     'service_description': 'Direct Current %s',
     'has_perfdata': True,

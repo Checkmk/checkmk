@@ -8,12 +8,6 @@
 
 from cmk.base.check_api import check_levels, get_percent_human_readable
 
-
-def inventory_elphase(parsed):
-    for item in parsed:
-        yield item, {}
-
-
 _RENDER_FUNCTION_AND_UNIT = {
     "%": (
         get_percent_human_readable,

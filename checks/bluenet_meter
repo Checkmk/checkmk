@@ -26,7 +26,7 @@ def parse_bluenet_meter(info):
 
 check_info["bluenet_meter"] = {
     "parse_function": parse_bluenet_meter,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_elphase,
     "service_description": "Powermeter %s",
     "group": "ups_outphase",

@@ -236,7 +236,7 @@ def parse_bluenet2_powerrail(info):
 
 check_info["bluenet2_powerrail"] = {
     'parse_function': parse_bluenet2_powerrail,
-    'inventory_function': lambda parsed: inventory_elphase(parsed["phases"]),
+    'inventory_function': lambda parsed: discover()(parsed["phases"]),
     'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["phases"]),
     'service_description': 'Inlet %s',
     "has_perfdata": True,
@@ -291,7 +291,7 @@ factory_settings["bluenet2_powerrail_rcm_default_levels"] = {
 }
 
 check_info["bluenet2_powerrail.rcm"] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["rcm_phases"]),
+    'inventory_function': lambda parsed: discover()(parsed["rcm_phases"]),
     'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["rcm_phases"]
                                                                 ),
     "service_description": "Inlet %s",

@@ -16,7 +16,7 @@ def _scan_apc_rackpdu_power(_oid):
 
 
 check_info["apc_rackpdu_power"] = {
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': 'PDU %s',
     'has_perfdata': True,

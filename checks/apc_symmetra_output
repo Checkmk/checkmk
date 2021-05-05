@@ -36,7 +36,7 @@ def parse_apc_symmetra_output(info):
 
 check_info['apc_symmetra_output'] = {
     'parse_function': parse_apc_symmetra_output,
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': "Phase %s",
     "snmp_info": (

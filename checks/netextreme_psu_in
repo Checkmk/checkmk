@@ -33,7 +33,7 @@ def parse_netextreme_psu_in(info):
 
 check_info['netextreme_psu_in'] = {
     'parse_function': parse_netextreme_psu_in,
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': 'Power Supply %s',
     'has_perfdata': True,

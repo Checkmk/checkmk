@@ -49,7 +49,7 @@ def parse_gude_relayport(info):
 
 check_info['gude_relayport'] = {
     'parse_function': parse_gude_relayport,
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': 'Relay port %s',
     'has_perfdata': True,

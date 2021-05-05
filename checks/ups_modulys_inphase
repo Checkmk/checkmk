@@ -38,7 +38,7 @@ def parse_ups_modulys_inphase(info):
 
 check_info['ups_modulys_inphase'] = {
     'parse_function': parse_ups_modulys_inphase,
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': 'Input %s',
     'has_perfdata': True,

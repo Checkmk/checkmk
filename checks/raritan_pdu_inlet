@@ -45,7 +45,7 @@ def check_raritan_pdu_inlet(item, params, info):
 
 check_info['raritan_pdu_inlet'] = {
     "parse_function": parse_raritan_pdu_inlet,
-    "inventory_function": inventory_elphase,
+    "inventory_function": discover(),
     "check_function": check_raritan_pdu_inlet,
     "service_description": "Input %s",
     "has_perfdata": True,

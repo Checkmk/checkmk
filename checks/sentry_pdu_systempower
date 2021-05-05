@@ -22,7 +22,7 @@ def parse_sentry_pdu_systempower(info):
 
 check_info['sentry_pdu_systempower'] = {
     'parse_function': parse_sentry_pdu_systempower,
-    'inventory_function': inventory_elphase,
+    'inventory_function': discover(),
     'check_function': check_elphase,
     'service_description': '%s',
     'has_perfdata': True,

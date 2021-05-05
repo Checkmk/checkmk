@@ -591,16 +591,12 @@ check_info['cmciii.humidity'] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_cmciii_phase(parsed):
-    return inventory_elphase(parsed.get("phase", {}))
-
-
 def check_cmciii_phase(item, params, parsed):
     return check_elphase(item, params, parsed.get("phase", {}))
 
 
 check_info['cmciii.phase'] = {
-    "inventory_function": inventory_cmciii_phase,
+    "inventory_function": lambda parsed: discover()(parsed["phase"]),
     "check_function": check_cmciii_phase,
     "service_description": "Input %s",
     "has_perfdata": True,

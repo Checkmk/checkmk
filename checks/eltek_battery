@@ -130,7 +130,7 @@ factory_settings['eltek_battery_phase_default_variables'] = {
 }
 
 check_info['eltek_battery.supply'] = {
-    'inventory_function': lambda parsed: inventory_elphase(parsed["supply"]),
+    'inventory_function': lambda parsed: discover()(parsed["supply"]),
     'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
     'service_description': 'Battery %s',
     'has_perfdata': True,

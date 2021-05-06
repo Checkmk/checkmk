@@ -22,7 +22,6 @@ from typing import (
 import cmk.utils.debug
 import cmk.utils
 import cmk.utils.defines as defines
-import cmk.utils.store as store
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName, ServiceName, MetricName
@@ -39,7 +38,6 @@ from cmk.utils.prediction import (
     PredictionParameters as _PredictionParameters,
     ConsolidationFunctionName,
     EstimatedLevels,
-    save_predictions,
 )
 
 logger = logging.getLogger("cmk.prediction")
@@ -267,7 +265,6 @@ def get_levels(
     timegroup, rel_time = period_info.groupby(now)
 
     prediction_store = cmk.utils.prediction.PredictionStore(hostname, service_description, dsname)
-    store.makedirs(prediction_store.dir)
 
     pred_file = os.path.join(prediction_store.dir, timegroup)
     cmk.utils.prediction.clean_prediction_files(pred_file)
@@ -295,7 +292,7 @@ def get_levels(
             slice=period_info.slice,
             params=params,
         )
-        save_predictions(pred_file, info, data_for_pred)
+        prediction_store.save_predictions(timegroup, info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred.step)

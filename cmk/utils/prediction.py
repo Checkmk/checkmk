@@ -326,16 +326,23 @@ class PredictionStore:
                 for f in self._dir.glob('*.info')
                 if (tg_info := retrieve_info_for_prediction(str(f))) is not None)
 
+    def _data_file(self, timegroup: Timegroup) -> Path:
+        return self._dir / timegroup
 
-def save_predictions(
-    pred_file: str,
-    info: PredictionInfo,
-    data_for_pred: PredictionData,
-) -> None:
-    with open(pred_file + '.info', "w") as fname:
-        json.dump(info, fname)
-    with open(pred_file, "w") as fname:
-        json.dump(data_for_pred, fname)
+    def _info_file(self, timegroup: Timegroup) -> Path:
+        return self._dir / f'{timegroup}.info'
+
+    def save_predictions(
+        self,
+        timegroup: Timegroup,
+        info: PredictionInfo,
+        data_for_pred: PredictionData,
+    ) -> None:
+        self._dir.mkdir(exist_ok=True, parents=True)
+        with self._info_file(timegroup).open("w") as fname:
+            json.dump(info, fname)
+        with self._data_file(timegroup).open("w") as fname:
+            json.dump(data_for_pred, fname)
 
 
 def clean_prediction_files(pred_file: str, force: bool = False) -> None:

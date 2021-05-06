@@ -360,7 +360,7 @@ std::wstring GetTempDir() noexcept { return GetCfg().getTempDir(); }
 
 std::string GetHostName() noexcept { return GetCfg().getHostName(); }
 
-std::wstring GetLogDir() noexcept { return GetCfg().getLogFileDir(); }
+std::wstring GetLogDir() noexcept { return GetCfg().getLogDir(); }
 
 std::wstring GetWorkingDir() noexcept { return GetCfg().getCwd(); }
 

@@ -108,6 +108,8 @@ public:
         return data_ / dirs::kPluginConfig;
     }
 
+    inline std::filesystem::path getLog() const { return data_ / dirs::kLog; }
+
     inline std::filesystem::path getBackup() const {
         return data_ / dirs::kBackup;
     }
@@ -364,6 +366,11 @@ public:
         return folders_.getTemp();
     }
 
+    auto getLogDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getLog();
+    }
+
     auto getHostName() const {
         std::lock_guard lk(lock_);
         return host_name_;
@@ -374,7 +381,7 @@ public:
         return cwd_;
     }
 
-    auto getLogFileDir() const {
+    auto getConfiguredLogFileDir() const {
         std::lock_guard lk(lock_);
         return logfile_dir_;
     }
@@ -388,7 +395,7 @@ public:
 
     int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
 
-    void setLogFileDir(const std::wstring& Path) {
+    void setConfiguredLogFileDir(const std::wstring& Path) {
         std::lock_guard lk(lock_);
         logfile_dir_ = Path;
     }

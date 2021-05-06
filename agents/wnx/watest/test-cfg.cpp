@@ -442,9 +442,9 @@ namespace cma::cfg {
 TEST(CmaCfg, ConfigManagement) {
     auto node = CreateNode("test");
     ASSERT_TRUE(node);
-    node->setLogFileDir(L"test");
+    node->setConfiguredLogFileDir(L"test");
     auto node2 = GetNode("test");
-    EXPECT_EQ(node2->getLogFileDir(), L"test");
+    EXPECT_EQ(node2->getConfiguredLogFileDir(), L"test");
     ASSERT_TRUE(node2);
     RemoveNode("test");
     auto node3 = GetNode("test");

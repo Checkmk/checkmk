@@ -189,10 +189,9 @@ void Global::setLogFolder(const std::filesystem::path& forced_path) {
 
 // transfer global data into app environment
 void Global::setupLogEnvironment() {
-    using namespace XLOG;
-
-    setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);
-    GetCfg().setLogFileDir(logfile_dir_.wstring());
+    XLOG::setup::Configure(logfile_as_string_, debug_level_, windbg_,
+                           event_log_);
+    GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());
 }
 
 // loader

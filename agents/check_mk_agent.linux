@@ -9,6 +9,7 @@ PATH=$PATH:/usr/local/bin
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
 export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
+export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk_agent}
 
 # Optionally set a tempdir for all subsequent calls
 #export TMPDIR=
@@ -41,16 +42,75 @@ LOCALDIR=$MK_LIBDIR/local
 # output if they are not outdated (see below)
 SPOOLDIR=$MK_VARDIR/spool
 
+DEBUG=false
+LOG_SECTION_TIME=false
+while test -n "$1"; do
+    case "$1" in
+        -d)
+            DEBUG=true
+            shift
+            ;;
+
+        -p)
+            LOG_SECTION_TIME=true
+            shift
+            ;;
+
+        *)
+            shift
+            ;;
+    esac
+done
+
 # close standard input (for security reasons) and stderr when not
 # explicitly in debug mode.
 # When the nodes agent is executed by a e.g. docker node in a container,
 # then don't close stdin, because the agent is piped through it in this
 # case.
-if [ "$1" = -d ]; then
+if $DEBUG; then
     set -xv
 elif [ -z "$MK_FROM_NODE" ]; then
     exec </dev/null 2>/dev/null
 fi
+
+DISABLE_CACHING=false
+PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
+if $LOG_SECTION_TIME; then
+    # If option '-p' is set disable caching in order to get the whole execution time
+    DISABLE_CACHING=true
+elif [ -e "$PROFILING_CONFIG" ]; then
+    # Config vars:
+    #   LOG_SECTION_TIME=true/false
+    #   DISABLE_CACHING=true/false
+
+    # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+    # to get the real execution time during operation.
+    # shellcheck disable=SC1090
+    . "$PROFILING_CONFIG"
+fi
+
+PROFILING_LOGFILE="${MK_LOGDIR}"/profiling_$(date +"%Y%m%d_%H%M%S").log
+if $LOG_SECTION_TIME; then
+    mkdir -p "$MK_LOGDIR"
+fi
+
+_log_section_time() {
+    local section_name="$1"
+    shift
+    local section_func="$*"
+
+    # TODO In the future
+    # echo "<<<check_mk_agent_profiling>>>"
+    if $LOG_SECTION_TIME; then
+        echo -e "[${section_name}]" >>"$PROFILING_LOGFILE"
+        start="$(perl -MTime::HiRes=time -le 'print time()')"
+        { time $section_func; } 2>>"$PROFILING_LOGFILE"
+        end="$(perl -MTime::HiRes=time -le 'print time()')"
+        echo -e "runtime $(echo "$end - $start" | bc)\n" >>"$PROFILING_LOGFILE"
+    else
+        $section_func
+    fi
+}
 
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
@@ -1088,7 +1148,7 @@ run_liveupdate() {
     fi
 }
 
-run_remote_plugin() {
+run_remote_plugins() {
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
             while read -r descr cmdline; do
@@ -1118,7 +1178,7 @@ run_remote_plugin() {
                 if [ -z "$interval" ]; then
                     run_mrpe "$descr" "$cmdline"
                 else
-                    run_cached "$args" "$descr" "$interval" "$cmdline"
+                    run_cached "$args" "$descr" "$interval" "_log_section_time 'mrpe_$descr' '$cmdline'"
                 fi
             done
     fi
@@ -1164,7 +1224,7 @@ run_runas_executor() {
                                 if [ -z "$interval" ]; then
                                     run_mrpe "$descr" "$cmdline"
                                 else
-                                    run_cached -m "$descr" "$interval" "$cmdline"
+                                    run_cached -m "$descr" "$interval" "_log_section_time 'mrpe_$descr' '$cmdline'"
                                 fi
                             done
 
@@ -1182,7 +1242,7 @@ run_runas_executor() {
                                     cmdline=$filename
                                 fi
 
-                                $cmdline
+                                _log_section_time "local_or_plugin_$filename" "$cmdline"
                             done
                     fi
                 fi
@@ -1205,13 +1265,13 @@ run_local_checks() {
     if cd "$LOCALDIR"; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                ./"$skript"
+                _log_section_time "local_$skript" "./$skript"
             fi
         done
         # Call some plugins only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\\}" "${skript%/*}" "$skript"
+                run_cached "local_${skript//\//\\}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
             fi
         done
     fi
@@ -1241,7 +1301,7 @@ run_mrpe() {
     echo '<<<mrpe>>>'
 
     PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "$cmdline")
+    OUTPUT=$(eval _log_section_time "mrpe_$descr" "$cmdline")
 
     echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
     echo
@@ -1260,7 +1320,7 @@ run_agent_plugin() {
 
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        ./"$agent_plugin"
+        _log_section_time "plugin_$agent_plugin" "./$agent_plugin"
         return
     fi
 
@@ -1274,7 +1334,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            $PYTHON3 "$agent_plugin"
+            _log_section_time "plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
             return
         fi
         return
@@ -1285,7 +1345,7 @@ run_agent_plugin() {
     fi
 
     if [ -n "$PYTHON2" ]; then
-        $PYTHON2 "$agent_plugin"
+        _log_section_time "plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
     fi
 }
 
@@ -1323,6 +1383,11 @@ run_cached() {
     local MAXAGE=$2
     shift 2
     local CMDLINE=$section$*
+
+    if $DISABLE_CACHING; then
+        "$CMDLINE"
+        return
+    fi
 
     if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache"; fi
     if [ "$mrpe" = 1 ]; then
@@ -1516,10 +1581,9 @@ get_file_mtime() {
 }
 
 section_checkmk_failed_plugins() {
-    failed=("$@")
-    if [ -n "$failed" ]; then
+    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
         echo "<<<check_mk>>>"
-        echo "FailedPythonPlugins: ${failed[*]}"
+        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
         if [ -n "$NO_PYTHON" ]; then
             echo "FailedPythonReason: No suitable python installation found."
         elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
@@ -1528,175 +1592,188 @@ section_checkmk_failed_plugins() {
     fi
 }
 
-section_checkmk
+if $LOG_SECTION_TIME; then
+    agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+fi
 
-[ -z "$MK_SKIP_LABELS" ] && section_labels
+_log_section_time "check_mk" section_checkmk
 
-[ -z "$MK_SKIP_DF" ] && section_df
+[ -z "$MK_SKIP_LABELS" ] && _log_section_time "labels" section_labels
 
-[ -z "$MK_SKIP_SYSTEMD" ] && sections_systemd
+[ -z "$MK_SKIP_DF" ] && _log_section_time "df" section_df
+
+[ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time "systemd" sections_systemd
 
 # Filesystem usage for ZFS
-[ -z "$MK_SKIP_ZFS" ] && section_zfs
+[ -z "$MK_SKIP_ZFS" ] && _log_section_time "zfs" section_zfs
 
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-[ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
+[ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time "nfs_mounts" section_nfs_mounts
 
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
-[ -z "$MK_SKIP_MOUNTS" ] && section_mounts
+[ -z "$MK_SKIP_MOUNTS" ] && _log_section_time "mounts" section_mounts
 
-[ -z "$MK_SKIP_PS" ] && section_ps
+[ -z "$MK_SKIP_PS" ] && _log_section_time "ps" section_ps
 
 # Memory usage
-[ -z "$MK_SKIP_MEM" ] && section_mem
+[ -z "$MK_SKIP_MEM" ] && _log_section_time "mem" section_mem
 
 # Load and number of processes
-[ -z "$MK_SKIP_CPU" ] && section_cpu
+[ -z "$MK_SKIP_CPU" ] && _log_section_time "cpu" section_cpu
 
 # Uptime
-[ -z "$MK_SKIP_UPTIME" ] && section_uptime
+[ -z "$MK_SKIP_UPTIME" ] && _log_section_time "uptime" section_uptime
 
 # New variant: Information about speed and state in one section
-[ -z "$MK_SKIP_LNX_IF" ] && section_lnx_if
+[ -z "$MK_SKIP_LNX_IF" ] && _log_section_time "lnx_if" section_lnx_if
 
 # Current state of bonding interfaces
-[ -z "$MK_SKIP_BONDING_IF" ] && section_bonding_interfaces
+[ -z "$MK_SKIP_BONDING_IF" ] && _log_section_time "bonding_interfaces" section_bonding_interfaces
 
 # Same for Open vSwitch bonding
-[ -z "$MK_SKIP_VSWITCH_BONDING" ] && section_vswitch_bonding
+[ -z "$MK_SKIP_VSWITCH_BONDING" ] && _log_section_time "vswitch_bonding" section_vswitch_bonding
 
 # Number of TCP connections in the various states
-[ -z "$MK_SKIP_TCP" ] && section_tcp
+[ -z "$MK_SKIP_TCP" ] && _log_section_time "tcp" section_tcp
 
 # Linux Multipathing
-[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
+[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time "multipathing" section_multipathing
 
 # Performancecounter Platten
-[ -z "$MK_SKIP_DISKSTAT" ] && section_diskstat
+[ -z "$MK_SKIP_DISKSTAT" ] && _log_section_time "diskstat" section_diskstat
 
 # Performancecounter Kernel
-[ -z "$MK_SKIP_KERNEL" ] && section_kernel
+[ -z "$MK_SKIP_KERNEL" ] && _log_section_time "kernel" section_kernel
 
 # Hardware sensors via IPMI (need ipmitool)
-[ -z "$MK_SKIP_IPMITOOL" ] && section_ipmitool
+[ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time "ipmitool" section_ipmitool
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
-[ -z "$MK_SKIP_IPMISENSORS" ] && section_ipmisensors
+[ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time "ipmisensors" section_ipmisensors
 
 # RAID status of Linux software RAID
-[ -z "$MK_SKIP_MD" ] && section_md
+[ -z "$MK_SKIP_MD" ] && _log_section_time "md" section_md
 
 # RAID status of Linux RAID via device mapper
-[ -z "$MK_SKIP_DM_RAID" ] && section_dm_raid
+[ -z "$MK_SKIP_DM_RAID" ] && _log_section_time "dm_raid" section_dm_raid
 
 # RAID status of LSI controllers via cfggen
-[ -z "$MK_SKIP_CFGGEN" ] && section_cfggen
+[ -z "$MK_SKIP_CFGGEN" ] && _log_section_time "cfggen" section_cfggen
 
 # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-[ -z "$MK_SKIP_MEGARAID" ] && section_megaraid
+[ -z "$MK_SKIP_MEGARAID" ] && _log_section_time "megaraid" section_megaraid
 
 # RAID status of 3WARE disk controller (by Radoslaw Bak)
-[ -z "$MK_SKIP_THREE_WARE_RAID" ] && section_3ware_raid
+[ -z "$MK_SKIP_THREE_WARE_RAID" ] && _log_section_time "3ware_raid" section_3ware_raid
 
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-[ -z "$MK_SKIP_ARECA" ] && section_areca_raid
+[ -z "$MK_SKIP_ARECA" ] && _log_section_time "areca_raid" section_areca_raid
 
 # VirtualBox Guests. Section must always been output. Otherwise the
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
-[ -z "$MK_SKIP_VBOX_GUEST" ] && section_vbox_guest
+[ -z "$MK_SKIP_VBOX_GUEST" ] && _log_section_time "vbox_guest" section_vbox_guest
 
 # OpenVPN Clients. Currently we assume that the configuration # is in
 # /etc/openvpn. We might find a safer way to find the configuration later.
-[ -z "$MK_SKIP_OPENVPN" ] && section_openvpn
+[ -z "$MK_SKIP_OPENVPN" ] && _log_section_time "openvpn" section_openvpn
 
 if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
-    section_timesyncd || section_ntp
+    _log_section_time "timesyncd" section_timesyncd || _log_section_time "ntp" section_ntp
 fi
 
 # Time synchronization with Chrony
-[ -z "$MK_SKIP_CHRONY" ] && section_chrony
+[ -z "$MK_SKIP_CHRONY" ] && _log_section_time "chrony" section_chrony
 
-[ -z "$MK_SKIP_NVIDIA" ] && section_nvidia
+[ -z "$MK_SKIP_NVIDIA" ] && _log_section_time "nvidia" section_nvidia
 
-[ -z "$MK_SKIP_DRBD" ] && section_drbd
+[ -z "$MK_SKIP_DRBD" ] && _log_section_time "drbd" section_drbd
 
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-[ -z "$MK_SKIP_HEARTBEAT" ] && section_heartbeat
+[ -z "$MK_SKIP_HEARTBEAT" ] && _log_section_time "heartbeat" section_heartbeat
 
-[ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
+[ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time "mailqueue" section_mailqueue
 
 ## Check status of OMD sites and Checkmk Notification spooler
-[ -z "$MK_SKIP_OMD" ] && section_omd
+[ -z "$MK_SKIP_OMD" ] && _log_section_time "omd" section_omd
 
 # Welcome the ZFS check on Linux
 # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
 # check zpool status
-[ -z "$MK_SKIP_ZPOOL" ] && section_zpool
+[ -z "$MK_SKIP_ZPOOL" ] && _log_section_time "zpool" section_zpool
 
 # Veritas Cluster Server
 # Software is always installed in /opt/VRTSvcs.
 # Secure mode must be off to allow root to execute commands
-[ -z "$MK_SKIP_VERITAS" ] && section_veritas_cluster
+[ -z "$MK_SKIP_VERITAS" ] && _log_section_time "veritas_cluster" section_veritas_cluster
 
 ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-[ -z "$MK_SKIP_FILEINFO" ] && section_fileinfo
+[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time "fileinfo" section_fileinfo
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance
 # on non-OMD machines.
-[ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
+[ -z "$MK_SKIP_OMD_CORES" ] && _log_section_time "omd_core" section_omd_core
 
 # Collect states of configured Checkmk site backup jobs
-section_mkbackup
+_log_section_time "mkbackup" section_mkbackup
 
 # Get statistics about monitored jobs. Below the job directory there
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-[ -z "$MK_SKIP_JOB" ] && section_job
+[ -z "$MK_SKIP_JOB" ] && _log_section_time "job" section_job
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-[ -z "$MK_SKIP_THERMAL" ] && section_thermal
+[ -z "$MK_SKIP_THERMAL" ] && _log_section_time "thermal" section_thermal
 
 # Libelle Business Shadow
-[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
+[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time "libelle" section_libelle
 
 # HTTP Accelerator Statistics
-[ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && section_http_accelerator
+[ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && _log_section_time "http_accelerator" section_http_accelerator
 
 # Proxmox Cluster
-[ -z "$MK_SKIP_PROXMOX" ] && section_proxmox
+[ -z "$MK_SKIP_PROXMOX" ] && _log_section_time "proxmox" section_proxmox
 
-[ -z "$MK_SKIP_HAPROXY" ] && section_haproxy
+[ -z "$MK_SKIP_HAPROXY" ] && _log_section_time "haproxy" section_haproxy
 
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.
+# run_liveupdate -> run_real_time_checks -> run_agent_plugin -> _log_section_time CMD
 run_liveupdate
 
 # MK's Remote Plugin Executor
-run_remote_plugin
+# run_remote_plugins -> run_mrpe -> _log_section_time CMD
+#                    -> run_cached _log_section_time CMD
+run_remote_plugins
 
 # MK's runas Executor
+# run_runas_executor -> _log_section_time CMD
+#                    -> run_mrpe -> _log_section_time CMD
+#                    -> run_cached _log_section_time CMD
 run_runas_executor
 
 # Local checks
+# run_local_checks -> _log_section_time CMD
+#                  -> run_cached _log_section_time CMD
 run_local_checks
 
 # Plugins
+# run_plugins -> run_agent_plugin -> _log_section_time CMD
 run_plugins
 
-section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"
+_log_section_time "failed_plugins" section_checkmk_failed_plugins
 
 # Agent output snippets created by cronjobs, etc.
 spooldir_files() {
@@ -1734,4 +1811,10 @@ spooldir_files() {
     )
 }
 
-spooldir_files
+_log_section_time "spooldir_files" spooldir_files
+
+if $LOG_SECTION_TIME; then
+    echo -e "[check_mk_agent]" >>"$PROFILING_LOGFILE"
+    agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+    echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$PROFILING_LOGFILE"
+fi

@@ -40,6 +40,7 @@ unset LANG
 export MK_LIBDIR=${MK_LIBDIR:-/usr/check_mk/lib}
 export MK_CONFDIR=${MK_CONFDIR:-/usr/check_mk/conf}
 export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
+export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk}
 
 # Optionally set a tempdir for all subsequent calls
 #export TMPDIR=
@@ -69,13 +70,71 @@ SPOOLDIR=$MK_VARDIR/spool
 #Avoid problems with wrong decimal separators in other language verions of aix
 export LC_NUMERIC="en_US"
 
+DEBUG=false
+LOG_SECTION_TIME=false
+while test -n "$1"; do
+    case "$1" in
+        -d)
+            DEBUG=true
+            shift
+            ;;
+
+        -p)
+            LOG_SECTION_TIME=true
+            shift
+            ;;
+
+        *)
+            shift
+            ;;
+    esac
+done
+
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if $DEBUG; then
     set -xv
 else
     exec </dev/null 2>/dev/null
 fi
+
+DISABLE_CACHING=false
+PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
+if $LOG_SECTION_TIME; then
+    # If option '-p' is set disable caching in order to get the whole execution time
+    DISABLE_CACHING=true
+elif [ -e "$PROFILING_CONFIG" ]; then
+    # Config vars:
+    #   LOG_SECTION_TIME=true/false
+    #   DISABLE_CACHING=true/false
+
+    # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+    # to get the real execution time during operation.
+    # shellcheck disable=SC1090
+    . "$PROFILING_CONFIG"
+fi
+
+PROFILING_LOGFILE="${MK_LOGDIR}"/profiling_$(date +"%Y%m%d_%H%M%S").log
+if $LOG_SECTION_TIME; then
+    mkdir -p "$MK_LOGDIR"
+fi
+
+_log_section_time() {
+    section_name="$1"
+    shift
+    section_func="$*"
+
+    # TODO In the future
+    # echo "<<<check_mk_agent_profiling>>>"
+    if $LOG_SECTION_TIME; then
+        printf "\n[%s]\n" "${section_name}" >>"$PROFILING_LOGFILE"
+        start="$(perl -MTime::HiRes=time -le 'print time()')"
+        { time $section_func; } 2>>"$PROFILING_LOGFILE"
+        end="$(perl -MTime::HiRes=time -le 'print time()')"
+        printf "\nruntime %.4fs\n" "$((end-start))" >>"$PROFILING_LOGFILE"
+    else
+        $section_func
+    fi
+}
 
 if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
     # shellcheck source=/dev/null
@@ -120,6 +179,11 @@ run_cached() {
     shift 2
     CMDLINE=$*
 
+    if $DISABLE_CACHING; then
+        $CMDLINE
+        return
+    fi
+
     if [ ! -e $MK_VARDIR/cache ] ; then mkdir -p $MK_VARDIR/cache ; fi
     CACHEFILE=$MK_VARDIR/cache/$NAME.cache
 
@@ -158,7 +222,7 @@ run_agent_plugin() {
     filename="${agent_plugin%.*}"
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        ./"$agent_plugin"
+        _log_section_time "agent_plugin_$agent_plugin" "./$agent_plugin"
         return
     fi
     if [ "${filename#${filename%??}}" != "_2" ]; then
@@ -171,7 +235,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            $PYTHON3 "$agent_plugin"
+            _log_section_time "agent_plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
             return
         fi
         return
@@ -180,7 +244,7 @@ run_agent_plugin() {
         return
     fi
     if [ -n "$PYTHON2" ]; then
-        $PYTHON2 "$agent_plugin"
+        _log_section_time "agent_plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
     fi
 }
 
@@ -449,7 +513,7 @@ section_aix_hacmp() {
             if [ "$list_active_nodes" ]
             then
                 echo '<<<aix_hacmp_nodes>>>'
-                echo -e $list_active_nodes
+                printf "%s\n" "$list_active_nodes"
                 cllsnode
             fi
 
@@ -473,20 +537,20 @@ run_local_checks() {
       for skript in $(ls)
       do
         if [ -x "$skript" ] ; then
-            ./$skript
+            _log_section_time "local_$skript" "./$skript"
         fi
       done
 
       # Call some local checks only every X'th second
       for skript in [1-9]*/* ; do
           if [ -x "$skript" ] ; then
-              run_cached local_${skript//\//\#} ${skript%/*} "$skript"
+              run_cached local_${skript//\//\#} ${skript%/*} "_log_section_time 'local_$skript' './$skript'"
           fi
       done
     fi
 }
 
-run_remote_plugin() {
+run_remote_plugins() {
     # MK's Remote Plugin Executor
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]
     then
@@ -495,7 +559,7 @@ run_remote_plugin() {
         while read descr cmdline
         do
             PLUGIN=${cmdline%% *}
-            OUTPUT=$(eval "$cmdline")
+            OUTPUT=$(eval _log_section_time "mrpe_$descr" "$cmdline")
             echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
             echo
         done
@@ -560,7 +624,7 @@ section_job() {
 }
 
 section_checkmk_failed_plugins() {
-    if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
         echo "<<<check_mk>>>"
         echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
         if [ -n "$NO_PYTHON" ]; then
@@ -571,54 +635,68 @@ section_checkmk_failed_plugins() {
     fi
 }
 
-section_checkmk
+if $LOG_SECTION_TIME; then
+    agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+fi
 
-[ -z "$MK_SKIP_DF" ] && section_df
+_log_section_time "check_mk" section_checkmk
 
-[ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
+[ -z "$MK_SKIP_DF" ] && _log_section_time "df" section_df
 
-[ -z "$MK_SKIP_PS" ] && section_ps
+[ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time "nfs_mounts" section_nfs_mounts
 
-[ -z "$MK_SKIP_AIX_LPARSTAT" ] && section_lparstat_aix
+[ -z "$MK_SKIP_PS" ] && _log_section_time "ps" section_ps
 
-[ -z "$MK_SKIP_AIX_VMSTAT" ] && section_vmstat_aix
+[ -z "$MK_SKIP_AIX_LPARSTAT" ] && _log_section_time "lparstat_aix" section_lparstat_aix
 
-[ -z "$MK_SKIP_AIX_DISKIO" ] && section_aix_diskio
+[ -z "$MK_SKIP_AIX_VMSTAT" ] && _log_section_time "vmstat_aix" section_vmstat_aix
 
-[ -z "$MK_SKIP_AIX_MEM" ] && section_aix_memory
+[ -z "$MK_SKIP_AIX_DISKIO" ] && _log_section_time "aix_diskio" section_aix_diskio
 
-[ -z "$MK_SKIP_AIX_MPSTAT" ] && section_mpstat_aix
+[ -z "$MK_SKIP_AIX_MEM" ] && _log_section_time "aix_memory" section_aix_memory
 
-[ -z "$MK_SKIP_AIX_PAGING" ] && section_aix_paging
+[ -z "$MK_SKIP_AIX_MPSTAT" ] && _log_section_time "mpstat_aix" section_mpstat_aix
 
-[ -z "$MK_SKIP_CPU" ] && section_cpu
+[ -z "$MK_SKIP_AIX_PAGING" ] && _log_section_time "aix_paging" section_aix_paging
 
-[ -z "$MK_SKIP_AIX_IF" ] && section_aix_if
+[ -z "$MK_SKIP_CPU" ] && _log_section_time "cpu" section_cpu
 
-[ -z "$MK_SKIP_TIMESYNCHRONISATION" ] && section_ntp
+[ -z "$MK_SKIP_AIX_IF" ] && _log_section_time "aix_if" section_aix_if
 
-[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
+[ -z "$MK_SKIP_TIMESYNCHRONISATION" ] && _log_section_time "ntp" section_ntp
 
-[ -z "$MK_SKIP_AIX_LVM" ] && section_aix_lvm
+[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time "multipathing" section_multipathing
 
-[ -z "$MK_SKIP_TCP" ] && section_tcp
+[ -z "$MK_SKIP_AIX_LVM" ] && _log_section_time "aix_lvm" section_aix_lvm
 
-[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
+[ -z "$MK_SKIP_TCP" ] && _log_section_time "tcp" section_tcp
 
-[ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
+[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time "libelle" section_libelle
 
-[ -z "$MK_SKIP_UPTIME" ] && section_uptime
+[ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time "mailqueue" section_mailqueue
 
-[ -z "$MK_SKIP_FILEINFO" ] && section_fileinfo
+[ -z "$MK_SKIP_UPTIME" ] && _log_section_time "uptime" section_uptime
 
-[ -z "$MK_SKIP_AIX_HACMP" ] && section_aix_hacmp
+[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time "fileinfo" section_fileinfo
 
-[ -z "$MK_SKIP_JOB" ] && section_job
+[ -z "$MK_SKIP_AIX_HACMP" ] && _log_section_time "aix_hacmp" section_aix_hacmp
 
-run_remote_plugin
+[ -z "$MK_SKIP_JOB" ] && _log_section_time "job" section_job
 
+# run_remote_plugins -> _log_section_time CMD
+run_remote_plugins
+
+# run_local_checks -> _log_section_time CMD
+#                  -> run_cached _log_section_time CMD
 run_local_checks
 
+# run_plugins -> run_agent_plugin -> _log_section_time CMD
 run_plugins
 
-section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[*]}"
+_log_section_time "failed_plugins" section_checkmk_failed_plugins
+
+if $LOG_SECTION_TIME; then
+    printf "\n[%s]\n" "check_mk_agent" >>"$PROFILING_LOGFILE"
+    agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+    printf "\nruntime %.4fs\n" "$((agent_end-agent_start))" >>"$PROFILING_LOGFILE"
+fi

@@ -120,7 +120,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    cmk.core_helpers.cache.set_cache_opts(use_caches=True)
+    cmk.core_helpers.cache.FileCacheFactory.enable_cache()
 
 
 modes.register_general_option(

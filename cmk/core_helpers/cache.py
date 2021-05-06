@@ -40,7 +40,6 @@ __all__ = [
     "FileCacheFactory",
     "PersistedSections",
     "SectionStore",
-    "set_cache_opts",
     "TRawDataSection",
 ]
 
@@ -133,14 +132,6 @@ class SectionStore(Generic[TRawDataSection]):
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")
-
-
-def set_cache_opts(use_caches: bool) -> None:
-    # TODO check these settings vs.
-    # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
-    if use_caches:
-        FileCacheFactory.maybe = True
-        FileCacheFactory.use_outdated = True
 
 
 class FileCache(Generic[TRawData], abc.ABC):
@@ -314,6 +305,13 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated = False
+
+    @staticmethod
+    def enable_cache():
+        # TODO check these settings vs.
+        # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
+        FileCacheFactory.maybe = True
+        FileCacheFactory.use_outdated = True
 
     def __init__(
         self,

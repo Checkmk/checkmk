@@ -243,7 +243,7 @@ class MegaMenuRenderer:
             onclick="cmk.popup_menu.close_popup()",
         )
         if config.user.get_attribute("icons_per_item"):
-            html.icon(item.icon or "trans")
+            html.icon(item.icon or "dash")
         self._show_item_title(item)
         html.close_a()
         html.close_li()

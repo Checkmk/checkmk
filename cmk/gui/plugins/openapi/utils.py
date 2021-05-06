@@ -203,7 +203,7 @@ class Attr(NamedTuple):
     mandatory: bool
     section: str
     description: str
-    enum: Optional[List[str]] = None
+    enum: Optional[List[Optional[str]]] = None
 
 
 ObjectType = Literal['host', 'folder', 'cluster']
@@ -280,6 +280,11 @@ def collect_attributes(
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
 
+    def _format(tag_id: Optional[str]) -> str:
+        if tag_id is None:
+            return "`null`"
+        return f'`"{tag_id}"`'
+
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
         description: List[str] = []
@@ -289,7 +294,7 @@ def collect_attributes(
         if tag_group.tags:
             description.append("Choices:")
             for tag in tag_group.tags:
-                description.append(f" * {tag.id}: {tag.title}")
+                description.append(f" * {_format(tag.id)}: {tag.title}")
 
         result.append(
             Attr(
@@ -362,8 +367,9 @@ def attr_openapi_schema(
     class FieldParams(TypedDict, total=False):
         description: str
         mandatory: bool
-        enum: List[str]
+        enum: List[Optional[str]]
         validate: Callable[[Any], Any]
+        allow_none: bool
 
     schema = collections.OrderedDict()
     for attr in collect_attributes(object_type, context):
@@ -374,6 +380,8 @@ def attr_openapi_schema(
         # If we would assign enum=None, this would lead to a broken OpenApi specification!
         if attr.enum is not None:
             kwargs['enum'] = attr.enum
+            if None in attr.enum:
+                kwargs['allow_none'] = True
 
         if attr.name in validators:
             kwargs['validate'] = validators[attr.name]

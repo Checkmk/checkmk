@@ -74,10 +74,7 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     @classmethod
     def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
-        try:
-            return cls._from_json(serialized)
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
+        return cls._from_json(serialized)
 
     @classmethod
     @abc.abstractmethod

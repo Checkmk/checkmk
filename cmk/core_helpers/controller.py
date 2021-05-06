@@ -57,14 +57,11 @@ class GlobalConfig(NamedTuple):
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "GlobalConfig":
         fetcher_config = serialized["fetcher_config"]
-        try:
-            return cls(
-                cmc_log_level=fetcher_config["cmc_log_level"],
-                cluster_max_cachefile_age=fetcher_config["cluster_max_cachefile_age"],
-                snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
-            )
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
+        return cls(
+            cmc_log_level=fetcher_config["cmc_log_level"],
+            cluster_max_cachefile_age=fetcher_config["cluster_max_cachefile_age"],
+            snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
+        )
 
     def serialize(self) -> Dict[str, Any]:
         return {

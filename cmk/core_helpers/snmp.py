@@ -62,14 +62,11 @@ class SNMPPluginStoreItem(NamedTuple):
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStoreItem":
-        try:
-            return cls(
-                [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
-                SNMPDetectSpec.from_json(serialized["detect_spec"]),
-                serialized["inventory"],
-            )
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
+        return cls(
+            [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
+            SNMPDetectSpec.from_json(serialized["detect_spec"]),
+            serialized["inventory"],
+        )
 
     def serialize(self) -> Dict[str, Any]:
         return {
@@ -100,13 +97,10 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
 
     @classmethod
     def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStore":
-        try:
-            return cls({
-                SectionName(k): SNMPPluginStoreItem.deserialize(v)
-                for k, v in serialized["plugin_store"].items()
-            })
-        except (LookupError, TypeError, ValueError) as exc:
-            raise ValueError(serialized) from exc
+        return cls({
+            SectionName(k): SNMPPluginStoreItem.deserialize(v)
+            for k, v in serialized["plugin_store"].items()
+        })
 
     def serialize(self) -> Dict[str, Any]:
         return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}

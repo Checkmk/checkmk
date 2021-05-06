@@ -20,13 +20,13 @@ from cmk.special_agents.utils.request_helper import create_api_connect_session, 
 def usage():
     print("Usage:")
     print(
-        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}] [--protocol {http|https}]\n"
+        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}]\n"
     )
 
 
 def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     short_options = ""
-    long_options = ["piggyback", "servername=", "port=", "username=", "password=", "protocol="]
+    long_options = ["piggyback", "servername=", "port=", "username=", "password="]
 
     try:
         opts, _args = getopt.getopt(

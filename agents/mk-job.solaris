@@ -46,7 +46,8 @@ fi
 
 echo "start_time `perl -e 'print time'`" > "$RUNNING_FILE"
 
-info=`(/usr/bin/time -p sh -c "$@ 2>/dev/null 1>&2" 2>&1; echo $?) | sed -e 's/,/\./g'`
+program_with_args="$@ 2>/dev/null 1>&2"
+info=`(/usr/bin/time -p sh -c "$program_with_args" 2>&1; echo $?) | sed -e 's/,/\./g'`
 RC=`echo $info | awk '{print $7}'`
 
 (echo $info | awk '{print "exit_code "$7"\nreal_time "$2"\nuser_time "$4"\nsystem_time "$6""}') >> "$RUNNING_FILE"

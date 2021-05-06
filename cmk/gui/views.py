@@ -2381,11 +2381,12 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
     singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
                                                                      view.spec["single_infos"])
     # Reports are displayed by separate dropdown (Export > Report)
-    linked_visuals = [
-        (t, v)
-        for t, v in _collect_linked_visuals(view, rows, singlecontext_request_vars, mobile)
-        if t.ident != "reports"
-    ]
+    linked_visuals = list(
+        _collect_linked_visuals(view,
+                                rows,
+                                singlecontext_request_vars,
+                                mobile,
+                                visual_types=["views", "dashboards"]))
 
     # Now get the "info+single object" combinations to show dropdown menus for
     for info_name, is_single_info in _get_relevant_infos(view):
@@ -2592,18 +2593,18 @@ def collect_context_links(view: View, rows: Rows, mobile: bool,
                                                                      view.spec["single_infos"])
 
     for visual_type, visual in _collect_linked_visuals(view, rows, singlecontext_request_vars,
-                                                       mobile):
-        if visual_types and visual_type.ident not in visual_types:
-            continue
+                                                       mobile, visual_types):
         yield _make_page_menu_entry_for_visual(visual_type, visual, singlecontext_request_vars,
                                                mobile)
 
 
 def _collect_linked_visuals(view: View, rows: Rows, singlecontext_request_vars: Dict[str, str],
-                            mobile: bool) -> Iterator[_Tuple[VisualType, Visual]]:
+                            mobile: bool,
+                            visual_types: List[InfoName]) -> Iterator[_Tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
-        yield from _collect_linked_visuals_of_type(type_name, view, rows,
-                                                   singlecontext_request_vars, mobile)
+        if type_name in visual_types:
+            yield from _collect_linked_visuals_of_type(type_name, view, rows,
+                                                       singlecontext_request_vars, mobile)
 
 
 def _collect_linked_visuals_of_type(type_name: str, view: View, rows: Rows,

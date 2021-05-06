@@ -1,7 +1,6 @@
 # -*- encoding: utf-8
 # yapf: disable
 
-
 checkname = 'cmciii'
 
 
@@ -60,6 +59,7 @@ info = [[[u'1', u'CMCIII-PU', u'CMCIII-PU', u'2'],
          [u'4.5', u'Input.Category', u'14', u'', u'0', u'0', u'0']]]
 
 
+# New items use _item_key to determine the sensor in parsed
 discovery = {'': [(u'CMCIII-IO1', None),
                   (u'CMCIII-IO2', None),
                   (u'CMCIII-LEAK', None),
@@ -70,14 +70,14 @@ discovery = {'': [(u'CMCIII-IO1', None),
              'access': [],
              'can_current': [],
              'humidity': [],
-             'io': [(u'CMCIII-IO2 Input 2', {}),
-                    (u'CMCIII-IO2 Input 3', {}),
-                    (u'CMCIII-IO2 Input 4', {}),
-                    (u'CMCIII-IO2 Input 5', {}),
-                    (u'CMCIII-IO2 Input 6', {}),
-                    (u'CMCIII-IO2 Input 7', {}),
-                    (u'CMCIII-IO2 Input 8', {}),
-                    (u'Doors Input', {})],
+             'io': [(u'CMCIII-IO2 Input 2', {'_item_key': u'CMCIII-IO2 Input 2'}),
+                    (u'CMCIII-IO2 Input 3', {'_item_key': u'CMCIII-IO2 Input 3'}),
+                    (u'CMCIII-IO2 Input 4', {'_item_key': u'CMCIII-IO2 Input 4'}),
+                    (u'CMCIII-IO2 Input 5', {'_item_key': u'CMCIII-IO2 Input 5'}),
+                    (u'CMCIII-IO2 Input 6', {'_item_key': u'CMCIII-IO2 Input 6'}),
+                    (u'CMCIII-IO2 Input 7', {'_item_key': u'CMCIII-IO2 Input 7'}),
+                    (u'CMCIII-IO2 Input 8', {'_item_key': u'CMCIII-IO2 Input 8'}),
+                    (u'Doors Input', {'_item_key': 'Doors Input'})],
              'phase': [],
              'psm_current': [],
              'psm_plugs': [],
@@ -86,6 +86,7 @@ discovery = {'': [(u'CMCIII-IO1', None),
              'temp_in_out': []}
 
 
+# For compatibility reasons _item_key is not necessary to determine the sensor
 checks = {'': [(u'CMCIII-IO1', {}, [(0, 'Status: OK', [])]),
                (u'CMCIII-IO2', {}, [(0, 'Status: OK', [])]),
                (u'CMCIII-LEAK', {}, [(0, 'Status: OK', [])]),

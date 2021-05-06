@@ -6,9 +6,20 @@
 
 import pytest  # type: ignore[import]
 
+from testlib import Check  # type: ignore[import]
+
 from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+
+@pytest.fixture(name="discovery_params")
+def mock_discovery_params(monkeypatch):
+    cmciii = Check('cmciii')
+    discovery_params = cmciii.context['discovery_params']
+    cmciii.context['discovery_params'] = lambda: {'use_sensor_descriptions': False}
+    yield
+    cmciii.context['discovery_params'] = discovery_params
 
 
 def run_discovery(section, plugin, info):
@@ -68,7 +79,7 @@ def _leakage_info(status, position):
         ],
     ),
 ])
-def test_cmciii_leakage_sensors(status, position, expected):
+def test_cmciii_leakage_sensors(discovery_params, status, position, expected):
     assert run_check('cmciii', 'cmciii_leakage', "CMCIII-LEAK Leakage",
                      _leakage_info(status, position)) == expected
 
@@ -135,12 +146,12 @@ def _lcp_sensor():
     (
         'cmciii_temp_in_out',
         [
-            Service(item='Air LCP In Bottom'),
-            Service(item='Air LCP In Middle'),
-            Service(item='Air LCP In Top'),
-            Service(item='Air LCP Out Bottom'),
-            Service(item='Air LCP Out Middle'),
-            Service(item='Air LCP Out Top'),
+            Service(item='Air LCP In Bottom', parameters={'_item_key': 'Air LCP In Bottom'}),
+            Service(item='Air LCP In Middle', parameters={'_item_key': 'Air LCP In Middle'}),
+            Service(item='Air LCP In Top', parameters={'_item_key': 'Air LCP In Top'}),
+            Service(item='Air LCP Out Bottom', parameters={'_item_key': 'Air LCP Out Bottom'}),
+            Service(item='Air LCP Out Middle', parameters={'_item_key': 'Air LCP Out Middle'}),
+            Service(item='Air LCP Out Top', parameters={'_item_key': 'Air LCP Out Top'}),
         ],
     ),
     (
@@ -148,7 +159,7 @@ def _lcp_sensor():
         [],
     ),
 ])
-def test_cmciii_lcp_discovery(plugin, expected):
+def test_cmciii_lcp_discovery(discovery_params, plugin, expected):
     assert run_discovery('cmciii', plugin, _lcp_sensor()) == expected
 
 
@@ -175,7 +186,7 @@ def test_cmciii_lcp_discovery(plugin, expected):
         ],
     ),
 ])
-def test_cmciii_lcp_check(item, expected):
+def test_cmciii_lcp_check(discovery_params, item, expected):
     assert run_check('cmciii', 'cmciii_temp_in_out', item, _lcp_sensor()) == expected
 
 
@@ -328,11 +339,11 @@ def _phase_sensor():
     ]
 
 
-def test_phase_sensors():
+def test_phase_sensors(discovery_params):
     assert run_discovery('cmciii', 'cmciii_phase', _phase_sensor()) == [
-        Service(item='Master_PDU Phase 1'),
-        Service(item='Master_PDU Phase 2'),
-        Service(item='Master_PDU Phase 3'),
+        Service(item='Master_PDU Phase 1', parameters={'_item_key': 'Master_PDU Phase 1'}),
+        Service(item='Master_PDU Phase 2', parameters={'_item_key': 'Master_PDU Phase 2'}),
+        Service(item='Master_PDU Phase 3', parameters={'_item_key': 'Master_PDU Phase 3'}),
     ]
 
 
@@ -353,5 +364,5 @@ def test_phase_sensors():
         ],
     ),
 ])
-def test_cmciii_phase_check(item, expected):
+def test_cmciii_phase_check(discovery_params, item, expected):
     assert run_check('cmciii', 'cmciii_phase', item, _phase_sensor()) == expected

@@ -58,6 +58,7 @@ def _parameter_valuespec_humidity():
                      ],
                  )),
             ],
+            ignored_keys=['_item_key'],
         ),
         forth=transform_humidity,
     )

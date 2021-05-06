@@ -232,6 +232,7 @@ info = [
         ['4.5', 'Smoke.Category', '14', '', '0', '80', '80']],
 ]
 
+# New items use _item_key to determine the sensor in parsed
 discovery = {
     '': [
         ('CMC-IOModul', None),
@@ -243,38 +244,39 @@ discovery = {
     'psm_current': [],
     'psm_plugs': [],
     'io': [
-        ('CMC-IOModul Input 1', {}),
-        ('CMC-IOModul Input 2', {}),
-        ('CMC-IOModul Input 3', {}),
-        ('CMC-IOModul Input 4', {}),
-        ('CMC-IOModul Input 5', {}),
-        ('CMC-IOModul Input 6', {}),
-        ('CMC-IOModul Input 7', {}),
-        ('CMC-IOModul Input 8', {}),
-        ('CMC-IOModul Output 1', {}),
-        ('CMC-IOModul Output 2', {}),
-        ('CMC-IOModul Output 3', {}),
-        ('CMC-IOModul Output 4', {}),
-        ('CMC-PU Input 1', {}),
-        ('CMC-PU Input 2', {}),
-        ('CMC-PU Output', {}),
+        ('CMC-IOModul Input 1', {'_item_key': 'CMC-IOModul Input 1'}),
+        ('CMC-IOModul Input 2', {'_item_key': 'CMC-IOModul Input 2'}),
+        ('CMC-IOModul Input 3', {'_item_key': 'CMC-IOModul Input 3'}),
+        ('CMC-IOModul Input 4', {'_item_key': 'CMC-IOModul Input 4'}),
+        ('CMC-IOModul Input 5', {'_item_key': 'CMC-IOModul Input 5'}),
+        ('CMC-IOModul Input 6', {'_item_key': 'CMC-IOModul Input 6'}),
+        ('CMC-IOModul Input 7', {'_item_key': 'CMC-IOModul Input 7'}),
+        ('CMC-IOModul Input 8', {'_item_key': 'CMC-IOModul Input 8'}),
+        ('CMC-IOModul Output 1', {'_item_key': 'CMC-IOModul Output 1'}),
+        ('CMC-IOModul Output 2', {'_item_key': 'CMC-IOModul Output 2'}),
+        ('CMC-IOModul Output 3', {'_item_key': 'CMC-IOModul Output 3'}),
+        ('CMC-IOModul Output 4', {'_item_key': 'CMC-IOModul Output 4'}),
+        ('CMC-PU Input 1', {'_item_key': 'CMC-PU Input 1'}),
+        ('CMC-PU Input 2', {'_item_key': 'CMC-PU Input 2'}),
+        ('CMC-PU Output', {'_item_key': 'CMC-PU Output'}),
     ],
-    'access': [('CMC-PU Access', None)],
+    'access': [('CMC-PU Access', {'_item_key': 'CMC-PU Access'})],
     'temp': [
-        ('Ambient CMC-PU', {}),
-        ('Ambient CMC-Temperatur', {}),
-        ('Dew Point CMC-Temperatur', {}),
-        ('System CMC-PU', {}),
+        ('Ambient CMC-PU', {'_item_key': 'Ambient CMC-PU'}),
+        ('Ambient CMC-Temperatur', {'_item_key': 'Ambient CMC-Temperatur'}),
+        ('Dew Point CMC-Temperatur', {'_item_key': 'Dew Point CMC-Temperatur'}),
+        ('System CMC-PU', {'_item_key': 'System CMC-PU'}),
     ],
     'temp_in_out': [],
     'can_current': [
-        ('CMC-PU System.CAN1 Current', None),
-        ('CMC-PU System.CAN2 Current', None),
+        ('CMC-PU System.CAN1 Current', {'_item_key': 'CMC-PU System.CAN1 Current'}),
+        ('CMC-PU System.CAN2 Current', {'_item_key': 'CMC-PU System.CAN2 Current'}),
     ],
-    'humidity': [('CMC-Temperatur Humidity', {})],
+    'humidity': [('CMC-Temperatur Humidity', {'_item_key': 'CMC-Temperatur Humidity'})],
     'phase': []
 }
 
+# For compatibility reasons _item_key is not necessary to determine the sensor
 checks = {
     '': [
         ('CMC-IOModul', {}, [(0, 'Status: OK', [])]),

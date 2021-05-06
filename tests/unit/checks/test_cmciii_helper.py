@@ -39,11 +39,11 @@ def test_sensor_key(table, var_type, variable, expected):
     ("other_sensors", ["one"], "device one"),
     ("other_sensors", ["one", "two"], "device one"),
 ])
-def test_sensor_item(sensor_type, variable, expected):
-    sensor_item = Check('cmciii').context['sensor_item']
-    assert sensor_item(sensor_type, variable, "device") == expected
+def test_sensor_id(sensor_type, variable, expected):
+    sensor_id = Check('cmciii').context['sensor_id']
+    assert sensor_id(sensor_type, variable, "device") == expected
 
 
-def test_sensor_item_temp_in_out():
-    sensor_item = Check('cmciii').context['sensor_item']
-    assert sensor_item('temp_in_out', ['Air'], 'Liquid_Cooling_Package') == 'Air LCP'
+def test_sensor_id_temp_in_out():
+    sensor_id = Check('cmciii').context['sensor_id']
+    assert sensor_id('temp_in_out', ['Air'], 'Liquid_Cooling_Package') == 'Air LCP'

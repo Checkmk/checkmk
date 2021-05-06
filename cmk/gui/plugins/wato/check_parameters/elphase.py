@@ -105,6 +105,7 @@ def _parameter_valuespec_el_inphase():
                         "or exact device state name and the related monitoring state."),
              )),
         ],
+        ignored_keys=['_item_key'],
     )
 
 

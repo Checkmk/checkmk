@@ -395,6 +395,7 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'dell_powerconnect_temp_default_values',
         'df_zos_exclude_list',
         'discovery_cisco_dom_rules',
+        'discovery_cmciii',
         'discovery_hr_processes_rules',
         'discovery_mssql_backup',
         'discovery_netapp_api_fan_rules',

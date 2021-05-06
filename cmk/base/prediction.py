@@ -202,7 +202,7 @@ def _calculate_data_for_prediction(
     descriptors = _data_stats(slices)
 
     return PredictionData(
-        columns=[u"average", u"min", u"max", u"stdev"],
+        columns=["average", "min", "max", "stdev"],
         points=descriptors,
         num_points=len(descriptors),
         data_twindow=list(twindow[:2]),
@@ -299,7 +299,7 @@ def get_levels(
         save_predictions(pred_file, info, data_for_pred)
 
     # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred.step)  # fixed: true-division
+    index = int(rel_time / data_for_pred.step)
     reference = dict(zip(data_for_pred.columns, data_for_pred.points[index]))
 
     return reference["average"], cmk.utils.prediction.estimate_levels(

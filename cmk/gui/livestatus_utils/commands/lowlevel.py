@@ -25,7 +25,7 @@ def send_command(
 
         command:
             The livestatus external command to be sent. For reference on these commands have a look
-            at this page: https://checkmk.com/cms_livestatus_references.html
+            at this page: https://docs.checkmk.com/2.0.0/en/livestatus_references.html
 
         params:
             A list of anything.

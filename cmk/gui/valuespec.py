@@ -845,8 +845,8 @@ class RegExp(TextAscii):
             help_text.append(_("The match is performed case insensitive."))
 
         help_text.append(
-            _("Read more about [cms_regexes|regular expression matching in Checkmk] in our user manual."
-             ))
+            _("Read more about [regexes|regular expression matching in Checkmk] in our user guide.")
+        )
 
         return u" ".join(u"%s" % h for h in help_text)
 

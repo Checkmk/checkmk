@@ -261,7 +261,7 @@ class PageMenu:
             PageMenuEntry(
                 title=title,
                 icon_name="manual",
-                item=make_external_link("https://checkmk.com/cms_%s.html%s" %
+                item=make_external_link("https://docs.checkmk.com/2.0.0/%s.html%s" %
                                         (article_name, anchor)),
             ))
 
@@ -335,9 +335,9 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Articles in the user guide"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Checkmk - The official guide"),
+                        title=_("The official Checkmk user guide"),
                         icon_name="manual",
-                        item=make_external_link("https://checkmk.com/cms_index.html"),
+                        item=make_external_link("https://docs.checkmk.com/2.0.0/index.html"),
                     ),
                 ],
             ),

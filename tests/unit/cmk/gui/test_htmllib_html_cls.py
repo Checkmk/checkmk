@@ -46,27 +46,27 @@ def test_render_help_visible(module_wide_request_context, register_builtin_html,
 def test_add_manual_link(register_builtin_html):
     assert config.user.language is None
     assert compare_html(
-        html.render_help(u"[cms_introduction_docker|docker]"),
+        html.render_help(u"[introduction_docker|docker]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.com/cms_introduction_docker.html\" target=\"_blank\">docker</a></div>"
+            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.com/2.0.0/en/introduction_docker.html\" target=\"_blank\">docker</a></div>"
         ))
 
 
 def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
     monkeypatch.setattr(config.user, "language", lambda: "de")
     assert compare_html(
-        html.render_help(u"[cms_introduction_docker|docker]"),
+        html.render_help(u"[introduction_docker|docker]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.de/cms_introduction_docker.html\" target=\"_blank\">docker</a></div>"
+            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.com/2.0.0/de/introduction_docker.html\" target=\"_blank\">docker</a></div>"
         ))
 
 
 def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
     monkeypatch.setattr(config.user, "language", lambda: "de")
     assert compare_html(
-        html.render_help(u"[cms_graphing#rrds|RRDs]"),
+        html.render_help(u"[graphing#rrds|RRDs]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://checkmk.de/cms_graphing.html#rrds\" target=\"_blank\">RRDs</a></div>"
+            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.de/2.0.0/de/graphing.html#rrds\" target=\"_blank\">RRDs</a></div>"
         ))
 
 

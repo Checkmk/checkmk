@@ -1441,7 +1441,7 @@ class html(ABCHTMLGenerator):
         """Embed help box, whose visibility is controlled by a global button in the page.
 
         You may add macros like this to the help texts to create links to the user
-        manual: [cms_piggyback|Piggyback chapter].
+        manual: [piggyback|Piggyback chapter].
         """
         self.write_html(self.render_help(text, escape_text=escape_text))
 
@@ -1467,9 +1467,9 @@ class html(ABCHTMLGenerator):
 
     def resolve_help_text_macros(self, text: str) -> str:
         if config.user.language == "de":
-            cmk_base_url = "https://checkmk.de"
+            cmk_base_url = "https://docs.checkmk.com/2.0.0/de"
         else:
-            cmk_base_url = "https://checkmk.com"
+            cmk_base_url = "https://docs.checkmk.com/2.0.0/en"
         return re.sub(r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
                       "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % cmk_base_url, text)
 

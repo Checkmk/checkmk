@@ -375,7 +375,7 @@ class MainModuleOtherServices(ABCMainModule):
 
     @property
     def description(self):
-        return _("Integrate [cms_active_checks#mrpe|custom nagios plugins] into the "
+        return _("Integrate [active_checks#mrpe|custom nagios plugins] into the "
                  "monitoring as active checks.")
 
     @property

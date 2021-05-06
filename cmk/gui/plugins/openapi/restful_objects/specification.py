@@ -177,9 +177,9 @@ can be found in the Checkmk documentation.
 To check what columns are available and what kind of value each column can have, please consult
 these definition files on GitHub.
 
- * [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
- * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
- * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
+ * [downtimes table](https://github.com/tribe29/checkmk/blob/2.0.0/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
+ * [hosts table](https://github.com/tribe29/checkmk/blob/2.0.0/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
+ * [services table](https://github.com/tribe29/checkmk/blob/2.0.0/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
 ### Example
 
@@ -391,8 +391,8 @@ OPTIONS: ReDocSpec = {
         },
     },
     'externalDocs': {
-        'description': 'The Checkmk Handbook',
-        'url': 'https://checkmk.com/cms.html',
+        'description': 'User guide',
+        'url': 'https://docs.checkmk.com/2.0.0',
     },
     'x-logo': {
         'url': 'https://checkmk.com/bilder/brand-assets/checkmk_logo_main.png',

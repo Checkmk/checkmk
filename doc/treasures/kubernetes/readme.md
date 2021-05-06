@@ -6,7 +6,7 @@ that needs to use it ends up configuring its own instance of prometheus.
 
 A very informative document on monitoring architecture for kubernetes can
 be found here
-<https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.md>
+<https://github.com/kubernetes/community/blob/2.0.0/contributors/design-proposals/instrumentation/monitoring_architecture.md>
 
 
 ## Deprecation
@@ -64,7 +64,7 @@ The data delivered by the kubelet API and the Prometheus adapter augments
 the basic monitoring of Kubernetes via Check_MK. Therefore, as a first step
 the setup of the basic monitoring is necessary. A detailled description of
 the setup can be found here
-<https://mathias-kettner.de/cms_monitoring_kubernetes.html>
+<https://docs.checkmk.com/2.0.0/en/monitoring_kubernetes.html>
 
 
 

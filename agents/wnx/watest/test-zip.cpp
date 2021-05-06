@@ -34,7 +34,8 @@ TEST_F(ZipFixture, UnZipIntegration) {
     auto target = target_ / "unzip";
     auto work_file = zip_file_;
 
-    fs::copy_file(tst::G_TestPath / tst::install_cab_to_test, work_file);
+    fs::copy_file(tst::GetUnitTestFilesRoot() / tst::install_cab_to_test,
+                  work_file);
 
     ASSERT_FALSE(Extract(work_file / "1", target_));
 
@@ -49,7 +50,7 @@ TEST_F(ZipFixture, UnCabIntegration) {
     auto target = target_ / "uncab";
     auto work_file = cab_file_;
 
-    fs::copy_file(tst::G_TestPath / tst::cab_to_test, work_file);
+    fs::copy_file(tst::GetUnitTestFilesRoot() / tst::cab_to_test, work_file);
     ASSERT_FALSE(Extract((work_file / "1"), target_));
 
     ASSERT_FALSE(Extract(work_file, target));

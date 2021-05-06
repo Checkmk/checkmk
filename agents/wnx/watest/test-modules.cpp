@@ -569,8 +569,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
 }
 
 TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
-    auto zip_file = tst::MakePathToUnitTestFiles(tst::G_SolutionPath) /
-                    tst::install_cab_to_test;
+    auto zip_file = tst::MakePathToUnitTestFiles() / tst::install_cab_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
         << "Please make '" << tst::install_cab_to_test << "' available";
 

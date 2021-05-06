@@ -91,10 +91,11 @@ TempDirPair::~TempDirPair() {
     }
 }
 
-const std::filesystem::path G_ProjectPath = PROJECT_DIR;
-const std::filesystem::path G_SolutionPath = SOLUTION_DIR;
-const std::filesystem::path G_TestPath =
-    MakePathToUnitTestFiles(G_SolutionPath);
+fs::path GetProjectRoot() { return fs::path{PROJECT_DIR}; }
+fs::path GetSolutionRoot() { return fs::path{SOLUTION_DIR}; }
+fs::path GetUnitTestFilesRoot() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
 
 // below described the structure of the solution folder:
 // solution root <--- Use SOLUTION_DIR define
@@ -384,7 +385,7 @@ bool TempCfgFs::loadContent(std::string_view content) {
 }
 
 std::filesystem::path GetFabricYml() {
-    return G_SolutionPath / "install" / "resources" /
+    return tst::GetSolutionRoot() / "install" / "resources" /
            cma::cfg::files::kDefaultMainConfig;
 }
 

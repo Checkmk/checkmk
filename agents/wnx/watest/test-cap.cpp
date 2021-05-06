@@ -182,8 +182,8 @@ TEST_F(CapTestYamlFixture, Install) {
 }
 
 TEST_F(CapTestYamlFixture, ReInstall) {
-    auto yml_base = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
-                    "check_mk.wato.install.yml";
+    auto yml_base =
+        tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
     ASSERT_TRUE(fs::exists(yml_base));
 
     auto yml_bakery = GetBakeryFile();
@@ -195,7 +195,7 @@ TEST_F(CapTestYamlFixture, ReInstall) {
     EXPECT_FALSE(fs::exists(yml_bakery)) << "must be absent";
     EXPECT_FALSE(fs::exists(yml_target())) << "must be absent";
 
-    // target presented: everнthing is removed
+    // target presented: everything is removed
     // fs::copy_file(yml_base, yml_source());
     tst::CreateWorkFile(yml_target(), "brr1");
     tst::CreateWorkFile(yml_bakery, "brr2");
@@ -384,8 +384,7 @@ private:
 };
 
 TEST_F(CapTestProcessFixture, ValidFile) {
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
     EXPECT_TRUE(Process(cap.u8string(), ProcMode::list, files));
@@ -397,8 +396,7 @@ TEST_F(CapTestProcessFixture, ValidFile) {
 }
 
 TEST_F(CapTestProcessFixture, EmptyFile) {
-    auto cap = tst::MakePathToCapTestFiles(tst::G_SolutionPath) /
-               "plugins_null.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins_null.test.cap";
 
     std::vector<std::wstring> files;
     auto ret = Process(cap.u8string(), ProcMode::list, files);
@@ -408,8 +406,7 @@ TEST_F(CapTestProcessFixture, EmptyFile) {
 
 TEST_F(CapTestProcessFixture, Install) {
     fs::create_directories(GetUserPluginsDir());
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     std::vector<std::wstring> files;
     EXPECT_TRUE(Process(cap.u8string(), ProcMode::install, files));
@@ -421,8 +418,7 @@ TEST_F(CapTestProcessFixture, Install) {
 }
 
 TEST_F(CapTestProcessFixture, Remove) {
-    auto cap =
-        tst::MakePathToCapTestFiles(tst::G_SolutionPath) / "plugins.test.cap";
+    auto cap = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
     makeFilesInPlugins();
 
@@ -449,8 +445,7 @@ TEST_F(CapTestProcessFixture, BadFiles) {
     };
 
     for (auto const& test : data) {
-        auto bad_cap =
-            tst::MakePathToCapTestFiles(tst::G_SolutionPath) / test.first;
+        auto bad_cap = tst::MakePathToCapTestFiles() / test.first;
         std::vector<std::wstring> results;
         EXPECT_FALSE(Process(bad_cap.u8string(), ProcMode::list, results));
         ASSERT_EQ(results.size(), test.second)

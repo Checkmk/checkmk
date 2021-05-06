@@ -166,8 +166,8 @@ TEST(CvtTest, ToYaml) {
 }
 
 TEST(CvtTest, LogFilesSection) {
-    auto test_file = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
-                     "check_mk.logfiles.test.ini";
+    auto test_file =
+        tst::MakePathToConfigTestFiles() / "check_mk.logfiles.test.ini";
     Parser p;
     p.prepare();
     p.readIni(test_file, false);

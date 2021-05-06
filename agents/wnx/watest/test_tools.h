@@ -23,10 +23,22 @@ class Node;
 }
 
 namespace tst {
+std::filesystem::path GetSolutionRoot();
+std::filesystem::path GetProjectRoot();
+std::filesystem::path GetUnitTestFilesRoot();
 
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToUnitTestFiles() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToConfigTestFiles() {
+    return MakePathToConfigTestFiles(GetSolutionRoot());
+}
 std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToCapTestFiles() {
+    return MakePathToCapTestFiles(GetSolutionRoot());
+}
 
 ///  from the TestEnvironment
 [[nodiscard]] std::filesystem::path GetTempDir();
@@ -224,7 +236,6 @@ private:
     YAML::Node yaml_;
 };
 
-const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
 std::string GetFabricYmlContent();
 

@@ -342,7 +342,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
 
         # Should we show a page with context links?
         context_links = list(
-            views.collect_context_links(self.view, rows, mobile=True, only_types=['views']))
+            views.collect_context_links(self.view, rows, mobile=True, visual_types=['views']))
 
         if context_links:
             navbar.append(("context", _("Context"), "arrow-r", ''))

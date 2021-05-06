@@ -888,7 +888,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
         # Link related reports
-        yield from collect_context_links(self.view, rows, only_types=["reports"])
+        yield from collect_context_links(self.view, rows, mobile=False, visual_types=["reports"])
 
     def _extend_display_dropdown(self, menu: PageMenu, show_filters: List[Filter]) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -2583,24 +2583,18 @@ def _get_relevant_infos(view: View) -> List[_Tuple[InfoName, bool]]:
     return dropdowns
 
 
-def collect_context_links(view: View,
-                          rows: Rows,
-                          mobile: bool = False,
-                          only_types: Optional[List[InfoName]] = None) -> Iterator[PageMenuEntry]:
+def collect_context_links(view: View, rows: Rows, mobile: bool,
+                          visual_types: List[InfoName]) -> Iterator[PageMenuEntry]:
     """Collect all visuals that share a context with visual. For example
     if a visual has a host context, get all relevant visuals."""
-    if only_types is None:
-        only_types = []
-
     # compute collections of set single context related request variables needed for this visual
     singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
                                                                      view.spec["single_infos"])
 
     for visual_type, visual in _collect_linked_visuals(view, rows, singlecontext_request_vars,
                                                        mobile):
-        if only_types and visual_type.ident not in only_types:
+        if visual_types and visual_type.ident not in visual_types:
             continue
-
         yield _make_page_menu_entry_for_visual(visual_type, visual, singlecontext_request_vars,
                                                mobile)
 

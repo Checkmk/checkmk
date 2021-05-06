@@ -702,6 +702,9 @@ msgstr "pornit"
 msgid "(0 is current period)"
 msgstr ""
 
+msgid "(Max limit reached, be more specific)"
+msgstr ""
+
 msgid "(No services with metrics found)"
 msgstr ""
 
@@ -51443,9 +51446,9 @@ msgstr ""
 msgid "Unknown match type: %s"
 msgstr ""
 
-#, python-format
-msgid "Unknown metric type <tt>%s</tt>"
-msgstr ""
+#, fuzzy, python-format
+msgid "Unknown metric type %s"
+msgstr "% întrări libere"
 
 msgid "Unknown paths"
 msgstr ""

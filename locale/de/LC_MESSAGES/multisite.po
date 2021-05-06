@@ -708,6 +708,9 @@ msgstr "'Warning' Status"
 msgid "(0 is current period)"
 msgstr "(0 entspricht aktuelle Periode)"
 
+msgid "(Max limit reached, be more specific)"
+msgstr ""
+
 msgid "(No services with metrics found)"
 msgstr "(Keine Services mit Metriken gefunden)"
 
@@ -54656,9 +54659,9 @@ msgstr "Unbekannte Gruppe: %s"
 msgid "Unknown match type: %s"
 msgstr "Unbekannte Auswertungsart: %s"
 
-#, python-format
-msgid "Unknown metric type <tt>%s</tt>"
-msgstr "Unbekannter Metrik-Typ <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "Unknown metric type %s"
+msgstr "Unbekannte Auswertungsart: %s"
 
 msgid "Unknown paths"
 msgstr "Unbekannte Pfade"
@@ -62752,6 +62755,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Unknown metric type <tt>%s</tt>"
+#~ msgstr "Unbekannter Metrik-Typ <tt>%s</tt>"
 
 #~ msgid "Loose - Contacts for hosts see all services"
 #~ msgstr "Lasch - Kontakte von Hosts können alle Services sehen"

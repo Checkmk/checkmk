@@ -702,16 +702,7 @@ msgstr "pornit"
 msgid "(0 is current period)"
 msgstr ""
 
-msgid "(Max limit reached, be more specific)"
-msgstr ""
-
-msgid "(No services with metrics found)"
-msgstr ""
-
-msgid "(Please select a metric)"
-msgstr ""
-
-msgid "(Please select a service)"
+msgid "(Max suggestions reached, be more specific)"
 msgstr ""
 
 #, python-format
@@ -726,9 +717,6 @@ msgid "(TLS, HTTP and DNS names)"
 msgstr ""
 
 msgid "(This module is not yet implemented)"
-msgstr ""
-
-msgid "(This service has no metrics)"
 msgstr ""
 
 msgid "(Untitled module)"
@@ -8469,9 +8457,6 @@ msgstr "Verificări active"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr ""
 
-msgid "Checkmk - The official guide"
-msgstr ""
-
 msgid "Checkmk Agent Local-Directory"
 msgstr ""
 
@@ -10137,7 +10122,7 @@ msgstr ""
 msgid "Consider times where the host is down"
 msgstr ""
 
-msgid "Consolidation function for the [cms_graphing#rrds|RRD] data column"
+msgid "Consolidation function for the [graphing#rrds|RRD] data column"
 msgstr ""
 
 msgid "Consolidation functions"
@@ -20392,14 +20377,6 @@ msgstr ""
 msgid "Highly automated"
 msgstr ""
 
-#, fuzzy
-msgid "Hint a hostname"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
-msgid "Hint a service"
-msgstr "sesiuni"
-
 msgid "Historic Event Console Event"
 msgstr ""
 
@@ -20596,10 +20573,6 @@ msgstr "Numele Elementului"
 #, fuzzy
 msgid "Host Labels"
 msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Host Metrics"
-msgstr "serviciu"
 
 #, fuzzy, python-format
 msgid "Host Name %s"
@@ -21099,10 +21072,6 @@ msgstr ""
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr ""
-
-#, fuzzy
-msgid "Hostname:"
-msgstr "Numele Elementului"
 
 msgid "Hostnames to query"
 msgstr ""
@@ -23514,8 +23483,8 @@ msgid "Integrate Nagios plugins"
 msgstr "Grup nou"
 
 msgid ""
-"Integrate [cms_active_checks#mrpe|custom nagios plugins] into the monitoring "
-"as active checks."
+"Integrate [active_checks#mrpe|custom nagios plugins] into the monitoring as "
+"active checks."
 msgstr ""
 
 msgid "Integrate platforms using special agents, e.g. SAP R/3"
@@ -28369,9 +28338,6 @@ msgstr " pe siteul de monitorizare: "
 msgid "Metric aggregation"
 msgstr "Agregare noua"
 
-msgid "Metric compression (RRD)"
-msgstr ""
-
 #, fuzzy
 msgid "Metric label"
 msgstr "trei nivele"
@@ -28405,6 +28371,9 @@ msgid "Metrics system"
 msgstr ""
 
 msgid "Metrics with all zero values"
+msgstr ""
+
+msgid "MiB"
 msgstr ""
 
 msgid "Microsoft Azure"
@@ -34203,10 +34172,6 @@ msgstr ""
 msgid "Please enter an alias name or description for the site %s."
 msgstr ""
 
-#, fuzzy
-msgid "Please enter hostname"
-msgstr " pe siteul de monitorizare: "
-
 msgid "Please enter the Multisite URL of the slave site."
 msgstr ""
 
@@ -35879,8 +35844,8 @@ msgid "Read logs from beginning"
 msgstr ""
 
 msgid ""
-"Read more about [cms_regexes|regular expression matching in Checkmk] in our "
-"user manual."
+"Read more about [regexes|regular expression matching in Checkmk] in our user "
+"guide."
 msgstr ""
 
 msgid "Read only mode"
@@ -37456,7 +37421,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+"Rules to add [active_checks|network services] like HTTP and TCP to the "
 "monitoring. The services are provided by so called active checks that allow "
 "you to monitor network services directly from the outside."
 msgstr ""
@@ -37472,10 +37437,10 @@ msgid "Rules to configure the behaviour of monitored hosts."
 msgstr ""
 
 msgid ""
-"Rules to set up [cms_wato_services#manual_checks|manual services]. Services "
-"set up in this way do not depend on the service discovery. This is useful if "
-"you want to enforce compliance with a specific guideline. You can for "
-"example ensure that a certain Windows service is always present on a host."
+"Rules to set up [wato_services#manual_checks|manual services]. Services set "
+"up in this way do not depend on the service discovery. This is useful if you "
+"want to enforce compliance with a specific guideline. You can for example "
+"ensure that a certain Windows service is always present on a host."
 msgstr ""
 
 msgid "Ruleset"
@@ -43560,8 +43525,9 @@ msgstr ""
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr ""
 
-msgid "Text logfiles (Linux, Windows)"
-msgstr ""
+#, fuzzy
+msgid "Text logfiles (Linux, Solaris, Windows)"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "Text logfiles (Windows) - Deprecated (see help text)"
 msgstr ""
@@ -44173,20 +44139,19 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The agent plugins <tt>mk_logwatch</tt> and <tt>mk_logwatch.exe</tt> monitor "
-"a configured set of text logfiles for new messages, classifies these "
-"according to a set of rules and sends (only) relevant messages to the "
-"Check_MK server for further processing. Here the messages can further be "
-"(re-)classified using the <a href='wato.py?"
-"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch Ruleset</a>. "
-"<b>Note:</b> If you want to configure several log files with different sets "
-"of patterns, then simply create several rules. In this ruleset <b>all</b> "
-"matching rules are being executed, not only the first one. <b>Note (2):</b> "
-"This duplicate possibility for classification is due to performance issues. "
-"It is always a good idea that the agent forwards only messages that are "
-"potential problems in order to cut down network traffic. Central "
-"reclassification on the other hand is more conveniant because no agent "
-"update is neccessary when rules need to be changed."
+"The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
+"logfiles for new messages, classifies these according to a set of rules and "
+"sends (only) relevant messages to the Check_MK server for further "
+"processing. Here the messages can further be (re-)classified using the <a "
+"href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch "
+"Ruleset</a>. <b>Note:</b> If you want to configure several log files with "
+"different sets of patterns, then simply create several rules. In this "
+"ruleset <b>all</b> matching rules are being executed, not only the first "
+"one. <b>Note (2):</b> This duplicate possibility for classification is due "
+"to performance issues. It is always a good idea that the agent forwards only "
+"messages that are potential problems in order to cut down network traffic. "
+"Central reclassification on the other hand is more conveniant because no "
+"agent update is neccessary when rules need to be changed."
 msgstr ""
 
 msgid ""
@@ -45702,6 +45667,9 @@ msgstr ""
 msgid ""
 "The numerical JIRA resolution transition ID. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
+msgstr ""
+
+msgid "The official Checkmk user guide"
 msgstr ""
 
 msgid "The offset in ms at which a critical state is triggered."
@@ -53035,6 +53003,10 @@ msgstr "Numele Elementului"
 msgid "User for login"
 msgstr ""
 
+#, fuzzy
+msgid "User guide"
+msgstr "Ascude regulile de utilizator"
+
 msgid "User interface"
 msgstr ""
 
@@ -58700,6 +58672,27 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Hint a hostname"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~ msgid "Hint a service"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Host Metrics"
+#~ msgstr "serviciu"
+
+#, fuzzy
+#~| msgid "Host Name"
+#~ msgid "Hostname:"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Please enter hostname"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 #~ msgid "Adaptable"
 #~ msgstr "spatiu utilizat"
 
@@ -62248,10 +62241,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Temporarily ignore this service"
 #~ msgstr "%s acest site"
-
-#, fuzzy
-#~ msgid "Text logfiles (Windows)"
-#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 #~ msgid "The %s %s does not match this rule."

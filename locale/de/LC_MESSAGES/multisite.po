@@ -708,17 +708,8 @@ msgstr "'Warning' Status"
 msgid "(0 is current period)"
 msgstr "(0 entspricht aktuelle Periode)"
 
-msgid "(Max limit reached, be more specific)"
+msgid "(Max suggestions reached, be more specific)"
 msgstr ""
-
-msgid "(No services with metrics found)"
-msgstr "(Keine Services mit Metriken gefunden)"
-
-msgid "(Please select a metric)"
-msgstr "(Bitte wählen Sie eine Metrik)"
-
-msgid "(Please select a service)"
-msgstr "(Bitte wählen Sie einen Service)"
 
 #, python-format
 msgid "(SLA alert levels at %d%%/%d%% left)"
@@ -733,9 +724,6 @@ msgstr "(TLS, HTTP und DNS Namen)"
 
 msgid "(This module is not yet implemented)"
 msgstr "(Dieses Modul ist noch nicht programmiert)"
-
-msgid "(This service has no metrics)"
-msgstr "(Dieser Service hat keine Metriken)"
 
 msgid "(Untitled module)"
 msgstr "(Modul ohne Namen)"
@@ -8949,9 +8937,6 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
-msgid "Checkmk - The official guide"
-msgstr "Checkmk - The offizielle Guide"
-
 msgid "Checkmk Agent Local-Directory"
 msgstr "Checkmk Agent Local-Ordner"
 
@@ -10698,7 +10683,8 @@ msgstr "Den Zustand des Jobs berücksichtigen"
 msgid "Consider times where the host is down"
 msgstr "Zeiten berücksichtigen wo der Host unten ist"
 
-msgid "Consolidation function for the [cms_graphing#rrds|RRD] data column"
+#, fuzzy
+msgid "Consolidation function for the [graphing#rrds|RRD] data column"
 msgstr "Verbindungsfunktion für die [cms_graphing#rrds|RRD]  Datenreihe"
 
 msgid "Consolidation functions"
@@ -21143,12 +21129,6 @@ msgstr "Hoch: Alarme umgehen die definierten Ruhezeiten"
 msgid "Highly automated"
 msgstr "Hochgradig automatisiert"
 
-msgid "Hint a hostname"
-msgstr "Einen Hostnamen vorschlagen"
-
-msgid "Hint a service"
-msgstr "Einen Service vorschlagen"
-
 msgid "Historic Event Console Event"
 msgstr "Historisches Ereignis der Event Console"
 
@@ -21333,9 +21313,6 @@ msgstr "Host-Label"
 
 msgid "Host Labels"
 msgstr "Host-Labels"
-
-msgid "Host Metrics"
-msgstr "Hostmetriken"
 
 #, python-format
 msgid "Host Name %s"
@@ -21805,9 +21782,6 @@ msgstr "Hostname/IP Adresse der Event Console:"
 
 msgid "Hostname/IP address of Master Event Console:"
 msgstr "Hostname/IP Adresse der Master Event Console:"
-
-msgid "Hostname:"
-msgstr "Hostname:"
 
 msgid "Hostnames to query"
 msgstr "Abzurufende Hostnamen"
@@ -24858,9 +24832,10 @@ msgstr ""
 msgid "Integrate Nagios plugins"
 msgstr "Nagios-Plugins einbinden"
 
+#, fuzzy
 msgid ""
-"Integrate [cms_active_checks#mrpe|custom nagios plugins] into the monitoring "
-"as active checks."
+"Integrate [active_checks#mrpe|custom nagios plugins] into the monitoring as "
+"active checks."
 msgstr ""
 "Integrieren Sie [cms_active_checks#mrpe|custom nagios plugins] als aktive "
 "Checks in das Monitoring."
@@ -29507,9 +29482,6 @@ msgstr "Metrik-Historie"
 msgid "Metric aggregation"
 msgstr "Metrik-Aggregation"
 
-msgid "Metric compression (RRD)"
-msgstr "Metrik Kompression (RRD)"
-
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
 
@@ -29546,6 +29518,9 @@ msgstr "Metrik-System"
 
 msgid "Metrics with all zero values"
 msgstr "Metriken, die überall den Wert 0 haben"
+
+msgid "MiB"
+msgstr "MiB"
 
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
@@ -35251,9 +35226,6 @@ msgstr "Bitte geben Sie einen gültigen Uhrzeitbereich ein"
 msgid "Please enter an alias name or description for the site %s."
 msgstr "Bitte Alias oder Beschreibung der Instanz %s eingeben."
 
-msgid "Please enter hostname"
-msgstr "Bitte Hostnamen eingeben"
-
 msgid "Please enter the Multisite URL of the slave site."
 msgstr "Bitte gebeb Sie die Multisite URL der Slave-Instanz eingeben."
 
@@ -36915,9 +36887,10 @@ msgstr "Leselatenz"
 msgid "Read logs from beginning"
 msgstr "Logs von Anfang an auslesen"
 
+#, fuzzy
 msgid ""
-"Read more about [cms_regexes|regular expression matching in Checkmk] in our "
-"user manual."
+"Read more about [regexes|regular expression matching in Checkmk] in our user "
+"guide."
 msgstr ""
 "Lesen Sie mehr über [cms_regexes|reguläre Ausdrucksübereinstimmung in "
 "Checkmk] in unserem Benutzerhandbuch."
@@ -38454,8 +38427,9 @@ msgstr ""
 "von Checks und Services. Zusätzlich kann die Erkennung individueller Checks "
 "wie z.B. des Interface Checks angepasst werden."
 
+#, fuzzy
 msgid ""
-"Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+"Rules to add [active_checks|network services] like HTTP and TCP to the "
 "monitoring. The services are provided by so called active checks that allow "
 "you to monitor network services directly from the outside."
 msgstr ""
@@ -38478,11 +38452,12 @@ msgstr ""
 msgid "Rules to configure the behaviour of monitored hosts."
 msgstr "Regeln um das Verhalten von überwachten Hosts zu konfigurieren."
 
+#, fuzzy
 msgid ""
-"Rules to set up [cms_wato_services#manual_checks|manual services]. Services "
-"set up in this way do not depend on the service discovery. This is useful if "
-"you want to enforce compliance with a specific guideline. You can for "
-"example ensure that a certain Windows service is always present on a host."
+"Rules to set up [wato_services#manual_checks|manual services]. Services set "
+"up in this way do not depend on the service discovery. This is useful if you "
+"want to enforce compliance with a specific guideline. You can for example "
+"ensure that a certain Windows service is always present on a host."
 msgstr ""
 "Regeln zum Einrichten von [cms_wato_services#manual_checks|manual services]. "
 "Auf diese Weise eingerichtete Services sind nicht von der Service-Erkennung "
@@ -44626,7 +44601,8 @@ msgstr "Text von der URL %s"
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Textgruppen von regulären Ausdrücken, mit Leerzeichen separiert"
 
-msgid "Text logfiles (Linux, Windows)"
+#, fuzzy
+msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Text-Logdateien (Linux, Windows)"
 
 msgid "Text logfiles (Windows) - Deprecated (see help text)"
@@ -45475,21 +45451,21 @@ msgstr ""
 "entsprechend dem konfigurierten Abschnitt gruppiert. Es kann auch eine "
 "einzelne Datei überwacht werden."
 
+#, fuzzy
 msgid ""
-"The agent plugins <tt>mk_logwatch</tt> and <tt>mk_logwatch.exe</tt> monitor "
-"a configured set of text logfiles for new messages, classifies these "
-"according to a set of rules and sends (only) relevant messages to the "
-"Check_MK server for further processing. Here the messages can further be "
-"(re-)classified using the <a href='wato.py?"
-"varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch Ruleset</a>. "
-"<b>Note:</b> If you want to configure several log files with different sets "
-"of patterns, then simply create several rules. In this ruleset <b>all</b> "
-"matching rules are being executed, not only the first one. <b>Note (2):</b> "
-"This duplicate possibility for classification is due to performance issues. "
-"It is always a good idea that the agent forwards only messages that are "
-"potential problems in order to cut down network traffic. Central "
-"reclassification on the other hand is more conveniant because no agent "
-"update is neccessary when rules need to be changed."
+"The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
+"logfiles for new messages, classifies these according to a set of rules and "
+"sends (only) relevant messages to the Check_MK server for further "
+"processing. Here the messages can further be (re-)classified using the <a "
+"href='wato.py?varname=logwatch_rules&folder=&mode=edit_ruleset'>Logwatch "
+"Ruleset</a>. <b>Note:</b> If you want to configure several log files with "
+"different sets of patterns, then simply create several rules. In this "
+"ruleset <b>all</b> matching rules are being executed, not only the first "
+"one. <b>Note (2):</b> This duplicate possibility for classification is due "
+"to performance issues. It is always a good idea that the agent forwards only "
+"messages that are potential problems in order to cut down network traffic. "
+"Central reclassification on the other hand is more conveniant because no "
+"agent update is neccessary when rules need to be changed."
 msgstr ""
 "Das Agentenplugin <tt>mk_logwatch</tt> überwacht eine konfigurierte Menge "
 "von Text-Logdateien bzgl. neuer Einträge, klassifiziert diese anhand eines "
@@ -47476,6 +47452,10 @@ msgid ""
 msgstr ""
 "The numerische JIRA resolution transition ID. 11 - 'To Do', 21 - 'In "
 "Progress', 31 - 'Done'"
+
+#, fuzzy
+msgid "The official Checkmk user guide"
+msgstr "Checkmk - The offizielle Guide"
 
 msgid "The offset in ms at which a critical state is triggered."
 msgstr "Verschiebung in ms ab dem der Status CRIT gemeldet wird."
@@ -56245,6 +56225,10 @@ msgstr "Benutzer Base DN"
 msgid "User for login"
 msgstr "Benutzer für Login"
 
+#, fuzzy
+msgid "User guide"
+msgstr "Benutzer-Agent"
+
 msgid "User interface"
 msgstr "Benutzerschnittstelle"
 
@@ -62756,6 +62740,36 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "(No services with metrics found)"
+#~ msgstr "(Keine Services mit Metriken gefunden)"
+
+#~ msgid "(Please select a metric)"
+#~ msgstr "(Bitte wählen Sie eine Metrik)"
+
+#~ msgid "(Please select a service)"
+#~ msgstr "(Bitte wählen Sie einen Service)"
+
+#~ msgid "(This service has no metrics)"
+#~ msgstr "(Dieser Service hat keine Metriken)"
+
+#~ msgid "Hint a hostname"
+#~ msgstr "Einen Hostnamen vorschlagen"
+
+#~ msgid "Hint a service"
+#~ msgstr "Einen Service vorschlagen"
+
+#~ msgid "Host Metrics"
+#~ msgstr "Hostmetriken"
+
+#~ msgid "Hostname:"
+#~ msgstr "Hostname:"
+
+#~ msgid "Metric compression (RRD)"
+#~ msgstr "Metrik Kompression (RRD)"
+
+#~ msgid "Please enter hostname"
+#~ msgstr "Bitte Hostnamen eingeben"
+
 #~ msgid "Unknown metric type <tt>%s</tt>"
 #~ msgstr "Unbekannter Metrik-Typ <tt>%s</tt>"
 
@@ -67578,9 +67592,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Log: type of state (hard/soft/stopped/started)"
 #~ msgstr "Logdatei: Statustyp (hard/soft/stopped/started)"
-
-#~ msgid "MiB"
-#~ msgstr "MiB"
 
 #~ msgid "NTP time offset"
 #~ msgstr "NTP-Zeitversatz"

@@ -21,9 +21,9 @@ def test_parse_arguments() -> None:
         '--password',
         '123',
     ])
-    assert args.opt_servername == "myserver"
-    assert args.opt_port == "8161"
-    assert args.opt_username == "abc"
-    assert args.opt_password == "123"
-    assert args.opt_piggyback_mode is True
-    assert args.opt_protocol == "https"
+    assert args.servername == "myserver"
+    assert args.port == "8161"
+    assert args.username == "abc"
+    assert args.password == "123"
+    assert args.piggyback is True
+    assert args.protocol == "https"

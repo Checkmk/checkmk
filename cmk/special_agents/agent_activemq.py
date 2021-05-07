@@ -39,30 +39,30 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         sys.exit(2)
 
     args = Args(
-        opt_servername=None,
-        opt_port=None,
-        opt_username=None,
-        opt_password=None,
-        opt_piggyback_mode=False,
-        opt_protocol="http",
+        servername=None,
+        port=None,
+        username=None,
+        password=None,
+        piggyback=False,
+        protocol="http",
         verbose=False,
     )
 
     for o, a in opts:
         if o in ['--piggyback']:
-            args.opt_piggyback_mode = True
+            args.piggyback = True
         elif o in ['--servername']:
-            args.opt_servername = a
+            args.servername = a
         elif o in ['--port']:
-            args.opt_port = a
+            args.port = a
         elif o in ['--username']:
-            args.opt_username = a
+            args.username = a
         elif o in ['--password']:
-            args.opt_password = a
+            args.password = a
         elif o in ['--protocol']:
-            args.opt_protocol = a
+            args.protocol = a
 
-    if not args.opt_servername or not args.opt_port:
+    if not args.servername or not args.port:
         usage()
         sys.exit(2)
 
@@ -71,15 +71,15 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 def agent_activemq_main(args: Args) -> None:
     api_url = parse_api_url(
-        server_address=args.opt_servername,
+        server_address=args.servername,
         api_path="/admin/xml/",
-        port=args.opt_port,
-        protocol=args.opt_protocol,
+        port=args.port,
+        protocol=args.protocol,
     )
 
     auth = None
-    if args.opt_username:
-        auth = HTTPBasicAuth(args.opt_username, args.opt_password)
+    if args.username:
+        auth = HTTPBasicAuth(args.username, args.password)
 
     session = create_api_connect_session(api_url, auth=auth)
 
@@ -98,12 +98,12 @@ def agent_activemq_main(args: Args) -> None:
     count = 0
     output_lines = []
     try:
-        if not args.opt_piggyback_mode:
+        if not args.piggyback:
             output_lines.append("<<<mq_queues>>>")
 
         for line in data:
             count += 1
-            if args.opt_piggyback_mode:
+            if args.piggyback:
                 output_lines.append("<<<<%s>>>>" % line.get('name'))
                 output_lines.append("<<<mq_queues>>>")
             output_lines.append("[[%s]]" % line.get('name'))
@@ -113,7 +113,7 @@ def agent_activemq_main(args: Args) -> None:
                 values += "%s " % stats[0].get(job)
             output_lines.append(values)
 
-        if args.opt_piggyback_mode:
+        if args.piggyback:
             output_lines.append("<<<<>>>>")
             output_lines.append("<<<local:sep(0)>>>")
             output_lines.append("0 Active_MQ - Found %s Queues in total" % count)

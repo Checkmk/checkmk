@@ -47,6 +47,16 @@ class TCPFetcher(AgentFetcher):
         self.use_only_cache: Final = use_only_cache
         self._socket: Optional[socket.socket] = None
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((
+            f"{type(self.file_cache).__name__}",
+            f"cluster_nodes={self.cluster_nodes!r}",
+            f"family={self.family!r}",
+            f"timeout={self.timeout!r}",
+            f"encryption_settings={self.encryption_settings!r}",
+            f"use_only_cache={self.use_only_cache!r}",
+        )) + ")"
+
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
         address: Tuple[Optional[HostAddress], int] = serialized.pop("address")

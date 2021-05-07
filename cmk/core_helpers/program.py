@@ -40,6 +40,15 @@ class ProgramFetcher(AgentFetcher):
         self.is_cmc: Final = is_cmc
         self._process: Optional[subprocess.Popen] = None
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((
+            f"{type(self.file_cache).__name__}",
+            f"cluster_nodes={self.cluster_nodes!r}",
+            f"cmdline={self.cmdline!r}",
+            f"stdin={self.stdin!r}",
+            f"is_cmc={self.is_cmc!r}",
+        )) + ")"
+
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
         return cls(

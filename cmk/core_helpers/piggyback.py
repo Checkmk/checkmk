@@ -43,6 +43,15 @@ class PiggybackFetcher(AgentFetcher):
         self.time_settings: Final = time_settings
         self._sources: List[PiggybackRawDataInfo] = []
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((
+            f"{type(self.file_cache).__name__}",
+            f"cluster_nodes={self.cluster_nodes!r}",
+            f"hostname={self.hostname!r}",
+            f"address={self.address!r}",
+            f"time_settings={self.time_settings!r}",
+        )) + ")"
+
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
         return cls(

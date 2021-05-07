@@ -230,6 +230,22 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def inventory_sections(self) -> Set[SectionName]:
         return {name for name, data in self.plugin_store.items() if data.inventory}
 
+    @property
+    def section_store_path(self) -> Path:
+        return self._section_store.path
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((
+            f"{type(self.file_cache).__name__}",
+            f"cluster_nodes={self.cluster_nodes!r}",
+            f"sections={self.sections!r}",
+            f"on_error={self.on_error!r}",
+            f"missing_sys_description={self.missing_sys_description!r}",
+            f"do_status_data_inventory={self.do_status_data_inventory!r}",
+            f"section_store_path={self.section_store_path!r}",
+            f"snmp_config={self.snmp_config!r}",
+        )) + ")"
+
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
         # The SNMPv3 configuration is represented by a tuple of different lengths (see

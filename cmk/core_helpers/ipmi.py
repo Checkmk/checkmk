@@ -59,6 +59,15 @@ class IPMIFetcher(AgentFetcher):
         self.password: Final = password
         self._command: Optional[ipmi_cmd.Command] = None
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(" + ", ".join((
+            f"{type(self.file_cache).__name__}",
+            f"cluster_nodes={self.cluster_nodes!r}",
+            f"address={self.address!r}",
+            f"username={self.username!r}",
+            f"password={self.password!r}",
+        )) + ")"
+
     @classmethod
     def _from_json(cls, serialized: Dict[str, Any]) -> IPMIFetcher:
         return cls(

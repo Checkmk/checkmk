@@ -216,6 +216,9 @@ class TestIPMIFetcher:
             password="secret",
         )
 
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
+
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, type(fetcher))
@@ -275,6 +278,9 @@ class TestPiggybackFetcher:
             time_settings=[],
         )
 
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
+
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, type(fetcher))
@@ -304,6 +310,9 @@ class TestProgramFetcher:
             stdin=None,
             is_cmc=False,
         )
+
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
@@ -510,6 +519,9 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
         assert other.snmp_config.snmp_backend == (
             SNMPBackendEnum.PYSNMP if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC)
 
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
+
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))
         assert isinstance(other, SNMPFetcher)
@@ -709,6 +721,9 @@ class TestTCPFetcher:
             encryption_settings={"encryption": "settings"},
             use_only_cache=False,
         )
+
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
 
     def test_fetcher_deserialization(self, fetcher):
         other = type(fetcher).from_json(json_identity(fetcher.to_json()))

@@ -456,6 +456,7 @@ export function resize_mega_menu_popup(menu_popup) {
             topics.forEach(topic => utils.add_class(topic, "single_column"));
             utils.add_class(menu_popup, "single_column");
             menu_popup.style.width = "";
+            mega_menu_last_topic_grow(topics);
             return;
         } else {
             topics.forEach(topic => utils.remove_class(topic, "single_column"));
@@ -479,6 +480,28 @@ export function resize_mega_menu_popup(menu_popup) {
         items.style.width = items_width + "px";
         menu_popup.style.width = items_width + 40 + "px";
     }
+
+    mega_menu_last_topic_grow(topics);
+}
+
+function mega_menu_last_topic_grow(topics) {
+    // For each column, let the last topic grow
+    let previous_node = null;
+    topics.forEach(function (node) {
+        if (utils.get_computed_style(node, "display") == "none") {
+            return;
+        }
+
+        if (previous_node) {
+            if (previous_node.offsetTop > node.offsetTop) {
+                utils.add_class(previous_node, "grow");
+            } else {
+                utils.remove_class(previous_node, "grow");
+            }
+        }
+        previous_node = node;
+    });
+    if (previous_node) utils.add_class(previous_node, "grow"); // last node needs to grow, too
 }
 
 function maximum_popup_width() {

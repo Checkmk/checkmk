@@ -252,7 +252,7 @@
         }
 
         &.search > div.topic {
-          width: 350px;
+          width: $single-column-mega-menu;
 
           li a {
             overflow: hidden;
@@ -262,7 +262,6 @@
         }
 
         div.topic {
-          flex-grow: 1;
           width: 250px;
           padding: (2 * $spacing) (2 * $spacing) 0;
           border-right: 1px solid $headline-color;
@@ -427,10 +426,10 @@
           &.extendable li.show_all_items {
             display: list-item;
           }
-        }
 
-        div.sentinel {
-          flex-grow: 1000;
+          &.grow {
+            flex-grow: 1;
+          }
         }
 
         input.button {

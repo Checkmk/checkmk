@@ -1347,6 +1347,7 @@ class MenuSearchResultsRenderer:
         with html.plugged():
             default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
             icon_mapping = self._get_icon_mapping(default_icons)
+
             for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
                 icons = icon_mapping.get(topic, default_icons)
@@ -1357,16 +1358,19 @@ class MenuSearchResultsRenderer:
                         result,
                         hidden=count >= self._max_num_displayed_results,
                     )
+
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
-                    html.input(name="show_all_results",
-                               value=_("Show all results"),
-                               type_="button",
-                               onclick=f"cmk.search.on_click_show_all_results('{topic}');",
-                               class_="button")
+                    html.input(
+                        name="show_all_results",
+                        value=_("Show all results"),
+                        type_="button",
+                        onclick=
+                        f"cmk.search.on_click_show_all_results('{topic}', 'popup_menu_{self.search_type}');",
+                        class_="button")
+
                 html.close_ul()
                 html.close_div()
-            html.div(None, class_=["topic", "sentinel"])
             html_text = html.drain()
         return html_text
 

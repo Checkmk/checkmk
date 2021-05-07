@@ -189,7 +189,6 @@ class MegaMenuRenderer:
             if not topic.items:
                 continue
             self._show_topic(topic, menu.name)
-        html.div(None, class_=["topic", "sentinel"])
         html.close_div()
         html.close_div()
         html.javascript(hide_entries_js)

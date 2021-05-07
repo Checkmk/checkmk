@@ -5,16 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from redis.client import Pipeline
 from typing import (
+    Dict,
     Iterable,
+    List,
     Mapping,
+    Set,
     Tuple,
+    TYPE_CHECKING,
 )
+import cmk.gui.sites as sites
 from livestatus import (
     lqencode,
     quote_dict,
+    SiteId,
 )
+from cmk.gui.config import user
+from cmk.gui.globals import g
 from cmk.gui.i18n import _
+from cmk.utils.redis import (
+    get_redis_client,
+    query_redis,
+    IntegrityCheckResponse,
+)
+from cmk.utils.type_defs import Labels as _Labels
+
+if TYPE_CHECKING:
+    from cmk.utils.redis import RedisDecoded
 
 Labels = Iterable[Tuple[str, str]]
 
@@ -71,3 +89,142 @@ def encode_labels_for_http(labels: Labels) -> str:
 def label_help_text() -> str:
     return _(
         "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.")
+
+
+def get_labels_cache():
+    if "labels_cache" not in g:
+        g.labels_cache = LabelsCache()
+    return g.labels_cache
+
+
+class LabelsCache:
+    def __init__(self):
+        self._namespace: str = "labels"
+        self._hst_label: str = "host_labels"
+        self._svc_label: str = "service_labels"
+        self._program_starts: str = self._namespace + ":last_program_starts"
+        self._redis_client: 'RedisDecoded' = get_redis_client()
+        self._sites_to_update: Set = set()
+
+    def _get_site_ids(self) -> List[SiteId]:
+        """ Create list of all site IDs the user is authorized for """
+        site_ids: List[SiteId] = []
+        for site_id, _site in user.authorized_sites().items():
+            site_ids.append(site_id)
+        return site_ids
+
+    def get_labels(self) -> _Labels:
+        """ Main function to query, check and update caches """
+        integrity_function = self._verify_cache_integrity
+        update_function = self._redis_update_labels
+        query_function = self._redis_query_labels
+
+        all_labels = query_redis(self._redis_client, self._namespace, integrity_function,
+                                 update_function, query_function)
+
+        return all_labels
+
+    def _redis_query_labels(self) -> _Labels:
+        """ Query all labels from redis """
+        cache_names: List = []
+        for site_id in self._get_site_ids():
+            for label_type in [self._hst_label, self._svc_label]:
+                cache_names.append("%s:%s:%s" % (self._namespace, site_id, label_type))
+
+        all_labels = {}
+        with self._redis_client.pipeline() as pipeline:
+            for cache in cache_names:
+                pipeline.hgetall(cache)
+            result = pipeline.execute()
+            for labels in result:
+                all_labels.update(labels)
+        return all_labels
+
+    def _livestatus_get_labels(self, only_sites: List[str]) -> List[Dict[SiteId, _Labels]]:
+        """ Get labels for all sites that need an update and the user is authorized for """
+        query: str = (
+            "GET services\n"  #
+            "Cache: reload\n"  #
+            "Columns: host_labels labels\n")
+
+        with sites.prepend_site(), sites.only_sites(only_sites):
+            rows = [(x[0], x[1], x[2]) for x in sites.live(user).query(query)]
+
+        host_labels: Dict[SiteId, _Labels] = {}
+        service_labels: Dict[SiteId, _Labels] = {}
+        for row in rows:
+            site_id = row[0]
+            host_label = row[1]
+            service_label = row[2]
+
+            for key, value in host_label.items():
+                host_labels.setdefault(site_id, {}).update({key: value})
+
+            for key, value in service_label.items():
+                service_labels.setdefault(site_id, {}).update({key: value})
+
+        return [host_labels, service_labels]
+
+    def _redis_update_labels(self, pipeline: Pipeline) -> None:
+        """ Set cache for all sites that need an update"""
+        host_labels, service_labels = self._livestatus_get_labels(list(self._sites_to_update))
+
+        for labels, label_type in [
+            (host_labels, self._hst_label),
+            (service_labels, self._svc_label),
+        ]:
+            self._redis_delete_old_and_set_new(labels, label_type, pipeline)
+
+    def _redis_delete_old_and_set_new(
+        self,
+        labels: Dict[SiteId, _Labels],
+        label_type: str,
+        pipeline: Pipeline,
+    ) -> None:
+
+        sites_list = []
+        for site_id, label in labels.items():
+            if site_id not in self._sites_to_update:
+                continue
+
+            label_key = "%s:%s:%s" % (self._namespace, site_id, label_type)
+            pipeline.delete(label_key)
+            pipeline.hmset(label_key, label)  # type: ignore
+
+            if site_id not in sites_list:
+                sites_list.append(site_id)
+
+        for site_id in sites_list:
+            self._redis_set_last_program_start(site_id, pipeline)
+
+    def _redis_get_last_program_starts(self):
+        program_starts = self._redis_client.hgetall(self._program_starts)
+        return program_starts
+
+    def _redis_set_last_program_start(self, site_id, pipeline: Pipeline):
+        program_start = self._livestatus_get_last_program_start(site_id)
+        pipeline.hmset(self._program_starts, {site_id: program_start})
+
+    def _livestatus_get_last_program_start(self, site_id):
+        return sites.states().get(site_id, sites.SiteStatus({})).get("program_start")
+
+    def _verify_cache_integrity(self) -> IntegrityCheckResponse:
+        """ Verify last program start value in redis with current value"""
+        last_program_starts = self._redis_get_last_program_starts()
+
+        if not last_program_starts:
+            all_sites = self._get_site_ids()
+            self._sites_to_update.update(all_sites)
+            return IntegrityCheckResponse.UPDATE
+
+        for site_id, last_program_start in last_program_starts.items():
+
+            if last_program_start is None or \
+                    (int(last_program_start) != self._livestatus_get_last_program_start(site_id)):
+
+                self._sites_to_update.update([site_id])
+
+        if self._sites_to_update:
+            return IntegrityCheckResponse.UPDATE
+
+        return IntegrityCheckResponse.USE

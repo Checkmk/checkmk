@@ -116,6 +116,9 @@ function enable_label_input_fields(container) {
             var value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 
+            // show loading animation and hide the suggestions dropdown
+            tagify.loading(true).dropdown.hide.call(tagify);
+
             var post_data =
                 "request=" +
                 encodeURIComponent(
@@ -137,7 +140,13 @@ function enable_label_input_fields(container) {
                         return;
                     }
 
-                    handler_data.tagify.settings.whitelist = response.result;
+                    handler_data.tagify.settings.whitelist.splice(
+                        10,
+                        response.result.length,
+                        ...response.result
+                    );
+                    // render the suggestions dropdown
+                    handler_data.tagify.loading(false);
                     handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
                 },
                 handler_data: {

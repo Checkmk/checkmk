@@ -13,9 +13,9 @@ import pprint
 import time
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set
+from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set, Mapping
 from typing import Tuple as _Tuple
-from typing import Type, Union
+from typing import Type, Union, overload
 
 import livestatus
 from livestatus import SiteId
@@ -86,7 +86,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     PainterOptions, register_command_group, register_legacy_command, register_painter,
     register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
     SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title, CommandExecutor,
-    CommandSpec,
+    CommandSpec, PainterRegistry, SorterRegistry,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -1536,13 +1536,14 @@ def _column_link_choices() -> List[CascadingDropdownChoice]:
     ]
 
 
-def view_editor_sorter_specs(view):
-    def _sorter_choices(view):
+def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
+    def _sorter_choices(view: ViewSpec) -> Iterator[DropdownChoiceEntry]:
         ds_name = view['datasource']
 
         for name, p in sorters_of_datasource(ds_name).items():
             yield name, get_plugin_title_for_choices(p)
 
+        painter_spec: PainterSpec
         for painter_spec in view.get('painters', []):
             if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
                     "svc_metrics_hist", "svc_metrics_forecast"
@@ -1605,9 +1606,11 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
             vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
             return {"html_code": html.drain()}
 
-    def _get_sub_vs(self, vs, choice_id):
+    def _get_sub_vs(self, vs: CascadingDropdown, choice_id: object) -> ValueSpec:
         for val, _title, sub_vs in vs.choices():
             if val == choice_id:
+                if sub_vs is None:
+                    raise MKGeneralException("Choice does not have a ValueSpec")
                 return sub_vs
         raise MKGeneralException("Invaild choice")
 
@@ -2955,15 +2958,15 @@ def _sort_data(view: View, data: 'Rows', sorters: List[SorterEntry]) -> None:
     data.sort(key=functools.cmp_to_key(multisort))
 
 
-def sorters_of_datasource(ds_name):
+def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
     return _allowed_for_datasource(sorter_registry, ds_name)
 
 
-def painters_of_datasource(ds_name: str) -> Dict[str, Painter]:
+def painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
     return _allowed_for_datasource(painter_registry, ds_name)
 
 
-def join_painters_of_datasource(ds_name):
+def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
     datasource = data_source_registry[ds_name]()
     if datasource.join is None:
         return {}  # no joining with this datasource
@@ -2973,7 +2976,7 @@ def join_painters_of_datasource(ds_name):
     join_painters_unfiltered = _allowed_for_datasource(painter_registry, datasource.join[0])
 
     # Filter out painters associated with the "join source" datasource
-    join_painters = {}
+    join_painters: Dict[str, Painter] = {}
     for key, val in join_painters_unfiltered.items():
         if key not in painters:
             join_painters[key] = val
@@ -2981,14 +2984,27 @@ def join_painters_of_datasource(ds_name):
     return join_painters
 
 
+@overload
+def _allowed_for_datasource(collection: PainterRegistry, ds_name: str) -> Mapping[str, Painter]:
+    ...
+
+
+@overload
+def _allowed_for_datasource(collection: SorterRegistry, ds_name: str) -> Mapping[str, Sorter]:
+    ...
+
+
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
-def _allowed_for_datasource(collection, ds_name):
+def _allowed_for_datasource(
+    collection: Union[PainterRegistry, SorterRegistry],
+    ds_name: str,
+) -> Mapping[str, Union[Sorter, Painter]]:
     datasource = data_source_registry[ds_name]()
     infos_available = set(datasource.infos)
     add_columns = datasource.add_columns
 
-    allowed = {}
+    allowed: Dict[str, Union[Sorter, Painter]] = {}
     for name, plugin_class in collection.items():
         plugin = plugin_class()
         infos_needed = infos_needed_by_plugin(plugin, add_columns)
@@ -3009,7 +3025,7 @@ def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
     return [(c[0], c[1]) for c in painter_choices_with_params(painters)]
 
 
-def painter_choices_with_params(painters: Dict[str, Painter]) -> List[CascadingDropdownChoice]:
+def painter_choices_with_params(painters: Mapping[str, Painter]) -> List[CascadingDropdownChoice]:
     return sorted(((name, get_plugin_title_for_choices(painter),
                     painter.parameters if painter.parameters else None)
                    for name, painter in painters.items()),

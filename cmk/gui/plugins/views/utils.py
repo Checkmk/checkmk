@@ -647,7 +647,7 @@ class ABCDataSource(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @property
-    def join(self) -> Optional[Tuple]:
+    def join(self) -> Optional[Tuple[str, str]]:
         """A view can display e.g. host-rows and include information from e.g.
         the service table to create a column which shows e.g. the state of one
         service.
@@ -2101,11 +2101,15 @@ class Cell:
         return content != ""
 
 
-SorterSpec = NamedTuple("SorterSpec", [
-    ("sorter", SorterName),
-    ("negate", bool),
-    ("join_key", Optional[str]),
-])
+SorterSpec = NamedTuple(
+    "SorterSpec",
+    [
+        # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
+        # The parameter is then encoded in the sorter name. "[sorter]:[param]"
+        ("sorter", SorterName),
+        ("negate", bool),
+        ("join_key", Optional[str]),
+    ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
 

@@ -146,13 +146,13 @@ class FileCache(Generic[TRawData], abc.ABC):
         simulation: bool,
     ) -> None:
         super().__init__()
-        self.hostname: Final[HostName] = hostname
-        self.base_path: Final[Path] = Path(base_path)
-        self.max_age: Final[int] = max_age
-        self.disabled: Final[bool] = disabled
-        self.use_outdated: Final[bool] = use_outdated
-        self.simulation: Final[bool] = simulation
-        self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
+        self.hostname: Final = hostname
+        self.base_path: Final = Path(base_path)
+        self.max_age: Final = max_age
+        self.disabled: Final = disabled
+        self.use_outdated: Final = use_outdated
+        self.simulation: Final = simulation
+        self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}(" + ", ".join((

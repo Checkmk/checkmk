@@ -366,6 +366,8 @@ class Rulespec(metaclass=abc.ABCMeta):
         valuespec: Callable[[], ValueSpec],
         match_type: str,
         item_type: Optional[str],
+        # WATCH OUT: passing a Callable[[], Transform] will not work (see the
+        # isinstance check in the item_spec property)!
         item_spec: Optional[Callable[[], ValueSpec]],
         item_name: Optional[Callable[[], str]],
         item_help: Optional[Callable[[], str]],

@@ -9,9 +9,7 @@ from cmk.special_agents.agent_activemq import parse_arguments
 
 def test_parse_arguments() -> None:
     args = parse_arguments([
-        '--servername',
         'myserver',
-        '--port',
         '8161',
         '--protocol',
         'https',
@@ -22,7 +20,7 @@ def test_parse_arguments() -> None:
         '123',
     ])
     assert args.servername == "myserver"
-    assert args.port == "8161"
+    assert args.port == 8161
     assert args.username == "abc"
     assert args.password == "123"
     assert args.piggyback is True

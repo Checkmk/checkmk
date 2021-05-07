@@ -16,7 +16,6 @@ from testlib import cmk_path  # type: ignore[import]
 # TODO: Actually fix this stuff.
 NOT_TESTED_YET = {
     'agent_3par',
-    'agent_activemq',
     'agent_appdynamics',
     'agent_bi',
     'agent_ddn_s2a',
@@ -80,6 +79,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
     'agent_netapp': ["address", "user", "password"],
+    'agent_activemq': ["server", "1234"],
 }
 
 

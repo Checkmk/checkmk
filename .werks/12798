@@ -1,0 +1,14 @@
+Title: Update of vanished host labels
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1620382644
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p5
+
+Vanished host labels would not update.
+This issue is now resolved. This was caused by old host
+labels not getting removed during discovery.
+

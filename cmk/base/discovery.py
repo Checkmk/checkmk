@@ -1148,25 +1148,23 @@ def _perform_host_label_discovery(
 
     # Take over old items if -I is selected
     if discovery_parameters.load_labels:
-        return_labels = DiscoveredHostLabels.from_dict(DiscoveredHostLabelsStore(hostname).load())
+        existing_labels = DiscoveredHostLabels.from_dict(DiscoveredHostLabelsStore(hostname).load())
     else:
-        return_labels = DiscoveredHostLabels()
-
-    existing_labels_set = {x.label for x in return_labels.to_list()}
+        existing_labels = DiscoveredHostLabels()
+    return_labels = DiscoveredHostLabels()
+    existing_labels_set = {x.label for x in existing_labels.to_list()}
     discovered_labels_set = {x.label for x in discovered_host_labels.to_list()}
 
-    new_labels = discovered_host_labels - return_labels
-    vanished_labels = return_labels - discovered_host_labels
+    new_labels = discovered_host_labels - existing_labels
+    vanished_labels = existing_labels - discovered_host_labels
     changed_labels = DiscoveredHostLabels()
 
     return_labels_per_plugin: Counter[str] = Counter()
     for label in discovered_host_labels.values():
-        existing_label = return_labels.get(label.name)
+        existing_label = existing_labels.get(label.name)
         if existing_label and existing_label.value != label.value:
             changed_labels.add_label(existing_label)
 
-        if label.label in existing_labels_set:
-            continue
         return_labels.add_label(label)
         return_labels_per_plugin[label.plugin_name] += 1
 

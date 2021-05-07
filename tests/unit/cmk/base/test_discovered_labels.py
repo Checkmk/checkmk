@@ -296,8 +296,7 @@ def test_label_validation(cls):
         [("foo", "1.5"), ("bar", "1.5")],
         [("foo", "1.6")],
         HostLabelDiscoveryResult(
-            labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz"),
-                                        HostLabel('foo', '1.6', plugin_name="xyz")),
+            labels=DiscoveredHostLabels(HostLabel('foo', '1.6', plugin_name="xyz")),
             per_plugin=Counter({"xyz": 1}),
             new_labels=DiscoveredHostLabels(),
             vanished_labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz")),
@@ -309,8 +308,7 @@ def test_label_validation(cls):
         [("foo", "1.5"), ("bar", "1.5")],
         [("foo", "1.6"), ("batz", "3.0")],
         HostLabelDiscoveryResult(
-            labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz"),
-                                        HostLabel('batz', '3.0', plugin_name="xyz"),
+            labels=DiscoveredHostLabels(HostLabel('batz', '3.0', plugin_name="xyz"),
                                         HostLabel('foo', '1.6', plugin_name="xyz")),
             per_plugin=Counter({"xyz": 2}),
             new_labels=DiscoveredHostLabels(HostLabel('batz', '3.0', plugin_name="xyz")),

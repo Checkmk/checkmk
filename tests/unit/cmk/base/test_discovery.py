@@ -1164,12 +1164,14 @@ def _cluster_scenario(monkeypatch):
 ExpectedDiscoveryResultRealHost = NamedTuple("ExpectedDiscoveryResultRealHost", [
     ("expected_per_plugin", Counter[str]),
     ("expected_return_labels", DiscoveredHostLabels),
+    ("expected_vanished_labels", DiscoveredHostLabels),
     ("expected_stored_labels", Dict),
 ])
 
 ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
     ("expected_per_plugin", Counter[str]),
     ("expected_return_labels", DiscoveredHostLabels),
+    ("expected_vanished_labels", DiscoveredHostLabels),
     ("expected_stored_labels_cluster", Dict),
     ("expected_stored_labels_node1", Dict),
     ("expected_stored_labels_node2", Dict),
@@ -1199,19 +1201,12 @@ _discovery_test_cases = [
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
-                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_vanished_labels=DiscoveredHostLabels(
                 HostLabel('another_label', 'true', plugin_name='labels'),
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
             ),
             expected_stored_labels={
-                'another_label': {
-                    'plugin_name': 'labels',
-                    'value': 'true',
-                },
-                'existing_label': {
-                    'plugin_name': 'foo',
-                    'value': 'bar',
-                },
                 'cmk/check_mk_server': {
                     'plugin_name': 'labels',
                     'value': 'yes',
@@ -1221,31 +1216,20 @@ _discovery_test_cases = [
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_per_plugin=Counter({
                 "labels": 2,
-                "node1_plugin": 1
             }),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('node2_live_label', 'true', plugin_name='labels'),
+            ),
+            expected_vanished_labels=DiscoveredHostLabels(
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
                 HostLabel('another_label', 'true', plugin_name='labels'),
                 HostLabel('node1_existing_label', 'true', plugin_name='node1_plugin'),
-                HostLabel('node2_live_label', 'true', plugin_name='labels'),
             ),
             expected_stored_labels_cluster={
-                'another_label': {
-                    'plugin_name': 'labels',
-                    'value': 'true',
-                },
-                'existing_label': {
-                    'plugin_name': 'foo',
-                    'value': 'bar',
-                },
                 'cmk/check_mk_server': {
                     'plugin_name': 'labels',
                     'value': 'yes',
-                },
-                'node1_existing_label': {
-                    'plugin_name': 'node1_plugin',
-                    'value': 'true',
                 },
                 'node2_live_label': {
                     'plugin_name': 'labels',
@@ -1256,10 +1240,6 @@ _discovery_test_cases = [
                 'cmk/check_mk_server': {
                     'plugin_name': 'labels',
                     'value': 'yes',
-                },
-                'node1_existing_label': {
-                    'plugin_name': 'node1_plugin',
-                    'value': 'true',
                 },
             },
             expected_stored_labels_node2={
@@ -1284,7 +1264,8 @@ _discovery_test_cases = [
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
-                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_vanished_labels=DiscoveredHostLabels(
                 HostLabel('another_label', 'true', plugin_name='labels'),
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
             ),
@@ -1302,14 +1283,15 @@ _discovery_test_cases = [
         on_cluster=ExpectedDiscoveryResultCluster(
             expected_per_plugin=Counter({
                 "labels": 2,
-                "node1_plugin": 1
             }),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
+                HostLabel('node2_live_label', 'true', plugin_name='labels'),
+            ),
+            expected_vanished_labels=DiscoveredHostLabels(
                 HostLabel('existing_label', 'bar', plugin_name='foo'),
                 HostLabel('another_label', 'true', plugin_name='labels'),
                 HostLabel('node1_existing_label', 'true', plugin_name='node1_plugin'),
-                HostLabel('node2_live_label', 'true', plugin_name='labels'),
             ),
             expected_stored_labels_cluster={
                 'another_label': {
@@ -1346,6 +1328,7 @@ _discovery_test_cases = [
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels={
                 'cmk/check_mk_server': {
                     'plugin_name': 'labels',
@@ -1359,6 +1342,7 @@ _discovery_test_cases = [
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('node2_live_label', 'true', plugin_name='labels'),
             ),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels_cluster={
                 'cmk/check_mk_server': {
                     'plugin_name': 'labels',
@@ -1400,6 +1384,7 @@ _discovery_test_cases = [
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels={
                 'another_label': {
                     'plugin_name': 'labels',
@@ -1417,6 +1402,7 @@ _discovery_test_cases = [
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('node2_live_label', 'true', plugin_name='labels'),
             ),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels_cluster={
                 'another_label': {
                     'plugin_name': 'labels',
@@ -1450,6 +1436,7 @@ _discovery_test_cases = [
             expected_per_plugin=Counter({"labels": 1}),
             expected_return_labels=DiscoveredHostLabels(
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels={
                 'another_label': {
                     'plugin_name': 'labels',
@@ -1467,6 +1454,7 @@ _discovery_test_cases = [
                 HostLabel('cmk/check_mk_server', 'yes', plugin_name='labels'),
                 HostLabel('node2_live_label', 'true', plugin_name='labels'),
             ),
+            expected_vanished_labels=DiscoveredHostLabels(),
             expected_stored_labels_cluster={
                 'another_label': {
                     'plugin_name': 'labels',
@@ -1529,6 +1517,8 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
     assert host_label_discovery_result.per_plugin == discovery_test_case.on_realhost.expected_per_plugin
 
     assert host_label_discovery_result.labels == discovery_test_case.on_realhost.expected_return_labels
+
+    assert host_label_discovery_result.vanished_labels == discovery_test_case.on_realhost.expected_vanished_labels
 
     assert DiscoveredHostLabelsStore(
         scenario.hostname).load() == discovery_test_case.on_realhost.expected_stored_labels

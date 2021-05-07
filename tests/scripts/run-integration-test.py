@@ -102,7 +102,7 @@ def _execute_as_site_user(site, args):
         "--log-cli-level=DEBUG",
         "--log-cli-format=%(asctime)s %(levelname)s %(message)s",
         "--junitxml",
-        os.path.join(site.result_dir(), "junit.xml"),
+        site.path("junit.xml"),
         "-T",
         "integration",
     ] + args

@@ -7,6 +7,7 @@
 import glob
 import logging
 import os
+from contextlib import suppress
 from pathlib import Path
 import pipes
 import pwd
@@ -782,6 +783,11 @@ class Site:
             return
         logger.info("Saving to %s", self.result_dir())
 
+        os.makedirs(self.result_dir(), exist_ok=True)
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("junit.xml"), self.result_dir())
+
         shutil.copytree(self.path("var/log"),
                         "%s/logs" % self.result_dir(),
                         ignore_dangling_symlinks=True)
@@ -789,13 +795,11 @@ class Site:
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
 
-        cmc_core_dump = self.path("var/check_mk/core/core")
-        if os.path.exists(cmc_core_dump):
-            shutil.copy(cmc_core_dump, "%s/cmc_core_dump" % self.result_dir())
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
 
-        cmc_core_dump = self.path("var/check_mk/crashes")
-        if os.path.exists(cmc_core_dump):
-            shutil.copytree(cmc_core_dump, "%s/crashes" % self.result_dir())
+        with suppress(FileNotFoundError):
+            shutil.copytree(self.path("var/check_mk/crashes"), "%s/crashes" % self.result_dir())
 
     def result_dir(self):
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)

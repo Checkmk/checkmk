@@ -79,9 +79,6 @@ class TestFileCache:
     def test_repr(self, file_cache):
         assert isinstance(repr(file_cache), str)
 
-    def test_hash(self, file_cache):
-        assert isinstance(hash(file_cache), int)
-
     def test_deserialization(self, file_cache):
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 

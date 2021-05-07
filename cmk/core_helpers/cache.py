@@ -6,7 +6,6 @@
 """Persisted sections type and store."""
 
 import abc
-import itertools
 import logging
 from pathlib import Path
 from typing import (
@@ -148,10 +147,10 @@ class FileCache(Generic[TRawData], abc.ABC):
         super().__init__()
         self.hostname: Final = hostname
         self.base_path: Final = Path(base_path)
-        self.max_age: Final = max_age
-        self.disabled: Final = disabled
-        self.use_outdated: Final = use_outdated
-        self.simulation: Final = simulation
+        self.max_age = max_age
+        self.disabled = disabled
+        self.use_outdated = use_outdated
+        self.simulation = simulation
         self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
@@ -163,21 +162,6 @@ class FileCache(Generic[TRawData], abc.ABC):
             f"use_outdated={self.use_outdated}",
             f"simulation={self.simulation}",
         )) + ")"
-
-    def __hash__(self) -> int:
-        *_rest, last = itertools.accumulate(
-            (
-                self.hostname,
-                self.base_path,
-                self.max_age,
-                self.disabled,
-                self.use_outdated,
-                self.simulation,
-            ),
-            lambda acc, elem: acc ^ hash(elem),
-            initial=0,
-        )
-        return last
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):

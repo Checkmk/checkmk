@@ -175,14 +175,31 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
     )
 
 
-def _parse_fetcher_config(serial: ConfigSerial, host_name: HostName) -> Iterator[Fetcher]:
+def _parse_config(serial: ConfigSerial, host_name: HostName) -> Iterator[Fetcher]:
     with make_local_config_path(serial=serial, host_name=host_name).open() as f:
         data = json.load(f)
 
+    if "fetchers" in data:
+        yield from _parse_fetcher_config(data)
+    elif "clusters" in data:
+        yield from _parse_cluster_config(data, serial)
+    else:
+        raise LookupError("invalid config")
+
+
+def _parse_fetcher_config(data: Dict[str, Any]) -> Iterator[Fetcher]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
     yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
                 for entry in data["fetchers"])
+
+
+def _parse_cluster_config(data: Dict[str, Any], serial: ConfigSerial) -> Iterator[Fetcher]:
+    global_config = load_global_config(serial)
+    for host_name in data["clusters"]["nodes"]:
+        for fetcher in _parse_config(serial, host_name):
+            fetcher.file_cache.max_age = global_config.cluster_max_cachefile_age
+            yield fetcher
 
 
 def _run_fetchers_from_file(
@@ -204,7 +221,7 @@ def _run_fetchers_from_file(
             timeout,
             message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
     ):
-        fetchers = tuple(_parse_fetcher_config(serial, host_name))
+        fetchers = tuple(_parse_config(serial, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
             for fetcher in fetchers:

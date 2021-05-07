@@ -1961,8 +1961,8 @@ class VSExplicitConditions(Transform):
                     choices=itemenum,
                     columns=3,
                 ),
-                forth=lambda item_list: [x + "$" for x in item_list],
-                back=lambda item_list: [x.rstrip("$") for x in item_list],
+                forth=lambda item_list: [(x[:-1] if x[-1] == "$" else x) for x in item_list],
+                back=lambda item_list: [f"{x}$" for x in item_list],
             )
 
         return ListOfStrings(

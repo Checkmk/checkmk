@@ -19,7 +19,6 @@ from typing import (
 )
 
 import cmk.utils.debug
-import cmk.utils
 import cmk.utils.defines as defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKGeneralException
@@ -61,20 +60,20 @@ def _window_start(timestamp: int, span: int) -> int:
 
 def _group_by_wday(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     wday = time.localtime(t).tm_wday
-    return defines.weekday_ids()[wday], _window_start(t, 86400)
+    return Timegroup(defines.weekday_ids()[wday]), _window_start(t, 86400)
 
 
 def _group_by_day(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
-    return "everyday", _window_start(t, 86400)
+    return Timegroup("everyday"), _window_start(t, 86400)
 
 
 def _group_by_day_of_month(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
     mday = time.localtime(t).tm_mday
-    return str(mday), _window_start(t, 86400)
+    return Timegroup(str(mday)), _window_start(t, 86400)
 
 
 def _group_by_everyhour(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
-    return "everyhour", _window_start(t, 3600)
+    return Timegroup("everyhour"), _window_start(t, 3600)
 
 
 _PREDICTION_PERIODS: Final = {
@@ -287,6 +286,7 @@ def get_levels(
         data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
         info = PredictionInfo(
+            name=timegroup,
             time=now,
             range=time_windows[0],
             cf=cf,
@@ -294,7 +294,7 @@ def get_levels(
             slice=period_info.slice,
             params=params,
         )
-        prediction_store.save_predictions(timegroup, info, data_for_pred)
+        prediction_store.save_predictions(info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred.step)

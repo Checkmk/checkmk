@@ -17,7 +17,6 @@ from typing import (
 
 import livestatus
 import cmk.utils.paths
-import cmk.utils
 import cmk.utils.prediction as prediction
 
 import cmk.gui.pages
@@ -34,17 +33,17 @@ def _load_prediction_information(
     *,
     tg_name: Optional[str],
     prediction_store: prediction.PredictionStore,
-) -> Tuple[Tuple[str, prediction.PredictionInfo], Sequence[Tuple[str, str]]]:
-    selected_timegroup: Optional[Tuple[str, prediction.PredictionInfo]] = None
-    timegroups: List[Tuple[str, prediction.PredictionInfo]] = []
+) -> Tuple[prediction.PredictionInfo, Sequence[Tuple[str, str]]]:
+    selected_timegroup: Optional[prediction.PredictionInfo] = None
+    timegroups: List[prediction.PredictionInfo] = []
     now = time.time()
-    for current_tg_name, tg_info in prediction_store.available_predictions():
-        timegroups.append((current_tg_name, tg_info))
-        if current_tg_name == tg_name or (tg_name is None and
-                                          (tg_info.range[0] <= now <= tg_info.range[1])):
-            selected_timegroup = (current_tg_name, tg_info)
+    for tg_info in prediction_store.available_predictions():
+        timegroups.append(tg_info)
+        if tg_info.name == tg_name or (tg_name is None and
+                                       (tg_info.range[0] <= now <= tg_info.range[1])):
+            selected_timegroup = tg_info
 
-    timegroups.sort(key=lambda x: x[1].range[0])
+    timegroups.sort(key=lambda x: x.range[0])
 
     if selected_timegroup is None:
         if not timegroups:
@@ -52,7 +51,7 @@ def _load_prediction_information(
                 _("There is currently no prediction information available for this service."))
         selected_timegroup = timegroups[0]
 
-    return selected_timegroup, [(name, name.title()) for name, _tg_info in timegroups]
+    return selected_timegroup, [(tg.name, tg.name.title()) for tg in timegroups]
 
 
 @cmk.gui.pages.register("prediction_graph")
@@ -69,19 +68,22 @@ def page_graph():
 
     prediction_store = prediction.PredictionStore(host, service, dsname)
 
-    (tg_name, timegroup), choices = _load_prediction_information(
+    timegroup, choices = _load_prediction_information(
         tg_name=html.request.var("timegroup"),
         prediction_store=prediction_store,
     )
 
     html.begin_form("prediction")
     html.write(_("Show prediction for "))
-    html.dropdown("timegroup", choices, deflt=tg_name, onchange="document.prediction.submit();")
+    html.dropdown("timegroup",
+                  choices,
+                  deflt=timegroup.name,
+                  onchange="document.prediction.submit();")
     html.hidden_fields()
     html.end_form()
 
     # Get prediction data
-    tg_data = prediction_store.get_data(tg_name)
+    tg_data = prediction_store.get_data(timegroup.name)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 
@@ -96,7 +98,7 @@ def page_graph():
     if current_value is not None:
         legend.append(("#0000ff", _("Current value: %.2f") % current_value))
 
-    create_graph(tg_name, graph_size, timegroup.range, vertical_range, legend)
+    create_graph(timegroup.name, graph_size, timegroup.range, vertical_range, legend)
 
     if "levels_upper" in timegroup.params:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)

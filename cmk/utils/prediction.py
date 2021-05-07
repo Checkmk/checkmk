@@ -18,6 +18,7 @@ from typing import (
     Iterator,
     List,
     Literal,
+    NewType,
     Optional,
     Tuple,
 )
@@ -38,7 +39,7 @@ RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
 TimeSeriesValue = Optional[float]
 TimeSeriesValues = List[TimeSeriesValue]
 ConsolidationFunctionName = str
-Timegroup = str
+Timegroup = NewType('Timegroup', str)
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
 PredictionParameters = Dict[str, Any]  # TODO: improve this type
@@ -53,6 +54,7 @@ _LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
 
 @dataclass(frozen=True)
 class PredictionInfo:
+    name: Timegroup
     time: int
     range: Tuple[Timestamp, Timestamp]
     cf: ConsolidationFunctionName
@@ -61,10 +63,11 @@ class PredictionInfo:
     params: PredictionParameters
 
     @classmethod
-    def loads(cls, raw: str) -> 'PredictionInfo':
+    def loads(cls, raw: str, *, name: Timegroup) -> 'PredictionInfo':
         data = json.loads(raw)
         range_ = data["range"]
         return cls(
+            name=name,  # explicitly passed. (not in `data` before 2.1)
             time=int(data["time"]),
             range=(Timestamp(range_[0]), Timestamp(range_[1])),
             cf=ConsolidationFunctionName(data["cf"]),
@@ -351,10 +354,9 @@ class PredictionStore:
             cmk.utils.pnp_cleanup(dsname),
         )
 
-    def available_predictions(self) -> Iterable[Tuple[str, PredictionInfo]]:
-        return ((f.stem, tg_info)
-                for f in self._dir.glob('*.info')
-                if (tg_info := self.get_info(f.stem)) is not None)
+    def available_predictions(self) -> Iterable[PredictionInfo]:
+        return (tg_info for f in self._dir.glob('*.info')
+                if (tg_info := self.get_info(Timegroup(f.stem))) is not None)
 
     def _data_file(self, timegroup: Timegroup) -> Path:
         return self._dir / timegroup
@@ -364,14 +366,13 @@ class PredictionStore:
 
     def save_predictions(
         self,
-        timegroup: Timegroup,
         info: PredictionInfo,
         data_for_pred: PredictionData,
     ) -> None:
         self._dir.mkdir(exist_ok=True, parents=True)
-        with self._info_file(timegroup).open("w") as fname:
+        with self._info_file(info.name).open("w") as fname:
             fname.write(info.dumps())
-        with self._data_file(timegroup).open("w") as fname:
+        with self._data_file(info.name).open("w") as fname:
             fname.write(data_for_pred.dumps())
 
     def clean_prediction_files(self, timegroup: Timegroup, force: bool = False) -> None:
@@ -386,7 +387,7 @@ class PredictionStore:
 
     def get_info(self, timegroup: Timegroup) -> Optional[PredictionInfo]:
         raw = self._read_file(self._info_file(timegroup))
-        return None if raw is None else PredictionInfo.loads(raw)
+        return None if raw is None else PredictionInfo.loads(raw, name=timegroup)
 
     def get_data(self, timegroup: Timegroup) -> Optional[PredictionData]:
         raw = self._read_file(self._data_file(timegroup))
@@ -400,7 +401,7 @@ class PredictionStore:
             logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
         except ValueError:
             logger.log(VERBOSE, "Invalid prediction file %s, old format", file_path)
-            self.clean_prediction_files(file_path.stem, force=True)
+            self.clean_prediction_files(Timegroup(file_path.stem), force=True)
         return None
 
 

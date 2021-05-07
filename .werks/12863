@@ -1,0 +1,12 @@
+Title: labels: Now cached in Redis
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1620368953
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0i1
+
+In large distributed setups the label search could lead to a memory leak.
+Therefore, labels are now cached in the shipped Redis database.

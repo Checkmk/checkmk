@@ -38,7 +38,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, Final, Generic, Iterable, List, NamedTuple, Literal
 from typing import Optional as _Optional
-from typing import Pattern, Protocol, Sequence, Set, SupportsFloat
+from typing import Pattern, Protocol, Sequence, SupportsFloat
 from typing import Tuple as _Tuple
 from typing import Type, TypeVar, Union
 
@@ -72,7 +72,12 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.type_defs import ChoiceGroup, Choices, GroupedChoices
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.labels import encode_labels_for_http, encode_labels_for_tagify, label_help_text
+from cmk.gui.utils.labels import (
+    encode_labels_for_http,
+    encode_labels_for_tagify,
+    get_labels_cache,
+    label_help_text,
+)
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.view_utils import render_labels
@@ -5697,21 +5702,10 @@ class PageAutocompleteLabels(AjaxPage):
         # want to search: hosts / folders, rules, ...?
         return self._get_labels_from_core(search_label)
 
-    # TODO: Provide information about the label source
-    # Would be better to optimize this kind of query somehow. The best we can
-    # do without extending livestatus is to use the Cache header for liveproxyd
     def _get_labels_from_core(self, search_label):
-        query = (
-            "GET services\n"  #
-            "Cache: reload\n"  #
-            "Columns: host_labels labels\n")
+        labels = get_labels_cache().get_labels()
 
-        labels: Set = set()
-        for row in sites.live().query(query):
-            labels.update(row[0].items())
-            labels.update(row[1].items())
-
-        return list(labels)
+        return labels.items()
 
 
 class IconSelector(ValueSpec):

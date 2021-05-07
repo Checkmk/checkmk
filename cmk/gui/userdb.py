@@ -12,6 +12,7 @@ import os
 import traceback
 import copy
 import ast
+import shutil
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from contextlib import suppress
@@ -1326,3 +1327,88 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         job_interface.send_progress_update(_("Finalizing synchronization"))
         general_userdb_job()
         return True
+
+
+def execute_user_profile_cleanup_job() -> None:
+    """This function is called by the GUI cron job once a minute.
+
+    Errors are logged to var/log/web.log. """
+    job = UserProfileCleanupBackgroundJob()
+    if job.is_active():
+        logger.debug("Job is already running: Skipping this time")
+        return
+
+    interval = 3600
+    with suppress(FileNotFoundError):
+        if time.time() - UserProfileCleanupBackgroundJob.last_run_path().stat().st_mtime < interval:
+            logger.debug("Job was already executed within last %d seconds", interval)
+            return
+
+    job.set_function(job.do_execute)
+    job.start()
+
+
+@gui_background_job.job_registry.register
+class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
+    job_prefix = "user_profile_cleanup"
+
+    @staticmethod
+    def last_run_path() -> Path:
+        return Path(cmk.utils.paths.var_dir, "wato", "last_user_profile_cleanup.mk")
+
+    @classmethod
+    def gui_title(cls) -> str:
+        return _("User profile cleanup")
+
+    def __init__(self) -> None:
+        super().__init__(
+            self.job_prefix,
+            title=self.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+        )
+
+    def do_execute(self, job_interface):
+        try:
+            self._do_cleanup()
+            job_interface.send_result_message(_("Job finished"))
+        finally:
+            UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
+
+    def _do_cleanup(self):
+        """Cleanup abandoned profile directories
+
+        The cleanup is done like this:
+
+        - Load the userdb to get the list of locally existing users
+        - Iterate over all use profile directories and find all directories that don't belong to an
+          existing user
+        - For each of these directories find the most recent written file
+        - In case the most recent written file is older than 30 days delete the profile directory
+        - Create an audit log entry for each removed directory
+        """
+        users = set(load_users().keys())
+        if not users:
+            self._logger.warning("Found no users. Be careful and not cleaning up anything.")
+            return
+
+        profile_base_dir = Path(config.config_dir)
+        profiles = set(profile_dir.name for profile_dir in profile_base_dir.iterdir())
+
+        abandoned_profiles = sorted(profiles - users)
+        if not abandoned_profiles:
+            self._logger.warning("Found no abandoned profile.")
+            return
+
+        self._logger.info("Found %d abandoned profiles", len(abandoned_profiles))
+        self._logger.debug("Profiles: %s", ", ".join(abandoned_profiles))
+
+        for profile_name in abandoned_profiles:
+            profile_dir = profile_base_dir / profile_name
+            last_mtime = max((p.stat().st_mtime for p in profile_dir.glob("*.mk")), default=0.0)
+            if time.time() - last_mtime > 2592000:
+                try:
+                    self._logger.info("Removing abandoned profile directory: %s", profile_name)
+                    shutil.rmtree(profile_dir)
+                except OSError:
+                    self._logger.debug("Could not delete %s", profile_dir, exc_info=True)

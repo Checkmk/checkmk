@@ -6,6 +6,7 @@
 
 import time
 import pytest
+import os
 from pathlib import Path
 from dataclasses import asdict
 
@@ -597,3 +598,44 @@ def test_load_custom_attr_convert(user_id):
         f.write("xyz\n")
     assert userdb.load_custom_attr(user_id, "a", conv_func=lambda x: "a"
                                    if x == "xyz" else "b") == "a"
+
+
+def test_cleanup_user_profiles_keep_recently_updated(user_id):
+    (profile := Path(config.config_dir, "profile")).mkdir()
+    (profile / "bla.mk").touch()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    assert profile.exists()
+
+
+def test_cleanup_user_profiles_remove_empty(user_id):
+    (profile := Path(config.config_dir, "profile")).mkdir()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    assert not profile.exists()
+
+
+def test_cleanup_user_profiles_remove_abandoned(user_id):
+    (profile := Path(config.config_dir, "profile")).mkdir()
+    (bla := profile / "bla.mk").touch()
+    with on_time('2018-04-15 16:50', 'CET'):
+        os.utime(bla, (time.time(), time.time()))
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    assert not profile.exists()
+
+
+def test_cleanup_user_profiles_keep_active_profile(user_id):
+    assert Path(config.config_dir, user_id).exists()
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    assert Path(config.config_dir, user_id).exists()
+
+
+def test_cleanup_user_profiles_keep_active_profile_old(user_id):
+    profile_dir = Path(config.config_dir, user_id)
+
+    assert profile_dir.exists()
+
+    with on_time('2018-04-15 16:50', 'CET'):
+        for file_path in profile_dir.glob("*.mk"):
+            os.utime(file_path, (time.time(), time.time()))
+
+    userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
+    assert Path(config.config_dir, user_id).exists()

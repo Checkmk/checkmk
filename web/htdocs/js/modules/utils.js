@@ -746,6 +746,6 @@ export function update_pending_changes(changes_info) {
     text_container.parentElement.parentElement.appendChild(elem);
 }
 
-function get_computed_style(object, property) {
+export function get_computed_style(object, property) {
     return object ? window.getComputedStyle(object).getPropertyValue(property) : null;
 }

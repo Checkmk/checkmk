@@ -114,12 +114,14 @@ export function on_input_search(id) {
     }
 }
 
-export function on_click_show_all_results(topic) {
+export function on_click_show_all_results(topic, popup_menu_id) {
     let topic_results = document.getElementById(topic).getElementsByTagName("li");
     add_class(window.event.target, "hidden");
     topic_results.forEach(li => {
         li.className == "hidden" && remove_class(li, "hidden");
     });
+
+    resize_mega_menu_popup(document.getElementById(popup_menu_id));
 }
 
 function get_current_search(id) {

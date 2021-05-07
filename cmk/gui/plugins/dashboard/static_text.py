@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import TextUnicode
+from cmk.gui.valuespec import TextAscii
 
 from cmk.gui.plugins.dashboard import (
     Dashlet,
@@ -41,7 +41,7 @@ class StaticTextDashlet(Dashlet):
     def vs_parameters(cls):
         return [
             ("text",
-             TextUnicode(
+             TextAscii(
                  title=_('Text'),
                  size=50,
                  help=_(

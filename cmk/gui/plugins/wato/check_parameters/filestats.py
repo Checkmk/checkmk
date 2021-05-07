@@ -15,7 +15,6 @@ from cmk.gui.valuespec import (
     ListOf,
     RegExpUnicode,
     TextAscii,
-    TextUnicode,
     Tuple,
     ValueSpec,
 )
@@ -136,7 +135,7 @@ def _parameter_valuespec_filestats():
                 "additional_rules",
                 ListOf(
                     Tuple(elements=[
-                        TextUnicode(
+                        TextAscii(
                             title=_("Display name"),
                             help=_(
                                 "Specify a user-friendly name that will be displayed in the service "

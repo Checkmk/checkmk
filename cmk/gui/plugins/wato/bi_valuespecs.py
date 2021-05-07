@@ -24,7 +24,6 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     ListOf,
     ListOfStrings,
-    TextUnicode,
     DropdownChoice,
 )
 
@@ -556,7 +555,7 @@ class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, ABCBIConfigActio
     def get_state_of_host_choice(cls):
         return (
             "host_regex",
-            TextUnicode(
+            TextAscii(
                 title=_("Host:"),
                 help=_(
                     "Either an exact host name or a regular expression exactly matching the host "
@@ -586,7 +585,7 @@ class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, ABCBIConfi
     @classmethod
     def _get_state_of_service_choice(cls):
         return ("service_regex",
-                TextUnicode(
+                TextAscii(
                     title=_("Service Regex:"),
                     help=_(
                         "A regular expression matching the <b>beginning</b> of a service "

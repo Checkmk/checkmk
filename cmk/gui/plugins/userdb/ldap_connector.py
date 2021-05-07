@@ -67,7 +67,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     Float,
-    TextUnicode,
     CascadingDropdown,
     ListChoice,
     Age,
@@ -1552,7 +1551,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value=5,
              )),
             ("suffix",
-             TextUnicode(
+             TextAscii(
                  allow_empty=False,
                  title=_("LDAP connection suffix"),
                  help=
@@ -1660,7 +1659,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value="sub",
              )),
             ("user_filter",
-             TextUnicode(
+             TextAscii(
                  title=_("Search filter"),
                  help=
                  _("Using this option you can define an optional LDAP filter which is used during "
@@ -1763,7 +1762,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value="sub",
              )),
             ("group_filter",
-             TextUnicode(
+             TextAscii(
                  title=_("Search filter"),
                  help=_("Using this option you can define an optional LDAP filter which is used "
                         "during group related LDAP searches. It can be used to only handle a "
@@ -2528,7 +2527,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                      Dictionary(
                          elements=[
                              ('cn',
-                              TextUnicode(
+                              TextAscii(
                                   title=_("Group<nobr> </nobr>CN"),
                                   size=40,
                                   allow_empty=False,

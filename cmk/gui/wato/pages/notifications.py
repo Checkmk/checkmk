@@ -41,7 +41,6 @@ from cmk.gui.valuespec import (
     RegExp,
     RegExpUnicode,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
     rule_option_elements,
@@ -1344,7 +1343,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     help=
                     _("The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc."
                      ),
-                    valuespec=TextUnicode(size=24),
+                    valuespec=TextAscii(size=24),
                     orientation="horizontal",
                 )
 

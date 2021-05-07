@@ -35,7 +35,7 @@ import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.valuespec import (
     Password,
     Dictionary,
-    TextUnicode,
+    TextAscii,
     DropdownChoice,
     Checkbox,
     Alternative,
@@ -769,7 +769,7 @@ class PageEditBackupJob:
         return Dictionary(
             title=_("Backup job"),
             elements=ident_attr + [
-                ("title", TextUnicode(
+                ("title", TextAscii(
                     title=_("Title"),
                     allow_empty=False,
                     size=64,
@@ -1248,7 +1248,7 @@ class PageEditBackupTarget:
         return Dictionary(
             title=_("Backup target"),
             elements=ident_attr + [
-                ("title", TextUnicode(
+                ("title", TextAscii(
                     title=_("Title"),
                     allow_empty=False,
                     size=64,

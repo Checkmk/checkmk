@@ -36,7 +36,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Tuple,
     Integer,
-    TextUnicode,
 )
 from cmk.gui.breadcrumb import (
     make_main_menu_breadcrumb,
@@ -453,7 +452,7 @@ def _werk_table_option_entries():
                  ("cre", _("Werks also concerning the Raw Edition")),
              ],
          ), None),
-        ("werk_content", "single", TextUnicode(
+        ("werk_content", "single", TextAscii(
             title=_("Werk title or content"),
             size=41,
         ), ""),

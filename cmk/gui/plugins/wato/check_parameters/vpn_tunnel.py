@@ -11,7 +11,6 @@ from cmk.gui.valuespec import (
     ListOf,
     MonitoringState,
     TextAscii,
-    TextUnicode,
     Tuple,
 )
 
@@ -35,7 +34,7 @@ def _parameter_valuespec_vpn_tunnel():
                              "The configured value must match a tunnel reported by the monitored "
                              "device."),
                      ),
-                     TextUnicode(
+                     TextAscii(
                          title=_("Tunnel Alias"),
                          help=_(
                              "You can configure an individual alias here for the tunnel matching "

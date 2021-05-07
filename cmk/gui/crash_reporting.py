@@ -34,7 +34,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.valuespec import (
     EmailAddress,
-    TextUnicode,
+    TextAscii,
     Dictionary,
 )
 import cmk.gui.config as config
@@ -337,7 +337,7 @@ class PageCrash(ABCCrashReportPage):
         return Dictionary(
             title=_("Crash Report"),
             elements=[
-                ("name", TextUnicode(
+                ("name", TextAscii(
                     title=_("Name"),
                     allow_empty=False,
                 )),

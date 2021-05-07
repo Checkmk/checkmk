@@ -35,7 +35,6 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Checkbox,
-    TextUnicode,
     TextAreaUnicode,
     Optional,
     ID,
@@ -334,7 +333,7 @@ class ModeBIEditPack(ABCBIMode):
             elements=
             [("id", id_element),
              ("title",
-              TextUnicode(
+              TextAscii(
                   title=_("Title"),
                   help=_("A descriptive title for this rule pack"),
                   allow_empty=False,
@@ -1132,7 +1131,7 @@ class ModeBIEditRule(ABCBIMode):
         elements = [
             ("id", id_valuespec),
             ("title",
-             TextUnicode(
+             TextAscii(
                  title=_("Rule Title"),
                  help=_("The title of the BI nodes which are created from this rule. This will be "
                         "displayed as the name of the node in the BI view. For "
@@ -1573,7 +1572,7 @@ class BIModeEditAggregation(ABCBIMode):
                     style="dropdown",
                     orientation="horizontal",
                     elements=[
-                        TextUnicode(title=_("Group name")),
+                        TextAscii(title=_("Group name")),
                         ListOfStrings(title=_("Group path"),
                                       orientation="horizontal",
                                       separator="/"),

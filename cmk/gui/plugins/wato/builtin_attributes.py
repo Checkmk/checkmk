@@ -32,7 +32,7 @@ from cmk.gui.valuespec import (
     Alternative,
     FixedValue,
     AbsoluteDate,
-    TextUnicode,
+    TextAscii,
     SetupSiteChoice,
     ID,
     Transform,
@@ -626,7 +626,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         ],
                     ),
                 ),
-                ("output", TextUnicode(title=_("Output"),)),
+                ("output", TextAscii(title=_("Output"),)),
             ],
             title=_("Last Scan Result"),
             optional_keys=[],
@@ -966,7 +966,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                                 None,
                                 totext=_("Someone before 1.6"),
                             ),
-                            TextUnicode(
+                            TextAscii(
                                 title=_("Created by"),
                                 default_value="unknown",
                             ),

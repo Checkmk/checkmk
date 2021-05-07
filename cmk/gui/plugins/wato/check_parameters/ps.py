@@ -28,7 +28,6 @@ from cmk.gui.valuespec import (
     Percentage,
     RegExp,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
 )
@@ -326,7 +325,7 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 
 def process_discovery_descr_option():
-    return TextUnicode(
+    return TextAscii(
         title=_('Process Name'),
         allow_empty=False,
         validate=validate_process_discovery_descr_option,

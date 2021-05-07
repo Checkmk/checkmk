@@ -62,7 +62,6 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
-    TextUnicode,
     DropdownChoice,
     TextAscii,
     Integer,
@@ -313,7 +312,7 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
                          )))
     else:
         elements.append(("title",
-                         TextUnicode(
+                         TextAscii(
                              title=_("Title"),
                              help=_("A descriptive title for this rule pack"),
                              allow_empty=False,
@@ -904,7 +903,7 @@ def vs_mkeventd_rule(customer=None):
                "Please note: When an inverted rule matches there can never be match groups."),
          )),
         ("set_text",
-         TextUnicode(
+         TextAscii(
              title=_("Rewrite message text"),
              help=_("Replace the message text with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -919,7 +918,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_host",
-         TextUnicode(
+         TextAscii(
              title=_("Rewrite hostname"),
              help=_("Replace the host name with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -935,7 +934,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_application",
-         TextUnicode(
+         TextAscii(
              title=_("Rewrite application"),
              help=_("Replace the application (syslog tag) with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -949,7 +948,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_comment",
-         TextUnicode(
+         TextAscii(
              title=_("Add comment"),
              help=_("Attach a comment to the event. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -962,7 +961,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_contact",
-         TextUnicode(
+         TextAscii(
              title=_("Add contact information"),
              help=_("Attach information about a contact person. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -1176,21 +1175,21 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
             optional_keys=False,
             elements=[
                 ("text",
-                 TextUnicode(title=_("Message text"),
-                             size=30,
-                             try_max_width=True,
-                             allow_empty=False,
-                             default_value=_("Still nothing happened."),
-                             attrencode=True)),
+                 TextAscii(title=_("Message text"),
+                           size=30,
+                           try_max_width=True,
+                           allow_empty=False,
+                           default_value=_("Still nothing happened."),
+                           attrencode=True)),
                 ("application",
-                 TextUnicode(title=_("Application name"),
-                             help=_("The syslog tag"),
-                             size=40,
-                             default_value=_("Foobar-Daemon"),
-                             allow_empty=True,
-                             attrencode=True)),
+                 TextAscii(title=_("Application name"),
+                           help=_("The syslog tag"),
+                           size=40,
+                           default_value=_("Foobar-Daemon"),
+                           allow_empty=True,
+                           attrencode=True)),
                 ("host",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Host lookup element"),
                      help=_("Hostname, IP address or host alias the event is relevant for"),
                      size=40,
@@ -3427,7 +3426,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                              size=12,
                          )),
                         ("title",
-                         TextUnicode(
+                         TextAscii(
                              title=_("Title"),
                              help=_("A descriptive title of this action."),
                              allow_empty=False,
@@ -3468,7 +3467,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     ),
                                                     (
                                                         "subject",
-                                                        TextUnicode(
+                                                        TextAscii(
                                                             title=_("Subject"),
                                                             allow_empty=False,
                                                             size=64,
@@ -3825,7 +3824,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
         return ListOf(
             Dictionary(
                 elements=[
-                    ("description", TextUnicode(title=_("Description"),)),
+                    ("description", TextAscii(title=_("Description"),)),
                     ("credentials", SNMPCredentials(for_ec=True)),
                     ("engine_ids",
                      ListOfStrings(
@@ -4351,7 +4350,7 @@ rulespec_registry.register(
 
 
 def _vs_contact(title):
-    return TextUnicode(
+    return TextAscii(
         title=title,
         help=_("This rule set is useful if you send your monitoring notifications "
                "into the Event Console. The contact information that is set by this rule "

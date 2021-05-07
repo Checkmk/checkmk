@@ -37,7 +37,7 @@ from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.valuespec import (
     Hostname,
     Tuple,
-    TextUnicode,
+    TextAscii,
     RegExpUnicode,
     DropdownChoice,
     RegExp,
@@ -326,7 +326,7 @@ class ModeBulkRenameHost(WatoMode):
                                allow_empty=False,
                                mode=RegExpUnicode.prefix,
                            ),
-                           TextUnicode(
+                           TextAscii(
                                title=_("Replacement"),
                                help=
                                _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups, <tt>\\0</tt> to insert to original host name"

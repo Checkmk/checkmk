@@ -623,17 +623,14 @@ class TextAscii(ValueSpec):
     def value_to_text(self, value: str) -> str:
         if not value:
             return self._empty_text
-
         if self._attrencode:
             return escaping.escape_attribute(value)
         return ensure_str(value)
 
     def from_html_vars(self, varprefix: str) -> str:
         value = html.request.get_str_input_mandatory(varprefix, "")
-
         if self._strip and value:
             value = value.strip()
-
         return value
 
     def validate_datatype(self, value: str, varprefix: str) -> None:
@@ -671,6 +668,12 @@ class TextAscii(ValueSpec):
             raise MKUserError(varprefix,
                               _("You must not provide more than %d characters.") % self._maxlen)
 
+    def value_to_json(self, value):
+        return value
+
+    def value_from_json(self, json_value):
+        return json_value
+
 
 class UUID(TextAscii):
     """Documentation for UUID
@@ -686,24 +689,6 @@ class UUID(TextAscii):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-class TextUnicode(TextAscii):
-    def from_html_vars(self, varprefix: str) -> str:
-        return html.request.get_unicode_input_mandatory(varprefix, "").strip()
-
-    def validate_datatype(self, value: str, varprefix: str) -> None:
-        if not isinstance(value, str):
-            raise MKUserError(
-                varprefix,
-                _("The value must be of type str or unicode, but it has type %s") %
-                _type_name(value))
-
-    def value_to_json(self, value):
-        return value
-
-    def value_from_json(self, json_value):
-        return json_value
-
-
 # TODO: Cleanup kwargs
 def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
@@ -716,19 +701,19 @@ def ID(**kwargs):
 # TODO: Cleanup kwargs
 def UnicodeID(**kwargs):
     """Same as the ID class, but allowing unicode objects"""
-    return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
-                       regex_error=_("An identifier must only consist of letters, digits, dash and "
-                                     "underscore and it must start with a letter or underscore."),
-                       **kwargs)
+    return TextAscii(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
+                     regex_error=_("An identifier must only consist of letters, digits, dash and "
+                                   "underscore and it must start with a letter or underscore."),
+                     **kwargs)
 
 
 # TODO: Cleanup kwargs
 def UserID(**kwargs):
-    return TextUnicode(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
-                       regex_error=_(
-                           "An identifier must only consist of letters, digits, dash, dot, "
-                           "at and underscore. But it must start with a letter or underscore."),
-                       **kwargs)
+    return TextAscii(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
+                     regex_error=_(
+                         "An identifier must only consist of letters, digits, dash, dot, "
+                         "at and underscore. But it must start with a letter or underscore."),
+                     **kwargs)
 
 
 class RegExp(TextAscii):
@@ -865,11 +850,11 @@ class RegExp(TextAscii):
 
 
 # TODO: Cleanup this multiple inheritance
-class RegExpUnicode(TextUnicode, RegExp):
+class RegExpUnicode(RegExp):
     pass
 
 
-class EmailAddress(TextUnicode):
+class EmailAddress(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         make_clickable: bool = False,
@@ -1354,7 +1339,7 @@ def CheckMKVersion(
     )
 
 
-class TextAreaUnicode(TextUnicode):
+class TextAreaUnicode(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         cols: int = 60,
@@ -5275,7 +5260,7 @@ class Transform(ValueSpec):
 
 
 # TODO: Change to factory, cleanup kwargs
-class LDAPDistinguishedName(TextUnicode):
+class LDAPDistinguishedName(TextAscii):
     def __init__(self, enforce_suffix: _Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.enforce_suffix = enforce_suffix
@@ -5622,7 +5607,7 @@ class TextOrRegExp(ABCTextOrRegExp):
 class TextOrRegExpUnicode(ABCTextOrRegExp):
     @classmethod
     def _text_valuespec_class(cls):
-        return TextUnicode
+        return TextAscii
 
     @classmethod
     def _regex_valuespec_class(cls):
@@ -6346,7 +6331,7 @@ def LogLevelChoice(**kwargs):
 def rule_option_elements(disabling: bool = True) -> List[DictionaryEntry]:
     elements: List[DictionaryEntry] = [
         ("description",
-         TextUnicode(
+         TextAscii(
              title=_("Description"),
              help=_("A description or title of this rule"),
              size=80,

@@ -3502,17 +3502,17 @@ def test_registered_filters(load_plugins):
 
 expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {
-        'single_spec': [('aggr_name', 'TextUnicode')],
+        'single_spec': [('aggr_name', 'TextAscii')],
         'title': u'BI Aggregation',
         'title_plural': u'BI Aggregations'
     },
     'aggr_group': {
-        'single_spec': [('aggr_group', 'TextUnicode')],
+        'single_spec': [('aggr_group', 'TextAscii')],
         'title': u'BI Aggregation Group',
         'title_plural': u'BI Aggregation Groups'
     },
     'command': {
-        'single_spec': [('command_name', 'TextUnicode')],
+        'single_spec': [('command_name', 'TextAscii')],
         'title': u'Command',
         'title_plural': u'Commands'
     },
@@ -3522,7 +3522,7 @@ expected_infos: Dict[str, Dict[str, Any]] = {
         'title_plural': u'Comments'
     },
     'contact': {
-        'single_spec': [('log_contact_name', 'TextUnicode')],
+        'single_spec': [('log_contact_name', 'TextAscii')],
         'title': u'Contact',
         'title_plural': u'Contacts'
     },
@@ -3548,13 +3548,13 @@ expected_infos: Dict[str, Dict[str, Any]] = {
     },
     'host': {
         'multiple_site_filters': ['hostgroup'],
-        'single_spec': [('host', 'TextUnicode')],
+        'single_spec': [('host', 'TextAscii')],
         'title': u'Host',
         'title_plural': u'Hosts'
     },
     'hostgroup': {
         'single_site': False,
-        'single_spec': [('hostgroup', 'TextUnicode')],
+        'single_spec': [('hostgroup', 'TextAscii')],
         'title': u'Host Group',
         'title_plural': u'Host Groups'
     },
@@ -3665,13 +3665,13 @@ expected_infos: Dict[str, Dict[str, Any]] = {
     },
     'service': {
         'multiple_site_filters': ['servicegroup'],
-        'single_spec': [('service', 'TextUnicode')],
+        'single_spec': [('service', 'TextAscii')],
         'title': u'Service',
         'title_plural': u'Services'
     },
     'servicegroup': {
         'single_site': False,
-        'single_spec': [('servicegroup', 'TextUnicode')],
+        'single_spec': [('servicegroup', 'TextAscii')],
         'title': u'Service Group',
         'title_plural': u'Service Groups'
     },

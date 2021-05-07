@@ -108,7 +108,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListOf,
-    TextUnicode,
+    TextAscii,
     Transform,
     Tuple,
     ValueSpec,
@@ -1467,13 +1467,12 @@ def view_editor_column_spec(ident, title, ds_name):
             )
         ]
         if painter_type == 'join_painter':
-            elements.extend([
-                TextUnicode(
+            elements.extend(
+                [TextAscii(
                     title=_('of Service'),
                     allow_empty=False,
                 ),
-                TextUnicode(title=_('Title'))
-            ])
+                 TextAscii(title=_('Title'))])
         else:
             elements.extend([FixedValue(None, totext=""), FixedValue(None, totext="")])
         # UX/GUI Better ordering of fields and reason for transform

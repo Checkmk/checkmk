@@ -21,7 +21,6 @@ from cmk.gui.valuespec import (
     RegExp,
     RegExpUnicode,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
 )
@@ -65,7 +64,7 @@ def _valuespec_logwatch_rules():
                                    size=40,
                                    mode=RegExp.infix,
                                ),
-                               TextUnicode(
+                               TextAscii(
                                    title=_("Comment"),
                                    size=40,
                                ),
@@ -398,7 +397,7 @@ def _parameter_valuespec_logwatch_ec():
                      )),
                     ('expected_logfiles',
                      ListOf(
-                         TextUnicode(),
+                         TextAscii(),
                          title=_("List of expected logfiles"),
                          help=
                          _("When the monitoring of forwarded logfiles is enabled, the check verifies that "

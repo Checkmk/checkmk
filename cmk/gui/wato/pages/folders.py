@@ -43,7 +43,6 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
     DropdownChoice,
-    TextUnicode,
     TextAscii,
     ValueSpec,
 )
@@ -1118,8 +1117,8 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
             return redirect(mode_url("folder", folder=folder.path()))
 
         # Title
-        title = TextUnicode().from_html_vars("title")
-        TextUnicode(allow_empty=False).validate_value(title, "title")
+        title = TextAscii().from_html_vars("title")
+        TextAscii(allow_empty=False).validate_value(title, "title")
 
         attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
@@ -1139,7 +1138,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
 
         # title
         basic_attributes: List[Tuple[str, ValueSpec, str]] = [
-            ("title", TextUnicode(title=_("Title")), "" if new else self._folder.title()),
+            ("title", TextAscii(title=_("Title")), "" if new else self._folder.title()),
         ]
         html.set_focus("title")
 

@@ -39,8 +39,8 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
     Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
     OptionalDropdownChoice, Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii,
-    AjaxDropdownChoice, TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp,
-    rule_option_elements, SingleLabel, autocompleter_registry,
+    AjaxDropdownChoice, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
+    SingleLabel, autocompleter_registry,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
     ActionResult, WatoMode, mode_registry, mode_url, redirect,
@@ -425,7 +425,7 @@ def _translation_elements(what):
                              mode=RegExp.prefix,
                              case_sensitive=False,
                          ),
-                         TextUnicode(
+                         TextAscii(
                              title=_("Replacement"),
                              help=_(
                                  "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
@@ -453,13 +453,13 @@ def _translation_elements(what):
              Tuple(
                  orientation="horizontal",
                  elements=[
-                     TextUnicode(
+                     TextAscii(
                          title=_("Original %s") % singular,
                          size=30,
                          allow_empty=False,
                          attrencode=True,
                      ),
-                     TextUnicode(
+                     TextAscii(
                          title=_("Translated %s") % singular,
                          size=30,
                          allow_empty=False,

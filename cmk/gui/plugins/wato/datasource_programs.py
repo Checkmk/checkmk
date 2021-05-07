@@ -44,7 +44,6 @@ from cmk.gui.valuespec import (
     RegExp,
     RegExpUnicode,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
 )
@@ -889,7 +888,7 @@ def _valuespec_generic_metrics_prometheus():
             ("promql_checks",
              ListOf(
                  Dictionary(elements=[
-                     ("service_description", TextUnicode(
+                     ("service_description", TextAscii(
                          title=_('Service name'),
                          allow_empty=False,
                      )),
@@ -2119,9 +2118,9 @@ def _special_agents_jolokia_mk_jolokia_elements():
              size=30,
          )),
         ("instance",
-         TextUnicode(title=_("Name of the instance in the monitoring"),
-                     help=_("If you do not specify a name here, then the TCP port number "
-                            "will be used as an instance name."))),
+         TextAscii(title=_("Name of the instance in the monitoring"),
+                   help=_("If you do not specify a name here, then the TCP port number "
+                          "will be used as an instance name."))),
         ("protocol",
          DropdownChoice(title=_("Protocol"), choices=[
              ("http", "HTTP"),
@@ -2383,7 +2382,7 @@ def _special_agents_azure_azure_tag_based_config():
                     orientation="horizontal",
                     choices=[
                         ('exists', _("exists")),
-                        ('value', _("is"), TextUnicode(title=_('Tag value'), allow_empty=False)),
+                        ('value', _("is"), TextAscii(title=_('Tag value'), allow_empty=False)),
                     ],
                 ),
             ],
@@ -2537,7 +2536,7 @@ class MultisiteBiDatasource:
                                  mode=RegExp.prefix,
                                  case_sensitive=False,
                              ),
-                             TextUnicode(
+                             TextAscii(
                                  title=_("Replacement"),
                                  help=
                                  _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"

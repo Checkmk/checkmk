@@ -20,7 +20,6 @@ from cmk.gui.valuespec import (
     Alternative,
     ListOfStrings,
     Age,
-    TextUnicode,
     TextAreaUnicode,
     DropdownChoice,
     RegExp,
@@ -221,7 +220,7 @@ def _valuespec_active_checks_ssh():
         title=_("Check SSH service"),
         help=_("This rulset allow you to configure a SSH check for a host"),
         elements=[
-            ("description", TextUnicode(title=_("Service Description"),)),
+            ("description", TextAscii(title=_("Service Description"),)),
             (
                 "port",
                 Integer(
@@ -268,7 +267,7 @@ def _valuespec_active_checks_icmp():
                "track performance data of the PING to some hosts, nevertheless."),
         elements=[
             ("description",
-             TextUnicode(
+             TextAscii(
                  title=_("Service Description"),
                  allow_empty=False,
                  default_value="PING",
@@ -507,7 +506,7 @@ def _valuespec_active_checks_dns():
                 title=_("Optional parameters"),
                 elements=[
                     ("name",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Alternative Service description"),
                          help=
                          _("The service description will be this name instead <i>DNS Servername</i>"
@@ -585,7 +584,7 @@ def _valuespec_active_checks_sql():
         optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "host"],
         elements=[
             ("description",
-             TextUnicode(
+             TextAscii(
                  title=_("Service Description"),
                  help=_("The name of this active service to be displayed."),
                  allow_empty=False,
@@ -719,7 +718,7 @@ def _valuespec_active_checks_tcp():
                 title=_("Optional parameters"),
                 elements=[
                     ("svc_description",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Service description"),
                          allow_empty=False,
                          help=_(
@@ -1016,7 +1015,7 @@ def _valuespec_active_checks_http():
                    "connection times, and report on certificate expiration times."),
             elements=[
                 ("name",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Service name"),
                      help=_(
                          "Will be used in the service description. If the name starts with "
@@ -1131,7 +1130,7 @@ def _valuespec_active_checks_http():
                                               "processing)"),
                                    )),
                                   ("expect_string",
-                                   TextUnicode(
+                                   TextAscii(
                                        title=_("Fixed string to expect in the content"),
                                        allow_empty=False,
                                    )),
@@ -1160,7 +1159,7 @@ def _valuespec_active_checks_http():
                                    Tuple(
                                        title=_("Send HTTP POST data"),
                                        elements=[
-                                           TextUnicode(
+                                           TextAscii(
                                                title=_("HTTP POST data"),
                                                help=_(
                                                    "Data to send via HTTP POST method. "
@@ -1287,7 +1286,7 @@ def _valuespec_active_checks_ldap():
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
         elements=[
-            TextUnicode(
+            TextAscii(
                 title=_("Name"),
                 help=
                 _("The service description will be <b>LDAP</b> plus this name. If the name starts with "
@@ -1404,7 +1403,7 @@ def _valuespec_active_checks_smtp():
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
         elements=[
-            TextUnicode(
+            TextAscii(
                 title=_("Name"),
                 help=
                 _("The service description will be <b>SMTP</b> plus this name. If the name starts with "
@@ -1547,7 +1546,7 @@ def _valuespec_active_checks_disk_smb():
                "filesystem shares that are exported via SMB/CIFS."),
         elements=[
             ("share",
-             TextUnicode(
+             TextAscii(
                  title=_("SMB share to check"),
                  help=_("Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> "
                         "the full UNC like <tt>\\\\servername\\iso</tt>"),
@@ -1555,7 +1554,7 @@ def _valuespec_active_checks_disk_smb():
                  allow_empty=False,
              )),
             ("workgroup",
-             TextUnicode(
+             TextAscii(
                  title=_("Workgroup"),
                  help=_("Workgroup or domain used (defaults to <tt>WORKGROUP</tt>)"),
                  size=32,
@@ -1615,11 +1614,11 @@ def _valuespec_custom_checks():
         _("This option can only be used with the permission \"Can add or modify executables\"."),
         elements=[
             ("service_description",
-             TextUnicode(title=_("Service description"),
-                         help=_("Please make sure that this is unique per host "
-                                "and does not collide with other services."),
-                         allow_empty=False,
-                         default_value=_("Customcheck"))),
+             TextAscii(title=_("Service description"),
+                       help=_("Please make sure that this is unique per host "
+                              "and does not collide with other services."),
+                       allow_empty=False,
+                       default_value=_("Customcheck"))),
             (
                 "command_line",
                 PluginCommandLine(),
@@ -1672,10 +1671,10 @@ def _valuespec_custom_checks():
                           default_value=3,
                       )),
                      ("output",
-                      TextUnicode(title=_("Plugin output in case of absent updates"),
-                                  size=40,
-                                  allow_empty=False,
-                                  default_value=_("Check result did not arrive in time"))),
+                      TextAscii(title=_("Plugin output in case of absent updates"),
+                                size=40,
+                                allow_empty=False,
+                                default_value=_("Check result did not arrive in time"))),
                  ],
              )),
         ],
@@ -1823,9 +1822,9 @@ def _valuespec_active_checks_form_submit():
           "from the requested pages, changes vars and submits them to check the response "
           "afterwards."),
         elements=[
-            TextUnicode(title=_("Name"),
-                        help=_("The name will be used in the service description"),
-                        allow_empty=False),
+            TextAscii(title=_("Name"),
+                      help=_("The name will be used in the service description"),
+                      allow_empty=False),
             Dictionary(
                 title=_("Check the URL"),
                 elements=[
@@ -1922,9 +1921,9 @@ def _valuespec_active_checks_notify_count():
           "This plugin queries livestatus to extract the notification related log entries from the "
           "log file of your monitoring core."),
         elements=[
-            TextUnicode(title=_("Service Description"),
-                        help=_("The name that will be used in the service description"),
-                        allow_empty=False),
+            TextAscii(title=_("Service Description"),
+                      help=_("The name that will be used in the service description"),
+                      allow_empty=False),
             Integer(
                 title=_("Interval to monitor"),
                 label=_("notifications within last"),
@@ -2027,9 +2026,9 @@ def _valuespec_active_checks_mail_loop():
         ],
         elements=[
             ('item',
-             TextUnicode(title=_('Name'),
-                         help=_('The service description will be <b>Mail Loop</b> plus this name'),
-                         allow_empty=False)),
+             TextAscii(title=_('Name'),
+                       help=_('The service description will be <b>Mail Loop</b> plus this name'),
+                       allow_empty=False)),
             ('subject',
              TextAscii(
                  title=_('Subject'),
@@ -2115,11 +2114,11 @@ def _valuespec_active_checks_mail():
                'to the Event Console.'),
         required_keys=['service_description', 'fetch'],
         elements=[('service_description',
-                   TextUnicode(title=_('Service description'),
-                               help=_('Please make sure that this is unique per host '
-                                      'and does not collide with other services.'),
-                               allow_empty=False,
-                               default_value="Email"))] + _mail_receiving_params() +
+                   TextAscii(title=_('Service description'),
+                             help=_('Please make sure that this is unique per host '
+                                    'and does not collide with other services.'),
+                             allow_empty=False,
+                             default_value="Email"))] + _mail_receiving_params() +
         [
             ('connect_timeout',
              Integer(
@@ -2223,7 +2222,7 @@ def _valuespec_active_checks_mail():
                                      title=_("Use the mail subject"),
                                      totext=_("The mail subject is used as syslog appliaction"),
                                  ),
-                                 TextUnicode(
+                                 TextAscii(
                                      title=_("Specify the application"),
                                      help=
                                      _("Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
@@ -2261,7 +2260,7 @@ def _valuespec_active_checks_mail():
                                      totext=_(
                                          'Delete all processed message belonging to this check'),
                                  ),
-                                 TextUnicode(
+                                 TextAscii(
                                      title=_("Move to subfolder"),
                                      help=_(
                                          "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
@@ -2288,11 +2287,11 @@ def _valuespec_active_checks_mailboxes():
         help=_('This check monitors count and age of mails in mailboxes.'),
         elements=[
             ('service_description',
-             TextUnicode(title=_('Service description'),
-                         help=_('Please make sure that this is unique per host '
-                                'and does not collide with other services.'),
-                         allow_empty=False,
-                         default_value="Mailboxes")), ('imap_parameters', _imap_parameters()),
+             TextAscii(title=_('Service description'),
+                       help=_('Please make sure that this is unique per host '
+                              'and does not collide with other services.'),
+                       allow_empty=False,
+                       default_value="Mailboxes")), ('imap_parameters', _imap_parameters()),
             ('connect_timeout',
              Integer(
                  title=_('Connect Timeout'),
@@ -2410,7 +2409,7 @@ def _valuespec_active_checks_elasticsearch_query():
         help=_("You can search indices for defined patterns in defined fieldnames."),
         elements=[
             ("svc_item",
-             TextUnicode(
+             TextAscii(
                  title=_("Item suffix"),
                  help=_("Here you can define what service description (item) is "
                         "used for the created service. The resulting item "
@@ -2448,7 +2447,7 @@ def _valuespec_active_checks_elasticsearch_query():
                  default_value=9200,
              )),
             ("pattern",
-             TextUnicode(
+             TextAscii(
                  title=_("Search pattern"),
                  help=_(
                      "Here you can define what search pattern should be used. "

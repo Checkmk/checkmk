@@ -65,7 +65,6 @@ from cmk.gui.valuespec import (
     FixedValue,
     IconSelector,
     Checkbox,
-    TextUnicode,
     TextAscii,
     TextAreaUnicode,
     DropdownChoice,
@@ -842,7 +841,7 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                  size=50,
                  allow_empty=False,
                  default_value=default_id)),
-            ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('title', TextAscii(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('description',
              TextAreaUnicode(
                  title=_('Description') + '<sup>*</sup>',

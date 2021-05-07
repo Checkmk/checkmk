@@ -23,7 +23,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     FileUpload,
     CascadingDropdown,
-    TextUnicode,
+    TextAscii,
 )
 from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.breadcrumb import Breadcrumb
@@ -263,7 +263,7 @@ class PageEditKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
+                ("alias", TextAscii(
                     title=_("Description or comment"),
                     size=64,
                     allow_empty=False,
@@ -384,7 +384,7 @@ class PageUploadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
+                ("alias", TextAscii(
                     title=_("Description or comment"),
                     size=64,
                     allow_empty=False,

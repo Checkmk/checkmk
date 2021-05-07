@@ -8,7 +8,6 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     ListOfStrings,
     TextAscii,
-    TextUnicode,
 )
 
 from cmk.gui.plugins.wato import (
@@ -25,7 +24,7 @@ def _parameter_valuespec_fs_mount_options():
                "actually found options differs from this list, the check will go "
                "warning or critical. Just the option <tt>commit</tt> is being "
                "ignored since it is modified by the power saving algorithms."),
-        valuespec=TextUnicode(),
+        valuespec=TextAscii(),
     )
 
 

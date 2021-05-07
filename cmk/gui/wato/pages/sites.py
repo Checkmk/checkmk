@@ -50,7 +50,6 @@ from cmk.gui.valuespec import (
     ID,
     Integer,
     FixedValue,
-    TextUnicode,
     TextAscii,
     Checkbox,
     Tuple,
@@ -283,7 +282,7 @@ class ModeEditSite(WatoMode):
         return [
             ("id", vs_site_id),
             ("alias",
-             TextUnicode(
+             TextAscii(
                  title=_("Alias"),
                  size=60,
                  help=_("An alias or description of the site."),

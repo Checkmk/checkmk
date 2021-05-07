@@ -58,7 +58,6 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextAscii,
     Dictionary,
-    TextUnicode,
     Optional,
     AbsoluteDate,
     DropdownChoice,
@@ -1191,7 +1190,7 @@ def _vs_annotation():
     return Dictionary(
         elements=[
             ("site", TextAscii(title=_("Site"))),
-            ("host", TextUnicode(title=_("Hostname"))),
+            ("host", TextAscii(title=_("Hostname"))),
             ("host_state",
              Optional(
                  HostState(),
@@ -1200,7 +1199,7 @@ def _vs_annotation():
                  label=_("Reclassify host state of this period"),
              )),
             ("service",
-             Optional(TextUnicode(allow_empty=False),
+             Optional(TextAscii(allow_empty=False),
                       sameline=True,
                       title=_("Service"),
                       label=_("Service description"))),

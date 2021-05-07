@@ -29,7 +29,6 @@ from cmk.gui.valuespec import (
     Password,
     TextAreaUnicode,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
 )
@@ -85,12 +84,11 @@ def _vs_add_common_mail_elements(elements):
                          size=40,
                          allow_empty=False,
                      )),
-                     ("display_name",
-                      TextUnicode(
-                          title=_("Display name"),
-                          size=40,
-                          allow_empty=False,
-                      )),
+                     ("display_name", TextAscii(
+                         title=_("Display name"),
+                         size=40,
+                         allow_empty=False,
+                     )),
                  ],
                  help=_("The email address and visible name used in the From header "
                         "of notifications messages. If no email address is specified "
@@ -110,12 +108,11 @@ def _vs_add_common_mail_elements(elements):
                          size=40,
                          allow_empty=False,
                      )),
-                     ("display_name",
-                      TextUnicode(
-                          title=_("Display name"),
-                          size=40,
-                          allow_empty=False,
-                      )),
+                     ("display_name", TextAscii(
+                         title=_("Display name"),
+                         size=40,
+                         allow_empty=False,
+                     )),
                  ],
                  required_keys=["address"],
                  help=_("The email address and visible name used in the Reply-To header "
@@ -124,7 +121,7 @@ def _vs_add_common_mail_elements(elements):
              forth=lambda x: x if isinstance(x, dict) else {'address': x},
          )),
         ("host_subject",
-         TextUnicode(
+         TextAscii(
              title=_("Subject for host notifications"),
              help=_("Here you are allowed to use all macros that are defined in the "
                     "notification context."),
@@ -132,7 +129,7 @@ def _vs_add_common_mail_elements(elements):
              size=64,
          )),
         ("service_subject",
-         TextUnicode(
+         TextAscii(
              title=_("Subject for service notifications"),
              help=_("Here you are allowed to use all macros that are defined in the "
                     "notification context."),
@@ -545,14 +542,14 @@ class NotificationILert(NotificationParameter):
                       ),
                      default_value='HIGH')),
                 ("ilert_summary_host",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Custom incident summary for host alerts"),
                      default_value=
                      "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
                      size=64,
                  )),
                 ("ilert_summary_service",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Custom incident summary for service alerts"),
                      default_value=
                      "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
@@ -669,7 +666,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=10,
                      )),
                     ("host_summary",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Summary for host notifications"),
                          help=_("Here you are allowed to use all macros that are defined in the "
                                 "notification context."),
@@ -677,7 +674,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=64,
                      )),
                     ("service_summary",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Summary for service notifications"),
                          help=_("Here you are allowed to use all macros that are defined in the "
                                 "notification context."),
@@ -685,7 +682,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=64,
                      )),
                     ("label",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Label"),
                          help=_("Here you can set a custom label for new issues. "
                                 "If not set, 'monitoring' will be used."),
@@ -1053,7 +1050,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                  )),
                 ("proxy_url", HTTPProxyReference()),
                 ("owner",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Owner"),
                      help=("Sets the user of the alert. "
                            "Display name of the request owner."),
@@ -1061,7 +1058,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("source",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Source"),
                      help=_("Source field of the alert. Default value is IP "
                             "address of the incoming request."),
@@ -1080,19 +1077,19 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      default_value="P3",
                  )),
                 ("note_created",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Note while creating"),
                      help=_("Additional note that will be added while creating the alert."),
                      default_value="Alert created by Check_MK",
                  )),
                 ("note_closed",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Note while closing"),
                      help=_("Additional note that will be added while closing the alert."),
                      default_value="Alert closed by Check_MK",
                  )),
                 ("host_msg",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Description for host alerts"),
                      help=_("Description field of host alert that is generally "
                             "used to provide a detailed information about the "
@@ -1101,7 +1098,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=64,
                  )),
                 ("svc_msg",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Description for service alerts"),
                      help=_("Description field of service alert that is generally "
                             "used to provide a detailed information about the "
@@ -1157,7 +1154,7 @@ $LONGSERVICEOUTPUT$
                      orientation="horizontal",
                  )),
                 ("entity",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Entity"),
                      help=_("Is used to specify which domain the alert is related to."),
                      allow_empty=False,

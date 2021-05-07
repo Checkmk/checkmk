@@ -47,7 +47,6 @@ from cmk.gui.valuespec import (
     PasswordSpec,
     RegExpUnicode,
     TextAscii,
-    TextUnicode,
     Transform,
     Tuple,
     ValueSpec,
@@ -569,7 +568,7 @@ class ConfigVariablePageHeading(ConfigVariable):
         return "page_heading"
 
     def valuespec(self):
-        return TextUnicode(
+        return TextAscii(
             title=_("Page title"),
             help=_("This title will be displayed in your browser's title bar or tab. You can use "
                    "a <tt>%s</tt> to insert the alias of your monitoring site to the title."),
@@ -729,7 +728,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                             title=_("ID"),
                             allow_empty=False,
                         )),
-                        ("title", TextUnicode(
+                        ("title", TextAscii(
                             title=_("Title of the tree"),
                             allow_empty=False,
                         )),
@@ -909,7 +908,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                          default_value=60,
                      )),
                     ("comment",
-                     TextUnicode(
+                     TextAscii(
                          title=_("Adhoc comment"),
                          help=_("The comment which is automatically sent with an adhoc downtime"),
                          size=80,
@@ -1012,7 +1011,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
                      totext=_("Hide the Checkmk version from the login box"),
                  )),
                 ("login_message",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Show a login message"),
                      help=
                      _("You may use this option to give your users an informational text before logging in."
@@ -1023,7 +1022,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
                  ListOf(
                      Tuple(
                          elements=[
-                             TextUnicode(title=_("Title"),),
+                             TextAscii(title=_("Title"),),
                              TextAscii(
                                  title=_('URL'),
                                  size=80,
@@ -1061,10 +1060,10 @@ class ConfigVariableUserLocalizations(ConfigVariable):
         return Transform(
             ListOf(
                 Tuple(elements=[
-                    TextUnicode(title=_("Original Text"), size=40),
+                    TextAscii(title=_("Original Text"), size=40),
                     Dictionary(
                         title=_("Translations"),
-                        elements=lambda: [(l or "en", TextUnicode(title=a, size=32))
+                        elements=lambda: [(l or "en", TextAscii(title=a, size=32))
                                           for (l, a) in cmk.gui.i18n.get_languages()],
                         columns=2,
                     ),
@@ -1105,7 +1104,7 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                  allow_empty=False,
                                  with_emblem=False,
                              )),
-                            ('title', TextUnicode(title=_('Title'),)),
+                            ('title', TextAscii(title=_('Title'),)),
                             ('url',
                              Transform(
                                  Tuple(
@@ -1209,7 +1208,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                                  "An identifier must only consist of letters, digits, dash and "
                                  "underscore and it must start with a letter or underscore.") +
                              " " + _("Only upper case letters are allowed"))),
-                        ('title', TextUnicode(title=_('Title'),)),
+                        ('title', TextAscii(title=_('Title'),)),
                         ("type",
                          DropdownChoice(
                              title=_("Data type"),
@@ -1351,7 +1350,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def valuespec(self):
         return ListOf(
             Dictionary(
-                elements=[('title', TextUnicode(title=_('Title'),)),
+                elements=[('title', TextAscii(title=_('Title'),)),
                           ('end',
                            Alternative(
                                title=_("To"),
@@ -1458,7 +1457,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         return ListOf(
             Dictionary(
                 elements=[
-                    ('title', TextUnicode(title=_('Title to show for the group'),)),
+                    ('title', TextAscii(title=_('Title to show for the group'),)),
                     ('pattern',
                      RegExpUnicode(
                          title=_('Grouping expression'),
@@ -1902,7 +1901,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
             Tuple(
                 elements=[
                     ID(title=_("ID"),),
-                    TextUnicode(title=_("Title"),),
+                    TextAscii(title=_("Title"),),
                 ],
                 orientation="horizontal",
             ),
@@ -2590,7 +2589,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                              allow_empty=False,
                          )),
                         ("title",
-                         TextUnicode(
+                         TextAscii(
                              title=_("Title"),
                              help=_("The title of the %s. It will be used as display name.") %
                              _("HTTP proxy"),
@@ -3068,7 +3067,7 @@ def _host_check_commands_host_check_command_choices() -> List[CascadingDropdownC
         ("ok", _("Always assume host to be up")),
         ("agent", _("Use the status of the Checkmk Agent")),
         ("service", _("Use the status of the service..."),
-         TextUnicode(
+         TextAscii(
              size=45,
              allow_empty=False,
              attrencode=True,
@@ -3957,7 +3956,7 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_display_name():
-    return TextUnicode(
+    return TextAscii(
         title=_("Alternative display name for Services"),
         help=_("This rule set allows you to specify an alternative name "
                "to be displayed for certain services. This name is available as "

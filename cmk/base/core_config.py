@@ -193,7 +193,7 @@ def duplicate_service_warning(
 #                                  Literal["ping"],
 #                                  Literal["ok"],
 #                                  Literal["agent"],
-#                                  Tuple[Literal["service"], TextUnicode],
+#                                  Tuple[Literal["service"], TextAscii],
 #                                  Tuple[Literal["tcp"], Integer],
 #                                  Tuple[Literal["custom"], TextAscii]])
 

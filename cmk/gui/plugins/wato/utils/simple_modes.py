@@ -32,7 +32,7 @@ from cmk.gui.valuespec import (
     ID,
     RuleComment,
     SetupSiteChoice,
-    TextUnicode,
+    TextAscii,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import SiteId
@@ -401,7 +401,7 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
 
         elements = ident_attr + [
             ("title",
-             TextUnicode(
+             TextAscii(
                  title=_("Title"),
                  help=_("The title of the %s. It will be used as display name.") %
                  (self._mode_type.name_singular()),

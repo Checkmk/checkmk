@@ -14,7 +14,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html, request
-from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
+from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextAscii
 from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 from cmk.gui.utils.urls import makeuri_contextless
 from typing import List, Dict, Tuple
@@ -73,7 +73,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
              ListOf(
                  Dictionary(
                      elements=[
-                         ("title", TextUnicode(
+                         ("title", TextAscii(
                              title=_("Title"),
                              allow_empty=False,
                          )),

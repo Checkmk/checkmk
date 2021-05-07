@@ -32,7 +32,6 @@ from cmk.gui.valuespec import (
     Integer,
     FileUpload,
     TextAscii,
-    TextUnicode,
     ListOf,
     Tuple,
     ListChoice,
@@ -683,7 +682,7 @@ class ModeEditTimeperiod(WatoMode):
             elements=[
                 ("name", name_element),
                 ("alias",
-                 TextUnicode(
+                 TextAscii(
                      title=_("Alias"),
                      help=_("An alias or description of the timeperiod"),
                      allow_empty=False,

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import NamedTuple
+from enum import Enum, auto
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
@@ -57,20 +58,40 @@ def _ignore_mountpoint(mountpoint, never_ignore_mountpoints):
     return True
 
 
+class ItemBehaviour(Enum):
+    default = auto()
+    add_volume_name = auto()
+
+
 class ItemAndGrouping(NamedTuple):
     item: str
     grouping: str
+    for_all: ItemBehaviour
+    for_single: ItemBehaviour
 
 
-def _get_item_and_grouping(params):
+def _get_item_and_grouping(params) -> ItemAndGrouping:
+    item = params.get("item_appearance", "mountpoint")
+    grouping = params.get("grouping_behaviour", "mountpoint")
+
+    for_all = ItemBehaviour.default
+    for_single = ItemBehaviour.default
+    if item == "volume_name_and_mountpoint":
+        if grouping == "volume_name_and_mountpoint":
+            for_all = ItemBehaviour.add_volume_name
+        else:
+            for_single = ItemBehaviour.add_volume_name
+
     return ItemAndGrouping(
-        item=params.get("item_appearance", "mountpoint"),
-        grouping=params.get("grouping_behaviour", "mountpoint"),
+        item=item,
+        grouping=grouping,
+        for_all=for_all,
+        for_single=for_single,
     )
 
 
-def _prepare_item_name(entry, include_device_name):
-    if entry.device and include_device_name:
+def _prepare_item_name(entry, behaviour):
+    if entry.device and behaviour == ItemBehaviour.add_volume_name:
         return "%s %s" % (entry.device, entry.mountpoint)
     return entry.mountpoint
 
@@ -110,9 +131,9 @@ def inventory_df(parsed):
     df_blocks = _handle_btrfs(df_blocks)
     filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
 
-    include_device_name = (item_and_grouping.item == "volume_name_and_mountpoint" and
-                           item_and_grouping.grouping == "volume_name_and_mountpoint")
-    mplist = [_prepare_item_name(df_block, include_device_name) for df_block in filtered_blocks]
+    mplist = [
+        _prepare_item_name(df_block, item_and_grouping.for_all) for df_block in filtered_blocks
+    ]
 
     # TODO df_inventory + mp_to_device:
     #   df_inventory should also return a list of DfBlocks, because for the case
@@ -121,18 +142,18 @@ def inventory_df(parsed):
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
     for mountpoint, params in df_inventory(mplist):
+        df_block = mp_to_df_block.get(mountpoint)
         if "patterns" in params:
             # Add the grouping_behaviour info to the discovered parameters of this service. With this information
             # the check can easily reconstruct the discovered grouping.
             params["grouping_behaviour"] = item_and_grouping.grouping
 
-        elif (item_and_grouping.item == "volume_name_and_mountpoint" and
-              item_and_grouping.grouping == "mountpoint"):
+        elif df_block:
             # Somehow the user wanted to see the volume name in the service description,
             # but the grouping itself is based on the mountpoint only
             # => The df_inventory returns a list of mountpoints and mountpoint groups
             # Add the volume name as prefix for single mountpoints
-            mountpoint = _prepare_item_name(mp_to_df_block[mountpoint], include_device_name=True)
+            mountpoint = _prepare_item_name(df_block, item_and_grouping.for_single)
 
         params["item_appearance"] = item_and_grouping.item
         yield mountpoint, params
@@ -141,7 +162,7 @@ def inventory_df(parsed):
 # Legacy params
 def _get_mountpoint_from_item(item, params, df_blocks):
     item_to_mp = {
-        _prepare_item_name(df_block, include_device_name=True): df_block.mountpoint
+        _prepare_item_name(df_block, ItemBehaviour.add_volume_name): df_block.mountpoint
         for df_block in df_blocks
     }
 
@@ -162,12 +183,10 @@ def check_df(item, params, parsed):
 
     item = _get_mountpoint_from_item(item, params, df_blocks)
 
-    include_device_name = (item_and_grouping.item == "volume_name_and_mountpoint" and
-                           item_and_grouping.grouping == "volume_name_and_mountpoint")
-    raw_df_blocks = [(_prepare_item_name(df_block, include_device_name), df_block.size_mb,
+    raw_df_blocks = [(_prepare_item_name(df_block, item_and_grouping.for_all), df_block.size_mb,
                       df_block.avail_mb, df_block.reserved_mb) for df_block in df_blocks]
     raw_df_inodes = [(_prepare_item_name(df_inode,
-                                         include_device_name), df_inode.total, df_inode.avail)
+                                         item_and_grouping.for_all), df_inode.total, df_inode.avail)
                      for df_inode in df_inodes]
 
     return df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)

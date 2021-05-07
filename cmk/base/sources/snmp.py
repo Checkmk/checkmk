@@ -164,7 +164,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
             self._make_file_cache(),
-            cluster_nodes=self.host_config.nodes or (),
             sections=self._make_sections(),
             on_error=self._on_snmp_scan_error,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(

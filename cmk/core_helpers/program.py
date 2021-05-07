@@ -9,12 +9,12 @@ import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Any, Dict, Final, Optional, Sequence, Union
+from typing import Any, Dict, Final, Optional, Union
 
 from six import ensure_binary, ensure_str
 
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData, HostName
+from cmk.utils.type_defs import AgentRawData
 
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
@@ -25,14 +25,12 @@ class ProgramFetcher(AgentFetcher):
         self,
         file_cache: DefaultAgentFileCache,
         *,
-        cluster_nodes: Sequence[HostName],
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
         super().__init__(
             file_cache,
-            cluster_nodes,
             logging.getLogger("cmk.helper.program"),
         )
         self.cmdline: Final = cmdline
@@ -43,7 +41,6 @@ class ProgramFetcher(AgentFetcher):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(" + ", ".join((
             f"{type(self.file_cache).__name__}",
-            f"cluster_nodes={self.cluster_nodes!r}",
             f"cmdline={self.cmdline!r}",
             f"stdin={self.stdin!r}",
             f"is_cmc={self.is_cmc!r}",
@@ -59,7 +56,6 @@ class ProgramFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "cluster_nodes": self.cluster_nodes,
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": self.is_cmc,

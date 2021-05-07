@@ -210,7 +210,6 @@ class TestIPMIFetcher:
     def fetcher(self, file_cache):
         return IPMIFetcher(
             file_cache,
-            cluster_nodes=(),
             address="1.2.3.4",
             username="us3r",
             password="secret",
@@ -236,7 +235,6 @@ class TestIPMIFetcher:
         with pytest.raises(MKFetcherError):
             with IPMIFetcher(
                     file_cache,
-                    cluster_nodes=(),
                     address="127.0.0.1",
                     username="",
                     password="",
@@ -272,7 +270,6 @@ class TestPiggybackFetcher:
     def fetcher(self, file_cache):
         return PiggybackFetcher(
             file_cache,
-            cluster_nodes=(),
             hostname="host",
             address="1.2.3.4",
             time_settings=[],
@@ -305,7 +302,6 @@ class TestProgramFetcher:
     def fetcher(self, file_cache):
         return ProgramFetcher(
             file_cache,
-            cluster_nodes=(),
             cmdline="/bin/true",
             stdin=None,
             is_cmc=False,
@@ -414,7 +410,6 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher(self, file_cache):
         return SNMPFetcher(
             file_cache,
-            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -442,7 +437,6 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher_inline(self, file_cache):
         return SNMPFetcher(
             file_cache,
-            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -471,7 +465,6 @@ class ABCTestSNMPFetcher(ABC):
     def fetcher_pysnmp(self, file_cache):
         return SNMPFetcher(
             file_cache,
-            cluster_nodes=(),
             sections={},
             on_error="raise",
             missing_sys_description=False,
@@ -714,7 +707,6 @@ class TestTCPFetcher:
     def fetcher(self, file_cache):
         return TCPFetcher(
             file_cache,
-            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
             timeout=0.1,
@@ -739,7 +731,6 @@ class TestTCPFetcher:
         output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
-            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -753,7 +744,6 @@ class TestTCPFetcher:
         output = AgentRawData(b"<<<section:sep(0)>>>\nbody\n")
         fetcher = TCPFetcher(
             file_cache,
-            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -769,7 +759,6 @@ class TestTCPFetcher:
         output = AgentRawData(b"the first two bytes are not a number")
         fetcher = TCPFetcher(
             file_cache,
-            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,
@@ -817,7 +806,6 @@ class TestFetcherCaching:
         # We use the TCPFetcher to test a general feature of the fetchers.
         return TCPFetcher(
             StubFileCache.from_json(file_cache.to_json()),
-            cluster_nodes=(),
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,

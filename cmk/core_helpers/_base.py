@@ -7,19 +7,7 @@
 import abc
 import logging
 from types import TracebackType
-from typing import (
-    Any,
-    Dict,
-    final,
-    Final,
-    Generic,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import Any, Dict, final, Final, Generic, Literal, Optional, Tuple, Type, TypeVar
 
 import cmk.utils
 from cmk.utils.exceptions import (
@@ -34,7 +22,6 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
-    HostName,
     result,
     ServiceDetails,
     ServiceState,
@@ -57,18 +44,11 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
     def __init__(
         self,
         file_cache: FileCache,
-        cluster_nodes: Sequence[HostName],
         logger: logging.Logger,
     ) -> None:
         super().__init__()
         self.file_cache: Final[FileCache[TRawData]] = file_cache
-        self.cluster_nodes: Final = cluster_nodes
         self._logger = logger
-
-    @property
-    def cluster(self) -> bool:
-        # The GUI takes care that there is no empty cluster.
-        return bool(self.cluster_nodes)
 
     @final
     @classmethod

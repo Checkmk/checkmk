@@ -103,7 +103,6 @@ class ProgramSource(AgentSource):
     def _make_fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
             self._make_file_cache(),
-            cluster_nodes=self.host_config.nodes or (),
             cmdline=self.cmdline,
             stdin=self.stdin,
             is_cmc=config.is_cmc(),

@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, TYPE_CHECKING
+from typing import Any, Dict, Final, List, Optional, Tuple, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -24,7 +24,6 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
-    HostName,
     SectionName,
     ServiceDetails,
     ServiceState,
@@ -48,12 +47,11 @@ class IPMIFetcher(AgentFetcher):
         self,
         file_cache: DefaultAgentFileCache,
         *,
-        cluster_nodes: Sequence[HostName],
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],
         password: Optional[str],
     ) -> None:
-        super().__init__(file_cache, cluster_nodes, logging.getLogger("cmk.helper.ipmi"))
+        super().__init__(file_cache, logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
@@ -62,7 +60,6 @@ class IPMIFetcher(AgentFetcher):
     def __repr__(self) -> str:
         return f"{type(self).__name__}(" + ", ".join((
             f"{type(self.file_cache).__name__}",
-            f"cluster_nodes={self.cluster_nodes!r}",
             f"address={self.address!r}",
             f"username={self.username!r}",
             f"password={self.password!r}",
@@ -78,7 +75,6 @@ class IPMIFetcher(AgentFetcher):
     def to_json(self) -> Dict[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
-            "cluster_nodes": self.cluster_nodes,
             "address": self.address,
             "username": self.username,
             "password": self.password,

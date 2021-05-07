@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import getopt
 import sys
 import xml.etree.ElementTree as ET
 from typing import Optional, Sequence
@@ -12,61 +11,50 @@ from typing import Optional, Sequence
 from requests.auth import HTTPBasicAuth
 
 from cmk.special_agents.utils.agent_common import special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
 
 
-def usage():
-    print("Usage:")
-    print(
-        "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}] [--protocol {http|https}]\n"
+def parse_arguments(args: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument(
+        "servername",
+        type=str,
+        metavar="SERVER",
+        help="Name of the server",
     )
-
-
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
-    short_options = ""
-    long_options = ["piggyback", "servername=", "port=", "username=", "password=", "protocol="]
-
-    try:
-        opts, _args = getopt.getopt(
-            list(argv) if argv else [],
-            short_options,
-            long_options,
-        )
-    except getopt.GetoptError as err:
-        usage()
-        sys.stderr.write("%s\n" % err)
-        sys.exit(2)
-
-    args = Args(
-        servername=None,
-        port=None,
-        username=None,
-        password=None,
-        piggyback=False,
-        protocol="http",
-        verbose=False,
+    parser.add_argument(
+        "port",
+        type=int,
+        metavar="PORT_NUM",
+        help="Port used for connecting to the server",
     )
-
-    for o, a in opts:
-        if o in ['--piggyback']:
-            args.piggyback = True
-        elif o in ['--servername']:
-            args.servername = a
-        elif o in ['--port']:
-            args.port = a
-        elif o in ['--username']:
-            args.username = a
-        elif o in ['--password']:
-            args.password = a
-        elif o in ['--protocol']:
-            args.protocol = a
-
-    if not args.servername or not args.port:
-        usage()
-        sys.exit(2)
-
-    return args
+    parser.add_argument(
+        "--protocol",
+        type=str,
+        choices=["http", "https"],
+        default="http",
+        metavar="PROTOCOL",
+        help="Protocol used for connecting to the server ('http' or 'https')",
+    )
+    parser.add_argument(
+        "--piggyback",
+        action="store_true",
+        help="Activate piggyback mode",
+    )
+    parser.add_argument(
+        "--username",
+        type=str,
+        metavar="USERNAME",
+        help="Username for authenticating at the server",
+    )
+    parser.add_argument(
+        "--password",
+        type=str,
+        metavar="PASSWORD",
+        help="Password for authenticating at the server",
+    )
+    return parser.parse_args(args)
 
 
 def agent_activemq_main(args: Args) -> None:

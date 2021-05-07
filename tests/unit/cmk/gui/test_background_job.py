@@ -40,6 +40,7 @@ def test_registered_background_jobs():
         'FetchAgentOutputBackgroundJob',
         'BulkDiscoveryBackgroundJob',
         'UserSyncBackgroundJob',
+        'UserProfileCleanupBackgroundJob',
         'ServiceDiscoveryBackgroundJob',
         'ActivationCleanupBackgroundJob',
         'CheckmkAutomationBackgroundJob',

@@ -20,8 +20,6 @@ import sys
 import pipes
 import subprocess
 import logging
-import shutil
-from contextlib import suppress
 from pathlib import Path
 
 # Make the testlib available
@@ -78,20 +76,7 @@ def main(args):
     try:
         return _execute_as_site_user(site, args)
     finally:
-        if _is_dockerized():
-            if os.path.exists("/results"):
-                shutil.rmtree("/results")
-                os.mkdir("/results")
-
-            with suppress(FileNotFoundError):
-                shutil.copy(site.path("junit.xml"), "/results")
-
-            with suppress(FileNotFoundError):
-                shutil.copytree(site.path("var/log"), "/results/logs")
-
-
-def _is_dockerized():
-    return Path("/.dockerenv").exists()
+        sf.save_results()
 
 
 def _execute_as_site_user(site, args):

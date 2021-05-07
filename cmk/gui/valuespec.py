@@ -625,17 +625,14 @@ class TextAscii(ValueSpec):
     def value_to_text(self, value: str) -> str:
         if not value:
             return self._empty_text
-
         if self._attrencode:
             return escaping.escape_attribute(value)
         return ensure_str(value)
 
     def from_html_vars(self, varprefix: str) -> str:
         value = html.request.get_str_input_mandatory(varprefix, "")
-
         if self._strip and value:
             value = value.strip()
-
         return value
 
     def validate_datatype(self, value: str, varprefix: str) -> None:
@@ -691,9 +688,6 @@ class UUID(TextAscii):
 
 class TextUnicode(TextAscii):
     # TODO: Once we switched to Python 3 we can merge the unicode and non unicode class
-    def from_html_vars(self, varprefix: str) -> str:  # type: ignore[override]
-        return html.request.get_unicode_input_mandatory(varprefix, "").strip()
-
     def validate_datatype(self, value: str, varprefix: str) -> None:
         if not isinstance(value, str):
             raise MKUserError(

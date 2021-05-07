@@ -97,7 +97,15 @@ def parse_printer_supply(info):
         if " S/N:" in line_0:
             line_0 = line_0[:line_0.find(" S/N:")]
 
-        parsed.append([line_0, unit_info, max_capacity, level, class_, color_id, color])
+        parsed.append([
+            line_0,
+            unit_info,
+            max_capacity,
+            level,
+            class_,
+            color_id,
+            color.rstrip('\0'),
+        ])
     return parsed
 
 

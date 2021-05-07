@@ -60,7 +60,8 @@ def _ignore_mountpoint(mountpoint, never_ignore_mountpoints):
 
 class ItemBehaviour(Enum):
     default = auto()
-    add_volume_name = auto()
+    volume_name = auto()
+    uuid = auto()
 
 
 class ItemAndGrouping(NamedTuple):
@@ -68,6 +69,12 @@ class ItemAndGrouping(NamedTuple):
     grouping: str
     for_all: ItemBehaviour
     for_single: ItemBehaviour
+
+
+def _get_item_behaviour_for_block_devices(params) -> ItemBehaviour:
+    if params.get("mountpoint_for_block_devices") == "uuid_as_mountpoint":
+        return ItemBehaviour.uuid
+    return ItemBehaviour.volume_name
 
 
 def _get_item_and_grouping(params) -> ItemAndGrouping:
@@ -78,9 +85,15 @@ def _get_item_and_grouping(params) -> ItemAndGrouping:
     for_single = ItemBehaviour.default
     if item == "volume_name_and_mountpoint":
         if grouping == "volume_name_and_mountpoint":
-            for_all = ItemBehaviour.add_volume_name
+            for_all = ItemBehaviour.volume_name
         else:
-            for_single = ItemBehaviour.add_volume_name
+            for_single = ItemBehaviour.volume_name
+
+    elif item == "uuid_and_mountpoint":
+        if grouping == "uuid_and_mountpoint":
+            for_all = ItemBehaviour.uuid
+        else:
+            for_single = ItemBehaviour.uuid
 
     return ItemAndGrouping(
         item=item,
@@ -91,12 +104,16 @@ def _get_item_and_grouping(params) -> ItemAndGrouping:
 
 
 def _prepare_item_name(entry, behaviour):
-    if entry.device and behaviour == ItemBehaviour.add_volume_name:
+    if entry.device and behaviour == ItemBehaviour.volume_name:
         return "%s %s" % (entry.device, entry.mountpoint)
+
+    if entry.uuid and behaviour == ItemBehaviour.uuid:
+        return "%s %s" % (entry.uuid, entry.mountpoint)
+
     return entry.mountpoint
 
 
-def _handle_btrfs(df_blocks):
+def _handle_block_devices(df_blocks, mountpoint_for_block_devices):
     # TODO What about df_inodes?
     # Not sure but it seems that inodes of btrfs FS are always zero (seen in our data pool):
     # /dev/sda1      btrfs         0     0      0     - /.snapshots
@@ -109,14 +126,22 @@ def _handle_btrfs(df_blocks):
             # of avoiding duplicate checks.
             # Compatibility: Before filtering/grouping/... we use '"btrfs " + device' as
             # mountpoint - regardless which field for mountpoint is set in df_section.
-            # (there: it's just for identification).
+
+            if df_block.uuid and mountpoint_for_block_devices == ItemBehaviour.uuid:
+                suffix = df_block.uuid
+            else:  # mountpoint_for_block_devices == ItemBehaviour.volume_name
+                suffix = df_block.device
+
+            mountpoint = " ".join([df_block.fs_type, suffix])
+
             df_block = DfBlock(
                 device=df_block.device,
                 fs_type=df_block.fs_type,
                 size_mb=df_block.size_mb,
                 avail_mb=df_block.avail_mb,
                 reserved_mb=df_block.reserved_mb,
-                mountpoint="btrfs " + df_block.device,
+                mountpoint=mountpoint,
+                uuid=df_block.uuid,
             )
 
         handled_df_blocks.append(df_block)
@@ -125,20 +150,19 @@ def _handle_btrfs(df_blocks):
 
 def inventory_df(parsed):
     inventory_options = host_extra_conf_merged(host_name(), inventory_df_rules)
+    mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(inventory_options)
     item_and_grouping = _get_item_and_grouping(inventory_options)
 
     df_blocks, _df_inodes = parsed
-    df_blocks = _handle_btrfs(df_blocks)
+    df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
     filtered_blocks = _filter_df_blocks(df_blocks, inventory_options)
 
     mplist = [
         _prepare_item_name(df_block, item_and_grouping.for_all) for df_block in filtered_blocks
     ]
 
-    # TODO df_inventory + mp_to_device:
-    #   df_inventory should also return a list of DfBlocks, because for the case
-    #       'include_volume_name and grouping_behaviour == "mountpoint"'
-    #   we need "device + mountpoint" as item. Then mp_to_device can be removed.
+    # TODO Cleanup df_inventory + mp_to_df_block:
+    #      df_inventory should also return a list of DfBlocks or similar.
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
     for mountpoint, params in df_inventory(mplist):
@@ -155,6 +179,9 @@ def inventory_df(parsed):
             # Add the volume name as prefix for single mountpoints
             mountpoint = _prepare_item_name(df_block, item_and_grouping.for_single)
 
+        # We have to add these parameters in any case in order to reconstruct df blocks
+        # in the check because "mountpoint" may contain a free-text group name.
+        params["mountpoint_for_block_devices"] = mountpoint_for_block_devices.name
         params["item_appearance"] = item_and_grouping.item
         yield mountpoint, params
 
@@ -162,9 +189,13 @@ def inventory_df(parsed):
 # Legacy params
 def _get_mountpoint_from_item(item, params, df_blocks):
     item_to_mp = {
-        _prepare_item_name(df_block, ItemBehaviour.add_volume_name): df_block.mountpoint
+        _prepare_item_name(df_block, ItemBehaviour.volume_name): df_block.mountpoint
         for df_block in df_blocks
     }
+    item_to_mp.update({
+        _prepare_item_name(df_block, ItemBehaviour.uuid): df_block.mountpoint
+        for df_block in df_blocks
+    })
 
     if "patterns" in params or item in [df_block.mountpoint for df_block in df_blocks]:
         return item
@@ -176,10 +207,11 @@ def _get_mountpoint_from_item(item, params, df_blocks):
 
 
 def check_df(item, params, parsed):
+    mountpoint_for_block_devices = _get_item_behaviour_for_block_devices(params)
     item_and_grouping = _get_item_and_grouping(params)
 
     df_blocks, df_inodes = parsed
-    df_blocks = _handle_btrfs(df_blocks)
+    df_blocks = _handle_block_devices(df_blocks, mountpoint_for_block_devices)
 
     item = _get_mountpoint_from_item(item, params, df_blocks)
 

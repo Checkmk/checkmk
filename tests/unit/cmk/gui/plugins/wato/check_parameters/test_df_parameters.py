@@ -15,12 +15,68 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
     _transform_discovered_filesystem_params,)
 
 
-@pytest.mark.parametrize('params', [
-    {
-        "item_appearance": "mountpoint",
-        "grouping_behaviour": "volume_name_and_mountpoint",
-    },
-])
+@pytest.mark.parametrize(
+    'params',
+    [
+        {
+            "item_appearance": "mountpoint",
+            "grouping_behaviour": "volume_name_and_mountpoint",
+        },
+        # 1
+        {
+            "item_appearance": "uuid_and_mountpoint",
+            "grouping_behaviour": "volume_name_and_mountpoint",
+        },
+        {
+            "item_appearance": "volume_name_and_mountpoint",
+            "grouping_behaviour": "uuid_and_mountpoint",
+        },
+        # 2
+        {
+            "mountpoint_for_block_devices": "uuid_as_mountpoint",
+            "item_appearance": "volume_name_and_mountpoint",
+        },
+        {
+            "mountpoint_for_block_devices": "volume_name_as_mountpoint",
+            "item_appearance": "uuid_and_mountpoint",
+        },
+        # 3
+        {
+            "mountpoint_for_block_devices": "uuid_as_mountpoint",
+            "grouping_behaviour": "volume_name_and_mountpoint",
+        },
+        {
+            "mountpoint_for_block_devices": "volume_name_as_mountpoint",
+            "grouping_behaviour": "uuid_and_mountpoint",
+        },
+        # 4
+        {
+            "mountpoint_for_block_devices": "uuid_as_mountpoint",
+            "item_appearance": "volume_name_and_mountpoint",
+            "grouping_behaviour": "volume_name_and_mountpoint",
+        },
+        {
+            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "item_appearance": "uuid_and_mountpoint",
+            "grouping_behaviour": "volume_name_and_mountpoint",
+        },
+        {
+            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "item_appearance": "volume_name_and_mountpoint",
+            "grouping_behaviour": "uuid_and_mountpoint",
+        },
+        # 5
+        {
+            "mountpoint_for_block_devices": "uuid_as_mountpoint",
+            "item_appearance": "volume_name_and_mountpoint",
+            "grouping_behaviour": "mountpoint",
+        },
+        {
+            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "item_appearance": "uuid_and_mountpoint",
+            "grouping_behaviour": "mountpoint",
+        },
+    ])
 def test_invalid_discovery_df_rules(params):
     with pytest.raises(MKUserError):
         _validate_discovery_filesystem_params(params, "varprefix")

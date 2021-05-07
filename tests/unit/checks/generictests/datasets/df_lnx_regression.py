@@ -25,12 +25,14 @@ discovery = {
             '/',
             {
                 "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             '/boot',
             {
                 "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
     ]
@@ -380,7 +382,6 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                "item_appearance": "mountpoint",
             },
             [
                 (
@@ -414,7 +415,6 @@ checks = {
                 'inodes_levels': (10.0, 5.0),
                 'show_inodes': 'onlow',
                 'show_reserved': False,
-                "item_appearance": "mountpoint",
             },
             [
                 (

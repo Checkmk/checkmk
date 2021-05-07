@@ -36,6 +36,7 @@ DfBlock = NamedTuple("DfBlock", [
     ("avail_mb", float),
     ("reserved_mb", float),
     ("mountpoint", str),
+    ("uuid", Optional[str]),
 ])
 
 FSBlock = Tuple[str, float, float, float]

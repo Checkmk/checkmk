@@ -30,12 +30,25 @@ from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
 
 def _validate_discovery_filesystem_params(value, varprefix):
-    if (value.get("item_appearance") == "mountpoint" and
-            value.get("grouping_behaviour") != "mountpoint"):
+    mountpoint_for_block_devices = value.get("mountpoint_for_block_devices",
+                                             "volume_name_as_mountpoint")
+    item_appearance = value.get("item_appearance", "mountpoint")
+    grouping_behaviour = value.get("grouping_behaviour", "mountpoint")
+
+    if (item_appearance == "mountpoint" and grouping_behaviour != "mountpoint"):
         raise MKUserError(
             varprefix,
             _("You cannot use mountpoint as item and grouping based on"
               " volume name and mountpoint."))
+
+    parameters = [
+        p for p in [mountpoint_for_block_devices, item_appearance, grouping_behaviour] if p
+    ]
+    if any("volume_name" in p for p in parameters) and any("uuid" in p for p in parameters):
+        raise MKUserError(
+            varprefix,
+            _("You cannot mix volume name and UUID in 'Mountpoint for block devices',"
+              " 'Item appearance' or 'Grouping'"))
 
 
 def _transform_discovery_filesystem_params(params):
@@ -64,13 +77,23 @@ def _valuespec_inventory_df_rules():
         Dictionary(
             title=_("Filesystem discovery"),
             elements=[
+                ("mountpoint_for_block_devices",
+                 DropdownChoice(
+                     title=_("Mountpoint for block devices (brtfs)"),
+                     choices=[
+                         ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
+                         ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
+                     ],
+                 )),
                 ("item_appearance",
                  DropdownChoice(
-                     title=_("Item appaerance"),
+                     title=_("Item appearance"),
                      choices=[
                          ("mountpoint", _("Use mountpoint")),
                          ("volume_name_and_mountpoint", _("Use volume name and mountpoint")),
+                         ("uuid_and_mountpoint", _("Use UUID and mountpoint")),
                      ],
+                     default_value="mountpoint",
                  )),
                 ("grouping_behaviour",
                  DropdownChoice(
@@ -78,10 +101,12 @@ def _valuespec_inventory_df_rules():
                      choices=[
                          ("mountpoint", _("mountpoint only")),
                          ("volume_name_and_mountpoint", _("volume name and mountpoint")),
+                         ("uuid_and_mountpoint", _("UUID and mountpoint")),
                      ],
                      help=_(
                          "Specifies how the <a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</a>"
                          " feature processes this filesystem."),
+                     default_value="mountpoint",
                  )),
                 ("ignore_fs_types",
                  ListChoice(title=_("Filesystem types to ignore"),
@@ -102,6 +127,10 @@ def _valuespec_inventory_df_rules():
                          "Regular expressions are supported."))),
             ],
             validate=_validate_discovery_filesystem_params,
+            optional_keys=[
+                "ignore_fs_types",
+                "never_ignore_mountpoints",
+            ],
         ),
         forth=_transform_discovery_filesystem_params,
     )

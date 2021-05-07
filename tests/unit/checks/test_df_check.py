@@ -155,6 +155,7 @@ info_empty_inodes = [
                     '/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -168,6 +169,7 @@ info_empty_inodes = [
                     '/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -183,6 +185,7 @@ info_empty_inodes = [
                     '/dev/sda4 /',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -198,18 +201,21 @@ info_empty_inodes = [
                     'E:/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'F:/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'C:/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -223,18 +229,21 @@ info_empty_inodes = [
                     'New_Volume E:/',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'New_Volume F:/',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'C:\\ C:/',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -264,6 +273,7 @@ info_empty_inodes = [
                     '/opt/omd/sites/heute/tmp',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -280,12 +290,14 @@ info_empty_inodes = [
                     '/opt/omd/sites/heute/tmp',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/shm',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -301,12 +313,14 @@ info_empty_inodes = [
                     'tmpfs /opt/omd/sites/heute/tmp',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'tmpfs /dev/shm',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -323,6 +337,7 @@ info_empty_inodes = [
                     'tmpfs /opt/omd/sites/heute/tmp',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -341,6 +356,7 @@ info_empty_inodes = [
                     'btrfs /dev/sda1',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -354,6 +370,7 @@ info_empty_inodes = [
                     '/dev/sda1 btrfs /dev/sda1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -371,12 +388,14 @@ info_empty_inodes = [
                     '/var/lib/docker',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/var/lib/docker-latest',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -553,24 +572,28 @@ info_df_groups = [
                     '/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/foo',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/bar',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -585,24 +608,28 @@ info_df_groups = [
                     '/',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/foo',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/bar',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -617,24 +644,28 @@ info_df_groups = [
                     '/dev/sda1 /',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -649,24 +680,28 @@ info_df_groups = [
                     '/dev/sda1 /',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -686,18 +721,21 @@ info_df_groups = [
                         "item_appearance": "mountpoint",
                         "grouping_behaviour": "mountpoint",
                         "patterns": (['/', '/foo'], ['/bar']),
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/bar',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     'btrfs /dev/sdb1',
                     {
                         "item_appearance": "mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -718,18 +756,21 @@ info_df_groups = [
                         "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "mountpoint",
                         "patterns": (['/', '/foo'], ['/bar']),
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -749,24 +790,28 @@ info_df_groups = [
                     '/dev/sda1 /',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -788,18 +833,21 @@ info_df_groups = [
                         "item_appearance": "volume_name_and_mountpoint",
                         "grouping_behaviour": "volume_name_and_mountpoint",
                         "patterns": (['/dev/sda1 /', '/dev/sda2 /foo'], ['/dev/sda3 /bar']),
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],
@@ -820,24 +868,28 @@ info_df_groups = [
                     '/dev/sda1 /',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda2 /foo',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sda3 /bar',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
                 (
                     '/dev/sdb1 btrfs /dev/sdb1',
                     {
                         "item_appearance": "volume_name_and_mountpoint",
+                        "mountpoint_for_block_devices": "volume_name",
                     },
                 ),
             ],

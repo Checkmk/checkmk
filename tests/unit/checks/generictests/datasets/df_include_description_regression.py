@@ -22,18 +22,21 @@ discovery = {
             'C:\\\\ C://',
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'SQL_Database_[GROUPME] D://',
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'Scratch_Volume_[GROUPME] E://',
             {
                 "item_appearance": "volume_name_and_mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
     ],

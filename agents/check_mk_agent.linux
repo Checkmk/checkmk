@@ -307,6 +307,12 @@ section_df() {
     # shellcheck disable=SC2086
     df -PTli ${excludefs} | sed 1d
     echo '[df_inodes_end]'
+
+    if inpath lsblk; then
+        echo "[df_lsblk_start]"
+        lsblk --list --json --paths --output NAME,UUID
+        echo "[df_lsblk_end]"
+    fi
 }
 
 sections_systemd() {

@@ -782,14 +782,16 @@ class Site:
             return
         logger.info("Saving to %s", self.result_dir())
 
-        shutil.copytree(self.path("var/log"), "%s/logs" % self.result_dir())
+        shutil.copytree(self.path("var/log"),
+                        "%s/logs" % self.result_dir(),
+                        ignore_dangling_symlinks=True)
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
-            shutil.copytree(nagios_log_path, "%s/logs" % self.result_dir())
+            shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
 
         cmc_core_dump = self.path("var/check_mk/core/core")
         if os.path.exists(cmc_core_dump):
-            shutil.copytree(cmc_core_dump, "%s/cmc_core_dump" % self.result_dir())
+            shutil.copy(cmc_core_dump, "%s/cmc_core_dump" % self.result_dir())
 
         cmc_core_dump = self.path("var/check_mk/crashes")
         if os.path.exists(cmc_core_dump):

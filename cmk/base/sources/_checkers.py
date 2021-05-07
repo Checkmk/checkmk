@@ -8,19 +8,18 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Iterable, Iterator, Optional, Sequence, Tuple
+from typing import Dict, Final, Iterable, Iterator, Optional, Sequence, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
-
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
+from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 from ._abstract import Mode, Source
 from .ipmi import IPMISource
@@ -45,17 +44,21 @@ class _Builder:
         force_snmp_cache_refresh: bool,
     ) -> None:
         super().__init__()
-        self._host_config = host_config
-        self._hostname = host_config.hostname
-        self._ipaddress = ipaddress
-        self._fallback_ip = ip_lookup.fallback_ip_for(self._host_config.default_address_family)
-        self._mode = mode
-        self._selected_sections = selected_sections
-        self._on_scan_error = on_scan_error
-        self._force_snmp_cache_refresh = force_snmp_cache_refresh
+        self.host_config: Final = host_config
+        self.ipaddress: Final = ipaddress
+        self.mode: Final = mode
+        self.selected_sections: Final = selected_sections
+        self.on_scan_error: Final = on_scan_error
+        self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
+        self._fallback_ip: Final = ip_lookup.fallback_ip_for(
+            self.host_config.default_address_family)
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
+
+    @property
+    def hostname(self) -> HostName:
+        return self.host_config.hostname
 
     @property
     def sources(self) -> Sequence[Source]:
@@ -66,7 +69,7 @@ class _Builder:
         )
 
     def _initialize(self) -> None:
-        if self._host_config.is_cluster:
+        if self.host_config.is_cluster:
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
             return
@@ -76,7 +79,7 @@ class _Builder:
         self._initialize_mgmt_boards()
 
     def _initialize_agent_based(self) -> None:
-        if self._host_config.is_all_agents_host:
+        if self.host_config.is_all_agents_host:
             self._add(self._get_agent(
                 ignore_special_agents=True,
                 main_data_source=True,
@@ -84,27 +87,27 @@ class _Builder:
             for elem in self._get_special_agents():
                 self._add(elem)
 
-        elif self._host_config.is_all_special_agents_host:
+        elif self.host_config.is_all_special_agents_host:
             for elem in self._get_special_agents():
                 self._add(elem)
 
-        elif self._host_config.is_tcp_host:
+        elif self.host_config.is_tcp_host:
             self._add(self._get_agent(
                 ignore_special_agents=False,
                 main_data_source=True,
             ))
 
-        if "no-piggyback" not in self._host_config.tags:
+        if "no-piggyback" not in self.host_config.tags:
             self._add(PiggybackSource(
-                self._hostname,
-                self._ipaddress,
-                mode=self._mode,
+                self.hostname,
+                self.ipaddress,
+                mode=self.mode,
             ))
 
     def _initialize_snmp_based(self) -> None:
-        if not self._host_config.is_snmp_host:
+        if not self.host_config.is_snmp_host:
             return
-        if self._ipaddress is None:
+        if self.ipaddress is None:
             # HostAddress is not Optional.
             #
             # At least classic SNMP enforces that there is an address set,
@@ -115,20 +118,20 @@ class _Builder:
             return
         self._add(
             SNMPSource.snmp(
-                self._hostname,
-                self._ipaddress,
-                mode=self._mode,
-                selected_sections=self._selected_sections,
-                on_scan_error=self._on_scan_error,
-                force_cache_refresh=self._force_snmp_cache_refresh,
+                self.hostname,
+                self.ipaddress,
+                mode=self.mode,
+                selected_sections=self.selected_sections,
+                on_scan_error=self.on_scan_error,
+                force_cache_refresh=self.force_snmp_cache_refresh,
             ))
 
     def _initialize_mgmt_boards(self) -> None:
-        protocol = self._host_config.management_protocol
+        protocol = self.host_config.management_protocol
         if protocol is None:
             return
 
-        ip_address = config.lookup_mgmt_board_ip_address(self._host_config)
+        ip_address = config.lookup_mgmt_board_ip_address(self.host_config)
         if ip_address is None:
             # HostAddress is not Optional.
             #
@@ -137,18 +140,18 @@ class _Builder:
         if protocol == "snmp":
             self._add(
                 SNMPSource.management_board(
-                    self._hostname,
+                    self.hostname,
                     ip_address,
-                    mode=self._mode,
-                    selected_sections=self._selected_sections,
-                    on_scan_error=self._on_scan_error,
-                    force_cache_refresh=self._force_snmp_cache_refresh,
+                    mode=self.mode,
+                    selected_sections=self.selected_sections,
+                    on_scan_error=self.on_scan_error,
+                    force_cache_refresh=self.force_snmp_cache_refresh,
                 ))
         elif protocol == "ipmi":
             self._add(IPMISource(
-                self._hostname,
+                self.hostname,
                 ip_address,
-                mode=self._mode,
+                mode=self.mode,
             ))
         else:
             raise LookupError()
@@ -166,32 +169,32 @@ class _Builder:
             if special_agents:
                 return special_agents[0]
 
-        datasource_program = self._host_config.datasource_program
+        datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             return DSProgramSource(
-                self._hostname,
-                self._ipaddress or self._fallback_ip,
-                mode=self._mode,
+                self.hostname,
+                self.ipaddress or self._fallback_ip,
+                mode=self.mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
             )
 
         return TCPSource(
-            self._hostname,
-            self._ipaddress,
-            mode=self._mode,
+            self.hostname,
+            self.ipaddress,
+            mode=self.mode,
             main_data_source=main_data_source,
         )
 
     def _get_special_agents(self) -> Sequence[Source]:
         return [
             SpecialAgentSource(
-                self._hostname,
-                self._ipaddress or self._fallback_ip,
-                mode=self._mode,
+                self.hostname,
+                self.ipaddress or self._fallback_ip,
+                mode=self.mode,
                 special_agent_id=agentname,
                 params=params,
-            ) for agentname, params in self._host_config.special_agents
+            ) for agentname, params in self.host_config.special_agents
         ]
 
 

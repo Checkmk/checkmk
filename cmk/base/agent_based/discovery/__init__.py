@@ -671,7 +671,10 @@ class _AutodiscoveryQueue:
         self.dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')  # TODO: mark private
 
     def _ls(self) -> Iterable[Path]:
-        return self.dir.iterdir()
+        try:
+            return list(self.dir.iterdir())
+        except FileNotFoundError:
+            return []
 
     def oldest(self) -> Optional[float]:
         return min((f.stat().st_mtime for f in self._ls()), default=None)
@@ -684,11 +687,7 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
     console.verbose("Doing discovery for all marked hosts:\n")
     autodiscovery_queue = _AutodiscoveryQueue()
 
-    try:
-        oldest_queued = autodiscovery_queue.oldest()
-    except FileNotFoundError:
-        console.verbose("  Nothing to do. %s is missing.\n" % autodiscovery_queue.dir)
-        return
+    oldest_queued = autodiscovery_queue.oldest()
     if oldest_queued is None:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
         return

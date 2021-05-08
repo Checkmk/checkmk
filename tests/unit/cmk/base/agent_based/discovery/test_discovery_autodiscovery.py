@@ -24,16 +24,15 @@ def _mocked_queue(tmpdir):
 
 
 class TestAutodiscoveryQueue:
-
-    #def test_oldest_empty(self):
-    #    assert discovery._AutodiscoveryQueue().oldest() is None
+    def test_oldest_empty(self):
+        assert discovery._AutodiscoveryQueue().oldest() is None
 
     def test_oldest_populated(self, autodiscovery_queue):
         assert isinstance(autodiscovery_queue.oldest(), float)
 
-    #def test_queued_empty(self, autodiscovery_queue, monkeypatch):
-    #    autodiscovery_queue = discovery._AutodiscoveryQueue()
-    #    assert not list(autodiscovery_queue.queued_hosts())
+    def test_queued_empty(self, autodiscovery_queue, monkeypatch):
+        autodiscovery_queue = discovery._AutodiscoveryQueue()
+        assert not list(autodiscovery_queue.queued_hosts())
 
     def test_queued_populated(self, autodiscovery_queue, monkeypatch):
         assert set(autodiscovery_queue.queued_hosts()) == {'most', 'lost'}

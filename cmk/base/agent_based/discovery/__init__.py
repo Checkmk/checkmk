@@ -42,7 +42,6 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
     HostName,
-    HostState,
     Item,
     MetricTuple,
     result as result_type,
@@ -712,22 +711,19 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
         return
 
-    # Fetch host state information from livestatus
-    host_states = _fetch_host_states()
+    process_hosts = EVERYTHING if (up_hosts := _get_up_hosts()) is None else up_hosts
+
     activation_required = False
     rediscovery_reference_time = time.time()
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
-            host_config = config_cache.get_host_config(host_name)
-
-            # Only try to discover hosts with UP state
-            if host_states and host_states.get(host_name) != 0:
+            if host_name not in process_hosts:
                 continue
 
             activation_required |= _discover_marked_host(
                 config_cache=config_cache,
-                host_config=host_config,
+                host_config=config_cache.get_host_config(host_name),
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -749,21 +745,14 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
                 config.get_config_cache().initialize()
 
 
-def _fetch_host_states() -> Dict[HostName, HostState]:
+def _get_up_hosts() -> Optional[Set[HostName]]:
+    query = "GET hosts\nColumns: name state"
     try:
-        query = "GET hosts\nColumns: name state"
         response = livestatus.LocalConnection().query(query)
-        return {k: v for row in response for k, v in [_parse_row(row)]}
+        return {HostName(name) for name, state in response if state == 0}
     except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
         pass
-    return {}
-
-
-def _parse_row(row: livestatus.LivestatusRow) -> Tuple[HostName, HostState]:
-    host_name, host_state = row
-    if isinstance(host_name, HostName) and isinstance(host_state, HostState):
-        return host_name, host_state
-    raise MKGeneralException("Invalid response from livestatus: %s" % row)
+    return None
 
 
 def _discover_marked_host(

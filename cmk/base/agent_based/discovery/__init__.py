@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import suppress
 import itertools
-import os
 from pathlib import Path
 import socket
 import time
@@ -673,6 +673,10 @@ class _AutodiscoveryQueue:
         self.dir.mkdir(parents=True, exist_ok=True)
         (self.dir / host_name).touch()
 
+    def remove(self, host_name: HostName) -> None:
+        with suppress(FileNotFoundError):
+            (self.dir / host_name).unlink()
+
 
 def discover_marked_hosts(core: MonitoringCore) -> None:
     console.verbose("Doing discovery for all marked hosts:\n")
@@ -694,7 +698,7 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
             host_config = config_cache.get_host_config(host_name)
 
-            if not _discover_marked_host_exists(config_cache, host_name):
+            if not _discover_marked_host_exists(config_cache, autodiscovery_queue, host_name):
                 continue
 
             # Only try to discover hosts with UP state
@@ -704,6 +708,7 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
             activation_required |= _discover_marked_host(
                 config_cache=config_cache,
                 host_config=host_config,
+                autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
             )
@@ -741,15 +746,15 @@ def _parse_row(row: livestatus.LivestatusRow) -> Tuple[HostName, HostState]:
     raise MKGeneralException("Invalid response from livestatus: %s" % row)
 
 
-def _discover_marked_host_exists(config_cache: config.ConfigCache, host_name: HostName) -> bool:
+def _discover_marked_host_exists(
+    config_cache: config.ConfigCache,
+    autodiscovery_queue: _AutodiscoveryQueue,
+    host_name: HostName,
+) -> bool:
     if host_name in config_cache.all_configured_hosts():
         return True
 
-    host_flag_path = os.path.join(_AutodiscoveryQueue().dir, host_name)
-    try:
-        os.remove(host_flag_path)
-    except OSError:
-        pass
+    autodiscovery_queue.remove(host_name)
     console.verbose(
         f"  Skipped. Host {host_name} does not exist in configuration. Removing mark.\n")
     return False
@@ -759,6 +764,7 @@ def _discover_marked_host(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
+    autodiscovery_queue: _AutodiscoveryQueue,
     reference_time: float,
     oldest_queued: float,
 ) -> bool:
@@ -766,7 +772,6 @@ def _discover_marked_host(
     something_changed = False
 
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
-    host_flag_path = os.path.join(_AutodiscoveryQueue().dir, host_name)
 
     params = host_config.discovery_check_parameters
     if params is None:
@@ -822,10 +827,7 @@ def _discover_marked_host(
 
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
-        try:
-            os.remove(host_flag_path)
-        except OSError:
-            pass
+        autodiscovery_queue.remove(host_name)
     else:
         console.verbose(f"  skipped: {reason}\n")
 

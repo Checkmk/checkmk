@@ -42,9 +42,9 @@ class TestAutodiscoveryQueue:
         autodiscovery_queue.add("most")
         assert list(autodiscovery_queue.queued_hosts()) == ['most']
 
-    #def test_remove(self, autodiscovery_queue, monkeypatch):
-    #    autodiscovery_queue.remove("lost")
-    #    assert list(autodiscovery_queue.queued_hosts()) == ['most']
+    def test_remove(self, autodiscovery_queue, monkeypatch):
+        autodiscovery_queue.remove("lost")
+        assert list(autodiscovery_queue.queued_hosts()) == ['most']
 
     #def test_cleanup(self, autodiscovery_queue):
     #    autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)

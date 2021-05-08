@@ -6,6 +6,7 @@
 
 import itertools
 import os
+from pathlib import Path
 import socket
 import time
 from typing import (
@@ -657,7 +658,7 @@ def _set_rediscovery_flag(host_name: HostName) -> None:
             f = open(filename, "w")
             f.close()
 
-    autodiscovery_dir = cmk.utils.paths.var_dir + '/autodiscovery'
+    autodiscovery_dir = _AutodiscoveryQueue().dir
     discovery_filename = os.path.join(autodiscovery_dir, host_name)
 
     if not os.path.exists(autodiscovery_dir):
@@ -665,26 +666,34 @@ def _set_rediscovery_flag(host_name: HostName) -> None:
     touch(discovery_filename)
 
 
-def _get_autodiscovery_dir() -> str:
-    return cmk.utils.paths.var_dir + '/autodiscovery'
+class _AutodiscoveryQueue:
+    def __init__(self):
+        self.dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')  # TODO: mark private
+
+    def _ls(self) -> Iterable[Path]:
+        return self.dir.iterdir()
+
+    def oldest(self) -> Optional[float]:
+        return min((f.stat().st_mtime for f in self._ls()), default=None)
+
+    def queued_hosts(self) -> Iterable[HostName]:
+        return (HostName(f.stem) for f in self._ls())
 
 
 def discover_marked_hosts(core: MonitoringCore) -> None:
     console.verbose("Doing discovery for all marked hosts:\n")
-    autodiscovery_dir = _get_autodiscovery_dir()
+    autodiscovery_queue = _AutodiscoveryQueue()
 
-    if not os.path.exists(autodiscovery_dir):
-        # there is obviously nothing to do
-        console.verbose("  Nothing to do. %s is missing.\n" % autodiscovery_dir)
+    try:
+        oldest_queued = autodiscovery_queue.oldest()
+    except FileNotFoundError:
+        console.verbose("  Nothing to do. %s is missing.\n" % autodiscovery_queue.dir)
+        return
+    if oldest_queued is None:
+        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
         return
 
     config_cache = config.get_config_cache()
-
-    oldest_queued = _queue_age()
-    hosts = os.listdir(autodiscovery_dir)
-    if not hosts:
-        console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
-        return
 
     # Fetch host state information from livestatus
     host_states = _fetch_host_states()
@@ -692,7 +701,7 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
     rediscovery_reference_time = time.time()
 
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
-        for host_name in time_limited(hosts):
+        for host_name in time_limited(autodiscovery_queue.queued_hosts()):
             host_config = config_cache.get_host_config(host_name)
 
             if not _discover_marked_host_exists(config_cache, host_name):
@@ -746,7 +755,7 @@ def _discover_marked_host_exists(config_cache: config.ConfigCache, host_name: Ho
     if host_name in config_cache.all_configured_hosts():
         return True
 
-    host_flag_path = os.path.join(_get_autodiscovery_dir(), host_name)
+    host_flag_path = os.path.join(_AutodiscoveryQueue().dir, host_name)
     try:
         os.remove(host_flag_path)
     except OSError:
@@ -767,7 +776,7 @@ def _discover_marked_host(
     something_changed = False
 
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
-    host_flag_path = os.path.join(_get_autodiscovery_dir(), host_name)
+    host_flag_path = os.path.join(_AutodiscoveryQueue().dir, host_name)
 
     params = host_config.discovery_check_parameters
     if params is None:
@@ -831,14 +840,6 @@ def _discover_marked_host(
         console.verbose(f"  skipped: {reason}\n")
 
     return something_changed
-
-
-def _queue_age() -> float:
-    autodiscovery_dir = _get_autodiscovery_dir()
-    oldest = time.time()
-    for filename in os.listdir(autodiscovery_dir):
-        oldest = min(oldest, os.path.getmtime(autodiscovery_dir + "/" + filename))
-    return oldest
 
 
 def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,

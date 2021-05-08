@@ -37,10 +37,10 @@ class TestAutodiscoveryQueue:
     def test_queued_populated(self, autodiscovery_queue, monkeypatch):
         assert set(autodiscovery_queue.queued_hosts()) == {'most', 'lost'}
 
-    #def test_add(self, autodiscovery_queue, monkeypatch):
-    #    autodiscovery_queue = discovery._AutodiscoveryQueue()
-    #    autodiscovery_queue.add("most")
-    #    assert list(autodiscovery_queue.queued_hosts()) == ['most']
+    def test_add(self, autodiscovery_queue, monkeypatch):
+        autodiscovery_queue = discovery._AutodiscoveryQueue()
+        autodiscovery_queue.add("most")
+        assert list(autodiscovery_queue.queued_hosts()) == ['most']
 
     #def test_remove(self, autodiscovery_queue, monkeypatch):
     #    autodiscovery_queue.remove("lost")

@@ -531,11 +531,12 @@ def check_discovery(
     )
 
     if need_rediscovery:
+        autodiscovery_queue = _AutodiscoveryQueue()
         if host_config.is_cluster and host_config.nodes:
             for nodename in host_config.nodes:
-                _set_rediscovery_flag(nodename)
+                autodiscovery_queue.add(nodename)
         else:
-            _set_rediscovery_flag(host_name)
+            autodiscovery_queue.add(host_name)
         infotexts.append(u"rediscovery scheduled")
 
     return status, infotexts, long_infotexts, perfdata
@@ -652,20 +653,6 @@ def _check_data_sources(
     )
 
 
-def _set_rediscovery_flag(host_name: HostName) -> None:
-    def touch(filename: str) -> None:
-        if not os.path.exists(filename):
-            f = open(filename, "w")
-            f.close()
-
-    autodiscovery_dir = _AutodiscoveryQueue().dir
-    discovery_filename = os.path.join(autodiscovery_dir, host_name)
-
-    if not os.path.exists(autodiscovery_dir):
-        os.makedirs(autodiscovery_dir)
-    touch(discovery_filename)
-
-
 class _AutodiscoveryQueue:
     def __init__(self):
         self.dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')  # TODO: mark private
@@ -681,6 +668,10 @@ class _AutodiscoveryQueue:
 
     def queued_hosts(self) -> Iterable[HostName]:
         return (HostName(f.stem) for f in self._ls())
+
+    def add(self, host_name: HostName) -> None:
+        self.dir.mkdir(parents=True, exist_ok=True)
+        (self.dir / host_name).touch()
 
 
 def discover_marked_hosts(core: MonitoringCore) -> None:

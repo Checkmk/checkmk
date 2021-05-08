@@ -654,6 +654,10 @@ def _check_data_sources(
 
 
 class _AutodiscoveryQueue:
+    @staticmethod
+    def _host_name(file_path: Path) -> HostName:
+        return HostName(file_path.stem)
+
     def __init__(self):
         self.dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')  # TODO: mark private
 
@@ -667,7 +671,7 @@ class _AutodiscoveryQueue:
         return min((f.stat().st_mtime for f in self._ls()), default=None)
 
     def queued_hosts(self) -> Iterable[HostName]:
-        return (HostName(f.stem) for f in self._ls())
+        return (self._host_name(f) for f in self._ls())
 
     def add(self, host_name: HostName) -> None:
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -677,17 +681,27 @@ class _AutodiscoveryQueue:
         with suppress(FileNotFoundError):
             (self.dir / host_name).unlink()
 
+    def cleanup(self, *, valid_hosts: Set[HostName], logger: Callable[[str], None]) -> None:
+        for host_name in {self._host_name(p) for p in self._ls()} - valid_hosts:
+            logger(f"  Host {host_name} does not exist in configuration. Removing mark.\n")
+            self.remove(host_name)
+
 
 def discover_marked_hosts(core: MonitoringCore) -> None:
     console.verbose("Doing discovery for all marked hosts:\n")
     autodiscovery_queue = _AutodiscoveryQueue()
 
+    config_cache = config.get_config_cache()
+
+    autodiscovery_queue.cleanup(
+        valid_hosts=config_cache.all_configured_hosts(),
+        logger=console.verbose,
+    )
+
     oldest_queued = autodiscovery_queue.oldest()
     if oldest_queued is None:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
         return
-
-    config_cache = config.get_config_cache()
 
     # Fetch host state information from livestatus
     host_states = _fetch_host_states()
@@ -697,9 +711,6 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autodiscovery_queue.queued_hosts()):
             host_config = config_cache.get_host_config(host_name)
-
-            if not _discover_marked_host_exists(config_cache, autodiscovery_queue, host_name):
-                continue
 
             # Only try to discover hosts with UP state
             if host_states and host_states.get(host_name) != 0:
@@ -744,20 +755,6 @@ def _parse_row(row: livestatus.LivestatusRow) -> Tuple[HostName, HostState]:
     if isinstance(host_name, HostName) and isinstance(host_state, HostState):
         return host_name, host_state
     raise MKGeneralException("Invalid response from livestatus: %s" % row)
-
-
-def _discover_marked_host_exists(
-    config_cache: config.ConfigCache,
-    autodiscovery_queue: _AutodiscoveryQueue,
-    host_name: HostName,
-) -> bool:
-    if host_name in config_cache.all_configured_hosts():
-        return True
-
-    autodiscovery_queue.remove(host_name)
-    console.verbose(
-        f"  Skipped. Host {host_name} does not exist in configuration. Removing mark.\n")
-    return False
 
 
 def _discover_marked_host(

@@ -46,6 +46,6 @@ class TestAutodiscoveryQueue:
         autodiscovery_queue.remove("lost")
         assert list(autodiscovery_queue.queued_hosts()) == ['most']
 
-    #def test_cleanup(self, autodiscovery_queue):
-    #    autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
-    #    assert list(autodiscovery_queue.queued_hosts()) == ['lost']
+    def test_cleanup(self, autodiscovery_queue):
+        autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
+        assert list(autodiscovery_queue.queued_hosts()) == ['lost']

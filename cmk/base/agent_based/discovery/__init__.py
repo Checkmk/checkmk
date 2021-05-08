@@ -702,9 +702,12 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
             if host_states and host_states.get(host_name) != 0:
                 continue
 
-            if _discover_marked_host(config_cache, host_config, rediscovery_reference_time,
-                                     oldest_queued):
-                activation_required = True
+            activation_required |= _discover_marked_host(
+                config_cache=config_cache,
+                host_config=host_config,
+                reference_time=rediscovery_reference_time,
+                oldest_queued=oldest_queued,
+            )
 
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
@@ -753,8 +756,13 @@ def _discover_marked_host_exists(config_cache: config.ConfigCache, host_name: Ho
     return False
 
 
-def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.HostConfig,
-                          now_ts: float, oldest_queued: float) -> bool:
+def _discover_marked_host(
+    *,
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    reference_time: float,
+    oldest_queued: float,
+) -> bool:
     host_name = host_config.hostname
     something_changed = False
 
@@ -766,7 +774,7 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
         console.verbose("  failed: discovery check disabled\n")
         return False
 
-    reason = _may_rediscover(params, now_ts, oldest_queued)
+    reason = _may_rediscover(params, reference_time, oldest_queued)
     if not reason:
         result = discover_on_host(
             config_cache=config_cache,

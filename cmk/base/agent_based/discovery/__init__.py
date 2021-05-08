@@ -684,6 +684,7 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
     hosts = os.listdir(autodiscovery_dir)
     if not hosts:
         console.verbose("  Nothing to do. No hosts marked by discovery check.\n")
+        return
 
     # Fetch host state information from livestatus
     host_states = _fetch_host_states()

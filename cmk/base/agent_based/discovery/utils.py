@@ -24,6 +24,8 @@ from typing import (
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import console
 
+_T = TypeVar('_T')
+
 
 class DiscoveryMode(enum.Enum):
     # NOTE: the values 0-3 are used in WATO rules and must not be changed!
@@ -84,7 +86,7 @@ class TimeLimitFilter:
             return True
         return False
 
-    def __call__(self, iterable: Iterable) -> Iterable:
+    def __call__(self, iterable: Iterable[_T]) -> Iterable[_T]:
         for element in iterable:
             yield element
             if time.monotonic() > self._end:

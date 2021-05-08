@@ -22,8 +22,6 @@ from typing import (
     Tuple,
 )
 
-from six import ensure_binary
-
 import livestatus
 
 import cmk.utils.cleanup
@@ -103,21 +101,17 @@ _DiscoverySubresult = Tuple[int, List[str], List[str], List[Tuple], bool]
 
 # TODO: Move to livestatus module!
 def schedule_discovery_check(host_name: HostName) -> None:
+    now = int(time.time())
+    service = ("Check_MK Discovery"
+               if 'cmk_inventory' in config.use_new_descriptions_for else "Check_MK inventory")
+    # Ignore missing check and avoid warning in cmc.log
+    cmc_try = ";TRY" if config.monitoring_core == "cmc" else ""
+    command = f"SCHEDULE_FORCED_SVC_CHECK;{host_name};{service};{now}{cmc_try}"
+
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(cmk.utils.paths.livestatus_unix_socket)
-        now = int(time.time())
-        if 'cmk_inventory' in config.use_new_descriptions_for:
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (host_name, now)
-        else:
-            # TODO: Remove this old name handling one day
-            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (host_name, now)
-
-        # Ignore missing check and avoid warning in cmc.log
-        if config.monitoring_core == "cmc":
-            command += ";TRY"
-
-        s.send(ensure_binary("COMMAND [%d] %s\n" % (now, command)))
+        s.send(f"COMMAND [{now}] {command}\n".encode())
     except Exception:
         if cmk.utils.debug.enabled():
             raise

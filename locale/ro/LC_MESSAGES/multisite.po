@@ -28585,10 +28585,6 @@ msgstr "(fără parametri)"
 msgid "Missing prediction data."
 msgstr ""
 
-#, fuzzy
-msgid "Missing prediction information."
-msgstr "Informații Adiționale"
-
 msgid "Missing render parameter"
 msgstr ""
 
@@ -58670,6 +58666,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Missing prediction information."
+#~ msgstr "Informații Adiționale"
 
 #, fuzzy
 #~ msgid "Hint a hostname"

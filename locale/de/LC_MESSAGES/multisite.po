@@ -29718,9 +29718,6 @@ msgstr "Der Parameter \"%s\" fehlt."
 msgid "Missing prediction data."
 msgstr "Die Information für die Vorhersage fehlt."
 
-msgid "Missing prediction information."
-msgstr "Die Information für die Vorhersage fehlt."
-
 msgid "Missing render parameter"
 msgstr "Der Parameter render fehlt"
 
@@ -62739,6 +62736,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Missing prediction information."
+#~ msgstr "Die Information für die Vorhersage fehlt."
 
 #~ msgid "(No services with metrics found)"
 #~ msgstr "(Keine Services mit Metriken gefunden)"

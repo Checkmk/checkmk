@@ -480,9 +480,15 @@ def test__check_service_table(
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    discovery_mode = parameters.get("inventory_rediscovery", {}).pop('mode', "")
+    rediscovery_parameters = parameters.get("inventory_rediscovery", {})
+    discovery_mode = rediscovery_parameters.pop('mode', "")
     status, infotexts, long_infotexts, perfdata, need_rediscovery = discovery._check_service_lists(
-        "hostname", grouped_services, parameters, discovery_mode)
+        host_name="hostname",
+        services_by_transition=grouped_services,
+        params=parameters,
+        service_filters=discovery._ServiceFilters.from_settings(rediscovery_parameters),
+        discovery_mode=discovery_mode,
+    )
 
     assert status == 1
     assert sorted(infotexts) == sorted([

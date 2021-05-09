@@ -486,8 +486,9 @@ def check_discovery(
     params = host_config.discovery_check_parameters
     if params is None:
         params = host_config.default_discovery_check_parameters()
+    rediscovery_parameters = _get_rediscovery_parameters(params)
 
-    discovery_mode = DiscoveryMode(_get_rediscovery_parameters(params).get("mode"))
+    discovery_mode = DiscoveryMode(rediscovery_parameters.get("mode"))
 
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
@@ -515,7 +516,13 @@ def check_discovery(
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
-        _check_service_lists(host_name, services, params, discovery_mode),
+        _check_service_lists(
+            host_name=host_name,
+            services_by_transition=services,
+            params=params,
+            service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+            discovery_mode=discovery_mode,
+        ),
         _check_host_labels(
             host_label_discovery_result,
             int(params.get("severity_new_host_label", 1)),
@@ -548,9 +555,11 @@ def _aggregate_subresults(*subresults: _DiscoverySubresult) -> _DiscoverySubresu
 
 
 def _check_service_lists(
+    *,
     host_name: HostName,
     services_by_transition: ServicesByTransition,
     params: config.DiscoveryCheckParameters,
+    service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
 ) -> _DiscoverySubresult:
 
@@ -559,8 +568,6 @@ def _check_service_lists(
     long_infotexts = []
     perfdata: List[Tuple] = []
     need_rediscovery = False
-
-    service_filters = _ServiceFilters.from_settings(_get_rediscovery_parameters(params))
 
     for transition, title, params_key, default_state, service_filter in [
         ("new", "unmonitored", "severity_unmonitored", config.inventory_check_severity,

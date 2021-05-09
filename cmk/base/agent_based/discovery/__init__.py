@@ -16,6 +16,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -766,8 +767,13 @@ def _discover_marked_host(
     if params is None:
         console.verbose("  failed: discovery check disabled\n")
         return False
+    rediscovery_parameters = _get_rediscovery_parameters(params)
 
-    reason = _may_rediscover(params, reference_time, oldest_queued)
+    reason = _may_rediscover(
+        rediscovery_parameters=rediscovery_parameters,
+        reference_time=reference_time,
+        oldest_queued=oldest_queued,
+    )
     if reason:
         console.verbose(f"  skipped: {reason}\n")
         return False
@@ -775,8 +781,8 @@ def _discover_marked_host(
     result = discover_on_host(
         config_cache=config_cache,
         host_config=host_config,
-        mode=DiscoveryMode(_get_rediscovery_parameters(params).get("mode")),
-        service_filters=_ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
+        mode=DiscoveryMode(rediscovery_parameters.get("mode")),
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         on_error="ignore",
         use_cached_snmp_data=True,
         # autodiscovery is run every 5 minutes (see
@@ -809,7 +815,7 @@ def _discover_marked_host(
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
         #       the activation decision is based on the discovery configuration of the node
-        activation_required = bool(_get_rediscovery_parameters(params)["activation"])
+        activation_required = bool(rediscovery_parameters["activation"])
 
         # Enforce base code creating a new host config object after this change
         config_cache.invalidate_host_config(host_name)
@@ -823,15 +829,14 @@ def _discover_marked_host(
 
 
 def _may_rediscover(
-    params: config.DiscoveryCheckParameters,
-    now_ts: float,
+    rediscovery_parameters: Mapping,  # TODO
+    reference_time: float,
     oldest_queued: float,
 ) -> str:
-    if "inventory_rediscovery" not in params:
+    if not {"excluded_time", "group_time"}.issuperset(rediscovery_parameters):
         return "automatic discovery disabled for this host"
 
-    rediscovery_parameters = _get_rediscovery_parameters(params)
-    now = time.gmtime(now_ts)
+    now = time.gmtime(reference_time)
     for start_hours_mins, end_hours_mins in rediscovery_parameters["excluded_time"]:
         start_time = time.struct_time(
             (now.tm_year, now.tm_mon, now.tm_mday, start_hours_mins[0], start_hours_mins[1], 0,
@@ -844,7 +849,7 @@ def _may_rediscover(
             return "we are currently in a disallowed time of day"
 
     # we could check this earlier. No need to to it for every host.
-    if now_ts - oldest_queued < rediscovery_parameters["group_time"]:
+    if reference_time - oldest_queued < rediscovery_parameters["group_time"]:
         return "last activation is too recent"
 
     return ""

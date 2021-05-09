@@ -729,20 +729,22 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
                 oldest_queued=oldest_queued,
             )
 
-    if activation_required:
-        console.verbose("\nRestarting monitoring core with updated configuration...\n")
-        with config.set_use_core_config(use_core_config=False):
-            try:
-                _config_cache.clear_all()
-                config.get_config_cache().initialize()
+    if not activation_required:
+        return
 
-                if config.monitoring_core == "cmc":
-                    cmk.base.core.do_reload(core)
-                else:
-                    cmk.base.core.do_restart(core)
-            finally:
-                _config_cache.clear_all()
-                config.get_config_cache().initialize()
+    console.verbose("\nRestarting monitoring core with updated configuration...\n")
+    with config.set_use_core_config(use_core_config=False):
+        try:
+            _config_cache.clear_all()
+            config.get_config_cache().initialize()
+
+            if config.monitoring_core == "cmc":
+                cmk.base.core.do_reload(core)
+            else:
+                cmk.base.core.do_restart(core)
+        finally:
+            _config_cache.clear_all()
+            config.get_config_cache().initialize()
 
 
 def _get_up_hosts() -> Optional[Set[HostName]]:
@@ -764,8 +766,6 @@ def _discover_marked_host(
     oldest_queued: float,
 ) -> bool:
     host_name = host_config.hostname
-    something_changed = False
-
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
     params = host_config.discovery_check_parameters
@@ -774,63 +774,71 @@ def _discover_marked_host(
         return False
 
     reason = _may_rediscover(params, reference_time, oldest_queued)
-    if not reason:
-        result = discover_on_host(
-            config_cache=config_cache,
-            host_config=host_config,
-            mode=DiscoveryMode(_get_rediscovery_parameters(params).get("mode")),
-            service_filters=_ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
-            on_error="ignore",
-            use_cached_snmp_data=True,
-            # autodiscovery is run every 5 minutes (see
-            # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-            # make sure we may use the file the active discovery check left behind:
-            max_cachefile_age=600,
-        )
-        if result.error_text is not None:
-            if result.error_text:
-                console.verbose(f"failed: {result.error_text}\n")
-            else:
-                # for offline hosts the error message is empty. This is to remain
-                # compatible with the automation code
-                console.verbose("  failed: host is offline\n")
+    if reason:
+        console.verbose(f"  skipped: {reason}\n")
+        return False
+
+    result = discover_on_host(
+        config_cache=config_cache,
+        host_config=host_config,
+        mode=DiscoveryMode(_get_rediscovery_parameters(params).get("mode")),
+        service_filters=_ServiceFilters.from_settings(_get_rediscovery_parameters(params)),
+        on_error="ignore",
+        use_cached_snmp_data=True,
+        # autodiscovery is run every 5 minutes (see
+        # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
+        # make sure we may use the file the active discovery check left behind:
+        max_cachefile_age=600,
+    )
+    if result.error_text is not None:
+        if result.error_text:
+            console.verbose(f"failed: {result.error_text}\n")
         else:
-            if result.self_new == 0 and\
-               result.self_removed == 0 and\
-               result.self_kept == result.self_total and\
-               result.clustered_new == 0 and\
-               result.clustered_vanished == 0 and\
-               result.self_new_host_labels == 0:
-                console.verbose("  nothing changed.\n")
-            else:
-                console.verbose(f"  {result.self_new} new, {result.self_removed} removed, "
-                                f"{result.self_kept} kept, {result.self_total} total services "
-                                f"and {result.self_new_host_labels} new host labels. "
-                                f"clustered new {result.clustered_new}, clustered vanished "
-                                f"{result.clustered_vanished}")
-
-                # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
-                #       the activation decision is based on the discovery configuration of the node
-                if _get_rediscovery_parameters(params)["activation"]:
-                    something_changed = True
-
-                # Enforce base code creating a new host config object after this change
-                config_cache.invalidate_host_config(host_name)
-
-                # Now ensure that the discovery service is updated right after the changes
-                schedule_discovery_check(host_name)
-
+            # for offline hosts the error message is empty. This is to remain
+            # compatible with the automation code
+            console.verbose("  failed: host is offline\n")
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
         autodiscovery_queue.remove(host_name)
+        return False
+
+    something_changed = False
+
+    if result.self_new == 0 and\
+       result.self_removed == 0 and\
+       result.self_kept == result.self_total and\
+       result.clustered_new == 0 and\
+       result.clustered_vanished == 0 and\
+       result.self_new_host_labels == 0:
+        console.verbose("  nothing changed.\n")
     else:
-        console.verbose(f"  skipped: {reason}\n")
+        console.verbose(f"  {result.self_new} new, {result.self_removed} removed, "
+                        f"{result.self_kept} kept, {result.self_total} total services "
+                        f"and {result.self_new_host_labels} new host labels. "
+                        f"clustered new {result.clustered_new}, clustered vanished "
+                        f"{result.clustered_vanished}")
+
+        # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
+        #       the activation decision is based on the discovery configuration of the node
+        if _get_rediscovery_parameters(params)["activation"]:
+            something_changed = True
+
+        # Enforce base code creating a new host config object after this change
+        config_cache.invalidate_host_config(host_name)
+
+        # Now ensure that the discovery service is updated right after the changes
+        schedule_discovery_check(host_name)
+
+    autodiscovery_queue.remove(host_name)
 
     return something_changed
 
 
-def _may_rediscover(params: config.DiscoveryCheckParameters, now_ts: float,
-                    oldest_queued: float) -> str:
+def _may_rediscover(
+    params: config.DiscoveryCheckParameters,
+    now_ts: float,
+    oldest_queued: float,
+) -> str:
     if "inventory_rediscovery" not in params:
         return "automatic discovery disabled for this host"
 

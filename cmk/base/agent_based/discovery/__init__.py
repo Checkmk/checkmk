@@ -791,26 +791,21 @@ def _discover_marked_host(
         max_cachefile_age=600,
     )
     if result.error_text is not None:
-        if result.error_text:
-            console.verbose(f"failed: {result.error_text}\n")
-        else:
-            # for offline hosts the error message is empty. This is to remain
-            # compatible with the automation code
-            console.verbose("  failed: host is offline\n")
+        # for offline hosts the error message is empty. This is to remain
+        # compatible with the automation code
+        console.verbose(f"  failed: {result.error_text or 'host is offline'}\n")
         # delete the file even in error case, otherwise we might be causing the same error
         # every time the cron job runs
         autodiscovery_queue.remove(host_name)
         return False
 
-    something_changed = False
+    something_changed = (result.self_new != 0 or result.self_removed != 0 or
+                         result.self_kept != result.self_total or result.clustered_new != 0 or
+                         result.clustered_vanished != 0 or result.self_new_host_labels != 0)
 
-    if result.self_new == 0 and\
-       result.self_removed == 0 and\
-       result.self_kept == result.self_total and\
-       result.clustered_new == 0 and\
-       result.clustered_vanished == 0 and\
-       result.self_new_host_labels == 0:
+    if not something_changed:
         console.verbose("  nothing changed.\n")
+        activation_required = False
     else:
         console.verbose(f"  {result.self_new} new, {result.self_removed} removed, "
                         f"{result.self_kept} kept, {result.self_total} total services "
@@ -820,8 +815,7 @@ def _discover_marked_host(
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
         #       the activation decision is based on the discovery configuration of the node
-        if _get_rediscovery_parameters(params)["activation"]:
-            something_changed = True
+        activation_required = bool(_get_rediscovery_parameters(params)["activation"])
 
         # Enforce base code creating a new host config object after this change
         config_cache.invalidate_host_config(host_name)
@@ -831,7 +825,7 @@ def _discover_marked_host(
 
     autodiscovery_queue.remove(host_name)
 
-    return something_changed
+    return activation_required
 
 
 def _may_rediscover(

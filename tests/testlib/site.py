@@ -398,6 +398,7 @@ class Site:
             self._enable_cmc_core_dumps()
             self._enable_cmc_debug_logging()
             self._enable_gui_debug_logging()
+            self._tune_nagios()
 
         if self.install_test_python_modules:
             self._install_test_python_modules()
@@ -514,6 +515,16 @@ class Site:
                 "cmk.web.automations": 10,
                 "cmk.web.background-job": 10,
             })
+
+    def _tune_nagios(self):
+        # We want nagios to process queued external commands as fast as possible.  Even if we
+        # set command_check_interval to -1, nagios is doing some sleeping in between the
+        # command processing. We reduce the sleep time here to make it a little faster.
+        self.write_file(
+            "etc/nagios/nagios.d/zzz-test-tuning.cfg", "log_passive_checks=1\n"
+            "service_inter_check_delay_method=n\n"
+            "host_inter_check_delay_method=n\n"
+            "sleep_time=0.05\n")
 
     def _install_test_python_modules(self):
         venv = virtualenv_path()

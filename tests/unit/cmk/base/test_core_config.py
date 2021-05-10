@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import shutil
 from contextlib import suppress
 from pathlib import Path
-import shutil
+
+import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
@@ -19,8 +20,8 @@ from cmk.utils.type_defs import CheckPluginName, ConfigSerial, LATEST_SERIAL
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.core_factory import create_core
 from cmk.base.check_utils import Service
+from cmk.base.core_factory import create_core
 
 
 def test_do_create_config_nagios(core_scenario):
@@ -329,7 +330,7 @@ class TestHelperConfig:
         assert store.latest_path.resolve() == store.serial_path
 
 
-def test_new_helper_config_serial():
-    assert core_config.new_helper_config_serial() == ConfigSerial("1")
-    assert core_config.new_helper_config_serial() == ConfigSerial("2")
-    assert core_config.new_helper_config_serial() == ConfigSerial("3")
+def test_next_helper_config_serial():
+    assert core_config.next_helper_config_serial() == ConfigSerial("1")
+    assert core_config.next_helper_config_serial() == ConfigSerial("2")
+    assert core_config.next_helper_config_serial() == ConfigSerial("3")

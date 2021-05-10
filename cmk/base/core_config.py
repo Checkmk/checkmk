@@ -7,44 +7,38 @@
 import abc
 import numbers
 import os
+import shutil
 import socket
 import sys
-import shutil
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator, Final, Iterable
 from contextlib import contextmanager, suppress
 from pathlib import Path
+from typing import AnyStr, Callable, Dict, Final, Iterable, Iterator, List, Optional, Tuple, Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.debug
-import cmk.utils.paths
-import cmk.utils.tty as tty
 import cmk.utils.password_store
+import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigSerial,
     HostAddress,
     HostName,
     Labels,
     LabelSources,
-    ServiceName,
-    ConfigSerial,
     LATEST_SERIAL,
+    ServiceName,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base.config import (
-    HostConfig,
-    ConfigCache,
-    HostCheckCommand,
-    Tags,
-    ObjectAttributes,
-)
-from cmk.base.check_utils import Service, LegacyCheckParameters
+import cmk.base.obsolete_output as out
+from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.config import ConfigCache, HostCheckCommand, HostConfig, ObjectAttributes, Tags
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ConfigurationWarnings = List[str]
@@ -100,7 +94,16 @@ class HelperConfig:
             shutil.rmtree(config_path)
 
 
-def new_helper_config_serial() -> ConfigSerial:
+def current_helper_config_serial() -> ConfigSerial:
+    serial: int = store.load_object_from_file(
+        cmk.utils.paths.core_helper_config_dir / "serial.mk",
+        default=0,
+        lock=True,
+    )
+    return ConfigSerial(str(serial))
+
+
+def next_helper_config_serial() -> ConfigSerial:
     """Acquire and return the next helper config serial
 
     This ID is used to identify a core helper configuration generation. It is used to store the
@@ -108,12 +111,13 @@ def new_helper_config_serial() -> ConfigSerial:
     be unique compared to all currently known serials (the ones that exist in the directory
     mentioned above).
     """
-    serial_file = cmk.utils.paths.core_helper_config_dir / "serial.mk"
-
-    serial: int = store.load_object_from_file(serial_file, default=0, lock=True)
+    serial = int(current_helper_config_serial())
     serial += 1
 
-    store.save_object_to_file(serial_file, serial)
+    store.save_object_to_file(
+        cmk.utils.paths.core_helper_config_dir / "serial.mk",
+        serial,
+    )
     return ConfigSerial(str(serial))
 
 
@@ -398,7 +402,7 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_deprecated_checkgroups()
 
     with HelperConfig(
-            new_helper_config_serial()).create() as helper_config, _backup_objects_file(core):
+            next_helper_config_serial()).create() as helper_config, _backup_objects_file(core):
         core.create_config(helper_config.serial)
 
     cmk.utils.password_store.save(config.stored_passwords)

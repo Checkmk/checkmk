@@ -115,6 +115,10 @@ UserId = NewType("UserId", str)
 EventRule = Dict[str, Any]  # TODO Improve this
 
 LATEST_SERIAL: Final[Literal["latest"]] = "latest"
+# TODO(ml): The strings in ConfigSerial look like this: "0", "1", "2"...
+#           We should use `int` or even better make a full-blown
+#           abstraction out of that.
+#           See also: a few of its "methods" are in `cmk.base.core_config`.
 ConfigSerial = NewType("ConfigSerial", str)
 OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 

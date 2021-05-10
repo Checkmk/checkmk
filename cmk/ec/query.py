@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex
@@ -46,27 +46,27 @@ class Query:
         return self.method + " " + self.method_arg
 
 
-def filter_operator_in(a, b):
+def filter_operator_in(a: Any, b: Any) -> bool:
     # implemented as a named function, as it is used in a second filter
     # cmk.ec.main: StatusTableEvents._enumerate
     # not implemented as regex/IGNORECASE due to performance
     return a.lower() in (e.lower() for e in b)
 
 
-_filter_operators = {
+_filter_operators: Dict[str, Callable[[Any, Any], bool]] = {
     "=": (lambda a, b: a == b),
     ">": (lambda a, b: a > b),
     "<": (lambda a, b: a < b),
     ">=": (lambda a, b: a >= b),
     "<=": (lambda a, b: a <= b),
-    "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
+    "~": (lambda a, b: bool(cmk.utils.regex.regex(b).search(a))),
     "=~": (lambda a, b: a.lower() == b.lower()),
-    "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
+    "~~": (lambda a, b: bool(cmk.utils.regex.regex(b.lower()).search(a.lower()))),
     "in": filter_operator_in,
 }
 
 
-def operator_for(name: str) -> Callable:
+def operator_for(name: str) -> Callable[[Any, Any], bool]:
     func = _filter_operators.get(name)
     if func is None:
         raise MKClientError("Unknown filter operator '%s'" % name)
@@ -113,7 +113,7 @@ class QueryGET(Query):
         else:
             logger.info("Ignoring not-implemented header %s" % header)
 
-    def _parse_filter(self, textspec: str) -> Tuple[str, str, Callable, Any]:
+    def _parse_filter(self, textspec: str) -> Tuple[str, str, Callable[[Any], bool], Any]:
         # Examples:
         # id = 17
         # name ~= This is some .* text

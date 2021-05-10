@@ -34,8 +34,8 @@ from .settings import Settings
 
 
 def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                     host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]], rule: Any,
-                     event: Dict[str, Any]) -> None:
+                     host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
+                     rule: Dict[str, Any], event: Dict[str, Any]) -> None:
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -116,11 +116,11 @@ def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], lo
         logger.exception("Error during execution of action %s" % action["id"])
 
 
-def _escape_null_bytes(s: Any) -> Any:
+def _escape_null_bytes(s: str) -> str:
     return s.replace("\000", "\\000")
 
 
-def _get_quoted_event(event: Dict[str, Any], logger: Logger) -> Any:
+def _get_quoted_event(event: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
     new_event: Dict[str, Any] = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
     for key, value in event.items():
@@ -144,26 +144,26 @@ def _get_quoted_event(event: Dict[str, Any], logger: Logger) -> Any:
     return new_event
 
 
-def _substitute_event_tags(event_columns: Iterable[Tuple[str, Any]], text: Any,
-                           event: Dict[str, Any]) -> Any:
+def _substitute_event_tags(event_columns: Iterable[Tuple[str, Any]], text: str,
+                           event: Dict[str, Any]) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
 
-def quote_shell_string(s: Any) -> Any:
+def quote_shell_string(s: str) -> str:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger: Logger) -> bool:
+def _send_email(config: Dict[str, Any], to: str, subject: str, body: str, logger: Logger) -> bool:
     command_utf8 = [
-        "mail", "-S", "sendcharsets=utf-8", "-s",
+        b"mail", b"-S", b"sendcharsets=utf-8", b"-s",
         subject.encode("utf-8"),
         to.encode("utf-8")
     ]
 
     if config["debug_rules"]:
-        logger.info("  Executing: %s" % " ".join(command_utf8))
+        logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
 
     p = subprocess.Popen(
         command_utf8,
@@ -189,15 +189,10 @@ def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger
     return True
 
 
-def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: Any, event: Dict[str, Any],
+def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: str, event: Dict[str, Any],
                     logger: Logger) -> None:
     script_env = os.environ.copy()
-
     for key, value in _get_event_tags(event_columns, event).items():
-        if isinstance(key, str):
-            key = key.encode("utf-8")
-        if isinstance(value, str):
-            value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
     # Traps can contain 0-Bytes. We need to remove this from the script
@@ -220,7 +215,7 @@ def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: Any, event: 
 def _get_event_tags(
     event_columns: Iterable[Tuple[str, Any]],
     event: Dict[str, Any],
-) -> Dict[Any, Any]:
+) -> Dict[str, str]:
     substs = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]
@@ -234,7 +229,7 @@ def _get_event_tags(
             return v
         return "%s" % v
 
-    tags = {}
+    tags: Dict[str, str] = {}
     for key, value in substs:
         if isinstance(value, tuple):
             value = " ".join(map(to_string, value))
@@ -310,15 +305,16 @@ def do_notify(host_config: HostConfig,
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(host_config: HostConfig, event: Dict[str, Any], username: Any,
-                                 is_cancelling: bool, logger: Logger) -> Any:
+def _create_notification_context(host_config: HostConfig, event: Dict[str, Any],
+                                 username: Optional[bool], is_cancelling: bool,
+                                 logger: Logger) -> Dict[str, Any]:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
     return context
 
 
-def _base_notification_context(event: Dict[str, Any], username: Any,
+def _base_notification_context(event: Dict[str, Any], username: Optional[bool],
                                is_cancelling: bool) -> Dict[str, Any]:
     return {
         "WHAT": "SERVICE",

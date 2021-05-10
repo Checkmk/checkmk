@@ -9,13 +9,12 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
-from collections.abc import MutableMapping
 import copy
 from enum import Enum
 import logging
 import os
 import pprint
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import AbstractSet, Any, Dict, Iterable, Iterator, List, MutableMapping, Optional, Union
 from pathlib import Path
 
 from six import ensure_str
@@ -38,7 +37,7 @@ class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
 
 
-class MkpRulePackProxy(MutableMapping):
+class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -48,7 +47,7 @@ class MkpRulePackProxy(MutableMapping):
     This is achieved via the method bind_to.
     """
     def __init__(self, rule_pack_id: str) -> None:
-        super(MkpRulePackProxy, self).__init__()
+        super().__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced
@@ -56,38 +55,34 @@ class MkpRulePackProxy(MutableMapping):
         self.id_ = rule_pack_id
         self.rule_pack: Optional[ECRulePack] = None
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         self.rule_pack[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         del self.rule_pack[key]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s("%s")' % (self.__class__.__name__, self.id_)
 
     # __iter__ and __len__ are only defined as a workaround for a buggy entry
     # in the typeshed
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         for k in self.keys():
             yield k
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.keys())
 
-    # NOTE: One cannot portably give a type for this method because of the
-    # braindead incompatible type changes of Mapping.keys(): In Python 2 it has
-    # to be a List[K], while in Python 3 it has to be an AbstractSet[K] (it's a
-    # KeysView[K], actually).
-    def keys(self):
+    def keys(self) -> AbstractSet[str]:
         """List of keys of this rule pack"""
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")

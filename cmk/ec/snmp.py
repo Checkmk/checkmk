@@ -7,7 +7,7 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Needed for receiving traps
 import pysnmp.debug  # type: ignore[import]
@@ -152,13 +152,13 @@ class SNMPTrapEngine:
                                                      wholeMsg=message)
 
     def _handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
-                         var_binds, cb_ctx):
+                         var_binds, cb_ctx) -> None:
         ipaddress = self.snmp_engine.getUserContext("sender_address")[0]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         self._callback(trap, ipaddress)
 
-    def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
+    def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress) -> None:
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(VERBOSE,
                              'Trap accepted from %s (ContextEngineId "%s", SNMPContextName "%s")',
@@ -167,7 +167,7 @@ class SNMPTrapEngine:
             for name, val in var_binds:
                 self._logger.log(VERBOSE, '%-40s = %s', name.prettyPrint(), val.prettyPrint())
 
-    def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx):
+    def _handle_unauthenticated_snmptrap(self, snmp_engine, execpoint, variables, cb_ctx) -> None:
         if variables["securityLevel"] in [1, 2] and variables["statusInformation"][
                 "errorIndication"] == pysnmp.proto.errind.unknownCommunityName:
             msg = "Unknown community (%s)" % variables["statusInformation"].get("communityName", "")
@@ -230,8 +230,8 @@ class SNMPTrapTranslator:
             return None
 
     # Convert pysnmp datatypes to simply handable ones
-    def _translate_simple(self, ipaddress, var_bind_list):
-        var_binds = []
+    def _translate_simple(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
+        var_binds: List[Tuple[str, str]] = []
         for oid, value in var_bind_list:
             key = str(oid)
 
@@ -250,8 +250,8 @@ class SNMPTrapTranslator:
         return var_binds
 
     # Convert pysnmp datatypes to simply handable ones
-    def _translate_via_mibs(self, ipaddress, var_bind_list):
-        var_binds = []
+    def _translate_via_mibs(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
+        var_binds: List[Tuple[str, str]] = []
         if self._mib_resolver is None:
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             # TODO: Fall back to _translate_simple?

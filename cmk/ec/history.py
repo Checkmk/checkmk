@@ -583,10 +583,8 @@ def _convert_history_line(history: History, values: List[Any]) -> None:
 def _unsplit(s: Any) -> Any:
     if not isinstance(s, str):
         return s
-
     if s.startswith('\2'):
         return None  # \2 is the designator for None
-
     if s.startswith('\1'):
         if len(s) == 1:
             return ()

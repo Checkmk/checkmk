@@ -282,11 +282,18 @@ class Document:
         """Whether or not a page break would help to make the element be rendered as a whole
         on the next page. In case the break would not solve the situation (e.g. when the
         element is higher than the available space on a single page, then let it be."""
-        if needed_space * mm > self._inner_height:
+        if not self.fits_on_empty_page(needed_space):
             return False
 
-        break_at = self._bottom
-        return self._linepos - needed_space * mm <= break_at
+        return not self.fits_on_remaining_page(needed_space)
+
+    def fits_on_remaining_page(self, needed_space: float) -> bool:
+        """Is the needed_space left free on the current page?"""
+        return self._linepos - needed_space * mm > self._bottom
+
+    def fits_on_empty_page(self, needed_space: float) -> bool:
+        """Is the needed_space sufficient on an empty page?"""
+        return needed_space * mm <= self._inner_height
 
     def check_pagebreak(self, needed_space=0.0):
         if self.need_pagebreak(needed_space):
@@ -743,7 +750,9 @@ class Document:
                 row_height = self.lineskip()
 
             needed_vspace = row_height + 2 * y_padding + y_spacing
-            if self.need_pagebreak(needed_space=needed_vspace / mm):  # fixed: true-division
+
+            if (not self.fits_on_remaining_page(needed_vspace / mm) and
+                    self.fits_on_empty_page(needed_vspace / mm)):
                 self.do_pagebreak()
                 if add_headers_after_pagebreak:
                     paint_headers()

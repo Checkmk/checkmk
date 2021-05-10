@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import List, Dict, Any, Type, Sequence, Tuple
+from typing import List, Dict, Any, Type, Sequence
 import cmk.utils.plugin_registry
 from cmk.utils.bi.bi_lib import (
     ABCBICompiledNode,

@@ -1066,7 +1066,7 @@ class EBSLimits(AWSSectionLimits):
         response = self._client.describe_volumes()
         volumes = self._get_response_content(response, 'Volumes')
 
-        response = self._client.describe_snapshots()
+        response = self._client.describe_snapshots(OwnerIds=['self'])
         snapshots = self._get_response_content(response, 'Snapshots')
         return volumes, snapshots
 

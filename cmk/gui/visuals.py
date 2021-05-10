@@ -1864,7 +1864,7 @@ def visual_title(what: VisualTypeName,
     title = title.replace("$SITE$", site_filter_vars.get("site", ""))
 
     if visual["add_context_to_title"] and not skip_title_context:
-        title = _add_context_title(visual, title)
+        title = _add_context_title(context, visual["single_infos"], title)
 
     # Execute title plugin functions which might be added by the user to
     # the visuals plugins. When such a plugin function returns None, the regular
@@ -1878,35 +1878,32 @@ def visual_title(what: VisualTypeName,
     return title
 
 
-def _add_context_title(visual: Visual, title: str) -> str:
-    extra_titles = list(
-        get_singlecontext_html_vars(visual["context"], visual["single_infos"]).values())
+def _add_context_title(context: VisualContext, single_infos: List[str], title: str) -> str:
+    extra_titles = list(get_singlecontext_vars(context, single_infos).values())
 
     # FIXME: Is this really only needed for visuals without single infos?
-    if not visual['single_infos']:
-        used_filters = []
-        for fn in visual["context"].keys():
-            try:
-                used_filters.append(get_filter(fn))
-            except KeyError:
-                pass  # silently ignore not existing filters
-
-        for filt in used_filters:
-            heading = filt.heading_info()
-            if heading:
-                extra_titles.append(heading)
+    if not single_infos:
+        # Context is already merged, don't allow the last instant query to uri vars.
+        with context_uri_vars(context, single_infos):
+            for fn in context:
+                try:
+                    if heading := get_filter(fn).heading_info():
+                        extra_titles.append(heading)
+                except KeyError:
+                    pass  # silently ignore not existing filters
 
     if extra_titles:
         title += " " + ", ".join(extra_titles)
 
     for fn in get_ubiquitary_filters():
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
+        if fn == "wato_folder" and (not config.wato_enabled or 'host' in single_infos):
             continue
 
-        heading = get_filter(fn).heading_info()
-        if heading:
-            title = heading + " - " + title
+        # Context is already merged, don't allow the last instant query to uri vars.
+        with context_uri_vars(context, single_infos):
+            if heading := get_filter(fn).heading_info():
+                title = heading + " - " + title
 
     return title
 

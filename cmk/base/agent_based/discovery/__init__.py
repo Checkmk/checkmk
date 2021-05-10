@@ -658,12 +658,15 @@ class _AutodiscoveryQueue:
     def _host_name(file_path: Path) -> HostName:
         return HostName(file_path.stem)
 
+    def _file_path(self, host_name: HostName) -> Path:
+        return self._dir / str(host_name)
+
     def __init__(self):
-        self.dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')  # TODO: mark private
+        self._dir = Path(cmk.utils.paths.var_dir, 'autodiscovery')
 
     def _ls(self) -> Iterable[Path]:
         try:
-            return list(self.dir.iterdir())
+            return list(self._dir.iterdir())
         except FileNotFoundError:
             return []
 
@@ -674,16 +677,16 @@ class _AutodiscoveryQueue:
         return (self._host_name(f) for f in self._ls())
 
     def add(self, host_name: HostName) -> None:
-        self.dir.mkdir(parents=True, exist_ok=True)
-        (self.dir / host_name).touch()
+        self._dir.mkdir(parents=True, exist_ok=True)
+        self._file_path(host_name).touch()
 
     def remove(self, host_name: HostName) -> None:
         with suppress(FileNotFoundError):
-            (self.dir / host_name).unlink()
+            self._file_path(host_name).unlink()
 
-    def cleanup(self, *, valid_hosts: Set[HostName], logger: Callable[[str], None]) -> None:
-        for host_name in {self._host_name(p) for p in self._ls()} - valid_hosts:
-            logger(f"  Host {host_name} does not exist in configuration. Removing mark.\n")
+    def cleanup(self, *, valid_hosts: Container[HostName], logger: Callable[[str], None]) -> None:
+        for host_name in (hn for f in self._ls() if (hn := self._host_name(f)) not in valid_hosts):
+            logger(f"  Removing mark '{host_name}' (host not configured)\n")
             self.remove(host_name)
 
 

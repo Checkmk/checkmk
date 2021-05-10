@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 from pathlib import Path
 
 import pytest
@@ -19,7 +17,7 @@ def _mocked_queue(tmpdir):
     mockdir = Path(tmpdir)
     (mockdir / "most").touch()
     (mockdir / "lost").touch()
-    adq.dir = mockdir
+    adq._dir = mockdir
     yield adq
 
 

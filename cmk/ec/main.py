@@ -29,7 +29,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Pattern, Tuple, Type, Union
+from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Pattern, Protocol, Tuple, Type, Union
 
 import dateutil.parser
 import dateutil.tz
@@ -59,6 +59,16 @@ from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
+
+
+# Python and mypy have FD stuff internally, but they don't export it. :-/
+class HasFileno(Protocol):
+    def fileno(self) -> int:
+        ...
+
+
+FileDescr = int  # mypy calls this FileDescriptor, but this clashes with out definition
+FileDescriptorLike = Union[FileDescr, HasFileno]
 
 # TODO: We really, really need a stricter type here, this is *the* central data structure in the EC!
 Event = Dict[str, Any]
@@ -545,7 +555,7 @@ class EventServer(ECServerThread):
                          slave_status=slave_status,
                          profiling_enabled=settings.options.profile_event,
                          profile_file=settings.paths.event_server_profile.value)
-        self._syslog: Optional[socket.socket] = None
+        self._syslog_udp: Optional[socket.socket] = None
         self._syslog_tcp: Optional[socket.socket] = None
         self._snmptrap: Optional[socket.socket] = None
 
@@ -572,7 +582,7 @@ class EventServer(ECServerThread):
 
         self.create_pipe()
         self.open_eventsocket()
-        self.open_syslog()
+        self.open_syslog_udp()
         self.open_syslog_tcp()
         self.open_snmptrap()
         self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
@@ -665,18 +675,18 @@ class EventServer(ECServerThread):
 
         self._logger.info("Created FIFO '%s' for receiving events" % path)
 
-    def open_syslog(self) -> None:
+    def open_syslog_udp(self) -> None:
         endpoint = self.settings.options.syslog_udp
         try:
             if isinstance(endpoint, FileDescriptor):
-                self._syslog = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
+                self._syslog_udp = socket.fromfd(endpoint.value, socket.AF_INET, socket.SOCK_DGRAM)
                 os.close(endpoint.value)
                 self._logger.info("Opened builtin syslog server on inherited filedescriptor %d" %
                                   endpoint.value)
             if isinstance(endpoint, PortNumber):
-                self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self._syslog.bind(("0.0.0.0", endpoint.value))
+                self._syslog_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                self._syslog_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self._syslog_udp.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin syslog server on UDP port %d" % endpoint.value)
         except Exception as e:
             raise Exception("Cannot start builtin syslog server: %s" % e)
@@ -728,7 +738,7 @@ class EventServer(ECServerThread):
         self._eventsocket.listen(self._config['eventsocket_queue_len'])
         self._logger.info("Opened UNIX socket '%s' for receiving events" % path)
 
-    def open_pipe(self) -> int:
+    def open_pipe(self) -> FileDescr:
         # Beware: we must open the pipe also for writing. Otherwise
         # we will see EOF forever after one writer has finished and
         # select() will trigger even if there is no data. A good article
@@ -742,11 +752,11 @@ class EventServer(ECServerThread):
     def serve(self) -> None:
         pipe_fragment = b''
         pipe = self.open_pipe()
-        listen_list: List[Union[int, socket.socket]] = [pipe]
+        listen_list: List[FileDescriptorLike] = [pipe]
 
         # Wait for incoming syslog packets via UDP
-        if self._syslog is not None:
-            listen_list.append(self._syslog.fileno())
+        if self._syslog_udp is not None:
+            listen_list.append(self._syslog_udp)
 
         # Wait for new connections for events via TCP socket
         if self._syslog_tcp is not None:
@@ -758,12 +768,12 @@ class EventServer(ECServerThread):
 
         # Wait for incomding SNMP traps
         if self._snmptrap is not None:
-            listen_list.append(self._snmptrap.fileno())
+            listen_list.append(self._snmptrap)
 
         # Keep list of client connections via UNIX socket and
         # read data that is not yet processed. Map from
         # fd to (fileobject, data)
-        client_sockets: Dict[int, Tuple[socket.socket, Any, bytes]] = {}
+        client_sockets: Dict[FileDescr, Tuple[socket.socket, Any, bytes]] = {}
         select_timeout = 1
         while not self._terminate_event.is_set():
             try:
@@ -778,13 +788,11 @@ class EventServer(ECServerThread):
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
-
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Same for the TCP syslog socket
-            if self._syslog_tcp and self._syslog_tcp in readable:
+            if self._syslog_tcp is not None and self._syslog_tcp in readable:
                 client_socket, address = self._syslog_tcp.accept()
-
                 client_sockets[client_socket.fileno()] = (client_socket, address, b"")
 
             # Read data from existing event unix socket connections
@@ -857,11 +865,11 @@ class EventServer(ECServerThread):
                     pass
 
             # Read events from builtin syslog server
-            if self._syslog is not None and self._syslog.fileno() in readable:
-                self.process_raw_lines(*self._syslog.recvfrom(4096))
+            if self._syslog_udp is not None and self._syslog_udp in readable:
+                self.process_raw_lines(*self._syslog_udp.recvfrom(4096))
 
             # Read events from builtin snmptrap server
-            if self._snmptrap is not None and self._snmptrap.fileno() in readable:
+            if self._snmptrap is not None and self._snmptrap in readable:
                 try:
                     message, sender_address = self._snmptrap.recvfrom(65535)
                     self.process_raw_data(

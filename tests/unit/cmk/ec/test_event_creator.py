@@ -37,7 +37,7 @@ def event_creator():
                 'priority': 5,
                 'facility': 1,
                 'text': 'message',
-                'pid': '8046',
+                'pid': 8046,
                 'core_host': '',
                 'host_in_downtime': False,
                 'application': 'CRON',
@@ -71,7 +71,7 @@ def event_creator():
                 'host': 'Klapprechner',
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
-                'pid': '8046',
+                'pid': 8046,
                 'priority': 6,
                 'text': 'message',
                 'time': 1558871101.0
@@ -219,7 +219,7 @@ def event_creator():
                 'host': 'gw',
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
-                'pid': '7122',
+                'pid': 7122,
                 'priority': 4,
                 'text': 'listening for IKE messages',
                 'time': 1427281326.0

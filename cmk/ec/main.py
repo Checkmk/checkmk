@@ -29,7 +29,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union
+from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Pattern, Tuple, Type, Union
 
 import dateutil.parser
 import dateutil.tz
@@ -254,7 +254,7 @@ def drain_pipe(pipe):
             break  # No data available
 
 
-def match(pattern: str, text: str, complete: bool = True) -> Union[bool, Tuple[str, ...]]:
+def match(pattern: Optional[str], text: str, complete: bool = True) -> Union[bool, Tuple[str, ...]]:
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
@@ -579,7 +579,7 @@ class EventServer(ECServerThread):
                                                 self._logger.getChild("snmp"), self.handle_snmptrap)
 
     @classmethod
-    def status_columns(cls):
+    def status_columns(cls) -> List[Tuple[str, Any]]:
         columns = cls._general_columns()
         columns += Perfcounters.status_columns()
         columns += cls._replication_columns()
@@ -587,7 +587,7 @@ class EventServer(ECServerThread):
         return columns
 
     @classmethod
-    def _general_columns(cls):
+    def _general_columns(cls) -> List[Tuple[str, Any]]:
         return [
             ("status_config_load_time", 0),
             ("status_num_open_events", 0),
@@ -595,7 +595,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _replication_columns(cls):
+    def _replication_columns(cls) -> List[Tuple[str, Any]]:
         return [
             ("status_replication_slavemode", ""),
             ("status_replication_last_sync", 0.0),
@@ -603,7 +603,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _event_limit_columns(cls):
+    def _event_limit_columns(cls) -> List[Tuple[str, Any]]:
         return [
             ("status_event_limit_host", 0),
             ("status_event_limit_rule", 0),
@@ -613,14 +613,12 @@ class EventServer(ECServerThread):
             ("status_event_limit_active_overall", False),
         ]
 
-    def get_status(self):
+    def get_status(self) -> List[List[Any]]:
         row: List[Any] = []
-
         row += self._add_general_status()
         row += self._perfcounters.get_status()
         row += self._add_replication_status()
         row += self._add_event_limit_status()
-
         return [row]
 
     def _add_general_status(self) -> List[Any]:
@@ -630,7 +628,7 @@ class EventServer(ECServerThread):
             self._virtual_memory_size(),
         ]
 
-    def _virtual_memory_size(self):
+    def _virtual_memory_size(self) -> int:
         parts = open('/proc/self/stat').read().split()
         return int(parts[22])  # in Bytes
 
@@ -653,23 +651,21 @@ class EventServer(ECServerThread):
             self.is_overall_event_limit_active(),
         ]
 
-    def create_pipe(self):
+    def create_pipe(self) -> None:
         path = self.settings.paths.event_pipe.value
         try:
             if not path.is_fifo():
                 path.unlink()
         except Exception:
             pass
-
         if not path.exists():
             os.mkfifo(str(path))
-
         # We want to be able to receive events from all users on the local system
         path.chmod(0o666)  # nosec
 
         self._logger.info("Created FIFO '%s' for receiving events" % path)
 
-    def open_syslog(self):
+    def open_syslog(self) -> None:
         endpoint = self.settings.options.syslog_udp
         try:
             if isinstance(endpoint, FileDescriptor):
@@ -685,7 +681,7 @@ class EventServer(ECServerThread):
         except Exception as e:
             raise Exception("Cannot start builtin syslog server: %s" % e)
 
-    def open_syslog_tcp(self):
+    def open_syslog_tcp(self) -> None:
         endpoint = self.settings.options.syslog_tcp
         try:
             if isinstance(endpoint, FileDescriptor):
@@ -705,7 +701,7 @@ class EventServer(ECServerThread):
         except Exception as e:
             raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
-    def open_snmptrap(self):
+    def open_snmptrap(self) -> None:
         endpoint = self.settings.options.snmptrap_udp
         try:
             if isinstance(endpoint, FileDescriptor):
@@ -721,7 +717,7 @@ class EventServer(ECServerThread):
         except Exception as e:
             raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
-    def open_eventsocket(self):
+    def open_eventsocket(self) -> None:
         path = self.settings.paths.event_socket.value
         if path.exists():
             path.unlink()
@@ -732,7 +728,7 @@ class EventServer(ECServerThread):
         self._eventsocket.listen(self._config['eventsocket_queue_len'])
         self._logger.info("Opened UNIX socket '%s' for receiving events" % path)
 
-    def open_pipe(self):
+    def open_pipe(self) -> int:
         # Beware: we must open the pipe also for writing. Otherwise
         # we will see EOF forever after one writer has finished and
         # select() will trigger even if there is no data. A good article
@@ -740,13 +736,13 @@ class EventServer(ECServerThread):
         # http://www.outflux.net/blog/archives/2008/03/09/using-select-on-a-fifo/
         return os.open(str(self.settings.paths.event_pipe.value), os.O_RDWR | os.O_NONBLOCK)
 
-    def handle_snmptrap(self, trap, ipaddress):
+    def handle_snmptrap(self, trap, ipaddress) -> None:
         self.process_event(self._event_creator.create_event_from_trap(trap, ipaddress))
 
     def serve(self) -> None:
         pipe_fragment = b''
         pipe = self.open_pipe()
-        listen_list = [pipe]
+        listen_list: List[Union[int, socket.socket]] = [pipe]
 
         # Wait for incoming syslog packets via UDP
         if self._syslog is not None:
@@ -886,7 +882,7 @@ class EventServer(ECServerThread):
 
     # Processes incoming data, just a wrapper between the real data and the
     # handler function to record some statistics etc.
-    def process_raw_data(self, handler):
+    def process_raw_data(self, handler: Callable[[], None]) -> None:
         self._perfcounters.count("messages")
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
@@ -926,21 +922,17 @@ class EventServer(ECServerThread):
     # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self) -> None:
         host_downtimes: Dict[str, bool] = {}
-
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
-
             host_name: HostName = event["core_host"]
             try:
                 in_downtime = host_downtimes[host_name]
             except KeyError:
                 in_downtime = self._is_host_in_downtime(host_name)
                 host_downtimes[host_name] = in_downtime
-
             if in_downtime:
                 continue  # (still) in downtime, don't delete any event
-
             self._logger.log(VERBOSE, "Remove event %d (created in downtime, host left downtime)",
                              event["id"])
             self._event_status.remove_event(event)
@@ -1066,7 +1058,7 @@ class EventServer(ECServerThread):
         for rule in self._rules:
             if "expect" in rule:
 
-                if not self._rule_matcher.event_rule_matches_site(rule, event=None):
+                if not self._rule_matcher.event_rule_matches_site(rule, event={}):
                     continue
 
                 # Interval is either a number of seconds, or pair of a number of seconds
@@ -1117,11 +1109,13 @@ class EventServer(ECServerThread):
                 for nr in events_to_delete[::-1]:
                     self._event_status.remove_event(events[nr])
 
-    def _handle_absent_event(self, rule, event_count, expected_count, interval_start):
+    def _handle_absent_event(self, rule: Dict[str, Any], event_count: int, expected_count: int,
+                             interval_start: float) -> None:
         now = time.time()
         if event_count:
-            text = "Expected message arrived only %d out of %d times since %s" % \
-                   (event_count, expected_count, time.strftime("%F %T", time.localtime(interval_start)))
+            text = ("Expected message arrived only %d out of %d times since %s" %
+                    (event_count, expected_count,
+                     time.strftime("%F %T", time.localtime(interval_start))))
         else:
             text = "Expected message did not arrive since %s" % \
                    time.strftime("%F %T", time.localtime(interval_start))
@@ -1199,12 +1193,11 @@ class EventServer(ECServerThread):
         self._config = config
         self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
                                                 self._logger.getChild("snmp"), self.handle_snmptrap)
-        self.compile_rules(self._config["rules"], self._config["rule_packs"])
+        self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
 
-    # Precompile regular expressions and similar stuff. Also convert legacy
-    # "rules" parameter into new "rule_packs" parameter
-    def compile_rules(self, legacy_rules, rule_packs):
+    # Precompile regular expressions and similar stuff.
+    def compile_rules(self, rule_packs: Iterable[Dict[str, Any]]) -> None:
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
@@ -1286,22 +1279,20 @@ class EventServer(ECServerThread):
                     self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
 
     @staticmethod
-    def _compile_matching_value(key, val):
+    def _compile_matching_value(key: str, val: str) -> Union[None, str, Pattern]:
         value = val.strip()
         # Remove leading .* from regex. This is redundant and
         # dramatically destroys performance when doing an infix search.
         if key in ["match", "match_ok"]:
             while value.startswith(".*") and not value.startswith(".*?"):
                 value = value[2:]
-
         if not value:
             return None
-
         if cmk.utils.regex.is_regex(value):
             return re.compile(value, re.IGNORECASE)
         return val.lower()
 
-    def hash_rule(self, rule):
+    def hash_rule(self, rule: Dict[str, Any]) -> None:
         # Construct rule hash for faster execution.
         facility = rule.get("match_facility")
         if facility and not rule.get("invert_matching"):
@@ -1310,7 +1301,7 @@ class EventServer(ECServerThread):
             for facility in range(32):  # all syslog facilities
                 self.hash_rule_facility(rule, facility)
 
-    def hash_rule_facility(self, rule, facility):
+    def hash_rule_facility(self, rule: Dict[str, Any], facility: int) -> None:
         needed_prios = [False] * 8
         for key in ["match_priority", "cancel_priority"]:
             if key in rule:
@@ -1331,7 +1322,7 @@ class EventServer(ECServerThread):
             if need:
                 prio_hash.setdefault(prio, []).append(rule)
 
-    def output_hash_stats(self):
+    def output_hash_stats(self) -> None:
         self._logger.info("Top 20 of facility/priority:")
         entries = []
         total_count = 0
@@ -1348,7 +1339,7 @@ class EventServer(ECServerThread):
                               (SyslogFacility(facility), SyslogPriority(priority), count,
                                (100.0 * count / float(total_count))))
 
-    def process_line(self, line, address):
+    def process_line(self, line: str, address: Any) -> None:
         line = line.rstrip()
         if self._config["debug_rules"]:
             if address:
@@ -1385,7 +1376,9 @@ class EventServer(ECServerThread):
                 self._logger.exception('  Exception during matching:\n%s' % e)
                 result = False
 
-            if result:  # A tuple with (True/False, {match_info}).. O.o
+            # TODO: result has a totally braindead typing: It can either return False or
+            # a pair of a bool and match groups. It never ever returns a "naked" True. o_O.
+            if isinstance(result, tuple):
                 self._perfcounters.count("rule_hits")
                 cancelling, match_groups = result
 
@@ -1491,7 +1484,7 @@ class EventServer(ECServerThread):
         if self._config["archive_orphans"]:
             self._event_status.archive_event(event)
 
-    def _add_rule_contact_groups_to_event(self, rule, event):
+    def _add_rule_contact_groups_to_event(self, rule: Dict[str, Any], event: Event) -> None:
         if rule.get("contact_groups") is None:
             event.update({
                 "contact_groups": None,
@@ -1509,7 +1502,7 @@ class EventServer(ECServerThread):
         name = self.host_config.get_canonical_name(event["host"])
         event["core_host"] = "" if name is None else name
 
-    def _add_core_host_to_new_event(self, event):
+    def _add_core_host_to_new_event(self, event: Event) -> None:
         self.add_core_host_to_event(event)
 
         # Add some state dependent information (like host is in downtime etc.)
@@ -1528,7 +1521,8 @@ class EventServer(ECServerThread):
     # normal match and True for a cancelling match and the groups is a tuple
     # if matched regex groups in either text (normal) or match_ok (cancelling)
     # match.
-    def event_rule_matches(self, rule, event):
+    def event_rule_matches(self, rule: Dict[str, Any],
+                           event: Event) -> Union[bool, Tuple[bool, Dict[str, Any]]]:
         self._perfcounters.count("rule_tries")
         with self._lock_configuration:
             result = self._rule_matcher.event_rule_matches_non_inverted(rule, event)
@@ -1547,7 +1541,7 @@ class EventServer(ECServerThread):
             return result
 
     # Rewrite texts and compute other fields in the event
-    def rewrite_event(self, rule, event, groups, set_first=True):
+    def rewrite_event(self, rule: Dict[str, Any], event: Event, groups, set_first=True) -> None:
         if rule["state"] == -1:
             prio = event["priority"]
             if prio >= 5:
@@ -1590,7 +1584,7 @@ class EventServer(ECServerThread):
     # *really* sorry: this code snipped is copied from modules/check_mk_base.py.
     # There is still no common library. Please keep this in sync with the
     # original code
-    def translate_hostname(self, backedhost):
+    def translate_hostname(self, backedhost: str) -> str:
         translation = self._config["hostname_translation"]
 
         # Here comes the original code from modules/check_mk_base.py
@@ -1676,8 +1670,8 @@ class EventServer(ECServerThread):
         return rule_ids
 
     def is_overall_event_limit_active(self) -> bool:
-        return self._event_status.num_existing_events \
-            >= self._config["event_limit"]["overall"]["limit"]
+        return (self._event_status.num_existing_events >=
+                self._config["event_limit"]["overall"]["limit"])
 
     # protected by self._event_status.lock
     def new_event_respecting_limits(self, event: Event) -> bool:
@@ -1792,7 +1786,7 @@ class EventServer(ECServerThread):
         return (self._config["event_limit"]["by_host"]["limit"],
                 self._config["event_limit"]["by_host"]["action"])
 
-    def _create_overflow_event(self, ty, event, limit):
+    def _create_overflow_event(self, ty: str, event: Event, limit: int) -> Event:
         now = time.time()
         new_event = {
             "rule_id": None,
@@ -2089,23 +2083,19 @@ class EventCreator:
 
         return event
 
-    # FIXME: Typing chaos for pid ahead!
-    def _parse_syslog_info(self, line):
-        # not-yet-a-type: (str) ->  Dict[str, Any]
+    def _parse_syslog_info(self, line: str) -> Dict[str, Any]:
         event: Dict[str, Any] = {}
         # Replaced ":" by ": " here to make tags with ":" possible. This
         # is needed to process logs generated by windows agent logfiles
         # like "c://test.log".
         tag, message = line.split(": ", 1)
         event["text"] = message.strip()
-
         if '[' in tag:
-            app, pid = tag.split('[', 1)
-            pid = pid.rstrip(']')
+            app, pid_str = tag.split('[', 1)
+            pid = int(pid_str.rstrip(']'))
         else:
             app = tag
             pid = 0
-
         event["application"] = app
         event["pid"] = pid
         return event
@@ -2131,11 +2121,12 @@ class EventCreator:
         event["pid"] = 0
         return event
 
-    def create_event_from_trap(self, trap, ipaddress):
+    def create_event_from_trap(self, trap: List[Tuple[str, Any]], ipaddress: AnyStr) -> Event:
         # use the trap-oid as application
         application = u''
         for index, (oid, _unused_val) in enumerate(trap):
             if oid in ['1.3.6.1.6.3.1.1.4.1.0', 'SNMPv2-MIB::snmpTrapOID.0']:
+                # TODO: This modification-while-enumerating is fragile and confusing!
                 application = scrub_and_decode(trap.pop(index)[1])
                 break
 
@@ -2166,10 +2157,11 @@ class RuleMatcher:
         self._time_periods = TimePeriods(logger)
 
     @property
-    def _debug_rules(self):
+    def _debug_rules(self) -> bool:
         return self._config["debug_rules"]
 
-    def event_rule_matches_non_inverted(self, rule, event):
+    def event_rule_matches_non_inverted(self, rule: Dict[str, Any],
+                                        event: Event) -> Union[bool, Tuple[bool, Dict[str, Any]]]:
         if self._debug_rules:
             self._logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
             self._logger.info("  Text:   %s" % event["text"])
@@ -2212,9 +2204,9 @@ class RuleMatcher:
                 return True, match_groups
 
         # Check create-event
-        if match_groups["match_groups_message"] is not False and\
-            match_groups.get("match_groups_syslog_application", ()) is not False and\
-            match_priority["has_match"] is True:
+        if (match_groups["match_groups_message"] is not False and
+                match_groups.get("match_groups_syslog_application",
+                                 ()) is not False and match_priority["has_match"] is True):
             if self._debug_rules:
                 self._logger.info("  found new event")
             return False, match_groups
@@ -2243,7 +2235,7 @@ class RuleMatcher:
 
         return False
 
-    def event_rule_matches_generic(self, rule, event):
+    def event_rule_matches_generic(self, rule: Dict[str, Any], event: Event) -> bool:
         generic_match_functions = [
             self.event_rule_matches_site,
             self.event_rule_matches_host,
@@ -2258,7 +2250,8 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_determine_match_priority(self, rule, event, match_priority):
+    def event_rule_determine_match_priority(self, rule: Dict[str, Any], event: Event,
+                                            match_priority: Dict[str, bool]) -> bool:
         p = event["priority"]
 
         if "match_priority" in rule:
@@ -2279,10 +2272,10 @@ class RuleMatcher:
 
         return True
 
-    def event_rule_matches_site(self, rule, event):
+    def event_rule_matches_site(self, rule: Dict[str, Any], event: Event) -> bool:
         return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
 
-    def event_rule_matches_host(self, rule, event):
+    def event_rule_matches_host(self, rule: Dict[str, Any], event: Event) -> bool:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             if self._debug_rules:
                 self._logger.info("  did not match because of wrong host '%s' (need '%s')" %
@@ -2290,7 +2283,7 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_matches_ip(self, rule, event):
+    def event_rule_matches_ip(self, rule: Dict[str, Any], event: Event) -> bool:
         if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             if self._debug_rules:
                 self._logger.info(
@@ -2299,14 +2292,14 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_matches_facility(self, rule, event):
+    def event_rule_matches_facility(self, rule: Dict[str, Any], event: Event) -> bool:
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
             if self._debug_rules:
                 self._logger.info("  did not match because of wrong syslog facility")
             return False
         return True
 
-    def event_rule_matches_service_level(self, rule, event):
+    def event_rule_matches_service_level(self, rule: Dict[str, Any], event: Event) -> bool:
         if "match_sl" in rule:
             sl_from, sl_to = rule["match_sl"]
             if sl_from > sl_to:
@@ -2320,7 +2313,7 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_matches_timeperiod(self, rule, event):
+    def event_rule_matches_timeperiod(self, rule: Dict[str, Any], event: Event) -> bool:
         if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info("  did not match, because timeperiod %s is not active" %
@@ -2328,7 +2321,9 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_determine_match_groups(self, rule, event, match_groups):
+    def event_rule_determine_match_groups(
+            self, rule: Dict[str, Any], event: Event,
+            match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
@@ -2338,7 +2333,9 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_matches_syslog_application(self, rule, event, match_groups):
+    def event_rule_matches_syslog_application(
+            self, rule: Dict[str, Any], event: Event,
+            match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
         if "match_application" not in rule and "cancel_application" not in rule:
             return True
 
@@ -2362,7 +2359,8 @@ class RuleMatcher:
 
         return True
 
-    def event_rule_matches_message(self, rule, event, match_groups):
+    def event_rule_matches_message(self, rule: Dict[str, Any], event: Event,
+                                   match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
         # Message matching, this condition is always active
         match_groups["match_groups_message"] = match(rule.get("match"),
                                                      event["text"],
@@ -2714,7 +2712,7 @@ class StatusServer(ECServerThread):
         self.close_tcp_socket()
         self.open_tcp_socket()
 
-    def reload_configuration(self, config):
+    def reload_configuration(self, config: Dict[str, Any]) -> None:
         self._config = config
         self._reopen_sockets = True
 
@@ -2780,7 +2778,7 @@ class StatusServer(ECServerThread):
             client_socket = None  # close without danger of exception
 
     def handle_client(self, client_socket: socket.socket, allow_commands: bool,
-                      client_ip: str) -> Any:
+                      client_ip: str) -> None:
         for query in Queries(self, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
@@ -3662,7 +3660,7 @@ def replication_update_state(settings: Settings, config: Dict[str, Any], event_s
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
         save_master_config(settings, new_state)
-        event_server.compile_rules(new_state["rules"], new_state.get("rule_packs", []))
+        event_server.compile_rules(new_state.get("rule_packs", []))
         config["actions"] = new_state["actions"]
 
     # Update to the masters' event state
@@ -3887,7 +3885,7 @@ def main() -> None:
                                      event_status, event_server, terminate_main_event)
 
         event_status.load_status(event_server)
-        event_server.compile_rules(config["rules"], config["rule_packs"])
+        event_server.compile_rules(config["rule_packs"])
 
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)

@@ -1065,16 +1065,13 @@ class FilterHostsHavingServiceProblems(Filter):
         html.end_checkbox_group()
 
     def filter(self, infoname):
-        headers = []
-        for var in ["warn", "crit", "pending", "unknown"]:
-            if html.get_checkbox("hosts_having_services_%s" % var) is True:
-                headers.append("Filter: host_num_services_%s > 0\n" % var)
+        conditions = [
+            "host_num_services_%s > 0" % var
+            for var in ["warn", "crit", "pending", "unknown"]
+            if html.get_checkbox("hosts_having_services_%s" % var) is True
+        ]
 
-        len_headers = len(headers)
-        if len_headers > 0:
-            headers.append("Or: %d\n" % len_headers)
-            return "".join(headers)
-        return ""
+        return lq_logic("Filter:", conditions, "Or")
 
 
 class FilterStateType(FilterTristate):
@@ -2557,10 +2554,7 @@ class FilterAggrHosts(Filter):
         return request.var(self.htmlvars[1])
 
     def find_host(self, host, hostlist):
-        for _s, h in hostlist:
-            if h == host:
-                return True
-        return False
+        return any((h == host for _s, h in hostlist))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {

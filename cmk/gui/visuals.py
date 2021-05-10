@@ -1319,13 +1319,12 @@ def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -
 
     The context vars set in single context are enforced (can not be overwritten by URL). The normal
     filter vars in "multiple" context are not enforced."""
-    uri_vars = dict(get_context_uri_vars(context, single_infos))
     single_info_keys = get_single_info_keys(single_infos)
 
     for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
-            request.set_var(filter_name, "%s" % uri_vars[filter_name])
+            request.set_var(filter_name, str(filter_vars))
             continue
 
         if not isinstance(filter_vars, dict):
@@ -1337,8 +1336,8 @@ def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -
         if any(request.has_var(uri_varname) for uri_varname in filter_vars):
             continue
 
-        for uri_varname in filter_vars.keys():
-            request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
+        for uri_varname, value in filter_vars.items():
+            request.set_var(uri_varname, str(value))
 
 
 def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
@@ -1349,7 +1348,7 @@ def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> H
     for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
-            uri_vars.append((filter_name, "%s" % context[filter_name]))
+            uri_vars.append((filter_name, str(filter_vars)))
 
         if not isinstance(filter_vars, dict):
             continue  # Skip invalid filter values
@@ -1911,17 +1910,14 @@ def _add_context_title(context: VisualContext, single_infos: List[str], title: s
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 def info_params(info_key: InfoName) -> List[FilterName]:
-    single_spec = visual_info_registry[info_key]().single_spec
-    if single_spec is None:
-        return []
-    return list(dict(single_spec).keys())
+    return [key for key, _vs in visual_info_registry[info_key]().single_spec]
 
 
 def get_single_info_keys(single_infos: SingleInfos) -> List[FilterName]:
-    keys: List[FilterName] = []
+    keys: Set[FilterName] = set()
     for info_key in single_infos:
-        keys.extend(info_params(info_key))
-    return list(set(keys))
+        keys.update(info_params(info_key))
+    return list(keys)
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:

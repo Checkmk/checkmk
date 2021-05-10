@@ -2105,7 +2105,7 @@ class ListOfMultiple(ValueSpec):
 
     def from_html_vars(self, varprefix: str) -> Dict[str, Any]:
         value: Dict[str, Any] = {}
-        active = request.get_str_input_mandatory('%s_active' % varprefix).strip()
+        active = request.get_str_input_mandatory('%s_active' % varprefix, "").strip()
         if not active:
             return value
 
@@ -2565,7 +2565,6 @@ class AjaxDropdownChoice(DropdownChoice):
                       class_=["ajax-vals", self.ident],
                       read_only=self._read_only,
                       data_strict=self._strict)
-        #**{"data-strict":self._strict})
 
     @classmethod
     @abc.abstractmethod

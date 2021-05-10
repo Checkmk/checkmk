@@ -347,9 +347,7 @@ class FilterTristate(Filter):
         current = self.tristate_value()
         if current == -1:  # ignore
             return ""
-        if current == 1:
-            return self.filter_code(infoname, True)
-        return self.filter_code(infoname, False)
+        return self.filter_code(infoname, current == 1)
 
     def filter_code(self, infoname, positive):
         raise NotImplementedError()

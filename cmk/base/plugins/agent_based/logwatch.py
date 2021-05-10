@@ -59,7 +59,7 @@ ClusterSection = Dict[Optional[str], logwatch.Section]
 GroupingPattern = Tuple[str, str]
 DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
 
-LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
+_LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 LOGWATCH_SERVICE_OUTPUT = "default"
 
 
@@ -179,8 +179,13 @@ def check_logwatch(
         if _is_cache_new(last_run, node):
             loglines.extend(item_data['lines'])
 
-    found = item in logwatch.discoverable_items(*section.values())
-    yield from check_logwatch_generic(item, _compile_params(), loglines, found)
+    yield from check_logwatch_generic(
+        item=item,
+        patterns=_compile_params(),
+        loglines=loglines,
+        found=item in logwatch.discoverable_items(*section.values()),
+        max_filesize=_LOGWATCH_MAX_FILESIZE,
+    )
 
 
 register.check_plugin(
@@ -191,6 +196,10 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
     check_function=check_logwatch_node,
+    # watch out when implementing a check_ruleset:
+    # There *are* already check parameters, they're just bypassing the official API.
+    # Make sure to give the check ruleset a general name, so we can (maybe, someday)
+    # incorporate those.
     cluster_check_function=check_logwatch,
 )
 
@@ -303,7 +312,13 @@ def check_logwatch_groups(
                     loglines.extend(item_data['lines'])
                 break
 
-    yield from check_logwatch_generic(item, _compile_params(), loglines, True)
+    yield from check_logwatch_generic(
+        item=item,
+        patterns=_compile_params(),
+        loglines=loglines,
+        found=True,
+        max_filesize=_LOGWATCH_MAX_FILESIZE,
+    )
 
 
 register.check_plugin(
@@ -407,7 +422,14 @@ class LogwatchBlockCollector:
         return "%s messages" % ', '.join(count_txt)
 
 
-def check_logwatch_generic(item, patterns, loglines, found) -> CheckResult:
+def check_logwatch_generic(
+    *,
+    item: str,
+    patterns,
+    loglines,
+    found: bool,
+    max_filesize: int,
+) -> CheckResult:
     logmsg_dir = pathlib.Path(cmk.utils.paths.var_dir, 'logwatch', host_name())
 
     logmsg_dir.mkdir(parents=True, exist_ok=True)
@@ -447,13 +469,13 @@ def check_logwatch_generic(item, patterns, loglines, found) -> CheckResult:
             skip_reclassification = False
 
         logfile_size = logmsg_file_path.stat().st_size
-        if skip_reclassification and logfile_size > LOGWATCH_MAX_FILESIZE:
+        if skip_reclassification and logfile_size > max_filesize:
             # early out: without reclassification the file wont shrink and if it is already at
             # the maximum size, all input is dropped anyway
-            if logfile_size > LOGWATCH_MAX_FILESIZE * 2:
+            if logfile_size > max_filesize * 2:
                 # if the file is far too large, truncate it
-                truncate_by_line(logmsg_file_path, LOGWATCH_MAX_FILESIZE)
-            yield _dropped_msg_result(LOGWATCH_MAX_FILESIZE)
+                truncate_by_line(logmsg_file_path, max_filesize)
+            yield _dropped_msg_result(max_filesize)
             return
 
         for line in logmsg_file_handle:
@@ -489,13 +511,13 @@ def check_logwatch_generic(item, patterns, loglines, found) -> CheckResult:
     header = six.ensure_str(header)
 
     # process new input lines - but only when there is some room left in the file
-    if output_size < LOGWATCH_MAX_FILESIZE:
+    if output_size < max_filesize:
         current_block = LogwatchBlock(header, patterns)
         for line in loglines:
             current_block.add_line(line, False)
             net_lines += 1
             output_size += len(line.encode('utf-8'))
-            if output_size >= LOGWATCH_MAX_FILESIZE:
+            if output_size >= max_filesize:
                 break
         block_collector(current_block)
 
@@ -513,8 +535,8 @@ def check_logwatch_generic(item, patterns, loglines, found) -> CheckResult:
         logmsg_file_path.unlink()
 
     # if logfile has reached maximum size, abort with critical state
-    if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > LOGWATCH_MAX_FILESIZE:
-        yield _dropped_msg_result(LOGWATCH_MAX_FILESIZE)
+    if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > max_filesize:
+        yield _dropped_msg_result(max_filesize)
         return
 
     #

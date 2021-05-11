@@ -281,8 +281,12 @@ def drain_pipe(pipe):
             break  # No data available
 
 
-def match(pattern: Union[None, str, Pattern[str]], text: str,
-          complete: bool) -> Union[bool, Sequence[str]]:
+TextPattern = Union[None, str, Pattern[str]]
+TextMatchResult = Union[bool, Sequence[str]]
+MatchGroups = Dict[str, TextMatchResult]
+
+
+def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
@@ -296,7 +300,7 @@ def match(pattern: Union[None, str, Pattern[str]], text: str,
     return m.groups('') if m else False
 
 
-def format_pattern(pattern: Union[None, str, Pattern[str]]) -> str:
+def format_pattern(pattern: TextPattern) -> str:
     if pattern is None:
         return str(pattern)
     if isinstance(pattern, str):
@@ -1314,7 +1318,7 @@ class EventServer(ECServerThread):
                     self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
 
     @staticmethod
-    def _compile_matching_value(key: str, val: str) -> Union[None, str, Pattern[str]]:
+    def _compile_matching_value(key: str, val: str) -> TextPattern:
         value = val.strip()
         # Remove leading .* from regex. This is redundant and
         # dramatically destroys performance when doing an infix search.
@@ -2208,7 +2212,7 @@ class RuleMatcher:
             return MatchFailure()
 
         # Determine and cleanup match_groups
-        match_groups: Dict[str, Union[bool, Sequence[str]]] = {}
+        match_groups: MatchGroups = {}
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
             return MatchFailure()
@@ -2349,9 +2353,8 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_determine_match_groups(
-            self, rule: Dict[str, Any], event: Event,
-            match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
+    def event_rule_determine_match_groups(self, rule: Dict[str, Any], event: Event,
+                                          match_groups: MatchGroups) -> bool:
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
@@ -2361,9 +2364,8 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_matches_syslog_application(
-            self, rule: Dict[str, Any], event: Event,
-            match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
+    def event_rule_matches_syslog_application(self, rule: Dict[str, Any], event: Event,
+                                              match_groups: MatchGroups) -> bool:
         if "match_application" not in rule and "cancel_application" not in rule:
             return True
 
@@ -2388,7 +2390,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_message(self, rule: Dict[str, Any], event: Event,
-                                   match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
+                                   match_groups: MatchGroups) -> bool:
         # Message matching, this condition is always active
         match_groups["match_groups_message"] = match(rule.get("match"),
                                                      event["text"],

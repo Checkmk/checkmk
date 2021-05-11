@@ -29,7 +29,24 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, NamedTuple, Optional, Pattern, Protocol, Tuple, Type, Union
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Pattern,
+    Protocol,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 import dateutil.parser
 import dateutil.tz
@@ -264,29 +281,27 @@ def drain_pipe(pipe):
             break  # No data available
 
 
-def match(pattern: Optional[str], text: str, complete: bool = True) -> Union[bool, Tuple[str, ...]]:
+def match(pattern: Union[None, str, Pattern[str]], text: str,
+          complete: bool) -> Union[bool, Sequence[str]]:
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
     In case no match group is produced, it returns an empty tuple."""
     if pattern is None:
         return ()
-
     if isinstance(pattern, str):
-        if complete:
-            return () if pattern == text.lower() else False
-        return () if pattern in text.lower() else False
-
-    # Assume compiled regex
+        found = pattern == text.lower() if complete else pattern in text.lower()
+        return () if found else False
     m = pattern.search(text)
-    return bool(m) and tuple('' if g is None else g for g in m.groups())
+    return m.groups('') if m else False
 
 
-def format_pattern(pat):
-    try:
-        return pat.pattern
-    except Exception:
-        return pat
+def format_pattern(pattern: Union[None, str, Pattern[str]]) -> str:
+    if pattern is None:
+        return str(pattern)
+    if isinstance(pattern, str):
+        return pattern
+    return pattern.pattern
 
 
 # Sorry: this code is dupliated in web/plugins/wato/mkeventd.py
@@ -1299,7 +1314,7 @@ class EventServer(ECServerThread):
                     self._logger.info(" %-12s: %s" % (SyslogFacility(facility), " ".join(stats)))
 
     @staticmethod
-    def _compile_matching_value(key: str, val: str) -> Union[None, str, Pattern]:
+    def _compile_matching_value(key: str, val: str) -> Union[None, str, Pattern[str]]:
         value = val.strip()
         # Remove leading .* from regex. This is redundant and
         # dramatically destroys performance when doing an infix search.
@@ -2193,7 +2208,7 @@ class RuleMatcher:
             return MatchFailure()
 
         # Determine and cleanup match_groups
-        match_groups: Dict[str, Union[bool, Tuple[str, ...]]] = {}
+        match_groups: Dict[str, Union[bool, Sequence[str]]] = {}
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
             return MatchFailure()
@@ -2336,7 +2351,7 @@ class RuleMatcher:
 
     def event_rule_determine_match_groups(
             self, rule: Dict[str, Any], event: Event,
-            match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
+            match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
@@ -2348,7 +2363,7 @@ class RuleMatcher:
 
     def event_rule_matches_syslog_application(
             self, rule: Dict[str, Any], event: Event,
-            match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
+            match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
         if "match_application" not in rule and "cancel_application" not in rule:
             return True
 
@@ -2373,7 +2388,7 @@ class RuleMatcher:
         return True
 
     def event_rule_matches_message(self, rule: Dict[str, Any], event: Event,
-                                   match_groups: Dict[str, Union[bool, Tuple[str, ...]]]) -> bool:
+                                   match_groups: Dict[str, Union[bool, Sequence[str]]]) -> bool:
         # Message matching, this condition is always active
         match_groups["match_groups_message"] = match(rule.get("match"),
                                                      event["text"],

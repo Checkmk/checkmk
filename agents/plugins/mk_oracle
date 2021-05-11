@@ -2694,7 +2694,7 @@ mk_ora_sqlplus () {
 
         if $MK_ORA_DEBUG_CONNECT; then
             echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
-            echo -e "    Error Message:          ${output:0:100}"
+            echo -e "    Error Message:          ${output:0:100}" >&2
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"

@@ -1,0 +1,15 @@
+Title: mk_oracle: errors are not written to cache file
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620726326
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+The agent plugin mk_oracle does not create a cache file any more in case of error.
+In previous versions the content of the cache file could contain an error message like:
+"Error Message:          ABC|FAILURE|ERROR:ORA-01017: invalid username/password;..."
+You have to redeploy the agent plugin in order to apply this bugfix.
+

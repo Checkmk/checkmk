@@ -17,6 +17,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
 from .actions import quote_shell_string
+from .event import Event
 from .query import QueryGET
 from .settings import Settings
 
@@ -51,7 +52,7 @@ class History:
         else:
             _flush_files(self)
 
-    def add(self, event: Dict[str, Any], what: str, who: str = "", addinfo: str = "") -> None:
+    def add(self, event: Event, what: str, who: str = "", addinfo: str = "") -> None:
         if self._config['archive_mode'] == 'mongodb':
             _add_mongodb(self, event, what, who, addinfo)
         else:
@@ -179,8 +180,7 @@ def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
     return ret['seq']
 
 
-def _add_mongodb(history: History, event: Dict[str, Any], what: str, who: str,
-                 addinfo: str) -> None:
+def _add_mongodb(history: History, event: Event, what: str, who: str, addinfo: str) -> None:
     _log_event(history._config, history._logger, event, what, who, addinfo)
     if not history._mongodb.connection:
         _connect_mongodb(history._settings, history._mongodb)
@@ -200,7 +200,7 @@ def _add_mongodb(history: History, event: Dict[str, Any], what: str, who: str,
     })
 
 
-def _log_event(config: Dict[str, Any], logger: Logger, event: Dict[str, Any], what: str, who: str,
+def _log_event(config: Dict[str, Any], logger: Logger, event: Event, what: str, who: str,
                addinfo: str) -> None:
     if config['debug_rules']:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
@@ -309,7 +309,7 @@ def _housekeeping_files(history: History) -> None:
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _add_files(history: History, event: Dict[str, Any], what: str, who: str, addinfo: str) -> None:
+def _add_files(history: History, event: Event, what: str, who: str, addinfo: str) -> None:
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
         columns = [

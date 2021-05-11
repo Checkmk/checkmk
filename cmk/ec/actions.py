@@ -8,7 +8,7 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, cast, Dict, List, Iterable, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -16,6 +16,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ContactgroupName
 
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
+from .event import Event
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -35,7 +36,7 @@ from .settings import Settings
 
 def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
-                     rule: Dict[str, Any], event: Dict[str, Any]) -> None:
+                     rule: Dict[str, Any], event: Event) -> None:
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -62,7 +63,7 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
 # opened or cancelled.
 def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
-                     actions: Any, event: Dict[str, Any], is_cancelling: bool) -> None:
+                     actions: Any, event: Event, is_cancelling: bool) -> None:
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(host_config, logger, event, is_cancelling=is_cancelling)
@@ -82,7 +83,7 @@ def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], l
 
 
 def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                    event_columns: Iterable[Tuple[str, Any]], action: Any, event: Dict[str, Any],
+                    event_columns: Iterable[Tuple[str, Any]], action: Any, event: Event,
                     user: Any) -> None:
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
@@ -120,7 +121,8 @@ def _escape_null_bytes(s: str) -> str:
     return s.replace("\000", "\\000")
 
 
-def _get_quoted_event(event: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
+# TODO: Fix the typing and remove the cast!
+def _get_quoted_event(event: Event, logger: Logger) -> Event:
     new_event: Dict[str, Any] = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
     for key, value in event.items():
@@ -128,24 +130,25 @@ def _get_quoted_event(event: Dict[str, Any], logger: Logger) -> Dict[str, Any]:
             new_event[key] = value
         else:
             try:
-                new_value: Any = None
                 if isinstance(value, list):
-                    new_value = list(map(quote_shell_string, value))
+                    new_event[key] = list(map(quote_shell_string, value))
                 elif isinstance(value, tuple):
-                    new_value = value
+                    # TODO: Huh??? Shouldn't we map over the tuple?
+                    new_event[key] = value
+                elif isinstance(value, str):
+                    new_event[key] = quote_shell_string(value)
                 else:
-                    new_value = quote_shell_string(value)
-                new_event[key] = new_value
+                    raise ValueError(f'unquotable field "{key}": {value}')
             except Exception as e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
                 logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
 
-    return new_event
+    return cast(Event, new_event)
 
 
 def _substitute_event_tags(event_columns: Iterable[Tuple[str, Any]], text: str,
-                           event: Dict[str, Any]) -> str:
+                           event: Event) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)
     return text
@@ -189,7 +192,7 @@ def _send_email(config: Dict[str, Any], to: str, subject: str, body: str, logger
     return True
 
 
-def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: str, event: Dict[str, Any],
+def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: str, event: Event,
                     logger: Logger) -> None:
     script_env = os.environ.copy()
     for key, value in _get_event_tags(event_columns, event).items():
@@ -214,9 +217,9 @@ def _execute_script(event_columns: Iterable[Tuple[str, Any]], body: str, event: 
 
 def _get_event_tags(
     event_columns: Iterable[Tuple[str, Any]],
-    event: Dict[str, Any],
+    event: Event,
 ) -> Dict[str, str]:
-    substs = [
+    substs: List[Tuple[str, Any]] = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]
 
@@ -265,7 +268,7 @@ def _get_event_tags(
 # We simulate a *service* notification.
 def do_notify(host_config: HostConfig,
               logger: Logger,
-              event: Dict[str, Any],
+              event: Event,
               username: Optional[bool] = None,
               is_cancelling: bool = False) -> None:
     if not _core_has_notifications_enabled(logger):
@@ -305,17 +308,17 @@ def do_notify(host_config: HostConfig,
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(host_config: HostConfig, event: Dict[str, Any],
-                                 username: Optional[bool], is_cancelling: bool,
-                                 logger: Logger) -> Dict[str, Any]:
+def _create_notification_context(host_config: HostConfig, event: Event, username: Optional[bool],
+                                 is_cancelling: bool, logger: Logger) -> Dict[str, Any]:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
     return context
 
 
-def _base_notification_context(event: Dict[str, Any], username: Optional[bool],
+def _base_notification_context(event: Event, username: Optional[bool],
                                is_cancelling: bool) -> Dict[str, Any]:
+    rule_id = event["rule_id"]
     return {
         "WHAT": "SERVICE",
         "CONTACTNAME": "check-mk-notify",
@@ -335,8 +338,7 @@ def _base_notification_context(event: Dict[str, Any], username: Optional[bool],
         "SERVICEACKAUTHOR": "",
         "SERVICEACKCOMMENT": "",
         "SERVICEATTEMPT": "1",
-        "SERVICECHECKCOMMAND": event["rule_id"] is None and "ec-internal"
-                               or "ec-rule-" + event["rule_id"],
+        "SERVICECHECKCOMMAND": "ec-internal" if rule_id is None else "ec-rule-" + rule_id,
         "SERVICEDESC": event["application"] or "Event Console",
         "SERVICENOTIFICATIONNUMBER": "1",
         "SERVICEOUTPUT": event["text"],
@@ -350,7 +352,7 @@ def _base_notification_context(event: Dict[str, Any], username: Optional[bool],
 
         # Some fields only found in EC notifications
         "EC_ID": str(event["id"]),
-        "EC_RULE_ID": event["rule_id"] or "",
+        "EC_RULE_ID": "" if rule_id is None else rule_id,
         "EC_PRIORITY": str(event["priority"]),
         "EC_FACILITY": str(event["facility"]),
         "EC_PHASE": event["phase"],
@@ -367,7 +369,7 @@ def _base_notification_context(event: Dict[str, Any], username: Optional[bool],
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
 def _add_infos_from_monitoring_host(host_config: HostConfig, context: Dict[str, Any],
-                                    event: Dict[str, Any]) -> None:
+                                    event: Event) -> None:
     def _add_artificial_context_info() -> None:
         context.update({
             "HOSTNAME": event["host"],
@@ -406,16 +408,15 @@ def _add_infos_from_monitoring_host(host_config: HostConfig, context: Dict[str, 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context: Dict[str, Any], event: Dict[str, Any], logger: Logger) -> None:
+def _add_contacts_from_rule(context: Dict[str, Any], event: Event, logger: Logger) -> None:
     # Add contact information from the rule, but only if the
     # host is unknown or if contact groups in rule have precedence
 
-    if event.get("contact_groups") is not None and \
-       event.get("contact_groups_notify") and (
-           "CONTACTS" not in context or
-           event.get("contact_groups_precedence", "host") != "host" or
-           not event['core_host']):
-        _add_contact_information_to_context(context, event["contact_groups"], logger)
+    contact_groups = event.get("contact_groups")
+    if (contact_groups is not None and event.get("contact_groups_notify") and
+        ("CONTACTS" not in context or event.get("contact_groups_precedence", "host") != "host" or
+         not event['core_host'])):
+        _add_contact_information_to_context(context, contact_groups, logger)
 
 
 def _add_contact_information_to_context(context: Dict[str, Any],

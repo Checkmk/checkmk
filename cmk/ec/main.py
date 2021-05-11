@@ -29,7 +29,7 @@ import threading
 import time
 import traceback
 from types import FrameType
-from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Pattern, Protocol, Tuple, Type, Union
+from typing import Any, AnyStr, Callable, Dict, Iterable, Iterator, List, Mapping, NamedTuple, Optional, Pattern, Protocol, Tuple, Type, Union
 
 import dateutil.parser
 import dateutil.tz
@@ -519,6 +519,18 @@ class Perfcounters:
 #   +----------------------------------------------------------------------+
 #   |  Verarbeitung und Klassifizierung von eingehenden Events.            |
 #   '----------------------------------------------------------------------'
+
+
+class MatchFailure:
+    pass
+
+
+class MatchSuccess(NamedTuple):
+    cancelling: bool
+    match_groups: Dict[str, Any]
+
+
+MatchResult = Union[MatchFailure, MatchSuccess]
 
 
 class EventServer(ECServerThread):
@@ -1382,16 +1394,13 @@ class EventServer(ECServerThread):
                 result = self.event_rule_matches(rule, event)
             except Exception as e:
                 self._logger.exception('  Exception during matching:\n%s' % e)
-                result = False
+                result = MatchFailure()
 
-            # TODO: result has a totally braindead typing: It can either return False or
-            # a pair of a bool and match groups. It never ever returns a "naked" True. o_O.
-            if isinstance(result, tuple):
+            if isinstance(result, MatchSuccess):
                 self._perfcounters.count("rule_hits")
-                cancelling, match_groups = result
-
                 if self._config["debug_rules"]:
-                    self._logger.info("  matching groups:\n%s" % pprint.pformat(match_groups))
+                    self._logger.info("  matching groups:\n%s" %
+                                      pprint.pformat(result.match_groups))
 
                 self._event_status.count_rule_match(rule["id"])
                 if self._config["log_rulehits"]:
@@ -1408,9 +1417,9 @@ class EventServer(ECServerThread):
                     self._perfcounters.count("drops")
                     return
 
-                if cancelling:
-                    self._event_status.cancel_events(self, self._event_columns, event, match_groups,
-                                                     rule)
+                if result.cancelling:
+                    self._event_status.cancel_events(self, self._event_columns, event,
+                                                     result.match_groups, rule)
                     return
 
                 # Remember the rule id that this event originated from
@@ -1423,10 +1432,10 @@ class EventServer(ECServerThread):
                 # Store groups from matching this event. In order to make
                 # persistence easier, we do not safe them as list but join
                 # them on ASCII-1.
-                event["match_groups"] = match_groups.get("match_groups_message", ())
-                event["match_groups_syslog_application"] = match_groups.get(
+                event["match_groups"] = result.match_groups.get("match_groups_message", ())
+                event["match_groups_syslog_application"] = result.match_groups.get(
                     "match_groups_syslog_application", ())
-                self.rewrite_event(rule, event, match_groups)
+                self.rewrite_event(rule, event, result.match_groups)
 
                 # Lookup the monitoring core hosts and add the core host
                 # name to the event when one can be matched.
@@ -1529,23 +1538,21 @@ class EventServer(ECServerThread):
     # normal match and True for a cancelling match and the groups is a tuple
     # if matched regex groups in either text (normal) or match_ok (cancelling)
     # match.
-    def event_rule_matches(self, rule: Dict[str, Any],
-                           event: Event) -> Union[bool, Tuple[bool, Dict[str, Any]]]:
+    def event_rule_matches(self, rule: Dict[str, Any], event: Event) -> MatchResult:
         self._perfcounters.count("rule_tries")
         with self._lock_configuration:
             result = self._rule_matcher.event_rule_matches_non_inverted(rule, event)
             if rule.get("invert_matching"):
-                if result is False:
-                    result = False, {}
+                if isinstance(result, MatchFailure):
+                    result = MatchSuccess(cancelling=False, match_groups={})
                     if self._config["debug_rules"]:
                         self._logger.info(
                             "  Rule would not match, but due to inverted matching does.")
                 else:
-                    result = False
+                    result = MatchFailure()
                     if self._config["debug_rules"]:
                         self._logger.info(
                             "  Rule would match, but due to inverted matching does not.")
-
             return result
 
     # Rewrite texts and compute other fields in the event
@@ -2168,8 +2175,7 @@ class RuleMatcher:
     def _debug_rules(self) -> bool:
         return self._config["debug_rules"]
 
-    def event_rule_matches_non_inverted(self, rule: Dict[str, Any],
-                                        event: Event) -> Union[bool, Tuple[bool, Dict[str, Any]]]:
+    def event_rule_matches_non_inverted(self, rule: Dict[str, Any], event: Event) -> MatchResult:
         if self._debug_rules:
             self._logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
             self._logger.info("  Text:   %s" % event["text"])
@@ -2178,25 +2184,24 @@ class RuleMatcher:
 
         # Generic conditions without positive/canceling matches
         if not self.event_rule_matches_generic(rule, event):
-            return False
+            return MatchFailure()
 
         # Determine syslog priority
         match_priority: Dict[str, bool] = {}
         if not self.event_rule_determine_match_priority(rule, event, match_priority):
             # Abort on negative outcome, neither positive nor negative
-            return False
+            return MatchFailure()
 
         # Determine and cleanup match_groups
         match_groups: Dict[str, Union[bool, Tuple[str, ...]]] = {}
         if not self.event_rule_determine_match_groups(rule, event, match_groups):
             # Abort on negative outcome, neither positive nor negative
-            return False
+            return MatchFailure()
 
         return self._check_match_outcome(rule, match_groups, match_priority)
 
-    def _check_match_outcome(
-            self, rule: Dict[str, Any], match_groups: Dict[str, Any],
-            match_priority: Dict[str, Any]) -> Union[bool, Tuple[bool, Dict[str, Any]]]:
+    def _check_match_outcome(self, rule: Dict[str, Any], match_groups: Dict[str, Any],
+                             match_priority: Dict[str, Any]) -> MatchResult:
         """Decide or not a event is created, canceled or nothing is done"""
 
         # Check canceling-event
@@ -2209,7 +2214,7 @@ class RuleMatcher:
                ("cancel_priority" not in rule or match_priority["has_canceling_match"] is True):
                 if self._debug_rules:
                     self._logger.info("  found canceling event")
-                return True, match_groups
+                return MatchSuccess(cancelling=True, match_groups=match_groups)
 
         # Check create-event
         if (match_groups["match_groups_message"] is not False and
@@ -2217,7 +2222,7 @@ class RuleMatcher:
                                  ()) is not False and match_priority["has_match"] is True):
             if self._debug_rules:
                 self._logger.info("  found new event")
-            return False, match_groups
+            return MatchSuccess(cancelling=False, match_groups=match_groups)
 
         # Looks like there was no match, output some additonal info
         # Reasons preventing create-event
@@ -2241,7 +2246,7 @@ class RuleMatcher:
                 if "cancel_priority" in rule and match_priority["has_canceling_match"] is False:
                     self._logger.info("  did not cancel event, because of wrong cancel priority")
 
-        return False
+        return MatchFailure()
 
     def event_rule_matches_generic(self, rule: Dict[str, Any], event: Event) -> bool:
         generic_match_functions = [

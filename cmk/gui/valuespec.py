@@ -5542,29 +5542,19 @@ class UploadOrPasteTextFile(Alternative):
         return value
 
 
-class ABCTextOrRegExp(Alternative, metaclass=abc.ABCMeta):
-    #@classmethod
-    @abc.abstractmethod
-    def _text_valuespec_class(self) -> Type[ValueSpec]:
-        raise NotImplementedError()
-
-    #@classmethod
-    @abc.abstractmethod
-    def _regex_valuespec_class(self) -> Type[ValueSpec]:
-        raise NotImplementedError()
-
+class TextOrRegExp(Alternative):
     def __init__(self, **kwargs):
         allow_empty = kwargs.pop("allow_empty", True)
 
         if "text_valuespec" in kwargs:
             vs_text = kwargs.pop("text_valuespec")
         else:
-            vs_text = self._text_valuespec_class()(
+            vs_text = TextAscii(
                 title=_("Explicit match"),
                 allow_empty=allow_empty,
             )
 
-        vs_regex = self._regex_valuespec_class()(
+        vs_regex = RegExp(
             mode=RegExp.prefix,
             title=_("Regular expression match"),
             allow_empty=allow_empty,
@@ -5585,26 +5575,6 @@ class ABCTextOrRegExp(Alternative, metaclass=abc.ABCMeta):
         })
 
         super().__init__(**kwargs)
-
-
-class TextOrRegExp(ABCTextOrRegExp):
-    @classmethod
-    def _text_valuespec_class(cls):
-        return TextAscii
-
-    @classmethod
-    def _regex_valuespec_class(cls):
-        return RegExp
-
-
-class TextOrRegExpUnicode(ABCTextOrRegExp):
-    @classmethod
-    def _text_valuespec_class(cls):
-        return TextAscii
-
-    @classmethod
-    def _regex_valuespec_class(cls):
-        return RegExp
 
 
 class Labels(ValueSpec):

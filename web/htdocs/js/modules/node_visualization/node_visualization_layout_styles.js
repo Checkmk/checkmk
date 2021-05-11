@@ -985,10 +985,11 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                     let rad = (node.data.use_style.style_config.options.rotation / 180) * Math.PI;
                     let bounding_rect = {height: 10, width: 10};
                     if (node.data.use_style._no_rotation_vertices)
-                        bounding_rect = node_visualization_utils.get_bounding_rect_of_rotated_vertices(
-                            node.data.use_style._no_rotation_vertices,
-                            rad
-                        );
+                        bounding_rect =
+                            node_visualization_utils.get_bounding_rect_of_rotated_vertices(
+                                node.data.use_style._no_rotation_vertices,
+                                rad
+                            );
                     return [bounding_rect.height * 1.1 + 100, bounding_rect.width * 1.1 + 100];
                 }
 

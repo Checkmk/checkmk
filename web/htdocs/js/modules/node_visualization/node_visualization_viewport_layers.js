@@ -1048,9 +1048,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             d3.select(this).datum(node_data);
         });
         // TODO: provide a function within the link instance to update its data
-        this.link_instances[
-            [link_data.source.data.id, link_data.target.data.id]
-        ].link_data = link_data;
+        this.link_instances[[link_data.source.data.id, link_data.target.data.id]].link_data =
+            link_data;
     }
 
     _remove_link(link_data) {

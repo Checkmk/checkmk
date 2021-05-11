@@ -104,7 +104,8 @@ export class TopologyVisualization extends NodeVisualization {
     update_browser_url() {
         let current_url = new URL(window.location);
 
-        this._topology_settings.overlays_config = this.viewport.current_viewport.get_overlay_configs();
+        this._topology_settings.overlays_config =
+            this.viewport.current_viewport.get_overlay_configs();
         current_url.searchParams.set("topology_settings", JSON.stringify(this._topology_settings));
         window.history.replaceState({}, "", current_url.toString());
     }
@@ -257,7 +258,8 @@ export class TopologyVisualization extends NodeVisualization {
     update_data() {
         if (this._throttle_update()) return;
 
-        this._topology_settings.overlays_config = this.viewport.current_viewport.get_overlay_configs();
+        this._topology_settings.overlays_config =
+            this.viewport.current_viewport.get_overlay_configs();
         this._topology_settings.growth_root_nodes = [];
         this._topology_settings.growth_forbidden_nodes = [];
         this._topology_settings.growth_continue_nodes = [];

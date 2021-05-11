@@ -1211,9 +1211,8 @@ class LayoutingMouseEventsOverlay {
         if (!dragged_node_datum) return;
 
         if (dragged_node_datum.data.use_style) {
-            let new_position = this.layout_manager.get_viewport_percentage_of_node(
-                dragged_node_datum
-            );
+            let new_position =
+                this.layout_manager.get_viewport_percentage_of_node(dragged_node_datum);
             node_visualization_utils.log(7, "dragended: new position", new_position);
             dragged_node_datum.data.use_style.style_config.position = new_position;
             dragged_node_datum.data.use_style.force_style_translation();

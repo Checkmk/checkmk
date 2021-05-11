@@ -309,7 +309,7 @@ def format_pattern(pattern: TextPattern) -> str:
 
 
 # Sorry: this code is dupliated in web/plugins/wato/mkeventd.py
-def match_ipv4_network(pattern, ipaddress_text):
+def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
     network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
     if network_bits == 0:
         return True  # event if ipaddress is empty
@@ -332,12 +332,12 @@ def match_ipv4_network(pattern, ipaddress_text):
     return (network & bitmask) == (ipaddress & bitmask)
 
 
-def parse_ipv4_address(text):
+def parse_ipv4_address(text: str) -> int:
     parts = list(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 
-def parse_ipv4_network(text):
+def parse_ipv4_network(text: str) -> Tuple[int, int]:
     if "/" not in text:
         return parse_ipv4_address(text), 32
 
@@ -345,7 +345,7 @@ def parse_ipv4_network(text):
     return parse_ipv4_address(network_text), int(bits_text)
 
 
-def replace_groups(text, origtext, match_groups):
+def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
     # replace \0 with text itself. This allows to add information
     # in front or and the end of a message
     text = text.replace("\\0", origtext)
@@ -428,7 +428,7 @@ class TimePeriods:
 #   '----------------------------------------------------------------------'
 
 
-def lerp(a, b, t):
+def lerp(a: float, b: float, t: float) -> float:
     """Linear interpolation between a and b with weight t"""
     return (1 - t) * a + t * b
 

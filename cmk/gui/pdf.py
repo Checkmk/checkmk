@@ -24,6 +24,7 @@ from reportlab.lib.utils import ImageReader  # type: ignore[import]
 from reportlab.pdfgen import canvas  # type: ignore[import]
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -1023,6 +1024,11 @@ class TableRenderer:
         row_oddeven = "even"
         for row in rows:
             row_oddeven = "odd" if row_oddeven == "even" else "even"
+
+            if self._paint_graph_row(row, column_widths, y_padding, x_padding, y_spacing, x_spacing,
+                                     headers, hrules, vrules, rule_width, row_shading, row_oddeven):
+                continue
+
             self._paint_row(row,
                             column_widths,
                             y_padding,
@@ -1158,6 +1164,77 @@ class TableRenderer:
             self.pdf._canvas.setStrokeColorRGB(*black)
             self.pdf._canvas.line(left, self.pdf._linepos, left,
                                   self.pdf._linepos - row_height - 2 * y_padding)
+
+    def _paint_graph_row(
+        self,
+        row,
+        column_widths,
+        y_padding,
+        x_padding,
+        y_spacing,
+        x_spacing,
+        headers,
+        hrules,
+        vrules,
+        rule_width,
+        row_shading,
+        row_oddeven,
+    ) -> bool:
+        """Paint special form of graph rows
+
+        Special hack for single dataset views displaying a graph columns which need more than 1 page
+        in total. Even if this may affect also other column types, these are the columns which are
+        most likely to span over multiple pages even in standard situations.
+
+        We explicitly only care about single dataset views (1st column: header, 2nd: data) or the
+        views that show only a single data column with the headers above. However, for a generic
+        solution we should drop the approach of trying to build our own table rendering solution and
+        find something more battle tested.
+        """
+        if cmk_version.is_raw_edition():
+            return False
+
+        # This import hack is needed because this module is part of the raw edition while
+        # the PainterPrinterTimeGraph class is not (also we don't have a base class
+        # available in CRE to use instead).
+        from cmk.gui.cee.plugins.reporting.pnp_graphs import PainterPrinterTimeGraph  # pylint: disable=no-name-in-module
+
+        is_single_dataset = (len(row) == 2 and isinstance(row[0], TitleCell) and
+                             isinstance(row[1], PainterPrinterTimeGraph))
+        is_single_column = (len(row) == 1 and isinstance(row[0], PainterPrinterTimeGraph))
+
+        if not is_single_dataset and not is_single_column:
+            return False
+
+        graph_column = row[-1]
+        assert isinstance(graph_column, PainterPrinterTimeGraph)
+
+        if self.pdf.fits_on_remaining_page(graph_column.height(self) * mm):
+            return False
+
+        if self.pdf.fits_on_empty_page(graph_column.height(self) * mm):
+            return False
+
+        for index, step in enumerate(graph_column.get_render_steps(self.pdf, y_padding)):
+            if is_single_dataset:
+                step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
+            else:
+                step_row = [step]
+
+            self._paint_row(step_row,
+                            column_widths,
+                            y_padding,
+                            x_padding,
+                            y_spacing,
+                            x_spacing,
+                            headers,
+                            hrules,
+                            vrules,
+                            rule_width,
+                            row_shading,
+                            add_headers_after_pagebreak=True,
+                            row_oddeven=row_oddeven)
+        return True
 
 
 # Note: all dimensions this objects handles with are in mm! This is due

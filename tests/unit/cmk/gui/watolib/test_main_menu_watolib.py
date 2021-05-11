@@ -66,9 +66,10 @@ def test_registered_modules():
         expected_modules += [
             'agents',
             'alert_handlers',
-            'mkps',
-            'license_usage',
             'dcd_connections',
+            'influxdb_connections',
+            'license_usage',
+            'mkps',
         ]
 
     if cmk_version.is_managed_edition():

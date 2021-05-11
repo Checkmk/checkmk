@@ -30,6 +30,7 @@ from cmk.gui.plugins.wato import (
     MainModuleTopicEvents,
     MainModuleTopicGeneral,
     MainModuleTopicMaintenance,
+    MainModuleTopicCustom,
 )
 
 
@@ -1424,3 +1425,38 @@ class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def is_show_more(self):
         return False
+
+
+@main_module_registry.register
+class MainModuleInfluxDB(ABCMainModule):
+    @property
+    def mode_or_url(self):
+        return "influxdb_connections"
+
+    @property
+    def topic(self):
+        return MainModuleTopicCustom
+
+    @property
+    def title(self):
+        return _("InfluxDB Connections")
+
+    @property
+    def icon(self):
+        return "influxdb"
+
+    @property
+    def permission(self):
+        return "influxdb_connections"
+
+    @property
+    def description(self):
+        return _("Connect Checkmk with your InfluxDB to send metrics.")
+
+    @property
+    def sort_index(self):
+        return 20
+
+    @property
+    def is_show_more(self):
+        return True

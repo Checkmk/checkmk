@@ -550,6 +550,7 @@ def test_registered_permissions():
             'wato.bake_agents',
             'wato.dcd_connections',
             'wato.download_all_agents',
+            'wato.influxdb_connections',
             'wato.license_usage',
             'wato.submit_license_usage',
             'wato.manage_mkps',

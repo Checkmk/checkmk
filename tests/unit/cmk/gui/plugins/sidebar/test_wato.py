@@ -109,6 +109,7 @@ def expected_items() -> Dict[str, List[str]]:
             'check_plugins',
         ],
         'bi': ['bi_packs'],
+        'custom': ['influxdb_connections'],
         'users': users_items,
     }
 

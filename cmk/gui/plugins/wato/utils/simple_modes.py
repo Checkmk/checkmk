@@ -14,7 +14,12 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type
+from typing import (
+    List,
+    Optional,
+    Type,
+    Union,
+)
 
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
@@ -28,6 +33,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DocumentationURL,
+    DualListChoice,
     FixedValue,
     ID,
     RuleComment,
@@ -68,7 +74,7 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def site_valuespec(self) -> SetupSiteChoice:
+    def site_valuespec(self) -> Union[DualListChoice, SetupSiteChoice]:
         return SetupSiteChoice()
 
     @abc.abstractmethod
@@ -105,6 +111,8 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         the objects of this site are site specific it can be used to decide which sites
         are affected by a change to this object."""
         if self.is_site_specific():
+            if isinstance(entry["site"], list):
+                return entry["site"]
             return [entry["site"]]
         return None
 

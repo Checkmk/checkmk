@@ -18,6 +18,7 @@
 #include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
+#include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
 #include "tools/_tgt.h"          // for IsDebug
@@ -453,5 +454,15 @@ FirewallOpener::~FirewallOpener() {
         cma::fw::RemoveRule(firewall_test_rule_name, argv0_);
     }
 }
+
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path& data) {
+    const auto& the_file =
+        tst::MakePathToUnitTestFiles() / "agent_msi.failed.python.log";
+    fs::create_directories(data / cma::cfg::dirs::kLog);
+    fs::copy_file(the_file, fs::path{cma::cfg::GetLogDir()} /
+                                cma::install::kMsiLogFileName);
+}
+}  // namespace misc
 
 }  // namespace tst

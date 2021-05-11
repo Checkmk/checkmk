@@ -119,6 +119,8 @@ TEST(SectionProviders, SystemTime) {
 
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
+    static constexpr size_t core_lines_ = 18;
+    static constexpr size_t full_lines_ = core_lines_ + 3;
     static constexpr std::string_view names_[] = {
         "Version",          "BuildDate",       "AgentOS",
         "Hostname",         "Architecture",    "WorkingDirectory",
@@ -140,8 +142,18 @@ public:
         };
 
     std::string getContent() { return getEngine().generateContent(); }
-    std::vector<std::string> getResultAsTable() {
+    std::vector<std::string> getFullResultAsTable() {
         return tools::SplitString(getContent(), "\n");
+    }
+    std::vector<std::string> getCoreResultAsTable() {
+        auto result = getFullResultAsTable();
+        if (result.size() == full_lines_ &&
+            result[core_lines_] + "\n" ==
+                section::MakeHeader(section::kCheckMk)) {
+            result.resize(core_lines_);
+        }
+        result.erase(result.begin());
+        return result;
     }
     CheckMk& getEngine() { return check_mk_provider_.getEngine(); }
 
@@ -151,6 +163,22 @@ public:
         }
         return cfg::GetLoadedConfig();
     }
+
+    std::filesystem::path createDataDir() {
+        if (!temp_fs_) {
+            temp_fs_ = std::move(tst::TempCfgFs::Create());
+        }
+        return temp_fs_->data();
+    }
+
+    auto get_val(const std::string& raw) -> std::string {
+        auto tbl = tools::SplitString(raw, ": ");
+        if (tbl.size() == 2) {
+            return tbl[1];
+        }
+
+        return {};
+    };
 
 private:
     srv::SectionProvider<CheckMk> check_mk_provider_;
@@ -165,10 +193,7 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
     auto cfg = getWorkingCfg();
     cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] = YAML::Load("127.0.0.1");
 
-    auto result = getResultAsTable();
-    EXPECT_EQ(result.size(), 18);
-    EXPECT_EQ(result[0] + "\n", section::MakeHeader(section::kCheckMk));
-    result.erase(result.begin());  // kill header
+    auto result = getCoreResultAsTable();
 
     const auto* expected_name = names_;
     for (const auto& r : result) {
@@ -180,31 +205,30 @@ TEST_F(SectionProviderCheckMkFixture, ConstFields) {
 }
 
 TEST_F(SectionProviderCheckMkFixture, AdvancedFields) {
-    auto result = getResultAsTable();
-    auto get_val = [](const std::string& raw) -> std::string {
-        auto tbl = tools::SplitString(raw, ": ");
-        return tbl[1];
-    };
-
-    EXPECT_EQ(get_val(result[1]), CHECK_MK_VERSION);
-    EXPECT_EQ(get_val(result[3]), "windows");
-    EXPECT_EQ(get_val(result[4]), cfg::GetHostName());
-    if constexpr (tgt::Is64bit())
-        EXPECT_EQ(get_val(result[5]), "64bit");
-    else
-        EXPECT_EQ(get_val(result[5]), "32bit");
+    auto result = getCoreResultAsTable();
+    EXPECT_EQ(get_val(result[0]), CHECK_MK_VERSION);
+    EXPECT_EQ(get_val(result[2]), "windows");
+    EXPECT_EQ(get_val(result[3]), cfg::GetHostName());
+    EXPECT_EQ(get_val(result[4]), tgt::Is64bit() ? "64bit" : "32bit");
 }
 
 TEST_F(SectionProviderCheckMkFixture, OnlyFromField) {
     auto cfg = getWorkingCfg();
 
-    const auto offset_to_only_from = getContent().size() - 1;  // remove \n
     for (auto p : only_from_cases_) {
         cfg[cfg::groups::kGlobal][cfg::vars::kOnlyFrom] =
             YAML::Load(std::string{p.first});
-        auto result = getContent().substr(offset_to_only_from);
-        EXPECT_EQ(result, std::string{p.second} + "\n");
+        auto result = getCoreResultAsTable();
+        EXPECT_EQ(get_val(*std::prev(result.end())), std::string{p.second});
     }
+}
+
+TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
+    tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
+
+    auto result = getFullResultAsTable();
+    EXPECT_TRUE(result[full_lines_ - 2].starts_with("FailedPythonPlugins:"));
+    EXPECT_TRUE(result[full_lines_ - 1].starts_with("FailedPythonReason:"));
 }
 
 class SectionProvidersFixture : public ::testing::Test {

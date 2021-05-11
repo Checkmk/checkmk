@@ -127,6 +127,9 @@ bool NeedInstall(const std::filesystem::path& incoming_file,
 bool IsPostInstallRequired();
 void ClearPostInstallFlag();
 
+/// Returns string with error message if the installation failed.
+std::optional<std::wstring> GetLastInstallFailReason();
+
 bool IsMigrationRequired();
 
 }  // namespace install

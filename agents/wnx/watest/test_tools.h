@@ -263,5 +263,10 @@ private:
 
 constexpr inline int TestPort() { return 64531; }
 
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path& data);
+
+}  // namespace misc
+
 }  // namespace tst
 #endif  // test_tools_h__

@@ -8,6 +8,7 @@
 #include <msi.h>
 
 #include <filesystem>
+#include <ranges>
 #include <string>
 
 #include "cfg.h"
@@ -18,6 +19,7 @@
 
 #pragma comment(lib, "msi.lib")
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma::install {
 bool g_use_script_to_install{true};
@@ -576,4 +578,92 @@ bool IsMigrationRequired() {
                                     registry::kMsiMigrationRequired,
                                     registry::kMsiMigrationDefault);
 }
+
+namespace {
+std::optional<fs::path> FindMsiLog() {
+    auto msi_log_file = fs::path{cfg::GetLogDir()} / kMsiLogFileName;
+    std::error_code ec;
+    if (!fs::exists(msi_log_file, ec)) {
+        return {};
+    }
+
+    return {msi_log_file};
+}
+
+/// \brief reads the file which must be encoded as LE BOM<summary>
+std::wstring ReadLeBom(const fs::path& file) {
+    constexpr size_t max_log_size{8192 * 1024};
+    try {
+        std::ifstream f1(file, std::ifstream::binary | std::ifstream::ate);
+
+        auto size = static_cast<size_t>(f1.tellg());
+        if (size > max_log_size) {
+            return {};
+        }
+        f1.seekg(0, std::ifstream::beg);
+        constexpr std::array<unsigned char, 2> le_bom_marker{'\xFF', '\xFE'};
+        std::array<unsigned char, 2> buf;
+        f1.read(reinterpret_cast<char*>(buf.data()), buf.size());
+        if (buf != le_bom_marker) {
+            XLOG::l(
+                "Expected LE BOM file {}, but at the start we have '{:X} {:X}'",
+                file, static_cast<unsigned int>(buf[0]),
+                static_cast<unsigned int>(buf[1]));
+            return {};
+        }
+        std::wstring ret;
+        ret.resize(size - 2);
+        f1.read(reinterpret_cast<char*>(ret.data()), size - 2);
+        return ret;
+
+    } catch (const std::exception& e) {
+        XLOG::l("Error during attempt to read LE BOM file {}", e.what());
+    }
+    return {};
+}
+
+std::vector<std::wstring> FindStringsByMarker(const std::wstring& content,
+                                              const std::wstring& marker) {
+    std::vector<std::wstring> strings;
+    size_t cur_offset = 0;
+    while (true) {
+        auto offset = content.find(marker, cur_offset);
+        if (offset == std::wstring::npos) {
+            break;
+        }
+        auto end = content.find(L"\r\n", offset);
+        if (end == std::wstring::npos) {
+            strings.emplace_back(content.substr(offset));
+        } else if (offset != end) {
+            strings.emplace_back(content.substr(offset, end - offset));
+        }
+        cur_offset = offset + 1;
+    }
+
+    return strings;
+}
+
+std::wstring ExpectedMarker() {
+    static const auto product_marker =
+        fmt::format(L"Product: {}", kAgentProductName);
+    return product_marker;
+}
+
+}  // namespace
+
+std::optional<std::wstring> GetLastInstallFailReason() {
+    auto msi_log = FindMsiLog();
+    if (!msi_log) {
+        return {};
+    }
+    auto content = ReadLeBom(*msi_log);
+    auto product_strings = FindStringsByMarker(content, ExpectedMarker());
+    if (rs::any_of(product_strings, [](const std::wstring& value) -> bool {
+            return value.find(L"Installation failed") != std::wstring::npos;
+        })) {
+        return {product_strings[0]};
+    }
+    return {};
+}
+
 };  // namespace cma::install

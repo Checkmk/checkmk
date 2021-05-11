@@ -255,4 +255,13 @@ TEST(InstallAuto, FindProductMsi) {
     ASSERT_TRUE(fs::exists(*msi));
 }
 
+TEST(InstallAuto, LastInstallFailReason) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    EXPECT_FALSE(GetLastInstallFailReason());
+    tst::misc::CopyFailedPythonLogFileToLog(temp_fs->data());
+    auto result = GetLastInstallFailReason();
+    EXPECT_TRUE(result);
+    EXPECT_NE(result->find(L"This version supports only"), std::wstring::npos);
+}
+
 }  // namespace cma::install

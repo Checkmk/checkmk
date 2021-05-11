@@ -1769,7 +1769,12 @@ TestDateTime StringToTime(const std::string& text) {
     if (table.size() != 3) return tdt;
 
     auto sec_table = cma::tools::SplitString(table[2], ".");
-    if (sec_table.size() != 2) return tdt;
+    if (sec_table.size() != 2) {
+        sec_table = cma::tools::SplitString(table[2], ",");
+    }
+    if (sec_table.size() != 2) {
+        return tdt;
+    }
 
     tdt.hour = std::atoi(table[0].c_str());
     tdt.min = std::atoi(table[1].c_str());

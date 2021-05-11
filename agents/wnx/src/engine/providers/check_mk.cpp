@@ -18,6 +18,7 @@
 #include "cfg.h"
 #include "check_mk.h"
 #include "common/version.h"
+#include "install_api.h"
 #include "onlyfrom.h"
 
 using namespace std::string_literals;
@@ -106,6 +107,14 @@ std::string CheckMk::makeBody() {
     auto out = MakeInfo();
     out += MakeDirs();
     out += "OnlyFrom: "s + makeOnlyFrom() + "\n"s;
+
+    if (install::GetLastInstallFailReason()) {
+        // We deliver fixed strings because it is a prototype solution.
+        out += "<<<check_mk>>>\n";
+        out += "FailedPythonPlugins: cmk_update_agent\n";
+        out +=
+            "FailedPythonReason: The last agent update is failed - OS doesn't support the Python runtime supplied with Windows agent.\n";
+    }
 
     return out;
 }

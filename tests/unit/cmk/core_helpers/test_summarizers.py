@@ -145,6 +145,44 @@ class TestAgentSummarizerDefault_OnlyFrom:
         )
 
 
+class TestAgentSummarizerDefault_Fails:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=None,
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers _check_agent_update
+        return Mode.CHECKING
+
+    def test_update_agent_fail(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["UpdateFailed:", "what"],
+                ["UpdateRecoverAction:", "why"],
+            ],
+            mode=Mode.CHECKING,
+        ) == (1, 'what why')
+
+    def test_update_agent_success(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["UpdateFailed:", "what"],
+            ],
+            mode=mode,
+        ) == (0, '')
+
+
 class TestAgentSummarizerDefault_CheckVersion:
     # TODO(ml): This is incomplete.
     @pytest.fixture

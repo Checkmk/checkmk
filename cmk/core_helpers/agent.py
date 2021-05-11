@@ -685,6 +685,8 @@ class AgentSummarizerDefault(AgentSummarizer):
             for sub_status, sub_output in (r for r in [
                     self._check_version(agent_info.get("version")),
                     self._check_only_from(agent_info.get("onlyfrom")),
+                    self._check_agent_update(agent_info.get("updatefailed"),
+                                             agent_info.get("updaterecoveraction")),
                     self._check_python_plugins(agent_info.get("failedpythonplugins"),
                                                agent_info.get("failedpythonreason")),
             ] if r):
@@ -782,6 +784,16 @@ class AgentSummarizerDefault(AgentSummarizer):
             return None
 
         return 1, f"Failed to execute python plugins: {agent_failed_plugins} ({agent_fail_reason})"
+
+    def _check_agent_update(
+        self,
+        update_fail_reason: Optional[str],
+        on_update_fail_action: Optional[str],
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+        if update_fail_reason is None or on_update_fail_action is None:
+            return None
+
+        return 1, f"{update_fail_reason} {on_update_fail_action}"
 
     @staticmethod
     def _is_expected_agent_version(

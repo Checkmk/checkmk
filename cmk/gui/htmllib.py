@@ -1446,7 +1446,9 @@ class html(ABCHTMLGenerator):
         self.write_html(self.render_help(text))
 
     def render_help(self, text: Union[None, HTML, str]) -> HTML:
-        if isinstance(text, HTML):
+        if isinstance(text, str):
+            text = escaping.escape_text(text)
+        elif isinstance(text, HTML):
             text = "%s" % text
 
         if not text:

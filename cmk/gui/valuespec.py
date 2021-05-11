@@ -274,7 +274,7 @@ class FixedValue(ValueSpec):
         return self._value
 
     def render_input(self, varprefix: str, value: Any) -> None:
-        html.write(self.value_to_text(value))
+        html.write_text(self.value_to_text(value))
 
     def value_to_text(self, value: Any) -> str:
         if self._totext is not None:
@@ -4589,10 +4589,8 @@ class Tuple(ValueSpec):
                 elif self._orientation == "horizontal":
                     html.open_td(class_="tuple_td")
                     if title:
-                        html.open_span(class_=["title"])
-                        html.write(title)
+                        html.span(title, class_=["title"])
 
-                    html.close_span()
                     if self._title_br and title:
                         html.br()
                     else:

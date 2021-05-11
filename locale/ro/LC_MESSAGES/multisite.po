@@ -24316,6 +24316,9 @@ msgstr ""
 msgid "Job duration"
 msgstr "Acțiune"
 
+msgid "Job finished"
+msgstr ""
+
 msgid "Job name"
 msgstr ""
 
@@ -35572,6 +35575,9 @@ msgid "REST API documentation"
 msgstr "Acțiune"
 
 msgid "REST API interactive GUI"
+msgstr ""
+
+msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr ""
 
 msgid "REST Endpoint URL"
@@ -53036,6 +53042,10 @@ msgstr "Parola"
 msgid "User profile"
 msgstr "Ascude regulile de utilizator"
 
+#, fuzzy
+msgid "User profile cleanup"
+msgstr "Ascude regulile de utilizator"
+
 msgid "User profiles can not be edited (WATO is disabled)."
 msgstr ""
 
@@ -54462,6 +54472,16 @@ msgid ""
 "When monitoring the performance of a monitoring site (i.e. its core) then "
 "also settings are being checked, e.g. for manually disabled notifications. "
 "The status of the various situations can be configured here."
+msgstr ""
+
+msgid ""
+"When multiple HTTP clients want to update an object at the same time, it can "
+"happen that the slower client will overwrite changes by the faster one. This "
+"is commonly referred to as the 'lost update problem'. To prevent this "
+"situation from happening, Checkmk's REST API does 'optimistic locking' using "
+"HTTP ETag headers. In this case the Object's ETag has to be sent to the "
+"server with a HTTP If-Match header. This behavior can be deactivated, but "
+"this will allow the 'lost update problem' to occur."
 msgstr ""
 
 msgid ""

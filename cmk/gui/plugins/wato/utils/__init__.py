@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
     Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
-    OptionalDropdownChoice, Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii,
+    OptionalDropdownChoice, Password, Percentage, RegExp, RuleComment, TextAscii,
     AjaxDropdownChoice, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
     SingleLabel, autocompleter_registry,
 )
@@ -415,7 +415,7 @@ def _translation_elements(what):
                  Tuple(
                      orientation="horizontal",
                      elements=[
-                         RegExpUnicode(
+                         RegExp(
                              title=_("Regular expression"),
                              help=_("Must contain at least one subgroup <tt>(...)</tt>"),
                              mingroups=0,
@@ -1247,9 +1247,9 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                          _("The service group alias must match one of the following regular expressions."
                            " For host events this condition never matches as soon as at least one group is selected."
                           ),
-                         valuespec=RegExpUnicode(
+                         valuespec=RegExp(
                              size=32,
-                             mode=RegExpUnicode.infix,
+                             mode=RegExp.infix,
                          ),
                          orientation="horizontal",
                      )
@@ -1265,9 +1265,9 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                          help=_(
                              "The service group alias must not match one of the following regular expressions. "
                              "For host events this condition is simply ignored."),
-                         valuespec=RegExpUnicode(
+                         valuespec=RegExp(
                              size=32,
-                             mode=RegExpUnicode.infix,
+                             mode=RegExp.infix,
                          ),
                          orientation="horizontal",
                      )
@@ -1279,9 +1279,9 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                    "service name in order for the rule to match. Note: Host notifications never match this "
                    "rule if this option is being used."),
-                 valuespec=RegExpUnicode(
+                 valuespec=RegExp(
                      size=32,
-                     mode=RegExpUnicode.prefix,
+                     mode=RegExp.prefix,
                  ),
                  orientation="horizontal",
                  allow_empty=False,
@@ -1292,9 +1292,9 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             ("match_exclude_services",
              ListOfStrings(
                  title=_("Exclude services"),
-                 valuespec=RegExpUnicode(
+                 valuespec=RegExp(
                      size=32,
-                     mode=RegExpUnicode.prefix,
+                     mode=RegExp.prefix,
                  ),
                  orientation="horizontal",
              )),
@@ -1313,7 +1313,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
                     ),
-                    mode=RegExpUnicode.prefix,
+                    mode=RegExp.prefix,
                 ),
             ),
             ("match_contacts",

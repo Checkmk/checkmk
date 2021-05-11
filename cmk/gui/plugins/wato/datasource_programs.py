@@ -42,7 +42,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     Password,
     RegExp,
-    RegExpUnicode,
     TextAscii,
     Transform,
     Tuple,
@@ -2526,7 +2525,7 @@ class MultisiteBiDatasource:
                      Tuple(
                          orientation="horizontal",
                          elements=[
-                             RegExpUnicode(
+                             RegExp(
                                  title=_("Regular expression"),
                                  help=_("Must contain at least one subgroup <tt>(...)</tt>"),
                                  mingroups=0,

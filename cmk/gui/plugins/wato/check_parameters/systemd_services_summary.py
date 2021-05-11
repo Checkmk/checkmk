@@ -9,7 +9,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    RegExpUnicode,
     RegExp,
     Tuple,
     Integer,
@@ -52,7 +51,7 @@ def _parameter_valuespec_systemd_services():
          )),
         ("ignored",
          ListOf(
-             RegExpUnicode(
+             RegExp(
                  title=_("Pattern (Regex)"),
                  size=40,
                  mode=RegExp.infix,

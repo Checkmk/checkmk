@@ -43,7 +43,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ListOfStrings,
     Dictionary,
-    RegExpUnicode,
+    RegExp,
     DropdownChoice,
     rule_option_elements,
 )
@@ -1204,29 +1204,29 @@ class ModeRuleSearchForm(WatoMode):
             ],
             elements=[
                 ("fulltext",
-                 RegExpUnicode(
+                 RegExp(
                      title=_("Rules matching pattern"),
                      help=_("Use this field to search the description, comment, host and "
                             "service conditions including the text representation of the "
                             "configured values."),
                      size=60,
-                     mode=RegExpUnicode.infix,
+                     mode=RegExp.infix,
                  )),
                 ("ruleset_group", _vs_ruleset_group()),
-                ("ruleset_name", RegExpUnicode(
+                ("ruleset_name", RegExp(
                     title=_("Name"),
                     size=60,
-                    mode=RegExpUnicode.infix,
+                    mode=RegExp.infix,
                 )),
-                ("ruleset_title", RegExpUnicode(
+                ("ruleset_title", RegExp(
                     title=_("Title"),
                     size=60,
-                    mode=RegExpUnicode.infix,
+                    mode=RegExp.infix,
                 )),
-                ("ruleset_help", RegExpUnicode(
+                ("ruleset_help", RegExp(
                     title=_("Help"),
                     size=60,
-                    mode=RegExpUnicode.infix,
+                    mode=RegExp.infix,
                 )),
                 ("ruleset_deprecated",
                  DropdownChoice(
@@ -1244,35 +1244,31 @@ class ModeRuleSearchForm(WatoMode):
                          (False, _("Search for rulesets that don't have rules configured")),
                      ],
                  )),
-                ("rule_description",
-                 RegExpUnicode(
-                     title=_("Description"),
-                     size=60,
-                     mode=RegExpUnicode.infix,
-                 )),
-                ("rule_comment",
-                 RegExpUnicode(
-                     title=_("Comment"),
-                     size=60,
-                     mode=RegExpUnicode.infix,
-                 )),
-                ("rule_value", RegExpUnicode(
+                ("rule_description", RegExp(
+                    title=_("Description"),
+                    size=60,
+                    mode=RegExp.infix,
+                )),
+                ("rule_comment", RegExp(
+                    title=_("Comment"),
+                    size=60,
+                    mode=RegExp.infix,
+                )),
+                ("rule_value", RegExp(
                     title=_("Value"),
                     size=60,
-                    mode=RegExpUnicode.infix,
+                    mode=RegExp.infix,
                 )),
-                ("rule_host_list",
-                 RegExpUnicode(
-                     title=_("Host match list"),
-                     size=60,
-                     mode=RegExpUnicode.infix,
-                 )),
-                ("rule_item_list",
-                 RegExpUnicode(
-                     title=_("Item match list"),
-                     size=60,
-                     mode=RegExpUnicode.infix,
-                 )),
+                ("rule_host_list", RegExp(
+                    title=_("Host match list"),
+                    size=60,
+                    mode=RegExp.infix,
+                )),
+                ("rule_item_list", RegExp(
+                    title=_("Item match list"),
+                    size=60,
+                    mode=RegExp.infix,
+                )),
                 ("rule_hosttags", HostTagCondition(title=_("Used host tags"))),
                 ("rule_disabled",
                  DropdownChoice(
@@ -1967,9 +1963,7 @@ class VSExplicitConditions(Transform):
 
         return ListOfStrings(
             orientation="horizontal",
-            valuespec=RegExpUnicode(size=30,
-                                    mode=RegExpUnicode.prefix,
-                                    validate=self._validate_list_entry),
+            valuespec=RegExp(size=30, mode=RegExp.prefix, validate=self._validate_list_entry),
             help=self._explicit_service_help_text(),
         )
 

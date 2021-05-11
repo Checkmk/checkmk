@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     FixedValue,
     DualListChoice,
-    RegExpUnicode,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -143,11 +142,11 @@ def _valuespec_sap_value_groups():
                     show_titles=True,
                     orientation="vertical",
                     elements=[
-                        RegExpUnicode(
+                        RegExp(
                             title=_("Include Pattern"),
                             mode=RegExp.prefix,
                         ),
-                        RegExpUnicode(
+                        RegExp(
                             title=_("Exclude Pattern"),
                             mode=RegExp.prefix,
                         )

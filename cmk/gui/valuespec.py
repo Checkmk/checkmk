@@ -849,11 +849,6 @@ class RegExp(TextAscii):
                   "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
 
 
-# TODO: Cleanup this multiple inheritance
-class RegExpUnicode(RegExp):
-    pass
-
-
 class EmailAddress(TextAscii):
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -5609,7 +5604,7 @@ class TextOrRegExpUnicode(ABCTextOrRegExp):
 
     @classmethod
     def _regex_valuespec_class(cls):
-        return RegExpUnicode
+        return RegExp
 
 
 class Labels(ValueSpec):

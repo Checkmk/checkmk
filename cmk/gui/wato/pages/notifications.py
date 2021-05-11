@@ -39,7 +39,6 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     RegExp,
-    RegExpUnicode,
     TextAscii,
     Transform,
     Tuple,
@@ -143,7 +142,7 @@ class ABCNotificationsMode(ABCEventsMode):
                  ],
              )),
             ("match_notification_comment",
-             RegExpUnicode(
+             RegExp(
                  title=_("Match notification comment"),
                  help=
                  _("This match only makes sense for custom notifications. When a user creates "
@@ -152,7 +151,7 @@ class ABCNotificationsMode(ABCEventsMode):
                    "make a condition of that comment. It is a regular expression matching the beginning "
                    "of the comment."),
                  size=60,
-                 mode=RegExpUnicode.prefix,
+                 mode=RegExp.prefix,
              )),
             ("match_ec",
              Alternative(
@@ -201,12 +200,12 @@ class ABCNotificationsMode(ABCEventsMode):
                                   choices=cmk.gui.mkeventd.syslog_facilities,
                               )),
                              ("match_comment",
-                              RegExpUnicode(
+                              RegExp(
                                   title=_("Match event comment"),
                                   help=
                                   _("This is a regular expression for matching the event's comment."
                                    ),
-                                  mode=RegExpUnicode.prefix,
+                                  mode=RegExp.prefix,
                               )),
                          ])
                  ]))

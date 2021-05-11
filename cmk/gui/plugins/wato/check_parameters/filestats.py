@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     Filesize,
     Integer,
     ListOf,
-    RegExpUnicode,
+    RegExp,
     TextAscii,
     Tuple,
     ValueSpec,
@@ -141,7 +141,7 @@ def _parameter_valuespec_filestats():
                                 "Specify a user-friendly name that will be displayed in the service "
                                 "details, along with the pattern to match."),
                         ),
-                        RegExpUnicode(
+                        RegExp(
                             title=_("Filename/- expression"),
                             mode="case_sensitive",
                             size=70,

@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     RegExp,
-    RegExpUnicode,
     TextAscii,
     Transform,
     Tuple,
@@ -59,7 +58,7 @@ def _valuespec_logwatch_rules():
                                        ('I', _('IGNORE')),
                                    ],
                                ),
-                               RegExpUnicode(
+                               RegExp(
                                    title=_("Pattern (Regex)"),
                                    size=40,
                                    mode=RegExp.infix,

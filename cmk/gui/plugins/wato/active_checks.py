@@ -23,7 +23,6 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     DropdownChoice,
     RegExp,
-    RegExpUnicode,
     Transform,
     EmailAddress,
     ListOf,
@@ -2196,7 +2195,7 @@ def _valuespec_active_checks_mail():
                                 ],
                             )),
                         ('match_subject',
-                         RegExpUnicode(
+                         RegExp(
                              title=_('Only process mails with matching subject'),
                              help=_(
                                  'Use this option to not process all messages found in the inbox, '

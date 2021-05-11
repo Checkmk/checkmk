@@ -45,7 +45,7 @@ from cmk.gui.valuespec import (
     MonitoringState,
     Optional,
     PasswordSpec,
-    RegExpUnicode,
+    RegExp,
     TextAscii,
     Transform,
     Tuple,
@@ -1459,11 +1459,11 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                 elements=[
                     ('title', TextAscii(title=_('Title to show for the group'),)),
                     ('pattern',
-                     RegExpUnicode(
+                     RegExp(
                          title=_('Grouping expression'),
                          help=_('This regular expression is used to match the services to be put '
                                 'into this group. This is a prefix match regular expression.'),
-                         mode=RegExpUnicode.prefix,
+                         mode=RegExp.prefix,
                      )),
                     ('min_items',
                      Integer(
@@ -4690,13 +4690,13 @@ def _valuespec_check_mk_exit_status():
                              "specific_missing_sections",
                              ListOf(
                                  Tuple(elements=[
-                                     RegExpUnicode(help=_(
+                                     RegExp(help=_(
                                          'In addition to setting the generic "Missing monitoring '
                                          'data" state above you can specify a regex pattern to '
                                          'match specific check plugins and give them an individual '
                                          'state in case they receive no monitoring data. Note that '
                                          'the first match is used.'),
-                                                   mode=RegExpUnicode.prefix),
+                                            mode=RegExp.prefix),
                                      MonitoringState(),
                                  ],
                                        orientation="horizontal"),
@@ -5143,9 +5143,9 @@ def _valuespec_piggybacked_host_files():
                               ListOfStrings(
                                   title=_("Piggybacked host name expressions"),
                                   orientation="horizontal",
-                                  valuespec=RegExpUnicode(
+                                  valuespec=RegExp(
                                       size=30,
-                                      mode=RegExpUnicode.prefix,
+                                      mode=RegExp.prefix,
                                   ),
                                   allow_empty=False,
                                   help=_(

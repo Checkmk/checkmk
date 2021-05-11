@@ -38,7 +38,6 @@ from cmk.gui.valuespec import (
     Hostname,
     Tuple,
     TextAscii,
-    RegExpUnicode,
     DropdownChoice,
     RegExp,
     ListOf,
@@ -317,14 +316,14 @@ class ModeBulkRenameHost(WatoMode):
                      "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"
                  ),
                        elements=[
-                           RegExpUnicode(
+                           RegExp(
                                title=_("Regular expression for the beginning of the host name"),
                                help=_("Must contain at least one subgroup <tt>(...)</tt>"),
                                mingroups=0,
                                maxgroups=9,
                                size=30,
                                allow_empty=False,
-                               mode=RegExpUnicode.prefix,
+                               mode=RegExp.prefix,
                            ),
                            TextAscii(
                                title=_("Replacement"),

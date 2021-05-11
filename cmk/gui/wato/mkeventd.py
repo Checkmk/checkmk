@@ -70,7 +70,6 @@ from cmk.gui.valuespec import (
     Alternative,
     ListChoice,
     RegExp,
-    RegExpUnicode,
     TextAreaUnicode,
     Transform,
     Dictionary,
@@ -251,7 +250,7 @@ class RuleState(CascadingDropdown):
              Dictionary(
                  elements=[
                      ('2',
-                      RegExpUnicode(
+                      RegExp(
                           title=_("CRIT Pattern"),
                           help=_("When the given regular expression (infix search) matches "
                                  "the events state is set to CRITICAL."),
@@ -259,7 +258,7 @@ class RuleState(CascadingDropdown):
                           mode=RegExp.infix,
                       )),
                      ('1',
-                      RegExpUnicode(
+                      RegExp(
                           title=_("WARN Pattern"),
                           help=_("When the given regular expression (infix search) matches "
                                  "the events state is set to WARNING."),
@@ -267,7 +266,7 @@ class RuleState(CascadingDropdown):
                           mode=RegExp.infix,
                       )),
                      ('0',
-                      RegExpUnicode(
+                      RegExp(
                           title=_("OK Pattern"),
                           help=_("When the given regular expression (infix search) matches "
                                  "the events state is set to OK."),
@@ -749,7 +748,7 @@ def vs_mkeventd_rule(customer=None):
             ),
         ),
         ("match",
-         RegExpUnicode(
+         RegExp(
              title=_("Text to match"),
              help=_("The rules does only apply when the given regular expression matches "
                     "the message text (infix search)."),
@@ -764,7 +763,7 @@ def vs_mkeventd_rule(customer=None):
              choices=config.get_event_console_site_choices(),
          )),
         ("match_host",
-         RegExpUnicode(
+         RegExp(
              title=_("Match host"),
              help=_("The rules does only apply when the given regular expression matches "
                     "the host name the message originates from. Note: in some cases the "
@@ -780,7 +779,7 @@ def vs_mkeventd_rule(customer=None):
                     "or an IPv4 network in the notation X.X.X.X/Bits."),
          )),
         ("match_application",
-         RegExpUnicode(
+         RegExp(
              title=_("Match syslog application (tag)"),
              help=_("Regular expression for matching the syslog tag (case insenstive)"),
              size=64,
@@ -845,7 +844,7 @@ def vs_mkeventd_rule(customer=None):
                "selection only offers timeperiods that are defined with WATO."),
          )),
         ("match_ok",
-         RegExpUnicode(
+         RegExp(
              title=_("Text to cancel event(s)"),
              help=_(
                  "If a matching message appears with this text, then events created "
@@ -881,7 +880,7 @@ def vs_mkeventd_rule(customer=None):
              ],
          )),
         ("cancel_application",
-         RegExpUnicode(
+         RegExp(
              title=_("Syslog application to cancel event"),
              help=_("If the application of the message matches this regular expression "
                     "(case insensitive) and either no text to cancel is specified or "

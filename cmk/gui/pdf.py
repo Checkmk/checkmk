@@ -1009,24 +1009,23 @@ class TableRenderer:
                 width = available_width * s[4] / sum_weight  # fixed: true-division
                 column_widths.append(width)
 
-        self._paint_headers(
-            headers,
-            column_widths,
-            y_padding,
-            x_padding,
-            y_spacing,
-            x_spacing,
-            hrules,
-            vrules,
-            rule_width,
-            row_shading,
-        )
         row_oddeven = "even"
-        for row in rows:
+        for row_index, row in enumerate(rows):
             row_oddeven = "odd" if row_oddeven == "even" else "even"
 
-            if self._paint_graph_row(row, column_widths, y_padding, x_padding, y_spacing, x_spacing,
-                                     headers, hrules, vrules, rule_width, row_shading, row_oddeven):
+            if self._paint_graph_row(row,
+                                     column_widths,
+                                     y_padding,
+                                     x_padding,
+                                     y_spacing,
+                                     x_spacing,
+                                     headers,
+                                     hrules,
+                                     vrules,
+                                     rule_width,
+                                     row_shading,
+                                     paint_header=row_index == 0,
+                                     row_oddeven=row_oddeven):
                 continue
 
             self._paint_row(row,
@@ -1040,7 +1039,8 @@ class TableRenderer:
                             vrules,
                             rule_width,
                             row_shading,
-                            add_headers_after_pagebreak=True,
+                            paint_header=row_index == 0,
+                            is_header=False,
                             row_oddeven=row_oddeven)
 
         self.pdf.restore_state()
@@ -1071,7 +1071,8 @@ class TableRenderer:
                             vrules,
                             rule_width,
                             row_shading,
-                            add_headers_after_pagebreak=False,
+                            paint_header=False,
+                            is_header=True,
                             row_oddeven="heading")
 
     def _paint_row(
@@ -1087,8 +1088,9 @@ class TableRenderer:
         vrules,
         rule_width,
         row_shading,
-        add_headers_after_pagebreak,
-        row_oddeven,
+        paint_header: bool,
+        is_header: bool,
+        row_oddeven: str,
     ):
         # Give each cell information about its final width so it can reorganize internally.
         # This is used for text cells that do the wrapping.
@@ -1107,19 +1109,21 @@ class TableRenderer:
         if (not self.pdf.fits_on_remaining_page(needed_vspace / mm) and
                 self.pdf.fits_on_empty_page(needed_vspace / mm)):
             self.pdf.do_pagebreak()
-            if add_headers_after_pagebreak:
-                self._paint_headers(
-                    headers,
-                    column_widths,
-                    y_padding,
-                    x_padding,
-                    y_spacing,
-                    x_spacing,
-                    hrules,
-                    vrules,
-                    rule_width,
-                    row_shading,
-                )
+            paint_header = True
+
+        if not is_header and paint_header:
+            self._paint_headers(
+                headers,
+                column_widths,
+                y_padding,
+                x_padding,
+                y_spacing,
+                x_spacing,
+                hrules,
+                vrules,
+                rule_width,
+                row_shading,
+            )
 
         # Apply row shading
         if row_shading["enabled"]:
@@ -1178,7 +1182,8 @@ class TableRenderer:
         vrules,
         rule_width,
         row_shading,
-        row_oddeven,
+        paint_header: bool,
+        row_oddeven: str,
     ) -> bool:
         """Paint special form of graph rows
 
@@ -1215,7 +1220,7 @@ class TableRenderer:
         if self.pdf.fits_on_empty_page(graph_column.height(self) * mm):
             return False
 
-        for index, step in enumerate(graph_column.get_render_steps(self.pdf, y_padding)):
+        for index, step in enumerate(graph_column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
                 step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
             else:
@@ -1232,7 +1237,8 @@ class TableRenderer:
                             vrules,
                             rule_width,
                             row_shading,
-                            add_headers_after_pagebreak=True,
+                            paint_header=paint_header and index == 0,
+                            is_header=False,
                             row_oddeven=row_oddeven)
         return True
 

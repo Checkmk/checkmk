@@ -1008,83 +1008,156 @@ class TableRenderer:
                 width = available_width * s[4] / sum_weight  # fixed: true-division
                 column_widths.append(width)
 
-        def paint_hrule():
-            if hrules:
-                self.pdf.add_hrule(width=rule_width / mm, margin=0)  # fixed: true-division
-
-        def paint_row(row, add_headers_after_pagebreak, row_oddeven):
-            # Give each cell information about its final width so it can reorganize internally.
-            # This is used for text cells that do the wrapping.
-            for column_width, render_object in zip(column_widths, row):
-                render_object.set_width(self.pdf, column_width)
-
-            # Now - after the text-wrapping - we know the maximum height of all cells
-            # a in row and can decide whether it fits on the current page.
-            if row:
-                row_height = max([render_object.height(self.pdf) * mm for render_object in row])
-            else:
-                row_height = self.pdf.lineskip()
-
-            needed_vspace = row_height + 2 * y_padding + y_spacing
-
-            if (not self.pdf.fits_on_remaining_page(needed_vspace / mm) and
-                    self.pdf.fits_on_empty_page(needed_vspace / mm)):
-                self.pdf.do_pagebreak()
-                if add_headers_after_pagebreak:
-                    paint_headers()
-
-            def paint_vrule(left):
-                if vrules:
-                    self.pdf._canvas.setLineWidth(rule_width)
-                    self.pdf._canvas.setStrokeColorRGB(*black)
-                    self.pdf._canvas.line(left, self.pdf._linepos, left,
-                                          self.pdf._linepos - row_height - 2 * y_padding)
-
-            # Apply row shading
-            if row_shading["enabled"]:
-                h = (row_height + 2 * y_padding) / mm  # fixed: true-division
-                self.pdf.render_rect(
-                    self.pdf._left / mm,  # fixed: true-division
-                    self.pdf._linepos / mm - h,  # fixed: true-divisioin
-                    self.pdf._inner_width / mm,  # fixed: true-division
-                    h,
-                    fill_color=row_shading[row_oddeven])
-
-            # Finally paint
-            left = self.pdf._left
-            for column_width, render_object in zip(column_widths, row):
-                old_linepos = self.pdf._linepos
-                render_object.render(
-                    self.pdf,
-                    left / mm,
-                    self.pdf._linepos / mm,  # fixed: true-division
-                    column_width / mm + 2 * x_padding / mm,  # fixed: true-division
-                    (row_height + 2 * y_padding) / mm,
-                    x_padding / mm,  # fixed: true-division
-                    y_padding / mm,  # fixed: true-division
-                    row_oddeven if row_shading["enabled"] else None)
-
-                self.pdf._linepos = old_linepos
-
-                paint_vrule(left)
-                left += column_width + 2 * x_padding + x_spacing
-            paint_vrule(left)
-            self.pdf.advance(needed_vspace - y_spacing / 2.0)
-            paint_hrule()
-            self.pdf.advance(y_spacing / 2.0)
-
-        def paint_headers():
-            paint_hrule()
-            if headers:
-                paint_row(headers, add_headers_after_pagebreak=False, row_oddeven="heading")
-
-        paint_headers()
+        self._paint_headers(
+            headers,
+            column_widths,
+            y_padding,
+            x_padding,
+            y_spacing,
+            x_spacing,
+            hrules,
+            vrules,
+            rule_width,
+            row_shading,
+        )
         row_oddeven = "even"
         for row in rows:
             row_oddeven = "odd" if row_oddeven == "even" else "even"
-            paint_row(row, add_headers_after_pagebreak=True, row_oddeven=row_oddeven)
+            self._paint_row(row,
+                            column_widths,
+                            y_padding,
+                            x_padding,
+                            y_spacing,
+                            x_spacing,
+                            headers,
+                            hrules,
+                            vrules,
+                            rule_width,
+                            row_shading,
+                            add_headers_after_pagebreak=True,
+                            row_oddeven=row_oddeven)
 
         self.pdf.restore_state()
+
+    def _paint_headers(
+        self,
+        headers,
+        column_widths,
+        y_padding,
+        x_padding,
+        y_spacing,
+        x_spacing,
+        hrules,
+        vrules,
+        rule_width,
+        row_shading,
+    ):
+        self._paint_hrule(hrules, rule_width)
+        if headers:
+            self._paint_row(headers,
+                            column_widths,
+                            y_padding,
+                            x_padding,
+                            y_spacing,
+                            x_spacing,
+                            headers,
+                            hrules,
+                            vrules,
+                            rule_width,
+                            row_shading,
+                            add_headers_after_pagebreak=False,
+                            row_oddeven="heading")
+
+    def _paint_row(
+        self,
+        row,
+        column_widths,
+        y_padding,
+        x_padding,
+        y_spacing,
+        x_spacing,
+        headers,
+        hrules,
+        vrules,
+        rule_width,
+        row_shading,
+        add_headers_after_pagebreak,
+        row_oddeven,
+    ):
+        # Give each cell information about its final width so it can reorganize internally.
+        # This is used for text cells that do the wrapping.
+        for column_width, render_object in zip(column_widths, row):
+            render_object.set_width(self.pdf, column_width)
+
+        # Now - after the text-wrapping - we know the maximum height of all cells
+        # a in row and can decide whether it fits on the current page.
+        if row:
+            row_height = max([render_object.height(self.pdf) * mm for render_object in row])
+        else:
+            row_height = self.pdf.lineskip()
+
+        needed_vspace = row_height + 2 * y_padding + y_spacing
+
+        if (not self.pdf.fits_on_remaining_page(needed_vspace / mm) and
+                self.pdf.fits_on_empty_page(needed_vspace / mm)):
+            self.pdf.do_pagebreak()
+            if add_headers_after_pagebreak:
+                self._paint_headers(
+                    headers,
+                    column_widths,
+                    y_padding,
+                    x_padding,
+                    y_spacing,
+                    x_spacing,
+                    hrules,
+                    vrules,
+                    rule_width,
+                    row_shading,
+                )
+
+        # Apply row shading
+        if row_shading["enabled"]:
+            h = (row_height + 2 * y_padding) / mm  # fixed: true-division
+            self.pdf.render_rect(
+                self.pdf._left / mm,  # fixed: true-division
+                self.pdf._linepos / mm - h,  # fixed: true-divisioin
+                self.pdf._inner_width / mm,  # fixed: true-division
+                h,
+                fill_color=row_shading[row_oddeven])
+
+        # Finally paint
+        left = self.pdf._left
+        for column_width, render_object in zip(column_widths, row):
+            old_linepos = self.pdf._linepos
+            render_object.render(
+                self.pdf,
+                left / mm,
+                self.pdf._linepos / mm,  # fixed: true-division
+                column_width / mm + 2 * x_padding / mm,  # fixed: true-division
+                (row_height + 2 * y_padding) / mm,
+                x_padding / mm,  # fixed: true-division
+                y_padding / mm,  # fixed: true-division
+                row_oddeven if row_shading["enabled"] else None)
+
+            self.pdf._linepos = old_linepos
+
+            self._paint_vrule(rule_width, y_padding, row_height, vrules, left)
+            left += column_width + 2 * x_padding + x_spacing
+        self._paint_vrule(rule_width, y_padding, row_height, vrules, left)
+        self.pdf.advance(needed_vspace - y_spacing / 2.0)
+        self._paint_hrule(hrules, rule_width)
+        self.pdf.advance(y_spacing / 2.0)
+
+    def _paint_hrule(self, hrules, rule_width):
+        if hrules:
+            self.pdf.add_hrule(width=rule_width / mm, margin=0)  # fixed: true-division
+
+    def _paint_vrule(self, rule_width, y_padding, row_height, vrules, left):
+        if vrules:
+            self.pdf._canvas.setLineWidth(rule_width)
+            self.pdf._canvas.setStrokeColorRGB(*black)
+            self.pdf._canvas.line(left, self.pdf._linepos, left,
+                                  self.pdf._linepos - row_height - 2 * y_padding)
 
 
 # Note: all dimensions this objects handles with are in mm! This is due

@@ -1964,7 +1964,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Hits"), hits is not None and hits or '', css="number")
 
                 # Text to match
-                table.cell(_("Text to match"), rule.get("match"))
+                table.text_cell(_("Text to match"), rule.get("match"))
 
                 # Description
                 table.cell(_("Description"))

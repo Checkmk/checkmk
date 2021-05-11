@@ -343,9 +343,9 @@ class ModeEditLDAPConnection(LDAPMode):
                         else:
                             img = html.render_icon("failed", _("Failed"))
 
-                        table.cell(_("Test"), title)
+                        table.text_cell(_("Test"), title)
                         table.cell(_("State"), img)
-                        table.cell(_("Details"), msg)
+                        table.text_cell(_("Details"), msg)
 
             connection.disconnect()
 

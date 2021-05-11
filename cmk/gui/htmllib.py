@@ -1436,15 +1436,15 @@ class html(ABCHTMLGenerator):
         else:
             self.response.set_http_cookie("language", lang)
 
-    def help(self, text: Union[None, HTML, str]) -> None:
+    def help(self, text: Union[None, HTML, str], escape_text: bool = False) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.
 
         You may add macros like this to the help texts to create links to the user
         manual: [cms_piggyback|Piggyback chapter].
         """
-        self.write_html(self.render_help(text))
+        self.write_html(self.render_help(text, escape_text=escape_text))
 
-    def render_help(self, text: Union[None, HTML, str]) -> HTML:
+    def render_help(self, text: Union[None, HTML, str], escape_text: bool = False) -> HTML:
         if isinstance(text, HTML):
             text = "%s" % text
 
@@ -1454,6 +1454,9 @@ class html(ABCHTMLGenerator):
         stripped = text.strip()
         if not stripped:
             return HTML("")
+
+        if escape_text:
+            stripped = escaping.escape_text(stripped)
 
         help_text = self.resolve_help_text_macros(stripped)
 

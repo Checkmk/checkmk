@@ -1,0 +1,19 @@
+Title: Fix several XSS issues
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1620385462
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p4
+
+* JavaScript was executed in the rule overview if a script
+  was entered in the Text to match of EC rules.
+* JavaScript was executed if scripts were entered in the LDAP
+  server and failover server and "Save & Test" was clicked
+* JavaScript was executed in the tag overview and notification
+  rules if sripts were entered in the the title, topic and
+  help text of aux tags and tags.
+
+FEED-6031

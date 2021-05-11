@@ -341,7 +341,7 @@ class ModeTags(ABCTagMode):
                 table.text_cell(_("Topic"), tag_group.topic or _("Tags"))
                 table.cell(_("Demonstration"), sortable=False)
                 if tag_group.help:
-                    html.help(tag_group.help)
+                    html.help(tag_group.help, escape_text=True)
                 html.begin_form("tag_%s" % tag_group.id)
                 tag_group_attribute = watolib.host_attribute("tag_%s" % tag_group.id)
                 tag_group_attribute.render_input("", tag_group_attribute.default_value())

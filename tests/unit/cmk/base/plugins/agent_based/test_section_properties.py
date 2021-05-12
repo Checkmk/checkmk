@@ -248,7 +248,6 @@ def test_section_parse_function_does_something(fix_register):
         'winperf_msx_queues',
         'winperf_ts_sessions',
         'wmic_process',
-        'zerto_vpg_rpo',
         'dmraid',
         'emcvnx_raidgroups',
         'hpux_tunables',

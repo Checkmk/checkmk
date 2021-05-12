@@ -468,7 +468,7 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
     if not file_names:
         return
 
-    rule_packs = ec.load_rule_packs()
+    rule_packs = list(ec.load_rule_packs())
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
 

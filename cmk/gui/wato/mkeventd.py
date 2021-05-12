@@ -4464,7 +4464,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        rule_pack_loader: Callable[[], ec.ECRulePacks],
+        rule_pack_loader: Callable[[], Iterable[ec.ECRulePack]],
     ) -> None:
         super().__init__(name)
         self._rule_pack_loader = rule_pack_loader

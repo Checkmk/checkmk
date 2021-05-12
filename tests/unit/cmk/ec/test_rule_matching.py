@@ -8,14 +8,16 @@ import logging
 from typing import Dict
 import pytest  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
-from cmk.ec.main import RuleMatcher, EventServer
+from cmk.ec.main import RuleMatcher, EventServer, make_config
+from cmk.ec.defaults import default_config
 
 
 @pytest.fixture(name="m")
 def fixture_m():
     logger = logging.getLogger("cmk.mkeventd")
-    return RuleMatcher(logger, {"debug_rules": True})
+    config = default_config()
+    config["debug_rules"] = True
+    return RuleMatcher(logger, make_config(config))
 
 
 @pytest.mark.parametrize(

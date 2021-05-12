@@ -15,6 +15,7 @@ import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ContactgroupName
 
+from .config import Action, Config
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .event import Event
 from .host_config import HostConfig
@@ -34,7 +35,7 @@ from .settings import Settings
 #   '----------------------------------------------------------------------'
 
 
-def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
+def event_has_opened(history: Any, settings: Settings, config: Config, logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
                      rule: Dict[str, Any], event: Event) -> None:
     # Prepare for events with a limited livetime. This time starts
@@ -61,17 +62,18 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
+def do_event_actions(history: Any, settings: Settings, config: Config, logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
                      actions: Any, event: Event, is_cancelling: bool) -> None:
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(host_config, logger, event, is_cancelling=is_cancelling)
         else:
-            action = config["action"].get(aname)
+            actions = config["action"]
+            action = actions.get(aname)
             if not action:
                 logger.info("Cannot execute undefined action '%s'" % aname)
-                logger.info("We have to following actions: %s" % ", ".join(config["action"].keys()))
+                logger.info("We have to following actions: %s" % ", ".join(actions.keys()))
             else:
                 logger.info("Going to execute action '%s' on event %d" %
                             (action["title"], event["id"]))
@@ -82,8 +84,8 @@ def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], l
 # not hang for more than a couple of ms.
 
 
-def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                    event_columns: Iterable[Tuple[str, Any]], action: Any, event: Event,
+def do_event_action(history: Any, settings: Settings, config: Config, logger: Logger,
+                    event_columns: Iterable[Tuple[str, Any]], action: Action, event: Event,
                     user: Any) -> None:
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
@@ -158,7 +160,7 @@ def quote_shell_string(s: str) -> str:
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def _send_email(config: Dict[str, Any], to: str, subject: str, body: str, logger: Logger) -> bool:
+def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger) -> bool:
     command_utf8 = [
         b"mail", b"-S", b"sendcharsets=utf-8", b"-s",
         subject.encode("utf-8"),

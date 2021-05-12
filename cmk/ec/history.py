@@ -17,6 +17,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
 from .actions import quote_shell_string
+from .config import Config
 from .event import Event
 from .query import QueryGET
 from .settings import Settings
@@ -25,7 +26,7 @@ from .settings import Settings
 
 
 class History:
-    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger,
+    def __init__(self, settings: Settings, config: Config, logger: Logger,
                  event_columns: List[Tuple[str, Any]], history_columns: List[Tuple[str,
                                                                                    Any]]) -> None:
         super().__init__()
@@ -39,7 +40,7 @@ class History:
         self._active_history_period = ActiveHistoryPeriod()
         self.reload_configuration(config)
 
-    def reload_configuration(self, config: Dict[str, Any]) -> None:
+    def reload_configuration(self, config: Config) -> None:
         self._config = config
         if self._config['archive_mode'] == 'mongodb':
             _reload_configuration_mongodb(self)
@@ -147,8 +148,7 @@ def _update_mongodb_indexes(settings: Settings, mongodb: MongoDB) -> None:
         mongodb.db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
-def _update_mongodb_history_lifetime(settings: Settings, config: Dict[str, Any],
-                                     mongodb: MongoDB) -> None:
+def _update_mongodb_history_lifetime(settings: Settings, config: Config, mongodb: MongoDB) -> None:
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
 
@@ -200,7 +200,7 @@ def _add_mongodb(history: History, event: Event, what: str, who: str, addinfo: s
     })
 
 
-def _log_event(config: Dict[str, Any], logger: Logger, event: Event, what: str, who: str,
+def _log_event(config: Config, logger: Logger, event: Event, what: str, who: str,
                addinfo: str) -> None:
     if config['debug_rules']:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
@@ -352,8 +352,7 @@ class ActiveHistoryPeriod:
 
 # Get file object to current log file, handle also
 # history and lifetime limit.
-def get_logfile(config: Dict[str, Any], log_dir: Path,
-                active_history_period: ActiveHistoryPeriod) -> Path:
+def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHistoryPeriod) -> Path:
     log_dir.mkdir(parents=True, exist_ok=True)
     # Log into file starting at current history period,
     # but: if a newer logfile exists, use that one. This
@@ -377,7 +376,7 @@ def get_logfile(config: Dict[str, Any], log_dir: Path,
 
 # Return timestamp of the beginning of the current history
 # period.
-def _current_history_period(config: Dict[str, Any]) -> int:
+def _current_history_period(config: Config) -> int:
     lt = time.localtime()
     ts = time.mktime(
         time.struct_time((
@@ -397,7 +396,7 @@ def _current_history_period(config: Dict[str, Any]) -> int:
 
 
 # Delete old log files
-def _expire_logfiles(settings: Settings, config: Dict[str, Any], logger: Logger,
+def _expire_logfiles(settings: Settings, config: Config, logger: Logger,
                      lock_history: threading.Lock, flush: bool) -> None:
     with lock_history:
         try:

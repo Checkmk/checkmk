@@ -68,6 +68,7 @@ from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
+from .config import ConfigFromWATO, Config
 from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .event import Event
@@ -209,7 +210,7 @@ class ECServerThread(threading.Thread):
     def serve(self) -> None:
         raise NotImplementedError()
 
-    def __init__(self, name: Any, logger: Logger, settings: Settings, config: Dict[str, Any],
+    def __init__(self, name: Any, logger: Logger, settings: Settings, config: Config,
                  slave_status: Dict[str, Any], profiling_enabled: bool, profile_file: Path) -> None:
         super().__init__(name=name)
         self.settings = settings
@@ -569,7 +570,7 @@ class EventServer(ECServerThread):
     def __init__(self,
                  logger: Logger,
                  settings: Settings,
-                 config: Dict[str, Any],
+                 config: Config,
                  slave_status: Dict[str, Any],
                  perfcounters: Perfcounters,
                  lock_configuration: ECLock,
@@ -1226,7 +1227,7 @@ class EventServer(ECServerThread):
                 self._history.add(event, "AUTODELETE")
                 self._event_status.remove_event(event)
 
-    def reload_configuration(self, config: Dict[str, Any]) -> None:
+    def reload_configuration(self, config: Config) -> None:
         self._config = config
         self._snmp_trap_engine = SNMPTrapEngine(self.settings, self._config,
                                                 self._logger.getChild("snmp"), self.handle_snmptrap)
@@ -1899,7 +1900,7 @@ def fix_broken_sophos_timestamp(timestamp: str) -> str:
 
 
 class EventCreator:
-    def __init__(self, logger: Logger, config: Dict[str, Any]) -> None:
+    def __init__(self, logger: Logger, config: Config) -> None:
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2182,7 +2183,7 @@ class EventCreator:
 
 
 class RuleMatcher:
-    def __init__(self, logger: Logger, config: Dict[str, Any]) -> None:
+    def __init__(self, logger: Logger, config: Config) -> None:
         super().__init__()
         self._logger = logger
         self._config = config
@@ -2641,7 +2642,7 @@ class StatusTableStatus(StatusTable):
 
 
 class StatusServer(ECServerThread):
-    def __init__(self, logger: Logger, settings: Settings, config: Dict[str, Any],
+    def __init__(self, logger: Logger, settings: Settings, config: Config,
                  slave_status: Dict[str, Any], perfcounters: Perfcounters,
                  lock_configuration: ECLock, history: History, event_status: 'EventStatus',
                  event_server: EventServer, terminate_main_event: threading.Event) -> None:
@@ -2696,7 +2697,7 @@ class StatusServer(ECServerThread):
         self._unix_socket_queue_len = self._config['socket_queue_len']  # detect changes in config
 
     def open_tcp_socket(self) -> None:
-        if self._config["remote_status"]:
+        if self._config["remote_status"] is not None:
             try:
                 self._tcp_port, self._tcp_allow_commands = self._config["remote_status"][:2]
                 try:
@@ -2740,7 +2741,7 @@ class StatusServer(ECServerThread):
         self.close_tcp_socket()
         self.open_tcp_socket()
 
-    def reload_configuration(self, config: Dict[str, Any]) -> None:
+    def reload_configuration(self, config: Config) -> None:
         self._config = config
         self._reopen_sockets = True
 
@@ -2992,11 +2993,12 @@ class StatusServer(ECServerThread):
                       is_cancelling=False)
         else:
             with self._lock_configuration:
-                if action_id not in self._config["action"]:
+                actions = self._config["action"]
+                if action_id not in actions:
                     raise MKClientError(
                         "The action '%s' is not defined. After adding new commands please "
                         "make sure that you activate the changes in the Event Console." % action_id)
-                action = self._config["action"][action_id]
+                action = actions[action_id]
             do_event_action(self._history, self.settings, self._config, self._logger,
                             self._event_columns, action, event, user)
 
@@ -3038,7 +3040,7 @@ class StatusServer(ECServerThread):
 #   '----------------------------------------------------------------------'
 
 
-def run_eventd(terminate_main_event: Any, settings: Settings, config: Dict[str, Any],
+def run_eventd(terminate_main_event: Any, settings: Settings, config: Config,
                lock_configuration: ECLock, history: History, perfcounters: Perfcounters,
                event_status: 'EventStatus', event_server: EventServer, status_server: StatusServer,
                slave_status: Dict[str, Any], logger: Logger) -> None:
@@ -3082,7 +3084,10 @@ def run_eventd(terminate_main_event: Any, settings: Settings, config: Dict[str, 
                 if is_replication_slave(config) and now > next_replication:
                     replication_pull(settings, config, lock_configuration, perfcounters,
                                      event_status, event_server, slave_status, logger)
-                    next_replication = now + config["replication"]["interval"]
+                    replication_settings = config["replication"]
+                    if replication_settings is None:  # help mypy a bit
+                        raise ValueError('no replication settings')
+                    next_replication = now + replication_settings["interval"]
             except MKSignalException as e:
                 raise e
             except Exception as e:
@@ -3119,7 +3124,7 @@ def run_eventd(terminate_main_event: Any, settings: Settings, config: Dict[str, 
 
 
 class EventStatus:
-    def __init__(self, settings: Settings, config: Dict[str, Any], perfcounters: Perfcounters,
+    def __init__(self, settings: Settings, config: Config, perfcounters: Perfcounters,
                  history: History, logger: Logger) -> None:
         self.settings = settings
         self._config = config
@@ -3129,7 +3134,7 @@ class EventStatus:
         self._logger = logger
         self.flush()
 
-    def reload_configuration(self, config: Dict[str, Any]) -> None:
+    def reload_configuration(self, config: Config) -> None:
         self._config = config
 
     def flush(self) -> None:
@@ -3578,20 +3583,19 @@ class EventStatus:
 #   '----------------------------------------------------------------------'
 
 
-def is_replication_slave(config: Dict[str, Any]) -> bool:
+def is_replication_slave(config: ConfigFromWATO) -> bool:
     repl_settings = config["replication"]
-    return repl_settings and not repl_settings.get("disabled")
+    return repl_settings is not None and not repl_settings.get("disabled")
 
 
-def replication_allow_command(config: Dict[str, Any], command: str,
-                              slave_status: Dict[str, Any]) -> None:
+def replication_allow_command(config: Config, command: str, slave_status: Dict[str, Any]) -> None:
     if is_replication_slave(config) and slave_status["mode"] == "sync" \
        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]:
         raise MKClientError("This command is not allowed on a replication slave "
                             "while it is in sync mode.")
 
 
-def replication_send(config: Dict[str, Any], lock_configuration: ECLock, event_status: EventStatus,
+def replication_send(config: Config, lock_configuration: ECLock, event_status: EventStatus,
                      last_update: int) -> Dict[str, Any]:
     response = {}
     with lock_configuration:
@@ -3604,7 +3608,7 @@ def replication_send(config: Dict[str, Any], lock_configuration: ECLock, event_s
         return response
 
 
-def replication_pull(settings: Settings, config: Dict[str, Any], lock_configuration: ECLock,
+def replication_pull(settings: Settings, config: Config, lock_configuration: ECLock,
                      perfcounters: Perfcounters, event_status: EventStatus,
                      event_server: EventServer, slave_status: Dict[str,
                                                                    Any], logger: Logger) -> None:
@@ -3619,6 +3623,8 @@ def replication_pull(settings: Settings, config: Dict[str, Any], lock_configurat
     #    is enabled then simply do nothing.
     now = time.time()
     repl_settings = config["replication"]
+    if repl_settings is None:
+        raise ValueError('no replication settings')
     mode = slave_status["mode"]
     need_sync = mode == "sync" or (
         mode == "takeover" and "fallback" in repl_settings and
@@ -3683,7 +3689,7 @@ def replication_pull(settings: Settings, config: Dict[str, Any], lock_configurat
                 perfcounters.count_time("sync", time.time() - now)
 
 
-def replication_update_state(settings: Settings, config: Dict[str, Any], event_status: EventStatus,
+def replication_update_state(settings: Settings, config: Config, event_status: EventStatus,
                              event_server: EventServer, new_state: Dict[str, Any]) -> None:
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
@@ -3707,7 +3713,7 @@ def save_master_config(settings: Settings, new_state: Dict[str, Any]) -> None:
     path_new.rename(path)
 
 
-def load_master_config(settings: Settings, config: Dict[str, Any], logger: Logger) -> None:
+def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> None:
     path = settings.paths.master_config_file.value
     try:
         master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
@@ -3721,8 +3727,10 @@ def load_master_config(settings: Settings, config: Dict[str, Any], logger: Logge
             logger.error("Replication: no previously saved master state available")
 
 
-def get_state_from_master(config: Dict[str, Any], slave_status: Dict[str, Any]) -> Any:
+def get_state_from_master(config: Config, slave_status: Dict[str, Any]) -> Any:
     repl_settings = config["replication"]
+    if repl_settings is None:
+        raise ValueError('no replication settings')
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(repl_settings["connect_timeout"])
@@ -3772,7 +3780,7 @@ def default_slave_status_sync() -> Dict[str, Any]:
 
 
 def update_slave_status(slave_status: Dict[str, Any], settings: Settings,
-                        config: Dict[str, Any]) -> None:
+                        config: ConfigFromWATO) -> None:
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
@@ -3799,8 +3807,17 @@ def update_slave_status(slave_status: Dict[str, Any], settings: Settings,
 #   '----------------------------------------------------------------------'
 
 
-def load_configuration(settings: Settings, logger: Logger,
-                       slave_status: Dict[str, Any]) -> Dict[str, Any]:
+def make_config(config: ConfigFromWATO) -> Config:
+    # We need a mypy suppression below because of various problems related to
+    # extending TypedDicts, see e.g. https://github.com/python/mypy/issues/8890.
+    return {
+        **config,  # type: ignore[misc]
+        "action": {action["id"]: action for action in config["actions"]},
+        "last_reload": time.time(),
+    }
+
+
+def load_configuration(settings: Settings, logger: Logger, slave_status: Dict[str, Any]) -> Config:
     config = load_config_using(settings)
 
     # If not set by command line, set the log level by configuration
@@ -3814,7 +3831,7 @@ def load_configuration(settings: Settings, logger: Logger,
         logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
         logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
 
-    if config.get("translate_snmptraps") is True:
+    if config.get("translate_snmptraps") is True:  # type: ignore[comparison-overlap]
         config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
 
     # Are we a replication slave? Parts of the configuration
@@ -3823,15 +3840,7 @@ def load_configuration(settings: Settings, logger: Logger,
     if is_replication_slave(config):
         logger.info("Replication: slave configuration, current mode: %s" % slave_status["mode"])
     load_master_config(settings, config, logger)
-
-    # Create dictionary for actions for easy access
-    config["action"] = {}
-    for action in config["actions"]:
-        config["action"][action["id"]] = action
-
-    config["last_reload"] = time.time()
-
-    return config
+    return make_config(config)
 
 
 def reload_configuration(settings: Settings, logger: Logger, lock_configuration: ECLock,

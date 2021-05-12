@@ -14,17 +14,15 @@ import pytest
 from testlib import on_time, set_timezone
 
 import cmk.ec.export as ec
-import cmk.ec.main
+from cmk.ec.main import EventCreator, make_config
 
 
 @pytest.fixture
 def event_creator():
     logger = logging.getLogger("cmk.mkeventd")
-
     config = ec.default_config()
     config["debug_rules"] = True
-
-    return cmk.ec.main.EventCreator(logger, config)
+    return EventCreator(logger, make_config(config))
 
 
 @pytest.mark.parametrize(
@@ -342,7 +340,7 @@ class TestEventCreator:
     )
     def test_parse_rfc5424_syslog_info(
         self,
-        event_creator: cmk.ec.main.EventCreator,
+        event_creator: EventCreator,
         line: str,
         expected_result: Mapping[str, Any],
     ) -> None:

@@ -7,7 +7,7 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 # Needed for receiving traps
 import pysnmp.debug  # type: ignore[import]
@@ -27,6 +27,7 @@ import pyasn1.error  # type: ignore[import]
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
+from .config import Config
 from .settings import Settings
 
 
@@ -36,7 +37,7 @@ class SNMPTrapEngine:
     class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger,
+    def __init__(self, settings: Settings, config: Config, logger: Logger,
                  callback: Callable) -> None:
         super().__init__()
         self._logger = logger
@@ -90,7 +91,7 @@ class SNMPTrapEngine:
             return pysnmp.entity.config.usmAesBlumenthalCfb256Protocol
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
-    def _initialize_snmp_credentials(self, config: Dict[str, Any]) -> None:
+    def _initialize_snmp_credentials(self, config: Config) -> None:
         user_num = 0
         for spec in config["snmp_credentials"]:
             credentials = spec["credentials"]
@@ -183,7 +184,7 @@ class SNMPTrapEngine:
 
 
 class SNMPTrapTranslator:
-    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger) -> None:
+    def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]

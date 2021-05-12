@@ -21,7 +21,6 @@ from .settings import (
 
 from .rule_packs import (
     ECRulePack,
-    ECRulePacks,
     ECRulePackSpec,
     ECRuleSpec,
     MkpRulePackProxy,

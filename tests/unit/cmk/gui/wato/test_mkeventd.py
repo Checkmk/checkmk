@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterable
+
 from cmk.gui.watolib.search import MatchItem
 from cmk.ec.export import (
-    ECRulePacks,
+    ECRulePack,
     MkpRulePackProxy,
 )
 from cmk.gui.wato.mkeventd import MatchItemGeneratorECRulePacksAndRules
@@ -23,15 +25,18 @@ def test_match_item_generator_ec_rule_packs_and_rules():
             "comment": "comment"
         }]
     }
-    rule_packs: ECRulePacks = [{
-        "title": "Rule pack",
-        "id": "rule_pack_id",
-        "rules": [{
-            "id": "rule_id",
-            "description": "descr",
-            "comment": ""
-        }]
-    }, mkp_rule_pack]
+    rule_packs: Iterable[ECRulePack] = [
+        {
+            "title": "Rule pack",
+            "id": "rule_pack_id",
+            "rules": [{
+                "id": "rule_id",
+                "description": "descr",
+                "comment": ""
+            }]
+        },
+        mkp_rule_pack,
+    ]
 
     assert list(
         MatchItemGeneratorECRulePacksAndRules(

@@ -1,15 +1,15 @@
+#!/usr/bin/env python
 # encoding: utf-8
-# pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore
+import pytest
 
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.utils.tags as tags
 
 
-@pytest.fixture()
-def test_cfg():
+@pytest.fixture(name="test_cfg")
+def fixture_test_cfg():
     cfg = tags.TagConfig()
     cfg.parse_config({
         "aux_tags": [{
@@ -238,7 +238,7 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg):
 
 
 def test_tag_config_get_tag_ids(test_cfg):
-    assert test_cfg.get_tag_ids() == set([
+    assert test_cfg.get_tag_ids() == {
         None,
         'none_val',
         'bla',
@@ -249,11 +249,11 @@ def test_tag_config_get_tag_ids(test_cfg):
         'prod',
         'test',
         'wan',
-    ])
+    }
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_by_group() == set([
+    assert test_cfg.get_tag_ids_by_group() == {
         ('bla', 'bla'),
         ('criticality', 'critical'),
         ('criticality', 'offline'),
@@ -264,7 +264,7 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
         ('networking', 'wan'),
         ('none_choice', None),
         ('none_choice', 'none_val'),
-    ])
+    }
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg):
@@ -273,8 +273,8 @@ def test_tag_config_get_tag_or_aux_tag(test_cfg):
     assert isinstance(test_cfg.get_tag_or_aux_tag("prod"), tags.GroupedTag)
 
 
-@pytest.fixture()
-def cfg():
+@pytest.fixture(name="cfg")
+def fixture_cfg():
     return tags.TagConfig()
 
 
@@ -363,21 +363,25 @@ def test_tag_config_update_tag_group(test_cfg):
 
 def test_tag_group_get_tag_group_config(test_cfg):
     tg = test_cfg.get_tag_group("criticality")
+    assert tg is not None
     assert tg.get_tag_group_config("prod") == {'bla': 'bla', 'criticality': 'prod'}
 
 
 def test_tag_group_get_tag_group_config_none_choice(test_cfg):
     tg = test_cfg.get_tag_group("none_choice")
+    assert tg is not None
     assert tg.get_tag_group_config(None) == {'bla': 'bla'}
 
 
 def test_tag_group_get_tag_group_config_none_val(test_cfg):
     tg = test_cfg.get_tag_group("none_choice")
+    assert tg is not None
     assert tg.get_tag_group_config('none_val') == {'none_choice': 'none_val'}
 
 
 def test_tag_group_get_tag_group_config_unknown_choice(test_cfg):
     tg = test_cfg.get_tag_group("criticality")
+    assert tg is not None
     assert tg.get_tag_group_config("prodX") == {'criticality': 'prodX'}
 
 

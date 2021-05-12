@@ -1,4 +1,4 @@
-throttle(['Gerrit']){
+throttle(['Gerrit']) {
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '200')),
 ])
@@ -20,12 +20,41 @@ node (NODE) {
         stage("Auschecken: Checkmk") {
             checkout(scm)
             sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
-            gerrit_stages = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
+            test_gerrit_helper = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
             str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-            withFolderProperties{
+            withFolderProperties {
                 TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
             }
         }
+
+        /// Add description to the build
+        test_gerrit_helper.desc_init()
+        test_gerrit_helper.desc_add_line(GERRIT_CHANGE_SUBJECT)
+        test_gerrit_helper.desc_add_table()
+        test_gerrit_helper.desc_add_row('Stage', 'Status')
+
+        /// Generate list of stages to be added - save them locally for reference
+        withEnv(["TEST_CONTAINER=${TEST_CONTAINER}"]) {
+          sh("""scripts/run-in-docker.sh \
+                  scripts/run-pipenv run \
+                    buildscripts/scripts/verify_changes \
+                    --log-level=WARN \
+                    --no-skip=False \
+                    --env "RESULTS=${RESULTS}" \
+                    --env "WORKSPACE=${WORKSPACE}" \
+                    --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
+                    --write-file=${RESULTS}/stages.json \
+                    buildscripts/scripts/stages.yml
+             """);
+        }
+        def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
+
+        println(">>> stage configuration")
+        sh("cat ${RESULTS}/stages.json");
+        println("<<< stage configuration")
+
+
+        /// >>>>> JUST FOR VERIFICATION - can be removed as soon as the script is known to work
 
         // Creates a \n separated list of changed files
         // We get realpaths here. However, the scripts/find-python-files calls
@@ -56,197 +85,22 @@ node (NODE) {
 
         def CHANGED_SW_DOC_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'doc/documentation/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
-        // this variable is needed as long as we have base plugins that are
-        // concantenated for pylint (See tests/pylint/test_pylint.py)
-        def WORKDIR="${WORKSPACE}/tmp"
+        assert stage_info.VARIABLES.CHANGED_FILES_REL == CHANGED_FILES_REL
+        assert stage_info.VARIABLES.CHANGED_FILES_ABS == CHANGED_FILES_ABS
+        assert stage_info.VARIABLES.GREP_PATTERNS == GREP_PATTERNS
+        assert stage_info.VARIABLES.CHANGED_PYTHON_FILES == CHANGED_PYTHON_FILES
+        assert stage_info.VARIABLES.CHANGED_PYLINT_RC_FILE == CHANGED_PYLINT_RC_FILE
+        assert stage_info.VARIABLES.CHANGED_AGENT_PLUGINS == CHANGED_AGENT_PLUGINS
+        assert stage_info.VARIABLES.CHANGED_AGENT_PLUGINS_TESTS == CHANGED_AGENT_PLUGINS_TESTS
+        assert stage_info.VARIABLES.CHANGED_CORE_FILES == CHANGED_CORE_FILES
+        assert stage_info.VARIABLES.CHANGED_JS_FILES == CHANGED_JS_FILES
+        assert stage_info.VARIABLES.CHANGED_CSS_FILES == CHANGED_CSS_FILES
+        assert stage_info.VARIABLES.CHANGED_SW_DOC_FILES == CHANGED_SW_DOC_FILES
+        /// <<<< REMOVE ME
 
-        print "Changed Python files: ${CHANGED_PYTHON_FILES}"
-        print "Changed agent plugins: ${CHANGED_AGENT_PLUGINS}"
-        print "Changed agent plugins tests: ${CHANGED_AGENT_PLUGINS_TESTS}"
-        print "Changed core files: ${CHANGED_CORE_FILES}"
-        print "Changed JS files: ${CHANGED_JS_FILES}"
-        print "Changed CSS files: ${CHANGED_CSS_FILES}"
-        print "Changed SW Documentation files: ${CHANGED_SW_DOC_FILES}"
-
-        //Add description to the build
-        gerrit_stages.desc_init()
-        gerrit_stages.desc_add_line(GERRIT_CHANGE_SUBJECT)
-        gerrit_stages.desc_add_table()
-        gerrit_stages.desc_add_row('Stage', 'Status')
-
-        gerrit_stages.run(
-            NAME: 'Python Typing',
-            CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["JUNIT_XML=--junit-xml ${RESULTS}/mypy.xml"],
-            COMMAND: 'make --quiet test-mypy-docker',
-            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
-        )
-
-        gerrit_stages.run(
-            NAME: 'Python Format',
-            CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["PYTHON_FILES=${CHANGED_PYTHON_FILES}"],
-            COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-yapf.txt",
-            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
-         )
-
-        gerrit_stages.run(
-            NAME: 'Python Unit Test',
-            CONDITION: CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["PYTEST_ADDOPTS=--junitxml=$RESULTS/python3-unit-junit.xml"],
-            COMMAND: "make test-unit-docker",
-            TEXT_ON_SKIP: 'No Python files changed. Skipping.'
-        )
-
-        gerrit_stages.run(
-            NAME: 'Python Linting',
-            CONDITION: CHANGED_PYLINT_RC_FILE != "" || CHANGED_PYTHON_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["WORKDIR=${WORKDIR}",'PYLINT_ARGS=--output-format=cmk_parseable'],
-            COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt",
-            TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed. Skipping.'
-        )
-
-         gerrit_stages.run(
-            NAME: 'Shell Format',
-            CONDITION: true,
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt",
-            TEXT_ON_SKIP: ''
-         )
-
-         gerrit_stages.run(
-            NAME: 'Shell Unit',
-            CONDITION: true,
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt",
-            TEXT_ON_SKIP: ''
-         )
-
-        gerrit_stages.run(
-            NAME: 'JavaScript Format',
-            CONDITION: CHANGED_JS_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt",
-            TEXT_ON_SKIP: 'No JavaScript files changed. Skipping.'
-         )
-
-        gerrit_stages.run(
-            NAME: 'CSS Format',
-            CONDITION: CHANGED_CSS_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: [],
-            COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt",
-            TEXT_ON_SKIP: 'No CSS files changed. Skipping.'
-         )
-
-        gerrit_stages.run(
-            NAME: 'Agent Plugin Unit Tests',
-            CONDITION: CHANGED_AGENT_PLUGINS != "" || CHANGED_AGENT_PLUGINS_TESTS != "",
-            DIR: 'tests',
-            ENV_VARS: [
-            "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-junit.xml",
-            "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
-            ],
-            COMMAND: "make test-agent-plugin-docker",
-            TEXT_ON_SKIP: 'No agent files changed. Skipping.'
-        )
-
-         gerrit_stages.run(
-            NAME: 'NEB/CMC Compile',
-            CONDITION: true,
-            DIR: '',
-            ENV_VARS: [],
-            COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt",
-            TEXT_ON_SKIP: ''
-         )
-
-         gerrit_stages.run(
-            NAME: 'Cppcheck Livestatus',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["RESULTS=${RESULTS}"],
-            COMMAND: "make test-cppcheck-livestatus-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Cppcheck core',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["RESULTS=${RESULTS}"],
-            COMMAND: "make test-cppcheck-core-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Clang Tidy Livestatus',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
-            COMMAND: "make test-tidy-livestatus-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Clang Tidy core',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
-            COMMAND: "make test-tidy-core-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'IWYU Livestatus',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
-            COMMAND: "make test-iwyu-livestatus-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'IWYU core',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'tests',
-            ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
-            COMMAND: "make test-iwyu-core-docker",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Unit Test Livestatus',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'livestatus/src/test',
-            ENV_VARS: ["RESULTS=${RESULTS}"],
-            COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-         gerrit_stages.run(
-            NAME: 'Unit Test core',
-            CONDITION: CHANGED_CORE_FILES != "",
-            DIR: 'enterprise/core/src/test',
-            ENV_VARS: ["RESULTS=${RESULTS}"],
-            COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt",
-            TEXT_ON_SKIP: 'No core files changed. Skipping.'
-         )
-
-        gerrit_stages.run(
-            NAME: 'Software Documentation Generation',
-            CONDITION: CHANGED_SW_DOC_FILES != "",
-            DIR: '',
-            ENV_VARS: [],
-            COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt",
-            TEXT_ON_SKIP: 'No SW Documentation files changed. Skipping.'
-        )
+        stage_info.STAGES.each { item ->
+            test_gerrit_helper.create_stage(item);
+        }
     } catch (e) {
         currentBuild.result = "FAILED"
         throw e

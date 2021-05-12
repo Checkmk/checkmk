@@ -51,22 +51,22 @@ class ConfigFromWATO(TypedDict):
     archive_mode: str
     archive_orphans: bool
     debug_rules: bool
-    event_limit: Mapping[Any, Any]
+    event_limit: Mapping[str, Mapping[str, Any]]  # TODO: TypedDict
     eventsocket_queue_len: int
     history_lifetime: int
     history_rotation: str
-    hostname_translation: MutableMapping[Any, Any]  # TODO: Mutable???
+    hostname_translation: MutableMapping[str, Any]  # TODO: Mutable??? TypedDict
     housekeeping_interval: int
-    log_level: MutableMapping[Any, Any]  # TODO: Mutable???
+    log_level: MutableMapping[str, int]  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
-    mkp_rule_packs: Mapping[Any, Any]
-    remote_status: Optional[Mapping[Any, Any]]
-    replication: Optional[Mapping[Any, Any]]
+    mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
+    remote_status: Optional[Tuple[int, bool, Optional[Sequence[str]]]]
+    replication: Optional[Mapping[str, Any]]  # TODO: TypedDict
     retention_interval: int
     rule_optimizer: bool
-    rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable???
-    rules: List[Dict[str, Any]]  # TODO: Mutable???
+    rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable??? TypedDict
+    rules: List[Dict[str, Any]]  # TODO: Mutable??? TypedDict
     snmp_credentials: Iterable[Mapping[str, str]]
     socket_queue_len: int
     statistics_interval: int

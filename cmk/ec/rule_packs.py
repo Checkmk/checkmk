@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     Sequence,
@@ -180,7 +181,8 @@ def remove_exported_rule_pack(id_: str) -> None:
     export_file.unlink()
 
 
-def _bind_to_rule_pack_proxies(rule_packs: Any, mkp_rule_packs: Any) -> None:
+def _bind_to_rule_pack_proxies(rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any,
+                                                                                  Any]) -> None:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.

@@ -50,7 +50,7 @@ def cluster_check_ps(
         section_cpu: Dict[str, cpu.Section],  # unused
 ) -> CheckResult:
     # introduce node name
-    process_lines: List[Tuple[Optional[str], ps.ps_info, List[str]]] = [
+    process_lines: List[Tuple[Optional[str], ps.PsInfo, List[str]]] = [
         (node_name, ps_info, cmd_line)
         for node_name, (_cpu_cores, node_lines) in section_ps.items()
         for (ps_info, cmd_line) in node_lines

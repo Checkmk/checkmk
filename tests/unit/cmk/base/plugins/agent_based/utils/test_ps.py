@@ -13,15 +13,12 @@ pytestmark = pytest.mark.checks
 
 
 def test_host_labels_ps_no_match_attr():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
         {
             "default_params": {},
@@ -38,15 +35,12 @@ def test_host_labels_ps_no_match_attr():
 
 
 def test_host_labels_ps_no_match_pattern():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
         {
             "default_params": {},
@@ -62,15 +56,12 @@ def test_host_labels_ps_no_match_pattern():
 
 
 def test_host_labels_ps_match():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
         {
             "default_params": {},
@@ -97,7 +88,7 @@ def test_host_labels_ps_match():
     (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
 ])
 def test_process_matches(ps_line, ps_pattern, user_pattern, result):
-    psi = ps.ps_info(ps_line[0])  # type: ignore[call-arg]
+    psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
 
@@ -112,7 +103,7 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
 ])
 def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_groups, result):
-    psi = ps.ps_info(ps_line[0])  # type: ignore[call-arg]
+    psi = ps.PsInfo(ps_line[0])  # type: ignore[call-arg]
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
 

@@ -50,7 +50,7 @@ Section = Tuple[int, List]  # don't ask what kind of list.
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
 # a windows output it will extract the number of cpu cores
-def merge_wmic_info(info):
+def _merge_wmic_info(info) -> Tuple[int, List]:
     # Agent output version cmk>1.2.5
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
@@ -61,16 +61,15 @@ def merge_wmic_info(info):
         if "wmic process" in line[-1]:
             has_wmic = True
             break
-
     # Data from other systems than windows
     if not has_wmic:
         return 1, info
 
     # Data from windows with wmic info, cmk<1.2.5
-    return extract_wmic_info(info)
+    return _extract_wmic_info(info)
 
 
-def extract_wmic_info(info):
+def _extract_wmic_info(info) -> Tuple[int, List]:
     ps_result = []
     lines = iter(info)
     wmic_info: Dict[str, List] = {}
@@ -102,10 +101,10 @@ def extract_wmic_info(info):
         else:
             ps_result.append(line)  # plain list of process names
 
-    return merge_wmic(ps_result, wmic_info, wmic_headers)
+    return _merge_wmic(ps_result, wmic_info, wmic_headers)
 
 
-def merge_wmic(ps_result, wmic_info, wmic_headers):
+def _merge_wmic(ps_result, wmic_info, wmic_headers) -> Tuple[int, List]:
     info = []
     seen_pids = set([])  # Remove duplicate entries
     cpu_cores = 1
@@ -136,16 +135,17 @@ def merge_wmic(ps_result, wmic_info, wmic_headers):
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def parse_process_entries(pre_parsed) -> List[Tuple[ps.ps_info, List[str]]]:
+def parse_process_entries(pre_parsed) -> List[Tuple[ps.PsInfo, List[str]]]:
     parsed = []
     # line[0] = process_info OR (if no process info available) = process name
     for line in pre_parsed:
-        process_info = ps.ps_info_tuple(line[0])
-        if process_info:
-            cmd_line = line[1:]
-        else:
-            process_info = ps.ps_info()  # type: ignore[call-arg]
+        try:
+            process_info = ps.PsInfo.from_raw(line[0])
+        except ValueError:
+            process_info = ps.PsInfo()
             cmd_line = line
+        else:
+            cmd_line = line[1:]
 
         # Filter out any lines where no process command line is available, e.g.
         # [None, u'(<defunct>,,,)']
@@ -163,7 +163,7 @@ def parse_ps(string_table: StringTable,) -> ps.Section:
     # ]
     # First element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
     # second element:  The process command line
-    cpu_cores, info = merge_wmic_info(string_table)
+    cpu_cores, info = _merge_wmic_info(string_table)
     parsed = parse_process_entries(info)
     return cpu_cores, parsed
 
@@ -188,7 +188,7 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
         >>> print(cpu_cores)
         1
         >>> print(lines[0][0])
-        ps_info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
+        PsInfo(user='root', virtual=226036, physical=9736, cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
         >>> print(lines[0][1])
         ['/sbin/init', '--ladida']
     """
@@ -206,10 +206,10 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
     for line in string_table[1:]:
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
-        ps_info_obj = ps.ps_info(  # type: ignore[call-arg]
+        ps_info_obj = ps.PsInfo(
             user=ps_raw['user'],
-            virtual=ps_raw['vsz'],
-            physical=ps_raw['rss'],
+            virtual=int(ps_raw['vsz']),
+            physical=int(ps_raw['rss']),
             cputime="%s/%s" % (ps_raw['time'], ps_raw['elapsed']),
             process_id=ps_raw['pid'],
             cgroup=ps_raw.get('cgroup'),

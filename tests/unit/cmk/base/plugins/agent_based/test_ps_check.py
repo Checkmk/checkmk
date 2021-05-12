@@ -552,7 +552,7 @@ def test_check_ps_common_cpu(data):
     def time_info(service, agent_info, check_time, cputime, cpu_cores):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name: List[Tuple[Optional[str], ps_utils.ps_info, List[str]]] = [
+            lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
                 (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
             return list(ps_utils.check_ps_common(
@@ -605,7 +605,7 @@ def test_check_ps_common_cpu(data):
 def test_check_ps_common_count(levels, reference):
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
-    lines_with_node_name: List[Tuple[Optional[str], ps_utils.ps_info, List[str]]] = [
+    lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
         (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
     params = {
@@ -717,7 +717,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
 (on,7962644,229660,00:00:10/26:56,25758) firefox
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
-            lines_with_node_name: List[Tuple[Optional[str], ps_utils.ps_info, List[str]]] = [
+            lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
                 (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
 
             return list(ps_utils.check_ps_common(

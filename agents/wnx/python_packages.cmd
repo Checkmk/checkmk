@@ -53,7 +53,7 @@ powershell Write-Host "pipenv installed" -Foreground Green
   powershell Write-Host "pipenv install Failed"  -Foreground Red
 )
 
-call python_package_install !ppath! pyyaml
+call python_package_install !ppath! "pyyaml==5.4"
 call python_package_install !ppath! pypiwin32
 call python_package_install !ppath! requests
 call python_package_install !ppath! pyOpenSSL

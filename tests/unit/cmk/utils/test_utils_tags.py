@@ -84,6 +84,22 @@ def fixture_test_cfg() -> tags.TagConfig:
                 ],
                 'title': u'None choice',
             },
+            {
+                'id': 'none_2',
+                'tags': [
+                    {
+                        'aux_tags': ['bla'],
+                        'id': 'none_val',
+                        'title': 'None value 2'
+                    },
+                    {
+                        'aux_tags': [],
+                        'id': 'none_val_2',
+                        'title': 'None value again'
+                    },
+                ],
+                'title': 'None 2',
+            },
         ],
     })
     return cfg
@@ -145,12 +161,13 @@ def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
 
     test_cfg += cfg2
 
-    assert len(test_cfg.tag_groups) == 5
+    assert len(test_cfg.tag_groups) == 6
     assert test_cfg.tag_groups[0].id == "criticality"
     assert test_cfg.tag_groups[1].id == "networking"
     assert test_cfg.tag_groups[2].id == "none_choice"
-    assert test_cfg.tag_groups[3].id == "tgid3"
-    assert test_cfg.tag_groups[3].title == "titlor"
+    assert test_cfg.tag_groups[3].id == "none_2"
+    assert test_cfg.tag_groups[4].id == "tgid3"
+    assert test_cfg.tag_groups[4].title == "titlor"
 
     aux_tags = test_cfg.get_aux_tags()
     assert len(aux_tags) == 2
@@ -170,7 +187,7 @@ def test_tag_config_get_topic_choices(test_cfg: tags.TagConfig) -> None:
 def test_tag_groups_by_topic(test_cfg: tags.TagConfig) -> None:
     expected_groups = {
         u"Blubberei": ["criticality"],
-        u'Tags': ["networking", "none_choice"],
+        u'Tags': ["networking", "none_choice", "none_2"],
     }
 
     actual_groups = dict(test_cfg.get_tag_groups_by_topic())
@@ -205,6 +222,7 @@ def test_tag_config_get_tag_group_choices(test_cfg: tags.TagConfig) -> None:
         ('criticality', u'Blubberei / Criticality'),
         ('networking', u'Networking Segment'),
         ('none_choice', u'None choice'),
+        ('none_2', 'None 2'),
     ]
 
 
@@ -215,7 +233,8 @@ def test_tag_config_get_aux_tags(test_cfg: tags.TagConfig) -> None:
 def test_tag_config_get_aux_tags_by_tag(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_aux_tags_by_tag() == {
         None: ['bla'],
-        'none_val': [],
+        'none_val': ['bla'],  # none_val from none_2 overwrites none_val from none_choice
+        'none_val_2': [],
         'critical': [],
         'dmz': [],
         'lan': [],
@@ -251,6 +270,7 @@ def test_tag_config_get_tag_ids(test_cfg: tags.TagConfig) -> None:
         'prod',
         'test',
         'wan',
+        'none_val_2',
     }
 
 
@@ -264,6 +284,8 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg: tags.TagConfig) -> N
         ('networking', 'dmz'),
         ('networking', 'lan'),
         ('networking', 'wan'),
+        ('none_2', 'none_val_2'),
+        ('none_2', 'none_val'),
         ('none_choice', None),
         ('none_choice', 'none_val'),
     }
@@ -273,6 +295,15 @@ def test_tag_config_get_tag_or_aux_tag(test_cfg: tags.TagConfig) -> None:
     assert test_cfg.get_tag_or_aux_tag("blä") is None
     assert isinstance(test_cfg.get_tag_or_aux_tag("bla"), tags.AuxTag)
     assert isinstance(test_cfg.get_tag_or_aux_tag("prod"), tags.GroupedTag)
+
+
+def test_tag_config_get_tag_or_aux_tag_duplicate(test_cfg: tags.TagConfig) -> None:
+    # in the current state, there is no way of knowing which tag we want in this case, since there
+    # are two tags with "none_val" as id in different groups
+    tag_none_choice = test_cfg.get_tag_or_aux_tag("none_val")
+    assert isinstance(tag_none_choice, tags.GroupedTag)
+    assert tag_none_choice.title == "None value"
+    assert tag_none_choice.group.id == "none_choice"
 
 
 @pytest.fixture(name="cfg")
@@ -359,7 +390,7 @@ def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
         test_cfg.validate_config()
 
     test_cfg.update_tag_group(tags.TagGroup(("networking", "title", [("tgid2", "tagid2", [])])))
-    assert test_cfg.tag_groups[-2].title == "title"
+    assert test_cfg.tag_groups[1].title == "title"
     test_cfg.validate_config()
 
 

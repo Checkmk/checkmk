@@ -37,7 +37,7 @@ from cmk.utils.type_defs import (
     HostName,
     InventoryPluginName,
     SectionName,
-    TagValue,
+    TagID,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
@@ -284,7 +284,7 @@ def mode_list_tag(args: List[str]) -> None:
         out.output("\n")
 
 
-def _list_all_hosts_with_tags(tags: List[TagValue]) -> List[HostName]:
+def _list_all_hosts_with_tags(tags: List[TagID]) -> List[HostName]:
     config_cache = config.get_config_cache()
     hosts = []
 

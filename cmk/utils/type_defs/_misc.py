@@ -13,11 +13,14 @@ from typing import (
     Final,
     List,
     Literal,
+    Mapping,
     NamedTuple,
     NewType,
     Optional,
+    Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -36,14 +39,37 @@ Ruleset = List[RuleSpec]  # TODO: Improve this type
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]
-TagValue = str
 Labels = Dict[str, str]
 LabelSources = Dict[str, str]
+
 TagID = str
 TaggroupID = str
-Tags = Dict[TagID, TagValue]
-TagList = Set[TagValue]
-TagGroups = Dict[TagID, TaggroupID]
+TaggroupIDToTagID = Mapping[TaggroupID, TagID]
+TagIDToTaggroupID = Mapping[TagID, TaggroupID]
+TagIDs = Set[TagID]
+TagConditionNE = TypedDict(
+    'TagConditionNE',
+    {
+        '$ne': Optional[TagID],
+    },
+)
+TagConditionOR = TypedDict(
+    'TagConditionOR',
+    {
+        '$or': Sequence[Optional[TagID]],
+    },
+)
+TagConditionNOR = TypedDict(
+    'TagConditionNOR',
+    {
+        '$nor': Sequence[Optional[TagID]],
+    },
+)
+TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditionNOR]
+# Here, we have data structures such as
+# {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
+TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
+
 HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
                            List[Union[Dict[str, str], str]]]
 ServiceNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],

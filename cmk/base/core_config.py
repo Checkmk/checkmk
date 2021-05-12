@@ -37,11 +37,11 @@ import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import (
-    HostConfig,
     ConfigCache,
     HostCheckCommand,
-    Tags,
+    HostConfig,
     ObjectAttributes,
+    TaggroupIDToTagID,
 )
 from cmk.base.check_utils import Service, LegacyCheckParameters
 from cmk.base.nagios_utils import do_check_nagiosconfig
@@ -678,8 +678,10 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     return attrs
 
 
-def _get_tag_attributes(collection: Union[Tags, Labels, LabelSources],
-                        prefix: str) -> ObjectAttributes:
+def _get_tag_attributes(
+    collection: Union[TaggroupIDToTagID, Labels, LabelSources],
+    prefix: str,
+) -> ObjectAttributes:
     return {u"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
 
 

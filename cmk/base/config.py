@@ -86,10 +86,9 @@ from cmk.utils.type_defs import (
     ServicegroupName,
     ServiceName,
     SourceType,
-    TagGroups,
-    TagList,
-    Tags,
-    TagValue,
+    TaggroupIDToTagID,
+    TagIDs,
+    TagIDToTaggroupID,
     TimeperiodName,
     OptionalConfigSerial,
     LATEST_SERIAL,
@@ -3242,7 +3241,7 @@ class ConfigCache:
         self._host_paths: Dict[HostName, str] = self._get_host_paths(host_paths)
 
         # Host tags
-        self._hosttags: Dict[HostName, TagList] = {}
+        self._hosttags: Dict[HostName, TagIDs] = {}
 
         # Autochecks cache
         self._autochecks_manager = autochecks.AutochecksManager()
@@ -3265,7 +3264,7 @@ class ConfigCache:
             service_description,  # this is the global function!
         ).to_dict()
 
-    def get_tag_to_group_map(self) -> TagGroups:
+    def get_tag_to_group_map(self) -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -3301,7 +3300,7 @@ class ConfigCache:
     def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
 
-    def _collect_hosttags(self, tag_to_group_map: TagGroups) -> None:
+    def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts
 
         WATO ensures that all hosts configured with WATO have host_tags set, but there may also be hosts defined
@@ -3330,7 +3329,11 @@ class ConfigCache:
             host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
                 tag_to_group_map, self._hosttags[shadow_host_name])
 
-    def _tag_groups_to_tag_list(self, host_path: str, tag_groups: Dict[str, str]) -> Set[str]:
+    def _tag_groups_to_tag_list(
+        self,
+        host_path: str,
+        tag_groups: TaggroupIDToTagID,
+    ) -> TagIDs:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
@@ -3339,14 +3342,18 @@ class ConfigCache:
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
-    def _tag_list_to_tag_groups(self, tag_to_group_map: TagGroups, tag_list: TagList) -> Tags:
+    def _tag_list_to_tag_groups(
+        self,
+        tag_to_group_map: TagIDToTaggroupID,
+        tag_list: TagIDs,
+    ) -> TaggroupIDToTagID:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts
         # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
-        tag_groups: Tags = {
+        return {
             'piggyback': 'auto-piggyback',
             'networking': 'lan',
             'agent': 'cmk-agent',
@@ -3354,19 +3361,14 @@ class ConfigCache:
             'snmp_ds': 'no-snmp',
             'site': cmk_version.omd_site(),
             'address_family': 'ip-v4-only',
-        }
-
-        for tag_id in tag_list:
             # Assume it's an aux tag in case there is a tag configured without known group
-            tag_group_id = tag_to_group_map.get(tag_id, tag_id)
-            tag_groups[tag_group_id] = tag_id
-
-        return tag_groups
+            **{tag_to_group_map.get(tag_id, tag_id): tag_id for tag_id in tag_list},
+        }
 
     # Kept for compatibility with pre 1.6 sites
     # TODO: Clean up all call sites one day (1.7?)
     # TODO: check all call sites and remove this
-    def tag_list_of_host(self, hostname: HostName) -> Set[TagValue]:
+    def tag_list_of_host(self, hostname: HostName) -> TagIDs:
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
@@ -3377,7 +3379,7 @@ class ConfigCache:
         return self._tag_groups_to_tag_list("/", self.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
-    def tags_of_host(self, hostname: HostName) -> Tags:
+    def tags_of_host(self, hostname: HostName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
@@ -3398,14 +3400,14 @@ class ConfigCache:
             'address_family': 'ip-v4-only',
         }
 
-    def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Tags:
+    def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
         """
-        tags: Tags = {}
-        for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules):
-            tags.update(entry)
-        return tags
+        return {
+            k: v for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules)
+            for k, v in entry
+        }
 
     def labels_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Labels:
         """Returns the effective set of service labels from all available sources

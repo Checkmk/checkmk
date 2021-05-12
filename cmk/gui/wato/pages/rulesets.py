@@ -11,7 +11,19 @@ import pprint
 import re
 import json
 from enum import Enum, auto
-from typing import Dict, Generator, List, Optional, Union, Any, Iterable, Type, overload, Tuple as _Tuple
+from typing import (
+    Any,
+    cast,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    overload,
+    Tuple as _Tuple,
+    Type,
+    Union,
+)
 
 from six import ensure_str
 
@@ -22,6 +34,10 @@ from cmk.utils.type_defs import (
     ServiceNameConditions,
     HostName,
     ServiceName,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+    TagID,
 )
 
 from cmk.gui.type_defs import HTTPVariables
@@ -2000,24 +2016,37 @@ class RuleConditionRenderer:
     def _tag_conditions(self, conditions: RuleConditions) -> Generator:
         for tag_spec in conditions.host_tags.values():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
-                yield HTML(" <i>or</i> ").join(
-                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])
+                yield HTML(" <i>or</i> ").join([
+                    self._single_tag_condition(sub_spec) for sub_spec in cast(
+                        TagConditionOR,
+                        tag_spec,
+                    )["$or"]
+                ])
             elif isinstance(tag_spec, dict) and "$nor" in tag_spec:
-                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join(
-                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$nor"]])
+                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join([
+                    self._single_tag_condition(sub_spec) for sub_spec in cast(
+                        TagConditionNOR,
+                        tag_spec,
+                    )["$nor"]
+                ])
             else:
-                yield self._single_tag_condition(tag_spec)
+                yield self._single_tag_condition(
+                    cast(
+                        Union[Optional[TagID], TagConditionNE],
+                        tag_spec,
+                    ))
 
-    def _single_tag_condition(self, tag_spec):
+    def _single_tag_condition(
+        self,
+        tag_spec: Union[Optional[TagID], TagConditionNE],
+    ):
         negate = False
         if isinstance(tag_spec, dict):
             if "$ne" in tag_spec:
                 negate = True
+                tag_id = tag_spec["$ne"]
             else:
                 raise NotImplementedError()
-
-        if negate:
-            tag_id = tag_spec["$ne"]
         else:
             tag_id = tag_spec
 

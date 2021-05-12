@@ -28,12 +28,12 @@ import cmk.utils.render
 import cmk.utils.regex
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
-    Timestamp,
-    TimeRange,
     HostName,
-    TagGroups,
     LabelSources,
     ServiceName,
+    TaggroupIDToTagID,
+    Timestamp,
+    TimeRange,
 )
 
 import cmk.gui.config as config
@@ -1245,7 +1245,7 @@ def get_linked_visual_request_vars(visual: Visual,
     return vars_values
 
 
-def get_tag_groups(row: Row, what: str) -> TagGroups:
+def get_tag_groups(row: Row, what: str) -> TaggroupIDToTagID:
     # Sites with old versions that don't have the tag groups column return
     # None for this field. Convert this to the default value
     groups = row.get("%s_tags" % what, {}) or {}

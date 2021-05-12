@@ -2079,14 +2079,12 @@ class HostTagCondition(ValueSpec):
         for topic_id, topic_title in all_topics:
             if make_foldable:
                 html.begin_foldable_container("topic", varprefix + topic_title, True,
-                                              HTML("<b>%s</b>" % (_u(topic_title))))
+                                              _u(topic_title))
             html.open_table(class_=["hosttags"])
 
             for tag_group in tag_groups_by_topic.get(topic_id, []):
                 html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(tag_group.title))
-                html.close_td()
+                html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
 
                 choices = tag_group.get_tag_choices()
                 default_tag, deflt = self._current_tag_setting(choices, tag_specs)
@@ -2104,9 +2102,7 @@ class HostTagCondition(ValueSpec):
 
             for aux_tag in aux_tags_by_topic.get(topic_id, []):
                 html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(aux_tag.title))
-                html.close_td()
+                html.td("%s: &nbsp;" % _u(aux_tag.title), class_="title")
                 default_tag, deflt = self._current_tag_setting([(aux_tag.id, _u(aux_tag.title))],
                                                                tag_specs)
                 self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)

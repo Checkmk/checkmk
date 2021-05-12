@@ -199,7 +199,7 @@ class FixedValue(ValueSpec):
         return self._value
 
     def render_input(self, varprefix, value):
-        html.write(self.value_to_text(value))
+        html.write_text(self.value_to_text(value))
 
     def value_to_text(self, value):
         if self._totext is not None:
@@ -1789,7 +1789,7 @@ class DropdownChoice(ValueSpec):
     def render_input(self, varprefix, value):
         self.classtype_info()
         if self._label:
-            html.write("%s " % self._label)
+            html.write_text("%s " % self._label)
 
         choices = self.choices()
 
@@ -3527,16 +3527,11 @@ class Tuple(ValueSpec):
                 else:
                     title = ""
                 if self._orientation == "vertical":
-                    html.open_td(class_="tuple_left")
-                    html.write(title)
-
-                    html.close_td()
+                    html.td(title, class_="tuple_left")
                 elif self._orientation == "horizontal":
                     html.open_td(class_="tuple_td")
-                    html.open_span(class_=["title"])
-                    html.write(title)
+                    html.span(title, class_=["title"])
 
-                    html.close_span()
                     if self._title_br:
                         html.br()
                     else:

@@ -366,3 +366,50 @@ def test_phase_sensors(discovery_params):
 ])
 def test_cmciii_phase_check(discovery_params, item, expected):
     assert run_check('cmciii', 'cmciii_phase', item, _phase_sensor()) == expected
+
+
+def _status_info(variable, status):
+    return [
+        [['2', 'CMCIII-DET-M', 'DET-AC III Master', '2']],
+        [
+            ['2.1', '%s.DescName' % variable, '1', '', '0', 'Leakage', '0'],
+            ['2.2', '%s.Status' % variable, '7', '', '0', status, '4'],
+            ['2.3', '%s.Category' % variable, '14', '', '0', '80', '80'],
+        ],
+    ]
+
+
+@pytest.mark.parametrize('variable', [
+    'External release',
+    'Fire',
+    'Extinguishing agent',
+    'Extinguishing system',
+    'Pre-Alarm',
+    'Manual detector',
+    'Manual release',
+    'Door contact',
+    'Air flow',
+    'Detector 1',
+    'Communication',
+    'Battery',
+    'Battery change',
+    'Maintenance interval',
+    'Mains',
+    'Mains adapter',
+    'Ignition',
+])
+def test_cmciii_status_discovery(discovery_params, variable):
+    service_description = 'DET-AC_III_Master %s' % variable
+    assert run_discovery('cmciii', 'cmciii_status', _status_info(variable, 'OK')) == [
+        Service(item=service_description, parameters={'_item_key': service_description})
+    ]
+
+
+@pytest.mark.parametrize('variable, status, expected', [
+    ('External release', 'OK', [Result(state=State.OK, summary='Status: OK')]),
+    ('Air flow', 'Too Low', [Result(state=State.CRIT, summary='Status: Too Low')]),
+    ('Battery change', 'Service', [Result(state=State.CRIT, summary='Status: Service')]),
+])
+def test_cmciii_status_sensors(discovery_params, variable, status, expected):
+    assert run_check('cmciii', 'cmciii_status', "DET-AC_III_Master %s" % variable,
+                     _status_info(variable, status)) == expected

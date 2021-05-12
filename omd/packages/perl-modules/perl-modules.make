@@ -78,7 +78,7 @@ PERL_MODULES_LIST2 := \
                   Term-ProgressBar-2.17.tar.gz \
                   Test-Cmd-1.08.tar.gz \
                   Test-Simple-1.001014.tar.gz \
-                  XML-LibXML-2.0117.tar.gz \
+                  XML-LibXML-2.0207.tar.gz \
                   HTTP-Cookies-6.01.tar.gz \
                   IPC-Cmd-0.92.tar.gz \
                   ExtUtils-CBuilder-0.280220.tar.gz \

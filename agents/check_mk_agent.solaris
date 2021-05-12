@@ -72,6 +72,10 @@ file_mtime () {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
 
+if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/exclude_sections.cfg"
+fi
 
 run_mrpe() {
     local descr=$1
@@ -158,18 +162,6 @@ run_cached() {
     fi
 }
 
-
-echo "<<<check_mk>>>"
-echo "Version: 2.1.0i1"
-echo "AgentOS: solaris"
-echo "Hostname: $(hostname)"
-echo "AgentDirectory: $MK_CONFDIR"
-echo "DataDirectory: $MK_VARDIR"
-echo "SpoolDirectory: $SPOOLDIR"
-echo "PluginsDirectory: $PLUGINSDIR"
-echo "LocalDirectory: $LOCALDIR"
-
-
 # Find out what zone we are running in
 # Treat all pre-Solaris 10 systems as "global"
 if type zonename &>/dev/null
@@ -181,211 +173,243 @@ else
     pszone="-A"
 fi
 
+section_checkmk() {
+    echo "<<<check_mk>>>"
+    echo "Version: 2.1.0i1"
+    echo "AgentOS: solaris"
+    echo "Hostname: $(hostname)"
+    echo "AgentDirectory: $MK_CONFDIR"
+    echo "DataDirectory: $MK_VARDIR"
+    echo "SpoolDirectory: $SPOOLDIR"
+    echo "PluginsDirectory: $PLUGINSDIR"
+    echo "LocalDirectory: $LOCALDIR"
+}
 
-# Get statistics about monitored jobs. Below the job directory there
-# is a sub directory per user that ran a job. That directory must be
-# owned by the user so that a symlink or hardlink attack for reading
-# arbitrary files can be avoided.
-if pushd $MK_VARDIR/job >/dev/null; then
-    echo '<<<job>>>'
-    for username in *
+section_job() {
+    # Get statistics about monitored jobs. Below the job directory there
+    # is a sub directory per user that ran a job. That directory must be
+    # owned by the user so that a symlink or hardlink attack for reading
+    # arbitrary files can be avoided.
+    if pushd $MK_VARDIR/job >/dev/null; then
+        echo '<<<job>>>'
+        for username in *
+        do
+            if [ -d "$username" ] && cd "$username" ; then
+                count=$(su "$username" -c "ls -1 * | wc -l")
+
+                if [ "$count" -eq "1" ]; then
+                    filename=$(su "$username" -c "ls -1 *")
+                    echo "==> $filename <=="
+                fi
+
+                su "$username" -c "head -n1000 *"
+                cd ..
+            fi
+        done
+        popd > /dev/null
+    fi
+}
+
+section_df() {
+    # Filesystem usage for UFS and VXFS
+    echo '<<<df>>>'
+    for fs in ufs vxfs samfs lofs tmpfs
     do
-        if [ -d "$username" ] && cd "$username" ; then
-            count=$(su "$username" -c "ls -1 * | wc -l")
+        df -l -k -F $fs 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
+        while read Filesystem kbytes used avail capacity Mountedon
+        do
+            kbytes=$(($used + $avail))
+            echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
+        done
+    done
+}
 
-            if [ "$count" -eq "1" ]; then
-                filename=$(su "$username" -c "ls -1 *")
-                echo "==> $filename <=="
+section_zfs() {
+    # Filesystem usage for ZFS
+    if type zfs &>/dev/null
+    then
+        echo '<<<zfsget>>>'
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
+        if [ $? -ne 0  ] ; then
+            zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+        fi
+        echo '[df]'
+        df -l -k -F zfs 2>/dev/null | sed 1d
+    fi
+}
+
+section_zfs_arc_cache() {
+    # ZFS arc cache
+    # newer Solaris (>=11.3) do not provide hits and misses via mdb -k
+    echo '<<<zfs_arc_cache>>>'
+    if type kstat &>/dev/null
+    then
+        kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | awk '{printf "%s = %s\n", $1, $2;}'
+
+    elif type mdb &>/dev/null
+    then
+        echo '::arc' | mdb -k
+    fi
+}
+
+section_ps() {
+    # Processes
+    echo '<<<ps>>>'
+    # The default solaris ps command strips the command lines of the processes. But for good process
+    # matching on the server we really need to whole command line. On linux there are arguments to
+    # make ps output the whole command line, but on solaris this seems to be missing. We use the ucb
+    # ps command to get the full command line instead. What a hack.
+    if [ -x /usr/ucb/ps ]; then
+        UCB_PS=$(/usr/ucb/ps -agwwwx)
+        PS=$(ps -o user,vsz,rss,pcpu,etime,pid,args $pszone | \
+             sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
+        while read -r LINE; do
+            STATS=${LINE%) *}
+            PID=${STATS##*,}
+
+            # Directly use ps output when line is too slow to be stripped
+            if [ ${#LINE} -lt 100 ]; then
+                echo "$LINE"
+                continue
             fi
 
-            su "$username" -c "head -n1000 *"
-            cd ..
-        fi
-    done
-    popd > /dev/null
-fi
-
-
-
-
-# Filesystem usage for UFS and VXFS
-echo '<<<df>>>'
-for fs in ufs vxfs samfs lofs tmpfs
-do
-    df -l -k -F $fs 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
-    while read Filesystem kbytes used avail capacity Mountedon
-    do
-        kbytes=$(($used + $avail))
-        echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
-    done
-done
-
-# Filesystem usage for ZFS
-if type zfs &>/dev/null
-then
-    echo '<<<zfsget>>>'
-    zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
-    if [ $? -ne 0  ] ; then
-        zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
+            CMD=$(echo "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
+                  awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
+            # Only use the ucb ps line when it's not empty (process might already been gone)
+            if [ -z "$CMD" ]; then
+                echo "$LINE"
+            else
+                echo "${STATS}) ${CMD}"
+            fi
+        done <<< "$PS"
+    else
+        ps -o user,vsz,rss,pcpu,etime,pid,args $pszone | \
+            sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
     fi
-    echo '[df]'
-    df -l -k -F zfs 2>/dev/null | sed 1d
-fi
+}
 
-# ZFS arc cache
-# newer Solaris (>=11.3) do not provide hits and misses via mdb -k
-echo '<<<zfs_arc_cache>>>'
-if type kstat &>/dev/null
-then
-    kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | awk '{printf "%s = %s\n", $1, $2;}'
+section_statgrab() {
+    # Statgrab
+    # source: http://www.i-scream.org/libstatgrab/
+    # binary: http://www.opencsw.org/
+    if type statgrab &>/dev/null
+    then
+        statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
+        statgrab_sections="cpu disk page"
 
-elif type mdb &>/dev/null
-then
-    echo '::arc' | mdb -k
-fi
-
-# Processes
-echo '<<<ps>>>'
-# The default solaris ps command strips the command lines of the processes. But for good process
-# matching on the server we really need to whole command line. On linux there are arguments to
-# make ps output the whole command line, but on solaris this seems to be missing. We use the ucb
-# ps command to get the full command line instead. What a hack.
-if [ -x /usr/ucb/ps ]; then
-    UCB_PS=$(/usr/ucb/ps -agwwwx)
-    PS=$(ps -o user,vsz,rss,pcpu,etime,pid,args $pszone | \
-         sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /')
-    while read -r LINE; do
-        STATS=${LINE%) *}
-        PID=${STATS##*,}
-
-        # Directly use ps output when line is too slow to be stripped
-        if [ ${#LINE} -lt 100 ]; then
-            echo "$LINE"
-            continue
+        # Collect net stats in the global zone and in local zones if dlstat is present.
+        if [ "$zonename" == "global" ] || type dlstat &>/dev/null
+        then
+            statgrab_vars="$statgrab_vars net."
+            statgrab_sections="$statgrab_sections net"
         fi
 
-        CMD=$(echo "$UCB_PS" | grep "^[ ]*$PID " | head -n1 | \
-              awk '{ s = ""; for (i = 5; i <= NF; i++) s = s $i " "; print s }')
-        # Only use the ucb ps line when it's not empty (process might already been gone)
-        if [ -z "$CMD" ]; then
-            echo "$LINE"
-        else
-            echo "${STATS}) ${CMD}"
+        statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
+        for s in $statgrab_sections
+        do
+            echo "<<<statgrab_$s>>>"
+            grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
+        done
+
+        # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
+        # since solaris_mem is under suspicion to be buggy.
+        echo '<<<statgrab_mem>>>'
+        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+
+        [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
+
+    else
+        # Memory
+        # <<<solaris_mem>>> should be used if statgrab is missing and top is available.
+        if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]
+        then
+            echo "<<<solaris_mem>>>"
+            if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+            if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
         fi
-    done <<< "$PS"
-else
-    ps -o user,vsz,rss,pcpu,etime,pid,args $pszone | \
-	sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
-fi
-
-# Statgrab
-# source: http://www.i-scream.org/libstatgrab/
-# binary: http://www.opencsw.org/
-if type statgrab &>/dev/null
-then
-    statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
-    statgrab_sections="cpu disk page"
-
-    # Collect net stats in the global zone and in local zones if dlstat is present.
-    if [ "$zonename" == "global" ] || type dlstat &>/dev/null
-    then
-        statgrab_vars="$statgrab_vars net."
-        statgrab_sections="$statgrab_sections net"
     fi
+}
 
-    statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
-    for s in $statgrab_sections
-    do
-        echo "<<<statgrab_$s>>>"
-        grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
-    done
+section_cpu() {
+    # /proc/cpu
+    # Simulated Output of Linux /proc/cpu
+    echo '<<<cpu>>>'
+    load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
+    nthreads=$(($(ps -AL | wc -l)))
+    procs=$(($(psrinfo | wc -l)))
+    echo $load 1/$nthreads $$ $procs
+}
 
-    # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
-    # since solaris_mem is under suspicion to be buggy.
-    echo '<<<statgrab_mem>>>'
-    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+section_zpool() {
+    # zpool status
+    if [ -x /sbin/zpool ]; then
+        run_cached -s zpool_status 120 "/sbin/zpool status -x"
 
-    [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
-
-else
-    # Memory
-    # <<<solaris_mem>>> should be used if statgrab is missing and top is available.
-    if [ -x /usr/bin/top ] || [ -x /usr/local/bin/top ]
-    then
-        echo "<<<solaris_mem>>>"
-        if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
-        if [ -x /usr/local/bin/top ]; then /usr/local/bin/top | grep '^Memory:'; fi
+        echo '<<<zpool>>>'
+        zpool list
     fi
-fi
+}
 
-# /proc/cpu
-# Simulated Output of Linux /proc/cpu
-echo '<<<cpu>>>'
-load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
-nthreads=$(($(ps -AL | wc -l)))
-procs=$(($(psrinfo | wc -l)))
-echo $load 1/$nthreads $$ $procs
+section_uptime() {
+    # Solaris doesn't always give a consisten output on uptime, thus include side information
+    # Tested in VM for solaris 10/11
+    echo '<<<uptime>>>'
+    ctime=`nawk 'BEGIN{print srand()}'`;
+    btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
+    echo $(($ctime - $btime));
+    echo '[uptime_solaris_start]'
+    uname -a
+    zonename
+    uptime
+    kstat -p unix:0:system_misc:snaptime
+    echo '[uptime_solaris_end]'
+}
 
-
-# zpool status
-if [ -x /sbin/zpool ]; then
-    run_cached -s zpool_status 120 "/sbin/zpool status -x"
-
-    echo '<<<zpool>>>'
-    zpool list
-fi
-
-# Solaris doesn't always give a consisten output on uptime, thus include side information
-# Tested in VM for solaris 10/11
-echo '<<<uptime>>>'
-ctime=`nawk 'BEGIN{print srand()}'`;
-btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
-echo $(($ctime - $btime));
-echo '[uptime_solaris_start]'
-uname -a
-zonename
-uptime
-kstat -p unix:0:system_misc:snaptime
-echo '[uptime_solaris_end]'
-
-# NTP
-ps -o comm $pszone | grep -w .*ntpd &>/dev/null
-if [ $? -eq 0 ]
-then
-    echo '<<<ntp>>>'
-    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-fi
-
-if type prtdiag >/dev/null 2>&1
-then
-    # prtdiag does not work in local zones
-    if [ "$zonename" == "global" ]
+section_ntp() {
+    # NTP
+    ps -o comm $pszone | grep -w .*ntpd &>/dev/null
+    if [ $? -eq 0 ]
     then
-        run_cached -s solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
+        echo '<<<ntp>>>'
+        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
     fi
-fi
+}
 
-# TCP Connection stats
-echo '<<<tcp_conn_stats>>>'
-netstat -n -a -f inet -P tcp | tail  +5 | \
-nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
-
-
-# Multipathing
-if type mpathadm &>/dev/null
-then
-    if [ "$zonename" == "global" ]
+section_solaris_prtg() {
+    if type prtdiag >/dev/null 2>&1
     then
-        echo '<<<solaris_multipath>>>'
-        mpathadm list LU | nawk '{if(NR%3==1){dev=$1}
-                                  if(NR%3==2){tc=$NF}
-                                  if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+        # prtdiag does not work in local zones
+        if [ "$zonename" == "global" ]
+        then
+            run_cached -s solaris_prtdiag_status 300 '/usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
+        fi
     fi
-fi
+}
 
+section_tcp() {
+    # TCP Connection stats
+    echo '<<<tcp_conn_stats>>>'
+    netstat -n -a -f inet -P tcp | tail  +5 | \
+    nawk '{ c[$7]++; } END { for (x in c) { print x, c[x]; } }'
+}
 
-# Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-perl -e '
+section_multipathing() {
+    # Multipathing
+    if type mpathadm &>/dev/null
+    then
+        if [ "$zonename" == "global" ]
+        then
+            echo '<<<solaris_multipath>>>'
+            mpathadm list LU | nawk '{if(NR%3==1){dev=$1}
+                                      if(NR%3==2){tc=$NF}
+                                      if(NR%3==0){printf "%s %s %s\n",dev,tc,$NF}}'
+        fi
+    fi
+}
+
+section_fileinfo() {
+    # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
 use File::Glob "bsd_glob";
 my @patterns = ();
 foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
@@ -416,89 +440,99 @@ foreach (@patterns) {
     }
 }
 ' -- "$MK_CONFDIR"
+}
 
+section_libelle() {
+    # Libelle Business Shadow
+    if type trd >/dev/null 2>&1
+    then
+        echo '<<<libelle_business_shadow:sep(58)>>>'
+        trd -s
+    fi
+}
 
-# Libelle Business Shadow
-if type trd >/dev/null 2>&1
-then
-    echo '<<<libelle_business_shadow:sep(58)>>>'
-    trd -s
-fi
+section_solaris_fmadm() {
+    # Displaying Information About Faults or Defects
+    # If there are no faults the output of this command will be empty.
+    if type fmadm >/dev/null 2>&1
+    then
+        echo '<<<solaris_fmadm:sep(58)>>>'
+        fmadm faulty
+    fi
+}
 
-# Displaying Information About Faults or Defects
-# If there are no faults the output of this command will be empty.
-if type fmadm >/dev/null 2>&1
-then
-    echo '<<<solaris_fmadm:sep(58)>>>'
-    fmadm faulty
-fi
+section_solaris_services() {
+    # Getting Information About Services Running on Solaris
+    # We can get a list of all service instances, including disabled
+    # or incomplete ones by 'svcs -a'
+    if type svcs > /dev/null 2>&1
+    then
+        echo '<<<solaris_services>>>'
+        svcs -a
+    fi
+}
 
-# Getting Information About Services Running on Solaris
-# We can get a list of all service instances, including disabled
-# or incomplete ones by 'svcs -a'
-if type svcs > /dev/null 2>&1
-then
-    echo '<<<solaris_services>>>'
-    svcs -a
-fi
+run_remote_plugin() {
+    # MK's Remote Plugin Executor
+    if test -f "$MK_CONFDIR/mrpe.cfg"
+    then
+        echo '<<<mrpe>>>'
+        grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
+        while read descr cmdline
+        do
+            interval=
+            args="-m"
+            if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
+            then
+                parameters=${BASH_REMATCH[1]}
+                cmdline=${BASH_REMATCH[2]}
 
-# MK's Remote Plugin Executor
-if test -f "$MK_CONFDIR/mrpe.cfg"
-then
-    echo '<<<mrpe>>>'
-    grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
-    while read descr cmdline
-    do
-        interval=
-        args="-m"
-        if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]
-        then
-            parameters=${BASH_REMATCH[1]}
-            cmdline=${BASH_REMATCH[2]}
+                # split multiple parameter assignments
+                for par in $(echo $parameters | tr ":" "\n")
+                do
+                    # split each assignment
+                    key=$(echo $par | cut -d= -f1)
+                    value=$(echo $par | cut -d= -f2)
 
-            # split multiple parameter assignments
-            for par in $(echo $parameters | tr ":" "\n")
-            do
-                # split each assignment
-                key=$(echo $par | cut -d= -f1)
-                value=$(echo $par | cut -d= -f2)
+                    if [ "$key" = "interval" ] ; then
+                        interval=$value
+                    elif [ "$key" = "appendage" ] ; then
+                        args="-ma"
+                    fi
+                done
+            fi
 
-                if [ "$key" = "interval" ] ; then
-                    interval=$value
-                elif [ "$key" = "appendage" ] ; then
-                    args="-ma"
-                fi
-            done
-        fi
+            if [ -z "$interval" ]
+            then
+                run_mrpe $descr "$cmdline"
+            else
+                run_cached $args $descr $interval "$cmdline"
+            fi
+        done
+    fi
+}
 
-        if [ -z "$interval" ]
-        then
-            run_mrpe $descr "$cmdline"
-        else
-            run_cached $args $descr $interval "$cmdline"
-        fi
-    done
-fi
+run_local_checks() {
+    # Local checks
+    if cd $LOCALDIR 2>/dev/null
+    then
+        echo '<<<local:sep(0)>>>'
+        for skript in $(ls)
+        do
+            if [ -x "$skript" ] ; then
+                ./$skript
+            fi
+        done
 
-# Local checks
-if cd $LOCALDIR 2>/dev/null
-then
-    echo '<<<local:sep(0)>>>'
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ] ; then
-            ./$skript
-        fi
-    done
+        # Call some plugins only every X'th second
+        for skript in [1-9]*/* ; do
+            if [ -x "$skript" ] ; then
+                run_cached local_${skript//\//\#} ${skript%/*} "$skript"
+            fi
+        done
 
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
-            run_cached local_${skript//\//\#} ${skript%/*} "$skript"
-        fi
-    done
-
-fi
+    fi
+}
 
 run_agent_plugin() {
     if [ "${1:(0):(2)}" == "./" ]; then
@@ -536,31 +570,78 @@ run_agent_plugin() {
     fi
 }
 
-# Plugins
-if cd $PLUGINSDIR 2>/dev/null
-then
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ] ; then
-            run_agent_plugin $skript
-        fi
-    done
+run_plugins() {
+    # Plugins
+    if cd $PLUGINSDIR 2>/dev/null
+    then
+        for skript in $(ls)
+        do
+            if [ -x "$skript" ] ; then
+                run_agent_plugin $skript
+            fi
+        done
 
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/* ; do
-        if [ -x "$skript" ] ; then
-            run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
-        fi
-    done
-fi
-
-
-if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
-    echo "<<<check_mk>>>"
-    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
-    if [ -n "$NO_PYTHON" ]; then
-        echo "FailedPythonReason: No suitable python installation found."
-    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
-        echo "FailedPythonReason: Configured python command not found."
+        # Call some plugins only every X'th second
+        for skript in [1-9]*/* ; do
+            if [ -x "$skript" ] ; then
+                run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
+            fi
+        done
     fi
-fi
+}
+
+section_checkmk_failed_plugins() {
+    if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+        echo "<<<check_mk>>>"
+        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+        if [ -n "$NO_PYTHON" ]; then
+            echo "FailedPythonReason: No suitable python installation found."
+        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            echo "FailedPythonReason: Configured python command not found."
+        fi
+    fi
+}
+
+section_checkmk
+
+[ -z "$MK_SKIP_JOB" ] && section_job
+
+[ -z "$MK_SKIP_DF" ] && section_df
+
+[ -z "$MK_SKIP_ZFS" ] && section_zfs
+
+[ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && section_zfs_arc_cache
+
+[ -z "$MK_SKIP_PS" ] && section_ps
+
+[ -z "$MK_SKIP_STATGRAB" ] && section_statgrab
+
+[ -z "$MK_SKIP_CPU" ] && section_cpu
+
+[ -z "$MK_SKIP_ZPOOL" ] && section_zpool
+
+[ -z "$MK_SKIP_UPTIME" ] && section_uptime
+
+[ -z "$MK_SKIP_NTP" ] && section_ntp
+
+[ -z "$MK_SKIP_SOLARIS_PRTG" ] && section_solaris_prtg
+
+[ -z "$MK_SKIP_TCP" ] && section_tcp
+
+[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
+
+[ -z "$MK_SKIP_FILEINFO" ] && section_fileinfo
+
+[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
+
+[ -z "$MK_SKIP_SOLARIS_FMADM" ] && section_solaris_fmadm
+
+[ -z "$MK_SKIP_SOLARIS_SERVICES" ] && section_solaris_services
+
+run_remote_plugin
+
+run_local_checks
+
+run_plugins
+
+section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"

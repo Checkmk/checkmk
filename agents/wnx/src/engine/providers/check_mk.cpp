@@ -111,9 +111,10 @@ std::string CheckMk::makeBody() {
     if (install::GetLastInstallFailReason()) {
         // We deliver fixed strings because it is a prototype solution.
         out += "<<<check_mk>>>\n";
-        out += "FailedPythonPlugins: cmk_update_agent\n";
         out +=
-            "FailedPythonReason: The last agent update is failed - OS doesn't support the Python runtime supplied with Windows agent.\n";
+            "UpdateFailed: The last agent update failed. Supplied Python environment is not compatible with OS. \n";
+        out +=
+            "UpdateRecoverAction: Please change the rule 'Setup Python environment' to 'legacy' in setup.\n";
     }
 
     return out;

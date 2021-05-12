@@ -227,8 +227,8 @@ TEST_F(SectionProviderCheckMkFixture, FailedInstall) {
     tst::misc::CopyFailedPythonLogFileToLog(createDataDir());
 
     auto result = getFullResultAsTable();
-    EXPECT_TRUE(result[full_lines_ - 2].starts_with("FailedPythonPlugins:"));
-    EXPECT_TRUE(result[full_lines_ - 1].starts_with("FailedPythonReason:"));
+    EXPECT_TRUE(result[full_lines_ - 2].starts_with("UpdateFailed:"));
+    EXPECT_TRUE(result[full_lines_ - 1].starts_with("UpdateRecoverAction:"));
 }
 
 class SectionProvidersFixture : public ::testing::Test {

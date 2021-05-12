@@ -670,6 +670,8 @@ class _AutodiscoveryQueue:
 
     def _ls(self) -> Iterable[Path]:
         try:
+            # we must consume the .iterdir generator to make sure
+            # the FileNotFoundError gets rased *here*.
             return list(self._dir.iterdir())
         except FileNotFoundError:
             return []

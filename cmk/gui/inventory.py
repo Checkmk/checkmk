@@ -437,8 +437,7 @@ def has_inventory(hostname):
 
 def inventory_of_host(host_name, request):
     site = request.get("site")
-    if not may_see(host_name, site):
-        raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)
+    verify_permission(host_name, site)
 
     row = get_status_data_via_livestatus(site, host_name)
     merged_tree = load_filtered_and_merged_tree(row)
@@ -454,24 +453,30 @@ def inventory_of_host(host_name, request):
     return merged_tree.get_raw_tree()
 
 
-def may_see(host_name, site):
+def verify_permission(host_name, site):
     if config.user.may("general.see_all"):
-        return True
+        return
 
-    query = "GET hosts\nStats: state >= 0\nFilter: name = %s\n" % livestatus.lqencode(host_name)
+    query = "GET hosts\nFilter: host_name = %s\nStats: state >= 0%s" % (
+        livestatus.lqencode(host_name),
+        "\nAuthUser: %s" % livestatus.lqencode(config.user.id) if config.user.id else "",
+    )
+
     if site:
         sites.live().set_only_sites([site])
 
     try:
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
     except livestatus.MKLivestatusNotFoundError:
-        # TODO differentiate between empty data and permissions
-        return False
+        raise MKAuthException(
+            _("No such inventory tree of host %s."
+              " You may also have no access to this host.") % host_name)
     finally:
         if site:
             sites.live().set_only_sites()
 
-    return result[0] > 0
+    if result[0] == 0:
+        raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
 
 
 def _write_xml(response):

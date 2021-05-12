@@ -28,7 +28,6 @@ from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
-from cmk.gui.exceptions import MKAuthException
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
@@ -1922,8 +1921,7 @@ class DeltaNodeRenderer(NodeRenderer):
 def ajax_inv_render_tree():
     site_id = html.request.var("site")
     hostname = html.request.var("host")
-    if not inventory.may_see(hostname, site_id):
-        raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % hostname)
+    inventory.verify_permission(hostname, site_id)
 
     invpath = html.request.var("path")
     tree_id = html.request.var("treeid", "")

@@ -3026,7 +3026,6 @@ def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
         'state': 0,
         'host_labels': {"cmk/os_family": "linux","cmk/check_mk_server": "yes",},
     })])
-    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     live.expect_query(
         "GET hosts\n"
         "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "

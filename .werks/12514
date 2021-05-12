@@ -1,0 +1,12 @@
+Title: zerto_vpg_rpo: Fix crash of plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1620815763
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p5
+
+The plugin crashed with the message "Wrong usage of decorator function".

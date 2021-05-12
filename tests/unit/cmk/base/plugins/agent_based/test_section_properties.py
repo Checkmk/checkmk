@@ -255,7 +255,6 @@ def test_section_parse_function_does_something():
         'winperf_msx_queues',
         'winperf_ts_sessions',
         'wmic_process',
-        'zerto_vpg_rpo',
         'zpool_status',
         'zypper',
         'dmraid',

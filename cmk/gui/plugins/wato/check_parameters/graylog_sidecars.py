@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -100,7 +100,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="graylog_sidecars",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Sidecar name")),
+        item_spec=lambda: TextInput(title=_("Sidecar name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_sidecars,
         title=lambda: _("Graylog sidecars"),

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_apache_status():
-    return TextAscii(
+    return TextInput(
         title=_("Apache Server"),
         help=_("A string-combination of servername and port, e.g. 127.0.0.1:5000."),
     )

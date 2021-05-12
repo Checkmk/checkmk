@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -33,9 +33,9 @@ def ibm_mq_version():
                     CascadingDropdown(
                         choices=[
                             ('at_least', _("At least"),
-                             TextAscii(title=_("At least"), allow_empty=False)),
+                             TextInput(title=_("At least"), allow_empty=False)),
                             ('specific', _("Specific version"),
-                             TextAscii(title=_("Specific version"), allow_empty=False)),
+                             TextInput(title=_("Specific version"), allow_empty=False)),
                         ],
                         default_value='at_least',
                     ),

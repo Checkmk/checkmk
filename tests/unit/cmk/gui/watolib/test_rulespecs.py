@@ -35,7 +35,7 @@ from cmk.gui.utils.urls import makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
-    TextAscii,
+    TextInput,
     FixedValue,
     ValueSpec,
 )
@@ -1551,7 +1551,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
         ),
         title="title",
         help="help me!",
-        itemspec=TextAscii(title="blub"),
+        itemspec=TextInput(title="blub"),
         itemtype="service",
         itemname=u"Blub",
         itemhelp=u"Item help",
@@ -1568,7 +1568,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
     assert spec.match_type == "dict"
     assert spec.title == "title"
     assert spec.help == "help me!"
-    assert isinstance(spec.item_spec, TextAscii)
+    assert isinstance(spec.item_spec, TextInput)
     assert spec.item_type == "service"
     assert spec.item_name == u"Blub"
     assert spec.item_help == u"Item help"
@@ -1593,7 +1593,7 @@ def test_register_check_parameters(patch_rulespec_registries):
         "bla_params",
         "Title of bla",
         Dictionary(elements=[],),
-        TextAscii(title="The object name"),
+        TextInput(title="The object name"),
         "dict",
     )
 
@@ -1616,7 +1616,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert rulespec.item_type == "item"
     assert rulespec.item_name == "The object name"
     assert rulespec.item_help is None
-    assert isinstance(rulespec.item_spec, TextAscii)
+    assert isinstance(rulespec.item_spec, TextInput)
     assert rulespec.match_type == "dict"
     assert rulespec.is_deprecated is False
     assert rulespec.is_optional is False
@@ -1646,7 +1646,7 @@ def test_register_check_parameters(patch_rulespec_registries):
     assert rulespec.item_help is None
     # The item_spec of the ManualCheckParameterRulespec fetched differently,
     # since it is no actual item spec
-    assert isinstance(rulespec._get_item_spec(), TextAscii)
+    assert isinstance(rulespec._get_item_spec(), TextInput)
     assert rulespec.is_deprecated is False
     assert rulespec.is_optional is False
 
@@ -1770,14 +1770,14 @@ def test_match_item_generator_rules():
         HostRulespec(
             name="some_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
             title=lambda: "Title",  # pylint: disable=unnecessary-lambda
         ))
     rulespec_reg.register(
         HostRulespec(
             name="some_deprecated_host_rulespec",
             group=SomeRulespecGroup,
-            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            valuespec=lambda: TextInput(),  # pylint: disable=unnecessary-lambda
             title=lambda: "Title",  # pylint: disable=unnecessary-lambda
             is_deprecated=True,
         ))
@@ -1821,6 +1821,6 @@ def test_rulespec_groups_have_unique_names(load_plugins):
 
 def test_validate_datatype_timeperiod_valuespec_inner():
     # make sure TimeperiodValuespec does propagate validate_datatype to its child
-    value_spec = TimeperiodValuespec(TextAscii(title="testing"))
+    value_spec = TimeperiodValuespec(TextInput(title="testing"))
     with pytest.raises(MKUserError):
         value_spec.validate_datatype(["not", "a", "string"], "")

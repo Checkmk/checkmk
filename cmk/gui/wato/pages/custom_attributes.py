@@ -81,7 +81,7 @@ def save_custom_attrs_to_mk_file(attrs):
 
 def custom_attr_types() -> Choices:
     return [
-        ('TextAscii', _('Simple Text')),
+        ('TextInput', _('Simple Text')),
     ]
 
 

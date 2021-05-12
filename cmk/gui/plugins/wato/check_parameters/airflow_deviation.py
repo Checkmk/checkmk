@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_airflow_deviation():
-    return TextAscii(
+    return TextInput(
         title=_("Detector ID"),
         help=_("The identifier of the detector."),
     )

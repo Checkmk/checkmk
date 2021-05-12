@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -53,7 +53,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netscaler_vserver",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Name of VServer")),
+        item_spec=lambda: TextInput(title=_("Name of VServer")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_vserver,
         title=lambda: _("Netscaler VServer States"),

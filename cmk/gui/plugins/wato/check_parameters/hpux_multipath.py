@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -36,7 +36,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hpux_multipath",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("WWID of the LUN")),
+        item_spec=lambda: TextInput(title=_("WWID of the LUN")),
         parameter_valuespec=_parameter_valuespec_hpux_multipath,
         title=lambda: _("HP-UX Multipath Count"),
     ))

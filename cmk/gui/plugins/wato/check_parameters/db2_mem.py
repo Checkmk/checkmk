@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -29,7 +29,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db2_mem",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Instance name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Instance name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_db2_mem,
         title=lambda: _("DB2 memory usage"),
     ))

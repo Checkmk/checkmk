@@ -18,7 +18,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -88,7 +88,7 @@ def _phase_elements():
 
 
 def _item_spec_el_inphase():
-    return TextAscii(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+    return TextInput(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
 def _parameter_valuespec_el_inphase():
@@ -99,7 +99,7 @@ def _parameter_valuespec_el_inphase():
         elements=_phase_elements() + [
             ("map_device_states",
              ListOf(
-                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                 Tuple(elements=[TextInput(size=10), MonitoringState()]),
                  title=_("Map device state"),
                  help=_("Here you can enter either device state number (eg. from SNMP devices) "
                         "or exact device state name and the related monitoring state."),
@@ -120,7 +120,7 @@ rulespec_registry.register(
 
 
 def _item_spec_ups_outphase():
-    return TextAscii(title=_("Output Name"),
+    return TextInput(title=_("Output Name"),
                      help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
 
 
@@ -145,7 +145,7 @@ def _parameter_valuespec_ups_outphase() -> Transform:
                        ])),
                 ("map_device_states",
                  ListOf(
-                     Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                     Tuple(elements=[TextInput(size=10), MonitoringState()]),
                      title=_("Map device state"),
                      help=_("Here you can enter either device state number (eg. from SNMP devices) "
                             "or exact device state name and the related monitoring state."),

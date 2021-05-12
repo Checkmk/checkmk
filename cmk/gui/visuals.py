@@ -65,7 +65,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     IconSelector,
     Checkbox,
-    TextAscii,
+    TextInput,
     TextAreaUnicode,
     DropdownChoice,
     Integer,
@@ -827,7 +827,7 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
         elements=[
             single_infos_spec(single_infos),
             ('name',
-             TextAscii(
+             TextInput(
                  title=_('Unique ID'),
                  help=_("The ID will be used in URLs that point to a view, e.g. "
                         "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
@@ -841,7 +841,7 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
                  size=50,
                  allow_empty=False,
                  default_value=default_id)),
-            ('title', TextAscii(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
+            ('title', TextInput(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('description',
              TextAreaUnicode(
                  title=_('Description') + '<sup>*</sup>',

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -43,7 +43,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="redis_info_persistence",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Redis server name")),
+        item_spec=lambda: TextInput(title=_("Redis server name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_redis_info_persistence,
         title=lambda: _("Redis persistence"),

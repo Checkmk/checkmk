@@ -19,7 +19,7 @@ from cmk.gui.wato.pages.global_settings import (
 )
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     ValueSpec,
 )
 
@@ -30,7 +30,7 @@ def test_match_item_generator_settings(monkeypatch, module_wide_request_context)
             return "ident"
 
         def valuespec(self) -> ValueSpec:
-            return TextAscii(title="title")
+            return TextInput(title="title")
 
     class SomeSettingsMode(ModeEditGlobals):
         def iter_all_configuration_variables(

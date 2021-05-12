@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -37,7 +37,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="docsis_channels_downstream",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("ID of the channel (usually ranging from 1)")),
+        item_spec=lambda: TextInput(title=_("ID of the channel (usually ranging from 1)")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_channels_downstream,
         title=lambda: _("Docsis Downstream Channels"),

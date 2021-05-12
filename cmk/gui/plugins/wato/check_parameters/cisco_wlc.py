@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -27,7 +27,7 @@ def _parameter_valuespec_cisco_wlc():
                "can be specified by the AP name or the AP model"),
         elements=[("ap_name",
                    ListOf(Tuple(elements=[
-                       TextAscii(title=_("AP name")),
+                       TextInput(title=_("AP name")),
                        MonitoringState(title=_("State when missing"), default_value=2)
                    ],),
                           title=_("Access point name"),
@@ -39,7 +39,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cisco_wlc",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Access Point")),
+        item_spec=lambda: TextInput(title=_("Access Point")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_wlc,
         title=lambda: _("Cisco WLAN AP"),

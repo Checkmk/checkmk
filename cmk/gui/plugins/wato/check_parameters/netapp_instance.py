@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_netapp_instance():
     return ListOf(Dictionary(help=_("This rule allows you to override netapp warnings"),
-                             elements=[("name", TextAscii(title=_("Warning starts with"))),
+                             elements=[("name", TextInput(title=_("Warning starts with"))),
                                        ("state",
                                         MonitoringState(title="Set state to", default_value=1))],
                              optional_keys=False),

@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _mongodb_collections_size_tuple(title, course, unit):
@@ -37,7 +37,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mongodb_collections",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("MongoDB Collection Size"),),
+        item_spec=lambda: TextInput(title=_("MongoDB Collection Size"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_collections,
         title=lambda: _("MongoDB Collection Size"),

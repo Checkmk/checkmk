@@ -31,7 +31,7 @@ from cmk.gui.valuespec import (
     Optional,
     Integer,
     FileUpload,
-    TextAscii,
+    TextInput,
     ListOf,
     Tuple,
     ListChoice,
@@ -665,7 +665,7 @@ class ModeEditTimeperiod(WatoMode):
         if self._new:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
-            name_element: ValueSpec = TextAscii(
+            name_element: ValueSpec = TextInput(
                 title=_("Internal ID"),
                 regex=r"^[-a-z0-9A-Z_]*$",
                 regex_error=_("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
@@ -682,7 +682,7 @@ class ModeEditTimeperiod(WatoMode):
             elements=[
                 ("name", name_element),
                 ("alias",
-                 TextAscii(
+                 TextInput(
                      title=_("Alias"),
                      help=_("An alias or description of the timeperiod"),
                      allow_empty=False,
@@ -736,7 +736,7 @@ class ModeEditTimeperiod(WatoMode):
                 orientation="horizontal",
                 show_titles=False,
                 elements=[
-                    TextAscii(
+                    TextInput(
                         regex="^[-a-z0-9A-Z /]*$",
                         regex_error=_("This is not a valid Nagios timeperiod day specification."),
                         allow_empty=False,

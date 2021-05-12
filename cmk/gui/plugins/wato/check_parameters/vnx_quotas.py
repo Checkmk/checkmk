@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     Tuple,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -25,8 +25,8 @@ def _valuespec_discovery_rules_vnx_quotas():
             ("dms_names",
              ListOf(
                  Tuple(elements=[
-                     TextAscii(title=_("Exact RWVDMS name or regex")),
-                     TextAscii(title=_("Substitution")),
+                     TextInput(title=_("Exact RWVDMS name or regex")),
+                     TextInput(title=_("Substitution")),
                  ]),
                  title=_("Map RWVDMS names"),
                  help=_("Here you are able to substitute the RWVDMS name. Either you "
@@ -37,8 +37,8 @@ def _valuespec_discovery_rules_vnx_quotas():
             ("mp_names",
              ListOf(
                  Tuple(elements=[
-                     TextAscii(title=_("Exact mount point name or regex")),
-                     TextAscii(title=_("Substitution")),
+                     TextInput(title=_("Exact mount point name or regex")),
+                     TextInput(title=_("Substitution")),
                  ]),
                  title=_("Map mount point names"),
                  help=_("Here you are able to substitute the filesystem name. Either you "

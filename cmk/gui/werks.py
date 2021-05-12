@@ -32,7 +32,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
     Timerange,
-    TextAscii,
+    TextInput,
     DropdownChoice,
     Tuple,
     Integer,
@@ -419,7 +419,7 @@ def _werk_table_option_entries():
             choices=sorted(translator.levels()),
         ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
-        ("id", "single", TextAscii(
+        ("id", "single", TextInput(
             title=_("Werk ID"),
             label="#",
             regex="^[0-9]{1,5}$",
@@ -452,7 +452,7 @@ def _werk_table_option_entries():
                  ("cre", _("Werks also concerning the Raw Edition")),
              ],
          ), None),
-        ("werk_content", "single", TextAscii(
+        ("werk_content", "single", TextInput(
             title=_("Werk title or content"),
             size=41,
         ), ""),
@@ -460,8 +460,8 @@ def _werk_table_option_entries():
          Tuple(title=_("Checkmk Version"),
                orientation="float",
                elements=[
-                   TextAscii(label=_("from:"), size=12),
-                   TextAscii(label=_("to:"), size=12),
+                   TextInput(label=_("from:"), size=12),
+                   TextInput(label=_("to:"), size=12),
                ]), ("", "")),
         ("grouping", "single",
          DropdownChoice(
@@ -554,7 +554,7 @@ def render_werks_table_row(table, translator, werk):
 
 def werk_matches_options(werk, werk_table_options):
     # TODO: Fix this silly typing chaos below!
-    # check if werk id is int because valuespec is TextAscii
+    # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
     try:
         werk_to_match: Union[int, str] = int(werk_table_options["id"])

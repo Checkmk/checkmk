@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
     Integer,
     Float,
@@ -227,7 +227,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="livestatus_status",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the monitoring site"),),
+        item_spec=lambda: TextInput(title=_("Name of the monitoring site"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_livestatus_status,
         title=lambda: _("Checkmk site performance and settings"),

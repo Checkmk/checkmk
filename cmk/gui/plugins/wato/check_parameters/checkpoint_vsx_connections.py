@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -49,7 +49,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="checkpoint_vsx_connections",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("VSID")),
+        item_spec=lambda: TextInput(title=_("VSID")),
         parameter_valuespec=_parameter_valuespec_checkpoint_vsx_connections,
         title=lambda: _("Checkpoint VSID connections"),
     ))

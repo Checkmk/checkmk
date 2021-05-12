@@ -9,7 +9,7 @@ from typing import Optional, Type
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.valuespec import TextAscii
+from cmk.gui.valuespec import TextInput
 
 from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
@@ -97,7 +97,7 @@ class ModeSearch(WatoMode):
         html.prevent_password_auto_completion()
 
         basic_attributes = [
-            ("host_search_host", TextAscii(title=_("Hostname",)), ""),
+            ("host_search_host", TextInput(title=_("Hostname",)), ""),
         ]
         html.set_focus("host_search_host")
 

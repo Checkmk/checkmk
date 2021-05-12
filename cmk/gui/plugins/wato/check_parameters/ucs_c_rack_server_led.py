@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextAscii
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     RulespecGroupCheckParametersHardware,
@@ -21,7 +21,7 @@ COLORS_DEF_STATES = [
 
 
 def _item_spec_ucs_c_rack_server_led():
-    return TextAscii(
+    return TextInput(
         title=_("LED"),
         help=_("Specify the LED, for example 'Rack Unit 1 0'."),
         allow_empty=False,

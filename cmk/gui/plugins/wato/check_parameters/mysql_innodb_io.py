@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mysql_innodb_io():
-    return TextAscii(
+    return TextInput(
         title=_("Instance"),
         help=_("Only needed if you have multiple MySQL Instances on one server"),
     )

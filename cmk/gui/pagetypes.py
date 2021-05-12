@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
     ID,
     Dictionary,
     Checkbox,
-    TextAscii,
+    TextInput,
     TextAreaUnicode,
     CascadingDropdown,
     DualListChoice,
@@ -153,7 +153,7 @@ class Base:
                   ) % cls.phrase("title"),
                  allow_empty=False,
              )),
-            (1.2, 'title', TextAscii(
+            (1.2, 'title', TextInput(
                 title=_('Title') + '<sup>*</sup>',
                 size=50,
                 allow_empty=False,

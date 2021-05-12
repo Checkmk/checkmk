@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_sap_dialog():
-    return TextAscii(
+    return TextInput(
         title=_("System ID"),
         help=_("The SAP system ID."),
     )

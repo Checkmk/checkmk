@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_jvm_queue():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,

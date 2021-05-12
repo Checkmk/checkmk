@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -52,7 +52,7 @@ rulespec_registry.register(
 
 
 def _item_spec_multipath():
-    return TextAscii(title=_("Name of the MP LUN"),
+    return TextInput(title=_("Name of the MP LUN"),
                      help=_("For Linux multipathing this is either the UUID (e.g. "
                             "60a9800043346937686f456f59386741), or the configured "
                             "alias."))

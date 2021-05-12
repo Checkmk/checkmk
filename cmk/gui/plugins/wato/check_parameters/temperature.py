@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -166,7 +166,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="temperature",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Sensor ID"),
+        item_spec=lambda: TextInput(title=_("Sensor ID"),
                                     help=_("The identifier of the thermal sensor.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_temperature,

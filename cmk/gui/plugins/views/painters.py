@@ -34,7 +34,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListChoiceChoices,
-    TextAscii,
+    TextInput,
     Timerange,
     Transform,
 )
@@ -5117,7 +5117,7 @@ class AbstractPainterSpecificMetric(Painter):
              DropdownChoice(title=_("Show metric"),
                             choices=choices,
                             help=_("If available, the following metric will be shown"))),
-            ("column_title", TextAscii(title=_("Custom title"))),
+            ("column_title", TextInput(title=_("Custom title"))),
         ],
                           optional_keys=["column_title"])
 

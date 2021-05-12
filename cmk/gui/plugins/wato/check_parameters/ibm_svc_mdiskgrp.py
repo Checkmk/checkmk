@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -45,7 +45,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ibm_svc_mdiskgrp",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Name of the pool"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Name of the pool"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_mdiskgrp,
         title=lambda: _("IBM SVC Pool Capacity"),

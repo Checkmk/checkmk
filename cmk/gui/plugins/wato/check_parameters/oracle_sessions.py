@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -72,7 +72,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="oracle_sessions",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Database name"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_oracle_sessions,
         title=lambda: _("Oracle Sessions"),
     ))

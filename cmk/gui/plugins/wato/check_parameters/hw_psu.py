@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -36,7 +36,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hw_psu",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("PSU (Chassis/Bay)")),
+        item_spec=lambda: TextInput(title=_("PSU (Chassis/Bay)")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_psu,
         title=lambda: _("Power Supply Unit"),

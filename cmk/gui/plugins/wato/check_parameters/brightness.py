@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii
+from cmk.gui.valuespec import TextInput
 from cmk.gui.plugins.wato import (
     Levels,
     RulespecGroupCheckParametersEnvironment,
@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_brightness():
-    return TextAscii(
+    return TextInput(
         title=_("Sensor name"),
         help=_("The identifier of the sensor."),
     )

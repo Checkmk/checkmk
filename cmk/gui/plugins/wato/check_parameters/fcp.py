@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
     Integer,
     ListOf,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -78,7 +78,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fcp",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Port specification"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Port specification"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fcp,
         title=lambda: _("Fibrechannel Interfaces"),

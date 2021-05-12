@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_jvm_gc():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine and/or<br>garbage collection type"),
         help=_("The name of the application server"),
         allow_empty=False,

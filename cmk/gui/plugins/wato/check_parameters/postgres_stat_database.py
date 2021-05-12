@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -92,7 +92,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="postgres_stat_database",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Database name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_postgres_stat_database,
         title=lambda: _("PostgreSQL Database Statistics"),

@@ -45,7 +45,7 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoice,
     FixedValue,
-    TextAscii,
+    TextInput,
     ValueSpec,
     ValueSpecValidateFunc,
 )
@@ -506,7 +506,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
                  default_value=True,
              )),
             ('title',
-             TextAscii(
+             TextInput(
                  title=_('Custom title') + '<sup>*</sup>',
                  placeholder=_(
                      "This option is macro-capable, please check the inline help for more "
@@ -521,7 +521,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
                  size=75,
              )),
             ('title_url',
-             TextAscii(
+             TextInput(
                  title=_('Link of Title'),
                  help=_('The URL of the target page the link of the element should link to.'),
                  size=50,

@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -62,7 +62,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="plesk_backups",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Service descriptions"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_plesk_backups,
         title=lambda: _("Plesk Backups"),

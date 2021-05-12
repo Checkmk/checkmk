@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii, Integer, MonitoredHostname, MonitoredServiceDescription
+from cmk.gui.valuespec import TextInput, Integer, MonitoredHostname, MonitoredServiceDescription
 
 from cmk.gui.plugins.visuals import (
     VisualInfo,
@@ -84,7 +84,7 @@ class VisualInfoHostgroup(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('hostgroup', TextAscii(title=_('Host Group Name'),))]
+        return [('hostgroup', TextInput(title=_('Host Group Name'),))]
 
     @property
     def single_site(self):
@@ -112,7 +112,7 @@ class VisualInfoServicegroup(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('servicegroup', TextAscii(title=_('Service Group Name'),)),
+            ('servicegroup', TextInput(title=_('Service Group Name'),)),
         ]
 
     @property
@@ -202,7 +202,7 @@ class VisualInfoContact(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('log_contact_name', TextAscii(title=_('Contact Name'),)),
+            ('log_contact_name', TextInput(title=_('Contact Name'),)),
         ]
 
 
@@ -223,7 +223,7 @@ class VisualInfoCommand(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('command_name', TextAscii(title=_('Command Name'),)),
+            ('command_name', TextInput(title=_('Command Name'),)),
         ]
 
 
@@ -244,7 +244,7 @@ class VisualInfoBIAggregation(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('aggr_name', TextAscii(title=_('Aggregation Name'),)),
+            ('aggr_name', TextInput(title=_('Aggregation Name'),)),
         ]
 
     @property
@@ -269,7 +269,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('aggr_group', TextAscii(title=_('Aggregation group'),)),
+            ('aggr_group', TextInput(title=_('Aggregation group'),)),
         ]
 
     @property
@@ -356,5 +356,5 @@ class VisualInfoCrash(VisualInfo):
     @property
     def single_spec(self):
         return [
-            ('crash_id', TextAscii(title=_('Crash ID'),)),
+            ('crash_id', TextInput(title=_('Crash ID'),)),
         ]

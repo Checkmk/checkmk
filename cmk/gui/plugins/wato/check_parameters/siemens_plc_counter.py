@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_siemens_plc_counter():
-    return TextAscii(
+    return TextInput(
         title=_("Device Name and Value Ident"),
         help=_("You need to concatenate the device name which is configured in the special agent "
                "for the PLC device separated by a space with the ident of the value which is also "

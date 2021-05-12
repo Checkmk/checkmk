@@ -81,7 +81,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Alternative,
     CascadingDropdown,
-    TextAscii,
+    TextInput,
     TextAreaUnicode,
     AjaxDropdownChoice,
     ValueSpec,

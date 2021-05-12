@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     Percentage,
     Age,
     FixedValue,
-    TextAscii,
+    TextInput,
     Filesize,
     ListOf,
     CascadingDropdown,
@@ -131,7 +131,7 @@ def _vs_latency():
 
 
 def _item_spec_aws_limits_generic():
-    return TextAscii(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
+    return TextInput(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
 
 
 def _vs_limits(resource: str,
@@ -196,7 +196,7 @@ def _vs_limits(resource: str,
 
 
 def _item_spec_aws_glacier_vault_archives():
-    return TextAscii(title=_("The vault name"))
+    return TextInput(title=_("The vault name"))
 
 
 rulespec_registry.register(
@@ -250,7 +250,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_s3_buckets():
-    return TextAscii(title=_("Bucket name"))
+    return TextInput(title=_("Bucket name"))
 
 
 rulespec_registry.register(
@@ -535,7 +535,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_costs_and_usage():
-    return TextAscii(title=_("The service name"))
+    return TextInput(title=_("The service name"))
 
 
 def _parameter_valuespec_aws_costs_and_usage():
@@ -810,7 +810,7 @@ def _parameter_valuespec_aws_elbv2_application_target_errors():
 
 
 def _item_spec_aws_elbv2_target_errors():
-    return TextAscii(title=_("Target group name"))
+    return TextInput(title=_("Target group name"))
 
 
 rulespec_registry.register(
@@ -835,7 +835,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_ebs_burst_balance():
-    return TextAscii(title=_("Block storage name"))
+    return TextInput(title=_("Block storage name"))
 
 
 rulespec_registry.register(
@@ -889,7 +889,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_rds():
-    return TextAscii(
+    return TextInput(
         title=_("Instance identifier & region"),
         help="Identfier of the DB instance and the name of the region in square brackets, e.g. "
         "'db-instance-1 \\[eu-central-1\\]'.")
@@ -1192,7 +1192,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_wafv2_limits():
-    return TextAscii(title=_("Region name"),
+    return TextInput(title=_("Region name"),
                      help=_("An AWS region name such as 'eu-central-1' or 'CloudFront' for WAFs in "
                             "front of CloudFront resources"))
 

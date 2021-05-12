@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
     DropdownChoice,
 )
 
@@ -38,7 +38,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="local",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of local item")),
+        item_spec=lambda: TextInput(title=_("Name of local item")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_local,
         title=lambda: _("Local checks in Checkmk clusters"),

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Optional,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -28,7 +28,7 @@ def _parameter_valuespec_proxmox_ve_vm_info():
                 title=_("Modify: Check VM Status (off: keep default)"),
                 label=_("Activate Check (off: ignore VM status)"),
                 default_value=True,
-                valuespec=TextAscii(
+                valuespec=TextInput(
                     title=_("Warn if VM status value is not"),
                     default_value="running",
                 ),

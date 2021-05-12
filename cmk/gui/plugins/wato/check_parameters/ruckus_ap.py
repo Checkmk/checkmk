@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
     Optional,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_ruckus_ap():
-    return TextAscii(
+    return TextInput(
         title=_("Band"),
         help=_("Name of the band, e.g. 5 GHz"),
     )

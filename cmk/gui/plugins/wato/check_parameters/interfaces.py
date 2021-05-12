@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
     Percentage,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
     defines,
@@ -161,7 +161,7 @@ def _vs_grouping():
                                     elements=[
                                         (
                                             "group_name",
-                                            TextAscii(
+                                            TextInput(
                                                 title=_("Group name"),
                                                 help=_("Name of group in service description"),
                                                 allow_empty=False,
@@ -456,7 +456,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
 
 vs_elements_if_groups_group = [
     ("group_name",
-     TextAscii(
+     TextInput(
          title=_("Group name"),
          help=_("Name of group in service description"),
          allow_empty=False,
@@ -477,7 +477,7 @@ vs_elements_if_groups_group = [
 
 
 def _valuespec_if_groups():
-    node_name_elements: List[DictionaryEntry] = [("node_name", TextAscii(title=_("Node name")))]
+    node_name_elements: List[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
     return Transform(Alternative(
         title=_('Network interface groups'),
         help=
@@ -572,7 +572,7 @@ def _vs_packet_levels(
 
 
 def _item_spec_if():
-    return TextAscii(title=_("port specification"), allow_empty=False)
+    return TextInput(title=_("port specification"), allow_empty=False)
 
 
 def _transform_if_check_parameters(v):
@@ -1070,7 +1070,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="k8s_if",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("port specification"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("port specification"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_if,
         title=lambda: _("Kubernetes Network interfaces"),

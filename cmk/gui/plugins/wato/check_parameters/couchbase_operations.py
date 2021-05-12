@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
     Dictionary,
 )
@@ -40,7 +40,7 @@ rulespec_registry.register(
         check_group_name="couchbase_ops",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node or bucket name')),
+        item_spec=lambda: TextInput(title=_('Node or bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
         title=lambda: _("Couchbase Operations"),
     ))

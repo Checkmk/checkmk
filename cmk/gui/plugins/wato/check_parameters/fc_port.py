@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_fc_port():
-    return TextAscii(
+    return TextInput(
         title=_("port name"),
         help=_("The name of the FC port"),
     )

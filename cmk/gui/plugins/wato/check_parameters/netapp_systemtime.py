@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_netapp_systemtime():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the node"),
         allow_empty=False,
     )

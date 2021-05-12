@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_openhardwaremonitor_smart():
-    return TextAscii(
+    return TextInput(
         title=_("Device Name"),
         help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
     )

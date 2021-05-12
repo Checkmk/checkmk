@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_prism_container():
-    return TextAscii(
+    return TextInput(
         title=_("Container Name"),
         help=_("Name of the container"),
     )

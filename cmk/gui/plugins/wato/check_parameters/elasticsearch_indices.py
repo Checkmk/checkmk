@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -50,7 +50,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="elasticsearch_indices",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of indice")),
+        item_spec=lambda: TextInput(title=_("Name of indice")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_indices,
         title=lambda: _("Elasticsearch Indices"),

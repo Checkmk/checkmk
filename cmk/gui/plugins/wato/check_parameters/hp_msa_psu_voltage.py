@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_hp_msa_psu_voltage():
-    return TextAscii(title=_("Power Supply name"), help=_("The identifier of the power supply."))
+    return TextInput(title=_("Power Supply name"), help=_("The identifier of the power supply."))
 
 
 def _parameter_valuespec_hp_msa_psu_voltage():

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -80,7 +80,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="sym_brightmail_queues",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Instance name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Instance name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sym_brightmail_queues,
         title=lambda: _("Symantec Brightmail Queues"),

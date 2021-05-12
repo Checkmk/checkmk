@@ -43,7 +43,7 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.valuespec import (
     DropdownChoice,
-    TextAscii,
+    TextInput,
     ValueSpec,
 )
 from cmk.gui.page_menu import (
@@ -1117,8 +1117,8 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
             return redirect(mode_url("folder", folder=folder.path()))
 
         # Title
-        title = TextAscii().from_html_vars("title")
-        TextAscii(allow_empty=False).validate_value(title, "title")
+        title = TextInput().from_html_vars("title")
+        TextInput(allow_empty=False).validate_value(title, "title")
 
         attributes = watolib.collect_attributes("folder", new=self._folder.name() is None)
         self._save(title, attributes)
@@ -1138,7 +1138,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
 
         # title
         basic_attributes: List[Tuple[str, ValueSpec, str]] = [
-            ("title", TextAscii(title=_("Title")), "" if new else self._folder.title()),
+            ("title", TextInput(title=_("Title")), "" if new else self._folder.title()),
         ]
         html.set_focus("title")
 
@@ -1147,7 +1147,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
             if not config.wato_hide_filenames:
                 basic_attributes += [
                     ("name",
-                     TextAscii(
+                     TextInput(
                          title=_("Internal directory name"),
                          help=_("This is the name of subdirectory where the files and "
                                 "other folders will be created. You cannot change this later."),

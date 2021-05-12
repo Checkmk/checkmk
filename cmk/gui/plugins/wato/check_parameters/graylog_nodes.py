@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -79,7 +79,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="graylog_nodes",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Node name")),
+        item_spec=lambda: TextInput(title=_("Node name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_nodes,
         title=lambda: _("Graylog nodes"),

@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOfStrings,
     ListOf,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -509,7 +509,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
                 ("paths", _("Allowed to see the following entries"),
                  ListOf(
                      Dictionary(
-                         elements=[("path", TextAscii(
+                         elements=[("path", TextInput(
                              title=_("Path"),
                              size=60,
                              allow_empty=False,

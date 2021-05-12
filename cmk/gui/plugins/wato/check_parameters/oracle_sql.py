@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -20,4 +20,4 @@ register_check_parameters(
     Dictionary(elements=[
         ("instance_error_state", MonitoringState(title=_("Instance error state"))),
         ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
-    ],), TextAscii(title=_("Custom SQL")), "dict")
+    ],), TextInput(title=_("Custom SQL")), "dict")

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_acme_certificates():
-    return TextAscii(
+    return TextInput(
         title=_("Name of certificate"),
         allow_empty=False,
     )

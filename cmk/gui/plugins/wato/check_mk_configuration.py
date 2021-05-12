@@ -46,7 +46,7 @@ from cmk.gui.valuespec import (
     Optional,
     PasswordSpec,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
     ValueSpec,
@@ -545,7 +545,7 @@ class ConfigVariableStartURL(ConfigVariable):
         return "start_url"
 
     def valuespec(self):
-        return TextAscii(
+        return TextInput(
             title=_("Start URL to display in main frame"),
             help=_("When you point your browser to the Check_MK GUI, usually the dashboard "
                    "is shown in the main (right) frame. You can replace this with any other "
@@ -568,7 +568,7 @@ class ConfigVariablePageHeading(ConfigVariable):
         return "page_heading"
 
     def valuespec(self):
-        return TextAscii(
+        return TextInput(
             title=_("Page title"),
             help=_("This title will be displayed in your browser's title bar or tab. You can use "
                    "a <tt>%s</tt> to insert the alias of your monitoring site to the title."),
@@ -728,7 +728,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                             title=_("ID"),
                             allow_empty=False,
                         )),
-                        ("title", TextAscii(
+                        ("title", TextInput(
                             title=_("Title of the tree"),
                             allow_empty=False,
                         )),
@@ -908,7 +908,7 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                          default_value=60,
                      )),
                     ("comment",
-                     TextAscii(
+                     TextInput(
                          title=_("Adhoc comment"),
                          help=_("The comment which is automatically sent with an adhoc downtime"),
                          size=80,
@@ -938,7 +938,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextAscii(
+            TextInput(
                 label=_("HTTP request header variable"),
                 help=_("Configure the name of the HTTP request header variable to read "
                        "from the incoming HTTP requests"),
@@ -1011,7 +1011,7 @@ class ConfigVariableLoginScreen(ConfigVariable):
                      totext=_("Hide the Checkmk version from the login box"),
                  )),
                 ("login_message",
-                 TextAscii(
+                 TextInput(
                      title=_("Show a login message"),
                      help=
                      _("You may use this option to give your users an informational text before logging in."
@@ -1022,8 +1022,8 @@ class ConfigVariableLoginScreen(ConfigVariable):
                  ListOf(
                      Tuple(
                          elements=[
-                             TextAscii(title=_("Title"),),
-                             TextAscii(
+                             TextInput(title=_("Title"),),
+                             TextInput(
                                  title=_('URL'),
                                  size=80,
                              ),
@@ -1060,10 +1060,10 @@ class ConfigVariableUserLocalizations(ConfigVariable):
         return Transform(
             ListOf(
                 Tuple(elements=[
-                    TextAscii(title=_("Original Text"), size=40),
+                    TextInput(title=_("Original Text"), size=40),
                     Dictionary(
                         title=_("Translations"),
-                        elements=lambda: [(l or "en", TextAscii(title=a, size=32))
+                        elements=lambda: [(l or "en", TextInput(title=a, size=32))
                                           for (l, a) in cmk.gui.i18n.get_languages()],
                         columns=2,
                     ),
@@ -1104,13 +1104,13 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                                  allow_empty=False,
                                  with_emblem=False,
                              )),
-                            ('title', TextAscii(title=_('Title'),)),
+                            ('title', TextInput(title=_('Title'),)),
                             ('url',
                              Transform(
                                  Tuple(
                                      title=_('Action'),
                                      elements=[
-                                         TextAscii(
+                                         TextInput(
                                              title=_('URL'),
                                              help=
                                              _('This URL is opened when clicking on the action / icon. You '
@@ -1192,7 +1192,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                 Dictionary(
                     elements=[
                         ("ident",
-                         TextAscii(
+                         TextInput(
                              title=_("ID"),
                              help=_("The ID will be used as internal identifier and the custom "
                                     "service attribute will be computed based on the ID. The "
@@ -1208,12 +1208,12 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                                  "An identifier must only consist of letters, digits, dash and "
                                  "underscore and it must start with a letter or underscore.") +
                              " " + _("Only upper case letters are allowed"))),
-                        ('title', TextAscii(title=_('Title'),)),
+                        ('title', TextInput(title=_('Title'),)),
                         ("type",
                          DropdownChoice(
                              title=_("Data type"),
                              choices=[
-                                 ('TextAscii', _('Simple Text')),
+                                 ('TextInput', _('Simple Text')),
                              ],
                          )),
                     ],
@@ -1297,8 +1297,8 @@ def _custom_service_attributes_validate_unique_entries(value, varprefix):
 def _custom_service_attributes_custom_service_attribute_choices():
     choices = []
     for ident, attr_spec in config.custom_service_attributes.items():
-        if attr_spec["type"] == "TextAscii":
-            vs = TextAscii()
+        if attr_spec["type"] == "TextInput":
+            vs = TextInput()
         else:
             raise NotImplementedError()
         choices.append((ident, attr_spec["title"], vs))
@@ -1350,7 +1350,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def valuespec(self):
         return ListOf(
             Dictionary(
-                elements=[('title', TextAscii(title=_('Title'),)),
+                elements=[('title', TextInput(title=_('Title'),)),
                           ('end',
                            Alternative(
                                title=_("To"),
@@ -1457,7 +1457,7 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
         return ListOf(
             Dictionary(
                 elements=[
-                    ('title', TextAscii(title=_('Title to show for the group'),)),
+                    ('title', TextInput(title=_('Title to show for the group'),)),
                     ('pattern',
                      RegExp(
                          title=_('Grouping expression'),
@@ -1901,7 +1901,7 @@ class ConfigVariableWATOIconCategories(ConfigVariable):
             Tuple(
                 elements=[
                     ID(title=_("ID"),),
-                    TextAscii(title=_("Title"),),
+                    TextInput(title=_("Title"),),
                 ],
                 orientation="horizontal",
             ),
@@ -2589,7 +2589,7 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                              allow_empty=False,
                          )),
                         ("title",
-                         TextAscii(
+                         TextInput(
                              title=_("Title"),
                              help=_("The title of the %s. It will be used as display name.") %
                              _("HTTP proxy"),
@@ -3067,7 +3067,7 @@ def _host_check_commands_host_check_command_choices() -> List[CascadingDropdownC
         ("ok", _("Always assume host to be up")),
         ("agent", _("Use the status of the Checkmk Agent")),
         ("service", _("Use the status of the service..."),
-         TextAscii(
+         TextInput(
              size=45,
              allow_empty=False,
              attrencode=True,
@@ -3806,7 +3806,7 @@ rulespec_registry.register(
 
 
 def _valuespec_clustered_services_mapping():
-    return TextAscii(
+    return TextInput(
         title=_("Clustered services for overlapping clusters"),
         label=_("Assign services to the following cluster:"),
         help=_("It's possible to have clusters that share nodes. You could say that "
@@ -3929,7 +3929,7 @@ def _valuespec_extra_service_conf_service_period():
 
 
 def _valuespec_extra_host_conf_notes_url():
-    return TextAscii(
+    return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Hosts"),
         help=_("With this setting you can set links to documentations "
@@ -3956,7 +3956,7 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_display_name():
-    return TextAscii(
+    return TextInput(
         title=_("Alternative display name for Services"),
         help=_("This rule set allows you to specify an alternative name "
                "to be displayed for certain services. This name is available as "
@@ -3982,7 +3982,7 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_notes_url():
-    return TextAscii(
+    return TextInput(
         label=_("URL:"),
         title=_("Notes URL for Services"),
         help=_("With this setting you can set links to documentations "
@@ -4784,14 +4784,14 @@ def _valuespec_check_mk_agent_target_versions():
             choices=[
                 ("ignore", _("Ignore the version")),
                 ("site", _("Same version as the monitoring site")),
-                ("specific", _("Specific version"), TextAscii(allow_empty=False,)),
+                ("specific", _("Specific version"), TextInput(allow_empty=False,)),
                 ("at_least", _("At least"),
                  Dictionary(elements=[
-                     ('release', TextAscii(
+                     ('release', TextInput(
                          title=_('Official Release version'),
                          allow_empty=False,
                      )),
-                     ('daily_build', TextAscii(
+                     ('daily_build', TextInput(
                          title=_('Daily build'),
                          allow_empty=False,
                      )),

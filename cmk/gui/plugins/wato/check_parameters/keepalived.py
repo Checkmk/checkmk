@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
     MonitoringState,
 )
 
@@ -47,7 +47,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="keepalived",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("VRRP Instance"),),
+        item_spec=lambda: TextInput(title=_("VRRP Instance"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_keepalived,
         title=lambda: _("Keepalived Parameters"),

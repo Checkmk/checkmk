@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
     MonitoringState,
     Percentage,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -325,7 +325,7 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 
 def process_discovery_descr_option():
-    return TextAscii(
+    return TextInput(
         title=_('Process Name'),
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
@@ -352,7 +352,7 @@ def process_match_options():
     return Alternative(
         title=_("Process Matching"),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Exact name of the process without argments"),
                 label=_("Executable:"),
                 size=50,
@@ -394,7 +394,7 @@ def user_match_options(extra_elements=None):
     return Alternative(
         title=_("Name of operating system user"),
         elements=[
-            TextAscii(title=_("Exact name of the operating system user"), label=_("User:"),
+            TextInput(title=_("Exact name of the operating system user"), label=_("User:"),
                       size=50),
             Transform(
                 RegExp(
@@ -431,7 +431,7 @@ def cgroup_match_options():
         elements=[
             Alternative(
                 elements=[
-                    TextAscii(title=_("Exact content of the operating system control group info"),
+                    TextInput(title=_("Exact content of the operating system control group info"),
                               label=_("Control group:"),
                               size=50),
                     Transform(
@@ -465,7 +465,7 @@ def cgroup_match_options():
 
 
 def _item_spec_ps():
-    return TextAscii(title=_("Discovered process name"),)
+    return TextInput(title=_("Discovered process name"),)
 
 
 def _parameter_valuespec_ps():
@@ -490,7 +490,7 @@ rulespec_registry.register(
 
 # Rule for static process checks
 def _manual_item_spec_ps():
-    return TextAscii(
+    return TextInput(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
@@ -643,7 +643,7 @@ def hr_process_match_name_option():
     return Alternative(
         title=_("Process Name Matching"),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Exact name of the textual description"),
                 size=50,
                 allow_empty=False,
@@ -677,7 +677,7 @@ def hr_process_match_path_option():
     return Alternative(
         title=_("Process Path Matching"),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Exact name of the process path"),
                 size=50,
                 allow_empty=False,
@@ -835,7 +835,7 @@ rulespec_registry.register(
 
 # Rule for static process checks
 def _manual_item_spec_hr_ps():
-    return TextAscii(
+    return TextInput(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,

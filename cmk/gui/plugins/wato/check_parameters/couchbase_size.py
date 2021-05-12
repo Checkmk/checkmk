@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Filesize,
-    TextAscii,
+    TextInput,
     Tuple,
     Dictionary,
 )
@@ -46,7 +46,7 @@ rulespec_registry.register(
         check_group_name="couchbase_size_docs",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextInput(title=_('Node name')),
         parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of documents")),
         title=lambda: _("Couchbase Node: Size of documents"),
     ))
@@ -56,7 +56,7 @@ rulespec_registry.register(
         check_group_name="couchbase_size_spacial",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextInput(title=_('Node name')),
         parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of spacial views")),
         title=lambda: _("Couchbase Node: Size of spacial views"),
     ))
@@ -66,7 +66,7 @@ rulespec_registry.register(
         check_group_name="couchbase_size_couch",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextInput(title=_('Node name')),
         parameter_valuespec=_valuespec_couchbase_size(_("Couchbase Node: Size of couch views")),
         title=lambda: _("Couchbase Node: Size of couch views"),
     ))

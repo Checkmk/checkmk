@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Optional,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -27,7 +27,7 @@ def _parameter_valuespec_proxmox_ve_node_info():
                 title=_("Node Status"),
                 label=_("Activate Check (off: ignore node status)"),
                 default_value=True,
-                valuespec=TextAscii(
+                valuespec=TextInput(
                     title=_("Warn if node status value is not"),
                     default_value="online",
                 ),
@@ -39,7 +39,7 @@ def _parameter_valuespec_proxmox_ve_node_info():
                 title=_("Subscription Status"),
                 label=_("Activate Check (off: ignore subscription status)"),
                 default_value=True,
-                valuespec=TextAscii(
+                valuespec=TextInput(
                     title=_("Warn if subscription status value is not"),
                     default_value="Active",
                 ),

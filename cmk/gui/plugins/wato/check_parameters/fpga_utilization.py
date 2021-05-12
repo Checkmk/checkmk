@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -41,7 +41,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fpga_utilization",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("FPGA"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("FPGA"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fpga_utilization,
         title=lambda: _("FPGA utilization"),

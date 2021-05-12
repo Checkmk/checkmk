@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -31,7 +31,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="bossock_fibers",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Node ID")),
+        item_spec=lambda: TextInput(title=_("Node ID")),
         parameter_valuespec=_parameter_valuespec_bossock_fibers,
         title=lambda: _("Number of Running Bossock Fibers"),
     ))

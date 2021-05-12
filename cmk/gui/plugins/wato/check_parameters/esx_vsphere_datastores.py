@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 
 
 def _item_spec_esx_vsphere_datastores():
-    return TextAscii(title=_("Datastore Name"),
+    return TextInput(title=_("Datastore Name"),
                      help=_("The name of the Datastore"),
                      allow_empty=False)
 

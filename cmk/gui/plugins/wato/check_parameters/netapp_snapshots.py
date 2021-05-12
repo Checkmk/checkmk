@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -38,7 +38,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netapp_snapshots",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Volume name")),
+        item_spec=lambda: TextInput(title=_("Volume name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_snapshots,
         title=lambda: _("NetApp Snapshot Reserve"),

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -63,7 +63,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cisco_stack",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Switch number"),),
+        item_spec=lambda: TextInput(title=_("Switch number"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_stack,
         title=lambda: _("Cisco Stack Switch Status"),

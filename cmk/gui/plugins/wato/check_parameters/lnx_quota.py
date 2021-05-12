@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_lnx_quota():
-    return TextAscii(
+    return TextInput(
         title=_("filesystem"),
         help=_("Name of filesystem with quotas enabled"),
     )

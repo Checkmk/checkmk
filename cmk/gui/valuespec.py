@@ -226,7 +226,7 @@ class ValueSpec:
         # types being written to the configuration. For the moment we can not
         # enable this because of the Web API: When using JSON as request_format
         # the JSON modules decodes all strings to unicode strings which are not
-        # accepted by some attribute valuespecs which base on e.g. TextAscii.
+        # accepted by some attribute valuespecs which base on e.g. TextInput.
         # This should be solved during Python3 transformation where we will
         # finally make a huge switch to unicode strings in many places.
         # TODO: Cleanup all external direct calls to validate_datatype() once this is
@@ -543,7 +543,7 @@ class Filesize(Integer):
         return json_value
 
 
-class TextAscii(ValueSpec):
+class TextInput(ValueSpec):
     """Editor for a line of text"""
 
     # TODO: Cleanup attrencode attribute
@@ -675,7 +675,7 @@ class TextAscii(ValueSpec):
         return json_value
 
 
-class UUID(TextAscii):
+class UUID(TextInput):
     """Documentation for UUID
 
     """
@@ -692,7 +692,7 @@ class UUID(TextAscii):
 # TODO: Cleanup kwargs
 def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
-    return TextAscii(regex=re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$'),
+    return TextInput(regex=re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$'),
                      regex_error=_("An identifier must only consist of letters, digits, dash and "
                                    "underscore and it must start with a letter or underscore."),
                      **kwargs)
@@ -701,7 +701,7 @@ def ID(**kwargs):
 # TODO: Cleanup kwargs
 def UnicodeID(**kwargs):
     """Same as the ID class, but allowing unicode objects"""
-    return TextAscii(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
+    return TextInput(regex=re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE),
                      regex_error=_("An identifier must only consist of letters, digits, dash and "
                                    "underscore and it must start with a letter or underscore."),
                      **kwargs)
@@ -709,14 +709,14 @@ def UnicodeID(**kwargs):
 
 # TODO: Cleanup kwargs
 def UserID(**kwargs):
-    return TextAscii(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
+    return TextInput(regex=re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE),
                      regex_error=_(
                          "An identifier must only consist of letters, digits, dash, dot, "
                          "at and underscore. But it must start with a letter or underscore."),
                      **kwargs)
 
 
-class RegExp(TextAscii):
+class RegExp(TextInput):
     infix = "infix"
     prefix = "prefix"
     complete = "complete"
@@ -727,7 +727,7 @@ class RegExp(TextAscii):
         case_sensitive: bool = True,
         mingroups: int = 0,
         maxgroups: _Optional[int] = None,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 25,
         try_max_width: bool = False,
@@ -849,11 +849,11 @@ class RegExp(TextAscii):
                   "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
 
 
-class EmailAddress(TextAscii):
+class EmailAddress(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         make_clickable: bool = False,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 40,
         try_max_width: bool = False,
@@ -940,14 +940,14 @@ class EmailAddress(TextAscii):
 
 def IPNetwork(  # pylint: disable=redefined-builtin
     ip_class: Union[None, Type[ipaddress.IPv4Network], Type[ipaddress.IPv6Network]] = None,
-    # TextAscii
+    # TextInput
     allow_empty: bool = True,
     size: Union[int, str] = 34,
     # From ValueSpec
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     default_value: Any = DEF_VALUE,
-) -> TextAscii:
+) -> TextInput:
     """Same as IPv4Network, but allowing both IPv4 and IPv6"""
     def _validate_value_for_one_class(value: str, varprefix: str) -> None:
         assert ip_class is not None
@@ -982,7 +982,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
         _validate_value_for_both_classes(value, varprefix)
 
-    return TextAscii(
+    return TextInput(
         validate=_validate_value,
         allow_empty=allow_empty,
         size=size,
@@ -994,7 +994,7 @@ def IPNetwork(  # pylint: disable=redefined-builtin
 
 def IPv4Network(  # pylint: disable=redefined-builtin
         title: _Optional[str] = None,
-        help: _Optional[ValueSpecHelp] = None) -> TextAscii:
+        help: _Optional[ValueSpecHelp] = None) -> TextInput:
     """Network as used in routing configuration, such as '10.0.0.0/8' or '192.168.56.1'"""
     return IPNetwork(ip_class=ipaddress.IPv4Network, size=18, title=title, help=help)
 
@@ -1004,14 +1004,14 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     default_value: Any = DEF_VALUE,
-) -> TextAscii:
+) -> TextInput:
     def _validate_value(value: str, varprefix: str):
         try:
             ipaddress.IPv4Address(ensure_str(value))
         except ValueError as exc:
             raise MKUserError(varprefix, _("Invalid IPv4 address: %s") % exc)
 
-    return TextAscii(
+    return TextInput(
         validate=_validate_value,
         size=16,
         title=title,
@@ -1022,7 +1022,7 @@ def IPv4Address(  # pylint: disable=redefined-builtin
 
 
 def Hostname(  # pylint: disable=redefined-builtin
-    # TextAscii
+    # TextInput
     allow_empty=False,
     # ValueSpec
     title: _Optional[str] = None,
@@ -1030,7 +1030,7 @@ def Hostname(  # pylint: disable=redefined-builtin
     default_value: Any = DEF_VALUE,
 ):
     """A host name with or without domain part. Also allow IP addresses"""
-    return TextAscii(
+    return TextInput(
         regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
         regex_error=_("Please enter a valid hostname or IPv4 address. "
                       "Only letters, digits, dash, underscore and dot are allowed."),
@@ -1041,14 +1041,14 @@ def Hostname(  # pylint: disable=redefined-builtin
     )
 
 
-class HostAddress(TextAscii):
+class HostAddress(TextInput):
     """Use this for all host / ip address input fields!"""
     def __init__(  # pylint: disable=redefined-builtin
         self,
         allow_host_name: bool = True,
         allow_ipv4_address: bool = True,
         allow_ipv6_address: bool = True,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 64,
         try_max_width: bool = False,
@@ -1170,7 +1170,7 @@ class HostAddress(TextAscii):
 
 
 def AbsoluteDirname(  # pylint: disable=redefined-builtin
-    # TextAscii
+    # TextInput
     allow_empty: bool = True,
     size: Union[int, str] = 25,
     # ValueSpec
@@ -1178,8 +1178,8 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     default_value: Any = DEF_VALUE,
     validate: _Optional[ValueSpecValidateFunc] = None,
-) -> TextAscii:
-    return TextAscii(
+) -> TextInput:
+    return TextInput(
         regex=re.compile('^(/|(/[^/]+)+)$'),
         regex_error=_("Please enter a valid absolut pathname with / as a path separator."),
         allow_empty=allow_empty,
@@ -1191,14 +1191,14 @@ def AbsoluteDirname(  # pylint: disable=redefined-builtin
     )
 
 
-class Url(TextAscii):
+class Url(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         default_scheme: str,
         allowed_schemes: List[str],
         show_as_link: bool = False,
         target: _Optional[str] = None,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 64,
         try_max_width: bool = False,
@@ -1298,7 +1298,7 @@ def HTTPUrl(  # pylint: disable=redefined-builtin
     # Url
     regex: Union[None, str, Pattern[str]] = None,
     regex_error: _Optional[str] = None,
-    # TextAscii
+    # TextInput
     allow_empty: bool = True,
     size: Union[int, str] = 80,
     # ValueSpec
@@ -1326,7 +1326,7 @@ def CheckMKVersion(
     title: _Optional[str] = None,
     default_value: Any = DEF_VALUE,
 ):
-    return TextAscii(
+    return TextInput(
         regex=r"[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$",
         regex_error=_("This is not a valid Checkmk version number"),
         title=title,
@@ -1334,14 +1334,14 @@ def CheckMKVersion(
     )
 
 
-class TextAreaUnicode(TextAscii):
+class TextAreaUnicode(TextInput):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         cols: int = 60,
         rows: Union[int, str] = 20,
         minrows: int = 0,
         monospaced: bool = False,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 64,
         try_max_width: bool = False,
@@ -1436,15 +1436,15 @@ class TextAreaUnicode(TextAscii):
 
 # TODO: Rename the valuespec here to ExistingFilename or somehting similar
 # TODO: Change to factory?
-class Filename(TextAscii):
-    """A variant of TextAscii() that validates a path to a filename that lies in an existing directory."""
+class Filename(TextInput):
+    """A variant of TextInput() that validates a path to a filename that lies in an existing directory."""
 
     # TODO: Cleanup default / default_value?
     def __init__(  # pylint: disable=redefined-builtin
         self,
         default: str = "/tmp/foo",
         trans_func: _Optional[Callable[[str], str]] = None,
-        # TextAscii
+        # TextInput
         label: _Optional[str] = None,
         size: Union[int, str] = 60,
         try_max_width: bool = False,
@@ -1547,7 +1547,7 @@ class ListOfStrings(ValueSpec):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
 
-        self._valuespec = valuespec if valuespec is not None else TextAscii(size=size)
+        self._valuespec = valuespec if valuespec is not None else TextInput(size=size)
         self._vertical = orientation == "vertical"
         self._allow_empty = allow_empty
         self._empty_text = empty_text
@@ -5253,7 +5253,7 @@ class Transform(ValueSpec):
 
 
 # TODO: Change to factory, cleanup kwargs
-class LDAPDistinguishedName(TextAscii):
+class LDAPDistinguishedName(TextInput):
     def __init__(self, enforce_suffix: _Optional[str] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.enforce_suffix = enforce_suffix
@@ -5267,7 +5267,7 @@ class LDAPDistinguishedName(TextAscii):
             raise MKUserError(varprefix, _('Does not ends with "%s".') % self.enforce_suffix)
 
 
-class Password(TextAscii):
+class Password(TextInput):
     # TODO: Cleanup kwargs
     def __init__(self,
                  is_stored_plain: bool = True,
@@ -5549,7 +5549,7 @@ class TextOrRegExp(Alternative):
         if "text_valuespec" in kwargs:
             vs_text = kwargs.pop("text_valuespec")
         else:
-            vs_text = TextAscii(
+            vs_text = TextInput(
                 title=_("Explicit match"),
                 allow_empty=allow_empty,
             )
@@ -6294,7 +6294,7 @@ def LogLevelChoice(**kwargs):
 def rule_option_elements(disabling: bool = True) -> List[DictionaryEntry]:
     elements: List[DictionaryEntry] = [
         ("description",
-         TextAscii(
+         TextInput(
              title=_("Description"),
              help=_("A description or title of this rule"),
              size=80,
@@ -6341,8 +6341,8 @@ class RuleComment(TextAreaUnicode):
         html.close_div()
 
 
-def DocumentationURL() -> TextAscii:
-    return TextAscii(
+def DocumentationURL() -> TextInput:
+    return TextInput(
         title=_("Documentation URL"),
         help=HTML(
             _("An optional URL pointing to documentation or any other page. This will be displayed "

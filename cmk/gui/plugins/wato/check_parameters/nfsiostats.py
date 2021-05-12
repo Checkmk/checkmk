@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -145,7 +145,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="nfsiostats",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("NFS IO Statistics"),),
+        item_spec=lambda: TextInput(title=_("NFS IO Statistics"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_nfsiostats,
         title=lambda: _("NFS IO Statistics"),

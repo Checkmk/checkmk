@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
     DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
     Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
-    OptionalDropdownChoice, Password, Percentage, RegExp, RuleComment, TextAscii,
+    OptionalDropdownChoice, Password, Percentage, RegExp, RuleComment, TextInput,
     AjaxDropdownChoice, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
     SingleLabel, autocompleter_registry,
 )
@@ -123,7 +123,7 @@ def PluginCommandLine():
             raise MKUserError(
                 varprefix, _("You are not allowed to use passwords from the password store here."))
 
-    return TextAscii(
+    return TextInput(
         title=_("Command line"),
         help=
         _("Please enter the complete shell command including path name and arguments to execute. "
@@ -263,7 +263,7 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
                     title=_("Security Level"),
                     totext=_("No authentication, no privacy"),
                 ),
-                TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
+                TextInput(title=_("Security name"), attrencode=True, allow_empty=False),
             ],
         ),
         forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
@@ -334,7 +334,7 @@ def _snmpv3_auth_protocol_elements():
             ],
             title=_("Authentication protocol"),
         ),
-        TextAscii(
+        TextInput(
             title=_("Security name"),
             attrencode=True,
         ),
@@ -349,7 +349,7 @@ def IPMIParameters() -> Dictionary:
     return Dictionary(
         title=_("IPMI credentials"),
         elements=[
-            ("username", TextAscii(
+            ("username", TextInput(
                 title=_("Username"),
                 allow_empty=False,
             )),
@@ -425,7 +425,7 @@ def _translation_elements(what):
                              mode=RegExp.prefix,
                              case_sensitive=False,
                          ),
-                         TextAscii(
+                         TextInput(
                              title=_("Replacement"),
                              help=_(
                                  "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
@@ -453,13 +453,13 @@ def _translation_elements(what):
              Tuple(
                  orientation="horizontal",
                  elements=[
-                     TextAscii(
+                     TextInput(
                          title=_("Original %s") % singular,
                          size=30,
                          allow_empty=False,
                          attrencode=True,
                      ),
-                     TextAscii(
+                     TextInput(
                          title=_("Translated %s") % singular,
                          size=30,
                          allow_empty=False,

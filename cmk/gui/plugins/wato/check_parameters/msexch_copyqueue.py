@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_msexch_copyqueue():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("The database name on the Mailbox Server."),
     )

@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (Dictionary, ListOf, Tuple, TextAscii, Float)
+from cmk.gui.valuespec import (Dictionary, ListOf, Tuple, TextInput, Float)
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -23,7 +23,7 @@ def _parameter_valuespec_prometheus_custom():
                  Dictionary(
                      elements=[
                          ("metric_label",
-                          TextAscii(
+                          TextInput(
                               title=_('Metric label'),
                               allow_empty=False,
                               help=_(
@@ -77,7 +77,7 @@ def _parameter_valuespec_prometheus_custom():
 
 
 def _item_spec_custom_service():
-    return TextAscii(
+    return TextInput(
         title=_("Prometheus custom service"),
         help=_("Name of the custom service"),
     )

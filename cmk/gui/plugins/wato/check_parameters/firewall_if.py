@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_firewall_if():
-    return TextAscii(
+    return TextInput(
         title=_("Interface"),
         help=_("The description of the interface as provided by the device"),
     )

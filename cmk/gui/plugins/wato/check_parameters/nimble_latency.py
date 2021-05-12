@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_nimble_latency():
-    return TextAscii(title=_("Volume"), help=_("Specify the name of the Nimble volume."))
+    return TextInput(title=_("Volume"), help=_("Specify the name of the Nimble volume."))
 
 
 def _parameter_valuespec_nimble_latency():

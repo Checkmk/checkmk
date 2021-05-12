@@ -20,7 +20,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
     ValueSpec,
@@ -390,16 +390,16 @@ def vs_interface_traffic():
                              ])
 
 
-def mssql_item_spec_instance_tablespace() -> TextAscii:
-    return TextAscii(
+def mssql_item_spec_instance_tablespace() -> TextInput:
+    return TextInput(
         title=_("Instance & tablespace name"),
         help=_("The MSSQL instance name and the tablespace name separated by a space."),
         allow_empty=False,
     )
 
 
-def mssql_item_spec_instance_database_file() -> TextAscii:
-    return TextAscii(
+def mssql_item_spec_instance_database_file() -> TextInput:
+    return TextInput(
         title=_("Instance, database & file name"),
         help=_("A combination of the instance, database and (logical) file name."),
         allow_empty=False,

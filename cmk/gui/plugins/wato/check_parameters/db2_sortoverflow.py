@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_db2_sortoverflow():
-    return TextAscii(title=_("Instance"),
+    return TextInput(title=_("Instance"),
                      help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
 

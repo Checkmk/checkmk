@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _item_spec_network_fs():
-    return TextAscii(title=_("Name of the mount point"),
+    return TextInput(title=_("Name of the mount point"),
                      help=_("For NFS enter the name of the mount point."))
 
 

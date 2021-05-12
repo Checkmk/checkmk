@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -102,7 +102,7 @@ def _parameter_valuespec_windows_tasks():
                     elements=[
                         (
                             "exit_code",
-                            TextAscii(
+                            TextInput(
                                 title=_("Exit code (hex value)"),
                                 help=_("Enter the exit code as 10-digit, lower case hex value, "
                                        "e.g. 0x00000000."),
@@ -120,7 +120,7 @@ def _parameter_valuespec_windows_tasks():
                         ),
                         (
                             "info_text",
-                            TextAscii(
+                            TextInput(
                                 title=_("Service output text"),
                                 help=_("Display this text in the service output. You can skip "
                                        "this field if you only want to change the monitoring "
@@ -160,7 +160,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="windows_tasks",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Task name")),
+        item_spec=lambda: TextInput(title=_("Task name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_windows_tasks,
         title=lambda: _("Windows Tasks"),

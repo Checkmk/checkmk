@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -77,7 +77,7 @@ rulespec_registry.register(
 
 
 def _item_spec_services():
-    return TextAscii(title=_("Name of the service"),
+    return TextInput(title=_("Name of the service"),
                      help=_("Please Please note, that the agent replaces spaces in "
                             "the service names with underscores. If you are unsure about the "
                             "correct spelling of the name then please look at the output of "

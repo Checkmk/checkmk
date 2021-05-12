@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _mongodb_cluster_count_tuple(title, course):
@@ -32,7 +32,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mongodb_cluster",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_(
+        item_spec=lambda: TextInput(title=_(
             "Database/Collection name ('<DB name> <collection name>')"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_cluster,

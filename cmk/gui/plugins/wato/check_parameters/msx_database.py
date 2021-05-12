@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_msx_database():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("Specify database names that the rule should apply to"),
     )

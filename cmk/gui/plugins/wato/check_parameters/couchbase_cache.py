@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -46,7 +46,7 @@ rulespec_registry.register(
         check_group_name="couchbase_cache",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node or bucket name')),
+        item_spec=lambda: TextInput(title=_('Node or bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_cache,
         title=lambda: _("Couchbase Cache"),
     ))

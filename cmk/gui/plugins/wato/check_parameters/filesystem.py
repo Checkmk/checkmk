@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Transform,
     DropdownChoice,
-    TextAscii,
+    TextInput,
     TextOrRegExp,
 )
 
@@ -149,7 +149,7 @@ def _valuespec_filesystem_groups():
             Dictionary(
                 optional_keys=False,
                 elements=[
-                    ('group_name', TextAscii(title=_("Group name"),)),
+                    ('group_name', TextInput(title=_("Group name"),)),
                     (
                         'patterns_include',
                         ListOfStrings(
@@ -209,7 +209,7 @@ rulespec_registry.register(
 
 
 def _item_spec_filesystem():
-    return TextAscii(
+    return TextInput(
         title=_("Mount point"),
         help=_("For Linux/UNIX systems, specify the mount point, for Windows systems "
                "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),

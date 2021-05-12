@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Integer,
     Tuple,
 )
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_msoffice_licenses():
-    return TextAscii(title=_("MS Office 365 license"))
+    return TextInput(title=_("MS Office 365 license"))
 
 
 def _parameter_valuespec_msoffice_licenses():
@@ -73,7 +73,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="msoffice_serviceplans",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("MS Office 365 license")),
+        item_spec=lambda: TextInput(title=_("MS Office 365 license")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_msoffice_serviceplans,
         title=lambda: _("MS Office 365 service plans"),

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_msx_info_store():
-    return TextAscii(
+    return TextInput(
         title=_("Store"),
         help=_("Specify the name of a store (This is either a mailbox or public folder)"))
 

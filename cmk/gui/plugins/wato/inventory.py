@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -114,7 +114,7 @@ def _valuespec_inv_exports_software_csv():
         title=_("Export List of Software packages as CSV file"),
         elements=[
             ("filename",
-             TextAscii(
+             TextInput(
                  title=_(
                      "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"),
                  help=_(
@@ -127,7 +127,7 @@ def _valuespec_inv_exports_software_csv():
                  default_value="csv-export/<HOST>.csv",
              )),
             ("separator",
-             TextAscii(
+             TextInput(
                  title=_("Separator"),
                  allow_empty=False,
                  size=1,

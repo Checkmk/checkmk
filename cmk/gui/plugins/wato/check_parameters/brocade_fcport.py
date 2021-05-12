@@ -14,7 +14,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -122,7 +122,7 @@ rulespec_registry.register(
 
 
 def _item_spec_brocade_fcport():
-    return TextAscii(
+    return TextInput(
         title=_("port name"),
         help=_("The name of the switch port"),
     )

@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -192,7 +192,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netapp_volumes",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Volume name")),
+        item_spec=lambda: TextInput(title=_("Volume name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_volumes,
         title=lambda: _("NetApp Volumes"),

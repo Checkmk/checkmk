@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -47,7 +47,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="elasticsearch_nodes",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of node")),
+        item_spec=lambda: TextInput(title=_("Name of node")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_nodes,
         title=lambda: _("Elasticsearch Nodes"),

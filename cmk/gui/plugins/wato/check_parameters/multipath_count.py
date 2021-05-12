@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -68,7 +68,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="multipath_count",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Path ID")),
+        item_spec=lambda: TextInput(title=_("Path ID")),
         parameter_valuespec=_parameter_valuespec_multipath_count,
         title=lambda: _("ESX Multipath Count"),
     ))

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_clr_memory():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the Application"),
         help=_("The name of the DotNet (.Net) application or _Global_"),
         allow_empty=False,

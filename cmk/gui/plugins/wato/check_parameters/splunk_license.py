@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -41,7 +41,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="splunk_license_state",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of license")),
+        item_spec=lambda: TextInput(title=_("Name of license")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_splunk_license_state,
         title=lambda: _("Splunk License State"),

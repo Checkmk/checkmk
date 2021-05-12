@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -60,7 +60,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Module name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_multiitem,
         title=lambda: _("Main memory usage of devices with modules"),

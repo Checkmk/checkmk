@@ -60,7 +60,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Transform,
     ListOf,
-    TextAscii,
+    TextInput,
     ListOfStrings,
     LDAPDistinguishedName,
     Tuple,
@@ -1431,7 +1431,7 @@ class LDAPConnectionValuespec(Transform):
         if self._new:
             id_element: DictionaryEntry = (
                 "id",
-                TextAscii(
+                TextInput(
                     title=_("ID"),
                     help=_(
                         "The ID of the connection must be a unique text. It will be used as an internal key "
@@ -1551,7 +1551,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value=5,
              )),
             ("suffix",
-             TextAscii(
+             TextInput(
                  allow_empty=False,
                  title=_("LDAP connection suffix"),
                  help=
@@ -1583,7 +1583,7 @@ class LDAPConnectionValuespec(Transform):
              Dictionary(
                  elements=[
                      ("server",
-                      TextAscii(
+                      TextInput(
                           title=_("LDAP Server"),
                           help=_(
                               "Set the host address of the LDAP server. Might be an IP address or "
@@ -1612,7 +1612,7 @@ class LDAPConnectionValuespec(Transform):
                 Dictionary(
                     elements=[
                         ("domain",
-                         TextAscii(
+                         TextInput(
                              title=_("DNS domain name to discover LDAP servers of"),
                              help=
                              _("Configure the DNS domain name of your Active directory domain here, Check_MK "
@@ -1659,7 +1659,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value="sub",
              )),
             ("user_filter",
-             TextAscii(
+             TextInput(
                  title=_("Search filter"),
                  help=
                  _("Using this option you can define an optional LDAP filter which is used during "
@@ -1696,7 +1696,7 @@ class LDAPConnectionValuespec(Transform):
                  size=80,
              )),
             ("user_id",
-             TextAscii(
+             TextInput(
                  title=_("User-ID attribute"),
                  help=_("The attribute used to identify the individual users. It must have "
                         "unique values to make an user identifyable by the value of this "
@@ -1762,7 +1762,7 @@ class LDAPConnectionValuespec(Transform):
                  default_value="sub",
              )),
             ("group_filter",
-             TextAscii(
+             TextInput(
                  title=_("Search filter"),
                  help=_("Using this option you can define an optional LDAP filter which is used "
                         "during group related LDAP searches. It can be used to only handle a "
@@ -1774,7 +1774,7 @@ class LDAPConnectionValuespec(Transform):
                  attrencode=True,
              )),
             ("group_member",
-             TextAscii(
+             TextInput(
                  title=_("Member attribute"),
                  help=_("The attribute used to identify users group memberships."),
                  default_value=lambda: ldap_attr_of_connection(self._connection_id, 'member'),
@@ -2005,7 +2005,7 @@ def register_user_attribute_sync_plugins():
                     help=self.help,
                     elements=[
                         ('attr',
-                         TextAscii(
+                         TextInput(
                              title=_("LDAP attribute to sync"),
                              help=
                              _("The LDAP attribute whose contents shall be synced into this custom attribute."
@@ -2166,7 +2166,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
             help=self.help,
             elements=[
                 ("attr",
-                 TextAscii(
+                 TextInput(
                      title=_("LDAP attribute to sync"),
                      help=_("The LDAP attribute containing the mail address of the user."),
                      default_value=lambda: ldap_attr_of_connection(connection.id(), 'mail'),
@@ -2218,7 +2218,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
             help=self.help,
             elements=[
                 ("attr",
-                 TextAscii(
+                 TextInput(
                      title=_("LDAP attribute to sync"),
                      help=_("The LDAP attribute containing the alias of the user."),
                      default_value=lambda: ldap_attr_of_connection(connection.id(), 'cn'),
@@ -2324,7 +2324,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
             help=self.help,
             elements=[
                 ("attr",
-                 TextAscii(
+                 TextInput(
                      title=_("LDAP attribute to be used as indicator"),
                      help=_("When the value of this attribute changes for a user account, all "
                             "current authenticated sessions of the user are invalidated and the "
@@ -2381,7 +2381,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
             help=self.help,
             elements=[
                 ('attr',
-                 TextAscii(
+                 TextInput(
                      title=_("LDAP attribute to sync"),
                      help=_("The LDAP attribute containing the pager number of the user."),
                      default_value=lambda: ldap_attr_of_connection(connection.id(), 'mobile'),
@@ -2527,7 +2527,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                      Dictionary(
                          elements=[
                              ('cn',
-                              TextAscii(
+                              TextInput(
                                   title=_("Group<nobr> </nobr>CN"),
                                   size=40,
                                   allow_empty=False,

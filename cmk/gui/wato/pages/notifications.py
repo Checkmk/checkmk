@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
     rule_option_elements,
@@ -1124,7 +1124,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ("contact_match_macros",
                  ListOf(
                      Tuple(elements=[
-                         TextAscii(
+                         TextInput(
                              title=_("Name of the macro"),
                              help=
                              _("As configured in the users settings. Do not add a leading underscore."
@@ -1206,7 +1206,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                    "<tt>NOTIFY_SERVICE_FOO</tt>."),
              )),
             ("bulk_subject",
-             TextAscii(
+             TextInput(
                  title=_("Subject for bulk notifications"),
                  help=
                  _("Customize the subject for bulk notifications and overwrite "
@@ -1342,7 +1342,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     help=
                     _("The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc."
                      ),
-                    valuespec=TextAscii(size=24),
+                    valuespec=TextInput(size=24),
                     orientation="horizontal",
                 )
 

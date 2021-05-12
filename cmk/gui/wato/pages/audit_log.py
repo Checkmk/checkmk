@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
     Integer,
     AbsoluteDate,
     DropdownChoice,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri
@@ -434,7 +434,7 @@ class ModeAuditLog(WatoMode):
                 title=_("Object type"),
                 choices=object_types,
             )),
-            ("object_ident", TextAscii(title=_("Object"),)),
+            ("object_ident", TextInput(title=_("Object"),)),
             (
                 "user_id",
                 UserSelection(

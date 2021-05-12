@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Optional,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_heartbeat_crm_resources():
-    return TextAscii(
+    return TextInput(
         title=_("Resource Name"),
         help=_("The name of the cluster resource as shown in the service description."),
         allow_empty=False,
@@ -27,7 +27,7 @@ def _item_spec_heartbeat_crm_resources():
 
 def _parameter_valuespec_heartbeat_crm_resources():
     return Optional(
-        TextAscii(allow_empty=False),
+        TextInput(allow_empty=False),
         title=_("Expected node"),
         help=_("The hostname of the expected node to hold this resource."),
         none_label=_("Do not enforce the resource to be hold by a specific node."),

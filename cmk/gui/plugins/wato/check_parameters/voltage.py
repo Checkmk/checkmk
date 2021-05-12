@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -48,7 +48,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="voltage",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Sensor Description and Index"),),
+        item_spec=lambda: TextInput(title=_("Sensor Description and Index"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_voltage,
         title=lambda: _("Voltage Sensor"),

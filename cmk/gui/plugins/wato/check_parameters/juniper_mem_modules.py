@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_juniper_mem_modules():
-    return TextAscii(
+    return TextInput(
         title=_("Module Name"),
         help=_("The identificator of the module."),
     )

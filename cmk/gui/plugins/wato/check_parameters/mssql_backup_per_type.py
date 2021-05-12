@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -24,8 +24,8 @@ def _parameter_valuespec_mssql_backup_per_type():
     ],)
 
 
-def _item_spec() -> TextAscii:
-    return TextAscii(
+def _item_spec() -> TextInput:
+    return TextInput(
         title=_("Instance, tablespace & backup type"),
         help=_("The MSSQL instance name, the tablespace name and the backup type, each separated "
                "by a space."),

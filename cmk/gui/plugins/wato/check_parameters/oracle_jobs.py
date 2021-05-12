@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -26,7 +26,7 @@ from cmk.gui.plugins.wato.check_parameters.db_jobs import (
 
 
 def _item_spec_oracle_jobs():
-    return TextAscii(
+    return TextInput(
         title=_("Scheduler Job Name"),
         help=_("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
                "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),

@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -84,7 +84,7 @@ def _parameter_valuespec_heartbeat_crm():
                  default_value=60,
              )),
             ("dc",
-             TextAscii(
+             TextInput(
                  allow_empty=False,
                  title=_("Expected DC"),
                  help=_("The hostname of the expected distinguished controller of the cluster"),

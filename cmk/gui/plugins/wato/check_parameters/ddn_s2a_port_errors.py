@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -100,7 +100,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ddn_s2a_port_errors",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title="Port index"),
+        item_spec=lambda: TextInput(title="Port index"),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ddn_s2a_port_errors,
         title=lambda: _("DDN S2A port errors"),

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -34,7 +34,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="oracle_rman",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_rman,
         title=lambda: _("Oracle RMAN Backups"),

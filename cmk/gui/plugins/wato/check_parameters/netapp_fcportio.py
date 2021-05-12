@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -42,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netapp_fcportio",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("File name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("File name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_fcportio,
         title=lambda: _("Netapp FC Port throughput"),

@@ -15,7 +15,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
     Float,
-    TextAscii,
+    TextInput,
     FixedValue,
     Alternative,
     ListOfStrings,
@@ -126,7 +126,7 @@ def _imap_parameters():
         optional_keys=[],
         elements=[
             ('server',
-             TextAscii(title=_('IMAP Server'),
+             TextInput(title=_('IMAP Server'),
                        allow_empty=False,
                        help=_(
                            'You can specify a hostname or IP address different from the IP address '
@@ -154,7 +154,7 @@ def _imap_parameters():
              Tuple(
                  title=_('Authentication'),
                  elements=[
-                     TextAscii(title=_('Username'), allow_empty=False, size=24),
+                     TextInput(title=_('Username'), allow_empty=False, size=24),
                      IndividualOrStoredPassword(title=_('Password'), allow_empty=False, size=12),
                  ],
              )),
@@ -167,7 +167,7 @@ def _pop3_parameters():
         optional_keys=['server'],
         elements=[
             ('server',
-             TextAscii(title=_('POP3 Server'),
+             TextInput(title=_('POP3 Server'),
                        allow_empty=False,
                        help=_(
                            'You can specify a hostname or IP address different from the IP address '
@@ -195,7 +195,7 @@ def _pop3_parameters():
              Tuple(
                  title=_('Authentication'),
                  elements=[
-                     TextAscii(title=_('Username'), allow_empty=False, size=24),
+                     TextInput(title=_('Username'), allow_empty=False, size=24),
                      IndividualOrStoredPassword(title=_('Password'), allow_empty=False, size=12),
                  ],
              )),
@@ -219,7 +219,7 @@ def _valuespec_active_checks_ssh():
         title=_("Check SSH service"),
         help=_("This rulset allow you to configure a SSH check for a host"),
         elements=[
-            ("description", TextAscii(title=_("Service Description"),)),
+            ("description", TextInput(title=_("Service Description"),)),
             (
                 "port",
                 Integer(
@@ -234,12 +234,12 @@ def _valuespec_active_checks_ssh():
                         default_value=10),
             ),
             ("remote_version",
-             TextAscii(
+             TextInput(
                  title=_("Version of Server"),
                  help=_("Warn if string doesn't match expected server version (ex: OpenSSH_3.9p1)"),
              )),
             ("remote_protocol",
-             TextAscii(
+             TextInput(
                  title=_("Protocol of Server"),
                  help=_("Warn if protocol doesn't match expected protocol version (ex: 2.0)"),
              )),
@@ -266,7 +266,7 @@ def _valuespec_active_checks_icmp():
                "track performance data of the PING to some hosts, nevertheless."),
         elements=[
             ("description",
-             TextAscii(
+             TextInput(
                  title=_("Service Description"),
                  allow_empty=False,
                  default_value="PING",
@@ -354,12 +354,12 @@ def _valuespec_active_checks_ftp():
                                 ('warn', _("WARNING")),
                                 ('ok', _("OK")),
                             ])),
-            ("send_string", TextAscii(title=_("String to send"), size=30)),
+            ("send_string", TextInput(title=_("String to send"), size=30)),
             ("expect",
              ListOfStrings(
                  title=_("Strings to expect in response"),
                  orientation="horizontal",
-                 valuespec=TextAscii(size=30),
+                 valuespec=TextInput(size=30),
              )),
             ("ssl",
              FixedValue(value=True, totext=_("use SSL"), title=_("Use SSL for the connection."))),
@@ -400,17 +400,17 @@ def _valuespec_active_checks_sftp():
           "a file. This file will then be created for the test and deleted afterwards. It will of course not "
           "deleted if it was not created by this active check."),
         elements=[
-            TextAscii(title=_("Hostname"), allow_empty=False),
-            TextAscii(title=_("Username"), allow_empty=False),
+            TextInput(title=_("Hostname"), allow_empty=False),
+            TextInput(title=_("Username"), allow_empty=False),
             IndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             Dictionary(elements=[
                 ("description",
-                 TextAscii(title=_("Service Description"), default_value="SFTP", size=30)),
+                 TextInput(title=_("Service Description"), default_value="SFTP", size=30)),
                 ("port", Integer(title=_("Port"), default_value=22)),
                 ("timeout", Integer(title=_("Timeout"), default_value=10)),
                 (
                     "timestamp",
-                    TextAscii(
+                    TextInput(
                         title=_("Timestamp of a remote file"),
                         size=30,
                         help=_(
@@ -422,7 +422,7 @@ def _valuespec_active_checks_sftp():
                  Tuple(
                      title=_("Put file to SFTP server"),
                      elements=[
-                         TextAscii(
+                         TextInput(
                              title=_("Local file"),
                              size=30,
                              default_value="tmp/check_mk_testfile",
@@ -431,7 +431,7 @@ def _valuespec_active_checks_sftp():
                                "will be the home directory of your site. The testfile will be created "
                                "if it does not exist. Examples: \'tmp/testfile\' (file will be located in "
                                "$OMD_ROOT/tmp/testfile )")),
-                         TextAscii(
+                         TextInput(
                              title=_("Remote destination"),
                              size=30,
                              default_value="",
@@ -443,7 +443,7 @@ def _valuespec_active_checks_sftp():
                  Tuple(
                      title=_("Get file from SFTP server"),
                      elements=[
-                         TextAscii(
+                         TextInput(
                              title=_("Remote file"),
                              size=30,
                              default_value="check_mk_testfile",
@@ -452,7 +452,7 @@ def _valuespec_active_checks_sftp():
                                "(e.g. \'testfile\'). If you also enabled "
                                "'Put file to SFTP server', you can use the same file for both tests."
                               )),
-                         TextAscii(title=_("Local destination"),
+                         TextInput(title=_("Local destination"),
                                    size=30,
                                    default_value="tmp",
                                    help=_("Local path where to put the downloaded file "
@@ -498,14 +498,14 @@ def _valuespec_active_checks_dns():
         help=_("Check the resolution of a hostname into an IP address by a DNS server. "
                "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
         elements=[
-            TextAscii(title=_("Queried Hostname or IP address"),
+            TextInput(title=_("Queried Hostname or IP address"),
                       allow_empty=False,
                       help=_('The name or IPv4 address you want to query')),
             Transform(Dictionary(
                 title=_("Optional parameters"),
                 elements=[
                     ("name",
-                     TextAscii(
+                     TextInput(
                          title=_("Alternative Service description"),
                          help=
                          _("The service description will be this name instead <i>DNS Servername</i>"
@@ -518,7 +518,7 @@ def _valuespec_active_checks_dns():
                              FixedValue(value=None,
                                         totext=_("this host"),
                                         title=_("Use this host as a DNS server for the lookup")),
-                             TextAscii(
+                             TextInput(
                                  title=_("Specify DNS Server"),
                                  allow_empty=False,
                                  help=_("Optional DNS server you want to use for the lookup")),
@@ -583,7 +583,7 @@ def _valuespec_active_checks_sql():
         optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "host"],
         elements=[
             ("description",
-             TextAscii(
+             TextInput(
                  title=_("Service Description"),
                  help=_("The name of this active service to be displayed."),
                  allow_empty=False,
@@ -607,13 +607,13 @@ def _valuespec_active_checks_sql():
                 help=_('The port the DBMS listens to'),
             )),
             ("name",
-             TextAscii(
+             TextInput(
                  title=_("Database Name"),
                  help=_('The name of the database on the DBMS'),
                  allow_empty=False,
              )),
             ("user",
-             TextAscii(
+             TextInput(
                  title=_("Database User"),
                  help=_('The username used to connect to the database'),
                  allow_empty=False,
@@ -665,7 +665,7 @@ def _valuespec_active_checks_sql():
                             totext=_("procedure call is used"),
                         )),
                         ("input",
-                         TextAscii(
+                         TextInput(
                              title=_("Input Parameters"),
                              allow_empty=True,
                              help=_(
@@ -690,7 +690,7 @@ def _valuespec_active_checks_sql():
                  value=True,
              )),
             ("host",
-             TextAscii(
+             TextInput(
                  title=_("DNS hostname or IP address"),
                  help=_("This defaults to the host for which the active check is configured."),
              )),
@@ -717,7 +717,7 @@ def _valuespec_active_checks_tcp():
                 title=_("Optional parameters"),
                 elements=[
                     ("svc_description",
-                     TextAscii(
+                     TextInput(
                          title=_("Service description"),
                          allow_empty=False,
                          help=_(
@@ -725,7 +725,7 @@ def _valuespec_active_checks_tcp():
                              "If this parameter is not set, the service is named <tt>TCP Port [PORT NUMBER]</tt>"
                          ))),
                     ("hostname",
-                     TextAscii(title=_("DNS Hostname"),
+                     TextInput(title=_("DNS Hostname"),
                                allow_empty=False,
                                help=_("If you specify a hostname here, then a dynamic DNS lookup "
                                       "will be done instead of using the IP address of the host "
@@ -749,7 +749,7 @@ def _valuespec_active_checks_tcp():
                                         ('warn', _("WARNING")),
                                         ('ok', _("OK")),
                                     ])),
-                    ("send_string", TextAscii(title=_("String to send"), size=30)),
+                    ("send_string", TextInput(title=_("String to send"), size=30)),
                     ("escape_send_string",
                      FixedValue(
                          value=True,
@@ -761,7 +761,7 @@ def _valuespec_active_checks_tcp():
                      ListOfStrings(
                          title=_("Strings to expect in response"),
                          orientation="horizontal",
-                         valuespec=TextAscii(size=30),
+                         valuespec=TextInput(size=30),
                      )),
                     ("expect_all",
                      FixedValue(value=True,
@@ -822,7 +822,7 @@ def _valuespec_active_checks_tcp():
                         ),
                     ),
                     ("quit_string",
-                     TextAscii(title=_("Final string to send"),
+                     TextInput(title=_("Final string to send"),
                                help=_("String to send server to initiate a clean close of "
                                       "the connection"),
                                size=30)),
@@ -846,7 +846,7 @@ def _valuespec_active_checks_uniserv():
         elements=[
             ("port", Integer(title=_("Port"))),
             ("service",
-             TextAscii(
+             TextInput(
                  title=_("Service Name"),
                  help=
                  _("Enter the uniserve service name here (has nothing to do with service description)."
@@ -863,11 +863,11 @@ def _valuespec_active_checks_uniserv():
                           title=_("Address Check mode"),
                           optional_keys=False,
                           elements=[
-                              ("street", TextAscii(title=_("Street name"))),
+                              ("street", TextInput(title=_("Street name"))),
                               ("street_no", Integer(title=_("Street number"))),
-                              ("city", TextAscii(title=_("City name"))),
+                              ("city", TextInput(title=_("City name"))),
                               ("search_regex",
-                               TextAscii(
+                               TextInput(
                                    title=_("Check City against Regex"),
                                    help=_("The city name from the response will be checked against "
                                           "the regular expression specified here"),
@@ -906,12 +906,12 @@ def _transform_add_address_family(v):
 def _active_checks_http_proxyspec():
     return Dictionary(title=_("Use proxy"),
                       elements=[
-                          ("address", TextAscii(title=_("Proxy server address"))),
+                          ("address", TextInput(title=_("Proxy server address"))),
                           ("port", _active_checks_http_portspec(80)),
                           ("auth",
                            Tuple(title=_("Proxy basic authorization"),
                                  elements=[
-                                     TextAscii(title=_("Username"), size=12, allow_empty=False),
+                                     TextInput(title=_("Username"), size=12, allow_empty=False),
                                      IndividualOrStoredPassword(title=_("Password"),),
                                  ])),
                       ],
@@ -930,11 +930,11 @@ def _active_checks_http_hostspec():
                " not resolvable by DNS). In this case the HTTP Host header will be set and "
                "HTTP/1.1 is used."),
         elements=[
-            ("address", TextAscii(title=_("Hosts name / IP address"), allow_empty=False)),
+            ("address", TextInput(title=_("Hosts name / IP address"), allow_empty=False)),
             ("port", _active_checks_http_portspec(443)),
             _ip_address_family_element(),
             ("virthost",
-             TextAscii(title=_("Virtual host"),
+             TextInput(title=_("Virtual host"),
                        help=_("Set this in order to specify the name of the"
                               " virtual host for the query."),
                        allow_empty=False)),
@@ -1014,7 +1014,7 @@ def _valuespec_active_checks_http():
                    "connection times, and report on certificate expiration times."),
             elements=[
                 ("name",
-                 TextAscii(
+                 TextInput(
                      title=_("Service name"),
                      help=_(
                          "Will be used in the service description. If the name starts with "
@@ -1035,7 +1035,7 @@ def _valuespec_active_checks_http():
                               title=_("URL Checking"),
                               elements=[
                                   ("uri",
-                                   TextAscii(
+                                   TextInput(
                                        title=_("URI to fetch (default is <tt>/</tt>)"),
                                        help=_("The URI of the request. This should start with"
                                               " '/' and not include the domain"
@@ -1077,7 +1077,7 @@ def _valuespec_active_checks_http():
                                    )),
                                   (
                                       "user_agent",
-                                      TextAscii(
+                                      TextInput(
                                           title=_("User Agent"),
                                           help=_(
                                               "String to be sent in http header as \"User Agent\""),
@@ -1089,14 +1089,14 @@ def _valuespec_active_checks_http():
                                       ListOfStrings(
                                           title=_("Additional header lines"),
                                           orientation="vertical",
-                                          valuespec=TextAscii(size=40),
+                                          valuespec=TextInput(size=40),
                                       ),
                                   ),
                                   ("auth",
                                    Tuple(title=_("Authorization"),
                                          help=_("Credentials for HTTP Basic Authentication"),
                                          elements=[
-                                             TextAscii(title=_("Username"),
+                                             TextInput(title=_("Username"),
                                                        size=12,
                                                        allow_empty=False),
                                              IndividualOrStoredPassword(title=_("Password"),)
@@ -1118,7 +1118,7 @@ def _valuespec_active_checks_http():
                                           default_value='follow'),
                                   ),
                                   ("expect_response_header",
-                                   TextAscii(title=_("String to expect in response headers"),)),
+                                   TextInput(title=_("String to expect in response headers"),)),
                                   ("expect_response",
                                    ListOfStrings(
                                        title=_("Strings to expect in server response"),
@@ -1129,7 +1129,7 @@ def _valuespec_active_checks_http():
                                               "processing)"),
                                    )),
                                   ("expect_string",
-                                   TextAscii(
+                                   TextInput(
                                        title=_("Fixed string to expect in the content"),
                                        allow_empty=False,
                                    )),
@@ -1158,7 +1158,7 @@ def _valuespec_active_checks_http():
                                    Tuple(
                                        title=_("Send HTTP POST data"),
                                        elements=[
-                                           TextAscii(
+                                           TextInput(
                                                title=_("HTTP POST data"),
                                                help=_(
                                                    "Data to send via HTTP POST method. "
@@ -1166,7 +1166,7 @@ def _valuespec_active_checks_http():
                                                ),
                                                size=40,
                                            ),
-                                           TextAscii(title=_("Content-Type"),
+                                           TextInput(title=_("Content-Type"),
                                                      default_value="text/html"),
                                        ])),
                                   ("method",
@@ -1285,14 +1285,14 @@ def _valuespec_active_checks_ldap():
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Name"),
                 help=
                 _("The service description will be <b>LDAP</b> plus this name. If the name starts with "
                   "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>."
                  ),
                 allow_empty=False),
-            TextAscii(title=_("Base DN"),
+            TextInput(title=_("Base DN"),
                       help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
                       allow_empty=False,
                       size=60),
@@ -1300,7 +1300,7 @@ def _valuespec_active_checks_ldap():
                 title=_("Optional parameters"),
                 elements=[
                     ("attribute",
-                     TextAscii(
+                     TextInput(
                          title=_("Attribute to search"),
                          help=_("LDAP attribute to search, "
                                 "The default is <tt>(objectclass=*)</tt>."),
@@ -1312,7 +1312,7 @@ def _valuespec_active_checks_ldap():
                      Tuple(
                          title=_("Authentication"),
                          elements=[
-                             TextAscii(
+                             TextInput(
                                  title=_("Bind DN"),
                                  help=_("Distinguished name for binding"),
                                  allow_empty=False,
@@ -1344,7 +1344,7 @@ def _valuespec_active_checks_ldap():
                          _("Use LDAPS (LDAP SSLv2 method). This sets the default port number to 636"
                           ))),
                     ("hostname",
-                     TextAscii(
+                     TextInput(
                          title=_("Alternative Hostname"),
                          help=
                          _("Use a alternative field as Hostname in case of SSL Certificate Problems (eg. the Hostalias )"
@@ -1402,7 +1402,7 @@ def _valuespec_active_checks_smtp():
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Name"),
                 help=
                 _("The service description will be <b>SMTP</b> plus this name. If the name starts with "
@@ -1414,7 +1414,7 @@ def _valuespec_active_checks_smtp():
                     title=_("Optional parameters"),
                     elements=[
                         ("hostname",
-                         TextAscii(
+                         TextInput(
                              title=_("DNS Hostname or IP address"),
                              allow_empty=False,
                              help=_(
@@ -1435,7 +1435,7 @@ def _valuespec_active_checks_smtp():
                          )),
                         _ip_address_family_element(),
                         ("expect",
-                         TextAscii(
+                         TextInput(
                              title=_("Expected String"),
                              help=_("String to expect in first line of server response. "
                                     "The default is <tt>220</tt>."),
@@ -1454,7 +1454,7 @@ def _valuespec_active_checks_smtp():
                              help=_("Expected responses to the given SMTP commands."),
                          )),
                         ("from",
-                         TextAscii(
+                         TextInput(
                              title=_("FROM-Address"),
                              help=_(
                                  "FROM-address to include in MAIL command, required by Exchange 2000"
@@ -1464,7 +1464,7 @@ def _valuespec_active_checks_smtp():
                              default_value="",
                          )),
                         ("fqdn",
-                         TextAscii(
+                         TextInput(
                              title=_("FQDN"),
                              help=_("FQDN used for HELO"),
                              size=20,
@@ -1496,7 +1496,7 @@ def _valuespec_active_checks_smtp():
                              title=_("Enable SMTP AUTH (LOGIN)"),
                              help=_("SMTP AUTH type to check (default none, only LOGIN supported)"),
                              elements=[
-                                 TextAscii(
+                                 TextInput(
                                      title=_("Username"),
                                      size=12,
                                      allow_empty=False,
@@ -1545,7 +1545,7 @@ def _valuespec_active_checks_disk_smb():
                "filesystem shares that are exported via SMB/CIFS."),
         elements=[
             ("share",
-             TextAscii(
+             TextInput(
                  title=_("SMB share to check"),
                  help=_("Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> "
                         "the full UNC like <tt>\\\\servername\\iso</tt>"),
@@ -1553,14 +1553,14 @@ def _valuespec_active_checks_disk_smb():
                  allow_empty=False,
              )),
             ("workgroup",
-             TextAscii(
+             TextInput(
                  title=_("Workgroup"),
                  help=_("Workgroup or domain used (defaults to <tt>WORKGROUP</tt>)"),
                  size=32,
                  allow_empty=False,
              )),
             ("host",
-             TextAscii(
+             TextInput(
                  title=_("NetBIOS name of the server"),
                  help=_("If omitted then the IP address is being used."),
                  size=32,
@@ -1584,7 +1584,7 @@ def _valuespec_active_checks_disk_smb():
              Tuple(
                  title=_("Authorization"),
                  elements=[
-                     TextAscii(title=_("Username"), allow_empty=False, size=24),
+                     TextInput(title=_("Username"), allow_empty=False, size=24),
                      Password(title=_("Password"), allow_empty=False, size=12),
                  ],
              )),
@@ -1613,7 +1613,7 @@ def _valuespec_custom_checks():
         _("This option can only be used with the permission \"Can add or modify executables\"."),
         elements=[
             ("service_description",
-             TextAscii(title=_("Service description"),
+             TextInput(title=_("Service description"),
                        help=_("Please make sure that this is unique per host "
                               "and does not collide with other services."),
                        allow_empty=False,
@@ -1623,7 +1623,7 @@ def _valuespec_custom_checks():
                 PluginCommandLine(),
             ),
             ("command_name",
-             TextAscii(title=_("Internal command name"),
+             TextInput(title=_("Internal command name"),
                        help=_("If you want, you can specify a name that will be used "
                               "in the <tt>define command</tt> section for these checks. This "
                               "allows you to a assign a custom PNP template for the performance "
@@ -1670,7 +1670,7 @@ def _valuespec_custom_checks():
                           default_value=3,
                       )),
                      ("output",
-                      TextAscii(title=_("Plugin output in case of absent updates"),
+                      TextInput(title=_("Plugin output in case of absent updates"),
                                 size=40,
                                 allow_empty=False,
                                 default_value=_("Check result did not arrive in time"))),
@@ -1710,7 +1710,7 @@ def _valuespec_active_checks_bi_aggr():
             "service."),
         elements=[
             ("base_url",
-             TextAscii(
+             TextInput(
                  title=_("Base URL (OMD Site)"),
                  help=
                  _("The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
@@ -1719,7 +1719,7 @@ def _valuespec_active_checks_bi_aggr():
                  size=60,
                  allow_empty=False)),
             ("aggregation_name",
-             TextAscii(
+             TextInput(
                  title=_("Aggregation Name"),
                  help=
                  _("The name of the aggregation to fetch. It will be added to the service description. You can "
@@ -1733,7 +1733,7 @@ def _valuespec_active_checks_bi_aggr():
                      ("automation", _("Use the credentials of the 'automation' user")),
                      ("configured", _("Use the following credentials"),
                       Tuple(elements=[
-                          TextAscii(
+                          TextInput(
                               title=_("Automation Username"),
                               allow_empty=True,
                               help=
@@ -1821,7 +1821,7 @@ def _valuespec_active_checks_form_submit():
           "from the requested pages, changes vars and submits them to check the response "
           "afterwards."),
         elements=[
-            TextAscii(title=_("Name"),
+            TextInput(title=_("Name"),
                       help=_("The name will be used in the service description"),
                       allow_empty=False),
             Dictionary(
@@ -1835,7 +1835,7 @@ def _valuespec_active_checks_form_submit():
                                 'be used. But by specifying one or several host addresses here, '
                                 'it is possible to let the check monitor one or multiple hosts.'))),
                     ("virthost",
-                     TextAscii(
+                     TextInput(
                          title=_("Virtual host"),
                          help=_("Set this in order to specify the name of the "
                                 "virtual host for the query (using HTTP/1.1). When you "
@@ -1844,7 +1844,7 @@ def _valuespec_active_checks_form_submit():
                          allow_empty=False,
                      )),
                     ("uri",
-                     TextAscii(
+                     TextInput(
                          title=_("URI to fetch (default is <tt>/</tt>)"),
                          allow_empty=False,
                          default_value="/",
@@ -1873,7 +1873,7 @@ def _valuespec_active_checks_form_submit():
                          mode=RegExp.infix,
                      )),
                     ("form_name",
-                     TextAscii(
+                     TextInput(
                          title=_("Name of the form to populate and submit"),
                          help=_("If there is only one form element on the requested page, you "
                                 "do not need to provide the name of that form here. But if you "
@@ -1883,7 +1883,7 @@ def _valuespec_active_checks_form_submit():
                          allow_empty=True,
                      )),
                     ("query",
-                     TextAscii(
+                     TextInput(
                          title=_("Send HTTP POST data"),
                          help=_(
                              "Data to send via HTTP POST method. Please make sure, that the data "
@@ -1920,7 +1920,7 @@ def _valuespec_active_checks_notify_count():
           "This plugin queries livestatus to extract the notification related log entries from the "
           "log file of your monitoring core."),
         elements=[
-            TextAscii(title=_("Service Description"),
+            TextInput(title=_("Service Description"),
                       help=_("The name that will be used in the service description"),
                       allow_empty=False),
             Integer(
@@ -1974,7 +1974,7 @@ def _valuespec_active_checks_traceroute():
                 ("routers",
                  ListOf(
                      Tuple(elements=[
-                         TextAscii(
+                         TextInput(
                              title=_("Router (FQDN, IP-Address)"),
                              allow_empty=False,
                          ),
@@ -2025,18 +2025,18 @@ def _valuespec_active_checks_mail_loop():
         ],
         elements=[
             ('item',
-             TextAscii(title=_('Name'),
+             TextInput(title=_('Name'),
                        help=_('The service description will be <b>Mail Loop</b> plus this name'),
                        allow_empty=False)),
             ('subject',
-             TextAscii(
+             TextInput(
                  title=_('Subject'),
                  allow_empty=False,
                  help=_('Here you can specify the subject text '
                         'instead of default text \'Check_MK-Mail-Loop\'.'),
              )),
             ('smtp_server',
-             TextAscii(title=_('SMTP Server'),
+             TextInput(title=_('SMTP Server'),
                        allow_empty=False,
                        help=_(
                            'You can specify a hostname or IP address different from the IP address '
@@ -2063,7 +2063,7 @@ def _valuespec_active_checks_mail_loop():
              Tuple(
                  title=_('SMTP Authentication'),
                  elements=[
-                     TextAscii(title=_('Username'), allow_empty=False, size=24),
+                     TextInput(title=_('Username'), allow_empty=False, size=24),
                      IndividualOrStoredPassword(title=_('Password'), allow_empty=False, size=12),
                  ],
              )),
@@ -2113,7 +2113,7 @@ def _valuespec_active_checks_mail():
                'to the Event Console.'),
         required_keys=['service_description', 'fetch'],
         elements=[('service_description',
-                   TextAscii(title=_('Service description'),
+                   TextInput(title=_('Service description'),
                              help=_('Please make sure that this is unique per host '
                                     'and does not collide with other services.'),
                              allow_empty=False,
@@ -2146,7 +2146,7 @@ def _valuespec_active_checks_mail():
                                                 _("Send events to local event console in same OMD site"
                                                  ),
                                             ),
-                                            TextAscii(
+                                            TextInput(
                                                 title=
                                                 _("Send events to local event console into unix socket"
                                                  ),
@@ -2160,7 +2160,7 @@ def _valuespec_active_checks_mail():
                                                  ),
                                             ),
                                             Transform(
-                                                TextAscii(allow_empty=False,),
+                                                TextInput(allow_empty=False,),
                                                 title=
                                                 _("Spooling: Send events to local event console into given spool directory"
                                                  ),
@@ -2180,7 +2180,7 @@ def _valuespec_active_checks_mail():
                                                   ],
                                                   title=_("Protocol"),
                                               ),
-                                              TextAscii(
+                                              TextInput(
                                                   title=_("Address"),
                                                   allow_empty=False,
                                               ),
@@ -2221,7 +2221,7 @@ def _valuespec_active_checks_mail():
                                      title=_("Use the mail subject"),
                                      totext=_("The mail subject is used as syslog appliaction"),
                                  ),
-                                 TextAscii(
+                                 TextInput(
                                      title=_("Specify the application"),
                                      help=
                                      _("Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
@@ -2231,7 +2231,7 @@ def _valuespec_active_checks_mail():
                                  ),
                              ])),
                         ('host',
-                         TextAscii(
+                         TextInput(
                              title=_('Events: Hostname'),
                              help=
                              _('Use this hostname for all created events instead of the name of the mailserver'
@@ -2259,7 +2259,7 @@ def _valuespec_active_checks_mail():
                                      totext=_(
                                          'Delete all processed message belonging to this check'),
                                  ),
-                                 TextAscii(
+                                 TextInput(
                                      title=_("Move to subfolder"),
                                      help=_(
                                          "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
@@ -2286,7 +2286,7 @@ def _valuespec_active_checks_mailboxes():
         help=_('This check monitors count and age of mails in mailboxes.'),
         elements=[
             ('service_description',
-             TextAscii(title=_('Service description'),
+             TextInput(title=_('Service description'),
                        help=_('Please make sure that this is unique per host '
                               'and does not collide with other services.'),
                        allow_empty=False,
@@ -2329,7 +2329,7 @@ def _valuespec_active_checks_by_ssh():
         title=_("Check via SSH service"),
         help=_("Checks via SSH. "),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Command"),
                 help=_("Command to execute on remote host."),
                 allow_empty=False,
@@ -2338,14 +2338,14 @@ def _valuespec_active_checks_by_ssh():
                 title=_("Optional parameters"),
                 elements=[
                     ("description",
-                     TextAscii(
+                     TextInput(
                          title=_("Service Description"),
                          help=_(
                              "Must be unique for every host. Defaults to command that is executed."
                          ),
                          size=30)),
                     ("hostname",
-                     TextAscii(
+                     TextInput(
                          title=_("DNS Hostname or IP address"),
                          default_value="$HOSTADDRESS$",
                          allow_empty=False,
@@ -2373,10 +2373,10 @@ def _valuespec_active_checks_by_ssh():
                          default_value=10,
                      )),
                     ("logname",
-                     TextAscii(title=_("Username"), help=_("SSH user name on remote host"),
+                     TextInput(title=_("Username"), help=_("SSH user name on remote host"),
                                size=30)),
                     ("identity",
-                     TextAscii(title=_("Keyfile"), help=_("Identity of an authorized key"),
+                     TextInput(title=_("Keyfile"), help=_("Identity of an authorized key"),
                                size=30)),
                     ("accept_new_host_keys",
                      FixedValue(
@@ -2408,7 +2408,7 @@ def _valuespec_active_checks_elasticsearch_query():
         help=_("You can search indices for defined patterns in defined fieldnames."),
         elements=[
             ("svc_item",
-             TextAscii(
+             TextInput(
                  title=_("Item suffix"),
                  help=_("Here you can define what service description (item) is "
                         "used for the created service. The resulting item "
@@ -2417,13 +2417,13 @@ def _valuespec_active_checks_elasticsearch_query():
                  size=16,
              )),
             ("hostname",
-             TextAscii(
+             TextInput(
                  title=_("DNS hostname or IP address"),
                  help=_('You can specify a hostname or IP address different from the IP address '
                         'of the host this check will be assigned to.'),
                  allow_empty=False,
              )),
-            ("user", TextAscii(title=_("Username"), size=32, allow_empty=True)),
+            ("user", TextInput(title=_("Username"), size=32, allow_empty=True)),
             ("password", PasswordFromStore(
                 title=_("Password of the user"),
                 allow_empty=False,
@@ -2446,7 +2446,7 @@ def _valuespec_active_checks_elasticsearch_query():
                  default_value=9200,
              )),
             ("pattern",
-             TextAscii(
+             TextInput(
                  title=_("Search pattern"),
                  help=_(
                      "Here you can define what search pattern should be used. "

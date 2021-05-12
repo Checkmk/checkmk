@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -60,7 +60,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_stats",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Counter ID"),),
+        item_spec=lambda: TextInput(title=_("Counter ID"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_stats,
         title=lambda: _("MSSQL Statistics"),

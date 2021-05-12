@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Checkbox,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
@@ -38,7 +38,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="brocade_optical",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Interface id")),
+        item_spec=lambda: TextInput(title=_("Interface id")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_optical,
         title=lambda: _("Brocade Optical Signal"),

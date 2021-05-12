@@ -33,7 +33,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     DropdownChoice,
     ValueSpec,
 )
@@ -1109,8 +1109,8 @@ def update_config_based_user_attributes() -> None:
     _clear_config_based_user_attributes()
 
     for attr in config.wato_user_attrs:
-        if attr["type"] == "TextAscii":
-            vs = TextAscii(title=attr['title'], help=attr['help'])
+        if attr["type"] == "TextInput":
+            vs = TextInput(title=attr['title'], help=attr['help'])
         else:
             raise NotImplementedError()
 

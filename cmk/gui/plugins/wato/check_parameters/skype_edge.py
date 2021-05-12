@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_skype_edge():
-    return TextAscii(
+    return TextInput(
         title=_("Interface"),
         help=_("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
     )

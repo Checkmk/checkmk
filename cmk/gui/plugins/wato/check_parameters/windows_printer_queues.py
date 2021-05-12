@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     ListChoice,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -100,7 +100,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="windows_printer_queues",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextAscii(title=_("Printer Name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Printer Name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_windows_printer_queues,
         title=lambda: _("Windows printers: number of open jobs"),
     ))

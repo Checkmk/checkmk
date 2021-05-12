@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
@@ -82,7 +82,7 @@ register_check_parameters(
             default_value=1,
         )),
     ]),
-    TextAscii(
+    TextInput(
         title=_("Name of VPN tunnel"),
         allow_empty=True,
     ),

@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Filesize,
     MonitoringState,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -24,7 +24,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_memory_simple():
-    return TextAscii(
+    return TextInput(
         title=_("Module name or empty"),
         help=_("Leave this empty for systems without modules, which just "
                "have one global memory usage."),

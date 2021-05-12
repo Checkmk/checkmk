@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_ad_replication():
-    return TextAscii(
+    return TextInput(
         title=_("Replication Partner"),
         help=_("The name of the replication partner (Destination DC Site/Destination DC)."),
     )

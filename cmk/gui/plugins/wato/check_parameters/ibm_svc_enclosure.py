@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_ibm_svc_enclosure():
-    return TextAscii(
+    return TextInput(
         title=_("Name of enclosure"),
         help=_("Name of the enclosure, e.g. Enclosure 1"),
     )

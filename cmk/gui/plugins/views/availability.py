@@ -56,7 +56,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     Checkbox,
     TextAreaUnicode,
-    TextAscii,
+    TextInput,
     Dictionary,
     Optional,
     AbsoluteDate,
@@ -1189,8 +1189,8 @@ def _vs_annotation():
 
     return Dictionary(
         elements=[
-            ("site", TextAscii(title=_("Site"))),
-            ("host", TextAscii(title=_("Hostname"))),
+            ("site", TextInput(title=_("Site"))),
+            ("host", TextInput(title=_("Hostname"))),
             ("host_state",
              Optional(
                  HostState(),
@@ -1199,7 +1199,7 @@ def _vs_annotation():
                  label=_("Reclassify host state of this period"),
              )),
             ("service",
-             Optional(TextAscii(allow_empty=False),
+             Optional(TextInput(allow_empty=False),
                       sameline=True,
                       title=_("Service"),
                       label=_("Service description"))),

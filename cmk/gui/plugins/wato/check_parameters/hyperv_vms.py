@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, FixedValue, Alternative, MonitoringState, TextAscii
+from cmk.gui.valuespec import Dictionary, FixedValue, Alternative, MonitoringState, TextInput
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -24,7 +24,7 @@ VM_STATES_DEFVALS = [('FastSaved', 0), ('FastSavedCritical', 2), ('FastSaving', 
 
 
 def _item_spec_hyperv_vms():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the VM"),
         help=_("Specify the name of the VM, for example z4065012."),
         allow_empty=False,

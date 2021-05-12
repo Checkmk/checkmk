@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Optional,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -63,7 +63,7 @@ rulespec_registry.register(
         check_group_name="temperature_trends",
         group=RulespecGroupCheckParametersEnvironment,
         is_deprecated=True,
-        item_spec=lambda: TextAscii(title=_("Sensor ID"),
+        item_spec=lambda: TextInput(title=_("Sensor ID"),
                                     help=_("The identifier of the thermal sensor.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_temperature_trends,

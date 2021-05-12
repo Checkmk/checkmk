@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_jvm_memory():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,
@@ -100,7 +100,7 @@ rulespec_registry.register(
 
 
 def _item_spec_jvm_memory_pools():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the memory pool"),
         help=_("The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"),
         allow_empty=False,

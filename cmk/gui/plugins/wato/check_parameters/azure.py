@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_azure_agent_info():
-    return TextAscii(title=_("Azure Agent Info"))
+    return TextInput(title=_("Azure Agent Info"))
 
 
 def _parameter_valuespec_azure_agent_info():
@@ -86,7 +86,7 @@ rulespec_registry.register(
 
 
 def _item_spec_webserver():
-    return TextAscii(title=_("Name of the service"))
+    return TextInput(title=_("Name of the service"))
 
 
 def _parameter_valuespec_webserver():
@@ -130,7 +130,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_storageaccounts():
-    return TextAscii(
+    return TextInput(
         title=_("Storage account name"),
         help=_("Specify storage account names that the rule should apply to"),
     )
@@ -211,7 +211,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_databases():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("Specify database names that the rule should apply to"),
     )
@@ -261,7 +261,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_vms():
-    return TextAscii(title=_("VM name"))
+    return TextInput(title=_("VM name"))
 
 
 def _parameter_valuespec_azure_vms():
@@ -368,7 +368,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_virtualnetworkgateways():
-    return TextAscii(
+    return TextInput(
         title=_("Virtual network gateway name"),
         help=_("Specify virtual network gateway names that the rule should apply to"),
     )
@@ -461,7 +461,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="azure_usagedetails",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service Type")),
+        item_spec=lambda: TextInput(title=_("Service Type")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
         title=lambda: _("Azure Usage Details (Costs)"),

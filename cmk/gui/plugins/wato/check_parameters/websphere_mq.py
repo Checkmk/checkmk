@@ -12,7 +12,7 @@ from cmk.gui.valuespec import (
     MonitoringState,
     OptionalDropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -96,7 +96,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="websphere_mq",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of queue")),
+        item_spec=lambda: TextInput(title=_("Name of queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq,
         title=lambda: _("Websphere MQ"),

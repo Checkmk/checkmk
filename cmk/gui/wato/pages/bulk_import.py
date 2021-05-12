@@ -44,7 +44,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     FixedValue,
-    TextAscii,
+    TextInput,
     UploadOrPasteTextFile,
 )
 
@@ -435,7 +435,7 @@ class ModeBulkImport(WatoMode):
         return Dictionary(
             elements=[
                 ("field_delimiter",
-                 TextAscii(
+                 TextInput(
                      title=_("Set field delimiter"),
                      default_value=";",
                      size=1,

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     ListOf,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -34,7 +34,7 @@ def _valuespec_winperf_msx_queues_inventory():
         Tuple(
             orientation="horizontal",
             elements=[
-                TextAscii(
+                TextInput(
                     title=_("Name of Counter"),
                     help=_("Name of the Counter to be monitored."),
                     size=50,
@@ -66,7 +66,7 @@ rulespec_registry.register(
 
 
 def _item_spec_msx_queues():
-    return TextAscii(
+    return TextInput(
         title=_("Explicit Queue Names"),
         help=_("Specify queue names that the rule should apply to"),
     )

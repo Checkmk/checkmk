@@ -16,7 +16,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     ListOf,
     Transform,
     Tuple,
@@ -79,7 +79,7 @@ class BookmarkList(pagetypes.Overridable):
             [
                 # sort-index, key, valuespec
                 (2.5, "default_topic",
-                 TextAscii(
+                 TextInput(
                      title=_("Default Topic") + "<sup>*</sup>",
                      size=50,
                      allow_empty=False,
@@ -95,12 +95,12 @@ class BookmarkList(pagetypes.Overridable):
                         Transform(
                             Tuple(
                                 elements=[
-                                    (TextAscii(
+                                    (TextInput(
                                         title=_("Title") + "<sup>*</sup>",
                                         size=30,
                                         allow_empty=False,
                                     )),
-                                    (TextAscii(
+                                    (TextInput(
                                         title=_("URL"),
                                         size=50,
                                         allow_empty=False,
@@ -134,7 +134,7 @@ class BookmarkList(pagetypes.Overridable):
                     title=_("Individual topic"),
                     choices=choices,
                     default_value=choices[0][0] if choices else "",
-                    explicit=TextAscii(
+                    explicit=TextInput(
                         size=30,
                         allow_empty=False,
                     ),

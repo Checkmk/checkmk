@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -104,7 +104,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="jenkins_jobs",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Job name")),
+        item_spec=lambda: TextInput(title=_("Job name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jenkins_jobs,
         title=lambda: _("Jenkins jobs"),

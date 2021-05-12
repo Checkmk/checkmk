@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Filesize,
     Optional,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mysql_db_size():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the database"),
         help=_("Don't forget the instance: instance:dbname"),
     )

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -40,7 +40,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="enterasys_powersupply",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Number of Powersupply"),),
+        item_spec=lambda: TextInput(title=_("Number of Powersupply"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_enterasys_powersupply,
         title=lambda: _("Enterasys Power Supply Settings"),

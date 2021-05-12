@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -52,7 +52,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="checkpoint_vsx_packets",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("VSID")),
+        item_spec=lambda: TextInput(title=_("VSID")),
         parameter_valuespec=_parameter_valuespec_checkpoint_vsx_packets,
         title=lambda: _("Checkpoint VSID packet rate"),
     ))

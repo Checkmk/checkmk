@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     Checkbox,
 )
 
@@ -43,7 +43,7 @@ class URLDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("url", TextAscii(
+            ("url", TextInput(
                 title=_('URL'),
                 size=50,
                 allow_empty=False,

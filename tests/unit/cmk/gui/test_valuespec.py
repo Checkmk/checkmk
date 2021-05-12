@@ -246,14 +246,14 @@ def test_email_validation_raises(address):
 
 
 def test_transform_value_no_transform_vs():
-    valuespec = vs.TextAscii()
+    valuespec = vs.TextInput()
     assert valuespec.transform_value("lala") == "lala"
     assert valuespec.transform_value("AAA") == "AAA"
 
 
 def test_transform_value_with_transform_vs():
     valuespec = vs.Transform(
-        vs.TextAscii(),
+        vs.TextInput(),
         forth=lambda x: x if x == "lala" else x.upper(),
         back=lambda x: x + "aaa",
     )
@@ -264,7 +264,7 @@ def test_transform_value_with_transform_vs():
 
 def test_transform_value_dict():
     valuespec = vs.Dictionary(elements=[
-        ("a", vs.TextAscii()),
+        ("a", vs.TextInput()),
     ])
     assert valuespec.transform_value({"a": "lala"}) == {"a": "lala"}
 
@@ -273,7 +273,7 @@ def test_transform_value_in_dict():
     valuespec = vs.Dictionary(elements=[
         ("a",
          vs.Transform(
-             vs.TextAscii(),
+             vs.TextInput(),
              forth=lambda x: x if x == "lala" else x.upper(),
              back=lambda x: x + "aaa",
          )),
@@ -286,12 +286,12 @@ def test_transform_value_in_dict():
 def test_transform_value_in_tuple():
     valuespec = vs.Tuple(elements=[
         vs.Transform(
-            vs.TextAscii(),
+            vs.TextInput(),
             forth=lambda x: x if x == "lala" else x.upper(),
             back=lambda x: x + "aaa",
         ),
         vs.Transform(
-            vs.TextAscii(),
+            vs.TextInput(),
             forth=lambda x: x if x == "lala" else x.upper(),
             back=lambda x: x + "aaa",
         ),
@@ -302,10 +302,10 @@ def test_transform_value_in_tuple():
 
 def test_transform_value_in_cascading_dropdown():
     valuespec = vs.CascadingDropdown(choices=[
-        ("a", "Title a", vs.TextAscii()),
+        ("a", "Title a", vs.TextInput()),
         ("b", "Title b",
          vs.Transform(
-             vs.TextAscii(),
+             vs.TextInput(),
              forth=lambda x: x if x == "lala" else x.upper(),
              back=lambda x: x + "aaa",
          )),

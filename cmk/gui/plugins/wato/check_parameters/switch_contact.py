@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     DropdownChoice,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -33,7 +33,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="switch_contact",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Sensor"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Sensor"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_switch_contact,
         title=lambda: _("Switch contact state"),
     ))

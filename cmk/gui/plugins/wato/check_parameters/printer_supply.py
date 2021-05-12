@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -80,7 +80,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="printer_supply",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextAscii(title=_("cartridge specification"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("cartridge specification"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_printer_supply,
         title=lambda: _("Printer cartridge levels"),
     ))

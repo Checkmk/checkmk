@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -54,7 +54,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="volume_groups",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Volume Group"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Volume Group"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_volume_groups,
         title=lambda: _("Volume Groups (LVM)"),

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -41,7 +41,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="rabbitmq_nodes_uptime",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Node name")),
+        item_spec=lambda: TextInput(title=_("Node name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_rabbitmq_nodes_uptime,
         title=lambda: _("RabbitMQ nodes uptime"),

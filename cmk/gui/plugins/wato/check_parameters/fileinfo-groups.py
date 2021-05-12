@@ -14,7 +14,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfTimeRanges,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -34,7 +34,7 @@ def _valuespec_fileinfo_groups():
             show_titles=True,
             orientation="horizontal",
             elements=[
-                TextAscii(
+                TextInput(
                     title=_("Name of group"),
                     size=20,
                 ),
@@ -42,8 +42,8 @@ def _valuespec_fileinfo_groups():
                     show_titles=True,
                     orientation="vertical",
                     elements=[
-                        TextAscii(title=_("Include Pattern"), size=40),
-                        TextAscii(title=_("Exclude Pattern"), size=40),
+                        TextInput(title=_("Include Pattern"), size=40),
+                        TextInput(title=_("Exclude Pattern"), size=40),
                     ],
                 ),
                           forth=lambda params: isinstance(params, str) and (params, '') or params),
@@ -89,7 +89,7 @@ rulespec_registry.register(
 
 
 def _item_spec_fileinfo_groups():
-    return TextAscii(
+    return TextInput(
         title=_("File Group Name"),
         help=_(
             "This name must match the name of the group defined "

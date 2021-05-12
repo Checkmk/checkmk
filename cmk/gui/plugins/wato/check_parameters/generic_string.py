@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -25,7 +25,7 @@ def _parameter_valuespec_generic_string():
         ("default_status", MonitoringState(title=_("Default Status"))),
         ("match_strings",
          ListOf(Tuple(elements=[
-             TextAscii(title=_("Search string")),
+             TextInput(title=_("Search string")),
              MonitoringState(),
          ],))),
     ],)
@@ -35,7 +35,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="generic_string",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Item"),),
+        item_spec=lambda: TextInput(title=_("Item"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_generic_string,
         title=lambda: _("Generic string"),

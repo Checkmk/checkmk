@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     ListChoice,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -61,7 +61,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="docsis_cm_status",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("ID of the Entry")),
+        item_spec=lambda: TextInput(title=_("ID of the Entry")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_cm_status,
         title=lambda: _("Docsis Cable Modem Status"),

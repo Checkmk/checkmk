@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_raid_disk():
-    return TextAscii(title=_("Number or ID of the disk"),
+    return TextInput(title=_("Number or ID of the disk"),
                      help=_("How the disks are named depends on the type of hardware being "
                             "used. Please look at already discovered checks for examples."))
 
@@ -30,7 +30,7 @@ def _parameter_valuespec_raid_disk():
         Dictionary(elements=[
             (
                 "expected_state",
-                TextAscii(title=_("Expected state"),
+                TextInput(title=_("Expected state"),
                           help=_(
                               "State the disk is expected to be in. Typical good states "
                               "are online, host spare, OK and the like. The exact way of how "

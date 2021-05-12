@@ -28,7 +28,7 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
-    TextAscii,
+    TextInput,
     Float,
     Integer,
     Tuple,
@@ -94,7 +94,7 @@ class SiteManagement:
             ("unix", _("Connect via UNIX socket"),
              Dictionary(
                  elements=[
-                     ("path", TextAscii(
+                     ("path", TextInput(
                          label=_("Path:"),
                          size=40,
                          allow_empty=False,

@@ -19,7 +19,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     Transform,
     Checkbox,
     DropdownChoice,
@@ -631,11 +631,11 @@ def _create_tag_group_attribute(tag_group):
 
 def declare_custom_host_attrs():
     for attr in transform_pre_16_host_topics(config.wato_host_attrs):
-        if attr['type'] == "TextAscii":
+        if attr['type'] == "TextInput":
             # Hack: The API does not perform validate_datatype and we can currently not enable
             # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
             # As a local workaround we use a custom validate function here to ensure we only get ascii characters
-            vs = TextAscii(title=attr['title'],
+            vs = TextInput(title=attr['title'],
                            help=attr['help'],
                            validate=_validate_is_ascii,
                            attrencode=False)

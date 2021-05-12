@@ -423,7 +423,7 @@ def test_user_attribute_sync_plugins(monkeypatch):
         'show_in_table': False,
         'title': u'VIP',
         'topic': 'ident',
-        'type': 'TextAscii',
+        'type': 'TextInput',
         'user_editable': True
     }])
 

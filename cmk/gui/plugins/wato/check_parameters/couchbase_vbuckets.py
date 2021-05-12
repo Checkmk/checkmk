@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Filesize,
     Percentage,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
     Dictionary,
 )
@@ -65,7 +65,7 @@ rulespec_registry.register(
         check_group_name="couchbase_vbuckets",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Bucket name')),
+        item_spec=lambda: TextInput(title=_('Bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_vbuckets,
         title=lambda: _("Couchbase vBuckets"),
     ))

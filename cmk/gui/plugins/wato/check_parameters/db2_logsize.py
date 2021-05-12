@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 
 def _item_spec_db2_logsize():
-    return TextAscii(title=_("Instance"),
+    return TextInput(title=_("Instance"),
                      help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
 
 

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,8 +20,8 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _item_spec_jvm_tp() -> TextAscii:
-    return TextAscii(
+def _item_spec_jvm_tp() -> TextInput:
+    return TextInput(
         title=_("Name of the virtual machine and/or<br>threadpool"),
         help=_("The name of the application server"),
         allow_empty=False,

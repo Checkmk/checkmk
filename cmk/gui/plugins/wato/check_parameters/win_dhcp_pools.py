@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -50,7 +50,7 @@ rulespec_registry.register(
 
 
 def _item_spec_win_dhcp_pools():
-    return TextAscii(
+    return TextInput(
         title=_("Pool name"),
         allow_empty=False,
     )

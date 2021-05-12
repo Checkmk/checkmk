@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -44,7 +44,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="websphere_mq_instance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of manager or instance")),
+        item_spec=lambda: TextInput(title=_("Name of manager or instance")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq_instance,
         title=lambda: _("Websphere MQ Instance"),

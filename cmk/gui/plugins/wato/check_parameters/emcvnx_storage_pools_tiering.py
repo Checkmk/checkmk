@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -36,7 +36,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="emcvnx_storage_pools_tiering",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Pool name")),
+        item_spec=lambda: TextInput(title=_("Pool name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_emcvnx_storage_pools_tiering,
         title=lambda: _("EMC VNX storage pools tiering"),

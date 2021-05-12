@@ -10,7 +10,7 @@
 register_check_parameters(
     subgroup_environment, "modbus_value", _("Modbus Performance Values"),
     Tuple(elements=[Integer(title=_("Warning if above")),
-                    Integer(title=_("Critical if above"))]), TextAscii(title=_("Value Name")), None)
+                    Integer(title=_("Critical if above"))]), TextInput(title=_("Value Name")), None)
 
 register_rule(
     group,
@@ -33,7 +33,7 @@ register_rule(
                                          ("counter", _("Its a counter value")),
                                          ("gauge", _("Its a gauge value")),
                                      ]),
-                      TextAscii(title=_("Counter Description")),
+                      TextInput(title=_("Counter Description")),
                   ]))
           ]),
     match="first")

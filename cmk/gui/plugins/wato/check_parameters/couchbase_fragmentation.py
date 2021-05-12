@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
     Dictionary,
 )
@@ -47,7 +47,7 @@ rulespec_registry.register(
         check_group_name="couchbase_fragmentation",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Bucket name')),
+        item_spec=lambda: TextInput(title=_('Bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_fragmentation,
         title=lambda: _("Couchbase Fragmentation"),
     ))

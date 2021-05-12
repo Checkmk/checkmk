@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_apc_power():
-    return TextAscii(
+    return TextInput(
         title=_("Phase"),
         help=_("The identifier of the phase the power is related to."),
     )

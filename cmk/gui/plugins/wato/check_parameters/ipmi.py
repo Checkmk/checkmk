@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -128,7 +128,7 @@ def _parameter_valuespec_ipmi():
         elements=[
             ("sensor_states",
              ListOf(
-                 Tuple(elements=[TextAscii(), MonitoringState()],),
+                 Tuple(elements=[TextInput(), MonitoringState()],),
                  title=_("Set states of IPMI sensor status texts"),
                  help=_("The pattern specified here must match exactly the beginning of "
                         "the sensor state (case sensitive)."),
@@ -150,7 +150,7 @@ def _parameter_valuespec_ipmi():
              )),
             ("numerical_sensor_levels",
              ListOf(Tuple(elements=[
-                 TextAscii(title=_("Sensor name"),
+                 TextInput(title=_("Sensor name"),
                            help=_(
                                "Enter the name of the sensor. In single mode, this can be read off "
                                "from the service descriptions of the services 'IPMI Sensor ...'.")),
@@ -175,7 +175,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ipmi",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("The sensor name")),
+        item_spec=lambda: TextInput(title=_("The sensor name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ipmi,
         title=lambda: _("IPMI sensors"),

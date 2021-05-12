@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -56,7 +56,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cups_queues",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextAscii(title=_("CUPS Queue")),
+        item_spec=lambda: TextInput(title=_("CUPS Queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cups_queues,
         title=lambda: _("CUPS Queue"),

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 def _parameter_valuespec_hostsystem_sensors():
     return ListOf(Dictionary(
         help=_("This rule allows to override alert levels for the given sensor names."),
-        elements=[("name", TextAscii(title=_("Sensor name"))),
+        elements=[("name", TextInput(title=_("Sensor name"))),
                   ("states",
                    Dictionary(
                        title=_("Custom states"),

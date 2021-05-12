@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
     Transform,
     Alternative,
     FixedValue,
-    TextAscii,
+    TextInput,
     Dictionary,
     IconSelector,
     ListOf,
@@ -333,7 +333,7 @@ class ModeBIEditPack(ABCBIMode):
             elements=
             [("id", id_element),
              ("title",
-              TextAscii(
+              TextInput(
                   title=_("Title"),
                   help=_("A descriptive title for this rule pack"),
                   allow_empty=False,
@@ -1118,7 +1118,7 @@ class ModeBIEditRule(ABCBIMode):
                 title=_("Rule ID"),
             )
         else:
-            id_valuespec = TextAscii(
+            id_valuespec = TextInput(
                 title=_("Rule ID"),
                 help=_(
                     "The ID of the rule must be a unique text. It will be used as an internal key "
@@ -1131,7 +1131,7 @@ class ModeBIEditRule(ABCBIMode):
         elements = [
             ("id", id_valuespec),
             ("title",
-             TextAscii(
+             TextInput(
                  title=_("Rule Title"),
                  help=_("The title of the BI nodes which are created from this rule. This will be "
                         "displayed as the name of the node in the BI view. For "
@@ -1148,7 +1148,7 @@ class ModeBIEditRule(ABCBIMode):
                  rows=4,
              )),
             ("docu_url",
-             TextAscii(
+             TextInput(
                  title=_("Documentation URL"),
                  help=HTML(
                      _("An optional URL pointing to documentation or any other page. This will be "
@@ -1173,7 +1173,7 @@ class ModeBIEditRule(ABCBIMode):
                          "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                          "(enclosed in dollar signs)."),
                      orientation="horizontal",
-                     valuespec=TextAscii(
+                     valuespec=TextInput(
                          size=80,
                          regex='[A-Za-z_][A-Za-z0-9_]*',
                          regex_error=_("Parameters must contain only A-Z, a-z, 0-9 and _ "
@@ -1200,7 +1200,7 @@ class ModeBIEditRule(ABCBIMode):
             ("state_messages",
              Optional(
                  Dictionary(elements=[(state,
-                                       TextAscii(
+                                       TextInput(
                                            title=_("Message when rule result is %s") % name,
                                            default_value=None,
                                            size=80,
@@ -1536,7 +1536,7 @@ class BIModeEditAggregation(ABCBIMode):
                 title=_("Aggregation ID"),
             )
         else:
-            id_valuespec = TextAscii(
+            id_valuespec = TextInput(
                 title=_("Aggregation ID"),
                 help=_("The ID of the aggregation must be a unique text. It will be as unique ID."),
                 allow_empty=False,
@@ -1572,7 +1572,7 @@ class BIModeEditAggregation(ABCBIMode):
                     style="dropdown",
                     orientation="horizontal",
                     elements=[
-                        TextAscii(title=_("Group name")),
+                        TextInput(title=_("Group name")),
                         ListOfStrings(title=_("Group path"),
                                       orientation="horizontal",
                                       separator="/"),

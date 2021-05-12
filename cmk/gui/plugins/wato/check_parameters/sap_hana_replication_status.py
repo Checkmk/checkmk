@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -42,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="sap_hana_replication_status",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("The instance name")),
+        item_spec=lambda: TextInput(title=_("The instance name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_hana_replication_status,
         title=lambda: _("SAP HANA replication status"),

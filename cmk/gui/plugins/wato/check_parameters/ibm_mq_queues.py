@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Integer,
     OptionalDropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -144,7 +144,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ibm_mq_queues",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of Queue")),
+        item_spec=lambda: TextInput(title=_("Name of Queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_queues,
         title=lambda: _("IBM MQ Queues"),

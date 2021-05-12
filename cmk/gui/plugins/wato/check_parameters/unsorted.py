@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
     Integer,
-    TextAscii,
+    TextInput,
     RegExp,
     Alternative,
     Transform,
@@ -81,7 +81,7 @@ def _valuespec_inventory_sap_values():
                 Alternative(
                     title=_("Node Path Matching"),
                     elements=[
-                        TextAscii(
+                        TextInput(
                             title=_("Exact path of the node"),
                             size=100,
                         ),
@@ -137,7 +137,7 @@ def _valuespec_sap_value_groups():
             show_titles=True,
             orientation="horizontal",
             elements=[
-                TextAscii(title=_("Name of group"),),
+                TextInput(title=_("Name of group"),),
                 Tuple(
                     show_titles=True,
                     orientation="vertical",

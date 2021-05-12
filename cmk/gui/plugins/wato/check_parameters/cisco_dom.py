@@ -12,7 +12,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
     ListChoice,
 )
@@ -68,8 +68,8 @@ def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
             ]))
 
 
-def _item_spec_cisco_dom() -> TextAscii:
-    return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
+def _item_spec_cisco_dom() -> TextInput:
+    return TextInput(title=_("Sensor description if present, sensor index otherwise"))
 
 
 def _parameter_valuespec_cisco_dom() -> Dictionary:

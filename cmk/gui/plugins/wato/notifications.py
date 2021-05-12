@@ -28,7 +28,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Password,
     TextAreaUnicode,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -84,7 +84,7 @@ def _vs_add_common_mail_elements(elements):
                          size=40,
                          allow_empty=False,
                      )),
-                     ("display_name", TextAscii(
+                     ("display_name", TextInput(
                          title=_("Display name"),
                          size=40,
                          allow_empty=False,
@@ -108,7 +108,7 @@ def _vs_add_common_mail_elements(elements):
                          size=40,
                          allow_empty=False,
                      )),
-                     ("display_name", TextAscii(
+                     ("display_name", TextInput(
                          title=_("Display name"),
                          size=40,
                          allow_empty=False,
@@ -121,7 +121,7 @@ def _vs_add_common_mail_elements(elements):
              forth=lambda x: x if isinstance(x, dict) else {'address': x},
          )),
         ("host_subject",
-         TextAscii(
+         TextInput(
              title=_("Subject for host notifications"),
              help=_("Here you are allowed to use all macros that are defined in the "
                     "notification context."),
@@ -129,7 +129,7 @@ def _vs_add_common_mail_elements(elements):
              size=64,
          )),
         ("service_subject",
-         TextAscii(
+         TextInput(
              title=_("Subject for service notifications"),
              help=_("Here you are allowed to use all macros that are defined in the "
                     "notification context."),
@@ -182,7 +182,7 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
             ("automatic_http", _("Automatic HTTP")),
             ("automatic_https", _("Automatic HTTPs")),
             ("manual", _("Specify URL prefix"),
-             TextAscii(
+             TextInput(
                  regex="^(http|https)://.*/check_mk/$",
                  regex_error=_("The URL must begin with <tt>http</tt> or "
                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
@@ -421,7 +421,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                      title=_("PagerDuty Service Integration Key"),
                      help=_("After setting up a new Service in PagerDuty you will receive an "
                             "Integration key associated with that service. Copy that value here."),
-                     choices=[("routing_key", _("Integration Key"), TextAscii(size=32)),
+                     choices=[("routing_key", _("Integration Key"), TextInput(size=32)),
                               ("store", _("Key from password store"),
                                DropdownChoice(sorted=True, choices=passwordstore_choices))],
                  )),
@@ -525,7 +525,7 @@ class NotificationILert(NotificationParameter):
                                    choices=[(
                                        "ilert_api_key",
                                        _("API key"),
-                                       TextAscii(size=80, allow_empty=False),
+                                       TextInput(size=80, allow_empty=False),
                                    ),
                                             ("store", _("API key from password store"),
                                              DropdownChoice(sorted=True,
@@ -542,14 +542,14 @@ class NotificationILert(NotificationParameter):
                       ),
                      default_value='HIGH')),
                 ("ilert_summary_host",
-                 TextAscii(
+                 TextInput(
                      title=_("Custom incident summary for host alerts"),
                      default_value=
                      "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
                      size=64,
                  )),
                 ("ilert_summary_service",
-                 TextAscii(
+                 TextInput(
                      title=_("Custom incident summary for service alerts"),
                      default_value=
                      "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
@@ -595,7 +595,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                      )),
                     ("username",
-                     TextAscii(
+                     TextInput(
                          title=_("User Name"),
                          help=_("Configure the user name here."),
                          size=40,
@@ -611,7 +611,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          allow_empty=False,
                      )),
                     ("project",
-                     TextAscii(
+                     TextInput(
                          title=_("Project ID"),
                          help=_(
                              "The numerical JIRA project ID. If not set, it will be retrieved from a "
@@ -620,7 +620,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=10,
                      )),
                     ("issuetype",
-                     TextAscii(
+                     TextInput(
                          title=_("Issue type ID"),
                          help=_(
                              "The numerical JIRA issue type ID. If not set, it will be retrieved from a "
@@ -629,19 +629,19 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=10,
                      )),
                     ("host_customid",
-                     TextAscii(
+                     TextInput(
                          title=_("Host custom field ID"),
                          help=_("The numerical JIRA custom field ID for host problems."),
                          size=10,
                      )),
                     ("service_customid",
-                     TextAscii(
+                     TextInput(
                          title=_("Service custom field ID"),
                          help=_("The numerical JIRA custom field ID for service problems."),
                          size=10,
                      )),
                     ("site_customid",
-                     TextAscii(
+                     TextInput(
                          title=_("Site custom field ID"),
                          help=_("The numerical ID of the JIRA custom field for sites. "
                                 "Please use this option if you have multiple sites in a "
@@ -657,7 +657,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                              "Used for link to check_mk out of jira."),
                      )),
                     ("priority",
-                     TextAscii(
+                     TextInput(
                          title=_("Priority ID"),
                          help=_(
                              "The numerical JIRA priority ID. If not set, it will be retrieved from a "
@@ -666,7 +666,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=10,
                      )),
                     ("host_summary",
-                     TextAscii(
+                     TextInput(
                          title=_("Summary for host notifications"),
                          help=_("Here you are allowed to use all macros that are defined in the "
                                 "notification context."),
@@ -674,7 +674,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=64,
                      )),
                     ("service_summary",
-                     TextAscii(
+                     TextInput(
                          title=_("Summary for service notifications"),
                          help=_("Here you are allowed to use all macros that are defined in the "
                                 "notification context."),
@@ -682,21 +682,21 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                          size=64,
                      )),
                     ("label",
-                     TextAscii(
+                     TextInput(
                          title=_("Label"),
                          help=_("Here you can set a custom label for new issues. "
                                 "If not set, 'monitoring' will be used."),
                          size=16,
                      )),
                     ("resolution",
-                     TextAscii(
+                     TextInput(
                          title=_("Activate resolution with following resolution transition ID"),
                          help=_("The numerical JIRA resolution transition ID. "
                                 "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"),
                          size=3,
                      )),
                     ("timeout",
-                     TextAscii(
+                     TextInput(
                          title=_("Set optional timeout for connections to JIRA"),
                          help=_("Here you can configure timeout settings."),
                          default_value=10,
@@ -735,7 +735,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                      )),
                     ("proxy_url", HTTPProxyReference()),
                     ("username",
-                     TextAscii(
+                     TextInput(
                          title=_("Username"),
                          help=_("The user, used for login, has to have at least the "
                                 "role 'itil' in ServiceNow."),
@@ -762,7 +762,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                          default_value=False,
                      )),
                     ("caller",
-                     TextAscii(
+                     TextInput(
                          title=_("Caller ID"),
                          help=_(
                              "Caller is the user on behalf of whom the incident is being reported "
@@ -775,7 +775,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                              "documentation for details."),
                      )),
                     ("host_short_desc",
-                     TextAscii(
+                     TextInput(
                          title=_("Short description for host incidents"),
                          help=_("Text that should be set in field <tt>Short description</tt> "
                                 "for host notifications."),
@@ -783,7 +783,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                          size=64,
                      )),
                     ("svc_short_desc",
-                     TextAscii(
+                     TextInput(
                          title=_("Short description for service incidents"),
                          help=_("Text that should be set in field <tt>Short description</tt> "
                                 "for service notifications."),
@@ -1007,7 +1007,7 @@ $LONGSERVICEOUTPUT$
                          ],
                      )),
                     ("timeout",
-                     TextAscii(title=_("Set optional timeout for connections to ServiceNow"),
+                     TextInput(title=_("Set optional timeout for connections to ServiceNow"),
                                help=_("Here you can configure timeout settings in seconds."),
                                default_value=10,
                                size=3)),
@@ -1039,7 +1039,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("url",
-                 TextAscii(
+                 TextInput(
                      title=_("Domain (only used for european accounts)"),
                      help=_("If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "
@@ -1050,7 +1050,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                  )),
                 ("proxy_url", HTTPProxyReference()),
                 ("owner",
-                 TextAscii(
+                 TextInput(
                      title=_("Owner"),
                      help=("Sets the user of the alert. "
                            "Display name of the request owner."),
@@ -1058,7 +1058,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      allow_empty=False,
                  )),
                 ("source",
-                 TextAscii(
+                 TextInput(
                      title=_("Source"),
                      help=_("Source field of the alert. Default value is IP "
                             "address of the incoming request."),
@@ -1077,19 +1077,19 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      default_value="P3",
                  )),
                 ("note_created",
-                 TextAscii(
+                 TextInput(
                      title=_("Note while creating"),
                      help=_("Additional note that will be added while creating the alert."),
                      default_value="Alert created by Check_MK",
                  )),
                 ("note_closed",
-                 TextAscii(
+                 TextInput(
                      title=_("Note while closing"),
                      help=_("Additional note that will be added while closing the alert."),
                      default_value="Alert closed by Check_MK",
                  )),
                 ("host_msg",
-                 TextAscii(
+                 TextInput(
                      title=_("Description for host alerts"),
                      help=_("Description field of host alert that is generally "
                             "used to provide a detailed information about the "
@@ -1098,7 +1098,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=64,
                  )),
                 ("svc_msg",
-                 TextAscii(
+                 TextInput(
                      title=_("Description for service alerts"),
                      help=_("Description field of service alert that is generally "
                             "used to provide a detailed information about the "
@@ -1154,7 +1154,7 @@ $LONGSERVICEOUTPUT$
                      orientation="horizontal",
                  )),
                 ("entity",
-                 TextAscii(
+                 TextInput(
                      title=_("Entity"),
                      help=_("Is used to specify which domain the alert is related to."),
                      allow_empty=False,
@@ -1214,7 +1214,7 @@ class NotificationParameterSpectrum(NotificationParameter):
                      help=_("SNMP Community for the SNMP trap"),
                  )),
                 ("baseoid",
-                 TextAscii(title=_("Base OID"),
+                 TextInput(title=_("Base OID"),
                            help=_("The base OID for the trap content"),
                            default_value="1.3.6.1.4.1.1234")),
             ],
@@ -1234,7 +1234,7 @@ class NotificationParameterPushover(NotificationParameter):
             optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
             elements=[
                 ("api_key",
-                 TextAscii(
+                 TextInput(
                      title=_("API Key"),
                      help=
                      _("You need to provide a valid API key to be able to send push notifications "
@@ -1246,7 +1246,7 @@ class NotificationParameterPushover(NotificationParameter):
                      regex="[a-zA-Z0-9]{30}",
                  )),
                 ("recipient_key",
-                 TextAscii(
+                 TextInput(
                      title=_("User / Group Key"),
                      help=_("Configure the user or group to receive the notifications by providing "
                             "the user or group key here. The key can be obtained from the Pushover "
@@ -1256,7 +1256,7 @@ class NotificationParameterPushover(NotificationParameter):
                      regex="[a-zA-Z0-9]{30}",
                  )),
                 ("url_prefix",
-                 TextAscii(
+                 TextInput(
                      title=_("URL prefix for links to Checkmk"),
                      help=_("If you specify an URL prefix here, then several parts of the "
                             "email body are armed with hyperlinks to your Check_MK GUI, so "
@@ -1273,7 +1273,7 @@ class NotificationParameterPushover(NotificationParameter):
                     "proxy_url",
                     Transform(
                         HTTPProxyReference(),
-                        # Transform legacy explicit TextAscii() proxy URL
+                        # Transform legacy explicit TextInput() proxy URL
                         forth=lambda v: ("url", v) if isinstance(v, str) else v,
                     )),
                 ("priority",
@@ -1287,7 +1287,7 @@ class NotificationParameterPushover(NotificationParameter):
                               Tuple(elements=[
                                   Age(title=_("Retry time")),
                                   Age(title=_("Expire time")),
-                                  TextAscii(
+                                  TextInput(
                                       title=_("Receipt"),
                                       help=
                                       _("The receipt can be used to periodically poll receipts API to get "

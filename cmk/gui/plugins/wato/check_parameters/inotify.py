@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     ListOf,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_inotify():
-    return TextAscii(title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),)
+    return TextInput(title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),)
 
 
 def _parameter_valuespec_inotify():

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
     Tuple,
     ListOf,
     Integer,
@@ -68,7 +68,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="job",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Job name"),),
+        item_spec=lambda: TextInput(title=_("Job name"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_job,
         title=lambda: _("mk-job job age"),

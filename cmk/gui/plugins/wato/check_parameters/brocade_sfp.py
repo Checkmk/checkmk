@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -47,7 +47,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="brocade_sfp",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Port index")),
+        item_spec=lambda: TextInput(title=_("Port index")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_sfp,
         title=lambda: _("Brocade SFPs"),

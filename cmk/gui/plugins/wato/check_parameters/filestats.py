@@ -14,7 +14,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     RegExp,
-    TextAscii,
+    TextInput,
     Tuple,
     ValueSpec,
 )
@@ -94,7 +94,7 @@ file_size_age_elements: List[_Tuple[str, ValueSpec]] = [
 
 
 def _item_spec_filestats():
-    return TextAscii(title=_("File Group Name"),
+    return TextInput(title=_("File Group Name"),
                      help=_("This name must match the name of the section defined "
                             "in the mk_filestats configuration."),
                      allow_empty=True)
@@ -135,7 +135,7 @@ def _parameter_valuespec_filestats():
                 "additional_rules",
                 ListOf(
                     Tuple(elements=[
-                        TextAscii(
+                        TextInput(
                             title=_("Display name"),
                             help=_(
                                 "Specify a user-friendly name that will be displayed in the service "

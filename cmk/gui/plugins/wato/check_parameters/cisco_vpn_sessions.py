@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    TextAscii,
+    TextInput,
     Dictionary,
     Integer,
     Tuple,
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_cisco_vpn_sessions():
-    return TextAscii(
+    return TextInput(
         title=_("Session type"),
         help=_("Type of the VPN connection, either 'IPsec RA', 'IPsec L2L', 'AnyConnect SVC', "
                "'WebVPN' or 'Summary'. The last item refers to the overall number of sessions "

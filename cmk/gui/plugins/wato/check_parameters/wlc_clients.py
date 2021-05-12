@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -55,7 +55,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="wlc_clients",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Name of Wifi")),
+        item_spec=lambda: TextInput(title=_("Name of Wifi")),
         parameter_valuespec=_parameter_valuespec_wlc_clients,
         title=lambda: _("WLC WiFi client connections"),
     ))

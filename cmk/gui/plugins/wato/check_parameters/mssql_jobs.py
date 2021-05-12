@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato.check_parameters.db_jobs import (
 
 
 def _item_spec_mssql_jobs():
-    return TextAscii(
+    return TextInput(
         title=_("Job Name"),
         help=_("You can set explicit jobs by defining their job names. The job names can be found "
                "in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB database."),

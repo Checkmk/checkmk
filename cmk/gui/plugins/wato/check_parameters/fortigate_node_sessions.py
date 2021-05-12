@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii
+from cmk.gui.valuespec import TextInput
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -19,7 +19,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortigate_node_sessions",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Node name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Node name"), allow_empty=False),
         parameter_valuespec=fortigate_sessions_element,
         title=lambda: _("Fortigate Cluster Active Sessions"),
     ))

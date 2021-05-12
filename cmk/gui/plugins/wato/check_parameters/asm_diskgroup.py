@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_asm_diskgroup():
-    return TextAscii(
+    return TextInput(
         title=_("ASM Disk Group"),
         help=_("Specify the name of the ASM Disk Group "),
         allow_empty=False,

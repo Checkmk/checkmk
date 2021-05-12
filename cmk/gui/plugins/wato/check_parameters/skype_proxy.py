@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_skype_proxy():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the Proxy"),
         help=_("The name of the Data Proxy"),
         allow_empty=False,

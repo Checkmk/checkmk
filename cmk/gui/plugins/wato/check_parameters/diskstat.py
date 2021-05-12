@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     FixedValue,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -85,7 +85,7 @@ rulespec_registry.register(
 
 
 def _item_spec_diskstat():
-    return TextAscii(
+    return TextInput(
         title=_("Device"),
         help=_("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
                "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "

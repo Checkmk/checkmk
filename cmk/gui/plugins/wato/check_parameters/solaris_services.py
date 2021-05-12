@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -123,7 +123,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="solaris_services",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the service"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Name of the service"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_solaris_services,
         title=lambda: _("Solaris Services"),

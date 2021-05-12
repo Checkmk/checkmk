@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_ibm_svc_mdisk():
-    return TextAscii(
+    return TextInput(
         title=_("IBM SVC disk"),
         help=_("Name of the disk, e.g. mdisk0"),
     )

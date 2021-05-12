@@ -19,7 +19,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -63,7 +63,7 @@ def _valuespec_logwatch_rules():
                                    size=40,
                                    mode=RegExp.infix,
                                ),
-                               TextAscii(
+                               TextInput(
                                    title=_("Comment"),
                                    size=40,
                                ),
@@ -175,13 +175,13 @@ def _valuespec_logwatch_groups():
                          show_titles=True,
                          orientation="horizontal",
                          elements=[
-                             TextAscii(title=_("Name of group"),),
+                             TextInput(title=_("Name of group"),),
                              Tuple(
                                  show_titles=True,
                                  orientation="vertical",
                                  elements=[
-                                     TextAscii(title=_("Include Pattern")),
-                                     TextAscii(title=_("Exclude Pattern"))
+                                     TextInput(title=_("Include Pattern")),
+                                     TextInput(title=_("Exclude Pattern"))
                                  ],
                              ),
                          ],
@@ -243,7 +243,7 @@ def _parameter_valuespec_logwatch_ec():
                                          ),
                                         totext=_("Directly forward to Event Console"),
                                     ),
-                                    TextAscii(
+                                    TextInput(
                                         title=
                                         _("Local: Send events to local Event Console into unix socket"
                                          ),
@@ -257,7 +257,7 @@ def _parameter_valuespec_logwatch_ec():
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextAscii(allow_empty=False,),
+                                        TextInput(allow_empty=False,),
                                         title=
                                         _("Local: Spooling - Send events to local Event Console into given spool directory"
                                          ),
@@ -274,7 +274,7 @@ def _parameter_valuespec_logwatch_ec():
                                                 Dictionary(
                                                     elements=[
                                                         ("address",
-                                                         TextAscii(
+                                                         TextInput(
                                                              title=_("Address"),
                                                              allow_empty=False,
                                                          )),
@@ -337,7 +337,7 @@ def _parameter_valuespec_logwatch_ec():
                                              Dictionary(
                                                  elements=[
                                                      ("address",
-                                                      TextAscii(
+                                                      TextInput(
                                                           title=_("Address"),
                                                           allow_empty=False,
                                                       )),
@@ -396,7 +396,7 @@ def _parameter_valuespec_logwatch_ec():
                      )),
                     ('expected_logfiles',
                      ListOf(
-                         TextAscii(),
+                         TextInput(),
                          title=_("List of expected logfiles"),
                          help=
                          _("When the monitoring of forwarded logfiles is enabled, the check verifies that "

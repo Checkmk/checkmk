@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mtr():
-    return TextAscii(title=_("MTR destination"),
+    return TextInput(title=_("MTR destination"),
                      help=_("Specify the name of the destination host, i.e. <tt>checkmk.com</tt>"),
                      allow_empty=False)
 

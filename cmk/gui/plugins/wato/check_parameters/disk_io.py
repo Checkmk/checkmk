@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_disk_io():
-    return TextAscii(
+    return TextInput(
         title=_("Device"),
         help=_("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
                "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "

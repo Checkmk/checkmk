@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -29,7 +29,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ocprot_current",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("The Index of the Overcurrent Protector")),
+        item_spec=lambda: TextInput(title=_("The Index of the Overcurrent Protector")),
         parameter_valuespec=_parameter_valuespec_ocprot_current,
         title=lambda: _("Electrical Current of Overcurrent Protectors"),
     ))

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
     Dictionary,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_power_multiitem():
-    return TextAscii(
+    return TextInput(
         title=_("Component"),
         help=_("The identifier of device component the consumed power is related to."),
     )

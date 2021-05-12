@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     ListOf,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -40,7 +40,7 @@ def _parameter_valuespec_snapvault():
              Tuple(
                  orientation="horizontal",
                  elements=[
-                     TextAscii(title=_("Policy name")),
+                     TextInput(title=_("Policy name")),
                      Tuple(
                          title=_("Maximum age"),
                          elements=[
@@ -64,7 +64,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="snapvault",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Source Path"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Source Path"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_snapvault,
         title=lambda: _("NetApp Snapvaults / Snapmirror Lag Time"),

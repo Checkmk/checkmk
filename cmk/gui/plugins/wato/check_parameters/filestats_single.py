@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
-    TextAscii,
+    TextInput,
     Age,
     Filesize,
 )
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_filestats():
-    return TextAscii(title=_("File Name"),
+    return TextInput(title=_("File Name"),
                      help=_("This name corresponds to the single file name to be monitored."),
                      allow_empty=True)
 

@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
     FixedValue,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -70,7 +70,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="postgres_maintenance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_postgres_maintenance,
         title=lambda: _("PostgreSQL VACUUM and ANALYZE"),

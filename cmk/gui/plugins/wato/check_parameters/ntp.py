@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Integer,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -92,7 +92,7 @@ def _parameter_valuespec_ntp_peer():
 
 
 def _item_spec_ntp_peer():
-    return TextAscii(title=_("Name of the peer"))
+    return TextInput(title=_("Name of the peer"))
 
 
 rulespec_registry.register(

@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mq_queues():
-    return TextAscii(title=_("Queue Name"),
+    return TextInput(title=_("Queue Name"),
                      help=_("The name of the queue like in the Apache queue manager"))
 
 

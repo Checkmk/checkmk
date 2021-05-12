@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -36,7 +36,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortisandbox_queues",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Queue name"),),
+        item_spec=lambda: TextInput(title=_("Queue name"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fortisandbox_queues,
         title=lambda: _("Fortinet FortiSandbox Queue Length"),

@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Integer,
     Filesize,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -118,7 +118,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="rabbitmq_queues",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Queue name")),
+        item_spec=lambda: TextInput(title=_("Queue name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_rabbitmq_queues,
         title=lambda: _("RabbitMQ queues"),

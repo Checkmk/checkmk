@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -51,7 +51,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="smoke",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Sensor ID"), help=_("The identifier of the sensor.")),
+        item_spec=lambda: TextInput(title=_("Sensor ID"), help=_("The identifier of the sensor.")),
         parameter_valuespec=_parameter_valuespec_smoke,
         title=lambda: _("Smoke Detection"),
     ))

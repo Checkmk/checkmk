@@ -193,9 +193,9 @@ def duplicate_service_warning(
 #                                  Literal["ping"],
 #                                  Literal["ok"],
 #                                  Literal["agent"],
-#                                  Tuple[Literal["service"], TextAscii],
+#                                  Tuple[Literal["service"], TextInput],
 #                                  Tuple[Literal["tcp"], Integer],
-#                                  Tuple[Literal["custom"], TextAscii]])
+#                                  Tuple[Literal["custom"], TextInput]])
 
 
 def _get_host_check_command(host_config: HostConfig,

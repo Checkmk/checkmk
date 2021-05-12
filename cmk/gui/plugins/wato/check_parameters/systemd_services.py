@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -98,7 +98,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="systemd_services",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the service")),
+        item_spec=lambda: TextInput(title=_("Name of the service")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_systemd_services,
         title=lambda: _("Systemd single services"),

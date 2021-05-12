@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     ListOfStrings,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -24,7 +24,7 @@ def _parameter_valuespec_fs_mount_options():
                "actually found options differs from this list, the check will go "
                "warning or critical. Just the option <tt>commit</tt> is being "
                "ignored since it is modified by the power saving algorithms."),
-        valuespec=TextAscii(),
+        valuespec=TextInput(),
     )
 
 
@@ -32,7 +32,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fs_mount_options",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Mount point"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Mount point"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_fs_mount_options,
         title=lambda: _("Filesystem mount options (Linux/UNIX)"),
     ))

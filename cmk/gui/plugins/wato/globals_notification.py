@@ -12,7 +12,7 @@ import cmk.utils.paths
 
 from cmk.gui.valuespec import (
     Age,
-    TextAscii,
+    TextInput,
     Integer,
     Tuple,
     ListOf,
@@ -222,7 +222,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
                         minvalue=0,
                         maxvalue=100,
                     ),
-                    TextAscii(
+                    TextInput(
                         title=_("Name / Description"),
                         allow_empty=False,
                         attrencode=True,

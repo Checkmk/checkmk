@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -38,7 +38,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hacmp_resources",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Resource Group")),
+        item_spec=lambda: TextInput(title=_("Resource Group")),
         parameter_valuespec=_parameter_valuespec_hacmp_resources,
         title=lambda: _("AIX HACMP Resource Groups"),
     ))

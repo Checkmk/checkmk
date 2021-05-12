@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -59,7 +59,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="emcvnx_disks",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Enclosure ID"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Enclosure ID"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_emcvnx_disks,
         title=lambda: _("EMC VNX Enclosures"),

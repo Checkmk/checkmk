@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Integer,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_k8s_port():
-    return TextAscii(
+    return TextInput(
         title=_("Port"),
         help=_("Name or number of the port"),
     )

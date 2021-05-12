@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -78,7 +78,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ibm_mq_managers",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of Queue Manager")),
+        item_spec=lambda: TextInput(title=_("Name of Queue Manager")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_managers,
         title=lambda: _("IBM MQ Managers"),

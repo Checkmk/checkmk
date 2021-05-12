@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
     Integer,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -46,7 +46,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="huawei_osn_laser",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Laser id")),
+        item_spec=lambda: TextInput(title=_("Laser id")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_huawei_osn_laser,
         title=lambda: _("OSN Laser attenuation"),

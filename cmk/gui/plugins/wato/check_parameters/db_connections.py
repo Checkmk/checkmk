@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -83,7 +83,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db_connections",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections,
         title=lambda: _("PostgreSQL database connections"),
@@ -119,7 +119,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db_connections_mongodb",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections_mongodb,
         title=lambda: _("MongoDB database connections"),

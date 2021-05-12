@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -52,7 +52,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="storage_throughput",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
+        item_spec=lambda: TextInput(title=_("Port index or 'Total'")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storage_throughput,
         title=lambda: _("DDN S2A throughput"),

@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     IPv4Address,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -21,7 +21,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_tcp_connections():
-    return TextAscii(
+    return TextInput(
         title=_("Connection name"),
         help=_("Specify an arbitrary name of this connection here"),
         allow_empty=False,

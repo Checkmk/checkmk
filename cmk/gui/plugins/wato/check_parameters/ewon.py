@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -46,7 +46,7 @@ rulespec_registry.register(
 
 
 def _item_spec_ewon():
-    return TextAscii(title=_("Item name"),
+    return TextInput(title=_("Item name"),
                      help=_("The item name. The meaning of this depends on the proxied device: "
                             "- Wagner OxyReduct: Name of the room/protection zone"))
 

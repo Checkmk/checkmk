@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -50,7 +50,7 @@ def _vs_license():
 
 
 def _item_spec_citrix_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
         allow_empty=False,
     )
@@ -67,7 +67,7 @@ rulespec_registry.register(
 
 
 def _item_spec_esx_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the license"),
         help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
         allow_empty=False,
@@ -85,7 +85,7 @@ rulespec_registry.register(
 
 
 def _item_spec_ibmsvc_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>virtualization</tt>"),
         allow_empty=False,
     )
@@ -102,7 +102,7 @@ rulespec_registry.register(
 
 
 def _item_spec_rds_licenses():
-    return TextAscii(
+    return TextInput(
         title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
         allow_empty=False,
     )

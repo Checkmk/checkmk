@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -45,7 +45,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="juniper_cpu_util",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Operating CPU"),),
+        item_spec=lambda: TextInput(title=_("Operating CPU"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
         title=lambda: _("Juniper Processor Utilization of Operating CPU"),

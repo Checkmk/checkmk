@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -48,7 +48,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="rabbitmq_nodes_sockets",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Node name")),
+        item_spec=lambda: TextInput(title=_("Node name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_rabbitmq_nodes_sockets,
         title=lambda: _("RabbitMQ nodes sockets"),

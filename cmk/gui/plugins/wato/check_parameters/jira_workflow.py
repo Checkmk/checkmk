@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -44,7 +44,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="jira_workflow",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(
+        item_spec=lambda: TextInput(
             title=_("Project and workflow name"),
             help=_("e.g. 'My_Project/Closed'"),
         ),

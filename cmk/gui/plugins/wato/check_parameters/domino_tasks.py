@@ -11,7 +11,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -71,7 +71,7 @@ def _valuespec_inv_domino_tasks_rules():
                    "Any changes later on require a host re-discovery"),
             elements=[
                 ('descr',
-                 TextAscii(
+                 TextInput(
                      title=_('Service Description'),
                      allow_empty=False,
                      help=
@@ -95,7 +95,7 @@ def _valuespec_inv_domino_tasks_rules():
                     Alternative(
                         title=_("Task Matching"),
                         elements=[
-                            TextAscii(
+                            TextInput(
                                 title=_("Exact name of the task"),
                                 size=50,
                             ),
@@ -151,7 +151,7 @@ rulespec_registry.register(
 
 
 def _item_spec_domino_tasks():
-    return TextAscii(
+    return TextInput(
         title=_("Name of service"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
@@ -181,7 +181,7 @@ def _parameter_valuespec_domino_tasks():
                     Alternative(
                         title=_("Name of the task"),
                         elements=[
-                            TextAscii(
+                            TextInput(
                                 title=_("Exact name of the task"),
                                 size=50,
                             ),

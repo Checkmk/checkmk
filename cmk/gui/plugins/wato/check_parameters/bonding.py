@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     MonitoringState,
-    TextAscii,
+    TextInput,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
@@ -45,7 +45,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="bonding",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Name of the bonding interface")),
+        item_spec=lambda: TextInput(title=_("Name of the bonding interface")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bonding,
         title=lambda: _("Linux bonding interface status"),

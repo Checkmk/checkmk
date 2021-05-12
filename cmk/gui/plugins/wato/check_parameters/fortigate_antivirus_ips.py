@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -42,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortigate_antivirus",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Virtual domain index"),),
+        item_spec=lambda: TextInput(title=_("Virtual domain index"),),
         parameter_valuespec=lambda: _parameter_valuespec_fortigate_antivirus_ips(_("virus")),
         title=lambda: _("Fortinet FortiGate AntiVirus Detections"),
     ))
@@ -51,7 +51,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortigate_ips",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Virtual domain index"),),
+        item_spec=lambda: TextInput(title=_("Virtual domain index"),),
         parameter_valuespec=lambda: _parameter_valuespec_fortigate_antivirus_ips(_("intrusion")),
         title=lambda: _("Fortinet FortiGate IPS Detections"),
     ))

@@ -18,7 +18,7 @@ from cmk.gui.valuespec import (
     ListOf,
     DropdownChoice,
     ListOfStrings,
-    TextAscii,
+    TextInput,
     UserID,
     RegExp,
     ListChoice,
@@ -367,8 +367,8 @@ def get_vs_flexible_notifications():
                                           "<tt>!</tt> for negation and <tt>~</tt> for regex matches."
                                          ),
                                         orientation="horizontal",
-                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
-                                        valuespec=TextAscii(size=20,),
+                                        # TODO: Clean this up to use an alternative between TextInput() and RegExp(). Also handle the negation in a different way
+                                        valuespec=TextInput(size=20,),
                                     ),
                                 ),
                                 (
@@ -380,8 +380,8 @@ def get_vs_flexible_notifications():
                                           "entry with <tt>!</tt> in order to <i>exclude</i> that service."
                                          ),
                                         orientation="horizontal",
-                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
-                                        valuespec=TextAscii(size=20,),
+                                        # TODO: Clean this up to use an alternative between TextInput() and RegExp(). Also handle the negation in a different way
+                                        valuespec=TextInput(size=20,),
                                         validate=validate_only_services,
                                     ),
                                 ),

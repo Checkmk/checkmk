@@ -63,7 +63,7 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
     DropdownChoice,
-    TextAscii,
+    TextInput,
     Integer,
     Tuple,
     FixedValue,
@@ -311,7 +311,7 @@ def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None):
                          )))
     else:
         elements.append(("title",
-                         TextAscii(
+                         TextInput(
                              title=_("Title"),
                              help=_("A descriptive title for this rule pack"),
                              allow_empty=False,
@@ -902,7 +902,7 @@ def vs_mkeventd_rule(customer=None):
                "Please note: When an inverted rule matches there can never be match groups."),
          )),
         ("set_text",
-         TextAscii(
+         TextInput(
              title=_("Rewrite message text"),
              help=_("Replace the message text with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -917,7 +917,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_host",
-         TextAscii(
+         TextInput(
              title=_("Rewrite hostname"),
              help=_("Replace the host name with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -933,7 +933,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_application",
-         TextAscii(
+         TextInput(
              title=_("Rewrite application"),
              help=_("Replace the application (syslog tag) with this text. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -947,7 +947,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_comment",
-         TextAscii(
+         TextInput(
              title=_("Add comment"),
              help=_("Attach a comment to the event. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -960,7 +960,7 @@ def vs_mkeventd_rule(customer=None):
              attrencode=True,
          )),
         ("set_contact",
-         TextAscii(
+         TextInput(
              title=_("Add contact information"),
              help=_("Attach information about a contact person. If you have bracketed "
                     "groups in the text to match, then you can use the placeholders "
@@ -1174,21 +1174,21 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
             optional_keys=False,
             elements=[
                 ("text",
-                 TextAscii(title=_("Message text"),
+                 TextInput(title=_("Message text"),
                            size=30,
                            try_max_width=True,
                            allow_empty=False,
                            default_value=_("Still nothing happened."),
                            attrencode=True)),
                 ("application",
-                 TextAscii(title=_("Application name"),
+                 TextInput(title=_("Application name"),
                            help=_("The syslog tag"),
                            size=40,
                            default_value=_("Foobar-Daemon"),
                            allow_empty=True,
                            attrencode=True)),
                 ("host",
-                 TextAscii(
+                 TextInput(
                      title=_("Host lookup element"),
                      help=_("Hostname, IP address or host alias the event is relevant for"),
                      size=40,
@@ -3216,7 +3216,7 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                              "you want to replicate from. The port number must be the same as set "
                              "in the master in <i>Access to event status via TCP</i>."),
                          elements=[
-                             TextAscii(
+                             TextInput(
                                  title=_("Hostname/IP address of Master Event Console:"),
                                  allow_empty=False,
                                  attrencode=True,
@@ -3425,7 +3425,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                              size=12,
                          )),
                         ("title",
-                         TextAscii(
+                         TextInput(
                              title=_("Title"),
                              help=_("A descriptive title of this action."),
                              allow_empty=False,
@@ -3458,7 +3458,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                 elements=[
                                                     (
                                                         "to",
-                                                        TextAscii(
+                                                        TextInput(
                                                             title=_("Recipient Email address"),
                                                             allow_empty=False,
                                                             attrencode=True,
@@ -3466,7 +3466,7 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     ),
                                                     (
                                                         "subject",
-                                                        TextAscii(
+                                                        TextInput(
                                                             title=_("Subject"),
                                                             allow_empty=False,
                                                             size=64,
@@ -3823,11 +3823,11 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
         return ListOf(
             Dictionary(
                 elements=[
-                    ("description", TextAscii(title=_("Description"),)),
+                    ("description", TextInput(title=_("Description"),)),
                     ("credentials", SNMPCredentials(for_ec=True)),
                     ("engine_ids",
                      ListOfStrings(
-                         valuespec=TextAscii(
+                         valuespec=TextInput(
                              size=24,
                              minlen=2,
                              allow_empty=False,
@@ -4048,7 +4048,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextAscii(
+            TextInput(
                 title=_("Host running Event Console"),
                 attrencode=True,
             ),
@@ -4203,7 +4203,7 @@ def _valuespec_active_checks_mkevents():
                                                 ('$HOSTADDRESS$', _("IP address")),
                                                 ('$HOSTALIAS$', _("Alias")),
                                             ]),
-                                 TextAscii(allow_empty=False,
+                                 TextInput(allow_empty=False,
                                            attrencode=True,
                                            title="Specify host explicitly"),
                              ],
@@ -4215,7 +4215,7 @@ def _valuespec_active_checks_mkevents():
                         "specify an explicit host for which to show events."),
                  forth=convert_mkevents_hostspec)),
             ("item",
-             TextAscii(
+             TextInput(
                  title=_("Item (used in service description)"),
                  help=_("If you enter an item name here, this will be used as "
                         "part of the service description after the prefix \"Events \". "
@@ -4257,7 +4257,7 @@ def _valuespec_active_checks_mkevents():
                      ),
                      Tuple(
                          elements=[
-                             TextAscii(
+                             TextInput(
                                  title=_("Hostname/IP address of Event Console:"),
                                  allow_empty=False,
                                  attrencode=True,
@@ -4276,7 +4276,7 @@ def _valuespec_active_checks_mkevents():
                            "via TCP. Please make sure that this is activated in the global settings of "
                            "the event console. The default port number is 6558."),
                      ),
-                     TextAscii(
+                     TextInput(
                          title=_("Access via UNIX socket"),
                          allow_empty=False,
                          size=64,
@@ -4349,7 +4349,7 @@ rulespec_registry.register(
 
 
 def _vs_contact(title):
-    return TextAscii(
+    return TextInput(
         title=title,
         help=_("This rule set is useful if you send your monitoring notifications "
                "into the Event Console. The contact information that is set by this rule "

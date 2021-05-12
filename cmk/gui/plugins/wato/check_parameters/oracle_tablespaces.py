@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -23,7 +23,7 @@ from cmk.gui.plugins.wato.check_parameters.db2_tablespaces import db_levels_comm
 
 
 def _item_spec_oracle_tablespaces():
-    return TextAscii(
+    return TextInput(
         title=_("Explicit tablespaces"),
         help=
         _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"

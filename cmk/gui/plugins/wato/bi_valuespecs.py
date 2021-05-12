@@ -18,7 +18,7 @@ from cmk.gui.valuespec import (
     Integer,
     Alternative,
     FixedValue,
-    TextAscii,
+    TextInput,
     Dictionary,
     MonitoringState,
     CascadingDropdown,
@@ -256,8 +256,8 @@ def _bi_host_choice_vs(title):
             title=title,
             choices=[
                 ("all_hosts", _("All hosts")),
-                ("host_name_regex", _("Regex for host name"), TextAscii(_("Pattern"), size=60)),
-                ("host_alias_regex", _("Regex for host alias"), TextAscii(_("Pattern"), size=60)),
+                ("host_name_regex", _("Regex for host name"), TextInput(_("Pattern"), size=60)),
+                ("host_alias_regex", _("Regex for host alias"), TextInput(_("Pattern"), size=60)),
             ],
             help=_("If you choose \"Regex for host name\" or \"Regex for host alias\", "
                    "you need to provide a regex which results in exactly one match group."),
@@ -361,7 +361,7 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     def get_service_conditions(cls):
         return [
             ("service_regex",
-             TextAscii(
+             TextInput(
                  title=_("Service Regex"),
                  help=_("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
                         "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
@@ -384,7 +384,7 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
                        ListOf(
                            Transform(
                                Tuple(elements=[
-                                   TextAscii(title=_("Keyword")),
+                                   TextInput(title=_("Keyword")),
                                    ListOfStrings(
                                        title=_("Values"),
                                        orientation="horizontal",
@@ -555,7 +555,7 @@ class BIConfigStateOfHostAction(bi_actions.BIStateOfHostAction, ABCBIConfigActio
     def get_state_of_host_choice(cls):
         return (
             "host_regex",
-            TextAscii(
+            TextInput(
                 title=_("Host:"),
                 help=_(
                     "Either an exact host name or a regular expression exactly matching the host "
@@ -585,7 +585,7 @@ class BIConfigStateOfServiceAction(bi_actions.BIStateOfServiceAction, ABCBIConfi
     @classmethod
     def _get_state_of_service_choice(cls):
         return ("service_regex",
-                TextAscii(
+                TextInput(
                     title=_("Service Regex:"),
                     help=_(
                         "A regular expression matching the <b>beginning</b> of a service "

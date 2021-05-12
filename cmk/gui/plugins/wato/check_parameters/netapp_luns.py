@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     Integer,
     Optional,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
@@ -129,7 +129,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netapp_luns",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("LUN name")),
+        item_spec=lambda: TextInput(title=_("LUN name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_luns,
         title=lambda: _("NetApp LUNs"),

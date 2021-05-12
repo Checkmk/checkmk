@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_disk_temperature():
-    return TextAscii(title=_("Hard disk device"),
+    return TextInput(title=_("Hard disk device"),
                      help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."))
 
 

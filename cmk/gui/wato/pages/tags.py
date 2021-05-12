@@ -25,7 +25,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ListOf,
     Dictionary,
-    TextAscii,
+    TextInput,
     OptionalDropdownChoice,
     FixedValue,
     ID,
@@ -438,13 +438,13 @@ class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
 
         return [
             ("id", vs_id),
-            ("title", TextAscii(
+            ("title", TextInput(
                 title=_("Title"),
                 size=60,
                 allow_empty=False,
             )),
             ("topic", self._get_topic_valuespec()),
-            ("help", TextAscii(
+            ("help", TextInput(
                 title=_("Help"),
                 size=60,
             )),
@@ -454,7 +454,7 @@ class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
             choices=self._effective_config.get_topic_choices(),
-            explicit=TextAscii(),
+            explicit=TextInput(),
             otherlabel=_("Create new topic"),
             default_value=None,
             help=_("Different tags can be grouped in topics to make the visualization and "
@@ -782,7 +782,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                 Tuple(
                     elements=[
                         Transform(
-                            TextAscii(
+                            TextInput(
                                 title=_("Tag ID"),
                                 size=40,
                                 regex="^[-a-z0-9A-Z_]*$",
@@ -793,7 +793,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                             forth=lambda x: "" if x is None else x,
                             back=lambda x: None if not x else x,
                         ),
-                        TextAscii(
+                        TextInput(
                             title=_("Title") + "*",
                             allow_empty=False,
                             size=60,

@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
     Transform,
 )
@@ -71,7 +71,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cpu_utilization_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Module name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec,
         title=lambda: _("CPU utilization of Devices with Modules"),

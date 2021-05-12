@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOf,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -101,7 +101,7 @@ def db_levels_common():
 
 
 def _item_spec_db2_tablespaces():
-    return TextAscii(title=_("Instance"),
+    return TextInput(title=_("Instance"),
                      help=_("The instance name, the database name and the tablespace name combined "
                             "like this db2wps8:WPSCOMT8.USERSPACE1"))
 

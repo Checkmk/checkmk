@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
     Percentage,
-    TextAscii,
+    TextInput,
 )
 
 from cmk.gui.plugins.wato import (
@@ -45,7 +45,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_percentage_used_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Module"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Module"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_percentage_multiitem_levels,
         title=lambda: _("Memory percentage used of devices with modules"),

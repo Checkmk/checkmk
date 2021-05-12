@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
@@ -56,7 +56,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="apc_ats_output",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("ID of phase"),),
+        item_spec=lambda: TextInput(title=_("ID of phase"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apc_ats_output,
         title=lambda: _("APC Automatic Transfer Switch Output"),

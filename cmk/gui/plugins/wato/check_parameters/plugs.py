@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    TextAscii,
+    TextInput,
     Transform,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_plugs():
-    return TextAscii(
+    return TextInput(
         title=_("Plug item number or name"),
         help=
         _("Whether you need the number or the name depends on the check. Just take a look to the service description."

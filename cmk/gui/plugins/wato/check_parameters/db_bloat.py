@@ -9,7 +9,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -71,7 +71,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db_bloat",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_bloat,
         title=lambda: _("PostgreSQL database bloat"),

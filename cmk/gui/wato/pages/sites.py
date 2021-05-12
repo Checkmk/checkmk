@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
     ID,
     Integer,
     FixedValue,
-    TextAscii,
+    TextInput,
     Checkbox,
     Tuple,
     Alternative,
@@ -282,7 +282,7 @@ class ModeEditSite(WatoMode):
         return [
             ("id", vs_site_id),
             ("alias",
-             TextAscii(
+             TextInput(
                  title=_("Alias"),
                  size=60,
                  help=_("An alias or description of the site."),
@@ -342,7 +342,7 @@ class ModeEditSite(WatoMode):
                   ),
              )),
             ("url_prefix",
-             TextAscii(
+             TextInput(
                  title=_("URL prefix"),
                  size=60,
                  help=

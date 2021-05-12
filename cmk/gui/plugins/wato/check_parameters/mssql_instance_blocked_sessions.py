@@ -10,7 +10,7 @@ from cmk.gui.valuespec import (
     Float,
     DualListChoice,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -52,7 +52,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_instance_blocked_sessions",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Instance identifier")),
+        item_spec=lambda: TextInput(title=_("Instance identifier")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_instance_blocked_sessions,
         title=lambda: _("MSSQL Blocked Sessions"),

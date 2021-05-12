@@ -8,7 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
-    TextAscii,
+    TextInput,
     Tuple,
 )
 
@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mysql_sessions():
-    return TextAscii(
+    return TextInput(
         title=_("Instance"),
         help=_("Only needed if you have multiple MySQL Instances on one server"),
     )

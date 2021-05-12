@@ -18310,9 +18310,6 @@ msgstr "Dateisytem Writeback"
 msgid "Filesystem discovery"
 msgstr "Dateisystem-Erkennung"
 
-msgid "Filesystem grouping"
-msgstr "Dateisystem-Gruppierung"
-
 msgid "Filesystem grouping patterns"
 msgstr "Dateisystemgruppen"
 
@@ -19817,6 +19814,10 @@ msgid "Grouping"
 msgstr "Gruppierung"
 
 #, fuzzy
+msgid "Grouping applies to"
+msgstr "Regulärer Ausdruck zur Gruppierung"
+
+#, fuzzy
 msgid "Grouping condition"
 msgstr "Backup-Bedingungen"
 
@@ -19825,12 +19826,6 @@ msgstr "Regulärer Ausdruck zur Gruppierung"
 
 msgid "Grouping of services in table views"
 msgstr "Gruppierung von Services in Tabellenansichten"
-
-msgid "Grouping pattern applies to mount point only"
-msgstr "Gruppierungsmuster wird nur auf Mountpunkt angewendet"
-
-msgid "Grouping pattern applies to volume name and mount point"
-msgstr "Das Gruppierungsmuster gilt für das Volume und den Einhängepunkt"
 
 msgid "Groups"
 msgstr "Gruppen"
@@ -25549,6 +25544,9 @@ msgstr "Punkt"
 msgid "Item (used in service description)"
 msgstr "Item (wird im Servicenamen verwendet)"
 
+msgid "Item appaerance"
+msgstr ""
+
 msgid "Item match list"
 msgstr "Item-Liste"
 
@@ -30535,9 +30533,6 @@ msgstr "Name des Managers"
 msgid "Name of manager or instance"
 msgstr "Manager- oder Instanzname"
 
-msgid "Name of mount point"
-msgstr "Name des Mount-Points"
-
 msgid "Name of node"
 msgstr "Name des Knotens"
 
@@ -30666,9 +30661,6 @@ msgstr "Name der virtuellen Maschine und/oder<br>Typ der Garbagecollection"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Name der virtuellen Maschine und/oder<br>Threadpool"
-
-msgid "Name of volume and name of mount point"
-msgstr "Name des Volumes und Name des Einhängepunktes"
 
 msgid "Name or number of the port"
 msgstr "Name oder Nummer des Ports"
@@ -39942,9 +39934,6 @@ msgstr "ID des benutzerdefinierten Service Feldes"
 
 msgid "Service description"
 msgstr "Service-Beschreibung"
-
-msgid "Service description format"
-msgstr "Format der Servicebeschreibung"
 
 msgid "Service description: "
 msgstr "Servicebeschreibung: "
@@ -55623,6 +55612,10 @@ msgstr ""
 "Von den Geräteschwellwerten und den eigenen die am meisten kritischen "
 "verwenden"
 
+#, fuzzy
+msgid "Use mountpoint"
+msgstr "Ist ein Mount-Point"
+
 msgid "Use new service descriptions"
 msgstr "Neue Servicenamen verwenden"
 
@@ -56082,6 +56075,10 @@ msgstr ""
 "bearbeiten kann. Wenn Sie viele parallele Anfragen haben, kann es gut sein "
 "diesen Wert anzupassen. Alledings müßsen Sie darauf achten, dass das System "
 "den Speicherbedarf der Apache-Prozesse erfüllen kann."
+
+#, fuzzy
+msgid "Use volume name and mountpoint"
+msgstr "Name des Volumes und Name des Einhängepunktes"
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -60227,6 +60224,12 @@ msgid ""
 msgstr ""
 "Ausnahme und Verzögerung zur selben Zeit ist für dieselbe Regel ungültig."
 
+#, fuzzy
+msgid ""
+"You cannot use mountpoint as item and grouping based on volume name and "
+"mountpoint."
+msgstr "Das Gruppierungsmuster gilt für das Volume und den Einhängepunkt"
+
 msgid "You cannot use the site itself as site of the status host."
 msgstr ""
 "Die eigene Instanz kann nicht als Instanz am Status-Host verwendet werden."
@@ -61938,6 +61941,10 @@ msgstr "überwacht"
 msgid "month"
 msgstr "Monat"
 
+#, fuzzy
+msgid "mountpoint only"
+msgstr "Mountpunkt"
+
 msgid "ms"
 msgstr "ms"
 
@@ -62671,6 +62678,10 @@ msgstr "Ansichten"
 msgid "virus"
 msgstr ""
 
+#, fuzzy
+msgid "volume name and mountpoint"
+msgstr "Name des Volumes und Name des Einhängepunktes"
+
 msgid "waits/sec"
 msgstr "Wartezyklen/Sek"
 
@@ -62766,6 +62777,18 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Filesystem grouping"
+#~ msgstr "Dateisystem-Gruppierung"
+
+#~ msgid "Grouping pattern applies to mount point only"
+#~ msgstr "Gruppierungsmuster wird nur auf Mountpunkt angewendet"
+
+#~ msgid "Name of mount point"
+#~ msgstr "Name des Mount-Points"
+
+#~ msgid "Service description format"
+#~ msgstr "Format der Servicebeschreibung"
 
 #~ msgid "Missing prediction information."
 #~ msgstr "Die Information für die Vorhersage fehlt."

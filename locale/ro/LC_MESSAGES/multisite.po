@@ -17884,10 +17884,6 @@ msgstr ""
 msgid "Filesystem discovery"
 msgstr "Inventariere in masa"
 
-#, fuzzy
-msgid "Filesystem grouping"
-msgstr "Spațiu liber exact"
-
 msgid "Filesystem grouping patterns"
 msgstr ""
 
@@ -19321,6 +19317,10 @@ msgid "Grouping"
 msgstr ""
 
 #, fuzzy
+msgid "Grouping applies to"
+msgstr "sesiuni"
+
+#, fuzzy
 msgid "Grouping condition"
 msgstr "%d condiții"
 
@@ -19329,12 +19329,6 @@ msgid "Grouping expression"
 msgstr "sesiuni"
 
 msgid "Grouping of services in table views"
-msgstr ""
-
-msgid "Grouping pattern applies to mount point only"
-msgstr ""
-
-msgid "Grouping pattern applies to volume name and mount point"
 msgstr ""
 
 msgid "Groups"
@@ -24167,6 +24161,9 @@ msgstr ""
 #, fuzzy
 msgid "Item (used in service description)"
 msgstr "foloseste descrierea"
+
+msgid "Item appaerance"
+msgstr ""
 
 msgid "Item match list"
 msgstr ""
@@ -29440,10 +29437,6 @@ msgid "Name of manager or instance"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
-msgid "Name of mount point"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
 msgid "Name of node"
 msgstr "Numele elementului pentru eveniment"
 
@@ -29587,10 +29580,6 @@ msgstr ""
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr ""
-
-#, fuzzy
-msgid "Name of volume and name of mount point"
-msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Name or number of the port"
@@ -38965,10 +38954,6 @@ msgstr ""
 
 msgid "Service description"
 msgstr ""
-
-#, fuzzy
-msgid "Service description format"
-msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Service description: "
@@ -52480,6 +52465,10 @@ msgstr " pe siteul de monitorizare: "
 msgid "Use most critical of your and device's levels"
 msgstr ""
 
+#, fuzzy
+msgid "Use mountpoint"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Use new service descriptions"
 msgstr ""
 
@@ -52843,6 +52832,10 @@ msgid ""
 "memory and you should only configure as many apache processes as your system "
 "can handle in high load situations."
 msgstr ""
+
+#, fuzzy
+msgid "Use volume name and mountpoint"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Use your own levels if present, otherwise the device's"
 msgstr ""
@@ -56187,6 +56180,11 @@ msgid ""
 "You cannot use expecting and delay at the same time in the same rule, sorry."
 msgstr ""
 
+msgid ""
+"You cannot use mountpoint as item and grouping based on volume name and "
+"mountpoint."
+msgstr ""
+
 msgid "You cannot use the site itself as site of the status host."
 msgstr ""
 
@@ -57822,6 +57820,10 @@ msgstr "nemonitorizat"
 msgid "month"
 msgstr ""
 
+#, fuzzy
+msgid "mountpoint only"
+msgstr "trei nivele"
+
 msgid "ms"
 msgstr ""
 
@@ -58587,6 +58589,10 @@ msgstr ""
 msgid "virus"
 msgstr ""
 
+#, fuzzy
+msgid "volume name and mountpoint"
+msgstr " pe siteul de monitorizare: "
+
 msgid "waits/sec"
 msgstr ""
 
@@ -58686,6 +58692,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Filesystem grouping"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Service description format"
+#~ msgstr "foloseste descrierea"
 
 #, fuzzy
 #~ msgid "Missing prediction information."

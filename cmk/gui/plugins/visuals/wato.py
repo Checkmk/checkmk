@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Tuple, Iterator, Set
+from typing import Tuple, Iterator, Set, List
 
 from cmk.utils.prediction import lq_logic
 import cmk.gui.watolib as watolib
@@ -13,9 +13,9 @@ import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, FilterHTTPVariables
 
-from cmk.gui.valuespec import ListOf, DropdownChoice
+from cmk.gui.valuespec import DualListChoice
 
 from cmk.gui.plugins.visuals import (
     filter_registry,
@@ -133,20 +133,32 @@ filter_registry.register(
 
 
 class FilterMultipleWatoFolder(FilterWatoFolder):
+    # Once filters are managed by a valuespec and we get more complex
+    # datastuctures beyond FilterHTTPVariable there must be a back&forth
+    # for data
     def valuespec(self):
         # Drop Main directory represented by empty string, because it means
         # don't filter after any folder due to recursive folder filtering.
-        choices = [entry for entry in self.choices() if entry[0]]
-        return ListOf(DropdownChoice(title=_("folders"), choices=choices))
+        choices = [(name, folder) for name, folder in self.choices() if name]
+        return DualListChoice(choices=choices, rows=4, enlarge_active=True)
+
+    def _to_list(self) -> List[str]:
+        if folders := html.request.get_str_input(self.htmlvars[0]):
+            return folders.split("|")
+        return []
 
     def display(self):
-        self.valuespec().render_input(self.ident, [])
+        self.valuespec().render_input(self.ident, self._to_list())
 
     def filter(self, infoname):
         self.check_wato_data_update()
-        folders = self.valuespec().from_html_vars(self.ident)
-        regex_values = list(map(_wato_folders_to_lq_regex, folders))
+        regex_values = list(map(_wato_folders_to_lq_regex, self._to_list()))
         return lq_logic("Filter: host_filename", regex_values, "Or")
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
+        return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
 
 
 filter_registry.register(

@@ -1,0 +1,13 @@
+Title: Filter Multiple WATO folder can now be saved
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626961455
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p9
+
+The Multiple WATO folder filter could be used from the Dashboards and Views
+filter menu, yet it could not be saved correspondinly as a context filter, when
+editing the view or dashboard. This is now fixed.

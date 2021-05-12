@@ -675,6 +675,10 @@ class TextInput(ValueSpec):
         return json_value
 
 
+TextAscii = TextInput  # alias added in 2.1.0 for compatibility
+TextUnicode = TextInput  # alias added in 2.1.0 for compatibility
+
+
 class UUID(TextInput):
     """Documentation for UUID
 
@@ -847,6 +851,9 @@ class RegExp(TextInput):
                 varprefix,
                 _("Your regular expression containes <b>%d</b> groups. "
                   "It must have at most <b>%d</b> groups.") % (compiled.groups, self._maxgroups))
+
+
+RegExpUnicode = RegExp  # alias added in 2.1.0 for compatibility
 
 
 class EmailAddress(TextInput):
@@ -5575,6 +5582,9 @@ class TextOrRegExp(Alternative):
         })
 
         super().__init__(**kwargs)
+
+
+TextOrRegExpUnicode = TextOrRegExp  # alias added in 2.1.0 for compatibility
 
 
 class Labels(ValueSpec):

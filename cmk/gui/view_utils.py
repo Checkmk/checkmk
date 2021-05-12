@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import Labels, LabelSources, TagGroups, TagID, TagValue
+from cmk.utils.type_defs import Labels, LabelSources, TagID, TaggroupID, TaggroupIDToTagID
 from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.escaping as escaping
@@ -146,7 +146,7 @@ def render_labels(labels: Labels, object_type: str, with_links: bool,
                                         label_sources=label_sources)
 
 
-def render_tag_groups(tag_groups: TagGroups, object_type: str, with_links: bool) -> HTML:
+def render_tag_groups(tag_groups: TaggroupIDToTagID, object_type: str, with_links: bool) -> HTML:
     return _render_tag_groups_or_labels(tag_groups,
                                         object_type,
                                         with_links,
@@ -154,38 +154,62 @@ def render_tag_groups(tag_groups: TagGroups, object_type: str, with_links: bool)
                                         label_sources={})
 
 
-def _render_tag_groups_or_labels(entries: Union[TagGroups,
-                                                Labels], object_type: str, with_links: bool,
-                                 label_type: str, label_sources: LabelSources) -> HTML:
+def _render_tag_groups_or_labels(
+    entries: Union[TaggroupIDToTagID, Labels],
+    object_type: str,
+    with_links: bool,
+    label_type: str,
+    label_sources: LabelSources,
+) -> HTML:
     elements = [
-        _render_tag_group(tg_id, tag, object_type, with_links, label_type,
-                          label_sources.get(tg_id, "unspecified"))
-        for tg_id, tag in sorted(entries.items())
+        _render_tag_group(
+            tag_group_id_or_label_key,
+            tag_id_or_label_value,
+            object_type,
+            with_links,
+            label_type,
+            label_sources.get(tag_group_id_or_label_key, "unspecified"),
+        ) for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
     return html.render_tags(HTML("").join(elements),
                             class_=["tagify", label_type, "display"],
                             readonly="true")
 
 
-def _render_tag_group(tg_id: Union[TagID, str], tag: Union[TagValue, str], object_type: str,
-                      with_link: bool, label_type: str, label_source: str) -> HTML:
-    span = html.render_tag(html.render_div(
-        html.render_span("%s:%s" % (tg_id, tag), class_=["tagify__tag-text"])),
-                           class_=["tagify--noAnim", label_source])
+def _render_tag_group(
+    tag_group_id_or_label_key: Union[TaggroupID, str],
+    tag_id_or_label_value: Union[TagID, str],
+    object_type: str,
+    with_link: bool,
+    label_type: str,
+    label_source: str,
+) -> HTML:
+    span = html.render_tag(
+        html.render_div(
+            html.render_span(
+                "%s:%s" % (
+                    tag_group_id_or_label_key,
+                    tag_id_or_label_value,
+                ),
+                class_=["tagify__tag-text"],
+            )),
+        class_=["tagify--noAnim", label_source],
+    )
     if not with_link:
         return span
 
     if label_type == "tag_group":
         type_filter_vars: HTTPVariables = [
-            ("%s_tag_0_grp" % object_type, tg_id),
+            ("%s_tag_0_grp" % object_type, tag_group_id_or_label_key),
             ("%s_tag_0_op" % object_type, "is"),
-            ("%s_tag_0_val" % object_type, tag),
+            ("%s_tag_0_val" % object_type, tag_id_or_label_value),
         ]
     elif label_type == "label":
         type_filter_vars = [
-            ("%s_label" % object_type, json.dumps([{
-                "value": "%s:%s" % (tg_id, tag)
-            }])),
+            ("%s_label" % object_type,
+             json.dumps([{
+                 "value": "%s:%s" % (tag_group_id_or_label_key, tag_id_or_label_value)
+             }])),
         ]
 
     else:

@@ -7,14 +7,16 @@
 import os
 import re
 import pprint
-from typing import Tuple, Optional, Dict, List, Any
+from typing import Any, Dict, cast, Container, List, Optional, Tuple
 
 from cmk.utils.type_defs import (
     Labels,
-    Tags,
     HostNameConditions,
-    ServiceNameConditions,
     RuleSpec,
+    ServiceNameConditions,
+    TagConditionNE,
+    TaggroupIDToTagCondition,
+    TagID,
 )
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -59,14 +61,14 @@ class RuleConditions:
     def __init__(
         self,
         host_folder: str,
-        host_tags: Optional[Tags] = None,
+        host_tags: Optional[TaggroupIDToTagCondition] = None,
         host_labels: Optional[Labels] = None,
         host_name: HostNameConditions = None,
         service_description: ServiceNameConditions = None,
         service_labels: Optional[Labels] = None,
     ):
         self.host_folder = host_folder
-        self.host_tags = host_tags or {}
+        self.host_tags: TaggroupIDToTagCondition = host_tags or {}
         self.host_labels = host_labels or {}
         self.host_name = host_name
         self.service_description = service_description
@@ -140,14 +142,14 @@ class RuleConditions:
 
     # Compatibility code for pre 1.6 WATO code
     @property
-    def tag_list(self):
+    def tag_list(self) -> Container[Optional[TagID]]:
         tag_list = []
         for tag_spec in self.host_tags.values():
             is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
             if isinstance(tag_spec, dict) and is_not:
-                tag_id = tag_spec["$ne"]
+                tag_id = cast(TagConditionNE, tag_spec)["$ne"]
             else:
-                tag_id = tag_spec
+                tag_id = cast(Optional[TagID], tag_spec)
 
             tag_list.append(("!%s" % tag_id) if is_not else tag_id)
         return tag_list

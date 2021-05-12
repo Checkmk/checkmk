@@ -5,18 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Optional, Pattern, Set, Tuple
+from typing import Any, cast, Dict, Generator, List, Optional, Pattern, Set, Tuple, TYPE_CHECKING
 
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
     ALL_HOSTS,
     ALL_SERVICES,
     CLUSTER_HOSTS,
-    PHYSICAL_HOSTS,
     NEGATE,
+    PHYSICAL_HOSTS,
 )
-from cmk.utils.regex import regex
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, TagGroups, TagList, Ruleset, RuleValue, Union
+from cmk.utils.type_defs import (
+    HostName,
+    Ruleset,
+    RuleValue,
+    ServiceName,
+    TagCondition,
+    TagConditionNE,
+    TagConditionNOR,
+    TagConditionOR,
+    TaggroupIDToTagCondition,
+    TagIDs,
+    TagIDToTaggroupID,
+)
 
 if TYPE_CHECKING:
     from cmk.utils.labels import LabelManager
@@ -69,8 +81,8 @@ class RulesetMatcher:
     """
     def __init__(
         self,
-        tag_to_group_map: TagGroups,
-        host_tag_lists: Dict[HostName, TagList],
+        tag_to_group_map: TagIDToTaggroupID,
+        host_tag_lists: Dict[HostName, TagIDs],
         host_paths: Dict[HostName, str],
         labels: 'LabelManager',
         all_configured_hosts: Set[HostName],
@@ -238,7 +250,7 @@ class RulesetMatcher:
             if rule_path != "/":
                 continue
 
-            if tags and not self.ruleset_optimizer.matches_host_tags([], tags):
+            if tags and not self.ruleset_optimizer.matches_host_tags(set(), tags):
                 continue
 
             if labels and not matches_labels({}, labels):
@@ -254,7 +266,7 @@ class RulesetMatcher:
 class RulesetOptimizer:
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
-    def __init__(self, ruleset_matcher: RulesetMatcher, host_tag_lists: Dict[HostName, TagList],
+    def __init__(self, ruleset_matcher: RulesetMatcher, host_tag_lists: Dict[HostName, TagIDs],
                  host_paths: Dict[HostName, str], labels: 'LabelManager',
                  all_configured_hosts: Set[HostName], clusters_of: Dict[HostName, List[HostName]],
                  nodes_of: Dict[HostName, List[HostName]]) -> None:
@@ -293,7 +305,7 @@ class RulesetOptimizer:
 
         # TODO: The folder will not be part of new dict tags anymore. This can
         # be cleaned up then.
-        self._hosttags_without_folder: Dict[HostName, TagList] = {}
+        self._hosttags_without_folder: Dict[HostName, TagIDs] = {}
 
         # TODO: Clean this one up?
         self._initialize_host_lookup()
@@ -523,7 +535,7 @@ class RulesetOptimizer:
 
         return negate
 
-    def matches_host_tags(self, hosttags, required_tags):
+    def matches_host_tags(self, hosttags: TagIDs, required_tags: TaggroupIDToTagCondition):
         for tag_spec in required_tags.values():
             if matches_tag_spec(tag_spec, hosttags) is False:
                 return False
@@ -667,19 +679,26 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
     return tag_or_label_spec
 
 
-def matches_tag_spec(tag_spec: Union[dict, str], hosttags: TagList) -> bool:
+def matches_tag_spec(tag_spec: TagCondition, hosttags: TagIDs) -> bool:
     is_not = False
     if isinstance(tag_spec, dict):
         if "$ne" in tag_spec:
             is_not = True
-            tag_spec = tag_spec["$ne"]
+            tag_spec = cast(TagConditionNE, tag_spec)["$ne"]
 
         elif "$or" in tag_spec:
-            return any(matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$or"])
+            return any(
+                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in cast(
+                    TagConditionOR,
+                    tag_spec,
+                )["$or"])
 
         elif "$nor" in tag_spec:
             return not any(
-                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in tag_spec["$nor"])
+                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in cast(
+                    TagConditionNOR,
+                    tag_spec,
+                )["$nor"])
 
         else:
             raise NotImplementedError()

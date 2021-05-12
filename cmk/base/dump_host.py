@@ -12,8 +12,6 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.type_defs import HostName
 
-from cmk.core_helpers.type_defs import Mode
-
 import cmk.base.check_table as check_table
 import cmk.base.sources as sources
 import cmk.base.agent_based.checking as checking
@@ -84,13 +82,7 @@ def dump_host(hostname: HostName) -> None:
     out.output(tty.yellow + "Contact groups:         " + tty.normal +
                ", ".join(host_config.contactgroups) + "\n")
 
-    agenttypes = [
-        source.description for source in sources.make_sources(
-            host_config,
-            ipaddress,
-            mode=Mode.NONE,
-        )
-    ]
+    agenttypes = [source.description for source in sources.make_sources(host_config, ipaddress)]
 
     if host_config.is_ping_host:
         agenttypes.append('PING only')

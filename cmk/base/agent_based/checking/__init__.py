@@ -166,7 +166,7 @@ def do_check(
                 )
 
             for source, host_sections in source_results:
-                source_state, source_output = source.summarize(host_sections)
+                source_state, source_output = source.summarize(host_sections, mode=mode)
                 if source_output != "":
                     status = worst_service_state(status, source_state, default=3)
                     infotexts.append("[%s] %s" % (source.id, source_output))

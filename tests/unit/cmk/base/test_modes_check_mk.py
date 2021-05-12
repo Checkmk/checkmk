@@ -31,7 +31,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self: result.OK(raw_data))
+        monkeypatch.setattr(TCPSource, "fetch", lambda self, mode: result.OK(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):

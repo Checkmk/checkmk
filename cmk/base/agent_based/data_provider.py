@@ -356,11 +356,9 @@ def make_broker(
         config_cache,
         host_config,
         ip_address,
-        mode,
         make_sources(
             host_config,
             ip_address,
-            mode=mode,
             selected_sections=selected_sections,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             on_scan_error=on_scan_error,
@@ -374,10 +372,12 @@ def make_broker(
         #       are `cmk.base.agent_based.checking.do_check(...)` and
         #       `cmk.base.agent_based.discovery.check_discovery(...)`.
         #       This does not seem right.
-        fetcher_messages = list(fetch_all(
-            nodes=nodes,
-            file_cache_max_age=file_cache_max_age,
-        ))
+        fetcher_messages = list(
+            fetch_all(
+                nodes=nodes,
+                file_cache_max_age=file_cache_max_age,
+                mode=mode,
+            ))
 
     collected_host_sections, results = _collect_host_sections(
         nodes=nodes,

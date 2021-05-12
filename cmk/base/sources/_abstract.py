@@ -52,7 +52,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         source_type: SourceType,
         fetcher_type: FetcherType,
         description: str,
@@ -64,7 +63,6 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     ) -> None:
         self.hostname: Final[str] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
-        self.mode: Final[Mode] = mode
         self.source_type: Final[SourceType] = source_type
         self.fetcher_type: Final[FetcherType] = fetcher_type
         self.description: Final[str] = description
@@ -86,11 +84,10 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         self.exit_spec = self.host_config.exit_code_spec(id_)
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, mode=%r, description=%r, id=%r)" % (
+        return "%s(%r, %r, description=%r, id=%r)" % (
             type(self).__name__,
             self.hostname,
             self.ipaddress,
-            self.mode,
             self.description,
             self.id,
         )
@@ -100,10 +97,10 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         return self._make_fetcher().to_json()
 
     @final
-    def fetch(self) -> result.Result[TRawData, Exception]:
+    def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
         try:
             with self._make_fetcher() as fetcher:
-                return fetcher.fetch(self.mode)
+                return fetcher.fetch(mode)
         except Exception as exc:
             if cmk.utils.debug.enabled():
                 raise
@@ -128,11 +125,13 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
     def summarize(
         self,
         host_sections: result.Result[THostSections, Exception],
+        *,
+        mode: Mode,
     ) -> Tuple[ServiceState, ServiceDetails]:
         summarizer = self._make_summarizer()
         return host_sections.fold(
-            ok=partial(summarizer.summarize_success, mode=self.mode),
-            error=partial(summarizer.summarize_failure, mode=self.mode),
+            ok=partial(summarizer.summarize_success, mode=mode),
+            error=partial(summarizer.summarize_failure, mode=mode),
         )
 
     @abc.abstractmethod

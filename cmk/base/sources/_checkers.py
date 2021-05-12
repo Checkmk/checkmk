@@ -38,7 +38,6 @@ class _Builder:
         host_config: HostConfig,
         ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
         force_snmp_cache_refresh: bool,
@@ -46,7 +45,6 @@ class _Builder:
         super().__init__()
         self.host_config: Final = host_config
         self.ipaddress: Final = ipaddress
-        self.mode: Final = mode
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
@@ -98,11 +96,7 @@ class _Builder:
             ))
 
         if "no-piggyback" not in self.host_config.tags:
-            self._add(PiggybackSource(
-                self.hostname,
-                self.ipaddress,
-                mode=self.mode,
-            ))
+            self._add(PiggybackSource(self.hostname, self.ipaddress))
 
     def _initialize_snmp_based(self) -> None:
         if not self.host_config.is_snmp_host:
@@ -120,7 +114,6 @@ class _Builder:
             SNMPSource.snmp(
                 self.hostname,
                 self.ipaddress,
-                mode=self.mode,
                 selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
@@ -142,7 +135,6 @@ class _Builder:
                 SNMPSource.management_board(
                     self.hostname,
                     ip_address,
-                    mode=self.mode,
                     selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
@@ -151,7 +143,6 @@ class _Builder:
             self._add(IPMISource(
                 self.hostname,
                 ip_address,
-                mode=self.mode,
             ))
         else:
             raise LookupError()
@@ -174,7 +165,6 @@ class _Builder:
             return DSProgramSource(
                 self.hostname,
                 self.ipaddress or self._fallback_ip,
-                mode=self.mode,
                 main_data_source=main_data_source,
                 template=datasource_program,
             )
@@ -182,7 +172,6 @@ class _Builder:
         return TCPSource(
             self.hostname,
             self.ipaddress,
-            mode=self.mode,
             main_data_source=main_data_source,
         )
 
@@ -191,7 +180,6 @@ class _Builder:
             SpecialAgentSource(
                 self.hostname,
                 self.ipaddress or self._fallback_ip,
-                mode=self.mode,
                 special_agent_id=agentname,
                 params=params,
             ) for agentname, params in self.host_config.special_agents
@@ -202,7 +190,6 @@ def make_sources(
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
     *,
-    mode: Mode,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: str = "raise",
@@ -211,7 +198,6 @@ def make_sources(
     return _Builder(
         host_config,
         ipaddress,
-        mode=mode,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
@@ -222,18 +208,18 @@ def make_nodes(
     config_cache: config.ConfigCache,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
-    mode: Mode,
     sources: Sequence[Source],
 ) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
     if host_config.nodes is None:
         return [(host_config.hostname, ipaddress, sources)]
-    return _make_cluster_nodes(mode, config_cache, host_config)
+    return _make_cluster_nodes(config_cache, host_config)
 
 
 def fetch_all(
     *,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     file_cache_max_age: int,
+    mode: Mode,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     # TODO(ml): It is not clear to me in which case it is possible for the following to hold true
@@ -248,7 +234,7 @@ def fetch_all(
             source.file_cache_max_age = file_cache_max_age
 
             with CPUTracker() as tracker:
-                raw_data = source.fetch()
+                raw_data = source.fetch(mode)
             yield FetcherMessage.from_raw_data(
                 raw_data,
                 tracker.duration,
@@ -257,7 +243,6 @@ def fetch_all(
 
 
 def _make_cluster_nodes(
-    mode: Mode,
     config_cache: config.ConfigCache,
     host_config: HostConfig,
 ) -> Sequence[Tuple[HostName, Optional[HostAddress], Sequence[Source]]]:
@@ -271,7 +256,6 @@ def _make_cluster_nodes(
         sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,
-            mode=mode,
             force_snmp_cache_refresh=False,
         )
         nodes.append((hostname, ipaddress, sources))

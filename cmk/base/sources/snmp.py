@@ -23,7 +23,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStoreItem,
     SNMPSummarizer,
 )
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -59,7 +59,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         source_type: SourceType,
         selected_sections: SectionNameCollection,
         id_: str,
@@ -72,7 +71,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
             description=SNMPSource._make_description(source_type, hostname, ipaddress, title=title),
@@ -99,7 +97,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
         force_cache_refresh: bool,
@@ -107,7 +104,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return cls(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.HOST,
             selected_sections=selected_sections,
             id_="snmp",
@@ -122,7 +118,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
         force_cache_refresh: bool,
@@ -130,7 +125,6 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         return cls(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.MANAGEMENT,
             selected_sections=selected_sections,
             id_="mgmt_snmp",

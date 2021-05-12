@@ -13,14 +13,8 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.core_helpers.agent import AgentSummarizerDefault
-from cmk.core_helpers.type_defs import Mode
 
 from cmk.base.sources.tcp import TCPSource
-
-
-@pytest.fixture(name="mode", params=Mode)
-def mode_fixture(request):
-    return request.param
 
 
 @pytest.mark.parametrize("res,reported,rule", [
@@ -31,7 +25,7 @@ def mode_fixture(request):
      "1.2.3.6"),
     ((1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
 ])
-def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
+def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
     # TODO(ml): Not only is this white box testing but all these instantiations
     #           before the summarizer obscure the purpose of the test.  This is
     #           way too complicated.  Test the `AgentSummarizerDefault` directly
@@ -40,7 +34,7 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    source = TCPSource("hostname", "ipaddress", mode=mode)
+    source = TCPSource("hostname", "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     summarizer = AgentSummarizerDefault(
@@ -75,7 +69,6 @@ def test_tcpdatasource_only_from(mode, monkeypatch, res, reported, rule):
      (3, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)')),
 ])
 def test_tcpdatasource_restricted_address_mismatch(
-    mode,
     monkeypatch,
     restricted_address_mismatch_state,
     only_from,
@@ -99,7 +92,7 @@ def test_tcpdatasource_restricted_address_mismatch(
         ])
 
     ts.apply(monkeypatch)
-    source = TCPSource(hostname, "ipaddress", mode=mode)
+    source = TCPSource(hostname, "ipaddress")
 
     summarizer = AgentSummarizerDefault(
         source.exit_spec,
@@ -112,12 +105,12 @@ def test_tcpdatasource_restricted_address_mismatch(
     assert summarizer._check_only_from(only_from) == res
 
 
-def test_attribute_defaults(mode, monkeypatch):
+def test_attribute_defaults(monkeypatch):
     ipaddress = "1.2.3.4"
     hostname = "testhost"
     Scenario().add_host(hostname).apply(monkeypatch)
 
-    source = TCPSource(hostname, ipaddress, mode=mode)
+    source = TCPSource(hostname, ipaddress)
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "file_cache": {

@@ -37,8 +37,6 @@ from cmk.utils.type_defs import (
     ConfigSerial,
 )
 
-from cmk.core_helpers.type_defs import Mode
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 import cmk.base.obsolete_output as out
@@ -1247,7 +1245,6 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
     yield from (s.special_agent_plugin_file_name for s in sources.make_sources(
         host_config,
         ipaddress,
-        mode=Mode.NONE,
     ) if isinstance(s, sources.programs.SpecialAgentSource))
 
 

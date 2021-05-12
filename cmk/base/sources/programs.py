@@ -19,7 +19,6 @@ from cmk.core_helpers.agent import (
     DefaultAgentFileCache,
     DefaultAgentFileCacheFactory,
 )
-from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -34,7 +33,6 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         id_: str,
         main_data_source: bool,
         cmdline: str,
@@ -43,7 +41,6 @@ class ProgramSource(AgentSource):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
             description=ProgramSource._make_description(
@@ -61,7 +58,6 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -69,7 +65,6 @@ class ProgramSource(AgentSource):
         return SpecialAgentSource(
             hostname,
             ipaddress,
-            mode=mode,
             main_data_source=main_data_source,
             special_agent_id=special_agent_id,
             params=params,
@@ -80,14 +75,12 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         main_data_source: bool = False,
         template: str,
     ) -> "DSProgramSource":
         return DSProgramSource(
             hostname,
             ipaddress,
-            mode=mode,
             main_data_source=main_data_source,
             template=template,
         )
@@ -131,14 +124,12 @@ class DSProgramSource(ProgramSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         main_data_source: bool = False,
         template: str,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             id_="agent",
             main_data_source=main_data_source,
             cmdline=DSProgramSource._translate(
@@ -203,7 +194,6 @@ class SpecialAgentSource(ProgramSource):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
-        mode: Mode,
         main_data_source: bool = False,
         special_agent_id: str,
         params: Dict,
@@ -211,7 +201,6 @@ class SpecialAgentSource(ProgramSource):
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             id_="special_%s" % special_agent_id,
             main_data_source=main_data_source,
             cmdline=SpecialAgentSource._make_cmdline(

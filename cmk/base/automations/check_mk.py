@@ -1149,19 +1149,10 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, u""
-        for source in sources.make_sources(
-                host_config,
-                ipaddress,
-                mode=Mode.CHECKING,
-        ):
+        for source in sources.make_sources(host_config, ipaddress):
             source.file_cache_max_age = config.check_max_cachefile_age
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = source.ds(
-                    source.hostname,
-                    ipaddress,
-                    mode=source.mode,
-                    template=cmd,
-                )
+                source = source.ds(source.hostname, ipaddress, template=cmd)
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port
                 if tcp_connect_timeout is not None:
@@ -1169,7 +1160,7 @@ class AutomationDiagHost(Automation):
             elif isinstance(source, sources.snmp.SNMPSource):
                 continue
 
-            raw_data = source.fetch()
+            raw_data = source.fetch(Mode.CHECKING)
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
@@ -1453,18 +1444,17 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
-                for source in sources.make_sources(
-                        host_config,
-                        ipaddress,
-                        mode=Mode.CHECKING,
-                ):
+                for source in sources.make_sources(host_config, ipaddress):
                     source.file_cache_max_age = config.check_max_cachefile_age
                     if not isinstance(source, sources.agent.AgentSource):
                         continue
 
-                    raw_data = source.fetch()
+                    raw_data = source.fetch(Mode.CHECKING)
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_state, source_output = source.summarize(host_sections)
+                    source_state, source_output = source.summarize(
+                        host_sections,
+                        mode=Mode.CHECKING,
+                    )
                     if source_state != 0:
                         # Optionally show errors of problematic data sources
                         success = False

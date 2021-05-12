@@ -11,7 +11,6 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 
-from ._abstract import Mode
 from ._checkers import make_sources
 
 __all__ = ["dump", "dumps"]
@@ -38,6 +37,5 @@ def _make(
         } for c in make_sources(
             config.HostConfig.make_host_config(hostname),
             ipaddress,
-            mode=Mode.NONE,
         )]
     }

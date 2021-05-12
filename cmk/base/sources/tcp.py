@@ -15,7 +15,6 @@ from cmk.core_helpers.agent import (
     DefaultAgentFileCache,
     DefaultAgentFileCacheFactory,
 )
-from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig
@@ -31,13 +30,11 @@ class TCPSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        mode: Mode,
         main_data_source: bool = False,
     ) -> None:
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
             description=TCPSource._make_description(hostname, ipaddress),

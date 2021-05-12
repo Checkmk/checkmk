@@ -31,13 +31,12 @@ def test_attribute_defaults(mode, monkeypatch):
     host_config = config.get_config_cache().get_host_config(hostname)
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
-    source = IPMISource(hostname, ipaddress, mode=mode)
+    source = IPMISource(hostname, ipaddress)
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
-    assert source.mode is mode
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown")
+    assert source.summarize(result.OK(AgentHostSections()), mode=mode) == (0, "Version: unknown")
     assert source.id == "mgmt_ipmi"
 
 
@@ -45,7 +44,7 @@ def test_summarizer():
     assert IPMISummarizer._get_ipmi_version(None) == "unknown"
 
 
-def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
+def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
     hostname = "testhost"
     ipaddress = "127.0.0.1"
 
@@ -60,7 +59,7 @@ def test_ipmi_ipaddress_from_mgmt_board(mode, monkeypatch):
         },
     })
 
-    source = IPMISource(hostname, ipaddress, mode=mode)
+    source = IPMISource(hostname, ipaddress)
     assert source.host_config.management_address == ipaddress
 
 

@@ -420,19 +420,15 @@ def mode_dump_agent(hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        mode = FetchMode.CHECKING
-        for source in sources.make_sources(
-                host_config,
-                ipaddress,
-                mode=mode,
-        ):
+        for source in sources.make_sources(host_config, ipaddress):
             source.file_cache_max_age = config.check_max_cachefile_age
             if not isinstance(source, sources.agent.AgentSource):
                 continue
 
-            raw_data = source.fetch()
+            mode = FetchMode.CHECKING
+            raw_data = source.fetch(mode)
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_state, source_output = source.summarize(host_sections)
+            source_state, source_output = source.summarize(host_sections, mode=mode)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",

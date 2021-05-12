@@ -12,7 +12,6 @@ from cmk.utils.type_defs import HostAddress, HostName, SourceType
 from cmk.core_helpers import FetcherType, IPMIFetcher
 from cmk.core_helpers.agent import DefaultAgentFileCache, DefaultAgentFileCacheFactory
 from cmk.core_helpers.ipmi import IPMISummarizer
-from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 from cmk.base.config import HostConfig, IPMICredentials
@@ -21,11 +20,10 @@ from .agent import AgentSource
 
 
 class IPMISource(AgentSource):
-    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress], *, mode: Mode) -> None:
+    def __init__(self, hostname: HostName, ipaddress: Optional[HostAddress]) -> None:
         super().__init__(
             hostname,
             ipaddress,
-            mode=mode,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
             description=IPMISource._make_description(

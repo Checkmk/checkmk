@@ -527,7 +527,7 @@ def check_discovery(
             int(params.get("severity_new_host_label", 1)),
             discovery_mode,
         ),
-        _check_data_sources(source_results),
+        _check_data_sources(source_results, mode=Mode.DISCOVERY),
     )
 
     if need_rediscovery:
@@ -640,8 +640,12 @@ def _check_host_labels(
 
 def _check_data_sources(
     result: Sequence[Tuple[sources.Source, result_type.Result[HostSections, Exception]]],
+    *,
+    mode: Mode,
 ) -> _DiscoverySubresult:
-    summaries = [(source, source.summarize(host_sections)) for source, host_sections in result]
+    summaries = [
+        (source, source.summarize(host_sections, mode=mode)) for source, host_sections in result
+    ]
     return (
         worst_service_state(*(state for _s, (state, _t) in summaries), default=0),
         # Do not output informational (state = 0) things.  These information

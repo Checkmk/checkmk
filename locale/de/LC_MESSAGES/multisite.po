@@ -48595,10 +48595,6 @@ msgid "The value must be of type dict, but it has type %s"
 msgstr "Der Wert muss vom Typ dict sein, hat aber den Typ %s"
 
 #, python-format
-msgid "The value must be of type str or unicode, but it has type %s"
-msgstr "Der Wert muss vom Typ str oder unicode sein - ist aber %s"
-
-#, python-format
 msgid "The value must be of type str, but it has type %s"
 msgstr "Der Wert muss vom Typ str sein, ist aber %s"
 
@@ -62777,6 +62773,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "The value must be of type str or unicode, but it has type %s"
+#~ msgstr "Der Wert muss vom Typ str oder unicode sein - ist aber %s"
 
 #~ msgid "Filesystem grouping"
 #~ msgstr "Dateisystem-Gruppierung"

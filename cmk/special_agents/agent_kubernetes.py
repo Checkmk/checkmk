@@ -11,6 +11,7 @@ is supported: https://github.com/kubernetes-client/python
 """
 
 import argparse
+import ast
 from collections import OrderedDict, defaultdict
 from collections.abc import MutableSequence
 import contextlib
@@ -223,7 +224,7 @@ class Node(Metadata):
         self._status = node.status
         # kubelet replies statistics for the last 2 minutes with 10s
         # intervals. We only need the latest state.
-        self.stats = eval(stats)['stats'][-1] if stats else {}
+        self.stats = ast.literal_eval(stats)['stats'][-1] if stats else {}
         # The timestamps are returned in RFC3339Nano format which cannot be parsed
         # by Pythons time module. Therefore we use dateutils parse function here.
         self.stats['timestamp'] = (dateutil.parser.parse(self.stats['timestamp']).timestamp()

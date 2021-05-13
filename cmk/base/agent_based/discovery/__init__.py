@@ -247,9 +247,10 @@ def _do_discovery_for(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
         run_plugin_names=run_plugin_names,
         only_new=only_new,
+        only_host_labels=discovery_parameters.only_host_labels,
+        on_error=discovery_parameters.on_error,
     )
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
@@ -927,9 +928,10 @@ def _get_node_services(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
         run_plugin_names=EVERYTHING,
         only_new=False,
+        only_host_labels=discovery_parameters.only_host_labels,
+        on_error=discovery_parameters.on_error,
     )
 
     return {
@@ -1058,9 +1060,10 @@ def _get_cluster_services(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
             run_plugin_names=EVERYTHING,
             only_new=True,
+            only_host_labels=discovery_parameters.only_host_labels,
+            on_error=discovery_parameters.on_error,
         )
 
         for check_source, service in itertools.chain(

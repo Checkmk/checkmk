@@ -46,21 +46,23 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
+
+_OnError = str  # TODO: Literal["raise", "warn", "ignore"]
 
 
 def analyse_discovered_services(
-        *,
-        host_name: HostName,
-        ipaddress: Optional[HostAddress],
-        parsed_sections_broker: ParsedSectionsBroker,
-        discovery_parameters: DiscoveryParameters,
-        run_plugin_names: Container[CheckPluginName],
-        only_new: bool,  # TODO: find a better name downwards in the callstack
+    *,
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    run_plugin_names: Container[CheckPluginName],
+    only_new: bool,  # TODO: find a better name downwards in the callstack
+    on_error: _OnError,
+    only_host_labels: bool,
 ) -> QualifiedDiscovery[Service]:
 
-    if discovery_parameters.only_host_labels:
+    if only_host_labels:
         # TODO: don't even come here, if there's nothing to do!
         existing = _load_existing_services(host_name=host_name)
         return QualifiedDiscovery(
@@ -75,8 +77,8 @@ def analyse_discovered_services(
             host_name=host_name,
             ipaddress=ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
             run_plugin_names=run_plugin_names,
+            on_error=on_error,
         ),
         run_plugin_names=run_plugin_names,
         only_new=only_new,
@@ -155,8 +157,8 @@ def _discover_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
     run_plugin_names: Container[CheckPluginName],
+    on_error: _OnError,
 ) -> List[Service]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
@@ -176,15 +178,15 @@ def _discover_services(
                             host_name=host_name,
                             ipaddress=ipaddress,
                             parsed_sections_broker=parsed_sections_broker,
-                            discovery_parameters=discovery_parameters,
+                            on_error=on_error,
                         )
                     })
                 except (KeyboardInterrupt, MKTimeout):
                     raise
                 except Exception as e:
-                    if discovery_parameters.on_error == "raise":
+                    if on_error == "raise":
                         raise
-                    if discovery_parameters.on_error == "warn":
+                    if on_error == "warn":
                         console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
             return list(service_table.values())
@@ -277,7 +279,7 @@ def _discover_plugins_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: _OnError,
 ) -> Iterator[Service]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(host_name, check_plugin_name, None):
@@ -298,11 +300,12 @@ def _discover_plugins_services(
     try:
         kwargs = parsed_sections_broker.get_section_kwargs(host_key, check_plugin.sections)
     except Exception as exc:
-        if cmk.utils.debug.enabled() or discovery_parameters.on_error == "raise":
+        if cmk.utils.debug.enabled() or on_error == "raise":
             raise
-        if discovery_parameters.on_error == "warn":
+        if on_error == "warn":
             console.warning("  Exception while parsing agent section: %s\n" % exc)
         return
+
     if not kwargs:
         return
 
@@ -314,11 +317,11 @@ def _discover_plugins_services(
         plugins_services = check_plugin.discovery_function(**kwargs)
         yield from _enriched_discovered_services(host_name, check_plugin.name, plugins_services)
     except Exception as e:
-        if discovery_parameters.on_error == "warn":
+        if on_error == "raise":
+            raise
+        if on_error == "warn":
             console.warning("  Exception in discovery function of check plugin '%s': %s" %
                             (check_plugin.name, e))
-        elif discovery_parameters.on_error == "raise":
-            raise
 
 
 def _enriched_discovered_services(

@@ -1221,7 +1221,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
                                    host_name=scenario.hostname,
                                    ipaddress=scenario.ipaddress,
                                    parsed_sections_broker=scenario.parsed_sections_broker,
-                                   discovery_parameters=discovery_parameters,
+                                   on_error=discovery_parameters.on_error,
                                    run_plugin_names=EVERYTHING,
                                ))
 

@@ -1208,7 +1208,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
     discovery_parameters = discovery_test_case.parameters
 
     # we're depending on the changed host labels:
-    _ = discovery.analyse_host_labels(
+    _ = discovery.analyse_node_labels(
         host_name=scenario.hostname,
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1238,7 +1238,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
     discovery_parameters = discovery_test_case.parameters
 
     with cmk_debug_enabled():
-        host_label_result = discovery.analyse_host_labels(
+        host_label_result = discovery.analyse_node_labels(
             host_name=scenario.hostname,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1261,7 +1261,7 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
     discovery_parameters = discovery_test_case.parameters
 
     # we need the sideeffects of this call. TODO: guess what.
-    _ = discovery._host_labels.analyse_cluster_host_labels(
+    _ = discovery._host_labels.analyse_cluster_labels(
         host_config=scenario.host_config,
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1289,7 +1289,7 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
     discovery_parameters = discovery_test_case.parameters
 
     with cmk_debug_enabled():
-        host_label_result = discovery._host_labels.analyse_cluster_host_labels(
+        host_label_result = discovery._host_labels.analyse_cluster_labels(
             host_config=scenario.host_config,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,

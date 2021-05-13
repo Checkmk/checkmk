@@ -30,7 +30,7 @@ from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
 
 
-def analyse_host_labels(
+def analyse_node_labels(
     *,
     host_name: HostName,
     ipaddress: Optional[HostAddress],
@@ -66,7 +66,7 @@ def analyse_host_labels(
     )
 
 
-def analyse_cluster_host_labels(
+def analyse_cluster_labels(
     *,
     host_config: config.HostConfig,
     ipaddress: Optional[str],
@@ -96,7 +96,7 @@ def analyse_cluster_host_labels(
         node_config = config_cache.get_host_config(node)
         node_ipaddress = config.lookup_ip_address(node_config)
 
-        node_result = analyse_host_labels(
+        node_result = analyse_node_labels(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,

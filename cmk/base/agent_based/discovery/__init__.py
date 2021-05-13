@@ -74,7 +74,7 @@ from cmk.base.discovered_labels import HostLabel
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_cluster_host_labels, analyse_host_labels
+from ._host_labels import analyse_cluster_labels, analyse_node_labels
 from .type_defs import DiscoveryParameters
 from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
 
@@ -236,7 +236,7 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
 ) -> None:
 
-    host_labels = analyse_host_labels(
+    host_labels = analyse_node_labels(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
@@ -884,12 +884,12 @@ def _get_host_services(
     discovery_parameters: DiscoveryParameters,
 ) -> Tuple[ServicesByTransition, QualifiedDiscovery[HostLabel]]:
 
-    host_labels = analyse_cluster_host_labels(
+    host_labels = analyse_cluster_labels(
         host_config=host_config,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
-    ) if host_config.is_cluster else analyse_host_labels(
+    ) if host_config.is_cluster else analyse_node_labels(
         host_name=host_config.hostname,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,

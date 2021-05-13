@@ -38,7 +38,7 @@ from typing import (
 
 import urllib3  # type: ignore[import]
 
-from dateutil.parser import parse as parse_time
+import dateutil.parser
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
 from kubernetes.client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
@@ -181,8 +181,8 @@ class Metadata:
         if metadata:
             self._name = metadata.name
             self.namespace = metadata.namespace
-            self.creation_timestamp = (time.mktime(metadata.creation_timestamp.utctimetuple())
-                                       if metadata.creation_timestamp else None)
+            self.creation_timestamp = (dateutil.parser.parse(
+                metadata.creation_timestamp).timestamp() if metadata.creation_timestamp else None)
             self.labels = metadata.labels if metadata.labels else {}
         else:
             self._name = None
@@ -226,7 +226,7 @@ class Node(Metadata):
         self.stats = eval(stats)['stats'][-1] if stats else {}
         # The timestamps are returned in RFC3339Nano format which cannot be parsed
         # by Pythons time module. Therefore we use dateutils parse function here.
-        self.stats['timestamp'] = (time.mktime(parse_time(self.stats['timestamp']).utctimetuple())
+        self.stats['timestamp'] = (dateutil.parser.parse(self.stats['timestamp']).timestamp()
                                    if self.stats.get('timestamp') else time.time())
 
     @property

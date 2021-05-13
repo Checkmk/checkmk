@@ -3,7 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Discovery of HostLabels
 
+This module exposes three functions:
+ * analyse_node_labels
+ * analyse_cluster_labels
+ * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
+
+"""
 from typing import (
     Dict,
     Mapping,
@@ -28,6 +35,26 @@ from cmk.base.discovered_labels import HostLabel
 
 from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
+
+
+def analyse_host_labels(
+    *,
+    host_config: config.HostConfig,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    discovery_parameters: DiscoveryParameters,
+) -> QualifiedDiscovery[HostLabel]:
+    return analyse_cluster_labels(
+        host_config=host_config,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    ) if host_config.is_cluster else analyse_node_labels(
+        host_name=host_config.hostname,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
 
 
 def analyse_node_labels(

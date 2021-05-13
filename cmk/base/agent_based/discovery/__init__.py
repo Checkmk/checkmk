@@ -74,7 +74,7 @@ from cmk.base.discovered_labels import HostLabel
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
-from ._host_labels import analyse_cluster_labels, analyse_node_labels
+from ._host_labels import analyse_host_labels, analyse_node_labels
 from .type_defs import DiscoveryParameters
 from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
 
@@ -325,8 +325,15 @@ def discover_on_host(
             on_scan_error=on_error,
         )
 
+        host_labels = analyse_host_labels(
+            host_config=host_config,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            discovery_parameters=discovery_parameters,
+        )
+
         # Compute current state of new and existing checks
-        services, host_labels = _get_host_services(
+        services = _get_host_services(
             host_config,
             ipaddress,
             parsed_sections_broker,
@@ -508,7 +515,13 @@ def check_discovery(
         on_scan_error=discovery_parameters.on_error,
     )
 
-    services, host_label_discovery_result = _get_host_services(
+    host_labels = analyse_host_labels(
+        host_config=host_config,
+        ipaddress=ipaddress,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+    services = _get_host_services(
         host_config,
         ipaddress,
         parsed_sections_broker,
@@ -524,7 +537,7 @@ def check_discovery(
             discovery_mode=discovery_mode,
         ),
         _check_host_labels(
-            host_label_discovery_result,
+            host_labels,
             int(params.get("severity_new_host_label", 1)),
             discovery_mode,
         ),
@@ -882,19 +895,7 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[ServicesByTransition, QualifiedDiscovery[HostLabel]]:
-
-    host_labels = analyse_cluster_labels(
-        host_config=host_config,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    ) if host_config.is_cluster else analyse_node_labels(
-        host_name=host_config.hostname,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
-    )
+) -> ServicesByTransition:
 
     services = _get_cluster_services(
         host_config,
@@ -910,7 +911,7 @@ def _get_host_services(
     )
 
     # Now add manual and active service and handle ignored services
-    return _merge_manual_services(host_config, services, discovery_parameters), host_labels
+    return _merge_manual_services(host_config, services, discovery_parameters)
 
 
 # Do the actual work for a non-cluster host or node
@@ -1149,7 +1150,14 @@ def get_check_preview(
         on_scan_error=on_error,
     )
 
-    grouped_services, host_label_result = _get_host_services(
+    host_labels = analyse_host_labels(
+        host_config=host_config,
+        ipaddress=ip_address,
+        parsed_sections_broker=parsed_sections_broker,
+        discovery_parameters=discovery_parameters,
+    )
+
+    grouped_services = _get_host_services(
         host_config,
         ip_address,
         parsed_sections_broker,
@@ -1171,7 +1179,7 @@ def get_check_preview(
             for service, found_on_nodes in services_with_nodes
         ]
 
-    return table, host_label_result
+    return table, host_labels
 
 
 def _check_preview_table_row(

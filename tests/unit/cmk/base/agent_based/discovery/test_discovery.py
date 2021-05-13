@@ -173,7 +173,7 @@ def grouped_services() -> discovery.ServicesByTransition:
 
 
 def test__group_by_transition(service_table, grouped_services):
-    assert discovery._group_by_transition(service_table.values()) == grouped_services
+    assert discovery._group_by_transition(service_table) == grouped_services
 
 
 @pytest.mark.parametrize(

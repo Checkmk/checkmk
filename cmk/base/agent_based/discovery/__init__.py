@@ -78,7 +78,8 @@ from ._host_labels import analyse_host_labels, analyse_node_labels
 from .type_defs import DiscoveryParameters
 from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
 
-ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
+ServicesTableEntry = Tuple[str, Service, List[HostName]]
+ServicesTable = Dict[ServiceID, ServicesTableEntry]
 ServicesByTransition = Dict[str, List[autochecks.ServiceWithNodes]]
 
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
@@ -923,8 +924,12 @@ def _get_host_services(
         only_host_labels=only_host_labels,
     )
 
-    # Now add manual and active service and handle ignored services
-    return _merge_manual_services(host_config, services, discovery_parameters)
+    services.update(_manual_items(host_config))
+    services.update(_custom_items(host_config))
+    services.update(_active_items(host_config))
+    services.update(_reclassify_disabled_items(host_config.hostname, services))
+
+    return _group_by_transition(services)
 
 
 # Do the actual work for a non-cluster host or node
@@ -981,38 +986,35 @@ def _node_service_source(
     return "clustered_" + check_source
 
 
-# TODO: Rename or extract disabled services handling
-def _merge_manual_services(
-    host_config: config.HostConfig,
-    services: ServicesTable,
-    discovery_parameters: DiscoveryParameters,
-) -> ServicesByTransition:
-    """Add/replace manual and active checks and handle ignoration"""
-    host_name = host_config.hostname
-
+def _manual_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     # Find manual checks. These can override discovered checks -> "manual"
-    manual_items = check_table.get_check_table(host_name, skip_autochecks=True)
-    for service in manual_items.values():
-        services[service.id()] = ('manual', service, [host_name])
+    host_name = host_config.hostname
+    yield from ((service.id(), ('manual', service, [
+        host_name
+    ])) for service in check_table.get_check_table(host_name, skip_autochecks=True).values())
 
+
+def _custom_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     # Add custom checks -> "custom"
-    for entry in host_config.custom_checks:
-        services[(CheckPluginName('custom'), entry['service_description'])] = (
-            'custom',
-            Service(
-                check_plugin_name=CheckPluginName('custom'),
-                item=entry['service_description'],
-                description=entry['service_description'],
-                parameters=None,
-            ),
-            [host_name],
-        )
+    yield from (((CheckPluginName('custom'), entry['service_description']), (
+        'custom',
+        Service(
+            check_plugin_name=CheckPluginName('custom'),
+            item=entry['service_description'],
+            description=entry['service_description'],
+            parameters=None,
+        ),
+        [host_config.hostname],
+    )) for entry in host_config.custom_checks)
 
+
+def _active_items(host_config: config.HostConfig) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
     # Similar for 'active_checks', but here we have parameters
+    host_name = host_config.hostname
     for plugin_name, entries in host_config.active_checks:
         for params in entries:
             descr = config.active_check_service_description(host_name, plugin_name, params)
-            services[(CheckPluginName(plugin_name), descr)] = (
+            yield (CheckPluginName(plugin_name), descr), (
                 'active',
                 Service(
                     check_plugin_name=CheckPluginName(plugin_name),
@@ -1023,26 +1025,26 @@ def _merge_manual_services(
                 [host_name],
             )
 
-    # Handle disabled services -> "ignored"
-    for check_source, discovered_service, _found_on_nodes in services.values():
-        if check_source in ["legacy", "active", "custom"]:
-            # These are ignored later in get_check_preview
-            # TODO: This needs to be cleaned up. The problem here is that service_description() can not
-            # calculate the description of active checks and the active checks need to be put into
-            # "[source]_ignored" instead of ignored.
-            continue
 
-        if config.service_ignored(host_name, discovered_service.check_plugin_name,
-                                  discovered_service.description):
-            services[discovered_service.id()] = ("ignored", discovered_service, [host_name])
+def _reclassify_disabled_items(
+    host_name: HostName,
+    services: ServicesTable,
+) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+    """Handle disabled services -> 'ignored'"""
+    yield from (
+        (discovered_service.id(), ("ignored", discovered_service, [host_name]))
+        for check_source, discovered_service, _found_on_nodes in services.values()
+        # These are ignored later in get_check_preview
+        # TODO: This needs to be cleaned up. The problem here is that service_description() can not
+        # calculate the description of active checks and the active checks need to be put into
+        # "[source]_ignored" instead of ignored.
+        if check_source not in {"legacy", "active", "custom"} and config.service_ignored(
+            host_name, discovered_service.check_plugin_name, discovered_service.description))
 
-    return _group_by_transition(services.values())
 
-
-def _group_by_transition(
-        transition_services: Iterable[Tuple[str, Service, List[HostName]]]) -> ServicesByTransition:
+def _group_by_transition(transition_services: ServicesTable) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
-    for transition, service, found_on_nodes in transition_services:
+    for transition, service, found_on_nodes in transition_services.values():
         services_by_transition.setdefault(
             transition,
             [],

@@ -59,4 +59,7 @@ then
     done
   fi
 
+  # In async execution the cache file would be removed if the plugin exits with non-zero exit code.
+  # Avoid this from happening, just because the last mysql command failed (due to missing permissions).
+  exit 0
 fi

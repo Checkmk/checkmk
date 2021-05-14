@@ -88,7 +88,6 @@ disable=
     # Alas, these maintenance/security nightmares are still part of our base
     # "technology"... :-/ Nevertheless, reducing their usage is a very worthy
     # goal.
-    eval-used,
     exec-used,
     global-statement,
     #---------------------------------------------------------------------------

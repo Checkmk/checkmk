@@ -127,7 +127,12 @@ def _resolve_string_parameters(
     try:
         context = get_check_context(check_name)
         # string may look like '{"foo": bar}', in the worst case.
-        return eval(params_unresolved, context, context)
+        # This evaluation was needed in the past to resolve references to variables in context and
+        # to evaluate data structure declarations containing references to variables.
+        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
+        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
+        # files are resolved during cmk-update-config.
+        return eval(params_unresolved, context, context)  # pylint: disable=eval-used
     except Exception:
         raise ValueError("Invalid check parameter string '%s' found in discovered service %r" %
                          (params_unresolved, check_name))

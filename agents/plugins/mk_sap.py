@@ -21,6 +21,7 @@ __version__ = "2.1.0i1"
 # During development the "CCMS_Doku.pdf" was really helpful.
 
 import os
+import ast
 import sys
 import time
 import fcntl
@@ -145,7 +146,7 @@ else:
 
 # Load the state file into memory
 try:
-    states = eval(open(STATE_FILE).read())
+    states = ast.literal_eval(open(STATE_FILE).read())
 except IOError:
     states = {}
 

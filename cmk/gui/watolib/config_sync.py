@@ -507,11 +507,11 @@ def _update_check_mk(path, tar_file):
     tar_file.extractall(path, members=members)
 
     master_vars: Dict[str, Any] = {"contacts": {}}
-    eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
+    exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
     site_vars: Dict[str, Any] = {"contacts": {}}
     with Path(path).joinpath("contacts.mk").open(encoding="utf-8") as f:
-        eval(f.read(), {}, site_vars)
+        exec(f.read(), {}, site_vars)
 
     site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])
 

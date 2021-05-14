@@ -209,7 +209,13 @@ def _load_raw_autochecks(
         return []
 
     try:
-        return eval(raw_file_content, check_variables or {}, check_variables or {})
+        # This evaluation was needed to resolve references to variables in the autocheck
+        # default parameters and to evaluate data structure declarations containing references to
+        # variables.
+        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
+        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
+        # files are resolved during cmk-update-config.
+        return eval(raw_file_content, check_variables or {}, check_variables or {})  # pylint: disable=eval-used
     except NameError as exc:
         raise MKGeneralException(
             "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "

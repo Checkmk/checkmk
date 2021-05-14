@@ -30,7 +30,9 @@ import itertools
 import pprint
 import re
 import json
-from typing import Dict, Generator, Text, NamedTuple, List, Optional  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Dict, Generator, Text, List, Optional,
+)
 
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -1742,16 +1744,16 @@ class RuleConditionRenderer(object):
     def render(self, rulespec, conditions):
         # type: (Rulespec, RuleConditions) -> List[Text]
         rendered = []  # type: List[Text]
-        rendered += list(self._tag_conditions(conditions))
+        rendered += list(self._tag_conditions(conditions.host_tags))
         rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
         rendered += list(self._service_conditions(rulespec, conditions))
         rendered += list(self._service_label_conditions(conditions))
         return rendered
 
-    def _tag_conditions(self, conditions):
-        # type: (RuleConditions) -> Generator
-        for tag_spec in conditions.host_tags.itervalues():
+    def _tag_conditions(self, host_tag_conditions):
+        # type: (Any) -> Generator
+        for tag_spec in host_tag_conditions.itervalues():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join(
                     [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])

@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
-import re
 import abc
-from typing import Any, Dict, List, Optional, Set
-
-from cmk.utils.i18n import _
+import re
+from typing import Any, Dict, List, Optional, Set, Union
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
+from cmk.utils.type_defs import TagID
 
 
 def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
@@ -94,8 +94,6 @@ class ABCTag(metaclass=abc.ABCMeta):
 
 
 class AuxTag(ABCTag):
-    is_aux_tag = True
-
     def __init__(self, data=None):
         super(AuxTag, self).__init__()
         if data:
@@ -196,8 +194,6 @@ class AuxTagList:
 
 
 class GroupedTag(ABCTag):
-    is_aux_tag = False
-
     def __init__(self, group, data=None):
         super(GroupedTag, self).__init__()
         self.group = group
@@ -413,7 +409,10 @@ class TagConfig:
                         ])
         return response
 
-    def get_tag_or_aux_tag(self, tag_id):
+    def get_tag_or_aux_tag(
+        self,
+        tag_id: Optional[TagID],
+    ) -> Optional[Union[GroupedTag, AuxTag]]:
         for tag_group in self.tag_groups:
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
@@ -422,6 +421,8 @@ class TagConfig:
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id == tag_id:
                 return aux_tag
+
+        return None
 
     def parse_config(self, data):
         self._initialize()

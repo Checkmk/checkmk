@@ -29,6 +29,7 @@ from six import ensure_str
 
 from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
     HostNameConditions,
     ServiceNameConditions,
@@ -2047,7 +2048,7 @@ class RuleConditionRenderer:
 
         tag = config.tags.get_tag_or_aux_tag(tag_id)
         if tag and tag.title:
-            if not tag.is_aux_tag:
+            if isinstance(tag, GroupedTag):
                 if negate:
                     return HTML(
                         _("Host: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))

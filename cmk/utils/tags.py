@@ -8,9 +8,10 @@
 import abc
 import re
 from typing import Any, Dict, List, Optional, Set, Union
+
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import TagID
+from cmk.utils.type_defs import TaggroupID, TagID
 
 
 def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
@@ -411,9 +412,10 @@ class TagConfig:
 
     def get_tag_or_aux_tag(
         self,
+        taggroupd_id: TaggroupID,
         tag_id: Optional[TagID],
     ) -> Optional[Union[GroupedTag, AuxTag]]:
-        for tag_group in self.tag_groups:
+        for tag_group in (t_grp for t_grp in self.tag_groups if t_grp.id == taggroupd_id):
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
                     return grouped_tag

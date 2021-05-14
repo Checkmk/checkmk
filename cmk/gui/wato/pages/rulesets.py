@@ -40,6 +40,7 @@ from cmk.utils.type_defs import (
     TagConditionOR,
     TaggroupIDToTagCondition,
     TagID,
+    TaggroupID,
 )
 
 from cmk.gui.type_defs import HTTPVariables
@@ -2010,30 +2011,39 @@ class RuleConditionRenderer:
         return rendered
 
     def _tag_conditions(self, host_tag_conditions: TaggroupIDToTagCondition) -> Generator:
-        for tag_spec in host_tag_conditions.values():
+        for taggroup_id, tag_spec in host_tag_conditions.items():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join([
-                    self._single_tag_condition(sub_spec) for sub_spec in cast(
+                    self._single_tag_condition(
+                        taggroup_id,
+                        sub_spec,
+                    ) for sub_spec in cast(
                         TagConditionOR,
                         tag_spec,
                     )["$or"]
                 ])
             elif isinstance(tag_spec, dict) and "$nor" in tag_spec:
                 yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join([
-                    self._single_tag_condition(sub_spec) for sub_spec in cast(
+                    self._single_tag_condition(
+                        taggroup_id,
+                        sub_spec,
+                    ) for sub_spec in cast(
                         TagConditionNOR,
                         tag_spec,
                     )["$nor"]
                 ])
             else:
                 yield self._single_tag_condition(
+                    taggroup_id,
                     cast(
                         Union[Optional[TagID], TagConditionNE],
                         tag_spec,
-                    ))
+                    ),
+                )
 
     def _single_tag_condition(
         self,
+        taggroup_id: TaggroupID,
         tag_spec: Union[Optional[TagID], TagConditionNE],
     ):
         negate = False
@@ -2046,7 +2056,7 @@ class RuleConditionRenderer:
         else:
             tag_id = tag_spec
 
-        tag = config.tags.get_tag_or_aux_tag(tag_id)
+        tag = config.tags.get_tag_or_aux_tag(taggroup_id, tag_id)
         if tag and tag.title:
             if isinstance(tag, GroupedTag):
                 if negate:

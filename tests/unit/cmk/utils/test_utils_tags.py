@@ -292,18 +292,20 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg: tags.TagConfig) -> N
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_or_aux_tag("blä") is None
-    assert isinstance(test_cfg.get_tag_or_aux_tag("bla"), tags.AuxTag)
-    assert isinstance(test_cfg.get_tag_or_aux_tag("prod"), tags.GroupedTag)
+    assert test_cfg.get_tag_or_aux_tag("nonexisting_group", "blä") is None
+    assert isinstance(test_cfg.get_tag_or_aux_tag("nonexisting_group", "bla"), tags.AuxTag)
+    assert isinstance(test_cfg.get_tag_or_aux_tag("criticality", "prod"), tags.GroupedTag)
 
 
 def test_tag_config_get_tag_or_aux_tag_duplicate(test_cfg: tags.TagConfig) -> None:
-    # in the current state, there is no way of knowing which tag we want in this case, since there
-    # are two tags with "none_val" as id in different groups
-    tag_none_choice = test_cfg.get_tag_or_aux_tag("none_val")
-    assert isinstance(tag_none_choice, tags.GroupedTag)
-    assert tag_none_choice.title == "None value"
-    assert tag_none_choice.group.id == "none_choice"
+    tag_none_choice_1 = test_cfg.get_tag_or_aux_tag("none_choice", "none_val")
+    assert isinstance(tag_none_choice_1, tags.GroupedTag)
+    assert tag_none_choice_1.title == "None value"
+    assert tag_none_choice_1.group.id == "none_choice"
+    tag_none_choice_2 = test_cfg.get_tag_or_aux_tag("none_2", "none_val")
+    assert isinstance(tag_none_choice_2, tags.GroupedTag)
+    assert tag_none_choice_2.title == "None value 2"
+    assert tag_none_choice_2.group.id == "none_2"
 
 
 @pytest.fixture(name="cfg")

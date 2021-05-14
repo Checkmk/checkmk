@@ -15,7 +15,6 @@ from typing import (
     Any,
     cast,
     Dict,
-    Generator,
     Iterable,
     List,
     Optional,
@@ -2007,16 +2006,18 @@ class VSExplicitConditions(Transform):
 
 
 class RuleConditionRenderer:
-    def render(self, rulespec: Rulespec, conditions: RuleConditions) -> List[str]:
-        rendered: List[str] = []
-        rendered += list(self._tag_conditions(conditions.host_tags))
-        rendered += list(self._host_label_conditions(conditions))
-        rendered += list(self._host_conditions(conditions))
-        rendered += list(self._service_conditions(rulespec, conditions))
-        rendered += list(self._service_label_conditions(conditions))
-        return rendered
+    def render(
+        self,
+        rulespec: Rulespec,
+        conditions: RuleConditions,
+    ) -> Iterable[Union[str, HTML]]:
+        yield from self._tag_conditions(conditions.host_tags)
+        yield from self._host_label_conditions(conditions)
+        yield from self._host_conditions(conditions)
+        yield from self._service_conditions(rulespec, conditions)
+        yield from self._service_label_conditions(conditions)
 
-    def _tag_conditions(self, host_tag_conditions: TaggroupIDToTagCondition) -> Generator:
+    def _tag_conditions(self, host_tag_conditions: TaggroupIDToTagCondition) -> Iterable[HTML]:
         for taggroup_id, tag_spec in host_tag_conditions.items():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join([
@@ -2051,7 +2052,7 @@ class RuleConditionRenderer:
         self,
         taggroup_id: TaggroupID,
         tag_spec: Union[Optional[TagID], TagConditionNE],
-    ):
+    ) -> HTML:
         negate = False
         if isinstance(tag_spec, dict):
             if "$ne" in tag_spec:
@@ -2079,13 +2080,13 @@ class RuleConditionRenderer:
 
         return HTML(_("Unknown tag: Host has the tag <tt>%s</tt>") % tag_id)
 
-    def _host_label_conditions(self, conditions: RuleConditions) -> Generator:
+    def _host_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.host_labels, "host", _("Host"))
 
-    def _service_label_conditions(self, conditions: RuleConditions) -> Generator:
+    def _service_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.service_labels, "service", _("Service"))
 
-    def _label_conditions(self, label_conditions, object_type, object_title):
+    def _label_conditions(self, label_conditions, object_type, object_title) -> Iterable[HTML]:
         if not label_conditions:
             return
 
@@ -2114,7 +2115,7 @@ class RuleConditionRenderer:
 
         return HTML("%s%s" % (html.render_i(_("not"), class_="label_operator"), labels_html))
 
-    def _host_conditions(self, conditions: RuleConditions) -> Generator:
+    def _host_conditions(self, conditions: RuleConditions) -> Iterable[Union[str, HTML]]:
         if conditions.host_name is None:
             return
 
@@ -2124,7 +2125,7 @@ class RuleConditionRenderer:
         if condition_txt:
             yield condition_txt
 
-    def _render_host_condition_text(self, conditions):
+    def _render_host_condition_text(self, conditions) -> Union[str, HTML]:
         if conditions.host_name == []:
             return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
 
@@ -2192,7 +2193,7 @@ class RuleConditionRenderer:
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Generator:
+    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Iterable[str]:
         if not rulespec.item_type or conditions.service_description is None:
             return
 

@@ -37,6 +37,7 @@ from cmk.utils.type_defs import (
     TagConditionNE,
     TagConditionNOR,
     TagConditionOR,
+    TaggroupIDToTagCondition,
     TagID,
 )
 
@@ -2000,15 +2001,15 @@ class VSExplicitConditions(Transform):
 class RuleConditionRenderer:
     def render(self, rulespec: Rulespec, conditions: RuleConditions) -> List[str]:
         rendered: List[str] = []
-        rendered += list(self._tag_conditions(conditions))
+        rendered += list(self._tag_conditions(conditions.host_tags))
         rendered += list(self._host_label_conditions(conditions))
         rendered += list(self._host_conditions(conditions))
         rendered += list(self._service_conditions(rulespec, conditions))
         rendered += list(self._service_label_conditions(conditions))
         return rendered
 
-    def _tag_conditions(self, conditions: RuleConditions) -> Generator:
-        for tag_spec in conditions.host_tags.values():
+    def _tag_conditions(self, host_tag_conditions: TaggroupIDToTagCondition) -> Generator:
+        for tag_spec in host_tag_conditions.values():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
                 yield HTML(" <i>or</i> ").join([
                     self._single_tag_condition(sub_spec) for sub_spec in cast(

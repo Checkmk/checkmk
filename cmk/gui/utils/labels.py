@@ -91,12 +91,6 @@ def label_help_text() -> str:
         "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.")
 
 
-def get_labels_cache():
-    if "labels_cache" not in g:
-        g.labels_cache = LabelsCache()
-    return g.labels_cache
-
-
 class LabelsCache:
     def __init__(self):
         self._namespace: str = "labels"
@@ -197,16 +191,16 @@ class LabelsCache:
         for site_id in sites_list:
             self._redis_set_last_program_start(site_id, pipeline)
 
-    def _redis_get_last_program_starts(self):
+    def _redis_get_last_program_starts(self) -> Dict[str, str]:
         program_starts = self._redis_client.hgetall(self._program_starts)
         return program_starts
 
-    def _redis_set_last_program_start(self, site_id, pipeline: Pipeline):
+    def _redis_set_last_program_start(self, site_id: SiteId, pipeline: Pipeline) -> None:
         program_start = self._livestatus_get_last_program_start(site_id)
         pipeline.hmset(self._program_starts, {site_id: program_start})
 
-    def _livestatus_get_last_program_start(self, site_id):
-        return sites.states().get(site_id, sites.SiteStatus({})).get("program_start")
+    def _livestatus_get_last_program_start(self, site_id: SiteId) -> int:
+        return sites.states().get(site_id, sites.SiteStatus({})).get("program_start", 0)
 
     def _verify_cache_integrity(self) -> IntegrityCheckResponse:
         """ Verify last program start value in redis with current value"""
@@ -228,3 +222,9 @@ class LabelsCache:
             return IntegrityCheckResponse.UPDATE
 
         return IntegrityCheckResponse.USE
+
+
+def get_labels_cache() -> LabelsCache:
+    if "labels_cache" not in g:
+        g.labels_cache = LabelsCache()
+    return g.labels_cache

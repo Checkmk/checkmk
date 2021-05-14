@@ -30,6 +30,7 @@ import abc
 from typing import Dict  # pylint: disable=unused-import
 
 from cmk.utils.i18n import _
+
 from cmk.utils.exceptions import MKGeneralException
 
 
@@ -101,8 +102,6 @@ class ABCTag(object):
 
 
 class AuxTag(ABCTag):
-    is_aux_tag = True
-
     def __init__(self, data=None):
         super(AuxTag, self).__init__()
         if data:
@@ -209,8 +208,6 @@ class AuxTagList(object):
 
 
 class GroupedTag(ABCTag):
-    is_aux_tag = False
-
     def __init__(self, group, data=None):
         super(GroupedTag, self).__init__()
         self.group = group
@@ -416,7 +413,10 @@ class TagConfig(object):
                         ])
         return response
 
-    def get_tag_or_aux_tag(self, tag_id):
+    def get_tag_or_aux_tag(
+            self,
+            tag_id,
+    ):
         for tag_group in self.tag_groups:
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
@@ -425,6 +425,8 @@ class TagConfig(object):
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id == tag_id:
                 return aux_tag
+
+        return None
 
     def parse_config(self, data):
         self._initialize()

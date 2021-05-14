@@ -1,0 +1,13 @@
+Title: Do not discard mk_mysql output in case of missing permissions
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p25
+Date: 1620976923
+
+When executed asynchronously, the entire output of mk_mysql was
+discared if no replication was configured.

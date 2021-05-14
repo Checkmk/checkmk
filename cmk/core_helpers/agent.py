@@ -9,7 +9,19 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import cast, Dict, final, Final, List, MutableMapping, Optional, Tuple, Union
+from typing import (
+    cast,
+    Dict,
+    final,
+    Final,
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from six import ensure_binary
 
@@ -37,8 +49,6 @@ from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, FileCacheFactory, SectionStore
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
-
-AgentHostSections = HostSections[AgentRawDataSection]
 
 
 class AgentFileCache(FileCache[AgentRawData]):
@@ -121,6 +131,12 @@ class AgentFetcher(Fetcher[AgentRawData]):
     pass
 
 
+AgentHostSections = HostSections[AgentRawDataSection]
+
+MutableSection = MutableMapping[SectionMarker, List[AgentRawData]]
+ImmutableSection = Mapping[SectionMarker, List[AgentRawData]]
+
+
 class ParserState(abc.ABC):
     """Base class for the state machine.
 
@@ -157,18 +173,16 @@ class ParserState(abc.ABC):
     def __init__(
         self,
         hostname: HostName,
-        host_sections: AgentHostSections,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
         *,
-        section_info: MutableMapping[SectionName, SectionMarker],
-        selection: SectionNameCollection,
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         self.hostname: Final = hostname
-        self.host_sections = host_sections
-        self.section_info = section_info
-        self.selection: Final = selection
+        self.sections = sections
+        self.piggyback_sections = piggyback_sections
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self._logger: Final = logger
@@ -197,9 +211,8 @@ class ParserState(abc.ABC):
         self._logger.debug("Transition %s -> %s", type(self).__name__, NOOPParser.__name__)
         return NOOPParser(
             self.hostname,
-            self.host_sections,
-            section_info=self.section_info,
-            selection=self.selection,
+            self.sections,
+            self.piggyback_sections,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             logger=self._logger,
@@ -215,12 +228,12 @@ class ParserState(abc.ABC):
             type(self).__name__,
             HostSectionParser.__name__,
         )
+        self.sections.setdefault(section_header, [])
         return HostSectionParser(
             self.hostname,
-            self.host_sections,
-            section_header,
-            section_info=self.section_info,
-            selection=self.selection,
+            self.sections,
+            self.piggyback_sections,
+            current_section=section_header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             logger=self._logger,
@@ -236,12 +249,12 @@ class ParserState(abc.ABC):
             type(self).__name__,
             PiggybackParser.__name__,
         )
+        self.piggyback_sections.setdefault(header, {})
         return PiggybackParser(
             self.hostname,
-            self.host_sections,
-            header,
-            section_info=self.section_info,
-            selection=self.selection,
+            self.sections,
+            self.piggyback_sections,
+            current_host=header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             logger=self._logger,
@@ -249,23 +262,23 @@ class ParserState(abc.ABC):
 
     def to_piggyback_section_parser(
         self,
-        piggyback_header: PiggybackMarker,
+        current_host: PiggybackMarker,
         section_header: SectionMarker,
     ) -> "PiggybackSectionParser":
         self._logger.debug(
             "%r %r / Transition %s -> %s",
-            piggyback_header,
+            current_host,
             section_header,
             type(self).__name__,
             PiggybackSectionParser.__name__,
         )
+        self.piggyback_sections[current_host].setdefault(section_header, [])
         return PiggybackSectionParser(
             self.hostname,
-            self.host_sections,
-            piggyback_header,
-            section_header,
-            section_info=self.section_info,
-            selection=self.selection,
+            self.sections,
+            self.piggyback_sections,
+            current_host=current_host,
+            current_section=section_header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             logger=self._logger,
@@ -330,31 +343,26 @@ class PiggybackParser(ParserState):
     def __init__(
         self,
         hostname: HostName,
-        host_sections: AgentHostSections,
-        piggyback_header: PiggybackMarker,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
         *,
-        section_info: MutableMapping[SectionName, SectionMarker],
-        selection: SectionNameCollection,
+        current_host: PiggybackMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         super().__init__(
             hostname,
-            host_sections,
-            section_info=section_info,
-            selection=selection,
+            sections,
+            piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
             logger=logger,
         )
-        self.piggyback_header: Final = piggyback_header
+        self.current_host: Final = current_host
 
     def do_action(self, line: bytes) -> "ParserState":
-        self.host_sections.piggybacked_raw_data.setdefault(
-            self.piggyback_header.hostname,
-            [],
-        ).append(line)
+        # We are not in a section -> ignore line.
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -373,7 +381,7 @@ class PiggybackParser(ParserState):
 
     def on_section_header(self, line: bytes) -> "ParserState":
         return self.to_piggyback_section_parser(
-            self.piggyback_header,
+            self.current_host,
             SectionMarker.from_headerline(line),
         )
 
@@ -385,42 +393,28 @@ class PiggybackSectionParser(ParserState):
     def __init__(
         self,
         hostname: HostName,
-        host_sections: AgentHostSections,
-        piggyback_header: PiggybackMarker,
-        section_header: SectionMarker,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
         *,
-        section_info: MutableMapping[SectionName, SectionMarker],
-        selection: SectionNameCollection,
+        current_host: PiggybackMarker,
+        current_section: SectionMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         super().__init__(
             hostname,
-            host_sections,
-            section_info=section_info,
-            selection=selection,
+            sections,
+            piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
             logger=logger,
         )
-        self.piggyback_header: Final = piggyback_header
-        self.section_header: Final = section_header
-        self.selected: Final[bool] = (True if selection is NO_SELECTION else
-                                      (self.section_header.name in selection))
-
-        # Entry action:
-        if self.selected:
-            self.host_sections.piggybacked_raw_data.setdefault(
-                self.piggyback_header.hostname,
-                [],
-            ).append(str(self.section_header).encode("utf8"))
+        self.current_host: Final = current_host
+        self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> "ParserState":
-        if not self.selected:
-            return self
-
-        self.host_sections.piggybacked_raw_data[self.piggyback_header.hostname].append(line)
+        self.piggyback_sections[self.current_host][self.current_section].append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -436,7 +430,7 @@ class PiggybackSectionParser(ParserState):
 
     def on_section_header(self, line: bytes) -> "ParserState":
         return self.to_piggyback_section_parser(
-            self.piggyback_header,
+            self.current_host,
             SectionMarker.from_headerline(line),
         )
 
@@ -449,46 +443,29 @@ class HostSectionParser(ParserState):
     def __init__(
         self,
         hostname: HostName,
-        host_sections: AgentHostSections,
-        section_header: SectionMarker,
+        sections: MutableSection,
+        piggyback_sections: MutableMapping[PiggybackMarker, MutableSection],
         *,
-        section_info: MutableMapping[SectionName, SectionMarker],
-        selection: SectionNameCollection,
+        current_section: SectionMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
         logger: logging.Logger,
     ) -> None:
         super().__init__(
             hostname,
-            host_sections,
-            section_info=section_info,
-            selection=selection,
+            sections,
+            piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
             logger=logger,
         )
-        self.section_header = section_header
-        self.selected: Final[bool] = (True if selection is NO_SELECTION else
-                                      (self.section_header.name in selection))
-
-        # Entry action:
-        if self.selected:
-            self.host_sections.sections.setdefault(self.section_header.name, [])
-            self.section_info[self.section_header.name] = self.section_header
+        self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> "ParserState":
-        if not self.selected:
-            return self
-
-        if not self.section_header.nostrip:
+        if not self.current_section.nostrip:
             line = line.strip()
 
-        self.host_sections.sections[self.section_header.name].append(
-            ensure_str_with_fallback(
-                line,
-                encoding=self.section_header.encoding,
-                fallback="latin-1",
-            ).split(self.section_header.separator))
+        self.sections[self.current_section].append(AgentRawData(line))
         return self
 
     def on_piggyback_header(self, line: bytes) -> "ParserState":
@@ -514,12 +491,7 @@ class HostSectionParser(ParserState):
 
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
-    """A parser for agent data.
-
-    Note:
-        It is forbidden to add base dependencies to this class.
-
-    """
+    """A parser for agent data."""
     def __init__(
         self,
         hostname: HostName,
@@ -552,26 +524,53 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             raw_data = agent_simulator.process(raw_data)
 
         now = int(time.time())
-
-        parser = self._parse_host_section(raw_data, selection=selection)
-
-        host_sections = parser.host_sections
         # Transform to seconds and give the piggybacked host a little bit more time
         cache_age = int(1.5 * 60 * self.check_interval)
-        host_sections.cache_info.update({
-            header.name: cast(Tuple[int, int], header.cache_info(now))
-            for header in parser.section_info.values()
-            if header.cache_info(now) is not None
-        })
-        host_sections.piggybacked_raw_data = self._make_updated_piggyback_section_header(
-            host_sections.piggybacked_raw_data,
-            cached_at=now,
-            cache_age=cache_age,
+
+        sections, piggyback_sections = self._parse_host_section(raw_data)
+        section_info = {
+            header.name: header
+            for header in sections
+            if selection is NO_SELECTION or header.name in selection
+        }
+
+        def decode_sections(
+            sections: ImmutableSection,) -> MutableMapping[SectionName, AgentRawDataSection]:
+            out: MutableMapping[SectionName, AgentRawDataSection] = {}
+            for header, content in sections.items():
+                out.setdefault(header.name, []).extend(
+                    ensure_str_with_fallback(
+                        line,
+                        encoding=header.encoding,
+                        fallback="latin-1",
+                    ).split(header.separator) for line in content)
+            return out
+
+        host_sections = AgentHostSections(
+            sections={
+                name: content
+                for name, content in decode_sections(sections).items()
+                if selection is NO_SELECTION or name in selection
+            },
+            piggybacked_raw_data={
+                header.hostname: list(
+                    self._flatten_piggyback_section(
+                        content,
+                        cached_at=now,
+                        cache_age=cache_age,
+                        selection=selection,
+                    )) for header, content in piggyback_sections.items()
+            },
+            cache_info={
+                header.name: cast(Tuple[int, int], header.cache_info(now))
+                for header in section_info.values()
+                if header.cache_info(now) is not None
+            },
         )
         host_sections.add_persisted_sections(
             host_sections.sections,
             section_store=self.section_store,
-            fetch_interval=lambda section_name: parser.section_info.get(
+            fetch_interval=lambda section_name: section_info.get(
                 section_name, SectionMarker.default(section_name)).persist,
             now=now,
             keep_outdated=self.keep_outdated,
@@ -582,15 +581,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     def _parse_host_section(
         self,
         raw_data: AgentRawData,
-        *,
-        selection: SectionNameCollection,
-    ) -> ParserState:
+    ) -> Tuple[ImmutableSection, Mapping[PiggybackMarker, ImmutableSection]]:
         """Split agent output in chunks, splits lines by whitespaces."""
         parser: ParserState = NOOPParser(
             self.hostname,
-            AgentHostSections(),
-            section_info={},
-            selection=selection,
+            {},
+            {},
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             logger=self._logger,
@@ -598,39 +594,34 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         for line in raw_data.split(b"\n"):
             parser = parser(line.rstrip(b"\r"))
 
-        return parser
+        return parser.sections, parser.piggyback_sections
 
     @staticmethod
-    def _make_updated_piggyback_section_header(
-        piggybacked_raw_data: Dict[HostName, List[bytes]],
+    def _flatten_piggyback_section(
+        sections: ImmutableSection,
         *,
         cached_at: int,
         cache_age: int,
-    ) -> Dict[HostName, List[bytes]]:
-        def update_section_header(line: bytes) -> bytes:
-            """Append cache information to section headers.
+        selection: SectionNameCollection,
+    ) -> Iterator[bytes]:
+        for header, content in sections.items():
+            if not (selection is NO_SELECTION or header.name in selection):
+                continue
 
-            If the `line` is a section header without caching
-            information, these are added to the header.
-            Return any other line without modification.
-
-            """
-            if not SectionMarker.is_header(line):
-                return line
-            if b':cached(' in line or b':persist(' in line:
-                return line
-            return b'<<<%s:cached(%s,%s)>>>' % (
-                line[3:-3],
-                ensure_binary("%d" % cached_at),
-                ensure_binary("%d" % cache_age),
-            )
-
-        updated_piggybacked_raw_data: Dict[HostName, List[bytes]] = {}
-        for hostname, raw_data in piggybacked_raw_data.items():
-            updated_piggybacked_raw_data[hostname] = [
-                update_section_header(line) for line in raw_data
-            ]
-        return updated_piggybacked_raw_data
+            if header.cached is not None or header.persist is not None:
+                yield str(header).encode(header.encoding)
+            else:
+                # Add cache information.
+                yield str(
+                    SectionMarker(
+                        header.name,
+                        (cached_at, cache_age),
+                        header.encoding,
+                        header.nostrip,
+                        header.persist,
+                        header.separator,
+                    )).encode(header.encoding)
+            yield from (bytes(line) for line in content)
 
 
 class AgentSummarizer(Summarizer[AgentHostSections]):

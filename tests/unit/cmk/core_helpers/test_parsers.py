@@ -99,7 +99,7 @@ class TestAgentParser:
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {}
         assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {'piggy': [b"line0", b"line1", b"line2"]}
+        assert ahs.piggybacked_raw_data == {'piggy': []}
 
     @pytest.mark.usefixtures("scenario")
     def test_raw_section_populates_sections(self, parser):
@@ -119,6 +119,50 @@ class TestAgentParser:
         assert ahs.sections == {
             SectionName("a_section"): [["first", "line"], ["second", "line"]],
             SectionName("another_section"): [["first", "line"], ["second", "line"]],
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+
+    @pytest.mark.usefixtures("scenario")
+    def test_merge_split_raw_sections(self, parser):
+        raw_data = AgentRawData(b"\n".join((
+            b"<<<a_section>>>",
+            b"first line",
+            b"second line",
+            b"<<<>>>",
+            b"<<<another_section>>>",
+            b"a line",
+            b"b line",
+            b"<<<a_section>>>",
+            b"third line",
+            b"forth line",
+            b"<<<>>>",
+            b"<<<another_section>>>",
+            b"c line",
+            b"d line",
+            b"<<<>>>",
+            b"<<<a_section:sep(124)>>>",
+            b"fifth|line",
+            b"sixth|line",
+            b"<<<>>>",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("a_section"): [
+                ["first", "line"],
+                ["second", "line"],
+                ["third", "line"],
+                ["forth", "line"],
+                ["fifth", "line"],
+                ["sixth", "line"],
+            ],
+            SectionName("another_section"): [
+                ["a", "line"],
+                ["b", "line"],
+                ["c", "line"],
+                ["d", "line"],
+            ],
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
@@ -176,6 +220,49 @@ class TestAgentParser:
             "_b_l-u_": [
                 b"<<<section:cached(1000,900)>>>",
                 b"first line",
+            ],
+        }
+
+    @pytest.mark.usefixtures("scenario")
+    def test_merge_split_piggyback_sections(self, parser, monkeypatch):
+        time_time = 1000
+        monkeypatch.setattr(time, "time", lambda: time_time)
+        monkeypatch.setattr(parser, "check_interval", 10)
+
+        raw_data = AgentRawData(b"\n".join((
+            b"<<<<piggy>>>>",
+            b"<<<a_section>>>",
+            b"first line",
+            b"second line",
+            b"<<<another_section>>>",
+            b"a line",
+            b"b line",
+            b"<<<<>>>>",
+            b"<<<<piggy>>>>",
+            b"<<<a_section>>>",
+            b"third line",
+            b"forth line",
+            b"<<<another_section>>>",
+            b"c line",
+            b"d line",
+            b"<<<<>>>>",
+        )))
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {
+            "piggy": [
+                b"<<<a_section:cached(1000,900)>>>",
+                b"first line",
+                b"second line",
+                b"third line",
+                b"forth line",
+                b"<<<another_section:cached(1000,900)>>>",
+                b"a line",
+                b"b line",
+                b"c line",
+                b"d line",
             ],
         }
 

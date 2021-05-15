@@ -355,9 +355,13 @@ def discover_on_host(
                                                     _ServiceFilters.accept_all(), result, mode)
         host_config.set_autochecks(new_services)
 
+        # If old_services == new_services, make_object_diff will return
+        # something along the lines of "nothing changed".
+        # I guess this was written before discovered host labels were invented.
         result.diff_text = make_object_diff(
-            _make_services_audit_log_object([x.service for x in old_services]),
-            _make_services_audit_log_object([x.service for x in new_services]))
+            {x.service.description for x in old_services},
+            {x.service.description for x in new_services},
+        )
 
     except MKTimeout:
         raise  # let general timeout through
@@ -386,11 +390,6 @@ def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
     # line in. As far as I can tell, this property is never being read after the
     # callsites of this function.
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
-
-
-def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
-    """The resulting object is used for building object diffs"""
-    return {s.description for s in services}
 
 
 def _get_post_discovery_services(

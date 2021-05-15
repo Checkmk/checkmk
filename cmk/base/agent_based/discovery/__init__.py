@@ -347,13 +347,22 @@ def discover_on_host(
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
 
+        if mode is DiscoveryMode.ONLY_HOST_LABELS:
+            # This is the result of a refactoring, and the following code was added
+            # to ensure a compatible behaviour. I don't think it is particularly
+            # sensible. We used to only compare service descriptions of old and new
+            # services, so `make_object_diff` was always comparing two identical objects
+            # if the mode was DiscoveryMode.ONLY_HOST_LABEL.
+            # We brainlessly mimic that behaviour, for now.
+            result.diff_text = make_object_diff(set(), set())
+            return result
+
         # Compute current state of new and existing checks
         services = _get_host_services(
             host_config,
             ipaddress,
             parsed_sections_broker,
             discovery_parameters,
-            only_host_labels=(mode is DiscoveryMode.ONLY_HOST_LABELS),
         )
 
         old_services = services.get("old", [])

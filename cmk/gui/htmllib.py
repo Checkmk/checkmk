@@ -121,7 +121,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
-from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.utils.urls import (
     makeactionuri,
@@ -1033,14 +1032,10 @@ class html(ABCHTMLGenerator):
 
         # Register helpers
         self.encoder = URLEncoder()
-        self.timeout_manager = TimeoutManager()
         self.transaction_manager = TransactionManager(request)
         self.response = Response()
         self.output_funnel = OutputFunnel(self.response)
         self.request = request
-
-        # TODO: Cleanup this side effect (then remove disable_request_timeout() e.g. from update_config.py)
-        self.enable_request_timeout()
 
         self.response.headers["Content-type"] = "text/html; charset=UTF-8"
 
@@ -1300,16 +1295,6 @@ class html(ABCHTMLGenerator):
         return self.output_funnel.drain()
 
     #
-    # Timeout handling
-    #
-
-    def enable_request_timeout(self) -> None:
-        self.timeout_manager.enable_timeout(self.request.request_timeout)
-
-    def disable_request_timeout(self) -> None:
-        self.timeout_manager.disable_timeout()
-
-    #
     # Content Type
     #
 
@@ -1372,10 +1357,6 @@ class html(ABCHTMLGenerator):
     def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
             return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
-
-    def finalize(self) -> None:
-        """Finish the HTTP request processing before handing over to the application server"""
-        self.disable_request_timeout()
 
     #
     # Messages

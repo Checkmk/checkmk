@@ -17,7 +17,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, timeout_manager
 from cmk.gui.utils.html import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
@@ -109,8 +109,8 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
         self._log_path_hint = _("More information can be found in ~/var/log/web.log")
 
         # Disable html request timeout
-        if html:
-            html.disable_request_timeout()
+        if timeout_manager:
+            timeout_manager.disable_timeout()
 
         # Close livestatus connections inherited from the parent process
         if g:

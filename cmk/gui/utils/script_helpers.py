@@ -46,14 +46,8 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 
 @contextmanager
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
-    this_html = html(Request(environ))
-
-    # Currently the htmllib.html constructor enables the timeout by default. This side effect
-    # should really be cleaned up.
-    this_html.disable_request_timeout()
-
     with RequestContext(
-            this_html,
+            html(Request(environ)),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
     ):

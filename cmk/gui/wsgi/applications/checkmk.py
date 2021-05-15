@@ -31,6 +31,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.http import Response
+from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
@@ -137,9 +138,14 @@ class CheckmkApp:
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
+
+        timeout_manager = TimeoutManager()
+        timeout_manager.enable_timeout(req.request_timeout)
+
         with AppContext(self), RequestContext(
                 req=req,
                 html_obj=htmllib.html(req),
+                timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
         ):
             config.initialize()

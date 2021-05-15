@@ -20,6 +20,7 @@ from werkzeug.local import LocalProxy, LocalStack
 
 if TYPE_CHECKING:
     from cmk.gui import htmllib, http, config, userdb
+    from cmk.gui.utils.timeout_manager import TimeoutManager
 
 _sentinel = object()
 
@@ -109,11 +110,13 @@ class RequestContext:
         html_obj=None,
         req=None,
         resp=None,
+        timeout_manager: Optional['TimeoutManager'] = None,  # pylint: disable=redefined-outer-name
         display_options=None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
     ):
         self.html = html_obj
         self.auth_type = None
+        self.timeout_manager = timeout_manager
         self.display_options = display_options
         self.session: Optional["userdb.SessionInfo"] = None
         self.flashes: Optional[List[str]] = None
@@ -146,11 +149,9 @@ class RequestContext:
         if self._web_log_handler is not None:
             self._web_log_handler.removeFilter(self._prepend_url_filter)
 
-        # html.finalize needs to be called before popping the stack, because it does
-        # something with the user object. We make this optional, so we can use the RequestContext
-        # without the html object (for APIs for example).
-        if self.html is not None:
-            self.html.finalize()
+        if self.timeout_manager is not None:
+            self.timeout_manager.disable_timeout()
+
         _request_ctx_stack.pop()
 
 
@@ -184,4 +185,5 @@ request: 'http.Request' = request_local_attr('request')
 session: 'userdb.Session' = request_local_attr('session')
 
 html: 'htmllib.html' = request_local_attr('html')
+timeout_manager: 'TimeoutManager' = request_local_attr('timeout_manager')
 display_options = request_local_attr('display_options')

@@ -250,6 +250,9 @@ def _do_discovery_for(
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} host labels")
 
+    if only_host_labels:
+        return
+
     section.section_step("Analyse discovered services")
 
     service_result = analyse_discovered_services(
@@ -258,7 +261,6 @@ def _do_discovery_for(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         only_new=only_new,
-        only_host_labels=only_host_labels,
         on_error=discovery_parameters.on_error,
     )
 
@@ -531,7 +533,6 @@ def check_discovery(
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
-        only_host_labels=False,
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
@@ -905,7 +906,7 @@ def _get_host_services(
     # TODO: this is a weird don't-actually-do-something flag.
     # I am not sure the actual behavior is the desired one.
     # Clean this up!
-    only_host_labels: bool,
+    only_host_labels: bool = False,
 ) -> ServicesByTransition:
 
     services = _get_cluster_services(
@@ -1178,7 +1179,6 @@ def get_check_preview(
         ip_address,
         parsed_sections_broker,
         discovery_parameters,
-        only_host_labels=False,
     )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:

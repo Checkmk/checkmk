@@ -333,12 +333,19 @@ def discover_on_host(
             on_scan_error=on_error,
         )
 
-        host_labels = analyse_host_labels(
-            host_config=host_config,
-            ipaddress=ipaddress,
-            parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
-        )
+        if mode is not DiscoveryMode.REMOVE:
+            host_labels = analyse_host_labels(
+                host_config=host_config,
+                ipaddress=ipaddress,
+                parsed_sections_broker=parsed_sections_broker,
+                discovery_parameters=DiscoveryParameters(
+                    on_error=on_error,
+                    load_labels=True,
+                    save_labels=True,
+                ),
+            )
+            result.self_new_host_labels = len(host_labels.new)
+            result.self_total_host_labels = len(host_labels.present)
 
         # Compute current state of new and existing checks
         services = _get_host_services(
@@ -371,11 +378,6 @@ def discover_on_host(
         if cmk.utils.debug.enabled():
             raise
         result.error_text = str(e)
-
-    else:
-        if mode is not DiscoveryMode.REMOVE:
-            result.self_new_host_labels = len(host_labels.new)
-            result.self_total_host_labels = len(host_labels.present)
 
     result.self_total = result.self_new + result.self_kept
     return result

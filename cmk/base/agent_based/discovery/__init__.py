@@ -155,7 +155,6 @@ def do_discovery(
         on_error=on_error,
         load_labels=arg_only_new,
         save_labels=True,
-        only_host_labels=only_host_labels,
     )
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
@@ -186,6 +185,7 @@ def do_discovery(
                 run_plugin_names,
                 arg_only_new,
                 discovery_parameters,
+                only_host_labels=only_host_labels,
             )
 
         except Exception as e:
@@ -234,6 +234,8 @@ def _do_discovery_for(
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
     discovery_parameters: DiscoveryParameters,
+    *,
+    only_host_labels: bool,
 ) -> None:
 
     section.section_step("Analyse discovered host labels")
@@ -256,7 +258,7 @@ def _do_discovery_for(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         only_new=only_new,
-        only_host_labels=discovery_parameters.only_host_labels,
+        only_host_labels=only_host_labels,
         on_error=discovery_parameters.on_error,
     )
 
@@ -296,7 +298,6 @@ def discover_on_host(
         on_error=on_error,
         load_labels=(mode is not DiscoveryMode.REMOVE),
         save_labels=(mode is not DiscoveryMode.REMOVE),
-        only_host_labels=(mode is DiscoveryMode.ONLY_HOST_LABELS),
     )
 
     if host_name not in config_cache.all_active_hosts():
@@ -342,6 +343,7 @@ def discover_on_host(
             ipaddress,
             parsed_sections_broker,
             discovery_parameters,
+            only_host_labels=(mode is DiscoveryMode.ONLY_HOST_LABELS),
         )
 
         old_services = services.get("old", [])
@@ -491,7 +493,6 @@ def check_discovery(
         on_error="raise",
         load_labels=True,
         save_labels=False,
-        only_host_labels=False,
     )
 
     params = host_config.discovery_check_parameters
@@ -530,6 +531,7 @@ def check_discovery(
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
+        only_host_labels=False,
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
@@ -899,6 +901,11 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    *,
+    # TODO: this is a weird don't-actually-do-something flag.
+    # I am not sure the actual behavior is the desired one.
+    # Clean this up!
+    only_host_labels: bool,
 ) -> ServicesByTransition:
 
     services = _get_cluster_services(
@@ -906,12 +913,14 @@ def _get_host_services(
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
+        only_host_labels=only_host_labels,
     ) if host_config.is_cluster else _get_node_services(
         host_config.hostname,
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
         config.get_config_cache().host_of_clustered_service,
+        only_host_labels=only_host_labels,
     )
 
     # Now add manual and active service and handle ignored services
@@ -925,6 +934,7 @@ def _get_node_services(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
     host_of_clustered_service: Callable[[HostName, str], str],
+    only_host_labels: bool,
 ) -> ServicesTable:
 
     service_result = analyse_discovered_services(
@@ -933,7 +943,7 @@ def _get_node_services(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         only_new=False,
-        only_host_labels=discovery_parameters.only_host_labels,
+        only_host_labels=only_host_labels,
         on_error=discovery_parameters.on_error,
     )
 
@@ -1045,6 +1055,7 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    only_host_labels: bool,
 ) -> ServicesTable:
 
     if not host_config.nodes:
@@ -1065,7 +1076,7 @@ def _get_cluster_services(
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             only_new=True,
-            only_host_labels=discovery_parameters.only_host_labels,
+            only_host_labels=only_host_labels,
             on_error=discovery_parameters.on_error,
         )
 
@@ -1139,7 +1150,6 @@ def get_check_preview(
         on_error=on_error,
         load_labels=True,
         save_labels=False,
-        only_host_labels=False,
     )
 
     _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
@@ -1168,6 +1178,7 @@ def get_check_preview(
         ip_address,
         parsed_sections_broker,
         discovery_parameters,
+        only_host_labels=False,
     )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:

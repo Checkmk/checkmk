@@ -875,12 +875,14 @@ ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
     ("expected_stored_labels_node2", Dict),
 ])
 
-DiscoveryTestCase = NamedTuple("DiscoveryTestCase", [
-    ("parameters", discovery.DiscoveryParameters),
-    ("expected_services", Set[Tuple[CheckPluginName, str]]),
-    ("on_realhost", ExpectedDiscoveryResultRealHost),
-    ("on_cluster", ExpectedDiscoveryResultCluster),
-])
+
+class DiscoveryTestCase(NamedTuple):
+    parameters: discovery.DiscoveryParameters
+    only_host_labels: bool
+    expected_services: Set[Tuple[CheckPluginName, str]]
+    on_realhost: ExpectedDiscoveryResultRealHost
+    on_cluster: ExpectedDiscoveryResultCluster
+
 
 _discovery_test_cases = [
     # do discovery: only_new == True
@@ -890,8 +892,8 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=True,
             save_labels=True,
-            only_host_labels=False,
         ),
+        only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
             (CheckPluginName('df'), '/opt/omd/sites/test-heute/tmp'),
@@ -977,8 +979,8 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=True,
             save_labels=False,
-            only_host_labels=False,
         ),
+        only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
         },
@@ -1038,8 +1040,8 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=False,
             save_labels=True,
-            only_host_labels=False,
         ),
+        only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
             (CheckPluginName('df'), '/opt/omd/sites/test-heute/tmp'),
@@ -1096,8 +1098,8 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=False,
             save_labels=False,
-            only_host_labels=False,
         ),
+        only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
         },
@@ -1151,8 +1153,8 @@ _discovery_test_cases = [
             on_error="raise",
             load_labels=False,
             save_labels=False,
-            only_host_labels=True,
         ),
+        only_host_labels=True,
         expected_services=set(),
         on_realhost=ExpectedDiscoveryResultRealHost(
             expected_vanished_host_labels=[],
@@ -1203,6 +1205,11 @@ _discovery_test_cases = [
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__discover_host_labels_and_services_on_realhost(realhost_scenario, discovery_test_case):
+    if discovery_test_case.only_host_labels:
+        # check for consistency of the test case
+        assert not discovery_test_case.expected_services
+        return
+
     scenario = realhost_scenario
 
     discovery_parameters = discovery_test_case.parameters
@@ -1216,14 +1223,13 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
     )
 
     with cmk_debug_enabled():
-        discovered_services = ([] if discovery_parameters.only_host_labels else
-                               discovery._discovered_services._discover_services(
-                                   host_name=scenario.hostname,
-                                   ipaddress=scenario.ipaddress,
-                                   parsed_sections_broker=scenario.parsed_sections_broker,
-                                   on_error=discovery_parameters.on_error,
-                                   run_plugin_names=EVERYTHING,
-                               ))
+        discovered_services = discovery._discovered_services._discover_services(
+            host_name=scenario.hostname,
+            ipaddress=scenario.ipaddress,
+            parsed_sections_broker=scenario.parsed_sections_broker,
+            on_error=discovery_parameters.on_error,
+            run_plugin_names=EVERYTHING,
+        )
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}
 
@@ -1274,6 +1280,7 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
             scenario.ipaddress,
             scenario.parsed_sections_broker,
             discovery_parameters,
+            only_host_labels=discovery_test_case.only_host_labels,
         )
 
     services = set(discovered_services)
@@ -1352,9 +1359,9 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
             on_error="raise",
             load_labels=True,
             save_labels=True,
-            only_host_labels=False,
         ),
         lambda hn, _svcdescr: hn,
+        only_host_labels=False,
     ) == {(service.check_plugin_name, None): (
         discovery_status,
         service,

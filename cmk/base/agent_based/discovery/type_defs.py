@@ -11,4 +11,3 @@ class DiscoveryParameters(NamedTuple):
     on_error: str
     load_labels: bool
     save_labels: bool
-    only_host_labels: bool

@@ -30309,6 +30309,11 @@ msgstr "(element fără element)"
 msgid "No such host(s): %s"
 msgstr ""
 
+#, python-format
+msgid ""
+"No such inventory tree of host %s. You may also have no access to this host."
+msgstr ""
+
 msgid "No such inventory tree."
 msgstr ""
 
@@ -40873,10 +40878,6 @@ msgid "Sorry, there is already an attribute with that name."
 msgstr ""
 
 msgid "Sorry, uploading TAR/GZ files is not yet implemented."
-msgstr ""
-
-#, python-format
-msgid "Sorry, you are not allowed to access the host %s."
 msgstr ""
 
 msgid "Sorry, you are not allowed to activate changes of other users."
@@ -55474,6 +55475,10 @@ msgid ""
 "You are missing the action with the ID <b>%s</b>, which is still used in "
 "some rules."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "You are not allowed to access the host %s."
+msgstr "Dezactiveaza Notificarile"
 
 #, python-format
 msgid "You are not allowed to access this page (%s)."

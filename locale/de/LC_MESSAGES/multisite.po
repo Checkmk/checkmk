@@ -31359,6 +31359,11 @@ msgstr "Host existiert nicht"
 msgid "No such host(s): %s"
 msgstr "Hostname(n) unbekannt: %s"
 
+#, python-format
+msgid ""
+"No such inventory tree of host %s. You may also have no access to this host."
+msgstr ""
+
 msgid "No such inventory tree."
 msgstr "Kein Inventarbaum gefunden."
 
@@ -41895,10 +41900,6 @@ msgstr "Es gibt schon ein Attribut mit diesem Namen."
 
 msgid "Sorry, uploading TAR/GZ files is not yet implemented."
 msgstr "Leider ist der Hochladen von TAR/GZ-Dateien noch nicht umgesetzt."
-
-#, python-format
-msgid "Sorry, you are not allowed to access the host %s."
-msgstr "Entschuldigung, Sie sind nicht berechtigt auf den Host %s zuzugreifen."
 
 msgid "Sorry, you are not allowed to activate changes of other users."
 msgstr "Sie können Änderungen anderer Benutzer nicht anwenden."
@@ -59204,6 +59205,10 @@ msgid ""
 msgstr ""
 "Die Aktion mit der  ID <b>%s</b> fehlt. Diese wird in einigen Regeln "
 "verwendet."
+
+#, fuzzy, python-format
+msgid "You are not allowed to access the host %s."
+msgstr "Entschuldigung, Sie sind nicht berechtigt auf den Host %s zuzugreifen."
 
 #, python-format
 msgid "You are not allowed to access this page (%s)."

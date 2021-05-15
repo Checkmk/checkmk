@@ -1261,7 +1261,12 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
 
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discovery_test_case):
+def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
+    if discovery_test_case.only_host_labels:
+        # check for consistency of the test case
+        assert not discovery_test_case.expected_services
+        return
+
     scenario = cluster_scenario
 
     discovery_parameters = discovery_test_case.parameters
@@ -1280,7 +1285,6 @@ def test__discover_host_labels_and_services_on_cluster(cluster_scenario, discove
             scenario.ipaddress,
             scenario.parsed_sections_broker,
             discovery_parameters,
-            only_host_labels=discovery_test_case.only_host_labels,
         )
 
     services = set(discovered_services)
@@ -1361,7 +1365,6 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
             save_labels=True,
         ),
         lambda hn, _svcdescr: hn,
-        only_host_labels=False,
     ) == {(service.check_plugin_name, None): (
         discovery_status,
         service,

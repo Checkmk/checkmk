@@ -913,11 +913,6 @@ def _get_host_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-    *,
-    # TODO: this is a weird don't-actually-do-something flag.
-    # I am not sure the actual behavior is the desired one.
-    # Clean this up!
-    only_host_labels: bool = False,
 ) -> ServicesByTransition:
 
     services = _get_cluster_services(
@@ -925,14 +920,12 @@ def _get_host_services(
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
-        only_host_labels=only_host_labels,
     ) if host_config.is_cluster else _get_node_services(
         host_config.hostname,
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
         config.get_config_cache().host_of_clustered_service,
-        only_host_labels=only_host_labels,
     )
 
     services.update(_manual_items(host_config))
@@ -950,7 +943,6 @@ def _get_node_services(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
     host_of_clustered_service: Callable[[HostName, str], str],
-    only_host_labels: bool,
 ) -> ServicesTable:
 
     service_result = analyse_discovered_services(
@@ -959,7 +951,6 @@ def _get_node_services(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         only_new=False,
-        only_host_labels=only_host_labels,
         on_error=discovery_parameters.on_error,
     )
 
@@ -1068,7 +1059,6 @@ def _get_cluster_services(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-    only_host_labels: bool,
 ) -> ServicesTable:
 
     if not host_config.nodes:
@@ -1089,7 +1079,6 @@ def _get_cluster_services(
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             only_new=True,
-            only_host_labels=only_host_labels,
             on_error=discovery_parameters.on_error,
         )
 

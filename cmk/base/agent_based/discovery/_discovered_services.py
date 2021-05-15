@@ -52,23 +52,14 @@ _OnError = str  # TODO: Literal["raise", "warn", "ignore"]
 
 
 def analyse_discovered_services(
-        *,
-        host_name: HostName,
-        ipaddress: Optional[HostAddress],
-        parsed_sections_broker: ParsedSectionsBroker,
-        run_plugin_names: Container[CheckPluginName],
-        only_new: bool,  # TODO: find a better name downwards in the callstack
-        on_error: _OnError,
-        only_host_labels: bool = False,  # TODO: get rid of this!
+    *,
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    parsed_sections_broker: ParsedSectionsBroker,
+    run_plugin_names: Container[CheckPluginName],
+    only_new: bool,  # TODO: find a better name downwards in the callstack
+    on_error: _OnError,
 ) -> QualifiedDiscovery[Service]:
-
-    if only_host_labels:
-        existing = _load_existing_services(host_name=host_name)
-        return QualifiedDiscovery(
-            preexisting=existing,
-            current=existing,
-            key=lambda s: s.id(),
-        )
 
     return _analyse_discovered_services(
         existing_services=_load_existing_services(host_name=host_name),

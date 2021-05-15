@@ -30,7 +30,6 @@ from cmk.utils.type_defs import (
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.section as section
 from cmk.base.discovered_labels import HostLabel
 
 from .type_defs import DiscoveryParameters
@@ -67,7 +66,6 @@ def analyse_node_labels(
     """Discovers and processes host labels per real host or node
 
     Side effects:
-     * prints to console (`section`)
      * may write to disk
      * may reset ruleset optimizer
 
@@ -103,7 +101,6 @@ def analyse_cluster_labels(
     """Discovers and processes host labels per cluster host
 
     Side effects:
-     * prints to console (`section`)
      * may write to disk
      * may reset ruleset optimizer
 
@@ -157,8 +154,6 @@ def _analyse_host_labels(
     existing_host_labels: Sequence[HostLabel],
     discovery_parameters: DiscoveryParameters,
 ) -> QualifiedDiscovery[HostLabel]:
-
-    section.section_step("Analyse discovered host labels")
 
     host_labels = QualifiedDiscovery(
         preexisting=existing_host_labels,
@@ -220,8 +215,6 @@ def _discover_host_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
 ) -> Sequence[HostLabel]:
-
-    section.section_step("Discover host labels of section plugins")
 
     # make names unique
     labels_by_name = {

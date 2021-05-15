@@ -236,12 +236,19 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
 ) -> None:
 
+    section.section_step("Analyse discovered host labels")
+
     host_labels = analyse_node_labels(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
     )
+
+    count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
+    section.section_success(f"Found {count} host labels")
+
+    section.section_step("Analyse discovered services")
 
     service_result = analyse_discovered_services(
         host_name=host_name,
@@ -254,19 +261,15 @@ def _do_discovery_for(
     )
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
-    # We should put the persisting and logging in one place.
+    # We should put the persisting in one place.
     autochecks.save_autochecks_file(host_name, service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):
         console.verbose("%s%3d%s %s\n" % (tty.green + tty.bold, count, tty.normal, name))
 
-    section.section_success("%s, %s" % (
-        f"Found {len(service_result.new)} services"
-        if service_result.new else "Found no%s services" % (" new" if only_new else ""),
-        f"{len(host_labels.new)} host labels" if host_labels.new else "no%s host labels" %
-        (" new" if only_new else ""),
-    ))
+    count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
+    section.section_success(f"Found {count} services")
 
 
 # determine changed services on host.

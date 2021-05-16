@@ -61,7 +61,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
-        self.hostname: Final[str] = hostname
+        self.hostname: Final[HostName] = hostname
         self.ipaddress: Final[Optional[str]] = ipaddress
         self.source_type: Final[SourceType] = source_type
         self.fetcher_type: Final[FetcherType] = fetcher_type

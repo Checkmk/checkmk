@@ -10,7 +10,7 @@ from contextlib import suppress
 import enum
 
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
 
@@ -194,7 +194,7 @@ def _get_clustered_services(
 
 
 def get_check_table(
-    hostname: str,
+    hostname: HostName,
     *,
     use_cache: bool = True,
     skip_autochecks: bool = False,

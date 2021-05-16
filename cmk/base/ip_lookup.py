@@ -7,7 +7,18 @@
 import errno
 import os
 import socket
-from typing import Any, cast, Dict, Iterable, List, Mapping, Optional, Protocol, Tuple, Union
+from typing import (
+    Any,
+    cast,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Protocol,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -18,8 +29,9 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
 IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
-NewIPLookupCache = Dict[IPLookupCacheId, str]
-LegacyIPLookupCache = Dict[str, str]
+NewIPLookupCache = MutableMapping[IPLookupCacheId, str]
+LegacyIPLookupCache = Mapping[HostName, str]
+
 UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns: Optional[HostAddress] = None

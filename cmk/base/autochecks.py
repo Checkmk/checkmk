@@ -53,7 +53,7 @@ class AutochecksManager:
 
     def get_autochecks_of(
         self,
-        hostname: str,
+        hostname: HostName,
         compute_check_parameters: ComputeCheckParameters,
         service_description: GetServiceDescription,
     ) -> List[Service]:

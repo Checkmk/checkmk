@@ -12,7 +12,19 @@ import socket
 import sys
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import AnyStr, Callable, Dict, Final, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import (
+    AnyStr,
+    Callable,
+    Dict,
+    Final,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.debug
 import cmk.utils.password_store
@@ -694,8 +706,11 @@ def _get_tag_attributes(
     return {u"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
 
 
-def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config.HostConfig,
-                           nodes: List[str]) -> Dict:
+def get_cluster_attributes(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    nodes: Sequence[HostName],
+) -> Dict:
     sorted_nodes = sorted(nodes)
 
     attrs = {
@@ -731,8 +746,10 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     return attrs
 
 
-def get_cluster_nodes_for_config(config_cache: ConfigCache,
-                                 host_config: HostConfig) -> List[HostName]:
+def get_cluster_nodes_for_config(
+    config_cache: ConfigCache,
+    host_config: HostConfig,
+) -> List[HostName]:
 
     if host_config.nodes is None:
         return []
@@ -748,8 +765,11 @@ def get_cluster_nodes_for_config(config_cache: ConfigCache,
     return nodes
 
 
-def _verify_cluster_address_family(nodes: List[str], config_cache: config.ConfigCache,
-                                   host_config: config.HostConfig) -> None:
+def _verify_cluster_address_family(
+    nodes: List[HostName],
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+) -> None:
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
 
     address_families = [
@@ -772,8 +792,11 @@ def _verify_cluster_address_family(nodes: List[str], config_cache: config.Config
                 (host_config.hostname, ", ".join(address_families)))
 
 
-def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCache,
-                               host_config: config.HostConfig) -> None:
+def _verify_cluster_datasource(
+    nodes: List[HostName],
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+) -> None:
     cluster_tg = host_config.tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")

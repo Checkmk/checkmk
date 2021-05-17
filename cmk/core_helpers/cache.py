@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
     Final,
     Generic,
@@ -128,6 +129,34 @@ class SectionStore(Generic[TRawDataSection]):
         raw_sections_data = _store.load_object_from_file(self.path, default={})
         return PersistedSections[TRawDataSection](
             {SectionName(k): v for k, v in raw_sections_data.items()})
+
+    def update(
+        self,
+        sections: Mapping[SectionName, TRawDataSection],
+        fetch_interval: Callable[[SectionName], Optional[int]],
+        *,
+        now: int,
+        keep_outdated: bool,
+    ) -> PersistedSections[TRawDataSection]:
+        # TODO: This is not race condition free when modifying the data. Either remove
+        # the possible write here and simply ignore the outdated sections or lock when
+        # reading and unlock after writing
+        persisted_sections = self.load()
+        persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
+            sections,
+            {section_name: fetch_interval(section_name) for section_name in sections},
+            cached_at=now,
+        ))
+        if not keep_outdated:
+            for section_name in tuple(persisted_sections):
+                interval = fetch_interval(section_name)
+                if interval is None:
+                    continue
+                if persisted_sections.cached_at(section_name) < now - interval:
+                    del persisted_sections[section_name]
+
+        self.store(persisted_sections)
+        return persisted_sections
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")

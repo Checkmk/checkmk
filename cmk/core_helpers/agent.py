@@ -567,13 +567,18 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 if header.cache_info(now) is not None
             },
         )
-        host_sections.add_persisted_sections(
-            host_sections.sections,
-            section_store=self.section_store,
+        persisted_sections = self.section_store.update(
+            {
+                marker.name: [[str(line) for line in lines] for lines in section
+                             ] for marker, section in sections.items()
+            },
             fetch_interval=lambda section_name: section_info.get(
                 section_name, SectionMarker.default(section_name)).persist,
             now=now,
             keep_outdated=self.keep_outdated,
+        )
+        host_sections.add_persisted_sections(
+            persisted_sections,
             logger=self._logger,
         )
         return host_sections

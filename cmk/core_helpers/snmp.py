@@ -444,12 +444,15 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
                 return fetch_interval
             return now + fetch_interval
 
-        host_sections.add_persisted_sections(
+        persisted_sections = self.section_store.update(
             raw_data,
-            section_store=self.section_store,
             fetch_interval=fetch_interval,
             now=now,
             keep_outdated=self.keep_outdated,
+        )
+
+        host_sections.add_persisted_sections(
+            persisted_sections,
             logger=self._logger,
         )
         return host_sections

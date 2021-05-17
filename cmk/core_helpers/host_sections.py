@@ -6,11 +6,11 @@
 
 import abc
 import logging
-from typing import Callable, cast, Dict, Generic, List, Mapping, MutableMapping, Optional, TypeVar
+from typing import cast, Dict, Generic, List, MutableMapping, Optional, TypeVar
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.core_helpers.cache import PersistedSections, SectionStore, TRawDataSection
+from cmk.core_helpers.cache import PersistedSections, TRawDataSection
 
 from .type_defs import SectionCacheInfo
 
@@ -70,35 +70,15 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
 
     def add_persisted_sections(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
+        persisted_sections: PersistedSections[TRawDataSection],
         *,
-        section_store: SectionStore[TRawDataSection],
-        fetch_interval: Callable[[SectionName], Optional[int]],
-        now: int,
-        keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
-        # TODO: This is not race condition free when modifying the data. Either remove
-        # the possible write here and simply ignore the outdated sections or lock when
-        # reading and unlock after writing
-        persisted_sections = section_store.load()
-        persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
-            sections,
-            {section_name: fetch_interval(section_name) for section_name in sections},
-            cached_at=now,
-        ))
-        if not keep_outdated:
-            for section_name in tuple(persisted_sections):
-                interval = fetch_interval(section_name)
-                if interval is None:
-                    continue
-                if persisted_sections.cached_at(section_name) < now - interval:
-                    del persisted_sections[section_name]
-
-        section_store.store(persisted_sections)
-
+        # This method is on the wrong class.
+        #
+        # See comments on callees.
         self._add_cache_info(persisted_sections)
-        self._add_persisted_sections(persisted_sections, logger=logger)
+        self._add_persisted_sections(self.sections, persisted_sections, logger=logger)
 
     def _add_cache_info(
         self,
@@ -116,8 +96,9 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             if section_name not in self.sections
         })
 
+    @staticmethod
     def _add_persisted_sections(
-        self,
+        sections: MutableMapping[SectionName, TRawDataSection],
         persisted_sections: PersistedSections[TRawDataSection],
         *,
         logger: logging.Logger,
@@ -134,9 +115,9 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
                 continue  # Skip entries of "old" format
 
             # Don't overwrite sections that have been received from the source with this call
-            if section_name in self.sections:
+            if section_name in sections:
                 logger.debug("Skipping persisted section %r, live data available", section_name)
                 continue
 
             logger.debug("Using persisted section %r", section_name)
-            self.sections[section_name] = entry[-1]
+            sections[section_name] = entry[-1]

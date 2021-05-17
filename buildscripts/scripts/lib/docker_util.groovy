@@ -2,7 +2,7 @@
 package lib
 
 // Make sure the docker group from outside the container is added inside of the contaienr
-def get-docker-group-id () {
+def get_docker_group_id() {
     sh DOCKER_GROUP_ID = sh(script: "getent group docker | cut -d: -f3", returnStdout: true).toString().trim()
     return DOCKER_GROUP_ID
 }

@@ -41,7 +41,7 @@ node (NODE) {
     }
     try {
         integration.build(
-            DOCKER_GROUP_ID: DOCKER_GROUP_ID
+            DOCKER_GROUP_ID: DOCKER_GROUP_ID,
             DISTRO_LIST: DISTRO_LIST,
             EDITION: EDITION,
             VERSION: VERSION,

@@ -6,15 +6,50 @@
 
 import json
 from typing import Mapping, Optional, Sequence, Tuple
+from six import ensure_str
 import urllib.parse
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
 
 from cmk.gui.utils.transaction_manager import TransactionManager
-from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.escaping import escape_text
 
 QueryVars = Mapping[str, Sequence[str]]
+
+
+def urlencode_vars(vars_: HTTPVariables) -> str:
+    """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
+    assert isinstance(vars_, list)
+    pairs = []
+    for varname, value in sorted(vars_):
+        assert isinstance(varname, str)
+
+        if isinstance(value, int):
+            value = str(value)
+        elif value is None:
+            # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
+            # variables with None values simply be skipped? We currently can not find the
+            # call sites easily. This may be cleaned up once we establish typing. Until then
+            # we need to be compatible with the previous behavior.
+            value = ""
+
+        value = ensure_str(value)
+        #assert type(value) == str, "%s: %s" % (varname, value)
+        pairs.append((varname, value))
+
+    return urllib.parse.urlencode(pairs)
+
+
+def urlencode(value: Optional[str]) -> str:
+    """Replace special characters in string using the %xx escape.
+    This function returns a str object in py2 and py3
+    """
+    if value is None:
+        return ""
+
+    value = ensure_str(value)
+    assert isinstance(value, str)
+    return urllib.parse.quote_plus(value)
 
 
 def _file_name_from_path(path: str) -> str:
@@ -53,9 +88,9 @@ def makeuri(
         vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
     vars_ = vars_ + addvars
     if filename is None:
-        filename = URLEncoder.urlencode(requested_file_name(request)) + ".py"
+        filename = urlencode(requested_file_name(request)) + ".py"
     if vars_:
-        return filename + "?" + URLEncoder.urlencode_vars(vars_)
+        return filename + "?" + urlencode_vars(vars_)
     return filename
 
 
@@ -67,7 +102,7 @@ def makeuri_contextless(
     if not filename:
         filename = requested_file_name(request) + '.py'
     if vars_:
-        return filename + "?" + URLEncoder.urlencode_vars(vars_)
+        return filename + "?" + urlencode_vars(vars_)
     return filename
 
 

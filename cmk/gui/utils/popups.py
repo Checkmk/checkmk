@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass
 from typing import Dict, Optional, Union
 
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.urls import urlencode_vars
 
 
 @dataclass
@@ -34,7 +34,7 @@ class MethodAjax(PopupMethod):
     def __init__(self, endpoint: str, url_vars: Optional[HTTPVariables]):
         super().__init__(type='ajax')
         self.endpoint = endpoint if endpoint else None
-        self.url_vars = URLEncoder().urlencode_vars(url_vars) if url_vars else None
+        self.url_vars = urlencode_vars(url_vars) if url_vars else None
 
 
 @dataclass(init=False)

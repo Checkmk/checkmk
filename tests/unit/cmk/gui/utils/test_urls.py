@@ -6,18 +6,11 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.gui.globals import html
-from cmk.gui.utils.url_encoder import URLEncoder
-
-
-def test_htmllib_integration(register_builtin_html):
-    assert isinstance(html.encoder, URLEncoder)
-
-    assert html.urlencode_vars([]) == ""
-    assert html.urlencode("") == ""
+from cmk.gui.utils.urls import urlencode_vars, urlencode
 
 
 @pytest.mark.parametrize("inp,out", [
+    ([], ""),
     ([("c", "d"), ("a", "b")], "a=b&c=d"),
     ([("a", 1), ("c", "d")], "a=1&c=d"),
     ([("a", u"ä"), ("c", "d")], "a=%C3%A4&c=d"),
@@ -30,9 +23,7 @@ def test_htmllib_integration(register_builtin_html):
     ([("a", None)], "a="),
 ])
 def test_urlencode_vars(inp, out):
-    result = URLEncoder().urlencode_vars(inp)
-    assert isinstance(result, str)
-    assert result == out
+    assert urlencode_vars(inp) == out
 
 
 @pytest.mark.parametrize(
@@ -49,6 +40,4 @@ def test_urlencode_vars(inp, out):
         ("/", "%2F"),
     ])
 def test_urlencode(inp, out):
-    result = URLEncoder().urlencode(inp)
-    assert isinstance(result, str)
-    assert result == out
+    assert urlencode(inp) == out

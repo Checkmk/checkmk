@@ -121,11 +121,12 @@ import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.utils.urls import (
     makeactionuri,
     makeactionuri_contextless,
     requested_file_name,
+    urlencode_vars,
+    urlencode,
 )
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
@@ -1030,7 +1031,6 @@ class html(ABCHTMLGenerator):
         self.form_vars: List[str] = []
 
         # Register helpers
-        self.encoder = URLEncoder()
         self.response = Response()
         self.output_funnel = OutputFunnel(self.response)
         self.request = request
@@ -1252,11 +1252,11 @@ class html(ABCHTMLGenerator):
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode_vars(self, vars_: List[Tuple[str, Union[None, int, str]]]) -> str:
-        return self.encoder.urlencode_vars(vars_)
+        return urlencode_vars(vars_)
 
     # TODO: Cleanup all call sites to self.encoder.*
     def urlencode(self, value: Optional[str]) -> str:
-        return self.encoder.urlencode(value)
+        return urlencode(value)
 
     #
     # output funnel

@@ -30,7 +30,7 @@ import cmk.utils.version as cmk_version
 from cmk.gui.globals import html
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
-from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 import cmk.gui.escaping as escaping
@@ -281,9 +281,8 @@ def do_remote_automation(site, command, vars_, files=None, timeout=None):
     if not secret:
         raise MKAutomationException(_("You are not logged into the remote site."))
 
-    url = (base_url + "automation.py?" +
-           URLEncoder().urlencode_vars([("command", command), ("secret", secret),
-                                        ("debug", config.debug and '1' or '')]))
+    url = (base_url + "automation.py?" + urlencode_vars([("command", command), ("secret", secret),
+                                                         ("debug", config.debug and '1' or '')]))
 
     response = get_url(url,
                        site.get('insecure', False),

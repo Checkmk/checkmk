@@ -11,7 +11,6 @@ from typing import (
     Iterable,
     List,
     Mapping,
-    Optional,
     Set,
     Tuple,
     TYPE_CHECKING,

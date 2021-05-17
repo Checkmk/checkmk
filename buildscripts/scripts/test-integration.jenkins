@@ -9,6 +9,8 @@ withFolderProperties{
     BRANCH = env.BRANCH
 }
 
+def DOCKER_GROUP_ID
+
 properties([
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
   parameters([
@@ -36,7 +38,7 @@ node (NODE) {
         docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
         integration= load 'buildscripts/scripts/lib/integration.groovy'
         // ID of docker group on the node
-        def DOCKER_GROUP_ID = docker_util.get_docker_group_id()
+        DOCKER_GROUP_ID = docker_util.get_docker_group_id()
 
     }
     try {

@@ -23,7 +23,7 @@ docker run -t -a stdout -a stderr \
     -u "$UID:$UID" \
     -v "$REPO_DIR:$REPO_DIR" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
-    --group-add=docker \
+    --group-add=$(getent group docker | cut -d: -f3') \
     -w "$PWD" \
     -e JUNIT_XML \
     -e PYLINT_ARGS \

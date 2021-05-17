@@ -278,7 +278,7 @@ def test_request_processing(register_builtin_html):
 
 
 def test_response_set_http_cookie(register_builtin_html):
-    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg")
+    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
         "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"

@@ -13,7 +13,6 @@ import werkzeug.wrappers
 import werkzeug.wrappers.json as json  # type: ignore[import]
 from werkzeug.utils import get_content_type
 
-from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 
@@ -328,10 +327,8 @@ class Response(werkzeug.wrappers.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
-    def set_http_cookie(self, key: str, value: str, secure: Optional[bool] = None) -> None:
-        if secure is None:
-            secure = request.is_secure
-        super(Response, self).set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
+    def set_http_cookie(self, key: str, value: str, *, secure: bool) -> None:
+        super().set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")
 
     def set_content_type(self, mime_type: str) -> None:
         self.headers["Content-type"] = get_content_type(mime_type, self.charset)

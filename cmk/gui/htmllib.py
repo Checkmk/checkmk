@@ -1416,7 +1416,7 @@ class html(ABCHTMLGenerator):
         if lang is None:
             self.del_language_cookie()
         else:
-            self.response.set_http_cookie("language", lang)
+            self.response.set_http_cookie("language", lang, secure=self.request.is_secure)
 
     def help(self, text: Union[None, HTML, str]) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.

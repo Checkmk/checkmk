@@ -180,7 +180,9 @@ def update_auth_cookie(username: UserId) -> None:
 
 
 def _set_auth_cookie(username: UserId, session_id: str) -> None:
-    html.response.set_http_cookie(auth_cookie_name(), _auth_cookie_value(username, session_id))
+    html.response.set_http_cookie(auth_cookie_name(),
+                                  _auth_cookie_value(username, session_id),
+                                  secure=html.request.is_secure)
 
 
 def user_from_cookie(raw_cookie: str) -> Tuple[UserId, str, str]:
@@ -594,7 +596,7 @@ class LogoutPage(Page):
         if not html.request.has_cookie('logout'):
             html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
                                                          config.omd_site())
-            html.response.set_http_cookie('logout', '1')
+            html.response.set_http_cookie('logout', '1', secure=html.request.is_secure)
             raise FinalizeRequest(http.client.UNAUTHORIZED)
 
         html.response.delete_cookie('logout')

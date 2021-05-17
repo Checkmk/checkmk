@@ -386,11 +386,11 @@ export function rule_comment_prefix_date_and_user(img, text) {
     textarea.setSelectionRange(text.length, text.length);
 }
 
-export function passwordspec_randomize(img) {
+export function passwordspec_randomize(img, pwlen) {
     var a,
         c,
         password = "";
-    while (password.length < 8) {
+    while (password.length < pwlen) {
         a = parseInt(Math.random() * 128);
         if ((a >= 97 && a <= 122) || (a >= 65 && a <= 90) || (a >= 48 && a <= 57)) {
             c = String.fromCharCode(a);

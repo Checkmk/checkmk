@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.page_menu import (
@@ -634,7 +634,7 @@ class PageBackup:
 
         action = html.request.var("_action")
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
         if action == "delete" and self._may_edit_config():
@@ -832,7 +832,7 @@ class PageEditBackupJob:
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup")]))
 
         vs = self.vs_backup_job()
@@ -1157,7 +1157,7 @@ class PageBackupTargets:
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         ident = html.request.var("target")
@@ -1270,7 +1270,7 @@ class PageEditBackupTarget:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         vs = self.vs_backup_target()
@@ -1721,7 +1721,7 @@ class PageBackupRestore:
         if action is None:
             return None  # Only choosen the target
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
         if action == "delete":
@@ -1791,7 +1791,7 @@ class PageBackupRestore:
                     # Validate the passphrase
                     key_mgmt.decrypt_private_key(key["private_key"], passphrase)
 
-                    html.check_transaction()  # invalidate transid
+                    transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
                     flash(_("The restore has been started."))
                     return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))

@@ -7,7 +7,7 @@
 import json
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 
@@ -96,7 +96,7 @@ class SiteStatus(SidebarSnapin):
         if not config.user.may("sidesnap.sitestatus"):
             return
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return
 
         switch_var = html.request.var("_site_switch")

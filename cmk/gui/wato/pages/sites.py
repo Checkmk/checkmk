@@ -66,7 +66,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redire
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
@@ -186,7 +186,7 @@ class ModeEditSite(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("sites"))
 
         vs = self._valuespec()
@@ -516,7 +516,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def action(self) -> ActionResult:
         delete_id = html.request.get_ascii_input("_delete")
-        if delete_id and html.check_transaction():
+        if delete_id and transactions.check_transaction():
             self._action_delete(delete_id)
 
         logout_id = html.request.get_ascii_input("_logout")
@@ -581,7 +581,7 @@ class ModeDistributedMonitoring(WatoMode):
         if html.request.get_ascii_input("_abort"):
             return redirect(mode_url("sites"))
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         site = configured_sites[login_id]
@@ -1003,7 +1003,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         config_variable = config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if varname in self._current_settings:
@@ -1160,7 +1160,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         action = html.request.get_ascii_input_mandatory("_action")

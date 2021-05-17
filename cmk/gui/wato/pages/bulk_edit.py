@@ -12,7 +12,7 @@ from typing import Type, Optional
 
 from six import ensure_binary
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.i18n import _
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -56,7 +56,7 @@ class ModeBulkEdit(WatoMode):
                                           button_name="_save")
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         config.user.need_permission("wato.edit_hosts")
@@ -136,7 +136,7 @@ class ModeBulkCleanup(WatoMode):
                                               self._get_attributes_for_bulk_cleanup(hosts)))
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         config.user.need_permission("wato.edit_hosts")

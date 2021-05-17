@@ -17,7 +17,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.valuespec import (
     Dictionary,
     CascadingDropdown,
@@ -129,7 +129,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
         if html.request.var('_delete'):
@@ -229,7 +229,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         pass
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
         alias = html.request.get_unicode_input_mandatory("alias").strip()

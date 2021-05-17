@@ -16,7 +16,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.valuespec import (
     IconSelector,
     ImageUpload,
@@ -95,7 +95,7 @@ class ModeIcons(WatoMode):
                   'choose another name for your icon.'))
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if html.request.has_var("_delete"):

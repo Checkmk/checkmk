@@ -28,7 +28,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, transactions
 from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -1377,7 +1377,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             save_rules(rules)
 
         elif html.request.has_var("_move"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 from_pos = html.request.get_integer_input_mandatory("_move")
                 to_pos = html.request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]

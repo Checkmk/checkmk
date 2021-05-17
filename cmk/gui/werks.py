@@ -27,7 +27,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -139,7 +139,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
 
 
 def handle_acknowledgement():
-    if not html.check_transaction():
+    if not transactions.check_transaction():
         return
 
     if html.request.var("_werk_ack"):

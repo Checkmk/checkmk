@@ -22,7 +22,7 @@ from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -127,7 +127,7 @@ class ModeLDAPConfig(LDAPMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         connections = load_connection_config(lock=True)
@@ -214,7 +214,7 @@ class ModeEditLDAPConnection(LDAPMode):
     def _from_vars(self):
         self._connection_id = html.request.get_ascii_input("id")
         self._connection_cfg = {}
-        self._connections = load_connection_config(lock=html.is_transaction())
+        self._connections = load_connection_config(lock=transactions.is_transaction())
 
         if self._connection_id is None:
             clone_id = html.request.var("clone")
@@ -260,7 +260,7 @@ class ModeEditLDAPConnection(LDAPMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         vs = self._valuespec()

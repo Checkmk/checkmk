@@ -52,7 +52,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.valuespec import (
     FixedValue,
     Transform,
@@ -804,7 +804,7 @@ class ModeEditRuleset(WatoMode):
             service=ensure_str(watolib.mk_repr(self._service)),
         )
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(back_url)
 
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
@@ -1487,7 +1487,7 @@ class ABCEditRuleMode(WatoMode):
                                                                                        ""))])
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self._back_url())
 
         self._update_rule_from_vars()

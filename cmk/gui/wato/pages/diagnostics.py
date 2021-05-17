@@ -29,7 +29,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, transactions
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKUserError,
@@ -130,7 +130,7 @@ class ModeDiagnostics(WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if self._job.is_active() or self._diagnostics_parameters is None:

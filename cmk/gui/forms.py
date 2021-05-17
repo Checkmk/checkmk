@@ -11,7 +11,7 @@ from six import ensure_binary, ensure_str
 import cmk.gui.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.config as config
 
@@ -49,9 +49,9 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
                       formname: str = "form",
                       consume_transid: bool = True):
 
-    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
+    if html.request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
         if not preview and consume_transid:
-            html.check_transaction()
+            transactions.check_transaction()
 
         messages: List[str] = []
         new_value: Dict[str, Dict[str, Any]] = {}

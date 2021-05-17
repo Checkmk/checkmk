@@ -51,7 +51,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.page_menu import (
     PageMenu,
@@ -1031,7 +1031,7 @@ class Overridable(Base):
 
         # Deletion
         delname = html.request.var("_delete")
-        if delname and html.check_transaction():
+        if delname and transactions.check_transaction():
             owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
             pagetype_title = cls.phrase("title")
 
@@ -1056,7 +1056,7 @@ class Overridable(Base):
             flash(_('Your %s has been deleted.') % pagetype_title)
             html.reload_whole_page(cls.list_url())
 
-        elif html.request.var("_bulk_delete") and html.check_transaction():
+        elif html.request.var("_bulk_delete") and transactions.check_transaction():
             cls._bulk_delete_after_confirm()
 
         my_instances, foreign_instances, builtin_instances = cls.get_instances()
@@ -1283,7 +1283,7 @@ class Overridable(Base):
         )
 
         varprefix = ""
-        if html.request.get_ascii_input("filled_in") == "edit" and html.check_transaction():
+        if html.request.get_ascii_input("filled_in") == "edit" and transactions.check_transaction():
             try:
                 new_page_dict = vs.from_html_vars(varprefix)
                 vs.validate_value(new_page_dict, varprefix)

@@ -81,7 +81,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, transactions
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -507,7 +507,7 @@ def page_list(what,
 
     # Deletion of visuals
     delname = html.request.var("_delete")
-    if delname and html.check_transaction():
+    if delname and transactions.check_transaction():
         if config.user.may('general.delete_foreign_%s' % what):
             user_id_str = html.request.get_unicode_input('_user_id', config.user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
@@ -693,7 +693,7 @@ def page_create_visual(what, info_keys, next_url=None):
           'of objects you want to restrict to manually.') % what_s)
     html.close_p()
 
-    if html.request.var('save') and html.check_transaction():
+    if html.request.var('save') and transactions.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars('single_infos')
             vs_infos.validate_value(single_infos, 'single_infos')
@@ -1086,7 +1086,7 @@ def page_edit_visual(
                         filename=visual_type.show_url,
                     )
 
-                if html.check_transaction():
+                if transactions.check_transaction():
                     all_visuals[(owner_user_id, visual["name"])] = visual
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:

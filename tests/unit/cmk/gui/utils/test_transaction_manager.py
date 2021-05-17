@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 
 import cmk.gui.config as config
 import cmk.gui.http as http
-from cmk.gui.globals import html
+from cmk.gui.globals import transactions
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 
@@ -21,12 +21,10 @@ def tm():
     return TransactionManager(request)
 
 
-def test_htmllib_integration(register_builtin_html):
-    assert html.transaction_manager
-
-    getattr(html, "transaction_valid")
-    getattr(html, "is_transaction")
-    getattr(html, "check_transaction")
+def test_request_context_integration(register_builtin_html):
+    assert callable(transactions.transaction_valid)
+    assert callable(transactions.is_transaction)
+    assert callable(transactions.check_transaction)
 
 
 def test_transaction_new_id(tm):

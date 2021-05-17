@@ -6,7 +6,7 @@
 
 from typing import List, Tuple, Union, Optional
 from cmk.gui.utils.html import HTML
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.i18n import _
 
 
@@ -28,7 +28,7 @@ def confirm_with_preview(msg: Union[str, HTML],
     """
     if html.request.var("_do_actions") == _("Cancel"):
         # User has pressed "Cancel", now invalidate the unused transid
-        html.check_transaction()
+        transactions.check_transaction()
         return None  # None --> "Cancel"
 
     if not any(html.request.has_var(varname) for _title, varname in confirm_options):
@@ -49,4 +49,4 @@ def confirm_with_preview(msg: Union[str, HTML],
         return False  # False --> "Dialog shown, no answer yet"
 
     # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
-    return True if html.check_transaction() else None
+    return True if transactions.check_transaction() else None

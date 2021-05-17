@@ -17,7 +17,7 @@ from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
 from cmk.gui.i18n import _, _u
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -171,7 +171,7 @@ class ModeTags(ABCTagMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
         if html.request.has_var("_delete"):
@@ -612,7 +612,7 @@ class ModeEditAuxtag(ABCEditTagMode):
                                           button_name="save")
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()
@@ -692,7 +692,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                                           button_name="save")
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
         vs = self._valuespec()

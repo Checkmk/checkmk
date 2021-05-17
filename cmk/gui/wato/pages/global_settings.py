@@ -35,7 +35,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -275,7 +275,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def action(self) -> ActionResult:
         if html.request.var("_reset"):
-            if not html.check_transaction():
+            if not transactions.check_transaction():
                 return None
 
             try:
@@ -456,7 +456,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if varname in self._current_settings:

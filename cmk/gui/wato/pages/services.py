@@ -24,7 +24,7 @@ from cmk.gui.background_job import JobStatusStates
 from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -239,7 +239,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ]
 
         if self._options.action not in job_actions \
-           and html.check_transaction():
+           and transactions.check_transaction():
             discovery_result = self._handle_action(discovery_result, request)
 
         if not discovery_result.check_table_created and previous_discovery_result:
@@ -385,7 +385,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         if self._options.action in [DiscoveryAction.REFRESH, DiscoveryAction.SCAN,
                                     DiscoveryAction.STOP] \
-                and html.transaction_manager.check_transaction():
+                and transactions.check_transaction():
             return False
 
         if self._is_active(previous_discovery_result):
@@ -1595,6 +1595,6 @@ def _start_js_call(host: watolib.CREHost,
         json.dumps(host.name()),
         json.dumps(host.folder().path()),
         json.dumps(options._asdict()),
-        json.dumps(html.transaction_manager.get()),
+        json.dumps(transactions.get()),
         json.dumps(request_vars),
     )

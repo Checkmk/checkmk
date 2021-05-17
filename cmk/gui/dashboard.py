@@ -48,7 +48,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -1690,7 +1690,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
     breadcrumb = _dashlet_editor_breadcrumb(name, dashboard, title)
     html.header(title, breadcrumb=breadcrumb, page_menu=_choose_view_page_menu(breadcrumb))
 
-    if html.request.var('save') and html.check_transaction():
+    if html.request.var('save') and transactions.check_transaction():
         try:
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
@@ -1838,7 +1838,7 @@ class EditDashletPage(Page):
                 properties_elements
             ), "Dashboard element settings and properties have a shared option name"
 
-        if html.request.var('save') and html.transaction_valid():
+        if html.request.var('save') and transactions.transaction_valid():
             try:
                 general_properties = vs_general.from_html_vars('general')
                 vs_general.validate_value(general_properties, 'general')

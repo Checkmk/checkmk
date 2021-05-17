@@ -44,7 +44,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import display_options, g, html
+from cmk.gui.globals import display_options, g, html, transactions
 from cmk.gui.globals import request as global_request
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
@@ -610,7 +610,7 @@ class GUIViewRenderer(ABCViewRenderer):
     ):
         view_spec = self.view.spec
 
-        if html.transaction_valid() and html.do_actions():
+        if transactions.transaction_valid() and html.do_actions():
             html.set_browser_reload(0)
 
         # Show/Hide the header with page title, MK logo, etc.
@@ -660,7 +660,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
 
-            if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
+            if html.do_actions() and transactions.transaction_valid(
+            ):  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
                     backurl = makeuri(global_request, [], delvars=['filled_in', 'actions'])
@@ -673,7 +674,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
         elif row_count > 0 and config.user.may("general.act") \
-                and html.do_actions() and html.transaction_valid():
+                and html.do_actions() and transactions.transaction_valid():
 
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
@@ -1265,7 +1266,7 @@ def show_create_view_dialog(next_url=None):
                                    button_name="save",
                                    save_title=_("Continue")))
 
-    if html.request.var('save') and html.check_transaction():
+    if html.request.var('save') and transactions.check_transaction():
         try:
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')

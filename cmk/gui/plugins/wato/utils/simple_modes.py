@@ -19,7 +19,7 @@ from typing import Optional, List, Type
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
@@ -199,7 +199,7 @@ class SimpleListMode(_SimpleWatoModeBase):
         return _("Add %s") % self._mode_type.name_singular()
 
     def action(self) -> ActionResult:
-        if not html.transaction_valid():
+        if not transactions.transaction_valid():
             return None
 
         action_var = html.request.get_str_input("_action")
@@ -209,7 +209,7 @@ class SimpleListMode(_SimpleWatoModeBase):
         if action_var != "delete":
             return self._handle_custom_action(action_var)
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url(self._mode_type.list_mode_name()))
 
         entries = self._store.load_for_modification()
@@ -424,7 +424,7 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
         return []
 
     def action(self) -> ActionResult:
-        if not html.transaction_valid():
+        if not transactions.transaction_valid():
             return redirect(mode_url(self._mode_type.list_mode_name()))
 
         vs = self.valuespec()

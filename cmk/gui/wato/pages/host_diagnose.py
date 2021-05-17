@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -132,7 +132,7 @@ class ModeDiagHost(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if html.request.var('_try'):
@@ -275,8 +275,8 @@ class ModeDiagHost(WatoMode):
             html.close_tr()
             html.close_table()
             html.javascript('cmk.host_diagnose.start_test(%s, %s, %s)' %
-                            (json.dumps(ident), json.dumps(self._hostname),
-                             json.dumps(html.transaction_manager.fresh_transid())))
+                            (json.dumps(ident), json.dumps(
+                                self._hostname), json.dumps(transactions.fresh_transid())))
 
     def _vs_host(self):
         return Dictionary(
@@ -358,7 +358,7 @@ class ModeAjaxDiagHost(AjaxPage):
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             raise MKAuthException(_("Invalid transaction"))
 
         request = self.webapi_request()
@@ -428,7 +428,7 @@ class ModeAjaxDiagHost(AjaxPage):
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {
-            "next_transid": html.transaction_manager.fresh_transid(),
+            "next_transid": transactions.fresh_transid(),
             "status_code": result[0],
             "output": ensure_str(result[1], errors="replace"),
         }

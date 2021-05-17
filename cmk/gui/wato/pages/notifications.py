@@ -22,7 +22,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -526,22 +526,22 @@ class ModeNotifications(ABCNotificationsMode):
 
     def action(self) -> ActionResult:
         if html.request.has_var("_show_user"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 self._show_user_rules = bool(html.request.var("_show_user"))
                 self._save_notification_display_options()
 
         elif html.request.has_var("_show_backlog"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 self._show_backlog = bool(html.request.var("_show_backlog"))
                 self._save_notification_display_options()
 
         elif html.request.has_var("_show_bulks"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 self._show_bulks = bool(html.request.var("_show_bulks"))
                 self._save_notification_display_options()
 
         elif html.request.has_var("_replay"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 nr = html.request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
                 flash(_("Replayed notifiation number %d") % (nr + 1))
@@ -797,7 +797,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         self._start_async_repl = False
 
     def _from_vars(self):
-        self._users = userdb.load_users(lock=html.is_transaction() or html.request.has_var("_move"))
+        self._users = userdb.load_users(
+            lock=transactions.is_transaction() or html.request.has_var("_move"))
 
         try:
             user = self._users[self._user_id()]
@@ -814,7 +815,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         return _("Custom notification table for user %s") % self._user_id()
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url(user=self._user_id()))
 
         if html.request.has_var("_delete"):
@@ -1382,7 +1383,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                           button_name="save")
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return self._back_mode()
 
         vs = self._valuespec()
@@ -1435,7 +1436,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return ModeNotifications
 
     def _load_rules(self) -> List[NotificationRule]:
-        return load_notification_rules(lock=html.is_transaction())
+        return load_notification_rules(lock=transactions.is_transaction())
 
     def _save_rules(self, rules: List[NotificationRule]) -> None:
         save_notification_rules(rules)
@@ -1459,7 +1460,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
 
 class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
     def _load_rules(self) -> List[NotificationRule]:
-        self._users = userdb.load_users(lock=html.is_transaction())
+        self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
                 None, _("The user you are trying to edit "

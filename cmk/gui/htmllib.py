@@ -112,6 +112,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.globals import transactions
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
@@ -120,7 +121,6 @@ import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.utils.urls import (
     makeactionuri,
@@ -1032,7 +1032,6 @@ class html(ABCHTMLGenerator):
 
         # Register helpers
         self.encoder = URLEncoder()
-        self.transaction_manager = TransactionManager(request)
         self.response = Response()
         self.output_funnel = OutputFunnel(self.response)
         self.request = request
@@ -1249,22 +1248,6 @@ class html(ABCHTMLGenerator):
         return request
 
     #
-    # Transaction IDs
-    #
-
-    # TODO: Cleanup all call sites to self.transaction_manager.*
-    def transaction_valid(self) -> bool:
-        return self.transaction_manager.transaction_valid()
-
-    # TODO: Cleanup all call sites to self.transaction_manager.*
-    def is_transaction(self) -> bool:
-        return self.transaction_manager.is_transaction()
-
-    # TODO: Cleanup all call sites to self.transaction_manager.*
-    def check_transaction(self) -> bool:
-        return self.transaction_manager.check_transaction()
-
-    #
     # Encoding
     #
 
@@ -1478,7 +1461,7 @@ class html(ABCHTMLGenerator):
                       delvars: Optional[Sequence[str]] = None) -> str:
         return makeactionuri(
             self.request,
-            self.transaction_manager,
+            transactions,
             addvars,
             filename=filename,
             delvars=delvars,
@@ -1489,7 +1472,7 @@ class html(ABCHTMLGenerator):
                                   filename: Optional[str] = None) -> str:
         return makeactionuri_contextless(
             self.request,
-            self.transaction_manager,
+            transactions,
             addvars,
             filename=filename,
         )
@@ -1758,7 +1741,7 @@ class html(ABCHTMLGenerator):
         if add_transid:
             self.hidden_field(
                 "_transid",
-                str(self.transaction_manager.get()),
+                str(transactions.get()),
                 add_var=True,
             )
         self.form_name = name
@@ -1908,7 +1891,7 @@ class html(ABCHTMLGenerator):
                    disabled: Optional[str] = None,
                    class_: CSSSpec = None) -> None:
         if add_transid:
-            href += "&_transid=%s" % self.transaction_manager.get()
+            href += "&_transid=%s" % transactions.get()
 
         if not obj_id:
             obj_id = utils.gen_id()

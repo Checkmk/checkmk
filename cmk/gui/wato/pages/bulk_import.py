@@ -24,7 +24,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -128,7 +128,7 @@ class ModeBulkImport(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if html.transaction_valid():
+        if transactions.transaction_valid():
             if html.request.has_var("_do_upload"):
                 self._upload_csv_file()
 

@@ -14,6 +14,8 @@ from typing import Any, TYPE_CHECKING, Optional, List
 
 from werkzeug.local import LocalProxy, LocalStack
 
+from cmk.gui.utils.transaction_manager import TransactionManager
+
 #####################################################################
 # a namespace for storing data during an application context
 # Cyclical import
@@ -129,6 +131,9 @@ class RequestContext:
 
         self.request = req
         self.response = resp
+
+        self.transactions = TransactionManager(req)
+
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
@@ -186,4 +191,5 @@ session: 'userdb.Session' = request_local_attr('session')
 
 html: 'htmllib.html' = request_local_attr('html')
 timeout_manager: 'TimeoutManager' = request_local_attr('timeout_manager')
+transactions: 'TransactionManager' = request_local_attr('transactions')
 display_options = request_local_attr('display_options')

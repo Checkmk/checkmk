@@ -23,7 +23,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.valuespec import (
     ValueSpec,
     FixedValue,
@@ -125,7 +125,7 @@ class ModeTimeperiods(WatoMode):
         if not delname:
             return redirect(mode_url("timeperiods"))
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("timeperiods"))
 
         if delname in watolib.timeperiods.builtin_timeperiods():
@@ -411,7 +411,7 @@ class ModeTimeperiodImportICal(WatoMode):
             raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         vs_ical = self._vs_ical()
@@ -807,7 +807,7 @@ class ModeEditTimeperiod(WatoMode):
         return False
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         vs = self._valuespec()  # returns a Dictionary object

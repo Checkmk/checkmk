@@ -13,7 +13,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.plugins.sidebar import (
     PageHandlers,
     SidebarSnapin,
@@ -157,7 +157,7 @@ class MasterControlSnapin(SidebarSnapin):
         if not config.user.may("sidesnap.master_control"):
             return
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return
 
         site = html.request.get_ascii_input_mandatory("site")

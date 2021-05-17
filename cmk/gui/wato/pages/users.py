@@ -33,7 +33,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.valuespec import (
     UserID,
     EmailAddress,
@@ -198,7 +198,7 @@ class ModeUsers(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if html.request.var('_delete'):
@@ -566,7 +566,7 @@ class ModeEditUser(WatoMode):
         self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
-        self._users = userdb.load_users(lock=html.is_transaction())
+        self._users = userdb.load_users(lock=transactions.is_transaction())
         new_user = userdb.new_user_template('htpasswd')
         if self._user_id is not None:
             self._user = self._users.get(UserId(self._user_id), new_user)
@@ -616,7 +616,7 @@ class ModeEditUser(WatoMode):
             )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user

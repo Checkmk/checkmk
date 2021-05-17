@@ -32,7 +32,7 @@ import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
@@ -136,7 +136,7 @@ class ModeRoles(RoleManagement, WatoMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if html.request.var("_delete"):
@@ -145,7 +145,7 @@ class ModeRoles(RoleManagement, WatoMode):
             if delid not in self._roles:
                 raise MKUserError(None, _("This role does not exist."))
 
-            if html.transaction_valid() and self._roles[delid].get('builtin'):
+            if transactions.transaction_valid() and self._roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
             users = userdb.load_users()

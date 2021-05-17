@@ -35,7 +35,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -466,12 +466,12 @@ class ModeFolder(WatoMode):
         # Operations on SUBFOLDERS
 
         if html.request.var("_delete_folder"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 self._folder.delete_subfolder(html.request.var("_delete_folder"))
             return redirect(folder_url)
 
         if html.request.has_var("_move_folder_to"):
-            if html.check_transaction():
+            if transactions.check_transaction():
                 what_folder = watolib.Folder.folder(html.request.var("_ident"))
                 target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
@@ -494,7 +494,7 @@ class ModeFolder(WatoMode):
                 return redirect(folder_url)
 
         # bulk operation on hosts
-        if not html.transaction_valid():
+        if not transactions.transaction_valid():
             return redirect(folder_url)
 
         # Host table: No error message on search filter reset
@@ -1113,7 +1113,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         else:
             folder = watolib.Folder.current()
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
         # Title

@@ -88,7 +88,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
 )
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
@@ -1318,7 +1318,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if self._event_simulation_action():
@@ -1746,7 +1746,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -2061,7 +2061,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rule_packs"))
 
         if not self._new:
@@ -2195,7 +2195,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
         if not self._new:
@@ -2469,7 +2469,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
         def_value = config_variable.valuespec().default_value()
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         if varname in self._current_settings:
@@ -2633,7 +2633,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if html.request.has_var("_delete"):

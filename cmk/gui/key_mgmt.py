@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.valuespec import (
     Dictionary,
     Password,
@@ -214,7 +214,7 @@ class PageEditKey:
                                           save_title=_("Create"))
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
@@ -302,7 +302,7 @@ class PageUploadKey:
                                           save_title=_("Upload"))
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
@@ -428,7 +428,7 @@ class PageDownloadKey:
                                           save_title=_("Download"))
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             keys = self.load()
 
             try:

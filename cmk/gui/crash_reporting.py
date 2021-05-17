@@ -25,7 +25,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
@@ -193,7 +193,7 @@ class PageCrash(ABCCrashReportPage):
             html.footer()
             return
 
-        if html.request.has_var("_report") and html.check_transaction():
+        if html.request.has_var("_report") and transactions.check_transaction():
             details = self._handle_report_form(crash_info)
         else:
             details = {}

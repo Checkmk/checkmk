@@ -31,7 +31,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, transactions
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
@@ -3188,7 +3188,7 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
-    return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
+    return folder_preserving_link(vars_ + [("_transid", transactions.get())])
 
 
 def get_folder_title_path(path, with_links=False):

@@ -18,7 +18,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -98,7 +98,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
 
         if not self._new:
             matching_attrs = [a for a in self._attrs if a['name'] == self._name]
@@ -161,7 +161,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
 
     def action(self) -> ActionResult:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
         title = html.request.get_unicode_input_mandatory("title").strip()
@@ -405,7 +405,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
 
     @property
     def _attrs(self):
@@ -467,7 +467,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if not html.request.var('_delete'):

@@ -29,7 +29,7 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, local, request as global_request
+from cmk.gui.globals import html, local, request as global_request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
@@ -70,7 +70,7 @@ def UserSessionContext(user_id: UserId) -> Iterator[None]:
         try:
             yield
         finally:
-            html.transaction_manager.store_new()
+            transactions.store_new()
             userdb.on_end_of_request(user_id)
 
 
@@ -332,7 +332,7 @@ def _check_auth_automation() -> UserId:
 
     if verify_automation_secret(user_id, secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
-        html.transaction_manager.ignore()
+        transactions.ignore()
         set_auth_type("automation")
         return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)

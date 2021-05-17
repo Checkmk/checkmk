@@ -11,7 +11,7 @@ from typing import Iterator, Optional, Type, overload, Tuple
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
 from cmk.gui.valuespec import (
@@ -319,7 +319,7 @@ class ModeEditHost(ABCHostMode):
 
     def action(self) -> ActionResult:
         folder = watolib.Folder.current()
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
         if html.request.var("_update_dns_cache") and self._should_use_dns_cache():
@@ -521,7 +521,7 @@ class CreateHostMode(ABCHostMode):
         return host
 
     def action(self) -> ActionResult:
-        if not html.transaction_valid():
+        if not transactions.transaction_valid():
             return redirect(mode_url("folder"))
 
         attributes = watolib.collect_attributes(self._host_type_name(), new=True)
@@ -532,7 +532,7 @@ class CreateHostMode(ABCHostMode):
 
         folder = watolib.Folder.current()
 
-        if html.check_transaction():
+        if transactions.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
         self._host = folder.host(hostname)

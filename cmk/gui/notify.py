@@ -19,7 +19,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
@@ -131,7 +131,7 @@ def page_notify():
 
     vs_notify = _vs_notify()
 
-    if html.check_transaction():
+    if transactions.check_transaction():
         try:
             msg = vs_notify.from_html_vars("_notify")
             vs_notify.validate_value(msg, "_notify")

@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -269,7 +269,7 @@ class ModeBIEditPack(ABCBIMode):
         return super().title() + " - " + _("Add BI Pack")
 
     def action(self) -> ActionResult:
-        if html.check_transaction():
+        if transactions.check_transaction():
             vs_config = self._vs_pack().from_html_vars("bi_pack")
             self._vs_pack().validate_value(vs_config, 'bi_pack')
             if self._bi_pack:
@@ -450,7 +450,7 @@ class ModeBIPacks(ABCBIMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url())
 
         if not html.request.has_var("_delete"):
@@ -670,7 +670,7 @@ class ModeBIRules(ABCBIMode):
     def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
         if html.request.var("_del_rule"):
@@ -986,7 +986,7 @@ class ModeBIEditRule(ABCBIMode):
                                               self.bi_pack))
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
         self.verify_pack_permission(self.bi_pack)
@@ -1473,7 +1473,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(mode_url("bi_aggregations", pack=self.bi_pack.id))
 
         vs_aggregation = self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id)
@@ -1713,7 +1713,7 @@ class BIModeAggregations(ABCBIMode):
 
     def action(self) -> ActionResult:
         self.verify_pack_permission(self.bi_pack)
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
         if html.request.var("_del_aggr"):

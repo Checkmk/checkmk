@@ -37,7 +37,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.page_menu import (
@@ -1117,7 +1117,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     value["service"] = service
     value["site"] = site_id
 
-    if html.check_transaction():
+    if transactions.check_transaction():
         try:
             vs = _vs_annotation()
             value = vs.from_html_vars("_editanno")
@@ -1248,7 +1248,7 @@ def handle_delete_annotations():
 
 def handle_edit_annotations(breadcrumb: Breadcrumb) -> bool:
     # Avoid reshowing edit form after edit and reload
-    if html.is_transaction() and not html.transaction_valid():
+    if transactions.is_transaction() and not transactions.transaction_valid():
         return False
     if html.request.var("anno_host") and not html.request.var("_delete_annotation"):
         finished = edit_annotation(breadcrumb)

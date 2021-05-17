@@ -17,7 +17,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
 
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, transactions
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
@@ -135,7 +135,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         return breadcrumb
 
     def _action(self) -> None:
-        if not html.transaction_valid():
+        if not transactions.transaction_valid():
             return
 
         action_handler = gui_background_job.ActionHandler(self._breadcrumb(self._title()))

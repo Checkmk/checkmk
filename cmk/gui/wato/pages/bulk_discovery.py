@@ -15,7 +15,7 @@ import cmk.gui.forms as forms
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, transactions
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -105,7 +105,7 @@ class ModeBulkDiscovery(WatoMode):
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
-            html.check_transaction()
+            transactions.check_transaction()
             self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()

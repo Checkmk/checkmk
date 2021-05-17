@@ -362,7 +362,7 @@ class Section(object):
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % self._cleanse_section_header(piggytarget))
+                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')

@@ -43,6 +43,9 @@ def _transform_legacy_parameters_jvm_memory(params):
         ("heap", "perc_heap"),
         ("nonheap", "perc_nonheap"),
     ):
+        if newkey in params:
+            new_params[newkey] = params[newkey]
+            continue
         levels = params.get(key)
         if isinstance(levels, tuple) and isinstance(levels[0], float):
             new_params[newkey] = levels

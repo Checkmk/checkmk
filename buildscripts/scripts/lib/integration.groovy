@@ -8,7 +8,7 @@ def build(Map args) {
         BUILD_IMAGE.pull()
         // The commands are executed with the 1001:1000 UID:GID (non-root).
         // The download credentials are needed by the image build part
-        BUILD_IMAGE.inside('--group-add=docker --ulimit nofile=1024:1024 --env HOME=/home/jenkins -v /var/run/docker.sock:/var/run/docker.sock') {
+        BUILD_IMAGE.inside("--group-add=${DOCKER_GROUP_ID} --ulimit nofile=1024:1024 --env HOME=/home/jenkins -v /var/run/docker.sock:/var/run/docker.sock") {
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             def CMK_VERSION = versioning.get_cmk_version(scm, args.VERSION)
 

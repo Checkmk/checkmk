@@ -4591,7 +4591,7 @@ rulespec_registry.register(
 def _valuespec_agent_encryption():
     return Dictionary(
         elements=[
-            ("passphrase", PasswordSpec(title=_("Encryption secret"), allow_empty=False)),
+            ("passphrase", PasswordSpec(title=_("Encryption secret"), pwlen=16, allow_empty=False)),
             ("use_regular",
              DropdownChoice(
                  title=_("Encryption for Agent"),
@@ -4616,8 +4616,12 @@ def _valuespec_agent_encryption():
                                      ("disable", _("Disable (drop encrypted data)"))])),
         ],
         optional_keys=[],
-        title=_("Encryption"),
-        help=_("Control encryption of data sent from agent to host."),
+        title=_("Encryption (Linux, Windows)"),
+        help=_("Control encryption of data sent from agents to Checkmk.") + "<br>" +
+        _("<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
+          "agent and the Windows agent. However, when setting the Encryption settings to "
+          "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
+          "Please keep this in mind when configuring this ruleset."),
     )
 
 

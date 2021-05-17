@@ -5418,7 +5418,8 @@ class ValueEncrypter:
 
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
-    def __init__(self, hidden: bool = True, **kwargs: Any) -> None:
+    def __init__(self, hidden: bool = True, pwlen: int = 8, **kwargs: Any) -> None:
+        self._pwlen = pwlen
         super().__init__(hidden=hidden, encrypt_value=False, **kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
@@ -5427,7 +5428,7 @@ class PasswordSpec(Password):
             html.icon_button("#",
                              _("Randomize password"),
                              "random",
-                             onclick="cmk.valuespecs.passwordspec_randomize(this);")
+                             onclick=f"cmk.valuespecs.passwordspec_randomize(this, {self._pwlen});")
         if self._hidden:
             html.icon_button("#",
                              _("Show/Hide password"),

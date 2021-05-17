@@ -71,8 +71,8 @@ storcli_info()
             ;;
             "PCI Address = "*)
                 PCIA=$( echo "$line" | cut -d ' ' -f 4 | (IFS=: read -r _d _c _b _a; echo ${_a}${_b}:$_c:$_d) )
-                _SGP=( "/sys/devices/pci*/*/*$PCIA.*/*/*/*/*/sg*" )
-                SG=$( basename $( echo $_SGP | cut -d ' ' -f 1 ) )
+                SG_PATH=( "/sys/devices/pci*/*/*$PCIA.*/*/*/*/*/sg*" )
+                SG=$( basename $( echo $SG_PATH | cut -d ' ' -f 1 ) )
             ;;
             "EID:Slt "*)
                 read -r line;
@@ -82,8 +82,8 @@ storcli_info()
                             break
                         ;;
                         *)
-                            EID=$( echo "$line" | awk '{print $1}' | cut -d ':' -f 1 )
-                            Slt=$( echo "$line" | awk '{print $1}' | cut -d ':' -f 2 )
+                            EID_Slt=$( echo "$line" | awk '{print $1}' )
+                            echo "$EID_Slt" | IFS=: read -r EID Slt 
                             DID=$( echo "$line" | awk '{print $2}' )
                             #DG=$( echo "$line" | awk '{print $4}' )
                             MODEL=$( echo "$line" | awk '{print $12}' )

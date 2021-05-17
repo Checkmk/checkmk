@@ -31,7 +31,7 @@ node(NODE) {
             notify = load('buildscripts/scripts/lib/notify.groovy')
             versioning = load('buildscripts/scripts/lib/versioning.groovy')
             str_mod = load('buildscripts/scripts/lib/str_mod.groovy')
-            docker_util = load ('buildscripts/scripts/lib/docker-util.groovy')
+            docker_util = load ('buildscripts/scripts/lib/docker_util.groovy')
         }
     }
 }

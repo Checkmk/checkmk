@@ -70,9 +70,9 @@ storcli_info()
                 CTRL=$( echo "$line" | cut -d ' ' -f 3 )
             ;;
             "PCI Address = "*)
-		    PCIA=$( echo "$line" | cut -d ' ' -f 4 | (IFS=: read -r _d _c _b _a; echo ${_a}${_b}:$_c:$_d) )
-		_SGP=( "/sys/devices/pci*/*/*$PCIA.*/*/*/*/*/sg*" )
-		SG=$( basename $( echo $_SGP | cut -d ' ' -f 1 ) )
+                PCIA=$( echo "$line" | cut -d ' ' -f 4 | (IFS=: read -r _d _c _b _a; echo ${_a}${_b}:$_c:$_d) )
+                _SGP=( "/sys/devices/pci*/*/*$PCIA.*/*/*/*/*/sg*" )
+                SG=$( basename $( echo $_SGP | cut -d ' ' -f 1 ) )
             ;;
             "EID:Slt "*)
                 read -r line;
@@ -85,10 +85,10 @@ storcli_info()
                             EID=$( echo "$line" | awk '{print $1}' | cut -d ':' -f 1 )
                             Slt=$( echo "$line" | awk '{print $1}' | cut -d ':' -f 2 )
                             DID=$( echo "$line" | awk '{print $2}' )
-                            #DG=$( echo "$line" | cut -d ' ' -f 4 )
-			    MODEL=$( echo "$line" | awk '{print $12}' )
-			    VENDOR=${MODEL}
-			    smartctl -d "megaraid,${DID}" -v 9,raw48 -A /dev/${SG}     | \
+                            #DG=$( echo "$line" | awk '{print $4}' )
+                            MODEL=$( echo "$line" | awk '{print $12}' )
+                            VENDOR=${MODEL}
+                            smartctl -d "megaraid,${DID}" -v 9,raw48 -A /dev/${SG}     | \
                               grep Always  | grep -E -v '^190(.*)Temperature(.*)' | \
                               sed "s|^|Enc${EID}/Slot${Slt} $VENDOR $MODEL |"
                         ;;

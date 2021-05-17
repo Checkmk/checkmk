@@ -642,7 +642,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'jolokia_jvm_threading.pool',
         'jolokia_metrics_app_sess_default_levels',
         'jolokia_metrics_cache_hits_default_levels',
-        'jolokia_metrics_mem_default_levels',
         'jolokia_metrics_perm_gen_default_levels',
         'jolokia_metrics_queue_default_levels',
         'jolokia_metrics_serv_req_default_levels',

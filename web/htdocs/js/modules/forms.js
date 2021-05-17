@@ -17,6 +17,9 @@ export function enable_dynamic_form_elements(container = null) {
     enable_label_input_fields(container);
 }
 
+var g_previous_timeout_id = null;
+var g_ajax_obj = null;
+
 export function enable_select2_dropdowns(container) {
     let elements;
     if (!container) container = $(document);
@@ -42,7 +45,6 @@ function enable_label_input_fields(container) {
         let max_labels = element.getAttribute("data-max-labels");
         let world = element.getAttribute("data-world");
 
-        let ajax_obj;
         let tagify_args = {
             pattern: /^[^:]+:[^:]+$/,
             dropdown: {
@@ -128,33 +130,48 @@ function enable_label_input_fields(container) {
                     })
                 );
 
-            if (ajax_obj) ajax_obj.abort();
-
-            ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
-                method: "POST",
-                post_data: post_data,
-                response_handler: function (handler_data, ajax_response) {
-                    var response = JSON.parse(ajax_response);
-                    if (response.result_code != 0) {
-                        console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
-                        return;
-                    }
-
-                    handler_data.tagify.settings.whitelist.splice(
-                        10,
-                        response.result.length,
-                        ...response.result
-                    );
-                    // render the suggestions dropdown
-                    handler_data.tagify.loading(false);
-                    handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
-                },
-                handler_data: {
-                    value: value,
-                    tagify: tagify,
-                },
-            });
+            if (g_previous_timeout_id !== null) {
+                clearTimeout(g_previous_timeout_id);
+            }
+            g_previous_timeout_id = setTimeout(function () {
+                kill_previous_autocomplete_call();
+                ajax_call_autocomplete_labels(post_data, tagify, value);
+            }, 300);
         });
+    });
+}
+
+function kill_previous_autocomplete_call() {
+    if (g_ajax_obj) {
+        g_ajax_obj.abort();
+        g_ajax_obj = null;
+    }
+}
+
+function ajax_call_autocomplete_labels(post_data, tagify, value) {
+    g_ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
+        method: "POST",
+        post_data: post_data,
+        response_handler: function (handler_data, ajax_response) {
+            var response = JSON.parse(ajax_response);
+            if (response.result_code != 0) {
+                console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
+                return;
+            }
+
+            handler_data.tagify.settings.whitelist.splice(
+                10,
+                response.result.length,
+                ...response.result
+            );
+            // render the suggestions dropdown
+            handler_data.tagify.loading(false);
+            handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
+        },
+        handler_data: {
+            value: value,
+            tagify: tagify,
+        },
     });
 }
 

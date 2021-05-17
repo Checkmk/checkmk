@@ -12,7 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
 from cmk.gui.plugins.views import PainterOptions
 from cmk.gui.type_defs import ViewSpec
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice
 
 
@@ -96,8 +96,8 @@ class ViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (html.urlencode(html.request.var('name')),
-             html.urlencode(makeuri(request, [('edit', '1')])))
+            (urlencode(html.request.var('name')),
+             urlencode(makeuri(request, [('edit', '1')])))
 
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
@@ -150,8 +150,8 @@ class LinkedViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (html.urlencode(html.request.var('name')),
-             html.urlencode(makeuri(request, [('edit', '1')])))
+            (urlencode(html.request.var('name')),
+             urlencode(makeuri(request, [('edit', '1')])))
 
     def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]

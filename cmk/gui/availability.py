@@ -38,8 +38,8 @@ from cmk.gui.valuespec import (
     Timerange,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.globals import request
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.html import HTML
 
 AVMode = str  # TODO: Improve this type
@@ -1595,13 +1595,13 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
 
     objectcells: AVObjectCells = []
     if what == "bi":
-        bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
-                                                   ("aggr_group", host), ("aggr_name", service)])
+        bi_url = "view.py?" + urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host),
+                                              ("aggr_name", service)])
         objectcells.append((service, bi_url))
         return objectcells
 
-    host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
-                                                 ("site", av_entry["site"]), ("host", host)])
+    host_url = "view.py?" + urlencode_vars([("view_name", "hoststatus"), ("site", av_entry["site"]),
+                                            ("host", host)])
     if "omit_host" not in labelling or\
             (what == "host" and "show_alias" not in labelling):
         objectcells.append((host, host_url))
@@ -1614,9 +1614,9 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
             service_name = av_entry["display_name"]
         else:
             service_name = service
-        service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
-                                                        ("site", av_entry["site"]), ("host", host),
-                                                        ("service", service)])
+        service_url = "view.py?" + urlencode_vars([("view_name", "service"),
+                                                   ("site", av_entry["site"]), ("host", host),
+                                                   ("service", service)])
         objectcells.append((service_name, service_url))
 
     return objectcells
@@ -2311,4 +2311,4 @@ def history_url_of(av_object, time_range):
             ("view_name", "hostevents"),
         ]
 
-    return "view.py?" + html.urlencode_vars(history_url_vars)
+    return "view.py?" + urlencode_vars(history_url_vars)

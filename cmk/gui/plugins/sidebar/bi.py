@@ -9,6 +9,7 @@ import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
+from cmk.gui.utils.urls import urlencode
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
@@ -36,7 +37,7 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
     def show(self) -> None:
         html.open_ul()
         for group in bi.get_aggregation_group_trees():
-            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % html.urlencode(group))
+            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % urlencode(group))
         html.close_ul()
 
 

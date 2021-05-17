@@ -8,6 +8,7 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.utils.urls import urlencode
 
 
 # This base class is only used by HostMatrixVisualization so far
@@ -110,8 +111,7 @@ class HostMatrixVisualization(MatrixVisualization):
                 s = "1"
             else:
                 s = "0"
-            url = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(site),
-                                                              html.urlencode(host))
+            url = "view.py?view_name=host&site=%s&host=%s" % (urlencode(site), urlencode(host))
             html.open_td(style=[
                 "width:%.2fpx" % (cell_size + cell_spacing),
                 "height:%.2fpx" % (cell_height + cell_spacing)

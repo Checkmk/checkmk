@@ -8,10 +8,10 @@ import re
 import shlex
 
 import cmk.gui.config as config
-from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.utils.urls import urlencode_vars
 
 
 @icon_and_action_registry.register
@@ -98,7 +98,7 @@ class MkeventdIcon(Icon):
             title = _('Events of Application "%s" on Host %s') % (app, host)
             url_vars.append(("event_application", app))
 
-        url = 'view.py?' + html.urlencode_vars(url_vars)
+        url = 'view.py?' + urlencode_vars(url_vars)
 
         return 'mkeventd', title, url_prefix + url
 

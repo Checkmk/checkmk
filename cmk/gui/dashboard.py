@@ -99,7 +99,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -940,7 +940,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
                 request,
                 [
                     ("load_name", name),
-                    ("back", html.urlencode(makeuri(request, []))),
+                    ("back", urlencode(makeuri(request, []))),
                 ],
                 filename="edit_dashboard.py",
             )),

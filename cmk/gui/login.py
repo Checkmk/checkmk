@@ -35,7 +35,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, urlencode
 
 auth_logger = logger.getChild("auth")
 
@@ -241,7 +241,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
         result = userdb.need_to_change_pw(username)
         if result:
             raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                               (html.urlencode(makeuri(global_request, [])), result))
+                               (urlencode(makeuri(global_request, [])), result))
 
     # Return the authenticated username
     return username
@@ -490,7 +490,7 @@ class LoginPage(Page):
                 change_pw_result = userdb.need_to_change_pw(username)
                 if change_pw_result:
                     raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                                       (html.urlencode(origtarget), change_pw_result))
+                                       (urlencode(origtarget), change_pw_result))
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username)

@@ -13,6 +13,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html
+from cmk.gui.utils.urls import urlencode_vars
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
@@ -320,8 +321,8 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def paint(self, value, hostname):
         parts = [
-            html.render_a(hn, "wato.py?" + html.urlencode_vars([("mode", "edit_host"),
-                                                                ("host", hn)])) for hn in value
+            html.render_a(hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)]))
+            for hn in value
         ]
         return "", HTML(", ").join(parts)
 

@@ -95,7 +95,7 @@ from cmk.gui.utils.labels import (
     label_help_text,
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400
@@ -5957,7 +5957,7 @@ class IconSelector(ValueSpec):
                       json.dumps(varprefix))
 
         if config.user.may('wato.icons'):
-            back_param = '&back=' + html.urlencode(
+            back_param = '&back=' + urlencode(
                 html.get_url_input('back')) if html.request.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 

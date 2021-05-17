@@ -29,7 +29,7 @@ from cmk.gui.plugins.views import (
     Row,
 )
 
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, urlencode_vars
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -197,11 +197,11 @@ class PainterAggrIcons(Painter):
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        single_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
-                                                       ("aggr_name", row["aggr_name"])])
+        single_url = "view.py?" + urlencode_vars([("view_name", "aggr_single"),
+                                                  ("aggr_name", row["aggr_name"])])
         avail_url = single_url + "&mode=availability"
 
-        bi_map_url = "bi_map.py?" + html.urlencode_vars([
+        bi_map_url = "bi_map.py?" + urlencode_vars([
             ("aggr_name", row["aggr_name"]),
         ])
 

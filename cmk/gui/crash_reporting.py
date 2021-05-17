@@ -53,7 +53,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars, urlencode
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 CrashInfo = Dict
@@ -280,7 +280,7 @@ class PageCrash(ABCCrashReportPage):
             vs.validate_value(details, "_report")
 
             # Make the resulting page execute the crash report post request
-            url_encoded_params = html.urlencode_vars(
+            url_encoded_params = urlencode_vars(
                 list(details.items()) + [
                     ("crashdump",
                      base64.b64encode(_pack_crash_report(self._get_serialized_crash_report()))),
@@ -628,7 +628,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
         config.user.need_permission("general.see_crash_reports")
 
         filename = "Checkmk_Crash_%s_%s_%s.tar.gz" % \
-            (html.urlencode(self._site_id), html.urlencode(self._crash_id), time.strftime("%Y-%m-%d_%H-%M-%S"))
+            (urlencode(self._site_id), urlencode(self._crash_id), time.strftime("%Y-%m-%d_%H-%M-%S"))
 
         html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
         html.response.headers['Content-Type'] = 'application/x-tar'

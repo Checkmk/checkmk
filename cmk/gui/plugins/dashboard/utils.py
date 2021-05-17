@@ -37,7 +37,7 @@ from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -680,7 +680,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
 
         # TODO: Would be good to align this scheme with AjaxPage.webapi_request()
         # (a single HTTP variable "request=<json-body>".
-        post_body = html.urlencode_vars(self._dashlet_http_variables())
+        post_body = urlencode_vars(self._dashlet_http_variables())
 
         html.javascript(
             """

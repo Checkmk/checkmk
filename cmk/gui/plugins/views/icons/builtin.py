@@ -57,7 +57,7 @@ from cmk.gui.type_defs import VisualLinkSpec
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars, urlencode
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -459,7 +459,7 @@ class PredictionIcon(Icon):
                     dsname = varname[8:]
                     sitename = row["site"]
                     url_prefix = config.site(sitename)["url_prefix"]
-                    url = url_prefix + "check_mk/prediction_graph.py?" + html.urlencode_vars([
+                    url = url_prefix + "check_mk/prediction_graph.py?" + urlencode_vars([
                         ("host", row["host_name"]),
                         ("service", row["service_description"]),
                         ("dsname", dsname),
@@ -1076,7 +1076,7 @@ class AggregationIcon(Icon):
             aggr_name = args[start:end]
 
             url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % \
-                  (base_url, html.urlencode(aggr_name))
+                  (base_url, urlencode(aggr_name))
 
             return 'aggr', _('Open this Aggregation'), url
 

@@ -17,6 +17,7 @@ from cmk.gui.escaping import escape_text
 QueryVars = Mapping[str, Sequence[str]]
 
 
+# TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode_vars(vars_: HTTPVariables) -> str:
     """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
     assert isinstance(vars_, list)
@@ -40,6 +41,7 @@ def urlencode_vars(vars_: HTTPVariables) -> str:
     return urllib.parse.urlencode(pairs)
 
 
+# TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode(value: Optional[str]) -> str:
     """Replace special characters in string using the %xx escape.
     This function returns a str object in py2 and py3

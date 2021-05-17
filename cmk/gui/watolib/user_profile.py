@@ -15,6 +15,7 @@ import cmk.gui.sites as sites
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
 from cmk.gui.globals import html
@@ -170,7 +171,7 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
 
 
 def _legacy_push_user_profile_to_site(site, user_id, profile):
-    url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
+    url = site["multisiteurl"] + "automation.py?" + urlencode_vars([
         ("command", "push-profile"),
         ("secret", site["secret"]),
         ("siteid", site['id']),

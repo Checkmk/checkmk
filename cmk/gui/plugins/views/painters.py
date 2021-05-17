@@ -76,7 +76,7 @@ from cmk.gui.plugins.views.graphs import (
     cmk_time_graph_params,
 )
 
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 
@@ -2839,8 +2839,8 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
             svc, state, checked = entry
             host = row["host_name"]
             text = svc
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (html.urlencode(
-            row["site"]), html.urlencode(host), html.urlencode(svc))
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (urlencode(
+            row["site"]), urlencode(host), urlencode(svc))
         if checked:
             css = "state%d" % state
         else:
@@ -3220,8 +3220,8 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
                            + "Available (missing)"
         }.get(value, value)
     if field == "discovery_service" and row["discovery_state"] == "vanished":
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (html.urlencode(
-            row["site"]), html.urlencode(row["host_name"]), html.urlencode(value))
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (urlencode(
+            row["site"]), urlencode(row["host_name"]), urlencode(value))
         return None, html.render_div(html.render_a(value, link))
     return None, value
 
@@ -3312,8 +3312,8 @@ class PainterHostgroupHosts(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         h = HTML()
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(
-                row["site"]), html.urlencode(host))
+            link = "view.py?view_name=host&site=%s&host=%s" % (urlencode(
+                row["site"]), urlencode(host))
             if checked:
                 css = "hstate%d" % state
             else:

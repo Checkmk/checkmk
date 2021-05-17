@@ -71,7 +71,7 @@ from cmk.gui.plugins.views import (
     format_plugin_output,
 )
 
-from cmk.gui.utils.urls import makeuri, make_confirm_link
+from cmk.gui.utils.urls import makeuri, make_confirm_link, urlencode_vars
 
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
@@ -1043,16 +1043,16 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
             if not omit_service:
                 if "omit_host" not in avoptions["labelling"]:
-                    host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
-                                                                 ("site", site_id), ("host", host)])
+                    host_url = "view.py?" + urlencode_vars([("view_name", "hoststatus"),
+                                                            ("site", site_id), ("host", host)])
                     table.cell(_("Host"), html.render_a(host, host_url))
 
                 if what == "service":
                     if service:
-                        service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
-                                                                        ("site", site_id),
-                                                                        ("host", host),
-                                                                        ("service", service)])
+                        service_url = "view.py?" + urlencode_vars([("view_name", "service"),
+                                                                   ("site", site_id),
+                                                                   ("host", host),
+                                                                   ("service", service)])
                         # TODO: honor use_display_name. But we have no display names here...
                         service_name = service
                         table.cell(_("Service"), html.render_a(service_name, service_url))

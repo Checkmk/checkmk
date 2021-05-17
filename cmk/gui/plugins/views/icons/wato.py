@@ -8,7 +8,7 @@ import cmk.gui.config as config
 from cmk.gui.globals import html, request, display_options
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 
 @icon_and_action_registry.register
@@ -48,7 +48,7 @@ class WatoIcon(Icon):
 
         if display_options.enabled(display_options.X):
             url = "wato.py?folder=%s&host=%s" % \
-                (html.urlencode(folder), html.urlencode(hostname))
+                (urlencode(folder), urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")

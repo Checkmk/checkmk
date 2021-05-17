@@ -85,7 +85,7 @@ from cmk.gui.type_defs import (
     VisualName,
 )
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
@@ -1521,7 +1521,7 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
         {
             k_mod: v_mod for k_orig, v_orig in macros.items() for k_mod, v_mod in (
                 (f"${k_orig}$", v_orig),
-                (f"${k_orig}_URL_ENCODED$", html.urlencode(v_orig)),
+                (f"${k_orig}_URL_ENCODED$", urlencode(v_orig)),
             )
         },
     )

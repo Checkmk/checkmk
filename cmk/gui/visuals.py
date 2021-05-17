@@ -103,7 +103,7 @@ from cmk.gui.plugins.visuals.utils import (
 
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, urlencode
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -539,7 +539,7 @@ def page_list(what,
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
-                backurl = html.urlencode(makeuri(global_request, []))
+                backurl = urlencode(makeuri(global_request, []))
                 clone_url = makeuri_contextless(
                     global_request,
                     [

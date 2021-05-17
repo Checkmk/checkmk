@@ -125,8 +125,6 @@ from cmk.gui.utils.urls import (
     makeactionuri,
     makeactionuri_contextless,
     requested_file_name,
-    urlencode_vars,
-    urlencode,
 )
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
@@ -1245,18 +1243,6 @@ class html(ABCHTMLGenerator):
                 request[key] = ensure_str(val) if isinstance(val, bytes) else val
 
         return request
-
-    #
-    # Encoding
-    #
-
-    # TODO: Cleanup all call sites to self.encoder.*
-    def urlencode_vars(self, vars_: List[Tuple[str, Union[None, int, str]]]) -> str:
-        return urlencode_vars(vars_)
-
-    # TODO: Cleanup all call sites to self.encoder.*
-    def urlencode(self, value: Optional[str]) -> str:
-        return urlencode(value)
 
     #
     # output funnel

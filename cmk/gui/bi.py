@@ -37,7 +37,7 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 
 
 @permission_section_registry.register
@@ -390,7 +390,7 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
         title = self._row["aggr_tree"]["title"]
         group = self._row["aggr_group"]
 
-        url_id = html.urlencode_vars([
+        url_id = urlencode_vars([
             ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
             ("group", group),
             ("title", title),

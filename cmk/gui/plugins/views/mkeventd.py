@@ -22,6 +22,7 @@ from cmk.gui.i18n import _, _l, ungettext
 
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.utils.urls import urlencode_vars
 
 from cmk.gui.plugins.views import (
     get_permitted_views,
@@ -637,7 +638,7 @@ class PainterEventRuleId(Painter):
     def render(self, row, cell):
         rule_id = row["event_rule_id"]
         if config.user.may("mkeventd.edit"):
-            urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
+            urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id
 

@@ -90,7 +90,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.main_menu import mega_menu_registry
 
 from cmk.gui.utils import unique_default_name_suggestion
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, urlencode
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
@@ -651,7 +651,7 @@ class Overridable(Base):
         return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self):
-        backurl = html.urlencode(makeuri(request, []))
+        backurl = urlencode(makeuri(request, []))
         return makeuri_contextless(request, [("owner", self.owner()), ("load_name", self.name()),
                                              ("mode", "clone"), ("back", backurl)],
                                    filename="edit_%s.py" % self.type_name())

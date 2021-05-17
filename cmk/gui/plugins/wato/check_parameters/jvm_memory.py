@@ -46,16 +46,16 @@ def _transform_legacy_parameters_jvm_memory(
     if isinstance(params, tuple) and isinstance(params[0], float):
         return {"perc_total": params}
 
-    new_params = {}
-    for key, newkey in (
-        ("totalheap", "perc_total"),
-        ("heap", "perc_heap"),
-        ("nonheap", "perc_nonheap"),
-    ):
-        levels = params.get(key)
-        if isinstance(levels, tuple) and isinstance(levels[0], float):
-            new_params[newkey] = levels
-    return new_params
+    if new_params_from_legacy := {
+            new_key: levels for old_key, new_key in (
+                ("totalheap", "perc_total"),
+                ("heap", "perc_heap"),
+                ("nonheap", "perc_nonheap"),
+            ) if isinstance(levels := params.get(old_key), tuple) and isinstance(levels[0], float)
+    }:
+        return new_params_from_legacy
+
+    return params
 
 
 def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:

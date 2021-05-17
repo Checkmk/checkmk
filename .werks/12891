@@ -1,0 +1,12 @@
+Title: Memory: Duplicate service for some dual hosts (ucd_mem, statgrab_mem)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621239841
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p5
+
+For some dual hosts (TCP and SNMP) the memory service has been discovered
+twice.

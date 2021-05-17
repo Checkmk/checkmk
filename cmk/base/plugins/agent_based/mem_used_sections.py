@@ -279,6 +279,7 @@ register.agent_section(
     name="statgrab_mem",
     parsed_section_name="mem_used",
     parse_function=parse_statgrab_mem,
+    supersedes=['ucd_mem'],
 )
 
 

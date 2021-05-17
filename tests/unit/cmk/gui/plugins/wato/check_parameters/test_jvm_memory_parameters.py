@@ -44,8 +44,15 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import (
                 "abs_heap": (20000, 312548),
                 "abs_nonheap": (987654, 1002455),
             },
-            {},
-            id="up to date case, currently wrong",
+            {
+                "perc_total": (10.0, 20.0),
+                "perc_heap": (13.4, 15.9),
+                "perc_nonheap": (0.1, 30.),
+                "abs_total": (10000, 100000),
+                "abs_heap": (20000, 312548),
+                "abs_nonheap": (987654, 1002455),
+            },
+            id="up to date case",
         ),
     ],
 )

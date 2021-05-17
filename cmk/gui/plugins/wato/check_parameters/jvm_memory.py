@@ -4,6 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import (
+    Iterable,
+    Mapping,
+    Tuple as TupleType,
+    Union,
+)
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -21,7 +28,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _item_spec_jvm_memory():
+def _item_spec_jvm_memory() -> TextAscii:
     return TextAscii(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
@@ -29,7 +36,9 @@ def _item_spec_jvm_memory():
     )
 
 
-def _transform_legacy_parameters_jvm_memory(params):
+def _transform_legacy_parameters_jvm_memory(
+    params: Union[TupleType[float, float], Mapping[str, TupleType[float, float]]]
+) -> Mapping[str, TupleType[float, float]]:
     # These old parameters only applied to the depricated jolokia_metrics.mem service
     # NOT to jolokia_jvm_memory(.pools).
     # However, absolute values were lower levels for *free* memory,
@@ -49,7 +58,7 @@ def _transform_legacy_parameters_jvm_memory(params):
     return new_params
 
 
-def _get_memory_level_elements(mem_type):
+def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
     return [
         ("perc_%s" % mem_type,
          Tuple(
@@ -76,7 +85,7 @@ def _get_memory_level_elements(mem_type):
     ]
 
 
-def _parameter_valuespec_jvm_memory():
+def _parameter_valuespec_jvm_memory() -> Transform:
     return Transform(Dictionary(
         help=(_("This rule allows to set the warn and crit levels of the heap / "
                 "non-heap and total memory area usage on web application servers.") + " " +
@@ -99,7 +108,7 @@ rulespec_registry.register(
     ))
 
 
-def _item_spec_jvm_memory_pools():
+def _item_spec_jvm_memory_pools() -> TextAscii:
     return TextAscii(
         title=_("Name of the memory pool"),
         help=_("The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"),
@@ -107,7 +116,7 @@ def _item_spec_jvm_memory_pools():
     )
 
 
-def _parameter_valuespec_jvm_memory_pools():
+def _parameter_valuespec_jvm_memory_pools() -> Dictionary:
     return Dictionary(help=(_("This rule allows to set the warn and crit levels of the memory"
                               " pools on web application servers.") + " " +
                             _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"),

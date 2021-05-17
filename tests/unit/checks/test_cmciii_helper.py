@@ -21,8 +21,12 @@ def test_sanitize_variable(variable, expected):
 
 @pytest.mark.parametrize("table, var_type, variable, expected", [
     ("not_phase", "", ["var_end"], "var_end"),
-    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "END"], "two_three_four"),
-    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "TWO THREE FOUR"),
+    ("phase", "2", ["Phase", "TWO", "THREE", "FOUR", "END"], "two_three_four"),
+    ("phase", "2", ["ONE", "Phase", "THREE", "FOUR", "END"], "three_four"),
+    ("phase", "2", ["ONE", "TWO", "THREE", "FOUR", "END"], "three_four"),
+    ("phase", "not 2", ["Phase", "TWO", "THREE", "FOUR", "END"], "TWO THREE FOUR"),
+    ("phase", "not 2", ["ONE", "Phase", "THREE", "FOUR", "END"], "THREE FOUR"),
+    ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "THREE FOUR"),
 ])
 def test_sensor_key(table, var_type, variable, expected):
     sensor_key = Check('cmciii').context['sensor_key']
@@ -33,7 +37,10 @@ def test_sensor_key(table, var_type, variable, expected):
     ("temp", ["FooTemperature", "Var"], "Foo device"),
     ("temp", ["Temperature", "In-Var"], "Ambient device In"),
     ("temp", ["Temperature", "Out-Var"], "Ambient device Out"),
-    ("phase", ["Phase L A"], "device Phase A"),
+    ("phase", ["Phase L 1"], "device Phase 1"),
+    ("phase", ["Phase L 1", "three"], "device Phase 1"),
+    ("phase", ["one", "Phase1"], "device one Phase 1"),
+    ("phase", ["one", "Phase1", "three"], "device one Phase 1"),
     ("psm_plugs", ["one", "two"], "device one.two"),
     ("can_current", ["one", "two"], "device one.two"),
     ("other_sensors", ["one"], "device one"),

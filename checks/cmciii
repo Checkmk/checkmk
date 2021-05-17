@@ -79,10 +79,17 @@ def sensor_id(sensor_type, variable, device):
             item += " %s" % variable[-1].split("-")[0]
         return item
     if sensor_type == "phase":
-        return "%s %s %s" % (
+        if "Phase" in variable[0]:
+            return "%s %s %s" % (
+                device,
+                "Phase",
+                variable[0].replace("Phase", "").replace("L", "").strip(),
+            )
+        return "%s %s %s %s" % (
             device,
+            variable[0],
             "Phase",
-            variable[0].replace("Phase", "").replace("L", "").strip(),
+            variable[1].replace("Phase", "").replace("L", "").strip(),
         )
     if sensor_type in ["psm_plugs", "can_current"]:
         return "%s %s" % (device, ".".join(variable))
@@ -93,10 +100,12 @@ def sensor_key(sensor_type, var_type, variable):
     if sensor_type != "phase":
         return variable[-1]
 
-    if var_type != "2":
-        return " ".join(variable[1:-1])
+    key_part = variable[1:-1] if "Phase" in variable[0] else variable[2:-1]
 
-    key = "_".join(variable[1:-1]).lower()
+    if var_type != "2":
+        return " ".join(key_part)
+
+    key = "_".join(key_part).lower()
     if key == "power_apparent":
         key = "appower"
     elif key.endswith("_active"):

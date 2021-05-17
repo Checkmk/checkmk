@@ -1,6 +1,6 @@
 title: Checkmk Site: Backup Job State
 agents: linux
-catalog: app/checkmk
+catalog: app/cmk
 license: GPL
 distribution: checkmk
 description:

@@ -1,6 +1,6 @@
 title: Cisco Prime WiFi connections
 agents: agent_cisco_prime
-catalog: os/misc
+catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:

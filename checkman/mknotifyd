@@ -1,6 +1,6 @@
 title: Checkmk Notification Spooler: Status
 agents: linux
-catalog: app/checkmk
+catalog: app/cmk
 license: GPL
 distribution: checkmk
 description:

@@ -1898,7 +1898,7 @@ def process_view(view_renderer: ABCViewRenderer) -> None:
 
 
 def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
-    all_active_filters = _get_view_filters(view_renderer.view)
+    all_active_filters = _get_all_active_filters(view_renderer.view)
     with livestatus.intercept_queries() as queries:
         unfiltered_amount_of_rows, rows = _get_view_rows(
             view_renderer.view,
@@ -1947,7 +1947,7 @@ def _add_rest_api_menu_entries(view_renderer, queries):
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     view = view_renderer.view
-    all_active_filters = _get_view_filters(view)
+    all_active_filters = _get_all_active_filters(view)
     filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
@@ -1972,36 +1972,18 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
 # TODO: Use livestatus Stats: instead of fetching rows?
 def get_row_count(view: View) -> int:
     """Returns the number of rows shown by a view"""
-    # This must not modify the request variables of the view currently being processed. It would be
-    # ideal to not deal with the global request variables data structure at all, but that would
-    # first need a rewrite of the visual filter processing.
-    with request.stashed_vars():
-        all_active_filters = _get_view_filters(view)
 
-        # Check that all needed information for configured single contexts are available
-        missing_single_infos = view.missing_single_infos
-        if missing_single_infos:
-            raise MKUserError(
-                None,
-                _("Missing context information: %s. You can either add this as a fixed "
-                  "setting, or call the with the missing HTTP variables.") %
-                (", ".join(missing_single_infos)))
+    all_active_filters = _get_all_active_filters(view)
+    # Check that all needed information for configured single contexts are available
+    if view.missing_single_infos:
+        raise MKUserError(
+            None,
+            _("Missing context information: %s. You can either add this as a fixed "
+              "setting, or call the with the missing HTTP variables.") %
+            (", ".join(view.missing_single_infos)))
 
-        _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
-        return len(rows)
-
-
-# TODO: Move to View
-# TODO: Investigate and cleanup the side effect of setting the HTTP request variables.
-def _get_view_filters(view: View) -> List[Filter]:
-    # Now populate the HTML vars with context vars from the view definition. Hard
-    # coded default values are treated differently:
-    #
-    # a) single context vars of the view are enforced
-    # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view.spec["context"], view.spec["single_infos"])
-
-    return _get_all_active_filters(view)
+    _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
+    return len(rows)
 
 
 def _get_view_rows(view: View,

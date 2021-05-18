@@ -133,29 +133,32 @@ class TestRuleConditionRenderer(object):
         ) == rendered_condition
 
     def test_tag_condition(self):
-        assert sorted(RuleConditionRenderer()._tag_conditions({
-            "tag_grp_1": {
-                "$or": [
-                    "grp_1_tg_1",
-                    "grp_1_tg_2",
-                ]
-            },
-            "tag_grp_2": {
-                "$nor": [
-                    "grp_2_tg_1",
-                    "grp_2_tg_2",
-                ]
-            },
-            "tag_grp_3": "grp_3_tg_1",
-            "aux_tag_1": {
-                "$ne": "aux_tag_1"
-            },
-        })) == [
+        assert sorted(
+            RuleConditionRenderer()._tag_conditions({
+                "tag_grp_1": {
+                    "$or": [
+                        "grp_1_tg_1",
+                        "grp_1_tg_2",
+                    ]
+                },
+                "tag_grp_2": {
+                    "$nor": [
+                        "grp_2_tg_1",
+                        "grp_2_tg_2",
+                    ]
+                },
+                "tag_grp_3": "grp_3_tg_1",
+                "aux_tag_1": {
+                    "$ne": "aux_tag_1"
+                },
+            }),
+            key=str,
+        ) == [
             HTML("Host does not have tag <b>Auxiliary tag 1</b>"),
             HTML("Host: Tag group 1 is <b>Tag 1.1</b> <i>or</i> Host: Tag group 1 is <b>Tag 1.2</b>"
                 ),
+            HTML("Host: Tag group 3 is <b>Tag 3.1</b>"),
             HTML(
                 "Neither Host: Tag group 2 is <b>Tag 2.1</b> <i>nor</i> Host: Tag group 2 is <b>Tag 2.2</b>"
             ),
-            HTML("Host: Tag group 3 is <b>Tag 3.1</b>"),
         ]

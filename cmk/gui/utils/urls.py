@@ -6,7 +6,6 @@
 
 import json
 from typing import Mapping, Optional, Sequence, Tuple
-from six import ensure_str
 import urllib.parse
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
@@ -34,8 +33,6 @@ def urlencode_vars(vars_: HTTPVariables) -> str:
             # we need to be compatible with the previous behavior.
             value = ""
 
-        value = ensure_str(value)
-        #assert type(value) == str, "%s: %s" % (varname, value)
         pairs.append((varname, value))
 
     return urllib.parse.urlencode(pairs)
@@ -43,15 +40,8 @@ def urlencode_vars(vars_: HTTPVariables) -> str:
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode(value: Optional[str]) -> str:
-    """Replace special characters in string using the %xx escape.
-    This function returns a str object in py2 and py3
-    """
-    if value is None:
-        return ""
-
-    value = ensure_str(value)
-    assert isinstance(value, str)
-    return urllib.parse.quote_plus(value)
+    """Replace special characters in string using the %xx escape."""
+    return "" if value is None else urllib.parse.quote_plus(value)
 
 
 def _file_name_from_path(path: str) -> str:

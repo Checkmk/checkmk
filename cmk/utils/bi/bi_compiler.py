@@ -83,8 +83,9 @@ class BICompiler:
             if path_object.is_dir():
                 continue
             aggr_id = path_object.name
-            if aggr_id in self._compiled_aggregations:
+            if aggr_id.endswith(".new") or aggr_id in self._compiled_aggregations:
                 continue
+
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
             aggr_data = self._load_data(str(path_object))
             self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)

@@ -1543,7 +1543,7 @@ class BIModeEditAggregation(ABCBIMode):
                 help=_("The ID of the aggregation must be a unique text. It will be as unique ID."),
                 allow_empty=False,
                 size=80,
-            )
+                validate=cls._validate_aggregation_id)
 
         return BIAggregationForm(
             title=_("Aggregation Properties"),
@@ -1556,6 +1556,13 @@ class BIModeEditAggregation(ABCBIMode):
                 ("computation_options", cls._get_vs_computation_options()),
                 ("aggregation_visualization", cls._get_vs_aggregation_visualization()),
             ])
+
+    @classmethod
+    def _validate_aggregation_id(cls, value, varprefix):
+        if value.endswith(".new"):
+            raise MKUserError(
+                varprefix,
+                _("The suffix .new is a reserved keyword an cannot be used as aggregation id"))
 
     @classmethod
     def _get_vs_aggregation_groups(cls):

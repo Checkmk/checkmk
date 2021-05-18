@@ -9,7 +9,7 @@ State: unknown
 Version: 1.6.0p22
 Date: 1612171687
 
-Since this release access to the internal communication channel of the 
-Windows agent is granted only for users and/or processes with administrative 
-rights, thus protecting the Windows agent service and therefore Checkmk 
+Since this release access to the internal communication channel of the
+Windows agent is granted only for users and/or processes with administrative
+rights, thus protecting the Windows agent service and therefore Checkmk
 monitoring site from intentional or unintentional interference.

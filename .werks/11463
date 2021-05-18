@@ -9,8 +9,8 @@ State: unknown
 Version: 1.6.0p20
 Date: 1601452258
 
-With this fix some deirectories used by windows Agent are protected from 
-any access of Windows Standart User:
+With this fix some directories used by windows Agent are protected from
+any access of Windows Standard User:
 Program Files (x86)\checkmk\service
 ProgramData\checkmk\agent\backup
 ProgramData\checkmk\agent\config

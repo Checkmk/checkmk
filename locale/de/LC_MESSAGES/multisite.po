@@ -38215,6 +38215,10 @@ msgstr "Umschreibung"
 msgid "Right"
 msgstr "Rechts"
 
+#, fuzzy
+msgid "Rittal CMC III discovery"
+msgstr "Rittal CMC-III Units: Strom"
+
 msgid "Rittal CMC-III LCP: Air In and Temperature"
 msgstr "Rittal CMC-III LCP: angesaugte Luft und Temperatur"
 
@@ -40845,6 +40849,10 @@ msgstr "Alle Regeln anzeigen"
 
 msgid "Show all settings"
 msgstr "Alle Einstellungen zeigen"
+
+#, fuzzy
+msgid "Show all topics"
+msgstr "Alle %s-Themen anzeigen"
 
 msgid "Show analysis"
 msgstr "Analyse anzeigen"
@@ -48009,6 +48017,12 @@ msgstr "Ausgewählten Hosts habe keine expliziten Merkmale"
 
 msgid "The selected icon does not exist."
 msgstr "Das ausgewählte Symbol ist nicht vorhanden."
+
+msgid ""
+"The sensor description is a user defined text. If you use this option, you "
+"must ensure that all sensors have a unique description. Otherwise two or "
+"more sensors can be aliased to the same service."
+msgstr ""
 
 msgid "The sensor name"
 msgstr "Der Sensorname"
@@ -55502,6 +55516,10 @@ msgstr "Standardthema verwenden"
 msgid "Use description"
 msgstr "Beschreibung verwenden"
 
+#, fuzzy
+msgid "Use device and sensor name"
+msgstr "Sensorname hinzufügen"
+
 msgid "Use device levels"
 msgstr "Nutze Geräte Schwellwerte"
 
@@ -55660,6 +55678,10 @@ msgstr "Verwende Proxy-Server"
 
 msgid "Use proxy settings from the process environment"
 msgstr "Proxy-Einstellungen aus der Prozessumgebung verwenden"
+
+#, fuzzy
+msgid "Use sensor description (see help text)"
+msgstr "Alias/Beschreibung dieser Instanz"
 
 msgid "Use separate fetchers and checkers"
 msgstr "Separate Fetchers und Checkers verwenden"

@@ -1424,17 +1424,8 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # the only_sites list and a string with the filter headers
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
-def get_filter_headers(table, infos, context):
-    with request.stashed_vars():
-        for filter_name, filter_vars in context.items():
-            # first set the HTML variables. Sorry - the filters need this
-            if isinstance(filter_vars, dict):  # this is a multi-context filter
-                for uri_varname, value in filter_vars.items():
-                    request.set_var(uri_varname, value)
-            else:
-                request.set_var(filter_name, filter_vars)
-
-        filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
+def get_filter_headers(table, infos, context: VisualContext):
+    filter_headers = "".join(collect_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
 
@@ -1444,8 +1435,13 @@ def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
             yield filter_obj
 
 
-def collect_filter_headers(filters: Iterable[Filter],) -> Iterable[str]:
-    yield from (filter.filter({"value": "from context"}) for filter in filters)
+def collect_filter_headers(
+    context: VisualContext,
+    filters: Iterable[Filter],
+) -> Iterable[str]:
+    yield from (filt.filter(var if isinstance(var, dict) else {filt.htmlvars[0]: var})
+                for filt in filters
+                for var in [context.get(filt.ident, {})])
 
 
 #.

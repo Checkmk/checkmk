@@ -136,7 +136,7 @@ class FilterText(Filter):
 class FilterRegExp(FilterText):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        cmk.gui.utils.validate_regex(value[htmlvar], htmlvar)
+        cmk.gui.utils.validate_regex(value.get(htmlvar, ""), htmlvar)
 
 
 filter_registry.register(

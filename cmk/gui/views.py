@@ -1797,6 +1797,9 @@ def page_view():
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
+        # TODO: there shouldn't be any merging because the html forms have
+        # already all the information for the page and even include the posibility
+        # of deleting a configured filter
         context = visuals.get_merged_context(
             view_spec["context"],
             visuals.get_context_from_uri_vars(datasource.infos,
@@ -1948,12 +1951,12 @@ def _add_rest_api_menu_entries(view_renderer, queries):
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     view = view_renderer.view
     all_active_filters = _get_all_active_filters(view)
-    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
     # later)
     if "aggr" not in view.datasource.infos or request.var("timeline_aggr"):
+        filterheaders = get_livestatus_filter_headers(view, all_active_filters)
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
         show_view_func = lambda: cmk.gui.plugins.views.availability.show_availability_page(
             view, filterheaders)
@@ -2193,12 +2196,12 @@ def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]'
     filterheaders = ""
     for filt in all_active_filters:
         try:
-            filt.validate_value(filt.value())
-            header = filt.filter({"value": "from context"})
+            value = view.context.get(filt.ident, {})
+            filt.validate_value(value)
+            if header := filt.filter(value):
+                filterheaders += header
         except MKUserError as e:
             user_errors.add(e)
-            continue
-        filterheaders += header
     return filterheaders
 
 

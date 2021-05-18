@@ -20,6 +20,22 @@ __version__ = "2.1.0i1"
 #
 # During development the "CCMS_Doku.pdf" was really helpful.
 
+#   #################################
+#   #                               #
+#   #         N  O  T  E            #
+#   #                               #
+#   #################################
+#
+# This plugin will only work with python2 as sapnwrfc is not available
+# for python 3.
+# This plugin will be converted to python2 automatically, and a patch in
+# the bakery plugin will make sure only the python 2 version will be deployed
+# -- such that even on monitored hosts that provide both py3 and py2 the
+# py2 variant is executed.
+#
+# Make sure to remove said patch if the plugin is python 2/3 compatible!
+#
+
 import os
 import ast
 import sys

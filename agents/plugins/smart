@@ -86,7 +86,7 @@ storcli_info()
                             echo "$EID_Slt" | IFS=: read -r EID Slt 
                             smartctl -d "megaraid,${DID}" -v 9,raw48 -A /dev/${SG}     | \
                               grep Always  | grep -E -v '^190(.*)Temperature(.*)' | \
-                              sed "s|^|Enc${EID}/Slot${Slt} $VEND $MODEL |"
+                              sed "s|^|Contr${CTRL}/Enc${EID}/Slot${Slt} $VEND $MODEL |"
                         ;;
                     esac
                 done

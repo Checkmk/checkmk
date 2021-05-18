@@ -98,7 +98,7 @@ class LabelsCache:
         self._svc_label: str = "service_labels"
         self._program_starts: str = self._namespace + ":last_program_starts"
         self._redis_client: 'RedisDecoded' = get_redis_client()
-        self._sites_to_update: Set = set()
+        self._sites_to_update: Set[SiteId] = set()
 
     def _get_site_ids(self) -> List[SiteId]:
         """ Create list of all site IDs the user is authorized for """
@@ -176,14 +176,18 @@ class LabelsCache:
         pipeline: Pipeline,
     ) -> None:
 
-        sites_list = []
+        sites_list: List[SiteId] = []
         for site_id, label in labels.items():
             if site_id not in self._sites_to_update:
                 continue
 
             label_key = "%s:%s:%s" % (self._namespace, site_id, label_type)
             pipeline.delete(label_key)
-            pipeline.hmset(label_key, label)  # type: ignore
+            # NOTE: Mapping is invariant in its key because of __getitem__, so for mypy's sake we
+            # make a copy below. This doesn't matter from a performance view, hset is iterating over
+            # the dict anyway, and after that there is some serious I/O going on.
+            # NOTE: pylint is too dumb to see the need for the comprehension.
+            pipeline.hset(label_key, mapping={k: v for k, v in label.items()})  # pylint: disable=unnecessary-comprehension
 
             if site_id not in sites_list:
                 sites_list.append(site_id)
@@ -197,7 +201,7 @@ class LabelsCache:
 
     def _redis_set_last_program_start(self, site_id: SiteId, pipeline: Pipeline) -> None:
         program_start = self._livestatus_get_last_program_start(site_id)
-        pipeline.hmset(self._program_starts, {site_id: program_start})
+        pipeline.hset(self._program_starts, key=site_id, value=program_start)
 
     def _livestatus_get_last_program_start(self, site_id: SiteId) -> int:
         return sites.states().get(site_id, sites.SiteStatus({})).get("program_start", 0)

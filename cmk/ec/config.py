@@ -19,6 +19,8 @@ from typing import (
     Union,
 )
 
+################################################################################
+
 
 # Horrible ValueSpec...
 class UseSNMPTrapTranslation(TypedDict, total=False):
@@ -27,22 +29,34 @@ class UseSNMPTrapTranslation(TypedDict, total=False):
 
 SNMPTrapTranslation = Union[Literal[False], Tuple[Literal[True], UseSNMPTrapTranslation]]
 
-ActionType = Union[Literal['email'], Literal['script']]
+################################################################################
 
 
-class ActionSettings(TypedDict):
-    # 'email' case
+class EMailActionConfig(TypedDict):
     to: str
     subject: str
     body: str
-    # 'script' case
+
+
+class EMailAction(TypedDict):
+    id: str
+    disabled: bool
+    action: Tuple[Literal['email'], EMailActionConfig]
+
+
+class ScriptActionConfig(TypedDict):
     script: str
 
 
-class Action(TypedDict):
+class ScriptAction(TypedDict):
     id: str
     disabled: bool
-    action: Tuple[ActionType, ActionSettings]
+    action: Tuple[Literal['script'], ScriptActionConfig]
+
+
+Action = Union[EMailAction, ScriptAction]
+
+################################################################################
 
 
 # This is what we get from the outside.

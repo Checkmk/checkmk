@@ -15,7 +15,7 @@ import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ContactgroupName
 
-from .config import Action, Config
+from .config import Action, Config, EMailActionConfig, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .event import Event
 from .host_config import HostConfig
@@ -87,36 +87,46 @@ def do_event_actions(history: Any, settings: Settings, config: Config, logger: L
 def do_event_action(history: Any, settings: Settings, config: Config, logger: Logger,
                     event_columns: Iterable[Tuple[str, Any]], action: Action, event: Event,
                     user: Any) -> None:
-    if action["disabled"]:
-        logger.info("Skipping disabled action %s." % action["id"])
+    action_id = action['id']
+    if action['disabled']:
+        logger.info('Skipping disabled action %s.', action_id)
         return
-
     try:
-        action_type, action_settings = action["action"]
-        if action_type == 'email':
-            to = _escape_null_bytes(
-                _substitute_event_tags(event_columns, action_settings["to"], event))
-            subject = _escape_null_bytes(
-                _substitute_event_tags(event_columns, action_settings["subject"], event))
-            body = _escape_null_bytes(
-                _substitute_event_tags(event_columns, action_settings["body"], event))
-
-            _send_email(config, to, subject, body, logger)
-            history.add(event, "EMAIL", user, "%s|%s" % (to, subject))
-        elif action_type == 'script':
-            _execute_script(
-                event_columns,
-                _escape_null_bytes(
-                    _substitute_event_tags(event_columns, action_settings["script"],
-                                           _get_quoted_event(event, logger))), event, logger)
-            history.add(event, "SCRIPT", user, action['id'])
+        act = action['action']
+        if act[0] == 'email':
+            _do_email_action(history, config, logger, event_columns, act[1], event, user)
+        elif act[0] == 'script':
+            _do_script_action(history, logger, event_columns, act[1], action_id, event, user)
         else:
-            logger.error("Cannot execute action %s: invalid action type %s" %
-                         (action["id"], action_type))
+            logger.error('Cannot execute action %s: invalid action type %s', action_id, act[0])
     except Exception:
         if settings.options.debug:
             raise
-        logger.exception("Error during execution of action %s" % action["id"])
+        logger.exception('Error during execution of action %s', action_id)
+
+
+def _do_email_action(history: Any, config: Config, logger: Logger,
+                     event_columns: Iterable[Tuple[str, Any]], action_config: EMailActionConfig,
+                     event: Event, user: Any) -> None:
+    to = _prepare_text(action_config['to'], event_columns, event)
+    subject = _prepare_text(action_config['subject'], event_columns, event)
+    body = _prepare_text(action_config['body'], event_columns, event)
+    _send_email(config, to, subject, body, logger)
+    history.add(event, 'EMAIL', user, f'{to}|{subject}')
+
+
+def _do_script_action(history: Any, logger: Logger, event_columns: Iterable[Tuple[str, Any]],
+                      action_config: ScriptActionConfig, action_id: str, event: Event,
+                      user: Any) -> None:
+    _execute_script(
+        event_columns,
+        _prepare_text(action_config['script'], event_columns, _get_quoted_event(event, logger)),
+        event, logger)
+    history.add(event, 'SCRIPT', user, action_id)
+
+
+def _prepare_text(text: str, event_columns: Iterable[Tuple[str, Any]], event: Event) -> str:
+    return _escape_null_bytes(_substitute_event_tags(text, event_columns, event))
 
 
 def _escape_null_bytes(s: str) -> str:
@@ -149,7 +159,7 @@ def _get_quoted_event(event: Event, logger: Logger) -> Event:
     return cast(Event, new_event)
 
 
-def _substitute_event_tags(event_columns: Iterable[Tuple[str, Any]], text: str,
+def _substitute_event_tags(text: str, event_columns: Iterable[Tuple[str, Any]],
                            event: Event) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)

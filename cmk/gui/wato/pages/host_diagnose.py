@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, user_errors
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -139,7 +139,7 @@ class ModeDiagHost(WatoMode):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
             return None
 
         if html.request.var('_save'):
@@ -244,7 +244,7 @@ class ModeDiagHost(WatoMode):
                   'press the "Test" button. The results will be displayed here.'))
             return
 
-        if html.has_user_errors():
+        if user_errors:
             html.show_user_errors()
             return
 

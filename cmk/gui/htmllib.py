@@ -112,7 +112,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.globals import transactions
+from cmk.gui.globals import transactions, user_errors
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
@@ -1018,7 +1018,6 @@ class html(ABCHTMLGenerator):
         self.link_target: Optional[str] = None
 
         # Browser options
-        self.user_errors: Dict[Optional[str], str] = {}
         self.final_javascript_code = ""
         self.page_context: 'VisualContext' = {}
 
@@ -1961,26 +1960,13 @@ class html(ABCHTMLGenerator):
     def user_error(self, e: MKUserError) -> None:
         """Display the given MKUserError and store message for later use"""
         self.show_error(str(e))
-        self.add_user_error(e.varname, e)
-
-    def add_user_error(self, varname: Optional[str], msg_or_exc: Union[str, Exception]) -> None:
-        """Store an error message for later displaying on the same page
-        User errors are used by input elements to show invalid input
-        """
-        self.user_errors[varname] = (str(msg_or_exc)
-                                     if isinstance(msg_or_exc, Exception) else msg_or_exc)
-
-    def has_user_errors(self) -> bool:
-        """Whether or not previous steps during page rendering produced an error"""
-        return len(self.user_errors) > 0
+        user_errors.add(e)
 
     def show_user_errors(self) -> None:
         """Show all previously created user errors"""
-        if self.has_user_errors():
-            self.open_div(class_="error")
-            self.write(self.render_br().join(
-                self.render_text(s) for s in self.user_errors.values()))
-            self.close_div()
+        if user_errors:
+            self.show_error(self.render_br().join(
+                self.render_text(s) for s in user_errors.values()))
 
     def text_input(self,
                    varname: str,
@@ -2005,7 +1991,7 @@ class html(ABCHTMLGenerator):
                    title: Optional[str] = None) -> None:
 
         # Model
-        error = self.user_errors.get(varname)
+        error = user_errors.get(varname)
         value = self.request.get_unicode_input(varname, default_value)
         if not value:
             value = ""
@@ -2143,7 +2129,7 @@ class html(ABCHTMLGenerator):
                   **attrs: HTMLTagAttributeValue) -> None:
 
         value = self.request.get_unicode_input(varname, deflt)
-        error = self.user_errors.get(varname)
+        error = user_errors.get(varname)
 
         self.form_vars.append(varname)
         if error:
@@ -2189,7 +2175,7 @@ class html(ABCHTMLGenerator):
                  read_only: bool = False,
                  **attrs: HTMLTagAttributeValue) -> None:
         current = self.request.get_unicode_input(varname, deflt)
-        error = self.user_errors.get(varname)
+        error = user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
 
@@ -2268,7 +2254,7 @@ class html(ABCHTMLGenerator):
         self.close_select()
 
     def upload_file(self, varname: str) -> None:
-        error = self.user_errors.get(varname)
+        error = user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")
         self.input(name=varname, type_="file")
@@ -2339,7 +2325,7 @@ class html(ABCHTMLGenerator):
         if value is None:  # form not yet filled in
             value = deflt
 
-        error = self.user_errors.get(varname)
+        error = user_errors.get(varname)
         if id_ is None:
             id_ = "cb_%s" % varname
 

@@ -44,7 +44,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import display_options, g, html, transactions
+from cmk.gui.globals import display_options, g, html, transactions, user_errors
 from cmk.gui.globals import request as global_request
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
@@ -2201,7 +2201,7 @@ def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]'
             # TODO: Argument does not seem to be used anywhere. Remove it
             header = filt.filter(view.datasource.ident)
         except MKUserError as e:
-            html.add_user_error(e.varname, e)
+            user_errors.add(e)
             continue
         filterheaders += header
     return filterheaders
@@ -2265,10 +2265,11 @@ def _add_inventory_data(rows: Rows) -> None:
                 str(inventory.get_short_inventory_filepath(row["host_name"])))
 
             if corrupted_inventory_files:
-                html.add_user_error(
-                    "load_structured_data_tree",
-                    _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files.") %
-                    ", ".join(sorted(corrupted_inventory_files)))
+                user_errors.add(
+                    MKUserError(
+                        "load_structured_data_tree",
+                        _("Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
+                         ) % ", ".join(sorted(corrupted_inventory_files))))
 
 
 def _add_sla_data(view: View, rows: Rows) -> None:

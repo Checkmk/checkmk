@@ -25,7 +25,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
@@ -322,8 +322,7 @@ class PageCrash(ABCCrashReportPage):
             html.javascript("cmk.transfer.submit_crash_report(%s, %s);" %
                             (json.dumps(config.crash_report_url), json.dumps(url_encoded_params)))
         except MKUserError as e:
-            action_message = "%s" % e
-            html.add_user_error(e.varname, action_message)
+            user_errors.add(e)
 
         return details
 

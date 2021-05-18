@@ -37,7 +37,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.page_menu import (
@@ -123,14 +123,14 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
                 vs.validate_value(avoptions[name], "avo_" + name)
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
 
     range_vs = availability.vs_rangespec()
     try:
         range_, range_title = range_vs.compute_range(avoptions["rangespec"])
         avoptions["range"] = range_, range_title
     except MKUserError as e:
-        html.add_user_error(e.varname, e)
+        user_errors.add(e)
 
     if html.request.var("_unset_logrow_limit") == "1":
         avoptions["logrow_limit"] = 0
@@ -158,7 +158,7 @@ def _show_availability_options(option_type: str, what: AVObjectType, avoptions: 
 
     container_id = "av_options_%s" % option_type
     html.open_div(id_=container_id, class_="side_popup_content")
-    if html.has_user_errors() and html.form_submitted(form_name):
+    if user_errors and html.form_submitted(form_name):
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:
@@ -284,7 +284,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     avoptions = get_availability_options_from_request(what)
 
     # Now compute all data, we need this also for CSV export
-    if not html.has_user_errors():
+    if not user_errors:
         include_long_output = av_mode == "timeline" \
                 and "timeline_long_output" in avoptions["labelling"]
         av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
@@ -315,7 +315,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                          if display_options.enabled(display_options.B) else None)
         html.begin_page_content()
 
-    if html.has_user_errors():
+    if user_errors:
         form_name = html.request.get_ascii_input_mandatory("filled_in")
         if form_name in ("avoptions_display", "avoptions_computation"):
             html.final_javascript("cmk.page_menu.open_popup(%s);" %
@@ -332,7 +332,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
     html.write(confirmation_html_code)
 
-    if not html.has_user_errors():
+    if not user_errors:
         # If we abolish the limit we have to fetch the data again
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
@@ -843,8 +843,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
         avoptions = get_availability_options_from_request("bi")
 
-    if not html.has_user_errors():
-
+    if not user_errors:
         # iterate all aggregation rows
         timewarpcode = HTML()
         timewarp = html.request.get_integer_input("timewarp")

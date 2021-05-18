@@ -51,7 +51,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.page_menu import (
     PageMenu,
@@ -1288,7 +1288,7 @@ class Overridable(Base):
                 new_page_dict = vs.from_html_vars(varprefix)
                 vs.validate_value(new_page_dict, varprefix)
             except MKUserError as e:
-                html.add_user_error(e.varname, e.message)
+                user_errors.add(e)
 
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
@@ -1301,7 +1301,7 @@ class Overridable(Base):
             page_dict["owner"] = owner
             new_page = cls(page_dict)
 
-            if not html.has_user_errors():
+            if not user_errors:
                 cls.add_page(new_page)
                 cls.save_user_instances(owner)
                 if mode == "create":

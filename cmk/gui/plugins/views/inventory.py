@@ -25,8 +25,9 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
@@ -855,10 +856,11 @@ class RowTableInventory(ABCRowTable):
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
-            html.add_user_error(
-                "load_inventory_tree",
-                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
-                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_tree",
+                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                    inventory.get_short_inventory_filepath(hostrow.get("host_name", ""))))
             return []
 
         if merged_tree is None:
@@ -933,10 +935,11 @@ class RowMultiTableInventory(ABCRowTable):
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
-            html.add_user_error(
-                "load_inventory_tree",
-                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
-                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_tree",
+                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                    inventory.get_short_inventory_filepath(hostrow.get("host_name", ""))))
             return []
 
         if merged_tree is None:
@@ -960,7 +963,7 @@ class RowMultiTableInventory(ABCRowTable):
 
     def _add_declaration_errors(self):
         if self._errors:
-            html.add_user_error("declare_invtable_view", ", ".join(self._errors))
+            user_errors.add(MKUserError("declare_invtable_view", ", ".join(self._errors)))
 
 
 def declare_joined_inventory_table_view(tablename, title_singular, title_plural, tables, match_by):
@@ -1450,10 +1453,12 @@ class RowTableInventoryHistory(ABCRowTable):
         hostname = hostrow.get("host_name")
         history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
         if corrupted_history_files:
-            html.add_user_error(
-                "load_inventory_delta_tree",
-                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
-                  % ", ".join(sorted(corrupted_history_files))))
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_delta_tree",
+                    _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                      % ", ".join(sorted(corrupted_history_files)))))
+
         return history_deltas
 
     def _prepare_rows(self, inv_data):
@@ -1944,10 +1949,11 @@ def ajax_inv_render_tree():
         struct_tree, corrupted_history_files = \
             inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:
-            html.add_user_error(
-                "load_inventory_delta_tree",
-                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
-                 ) % ", ".join(corrupted_history_files))
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_delta_tree",
+                    _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                     ) % ", ".join(corrupted_history_files)))
             return
         tree_renderer: NodeRenderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
 
@@ -1956,10 +1962,11 @@ def ajax_inv_render_tree():
         try:
             struct_tree = inventory.load_filtered_and_merged_tree(row)
         except inventory.LoadStructuredDataError:
-            html.add_user_error(
-                "load_inventory_tree",
-                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
-                inventory.get_short_inventory_filepath(hostname))
+            user_errors.add(
+                MKUserError(
+                    "load_inventory_tree",
+                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                    inventory.get_short_inventory_filepath(hostname)))
             return
         tree_renderer = AttributeRenderer(site_id,
                                           hostname,

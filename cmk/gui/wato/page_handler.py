@@ -14,7 +14,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, display_options, transactions
+from cmk.gui.globals import html, display_options, transactions, user_errors
 from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -144,11 +144,10 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
                 raise result
 
         except MKUserError as e:
-            html.add_user_error(e.varname, str(e))
+            user_errors.add(e)
 
         except MKAuthException as e:
-            reason = e.args[0]
-            html.add_user_error(None, reason)
+            user_errors.add(MKUserError(None, e.args[0]))
 
     breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
     page_menu = mode.page_menu(breadcrumb)
@@ -163,8 +162,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
         _show_read_only_warning()
 
     # Show outcome of failed action on this page
-    if html.has_user_errors():
-        html.show_user_errors()
+    html.show_user_errors()
 
     # Show outcome of previous page (that redirected to this one)
     for message in get_flashed_messages():

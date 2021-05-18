@@ -11,7 +11,7 @@ from six import ensure_binary, ensure_str
 import cmk.gui.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, user_errors
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.config as config
 
@@ -64,17 +64,17 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
                 new_value[keyname].update(edited_value)
             except MKUserError as e:
                 messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
             except Exception as e:
                 messages.append("%s: %s" % (vs_dict.title() or _("Properties"), e))
-                html.add_user_error(None, e)
+                user_errors.add(MKUserError(None, str(e)))
 
-            if validate and not html.has_user_errors():
+            if validate and not user_errors:
                 try:
                     validate(new_value[keyname])
                 except MKUserError as e:
-                    messages.append("%s" % e)
-                    html.add_user_error(e.varname, e)
+                    messages.append(str(e))
+                    user_errors.add(e)
 
         if messages:
             messages_joined = "".join(["%s<br>\n" % m for m in messages])

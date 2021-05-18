@@ -29,7 +29,7 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, local, request as global_request, transactions
+from cmk.gui.globals import html, local, request as global_request, transactions, user_errors
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
@@ -496,7 +496,7 @@ class LoginPage(Page):
             userdb.on_failed_login(username)
             raise MKUserError(None, _('Invalid credentials.'))
         except MKUserError as e:
-            html.add_user_error(e.varname, e)
+            user_errors.add(e)
 
     def _show_login_page(self) -> None:
         html.set_render_headfoot(False)
@@ -533,7 +533,7 @@ class LoginPage(Page):
         html.br()
         html.password_input("_password", id_="input_pass", size=None)
 
-        if html.has_user_errors():
+        if user_errors:
             html.open_div(id_="login_error")
             html.show_user_errors()
             html.close_div()

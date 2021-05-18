@@ -15,6 +15,7 @@ from typing import Any, TYPE_CHECKING, Optional, List
 from werkzeug.local import LocalProxy, LocalStack
 
 from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.user_errors import UserErrors
 
 #####################################################################
 # a namespace for storing data during an application context
@@ -137,6 +138,7 @@ class RequestContext:
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
+        self.user_errors = UserErrors()
 
         self._prepend_url_filter = _PrependURLFilter()
         self._web_log_handler: Optional[logging.Handler] = None
@@ -188,6 +190,7 @@ local = request_local_attr()  # None as name will get the whole object.
 user: 'config.LoggedInUser' = request_local_attr('user')
 request: 'http.Request' = request_local_attr('request')
 session: 'userdb.Session' = request_local_attr('session')
+user_errors: 'UserErrors' = request_local_attr('user_errors')
 
 html: 'htmllib.html' = request_local_attr('html')
 timeout_manager: 'TimeoutManager' = request_local_attr('timeout_manager')

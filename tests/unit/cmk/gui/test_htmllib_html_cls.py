@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user_errors
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKUserError
@@ -77,10 +77,10 @@ def test_user_error(register_builtin_html):
     assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
 
 
-def test_add_user_error(register_builtin_html):
-    assert not html.has_user_errors()
-    html.add_user_error(None, "asd <script>alert(1)</script> <br> <b>")
-    assert html.has_user_errors()
+def test_show_user_errors(register_builtin_html):
+    assert not user_errors
+    user_errors.add(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
+    assert user_errors
 
     with html.plugged():
         html.show_user_errors()

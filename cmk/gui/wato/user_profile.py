@@ -28,7 +28,7 @@ from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -313,13 +313,12 @@ class ABCUserProfilePage(Page):
             try:
                 self._action()
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
 
         for message in get_flashed_messages():
             html.show_message(message)
 
-        if html.has_user_errors():
-            html.show_user_errors()
+        html.show_user_errors()
 
         self._show_form()
 

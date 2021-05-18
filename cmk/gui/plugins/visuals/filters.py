@@ -19,10 +19,10 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user_errors
 from cmk.gui.valuespec import (
     DualListChoice,
     Labels,
@@ -2498,7 +2498,9 @@ class BITextFilter(Filter):
             try:
                 reg = re.compile(val.lower())
             except re.error as e:
-                html.add_user_error(None, "Invalid regular expression: %s" % e)
+                user_errors.add(
+                    MKUserError(self.htmlvars[0],
+                                _("Invalid regular expression: %s") % e))
                 return rows
 
             return [row for row in rows if reg.search(row[self.column].lower())]

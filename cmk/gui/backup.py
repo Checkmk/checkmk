@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.page_menu import (
@@ -1796,7 +1796,7 @@ class PageBackupRestore:
                     flash(_("The restore has been started."))
                     return redirect(makeuri_contextless(request, [("mode", "backup_restore")]))
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
 
         # Special handling for Checkmk / CMA differences
         if is_site():

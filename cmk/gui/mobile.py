@@ -362,8 +362,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
                     try:
                         show_commands = do_commands(self.view.datasource.infos[0], rows)
                     except MKUserError as e:
-                        html.show_error("%s" % e)
-                        html.add_user_error(e.varname, e)
+                        html.user_error(e)
                         show_commands = True
                 if show_commands:
                     _show_command_form(self.view.datasource, rows)

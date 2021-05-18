@@ -13,7 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iter
 
 from livestatus import SiteId
 
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.valuespec import ValueSpec
 
 import cmk.utils.plugin_registry
@@ -21,7 +21,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user_errors
 from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import Choices, ColumnName, Row, Rows, VisualContext
 from cmk.gui.page_menu import PageMenuEntry
@@ -419,7 +419,8 @@ class FilterTime(Filter):
                 return time.mktime(
                     time.strptime(html.request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
             except Exception:
-                html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
+                user_errors.add(
+                    MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD.")))
                 return None
 
         if rangename == "unix":

@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import html, request, display_options
+from cmk.gui.globals import html, request, display_options, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -240,7 +240,7 @@ class ModeAuditLog(WatoMode):
                 vs.validate_value(value, "options_" + name)
                 options[name] = value
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
         return options
 
     def _display_daily_audit_log(self, log):
@@ -402,8 +402,7 @@ class ModeAuditLog(WatoMode):
         self._show_audit_log_options_controls()
 
         html.open_div(class_="side_popup_content")
-        if html.has_user_errors():
-            html.show_user_errors()
+        html.show_user_errors()
 
         for name, vs in self._audit_log_options():
             html.render_floating_option(name, "single", "options_", vs, self._options[name])

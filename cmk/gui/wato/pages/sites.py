@@ -66,7 +66,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redire
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user_errors
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
@@ -611,8 +611,8 @@ class ModeDistributedMonitoring(WatoMode):
                 error = _("Cannot connect to remote site: %s") % e
 
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
-                error = "%s" % e
+                user_errors.add(e)
+                error = str(e)
 
             except Exception as e:
                 logger.exception("error logging in")
@@ -620,7 +620,7 @@ class ModeDistributedMonitoring(WatoMode):
                     raise
                 error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace(
                     "\n", "\n<br>")
-                html.add_user_error("_name", error)
+                user_errors.add(MKUserError("_name", error))
 
         wato_html_head(title=_("Login into site \"%s\"") % site["alias"],
                        breadcrumb=self.breadcrumb())

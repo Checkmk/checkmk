@@ -1,0 +1,15 @@
+Title: mk_sap.py: Run Python2 version on hosts with Python2 and Python3
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621329741
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p5
+
+The agent plugin <i>mk_sap.py</i> ("SAP R/3 monitoring plugin") is not
+compatible with Python3, because the used third party library
+(`sapnwrfc`) is only available for Python2.
+This Werk ensures that the Python2 version is used on monitored hosts
+that provide both Python versions.

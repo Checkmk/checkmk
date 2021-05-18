@@ -1754,17 +1754,32 @@ class RuleConditionRenderer(object):
 
     def _tag_conditions(self, host_tag_conditions):
         # type: (Any) -> Generator
-        for tag_spec in host_tag_conditions.itervalues():
+        for taggroup_id, tag_spec in host_tag_conditions.iteritems():
             if isinstance(tag_spec, dict) and "$or" in tag_spec:
-                yield HTML(" <i>or</i> ").join(
-                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$or"]])
+                yield HTML(" <i>or</i> ").join([
+                    self._single_tag_condition(
+                        taggroup_id,
+                        sub_spec,
+                    ) for sub_spec in tag_spec["$or"]
+                ])
             elif isinstance(tag_spec, dict) and "$nor" in tag_spec:
-                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join(
-                    [self._single_tag_condition(sub_spec) for sub_spec in tag_spec["$nor"]])
+                yield HTML(_("Neither") + " ") + HTML(" <i>nor</i> ").join([
+                    self._single_tag_condition(
+                        taggroup_id,
+                        sub_spec,
+                    ) for sub_spec in tag_spec["$nor"]
+                ])
             else:
-                yield self._single_tag_condition(tag_spec)
+                yield self._single_tag_condition(
+                    taggroup_id,
+                    tag_spec,
+                )
 
-    def _single_tag_condition(self, tag_spec):
+    def _single_tag_condition(
+            self,
+            taggroup_id,
+            tag_spec,
+    ):
         negate = False
         if isinstance(tag_spec, dict):
             if "$ne" in tag_spec:
@@ -1778,7 +1793,7 @@ class RuleConditionRenderer(object):
         else:
             tag_id = tag_spec
 
-        tag = config.tags.get_tag_or_aux_tag(tag_id)
+        tag = config.tags.get_tag_or_aux_tag(taggroup_id, tag_id)
         if tag and tag.title:
             if isinstance(tag, GroupedTag):
                 if negate:

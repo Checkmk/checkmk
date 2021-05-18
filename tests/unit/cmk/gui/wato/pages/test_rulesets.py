@@ -81,41 +81,56 @@ def patch_tag_config(
 
 class TestRuleConditionRenderer(object):
     @pytest.mark.parametrize(
-        "tag_spec, rendered_condition",
+        "taggroup_id, tag_spec, rendered_condition",
         [
             pytest.param(
+                "tag_grp_1",
                 "grp_1_tg_1",
                 HTML("Host: Tag group 1 is <b>Tag 1.1</b>"),
                 id="grouped tag",
             ),
             pytest.param(
+                "tag_grp_1",
                 {"$ne": "grp_1_tg_1"},
                 HTML("Host: Tag group 1 is <b>not</b> <b>Tag 1.1</b>"),
                 id="negated grouped tag",
             ),
             pytest.param(
                 "aux_tag_1",
+                "aux_tag_1",
                 HTML("Host has tag <b>Auxiliary tag 1</b>"),
                 id="auxiliary tag",
             ),
             pytest.param(
+                "aux_tag_1",
                 {"$ne": "aux_tag_1"},
                 HTML("Host does not have tag <b>Auxiliary tag 1</b>"),
                 id="negated auxiliary tag",
             ),
             pytest.param(
+                "xyz",
                 "a",
                 HTML("Unknown tag: Host has the tag <tt>a</tt>"),
+                id="unknown tag group",
+            ),
+            pytest.param(
+                "xyz",
+                "grp_1_tg_1",
+                HTML("Unknown tag: Host has the tag <tt>grp_1_tg_1</tt>"),
                 id="unknown tag",
             ),
         ],
     )
     def test_single_tag_condition(
             self,
+            taggroup_id,
             tag_spec,
             rendered_condition,
     ):
-        assert RuleConditionRenderer()._single_tag_condition(tag_spec) == rendered_condition
+        assert RuleConditionRenderer()._single_tag_condition(
+            taggroup_id,
+            tag_spec,
+        ) == rendered_condition
 
     def test_tag_condition(self):
         assert list(RuleConditionRenderer()._tag_conditions({

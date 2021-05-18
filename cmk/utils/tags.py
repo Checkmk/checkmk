@@ -415,9 +415,10 @@ class TagConfig(object):
 
     def get_tag_or_aux_tag(
             self,
+            taggroupd_id,
             tag_id,
     ):
-        for tag_group in self.tag_groups:
+        for tag_group in (t_grp for t_grp in self.tag_groups if t_grp.id == taggroupd_id):
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
                     return grouped_tag

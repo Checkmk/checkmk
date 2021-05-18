@@ -82,11 +82,8 @@ storcli_info()
                             break
                         ;;
                         *)
-                            EID_Slt=$( echo "$line" | awk '{print $1}' )
+                            echo "$line" | IFS=' ' read -r EID_Slt DID _ _ _ _ VEND _ _ _ _ MODEL _
                             echo "$EID_Slt" | IFS=: read -r EID Slt 
-                            DID=$( echo "$line" | awk '{print $2}' )
-                            MODEL=$( echo "$line" | awk '{print $12}' )
-                            VEND=$( echo "$line" | awk '{print $7}' )
                             smartctl -d "megaraid,${DID}" -v 9,raw48 -A /dev/${SG}     | \
                               grep Always  | grep -E -v '^190(.*)Temperature(.*)' | \
                               sed "s|^|Enc${EID}/Slot${Slt} $VEND $MODEL |"

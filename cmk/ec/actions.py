@@ -8,7 +8,7 @@ from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Iterable, Optional, Set, Tuple
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -189,10 +189,6 @@ def _execute_script(event_columns: Any, body: Any, event: Any, logger: Any) -> N
     script_env = os.environ.copy()
 
     for key, value in _get_event_tags(event_columns, event).items():
-        if isinstance(key, str):
-            key = key.encode("utf-8")
-        if isinstance(value, str):
-            value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
     # Traps can contain 0-Bytes. We need to remove this from the script
@@ -212,7 +208,8 @@ def _execute_script(event_columns: Any, body: Any, event: Any, logger: Any) -> N
         logger.info('  Output: \'%s\'' % stdout)
 
 
-def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
+def _get_event_tags(event_columns: Iterable[Tuple[str, Any]], event: Dict[str,
+                                                                          Any]) -> Dict[str, str]:
     substs = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]

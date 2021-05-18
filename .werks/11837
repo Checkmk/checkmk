@@ -8,5 +8,5 @@ Knowledge: doc
 Level: 2
 Version: 2.1.0i1
 
-With this realease Windows agent opens firewall for all three Windows network profile:
+With this release Windows agent opens firewall for all three Windows network profile:
 Private, Domain and Public.

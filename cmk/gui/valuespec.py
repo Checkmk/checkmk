@@ -5659,10 +5659,14 @@ class Labels(ValueSpec):
         return {}
 
     def from_html_vars(self, varprefix):
+        value = html.request.get_unicode_input_mandatory(varprefix, "[]")
+        return self._from_html_vars(value, varprefix)
+
+    def _from_html_vars(self, value: str, varprefix) -> Dict[str, Any]:
         labels: Dict[str, Any] = {}
 
         try:
-            decoded_labels = json.loads(request.get_unicode_input(varprefix) or "[]")
+            decoded_labels = json.loads(value or "[]")
         except ValueError as e:
             raise MKUserError(varprefix, _("Failed to parse labels: %s") % e)
 

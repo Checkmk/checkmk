@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
+from typing import Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
 
 from livestatus import SiteId
 
@@ -22,7 +22,15 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user_errors, request
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import Choices, ColumnName, Row, Rows, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    ColumnName,
+    Row,
+    Rows,
+    VisualContext,
+    FilterHTTPVariables,
+    FilterHeader,
+)
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.sites import get_site_config
 
@@ -266,19 +274,17 @@ class Filter(metaclass=abc.ABCMeta):
         return True
 
     @abc.abstractmethod
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         raise NotImplementedError()
 
-    # The reason for infoname: Any is that no subclass uses this argument and it will be removed
-    # in the future.
-    def filter(self, infoname: Any) -> str:
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""
 
-    def need_inventory(self) -> bool:
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         """Whether this filter needs to load host inventory data"""
         return False
 
-    def validate_value(self, value: Dict) -> None:
+    def validate_value(self, value: FilterHTTPVariables) -> None:
         return
 
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
@@ -289,7 +295,7 @@ class Filter(metaclass=abc.ABCMeta):
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> FilterHTTPVariables:
         """return filter request variables built from the given row"""
         return {}
 
@@ -302,13 +308,10 @@ class Filter(metaclass=abc.ABCMeta):
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
-    def value(self):
+    def value(self) -> FilterHTTPVariables:
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = request.var(varname, '')
-        return val
+        return {varname: request.get_str_input_mandatory(varname, '') for varname in self.htmlvars}
 
 
 class FilterTristate(Filter):
@@ -332,24 +335,27 @@ class FilterTristate(Filter):
                          is_show_more=is_show_more)
         self.deflt = deflt
 
-    def display(self):
-        current = request.var(self.varname)
+    def display(self, value: FilterHTTPVariables) -> None:
+        current = value[self.varname]
         html.begin_radio_group(horizontal=True)
-        for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
-            checked = current == value or (current in [None, ""] and int(value) == self.deflt)
-            html.radiobutton(self.varname, value, checked, text + u" &nbsp; ")
+        for state, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
+            checked = current == state or (current in [None, ""] and int(state) == self.deflt)
+            html.radiobutton(self.varname, state, checked, text + u" &nbsp; ")
         html.end_radio_group()
 
-    def tristate_value(self):
-        return request.get_integer_input_mandatory(self.varname, self.deflt)
+    def tristate_value(self, value: FilterHTTPVariables) -> int:
+        try:
+            return int(value.get(self.varname, ""))
+        except ValueError:
+            return self.deflt
 
-    def filter(self, infoname):
-        current = self.tristate_value()
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        current = self.tristate_value(value)
         if current == -1:  # ignore
             return ""
-        return self.filter_code(infoname, current == 1)
+        return self.filter_code(current == 1)
 
-    def filter_code(self, infoname, positive):
+    def filter_code(self, positive) -> str:
         raise NotImplementedError()
 
 
@@ -385,7 +391,7 @@ class FilterTime(Filter):
                          link_columns=[column] if column is not None else [],
                          is_show_more=is_show_more)
 
-    def display(self):
+    def display(self, value: FilterHTTPVariables):
         choices: Choices = [(str(sec), title + " " + _("ago")) for sec, title in self.ranges]
         choices += [("abs", _("Date (YYYY-MM-DD)")), ("unix", _("UNIX timestamp"))]
 
@@ -403,8 +409,8 @@ class FilterTime(Filter):
             html.close_tr()
         html.close_table()
 
-    def filter(self, infoname):
-        fromsecs, untilsecs = self.get_time_range()
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        fromsecs, untilsecs = self.get_time_range(value)
         filtertext = ""
         if fromsecs is not None:
             filtertext += "Filter: %s >= %d\n" % (self.column, fromsecs)
@@ -413,34 +419,32 @@ class FilterTime(Filter):
         return filtertext
 
     # Extract timerange user has selected from HTML variables
-    def get_time_range(self):
-        return self._get_time_range_of("from"), \
-               self._get_time_range_of("until")
+    def get_time_range(self, value: FilterHTTPVariables):
+        return self._get_time_range_of(value, "from"), \
+               self._get_time_range_of(value, "until")
 
-    def _get_time_range_of(self, what: str) -> Union[None, int, float]:
+    def _get_time_range_of(self, value: FilterHTTPVariables, what: str) -> Union[None, int, float]:
         varprefix = self.ident + "_" + what
 
-        rangename = request.var(varprefix + "_range")
+        rangename = value.get(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(
-                    time.strptime(request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
+                return time.mktime(time.strptime(value[varprefix], "%Y-%m-%d"))
             except Exception:
                 user_errors.add(
                     MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD.")))
                 return None
 
         if rangename == "unix":
-            return request.get_integer_input_mandatory(varprefix)
+            return int(value[varprefix])
         if rangename is None:
             return None
 
         try:
-            count = request.get_integer_input_mandatory(varprefix)
+            count = int(value[varprefix])
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:
-            request.set_var(varprefix, "")
             return None
 
 

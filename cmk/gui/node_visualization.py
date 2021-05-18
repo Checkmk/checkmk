@@ -40,7 +40,7 @@ import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import FilterHeaders
+from cmk.gui.type_defs import FilterHeader
 from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
@@ -184,7 +184,7 @@ class ParentChildTopologyPage(Page):
     def _get_overlays_config(self) -> List:
         return []
 
-    def _get_filter_headers(self) -> FilterHeaders:
+    def _get_filter_headers(self) -> FilterHeader:
         view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 

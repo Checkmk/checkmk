@@ -129,7 +129,7 @@ if cmk_version.is_managed_edition():
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,
-    FilterHeaders,
+    FilterHeader,
     HTTPVariables,
     InfoName,
     PainterSpec,
@@ -2068,8 +2068,7 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter],
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
-        if _is_inventory_data_needed(view.group_cells, view.row_cells, view.sorters,
-                                     all_active_filters):
+        if _is_inventory_data_needed(view, all_active_filters):
             _add_inventory_data(rows)
 
         if not cmk_version.is_raw_edition():
@@ -2207,14 +2206,13 @@ def _get_needed_regular_columns(
 # TODO: When this is used by the reporting then *all* filters are active.
 # That way the inventory data will always be loaded. When we convert this to the
 # visuals principle the we need to optimize this.
-def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]') -> FilterHeaders:
+def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]') -> FilterHeader:
     """Prepare Filter headers for Livestatus"""
     filterheaders = ""
     for filt in all_active_filters:
         try:
             filt.validate_value(filt.value())
-            # TODO: Argument does not seem to be used anywhere. Remove it
-            header = filt.filter(view.datasource.ident)
+            header = filt.filter({"value": "from context"})
         except MKUserError as e:
             user_errors.add(e)
             continue
@@ -2240,9 +2238,12 @@ def _get_needed_join_columns(join_cells: List[JoinCell],
     return list(join_columns)
 
 
-def _is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell],
-                              sorters: List[SorterEntry],
-                              all_active_filters: 'List[Filter]') -> bool:
+def _is_inventory_data_needed(view: View, all_active_filters: 'List[Filter]') -> bool:
+
+    group_cells: List[Cell] = view.group_cells
+    cells: List[Cell] = view.row_cells
+    sorters: List[SorterEntry] = view.sorters
+
     for cell in cells:
         if cell.has_tooltip():
             if cell.tooltip_painter_name().startswith("inv_"):
@@ -2257,7 +2258,7 @@ def _is_inventory_data_needed(group_cells: List[Cell], cells: List[Cell],
             return True
 
     for filt in all_active_filters:
-        if filt.need_inventory():
+        if filt.need_inventory(view.context.get(filt.ident, {})):
             return True
 
     return False

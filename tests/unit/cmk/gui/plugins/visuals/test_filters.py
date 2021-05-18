@@ -7,6 +7,7 @@
 # yapf: disable
 from collections import namedtuple
 import pytest
+from cmk.gui.type_defs import VisualContext
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tags
@@ -75,11 +76,9 @@ def test_filters_filter_with_empty_request(request_context, filter_ident, live):
     else:
         expected_filter = ""
 
-    with live(expect_status_query=False), request.stashed_vars():
-        request.del_vars()
-
+    with live(expect_status_query=False):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]
-        assert filt.filter(infoname="bla") == expected_filter
+        assert filt.filter({}) == expected_filter
 
 
 FilterTest = namedtuple("FilterTest", [
@@ -393,26 +392,22 @@ filter_tests = [
         ),
     ),
     FilterTest(
+        ident="hostsgroups_having_problems",
+        request_vars=[("hostgroups_having_hosts_down", "on")],
+        expected_filters=("Filter: num_hosts_down > 0\n")
+    ),
+    FilterTest(
         ident="hoststate",
         request_vars=[
             ('hoststate_filled', "1"),
-            ('hst0', ""),
-            ('hst1', ""),
+            ('hst0', "on"),
+            ('hst1', "on"),
         ],
-        expected_filters=(
-            "Filter: host_state = 0\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-            "Filter: host_state = 1\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-            "Filter: host_state = 2\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-        ),
+        expected_filters=("Filter: host_state = 2\n"
+                          "Filter: host_has_been_checked = 1\n"
+                          "And: 2\n"
+                          "Negate:\n"
+                          "Filter: host_has_been_checked = 1\n"),
     ),
     # Testing base class FilterECServiceLevelRange
     FilterTest(
@@ -521,6 +516,7 @@ filter_tests = [
             "Filter: service_has_been_checked = 1\n"
             "And: 2\n"
             "Negate:\n"
+            "Filter: service_has_been_checked = 1\n"
         ),
     ),
     FilterTest(
@@ -570,13 +566,9 @@ def test_filters_filter(request_context, test, monkeypatch):
     # Need for ABCTagFilter
     monkeypatch.setattr(config, "tags", cmk.utils.tags.BuiltinTagConfig())
 
-    with request.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        request.del_vars()
-        for key, val in test.request_vars:
-            request.set_var(key, val)
-
+    with on_time('2018-04-15 16:50', 'CET'):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-        assert filt.filter(infoname="bla") == test.expected_filters
+        assert filt.filter(dict(test.request_vars)) == test.expected_filters
 
 FilterTableTest = namedtuple("FilterTableTest", [
     "ident",
@@ -1066,26 +1058,22 @@ def test_filters_filter_table(request_context, test, monkeypatch):
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
-    with request.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        request.del_vars()
-        for key, val in test.request_vars:
-            request.set_var(key, val)
+    with on_time('2018-04-15 16:50', 'CET'):
+        context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-            assert filt.filter_table({}, test.rows) == test.expected_rows
+            assert filt.filter_table(context, test.rows) == test.expected_rows
 
 
 # Filter form is not really checked. Only checking that no exception occurs
 def test_filters_display_with_empty_request(request_context, live):
-    with live, request.stashed_vars():
-        request.del_vars()
-
+    with live:
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
             with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
-                filt.display()
+                filt.display({k:"" for k in filt.htmlvars})
 
 
 def _set_expected_queries(filt_ident, live):

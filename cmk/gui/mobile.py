@@ -392,7 +392,7 @@ def _show_filter_form(show_filters: List[Filter]) -> None:
     for _sort_index, title, f in s:
         html.open_li(**{"data-role": "fieldcontain"})
         html.legend(title)
-        f.display()
+        f.display({"value": "from context"})
         html.close_li()
     html.close_ul()
     html.hidden_fields()

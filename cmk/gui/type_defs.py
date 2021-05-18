@@ -96,7 +96,7 @@ ViewSpec = Dict[str, Any]
 AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
-FilterHeaders = str
+FilterHeader = str
 
 # Configuration related
 ConfigDomainName = str

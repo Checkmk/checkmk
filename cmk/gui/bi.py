@@ -818,7 +818,7 @@ def compute_bi_aggregation_filter(all_active_filters):
             if (host_name := host_match.get("aggr_host_host", "")) != "":
                 only_hosts = [host_name]
         elif active_filter.ident == "aggr_group":
-            aggr_group = active_filter.selected_group()
+            aggr_group = active_filter.selected_group({})
             if aggr_group:
                 only_group = [aggr_group]
         elif active_filter.ident == "aggr_service":

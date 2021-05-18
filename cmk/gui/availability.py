@@ -27,7 +27,7 @@ from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
 from cmk.gui.view_utils import CSSClass
-from cmk.gui.type_defs import (Rows, Row, FilterHeaders, ViewProcessTracking, VisualContext,
+from cmk.gui.type_defs import (Rows, Row, FilterHeader, ViewProcessTracking, VisualContext,
                                HTTPVariables)
 from cmk.gui.valuespec import (
     Integer,
@@ -720,7 +720,7 @@ def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
 def get_availability_rawdata(
     what: AVObjectType,
     context: VisualContext,
-    filterheaders: FilterHeaders,
+    filterheaders: FilterHeader,
     only_sites: OnlySites,
     av_object: AVObjectSpec,
     include_output: bool,
@@ -1992,7 +1992,7 @@ BITimelineEntry = Any
 
 
 def get_bi_availability_rawdata(
-    filterheaders: FilterHeaders,
+    filterheaders: FilterHeader,
     only_sites: OnlySites,
     av_object: AVObjectSpec,
     include_output: bool,

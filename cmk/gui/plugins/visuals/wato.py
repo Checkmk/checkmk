@@ -13,7 +13,7 @@ import cmk.gui.sites as sites
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, FilterHTTPVariables, FilterHeader
 
 from cmk.gui.valuespec import ListOf, DropdownChoice
 
@@ -84,13 +84,12 @@ class FilterWatoFolder(Filter):
                 allowed_folders.add(subfolder)
         return allowed_folders
 
-    def display(self):
+    def display(self, value):
         html.dropdown(self.ident, self.choices())
 
-    def filter(self, infoname):
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
-        folder = request.get_str_input_mandatory(self.ident, "")
-        if folder:
+        if folder := value.get(self.ident):
             return "Filter: host_filename %s\n" % _wato_folders_to_lq_regex(folder)
         return ""
 
@@ -139,10 +138,10 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         choices = [entry for entry in self.choices() if entry[0]]
         return ListOf(DropdownChoice(title=_("folders"), choices=choices))
 
-    def display(self):
+    def display(self, value):
         self.valuespec().render_input(self.ident, [])
 
-    def filter(self, infoname):
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         self.check_wato_data_update()
         folders = self.valuespec().from_html_vars(self.ident)
         regex_values = list(map(_wato_folders_to_lq_regex, folders))

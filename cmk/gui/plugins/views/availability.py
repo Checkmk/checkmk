@@ -78,7 +78,7 @@ from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import (
-        FilterHeaders,
+        FilterHeader,
         Rows,
         HTTPVariables,
     )
@@ -213,7 +213,7 @@ def _show_availability_options_controls() -> None:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def show_availability_page(view: View, filterheaders: FilterHeaders) -> None:
+def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
     user.need_permission("general.see_availability")
 
     # We make reports about hosts, services or BI aggregates

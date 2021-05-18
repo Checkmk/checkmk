@@ -1194,7 +1194,7 @@ def show_filter(f: Filter) -> None:
     html.open_div(class_="content")
     try:
         with output_funnel.plugged():
-            f.display()
+            f.display({"value": "from context"})
             html.write_html(HTML(output_funnel.drain()))
     except LivestatusTestingError:
         raise
@@ -1445,7 +1445,7 @@ def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
 
 
 def collect_filter_headers(filters: Iterable[Filter],) -> Iterable[str]:
-    yield from (filter.filter(None) for filter in filters)
+    yield from (filter.filter({"value": "from context"}) for filter in filters)
 
 
 #.

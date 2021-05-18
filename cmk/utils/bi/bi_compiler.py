@@ -127,9 +127,8 @@ class BICompiler:
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
         self._cleanup_vanished_aggregations()
         self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
-
-        self._path_compilation_timestamp.write_text(
-            str(current_configstatus["configfile_timestamp"]))
+        store.save_text_to_file(str(self._path_compilation_timestamp),
+                                str(current_configstatus["configfile_timestamp"]))
 
     def _cleanup_vanished_aggregations(self):
         valid_aggregations = list(self._compiled_aggregations.keys())

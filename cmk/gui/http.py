@@ -9,7 +9,8 @@ from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
 
 from six import ensure_binary, ensure_str
 import werkzeug.wrappers
-import werkzeug.wrappers.json as json
+# NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
+import werkzeug.wrappers.json as json  # type: ignore[import]
 from werkzeug.utils import get_content_type
 
 from cmk.gui.globals import request

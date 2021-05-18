@@ -1959,30 +1959,23 @@ class html(ABCHTMLGenerator):
     #
 
     def user_error(self, e: MKUserError) -> None:
-        assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
-        self.open_div(class_="error")
-        self.write_text(str(e))
-        self.close_div()
+        """Display the given MKUserError and store message for later use"""
+        self.show_error(str(e))
         self.add_user_error(e.varname, e)
 
-    # user errors are used by input elements to show invalid input
     def add_user_error(self, varname: Optional[str], msg_or_exc: Union[str, Exception]) -> None:
-        if isinstance(msg_or_exc, Exception):
-            message: str = u"%s" % msg_or_exc
-        else:
-            message = ensure_str(msg_or_exc)
-
-        # TODO: Find the multiple varname call sites and clean this up
-        if isinstance(varname, list):
-            for v in varname:
-                self.add_user_error(v, message)
-        else:
-            self.user_errors[varname] = message
+        """Store an error message for later displaying on the same page
+        User errors are used by input elements to show invalid input
+        """
+        self.user_errors[varname] = (str(msg_or_exc)
+                                     if isinstance(msg_or_exc, Exception) else msg_or_exc)
 
     def has_user_errors(self) -> bool:
+        """Whether or not previous steps during page rendering produced an error"""
         return len(self.user_errors) > 0
 
     def show_user_errors(self) -> None:
+        """Show all previously created user errors"""
         if self.has_user_errors():
             self.open_div(class_="error")
             self.write(self.render_br().join(

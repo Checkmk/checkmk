@@ -668,8 +668,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
-                    html.show_error("%s" % e)
-                    html.add_user_error(e.varname, e)
+                    html.user_error(e)
 
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
@@ -1281,8 +1280,7 @@ def show_create_view_dialog(next_url=None):
                 next_url = next_url + '&datasource=%s' % ds
             raise HTTPRedirect(next_url)
         except MKUserError as e:
-            html.div(str(e), class_=["error"])
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     html.begin_form('create_view')
     html.hidden_field('mode', 'create')

@@ -3219,7 +3219,7 @@ class ConfigCache:
 
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=tag_to_group_map,
-            host_tag_lists=self._hosttags,
+            host_tags=host_tags,
             host_paths=self._host_paths,
             labels=self.labels,
             clusters_of=self._clusters_of_cache,

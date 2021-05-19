@@ -74,6 +74,7 @@ TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditi
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
+TagsOfHosts = Dict[HostName, TaggroupIDToTagID]
 
 HostNameConditions = Union[None, Dict[str, List[Union[Dict[str, str], str]]],
                            List[Union[Dict[str, str], str]]]

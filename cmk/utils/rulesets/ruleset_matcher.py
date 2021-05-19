@@ -30,6 +30,7 @@ from cmk.utils.type_defs import (
     TagID,
     TagIDs,
     TagIDToTaggroupID,
+    TagsOfHosts,
 )
 
 if TYPE_CHECKING:
@@ -84,7 +85,7 @@ class RulesetMatcher:
     def __init__(
         self,
         tag_to_group_map: TagIDToTaggroupID,
-        host_tag_lists: Dict[HostName, TagIDs],
+        host_tags: TagsOfHosts,
         host_paths: Dict[HostName, str],
         labels: 'LabelManager',
         all_configured_hosts: Set[HostName],
@@ -97,7 +98,7 @@ class RulesetMatcher:
 
         self.ruleset_optimizer = RulesetOptimizer(
             self,
-            host_tag_lists,
+            host_tags,
             host_paths,
             labels,
             all_configured_hosts,
@@ -268,14 +269,23 @@ class RulesetMatcher:
 class RulesetOptimizer:
     """Performs some precalculations on the configured rulesets to improve the
     processing performance"""
-    def __init__(self, ruleset_matcher: RulesetMatcher, host_tag_lists: Dict[HostName, TagIDs],
-                 host_paths: Dict[HostName, str], labels: 'LabelManager',
-                 all_configured_hosts: Set[HostName], clusters_of: Dict[HostName, List[HostName]],
-                 nodes_of: Dict[HostName, List[HostName]]) -> None:
+    def __init__(
+        self,
+        ruleset_matcher: RulesetMatcher,
+        host_tags: TagsOfHosts,
+        host_paths: Dict[HostName, str],
+        labels: 'LabelManager',
+        all_configured_hosts: Set[HostName],
+        clusters_of: Dict[HostName, List[HostName]],
+        nodes_of: Dict[HostName, List[HostName]],
+    ) -> None:
         super(RulesetOptimizer, self).__init__()
         self._ruleset_matcher = ruleset_matcher
         self._labels = labels
-        self._host_tag_lists = host_tag_lists
+        # For now, we still throw away the taggroup ids, until the actual matching can handle them
+        self._host_tags_as_sets = {
+            hn: set(tags_of_host.values()) for hn, tags_of_host in host_tags.items()
+        }
         self._host_paths = host_paths
         self._clusters_of = clusters_of
         self._nodes_of = nodes_of
@@ -509,8 +519,10 @@ class RulesetOptimizer:
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if tag_conditions and not self.matches_host_tags(self._host_tag_lists[hostname],
-                                                                 tag_conditions):
+                if tag_conditions and not self.matches_host_tags(
+                        self._host_tags_as_sets[hostname],
+                        tag_conditions,
+                ):
                     continue
 
                 if labels:
@@ -621,10 +633,9 @@ class RulesetOptimizer:
         if self._all_processed_hosts_similarity < 3.0:
             # Without shared folders
             for hostname in valid_hosts:
-                host_tags = self._host_tag_lists[hostname]
-                if not positive_match_tags - host_tags:
-                    if not negative_match_tags.intersection(host_tags):
-                        matching.add(hostname)
+                if (not positive_match_tags - self._host_tags_as_sets[hostname]) and (
+                        not negative_match_tags.intersection(self._host_tags_as_sets[hostname])):
+                    matching.add(hostname)
 
             self._all_matching_hosts_match_cache[cache_id] = matching
             return matching
@@ -638,10 +649,9 @@ class RulesetOptimizer:
             hosts_with_same_tag = self._filter_hosts_with_same_tags_as_host(hostname, valid_hosts)
             checked_hosts.update(hosts_with_same_tag)
 
-            tag_ids = self._host_tag_lists[hostname]
-            if not positive_match_tags - tag_ids:
-                if not negative_match_tags.intersection(tag_ids):
-                    matching.update(hosts_with_same_tag)
+            if (not positive_match_tags - self._host_tags_as_sets[hostname]) and (
+                    not negative_match_tags.intersection(self._host_tags_as_sets[hostname])):
+                matching.update(hosts_with_same_tag)
 
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
@@ -672,7 +682,7 @@ class RulesetOptimizer:
     def _initialize_host_lookup(self):
         # Determine hosttags without folder tag
         for hostname in self._all_configured_hosts:
-            tags_without_folder = set(self._host_tag_lists[hostname])
+            tags_without_folder = self._host_tags_as_sets[hostname]
             try:
                 tags_without_folder.remove(self._host_paths.get(hostname, "/"))
             except (KeyError, ValueError):

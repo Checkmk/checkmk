@@ -58,7 +58,7 @@ class AgentFileCache(FileCache[AgentRawData]):
 class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
     def cache_read(mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
+        return mode is not Mode.FORCE_SECTIONS
 
     @staticmethod
     def cache_write(mode: Mode) -> bool:

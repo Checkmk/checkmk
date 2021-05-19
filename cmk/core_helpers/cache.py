@@ -296,23 +296,28 @@ class FileCache(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     def read(self, mode: Mode) -> Optional[TRawData]:
-        if not (self.simulation or self.cache_read(mode)):
-            return None
-
-        raw_data = self._read(self.make_path(mode))
-        if raw_data is None and self.simulation:
-            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
-        return raw_data
-
-    def _read(self, path: Path) -> Optional[TRawData]:
-        if not path.exists():
-            self._logger.debug("Not using cache (Does not exist)")
-            return None
-
         if self.disabled:
             self._logger.debug("Not using cache (Cache usage disabled)")
             return None
 
+        path = self.make_path(mode)
+        if not path.exists():
+            self._logger.debug("Not using cache (Does not exist)")
+            return None
+
+        if not (self.simulation or self.cache_read(mode)):
+            self._logger.debug("Not using cache (Mode %s)", mode)
+            return None
+
+        raw_data = self._read(path)
+        if raw_data is None and self.simulation:
+            raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
+
+        if raw_data is not None:
+            self._logger.debug("Got %r bytes data from cache", len(raw_data))
+        return raw_data
+
+    def _read(self, path: Path) -> Optional[TRawData]:
         may_use_outdated = self.simulation or self.use_outdated
         cachefile_age = cmk.utils.cachefile_age(path)
         if not may_use_outdated and cachefile_age > self.max_age:

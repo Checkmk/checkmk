@@ -109,11 +109,12 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.debug("[%s] Fetch with cache settings: %r, Cache enabled: %r",
-                           self.__class__.__name__, self.file_cache,
-                           self.file_cache.cache_read(mode))
-
         # TODO(ml): EAFP would significantly simplify the code.
+        self._logger.debug(
+            "[%s] Fetch with cache settings: %r",
+            self.__class__.__name__,
+            self.file_cache,
+        )
         raw_data = self.file_cache.read(mode)
         if raw_data:
             self._logger.log(VERBOSE, "[%s] Use cached data", self.__class__.__name__)

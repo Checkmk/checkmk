@@ -820,11 +820,6 @@ class TestFetcherCaching:
     def patch_io(self, fetcher, monkeypatch):
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
 
-    def test_fetch_not_reading_cache_in_checking_mode(self, fetcher):
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.CHECKING) == result.OK(b"fetched_section")
-        assert fetcher.file_cache.cache == b"fetched_section"
-
     # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"

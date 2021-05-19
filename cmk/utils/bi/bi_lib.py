@@ -63,7 +63,9 @@ from cmk.utils.type_defs import (
     HostState,
     ServiceState,
     ServiceDetails,
+    TaggroupID,
     TaggroupIDToTagCondition,
+    TagID,
 )
 
 
@@ -109,7 +111,7 @@ BIServiceData = NamedTuple("BIServiceData", [
 
 BIHostData = NamedTuple("BIHostData", [
     ("site_id", str),
-    ("tags", Set[str]),
+    ("tags", Set[Tuple[TaggroupID, TagID]]),
     ("labels", MapGroup2Value),
     ("folder", str),
     ("services", Dict[str, BIServiceData]),

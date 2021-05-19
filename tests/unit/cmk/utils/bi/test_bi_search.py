@@ -79,7 +79,7 @@ def test_host_search(search_class, bi_searcher_with_sample_config):
     schema_config = search_class.schema()().dump(
         {"conditions": {
             "host_tags": {
-                "cmk-agent": "clone-tag"
+                "clone-tag": "clone-tag"
             }
         }})
     search = search_class(schema_config)

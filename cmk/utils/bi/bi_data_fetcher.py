@@ -127,7 +127,7 @@ class BIStructureFetcher:
             # Named tuples/dicts will be used later on when the data gets processed
             site_data[site][host_name] = (
                 site,
-                set(host_tags.values()),
+                set(host_tags.items()),
                 host_labels,
                 host_filename.rstrip("/hosts.mk"),
                 services,
@@ -175,7 +175,7 @@ class BIStructureFetcher:
     def add_site_data(self, site_id, hosts) -> None:
         # BIHostData
         #("site_id", str),
-        #("tags", set),
+        #("tags", Set[Tuple[TaggroupID, TagID]]),
         #("labels", set),
         #("folder", str),
         #("services", Dict[str, BIServiceData]),

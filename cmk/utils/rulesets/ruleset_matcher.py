@@ -559,11 +559,9 @@ class RulesetOptimizer:
         hosttags: TagIDs,
         required_tags: TaggroupIDToTagCondition,
     ) -> bool:
-        for tag_spec in required_tags.values():
-            if matches_tag_spec(tag_spec, hosttags) is False:
-                return False
-
-        return True
+        return all(
+            matches_tag_condition(tag_condition, hosttags)
+            for tag_condition in required_tags.values())
 
     def _condition_cache_id(
         self,
@@ -704,35 +702,31 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
     return tag_or_label_spec
 
 
-def matches_tag_spec(tag_spec: TagCondition, hosttags: TagIDs) -> bool:
+def matches_tag_condition(tag_condition: TagCondition, hosttags: TagIDs) -> bool:
     is_not = False
-    if isinstance(tag_spec, dict):
-        if "$ne" in tag_spec:
+    if isinstance(tag_condition, dict):
+        if "$ne" in tag_condition:
             is_not = True
-            tag_spec = cast(TagConditionNE, tag_spec)["$ne"]
+            tag_condition = cast(TagConditionNE, tag_condition)["$ne"]
 
-        elif "$or" in tag_spec:
+        elif "$or" in tag_condition:
             return any(
-                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in cast(
+                matches_tag_condition(sub_tag_condition, hosttags) for sub_tag_condition in cast(
                     TagConditionOR,
-                    tag_spec,
+                    tag_condition,
                 )["$or"])
 
-        elif "$nor" in tag_spec:
+        elif "$nor" in tag_condition:
             return not any(
-                matches_tag_spec(sub_tag_spec, hosttags) for sub_tag_spec in cast(
+                matches_tag_condition(sub_tag_condition, hosttags) for sub_tag_condition in cast(
                     TagConditionNOR,
-                    tag_spec,
+                    tag_condition,
                 )["$nor"])
 
         else:
             raise NotImplementedError()
 
-    matches = tag_spec in hosttags
-    if matches == is_not:
-        return False
-
-    return True
+    return (tag_condition in hosttags) is not is_not
 
 
 def matches_labels(object_labels, required_labels) -> bool:

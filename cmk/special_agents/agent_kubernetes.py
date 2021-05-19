@@ -230,6 +230,17 @@ class Node(Metadata):
         self.stats['timestamp'] = (dateutil.parser.parse(self.stats['timestamp']).timestamp()
                                    if self.stats.get('timestamp') else time.time())
 
+        is_control_plane = (
+            # 1.18 returns an empty string, 1.20 returns 'true'
+            ('node-role.kubernetes.io/control-plane' in self.labels) or
+            ('node-role.kubernetes.io/master' in self.labels))
+
+        if is_control_plane:
+            self.labels['cmk/kubernetes_object'] = "control-plane_node"
+        else:
+            self.labels['cmk/kubernetes_object'] = "worker_node"
+        self.labels['cmk/kubernetes'] = "yes"
+
     @property
     def conditions(self) -> Optional[Dict[str, str]]:
         if not self._status:

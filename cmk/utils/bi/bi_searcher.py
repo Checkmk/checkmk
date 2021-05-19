@@ -152,14 +152,15 @@ class BISearcher(ABCBISearcher):
         hosts: List[BIHostData],
         tag_conditions: TaggroupIDToTagCondition,
     ) -> List[BIHostData]:
-        matched_hosts = []
-        for host in hosts:
-            for tag_condition in tag_conditions.values():
-                if not matches_tag_condition(tag_condition, host.tags):
-                    break
-            else:  # I know..
-                matched_hosts.append(host)
-        return matched_hosts
+        return [
+            host for host in hosts  #
+            if all(
+                matches_tag_condition(
+                    taggroup_id,
+                    tag_condition,
+                    host.tags,
+                ) for taggroup_id, tag_condition in tag_conditions.items())
+        ]
 
     def filter_host_labels(self, hosts: List[BIHostData], required_labels):
         if not required_labels:

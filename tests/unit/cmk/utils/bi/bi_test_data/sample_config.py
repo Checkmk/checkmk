@@ -8,8 +8,15 @@ bi_structure_states = {
     'heute': (
         'heute',
         {
-            'auto-piggyback', 'cmk-agent', 'heute', 'ip-v4', 'ip-v4-only', 'lan', 'no-snmp', 'prod',
-            'tcp'
+            ('piggyback', 'auto-piggyback'),
+            ('agent', 'cmk-agent'),
+            ('site', 'heute'),
+            ('ip-v4', 'ip-v4'),
+            ('address_family', 'ip-v4-only'),
+            ('networking', 'lan'),
+            ('snmp_ds', 'no-snmp'),
+            ('criticality', 'prod'),
+            ('tcp', 'tcp'),
         },
         {
             'cmk/check_mk_server': 'yes'
@@ -41,8 +48,16 @@ bi_structure_states = {
     'heute_clone': (
         'heute',
         {
-            'auto-piggyback', 'cmk-agent', 'heute', 'ip-v4', 'ip-v4-only', 'lan', 'no-snmp', 'prod',
-            'tcp', 'clone-tag'
+            ('piggyback', 'auto-piggyback'),
+            ('agent', 'cmk-agent'),
+            ('site', 'heute'),
+            ('ip-v4', 'ip-v4'),
+            ('address_family', 'ip-v4-only'),
+            ('networking', 'lan'),
+            ('snmp_ds', 'no-snmp'),
+            ('criticality', 'prod'),
+            ('tcp', 'tcp'),
+            ('clone-tag', 'clone-tag'),
         },
         {
             'cmk/check_mk_server': 'no'

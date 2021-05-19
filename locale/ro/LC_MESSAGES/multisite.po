@@ -1137,6 +1137,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Note</b>: On the agent side, this encryption is only supported by the "
+"Linux agent and the Windows agent. However, when setting the Encryption "
+"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
+"matching hosts. Please keep this in mind when configuring this ruleset."
+msgstr ""
+
+msgid ""
 "<b>Note</b>: Real-time check data is encrypted by default. Hence, an "
 "encryption secret is needed to enable the baked agent to send real-time "
 "check data. A secret can be provided by activating <a href=\"wato.py?"
@@ -10116,6 +10123,10 @@ msgstr ""
 msgid "Consider state of Archivelogmode: "
 msgstr ""
 
+#, fuzzy
+msgid "Consider the input states during discovery to be OK"
+msgstr "Starea porturilor pentru inventariere"
+
 msgid "Consider the state of the job"
 msgstr ""
 
@@ -10293,7 +10304,7 @@ msgstr ""
 msgid "Continue search"
 msgstr ""
 
-msgid "Control encryption of data sent from agent to host."
+msgid "Control encryption of data sent from agents to Checkmk."
 msgstr ""
 
 #, fuzzy
@@ -11501,6 +11512,10 @@ msgid "Custom incident summary for service alerts"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
+msgid "Custom input state mapping"
+msgstr "Atribute personalizate"
+
+#, fuzzy
 msgid "Custom integrations"
 msgstr "Atribute personalizate"
 
@@ -12516,6 +12531,11 @@ msgstr ""
 msgid ""
 "Define textfiles to be monitored. The full path is necessary. Glob pattern "
 "(* and ?) are supported and will produce multiple services at once."
+msgstr ""
+
+msgid ""
+"Define which monitoring state maps which input state. This applies for every "
+"single input."
 msgstr ""
 
 #, fuzzy
@@ -16145,6 +16165,9 @@ msgstr ""
 #, fuzzy
 msgid "Encryption"
 msgstr "Acțiune"
+
+msgid "Encryption (Linux, Windows)"
+msgstr ""
 
 msgid "Encryption for Agent"
 msgstr ""
@@ -21984,6 +22007,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"If this option is activated, the state of an input during the discovery will "
+"be evaluated as OK. All other states will result in CRIT."
+msgstr ""
+
+msgid ""
 "If this option is enabled, Check_MK BI will create a log with details about "
 "compiling BI aggregations. This includes statistics and details for each "
 "executed compilation."
@@ -24162,7 +24190,7 @@ msgstr ""
 msgid "Item (used in service description)"
 msgstr "foloseste descrierea"
 
-msgid "Item appaerance"
+msgid "Item appearance"
 msgstr ""
 
 msgid "Item match list"
@@ -29054,6 +29082,9 @@ msgid "Mount point"
 msgstr ""
 
 msgid "Mountpoint"
+msgstr ""
+
+msgid "Mountpoint for block devices (brtfs)"
 msgstr ""
 
 msgid "Mountpoints to never ignore"
@@ -41155,6 +41186,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Specify input state evaluation"
+msgstr "%d traduceri"
+
+#, fuzzy
 msgid "Specify levels"
 msgstr "trei nivele"
 
@@ -41712,6 +41747,14 @@ msgstr ""
 
 msgid "State if conditions above are not satisfied."
 msgstr ""
+
+#, fuzzy
+msgid "State if input is OFF"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "State if input is ON"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
 msgstr ""
@@ -51086,6 +51129,10 @@ msgstr ""
 msgid "UTF-8"
 msgstr ""
 
+#, fuzzy
+msgid "UUID and mountpoint"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr ""
 
@@ -52325,6 +52372,14 @@ msgstr ""
 msgid "Use TLS over SMTP"
 msgstr ""
 
+#, fuzzy
+msgid "Use UUID and mountpoint"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Use UUID as mountpoint"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Use WMI"
 msgstr ""
 
@@ -52854,6 +52909,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Use volume name and mountpoint"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Use volume name as mountpoint"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Use your own levels if present, otherwise the device's"
@@ -53772,6 +53831,9 @@ msgid "VxVM volumes (Linux)"
 msgstr ""
 
 msgid "W"
+msgstr ""
+
+msgid "W&T WebIO"
 msgstr ""
 
 msgid "WA"
@@ -56179,6 +56241,11 @@ msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 
 msgid "You cannot lock your own account!"
+msgstr ""
+
+msgid ""
+"You cannot mix volume name and UUID in 'Mountpoint for block devices', 'Item "
+"appearance' or 'Grouping'"
 msgstr ""
 
 msgid "You cannot query for time ranges that are before the horizon."
@@ -60775,10 +60842,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "State classification"
 #~ msgstr "Adaugă notificare"
-
-#, fuzzy
-#~ msgid "State of Citrix VMs"
-#~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 #~ msgid "Stop Editing"

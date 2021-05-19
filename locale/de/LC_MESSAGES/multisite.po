@@ -1127,6 +1127,13 @@ msgstr ""
 "nicht die Sortierordnung wieder."
 
 msgid ""
+"<b>Note</b>: On the agent side, this encryption is only supported by the "
+"Linux agent and the Windows agent. However, when setting the Encryption "
+"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
+"matching hosts. Please keep this in mind when configuring this ruleset."
+msgstr ""
+
+msgid ""
 "<b>Note</b>: Real-time check data is encrypted by default. Hence, an "
 "encryption secret is needed to enable the baked agent to send real-time "
 "check data. A secret can be provided by activating <a href=\"wato.py?"
@@ -10677,6 +10684,10 @@ msgstr "Unstetige Perioden berücksichtigen"
 msgid "Consider state of Archivelogmode: "
 msgstr "Zustand im Archivelog-Modus werten:"
 
+#, fuzzy
+msgid "Consider the input states during discovery to be OK"
+msgstr "Ignoriere Port-Typen während der Service-Erkennung"
+
 msgid "Consider the state of the job"
 msgstr "Den Zustand des Jobs berücksichtigen"
 
@@ -10856,7 +10867,7 @@ msgid "Continue search"
 msgstr "Suche verfeinern"
 
 #, fuzzy
-msgid "Control encryption of data sent from agent to host."
+msgid "Control encryption of data sent from agents to Checkmk."
 msgstr "Verschlüsselung der Daten vom Agenten"
 
 msgid "Control group:"
@@ -11999,6 +12010,10 @@ msgstr "Benutzerdefinierte Ereigniszusammenfassung für Host-Alerts"
 msgid "Custom incident summary for service alerts"
 msgstr "Benutzerdefinierte Ereigniszusammenfassung für Service-Warnungen"
 
+#, fuzzy
+msgid "Custom input state mapping"
+msgstr "Kundenname fehlt"
+
 msgid "Custom integrations"
 msgstr "Benutzerdefinierte Integrationen"
 
@@ -12994,6 +13009,11 @@ msgstr ""
 "Gegen Sie die Textdateien, die überwacht werden sollen, mit ihrem vollen "
 "Pfad an. Suchmuster (* und ?) werden unterstützt, es werden dann ggfs. "
 "mehrere Services mit einem Muster erzeugt."
+
+msgid ""
+"Define which monitoring state maps which input state. This applies for every "
+"single input."
+msgstr ""
 
 msgid "Defines what information to query."
 msgstr "Definiert abzurufende Informationen."
@@ -16614,6 +16634,10 @@ msgstr ""
 
 msgid "Encryption"
 msgstr "Verschlüsselung"
+
+#, fuzzy
+msgid "Encryption (Linux, Windows)"
+msgstr "Text-Logdateien (Linux, Windows)"
 
 msgid "Encryption for Agent"
 msgstr "Verschlüsselung des Agenten"
@@ -22863,6 +22887,11 @@ msgstr ""
 "Länge haben. Das führt zu einer korrekten Sortierung in der GUI."
 
 msgid ""
+"If this option is activated, the state of an input during the discovery will "
+"be evaluated as OK. All other states will result in CRIT."
+msgstr ""
+
+msgid ""
 "If this option is enabled, Check_MK BI will create a log with details about "
 "compiling BI aggregations. This includes statistics and details for each "
 "executed compilation."
@@ -25544,7 +25573,7 @@ msgstr "Punkt"
 msgid "Item (used in service description)"
 msgstr "Item (wird im Servicenamen verwendet)"
 
-msgid "Item appaerance"
+msgid "Item appearance"
 msgstr ""
 
 msgid "Item match list"
@@ -30176,6 +30205,9 @@ msgstr "Mount-Point"
 
 msgid "Mountpoint"
 msgstr "Mountpunkt"
+
+msgid "Mountpoint for block devices (brtfs)"
+msgstr ""
 
 msgid "Mountpoints to never ignore"
 msgstr "Mountpoints, die nie ignoriert werden sollen"
@@ -42239,6 +42271,10 @@ msgstr ""
 "den die Spannungsschwellwerte gelten sollen. Die Liste wird beim Speichern "
 "automatisch sortiert."
 
+#, fuzzy
+msgid "Specify input state evaluation"
+msgstr "Geben Sie die Anwendung an"
+
 msgid "Specify levels"
 msgstr "Level einstellen"
 
@@ -42876,6 +42912,14 @@ msgstr "Status für ungültige Kalibrierung"
 #, fuzzy
 msgid "State if conditions above are not satisfied."
 msgstr "Status, falls die oberen Bedingungen nicht erfüllt sind"
+
+#, fuzzy
+msgid "State if input is OFF"
+msgstr "Zustand, wenn die Lizenz abgelaufen ist"
+
+#, fuzzy
+msgid "State if input is ON"
+msgstr "Zustand, wenn die Lizenz abgelaufen ist"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
 msgstr ""
@@ -54271,6 +54315,10 @@ msgstr "UTC -9 Stunden"
 msgid "UTF-8"
 msgstr "UTF-8"
 
+#, fuzzy
+msgid "UUID and mountpoint"
+msgstr "Ist ein Mount-Point"
+
 msgid "Umlauts in User-IDs (deprecated)"
 msgstr "Umlaute in Benutzerkennungen (veraltet)"
 
@@ -55467,6 +55515,14 @@ msgstr "TLS für IMAP-Authentifikation verwenden"
 msgid "Use TLS over SMTP"
 msgstr "TLS über SMTP verwenden"
 
+#, fuzzy
+msgid "Use UUID and mountpoint"
+msgstr "Ist ein Mount-Point"
+
+#, fuzzy
+msgid "Use UUID as mountpoint"
+msgstr "Ist ein Mount-Point"
+
 msgid "Use WMI"
 msgstr "WMI verwenden"
 
@@ -56097,6 +56153,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Use volume name and mountpoint"
+msgstr "Name des Volumes und Name des Einhängepunktes"
+
+#, fuzzy
+msgid "Use volume name as mountpoint"
 msgstr "Name des Volumes und Name des Einhängepunktes"
 
 msgid "Use your own levels if present, otherwise the device's"
@@ -57020,6 +57080,9 @@ msgstr "VxVM volumes (Linux)"
 
 msgid "W"
 msgstr "W"
+
+msgid "W&T WebIO"
+msgstr ""
 
 msgid "WA"
 msgstr "WA"
@@ -60219,6 +60282,11 @@ msgstr ""
 msgid "You cannot lock your own account!"
 msgstr "Ihren eigenen Zugang können Sie nicht sperren!"
 
+msgid ""
+"You cannot mix volume name and UUID in 'Mountpoint for block devices', 'Item "
+"appearance' or 'Grouping'"
+msgstr ""
+
 msgid "You cannot query for time ranges that are before the horizon."
 msgstr "Sie können keine Zeitbereiche abfragen, die vor dem Horizont liegen."
 
@@ -62984,11 +63052,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~| msgid "Event was deleted automatically"
 #~ msgid "<i>Generated automatically</i>"
 #~ msgstr "Ereignis wurde automatisch gelöscht"
-
-#, fuzzy
-#~| msgid "Text logfiles (Linux, Windows)"
-#~ msgid "Encryption (Linux, Windows)"
-#~ msgstr "Text-Logdateien (Linux, Windows)"
 
 #~ msgid "Critical if younger than"
 #~ msgstr "Kritsch wenn jünger als"

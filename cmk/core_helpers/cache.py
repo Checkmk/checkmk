@@ -3,7 +3,60 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Persisted sections type and store."""
+"""Persisted sections type and store.
+
+Cache hierarchy
+
+.. uml::
+
+    abstract FileCache<TRawData> {
+        + read(Mode) : Optional[TRawData]
+        + write(TRawData, Mode) : None
+        + {abstract} cache_read(Mode) : Bool
+        + {abstract} cache_write(Mode) : Bool
+        + {abstract} make_path(Mode) : Path
+        - {abstract} _from_cache_file(bytes) : TRawData
+        - {abstract} _to_cache_file(TRawData) : bytes
+    }
+    abstract AgentFileCache {}
+    class DefaultAgentFileCache {
+        + cache_read(Mode) : Bool
+        + cache_write(Mode) : Bool
+        + make_path(Mode) : Path
+        - _from_cache_file(bytes) : TRawData
+        - _to_cache_file(TRawData) : bytes
+    }
+    class NoCache {
+        + cache_read(Mode) : Bool
+        + cache_write(Mode) : Bool
+        + make_path(Mode) : Path
+        - _from_cache_file(bytes) : TRawData
+        - _to_cache_file(TRawData) : bytes
+    }
+    class SNMPFileCache {
+        + cache_read(Mode) : Bool
+        + cache_write(Mode) : Bool
+        + make_path(Mode) : Path
+        - _from_cache_file(bytes) : TRawData
+        - _to_cache_file(TRawData) : bytes
+    }
+    class TCPFetcher {}
+    class ProgramFetcher {}
+    class IPMIFetcher {}
+    class SNMPFetcher {}
+    class PiggybackFetcher {}
+
+    FileCache <|.. AgentFileCache : <<bind>>\nTRawData::AgentRawData
+    FileCache <|.. SNMPFileCache : <<bind>>\nTRawData::SNMPRawData
+    AgentFileCache <|-- DefaultAgentFileCache
+    AgentFileCache <|-- NoCache
+    DefaultAgentFileCache *-- TCPFetcher
+    DefaultAgentFileCache *-- ProgramFetcher
+    DefaultAgentFileCache *-- IPMIFetcher
+    NoCache *-- PiggybackFetcher
+    SNMPFileCache *-- SNMPFetcher
+
+"""
 
 import abc
 import logging

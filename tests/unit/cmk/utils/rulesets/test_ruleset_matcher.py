@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
+
 from testlib.base import Scenario
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.rulesets.ruleset_matcher import matches_tag_spec, RulesetMatchObject
+from cmk.utils.type_defs import CheckPluginName, TagCondition
+
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 
 
 def test_ruleset_match_object_no_conditions():
@@ -541,3 +542,58 @@ def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
     ruleset_optimizer.clear_ruleset_caches()
     assert not ruleset_optimizer._host_ruleset_cache
     assert not ruleset_optimizer._service_ruleset_cache
+
+
+@pytest.mark.parametrize(
+    "tag_condition, expected_result",
+    [
+        pytest.param(
+            "abc",
+            True,
+            id="direct check if tag is present, true",
+        ),
+        pytest.param(
+            "efg",
+            False,
+            id="direct check if tag is present, false",
+        ),
+        pytest.param(
+            {"$ne": "789"},
+            True,
+            id="negated condition, true",
+        ),
+        pytest.param(
+            {"$ne": "123"},
+            False,
+            id="negated condition, false",
+        ),
+        pytest.param(
+            {"$or": ["abc", "efg"]},
+            True,
+            id="or condition, true",
+        ),
+        pytest.param(
+            {"$or": ["efg", "789"]},
+            False,
+            id="or condition, false",
+        ),
+        pytest.param(
+            {"$nor": ["efg", "789"]},
+            True,
+            id="nor condition, true",
+        ),
+        pytest.param(
+            {"$nor": ["efg", "xyz"]},
+            False,
+            id="nor condition, false",
+        ),
+    ],
+)
+def test_matches_tag_spec(
+    tag_condition: TagCondition,
+    expected_result: bool,
+) -> None:
+    assert matches_tag_spec(
+        tag_condition,
+        {"abc", "xyz", "123", "456"},
+    ) is expected_result

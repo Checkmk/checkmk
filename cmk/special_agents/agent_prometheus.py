@@ -463,9 +463,11 @@ class CAdvisorExporter:
     def _verify_valid_memory_limit(self, pod_info):
         if "memory_limit" not in pod_info:
             return False
-        if pod_info["memory_limit"]["value"] == '0':
+
+        try:
+            return float(pod_info["memory_limit"]["value"]) != 0.0
+        except ValueError:
             return False
-        return True
 
     def _complement_machine_memory(
             self, pods: Dict[str, Dict[str, Any]],

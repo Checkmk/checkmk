@@ -8,7 +8,8 @@ This list can either be executed directly or returned (JSON encoded on stdout or
 to be read and handled later by a Jenkins pipelined job.
 """
 
-from typing import TypedDict, Tuple, Dict, Mapping, Sequence, Any
+from typing import Callable, TypedDict, Tuple, Dict, Mapping, Sequence, Any, Optional
+import asyncio
 import sys
 import os
 from functools import reduce
@@ -17,6 +18,7 @@ import json
 import yaml
 import argparse
 import logging
+import time
 from pathlib import Path
 
 LOG = logging.getLogger("validate_changes")
@@ -45,11 +47,11 @@ def parse_args() -> argparse.Namespace:
     """Parse command line arguments and return argument object"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--log-level",
-        "-l",
-        type=str.upper,
-        default='INFO',
-        help="Set the minimum level for debug messages",
+        "--verbose",
+        "-v",
+        action='count',
+        default=0,
+        help="Be verbose (can be applied multiple times)",
     )
     parser.add_argument(
         "--env",
@@ -68,14 +70,29 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--no-skip",
-        type=lambda a: a.lower() in {"1", "true"},
-        default=False,
+        action='store_true',
         help="Ignore conditions for skipping stages (activate all)",
+    )
+    parser.add_argument(
+        "--exitfirst",
+        "-x",
+        action='store_true',
+        help="Exit on first failing stage command",
+    )
+    parser.add_argument(
+        "--filter-substring",
+        "-k",
+        type=str,
+        default=[],
+        action='append',
+        help="Filter for substring in stage name",
     )
     parser.add_argument(
         "input",
         type=Path,
         help="A YAML encoded file containing information about stages to generate",
+        default=Path(os.path.dirname(__file__)) / "stages.yml",
+        nargs="?",
     )
     return parser.parse_args()
 
@@ -97,7 +114,12 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
 def load_file(filename: Path) -> Tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
-    raw_data = yaml.load(open(filename), Loader=yaml.BaseLoader)
+    try:
+        raw_data = yaml.load(open(filename), Loader=yaml.BaseLoader)
+    except FileNotFoundError:
+        raise RuntimeError(
+            f"Could not find {filename}. Must be a YAML file containing stage declarations.")
+
     return (
         [{str(k): str(v) for k, v in e.items()} for e in raw_data["VARIABLES"]],
         list(map(to_stage_info, raw_data["STAGES"])),
@@ -155,11 +177,12 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
 
 
 def run_shell_command(cmd: str, replace_newlines: bool) -> str:
+    """Run a command and return preprocessed stdout"""
     stdout_str = subprocess.check_output(["sh", "-c", cmd], universal_newlines=True).strip()
     return stdout_str.replace("\n", " ") if replace_newlines else stdout_str
 
 
-def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
+def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]:
     """Evaluate receipts for variables. Make sure already evaluated variables can be used in
     later steps.
     >>> evaluate_vars([
@@ -210,11 +233,81 @@ def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> Tupl
     )
 
 
-def run_locally(stages: Stages) -> None:
+async def run_cmd(cmd: str, cwd: Optional[str], check: bool,
+              stdout_fn: Callable[[str], None],
+              stderr_fn: Callable[[str], None]) -> bool:
+    """Run a command while continuously capturing its stdout/stdin and printing it out in a
+    predefined way for either stdout or stderr"""
+    async def process_lines(stream: asyncio.StreamReader, proc_fn: Callable[[str], None]) -> None:
+        async for line in stream:
+            proc_fn(line.decode().rstrip())
+
+    process = await asyncio.create_subprocess_exec(
+        "sh", "-c", cmd, cwd=cwd,
+        limit = 1024 * 512,  # see https://stackoverflow.com/questions/55457370
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        # This is to make Python scripts behave, i.e. not buffer stdout.
+        # this works only for Python of course but a general solution would be nice of course.
+        # If someone knows a better way to deactivate buffering, drop me a line please.
+        env={**os.environ, **{'PYTHONUNBUFFERED': '1'}},
+    )
+
+    assert process.stdout and process.stderr
+    await asyncio.gather(
+        process_lines(process.stdout, stdout_fn),
+        process_lines(process.stderr, stderr_fn))
+
+    return process.returncode == 0
+
+
+async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, verbosity: int) -> None:
     """Not yet implementd: run all stages by executing each command"""
-    print("NYI")
-    for s in stages:
-        print(f"{s['NAME']}: {s.get('COMMAND', 'SKIPPED: ' + s.get('SKIPPED', ''))}")
+    code_red, code_green, code_bold, code_reset = "\033[1;31m", "\033[1;32m", "\033[0;37m", "\033[0;0m"
+    results = {}
+    for stage in stages:
+        name = stage['NAME']
+        if filter_substring and not any(map(lambda s: s.lower() in name.lower(), filter_substring)):
+            results[name] = f"SKIPPED Reason: none of {filter_substring!r} in name"
+            print(f"Stage {name!r}: {results[name]}")
+            continue
+
+        if "SKIPPED" in stage:
+            results[name] = f"SKIPPED {stage['SKIPPED']}"
+            print(f"Stage {name!r}: {results[name]}")
+            continue
+
+        print(f"RUN stage ======== {code_bold}{name}{code_reset} ============")
+
+        for key, value in stage.items():
+            LOG.debug("%s: %s", key, value)
+
+        t_before = time.time()
+        cmd_successful = await run_cmd(
+            cmd=stage["COMMAND"],
+            cwd=stage["DIR"] or None,
+            check=exitfirst,
+            stdout_fn=(
+                (lambda l, name=name: print(f"{code_bold}{name}: {code_reset}{l}"))
+                if verbosity else
+                (lambda l, name=name: None)),
+            stderr_fn=lambda l, name=name: print(f"{code_bold}{name}: {code_red}{l}{code_reset}"),
+        )
+        duration = time.time() - t_before
+
+        if cmd_successful:
+            results[name] = f"{code_green}SUCCESSFUL{code_reset} ({duration:.2f}s)"
+        else:
+            results[name] = f"{code_red}FAILED{code_reset} ({duration:.2f}s)"
+            if exitfirst:
+                print(f"{code_red}Stage {name!r} returned non-zero"
+                      f" and you told me to stop if that happens.{code_reset}")
+                break
+        print(f"Stage {name!r}: {results[name]}")
+
+    print("Summary:")
+    for stage_name, summary  in results.items():
+        print(f" {stage_name:24s} | {summary}")
 
 
 def main() -> None:
@@ -223,7 +316,7 @@ def main() -> None:
     logging.basicConfig(
         format="%(levelname)s %(name)s %(asctime)s: %(message)s",
         datefmt='%H:%M:%S',
-        level=getattr(logging, args.log_level),
+        level=getattr(logging, {0: "WARNING", 1: "INFO", 2: "DEBUG"}.get(args.verbose, "WARNING")),
     )
     LOG.debug("Python: %s %s", '.'.join(map(str, sys.version_info)), sys.executable)
     LOG.debug("Args: %s", args.__dict__)
@@ -231,7 +324,17 @@ def main() -> None:
     LOG.debug("Variables provided via command: %s", env_vars)
     for key, value in os.environ.items():
         LOG.debug("ENV: %s: %s", key, value)
+
+    if not args.write_file:
+        print(f"Read and process {args.input}")
+
     variables, stages = compile_stage_info(args.input, env_vars, args.no_skip)
+
+    if not args.write_file:
+        print("Modified files ($CHANGED_FILES_REL):")
+        for file in variables.get('CHANGED_FILES_REL', '').split():
+            print(f"  {file}")
+
     if args.write_file:
         json.dump(
             obj={
@@ -242,11 +345,13 @@ def main() -> None:
             indent=2,
         )
     else:
-        run_locally(stages)
+        print(f"Found {len(stages)} stage commands to run locally")
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(run_locally(stages, args.exitfirst, args.filter_substring, args.verbose))
+        loop.close()
 
 
 if __name__ == "__main__":
-
     # kommt weg
     import doctest
     assert not doctest.testmod().failed

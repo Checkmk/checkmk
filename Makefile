@@ -14,7 +14,7 @@ DISTNAME           := $(NAME)-$(VERSION)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
-		      --exclude=__pycache__ --exclude=*.pyc
+                      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
@@ -612,3 +612,14 @@ Pipfile.lock: Pipfile
 # %MAKEFILE% is updated before considering the am--refresh target.
 am--refresh: config.status
 	./config.status
+
+# Run `validate_changes` in live-mode i.e. not creating a JSON file 
+# containing build steps to be executed by Jenkins but directly running
+# them.
+what-gerrit-makes:
+	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
+	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
+	    -e BASE_COMMIT_ID=origin/master \
+	    -e WORKSPACE="$$WORKSPACE" \
+	    -e RESULTS="$$WORKSPACE"
+

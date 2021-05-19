@@ -138,30 +138,6 @@ class SectionMeta:
 
 class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
-    def cache_read(mode: Mode) -> bool:
-        """Decide whether to try to read data from cache
-
-        Fetching for SNMP data is special in that we have to list the sections to fetch
-        in advance, unlike for agent data, where we parse the data and see what we get.
-
-        For discovery, we must not fetch the pre-configured sections (which are the ones
-        in the cache), but all sections for which the detection spec evaluates to true,
-        which can be many more.
-        """
-        return mode is not Mode.FORCE_SECTIONS
-
-    @staticmethod
-    def cache_write(mode: Mode) -> bool:
-        """Decide whether to write data to cache
-
-        If we write the fetching result for SNMP, we also "override" the resulting
-        sections for the next call that uses the cache. Since we use the cache for
-        DISCOVERY only, we must only write it if we're dealing with the right
-        sections for discovery.
-        """
-        return True
-
-    @staticmethod
     def _from_cache_file(raw_data: bytes) -> SNMPRawData:
         return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 

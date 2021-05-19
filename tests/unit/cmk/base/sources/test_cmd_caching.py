@@ -13,24 +13,26 @@ from functools import partial
 
 import pytest  # type: ignore[import]
 
-from testlib.utils import is_enterprise_repo
 from testlib.base import Scenario
 from testlib.debug_utils import cmk_debug_enabled
+from testlib.utils import is_enterprise_repo
 
 import cmk.utils.paths
 from cmk.utils.log import logger
+
+from cmk.core_helpers.agent import NoCache
 
 import cmk.base.automations
 import cmk.base.automations.check_mk
 import cmk.base.config as config
 import cmk.base.inventory_plugins
+import cmk.base.license_usage as license_usage
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
-import cmk.base.license_usage as license_usage
 
 
 @pytest.fixture(autouse=True)
@@ -92,8 +94,9 @@ def _patch_data_source(mocker, **kwargs):
 
         file_cache = self._make_file_cache()
 
-        assert file_cache.disabled == ((defaults["disabled"] or defaults["snmp_disabled"])
-                                       if isinstance(self, SNMPSource) else defaults["disabled"])
+        assert file_cache.disabled == (True if isinstance(file_cache, NoCache) else (
+            defaults["disabled"] or defaults["snmp_disabled"]) if isinstance(self, SNMPSource) else
+                                       defaults["disabled"]), repr(file_cache)
 
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]

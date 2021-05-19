@@ -12,30 +12,22 @@ Cache hierarchy
     abstract FileCache<TRawData> {
         + read(Mode) : Optional[TRawData]
         + write(TRawData, Mode) : None
-        + {abstract} cache_read(Mode) : Bool
-        + {abstract} cache_write(Mode) : Bool
         + {abstract} make_path(Mode) : Path
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
     }
     abstract AgentFileCache {}
     class DefaultAgentFileCache {
-        + cache_read(Mode) : Bool
-        + cache_write(Mode) : Bool
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
     }
     class NoCache {
-        + cache_read(Mode) : Bool
-        + cache_write(Mode) : Bool
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
     }
     class SNMPFileCache {
-        + cache_read(Mode) : Bool
-        + cache_write(Mode) : Bool
         + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
@@ -281,16 +273,6 @@ class FileCache(Generic[TRawData], abc.ABC):
     def _to_cache_file(raw_data: TRawData) -> bytes:
         raise NotImplementedError()
 
-    @staticmethod
-    @abc.abstractmethod
-    def cache_read(mode: Mode) -> bool:
-        raise NotImplementedError()
-
-    @staticmethod
-    @abc.abstractmethod
-    def cache_write(mode: Mode) -> bool:
-        raise NotImplementedError()
-
     @abc.abstractmethod
     def make_path(self, mode: Mode) -> Path:
         raise NotImplementedError()
@@ -305,7 +287,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
-        if not (self.simulation or self.cache_read(mode)):
+        if not (self.simulation or mode is not Mode.FORCE_SECTIONS):
             self._logger.debug("Not using cache (Mode %s)", mode)
             return None
 
@@ -339,7 +321,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
-        if self.disabled or not self.cache_write(mode):
+        if self.disabled:
             self._logger.debug("Not writing data to cache file (Cache usage disabled)")
             return
 

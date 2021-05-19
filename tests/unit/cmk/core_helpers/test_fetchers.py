@@ -106,7 +106,7 @@ class TestNoCache:
     def test_write_and_read_is_noop(self, file_cache, agent_raw_data):
         mode = Mode.DISCOVERY
 
-        assert not file_cache.disabled
+        assert file_cache.disabled is True
         assert file_cache.make_path(mode) == Path(os.devnull)
 
         file_cache.write(agent_raw_data, mode)
@@ -775,15 +775,9 @@ class StubFileCache(DefaultAgentFileCache):
         self.cache: Optional[AgentRawData] = None
 
     def write(self, raw_data: AgentRawData, mode: Mode) -> None:
-        if not self.cache_write(mode):
-            return None
-
         self.cache = raw_data
 
     def read(self, mode: Mode) -> Optional[AgentRawData]:
-        if not self.cache_read(mode):
-            return None
-
         return self.cache
 
 

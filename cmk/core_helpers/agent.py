@@ -57,14 +57,6 @@ class AgentFileCache(FileCache[AgentRawData]):
 
 class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
-    def cache_read(mode: Mode) -> bool:
-        return mode is not Mode.FORCE_SECTIONS
-
-    @staticmethod
-    def cache_write(mode: Mode) -> bool:
-        return True
-
-    @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:
         return AgentRawData(raw_data)
 
@@ -79,13 +71,26 @@ class DefaultAgentFileCache(AgentFileCache):
 
 class NoCache(AgentFileCache):
     """Noop cache for fetchers that do not cache."""
-    @staticmethod
-    def cache_read(mode: Mode) -> bool:
-        return False
-
-    @staticmethod
-    def cache_write(mode: Mode) -> bool:
-        return False
+    def __init__(
+        self,
+        hostname: HostName,
+        *,
+        base_path: Union[str, Path],
+        max_age: int,
+        disabled: bool,
+        use_outdated: bool,
+        simulation: bool,
+    ) -> None:
+        # Force disable
+        disabled = True
+        super().__init__(
+            hostname,
+            base_path=base_path,
+            max_age=max_age,
+            disabled=disabled,
+            use_outdated=use_outdated,
+            simulation=simulation,
+        )
 
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> AgentRawData:

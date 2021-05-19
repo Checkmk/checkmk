@@ -182,8 +182,8 @@ class Metadata:
         if metadata:
             self._name = metadata.name
             self.namespace = metadata.namespace
-            self.creation_timestamp = (dateutil.parser.parse(
-                metadata.creation_timestamp).timestamp() if metadata.creation_timestamp else None)
+            self.creation_timestamp = (metadata.creation_timestamp.timestamp()
+                                       if metadata.creation_timestamp else None)
             self.labels = metadata.labels if metadata.labels else {}
         else:
             self._name = None

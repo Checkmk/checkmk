@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime, timezone
+
 import pytest  # type: ignore[import]
 from kubernetes.client.models import V1ObjectMeta, V1Node  # type: ignore # pylint: disable=import-error
 
@@ -51,8 +53,10 @@ def test_node_timestamps_non_utc():
 
 @pytest.mark.parametrize('metadata, parsed_time', [
     (
-        V1ObjectMeta(name='mynode', namespace='foo', creation_timestamp='2021-05-12T10:22:39.7Z'),
-        1620814959.7,
+        V1ObjectMeta(name='mynode',
+                     namespace='foo',
+                     creation_timestamp=datetime(2021, 5, 12, 10, 22, 39, 0, timezone.utc)),
+        1620814959.0,
     ),
 ])
 def test_node_metadata_creation_timestamp(metadata, parsed_time):

@@ -25,6 +25,9 @@ node (NODE) {
             withFolderProperties {
                 TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
             }
+            withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
+                sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
+            }
         }
 
         /// Add description to the build

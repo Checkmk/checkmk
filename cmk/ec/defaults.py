@@ -6,14 +6,14 @@
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable
 
 from cmk.utils.i18n import _
 
-from .config import ConfigFromWATO
+from .config import ConfigFromWATO, Rule
 
 
-def default_rule_pack(rules: List[Dict[str, Any]]) -> Dict[str, Any]:
+def default_rule_pack(rules: Iterable[Rule]) -> Dict[str, Any]:
     """Returns the default rule pack"""
     return {
         "id": "default",

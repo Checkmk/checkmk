@@ -7,7 +7,6 @@
 from typing import (
     Any,
     Dict,
-    List,
     Literal,
     Iterable,
     Mapping,
@@ -18,6 +17,8 @@ from typing import (
     TypedDict,
     Union,
 )
+
+from cmk.utils.type_defs import Seconds
 
 ################################################################################
 
@@ -84,6 +85,23 @@ class Replication(ReplicationBase, total=False):
     takeover: int
 
 
+class ContactGroups(TypedDict):
+    groups: Iterable[str]
+    notify: bool
+    precedence: Union[Literal['host'], Literal['rule']]
+
+
+class ServiceLevel(TypedDict):
+    value: int
+    precedence: Union[Literal['message'], Literal['rule']]
+
+
+class Rule(TypedDict):
+    contact_groups: ContactGroups
+    livetime: Tuple[Seconds, Union[Literal['open'], Literal['ack']]]
+    sl: ServiceLevel
+
+
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
@@ -105,7 +123,7 @@ class ConfigFromWATO(TypedDict):
     retention_interval: int
     rule_optimizer: bool
     rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable??? TypedDict
-    rules: List[Dict[str, Any]]  # TODO: Mutable??? TypedDict
+    rules: Iterable[Rule]
     snmp_credentials: Iterable[Mapping[str, str]]
     socket_queue_len: int
     statistics_interval: int

@@ -8,7 +8,7 @@ import pytest
 
 from testlib.base import Scenario
 
-from cmk.utils.rulesets.ruleset_matcher import matches_tag_spec, RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, TagCondition
 
 from cmk.base.check_utils import Service
@@ -589,11 +589,11 @@ def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
         ),
     ],
 )
-def test_matches_tag_spec(
+def test_matches_tag_condition(
     tag_condition: TagCondition,
     expected_result: bool,
 ) -> None:
-    assert matches_tag_spec(
+    assert matches_tag_condition(
         tag_condition,
         {"abc", "xyz", "123", "456"},
     ) is expected_result

@@ -63,6 +63,7 @@ from cmk.utils.type_defs import (
     HostState,
     ServiceState,
     ServiceDetails,
+    TaggroupIDToTagCondition,
 )
 
 
@@ -377,8 +378,12 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def filter_host_tags(self, hosts: List[BIHostData], condition: Dict) -> List[BIHostData]:
-        raise NotImplementedError()
+    def filter_host_tags(
+        self,
+        hosts: List[BIHostData],
+        tag_conditions: TaggroupIDToTagCondition,
+    ) -> List[BIHostData]:
+        ...
 
 
 class ABCBIStatusFetcher(metaclass=abc.ABCMeta):

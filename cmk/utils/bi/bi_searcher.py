@@ -4,16 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.regex import regex
 from typing import Dict, List, Tuple
-from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_spec
 
-from cmk.utils.bi.bi_lib import (
-    ABCBISearcher,
-    BIHostSearchMatch,
-    BIServiceSearchMatch,
-    BIHostData,
-)
+from cmk.utils.bi.bi_lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
+from cmk.utils.regex import regex
+from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition
+from cmk.utils.type_defs import TaggroupIDToTagCondition
 
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |
@@ -151,11 +147,15 @@ class BISearcher(ABCBISearcher):
         service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
         return service_matches
 
-    def filter_host_tags(self, hosts: List[BIHostData], condition: Dict) -> List[BIHostData]:
+    def filter_host_tags(
+        self,
+        hosts: List[BIHostData],
+        tag_conditions: TaggroupIDToTagCondition,
+    ) -> List[BIHostData]:
         matched_hosts = []
         for host in hosts:
-            for tag_condition in condition.values():
-                if not matches_tag_spec(tag_condition, host.tags):
+            for tag_condition in tag_conditions.values():
+                if not matches_tag_condition(tag_condition, host.tags):
                     break
             else:  # I know..
                 matched_hosts.append(host)

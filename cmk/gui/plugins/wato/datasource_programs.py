@@ -819,7 +819,7 @@ def _valuespec_generic_metrics_prometheus():
                                             optional_keys=[],
                                         )),
                                        ("pod", _("Pod - Display the information for pod level"),
-                                        Dictionary(elements=[namespace_element])),
+                                        Dictionary(elements=[namespace_element], optional_keys=[])),
                                        ("both",
                                         _("Both - Display the information for both, pod and container, levels"
                                          ),

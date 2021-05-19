@@ -27,7 +27,7 @@ import pyasn1.error  # type: ignore[import]
 from cmk.utils.log import VERBOSE
 import cmk.utils.render
 
-from .config import Config
+from .config import AuthenticationProtocol, Config, PrivacyProtocol
 from .settings import Settings
 
 
@@ -58,7 +58,7 @@ class SNMPTrapEngine:
                                                    "rfc3412.prepareDataElements:sm-failure")
 
     @staticmethod
-    def _auth_proto_for(proto_name: str) -> Tuple[int, ...]:
+    def _auth_proto_for(proto_name: AuthenticationProtocol) -> Tuple[int, ...]:
         if proto_name == "md5":
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
@@ -74,7 +74,7 @@ class SNMPTrapEngine:
         raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
     @staticmethod
-    def _priv_proto_for(proto_name: str) -> Tuple[int, ...]:
+    def _priv_proto_for(proto_name: PrivacyProtocol) -> Tuple[int, ...]:
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
         if proto_name == "3DES-EDE":
@@ -105,27 +105,26 @@ class SNMPTrapEngine:
                 continue
 
             # SNMPv3
-            securityLevel = credentials[0]
-            if securityLevel == "noAuthNoPriv":
+            if credentials[0] == "noAuthNoPriv":
                 user_id = credentials[1]
-                auth_proto = pysnmp.entity.config.usmNoAuthProtocol
+                auth_proto: Tuple[int, ...] = pysnmp.entity.config.usmNoAuthProtocol
                 auth_key = None
-                priv_proto = pysnmp.entity.config.usmNoPrivProtocol
+                priv_proto: Tuple[int, ...] = pysnmp.entity.config.usmNoPrivProtocol
                 priv_key = None
-            elif securityLevel == "authNoPriv":
+            elif credentials[0] == "authNoPriv":
                 user_id = credentials[2]
                 auth_proto = self._auth_proto_for(credentials[1])
                 auth_key = credentials[3]
                 priv_proto = pysnmp.entity.config.usmNoPrivProtocol
                 priv_key = None
-            elif securityLevel == "authPriv":
+            elif credentials[0] == "authPriv":
                 user_id = credentials[2]
                 auth_proto = self._auth_proto_for(credentials[1])
                 auth_key = credentials[3]
                 priv_proto = self._priv_proto_for(credentials[4])
                 priv_key = credentials[5]
             else:
-                raise Exception("Invalid SNMP security level: %s" % securityLevel)
+                raise Exception("Invalid SNMP security level: %s" % credentials[0])
 
             for engine_id in spec.get("engine_ids", []):
                 self._logger.info(

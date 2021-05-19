@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable
 
 from cmk.utils.i18n import _
 
-from .config import ConfigFromWATO, Rule
+from .config import ConfigFromWATO, Rule, SNMPCredential
 
 
 def default_rule_pack(rules: Iterable[Rule]) -> Dict[str, Any]:
@@ -25,7 +25,7 @@ def default_rule_pack(rules: Iterable[Rule]) -> Dict[str, Any]:
 
 def default_config() -> ConfigFromWATO:
     """Returns the default configuration"""
-    v1_v2_credential = {
+    v1_v2_credential: SNMPCredential = {
         "description": '"public" default for receiving SNMPv1/v2 traps',
         "credentials": "public",
     }

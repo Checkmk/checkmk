@@ -10,7 +10,6 @@ from typing import (
     Literal,
     Iterable,
     Mapping,
-    MutableMapping,
     Optional,
     Sequence,
     Tuple,
@@ -65,11 +64,30 @@ class EventLimit(TypedDict):
     limit: int
 
 
+class EventLimits(TypedDict):
+    by_host: EventLimit
+    by_rule: EventLimit
+    overall: EventLimit
+
+
 class HostnameTranslation(TypedDict, total=False):
     case: Union[Literal['lower'], Literal['upper']]
     drop_domain: bool
     mapping: Iterable[Tuple[str, str]]
     regex: Iterable[Tuple[str, str]]
+
+
+LogLevel = int
+
+LogConfig = TypedDict(
+    'LogConfig', {
+        'cmk.mkeventd': LogLevel,
+        'cmk.mkeventd.EventServer': LogLevel,
+        'cmk.mkeventd.EventServer.snmp': LogLevel,
+        'cmk.mkeventd.EventStatus': LogLevel,
+        'cmk.mkeventd.StatusServer': LogLevel,
+        'cmk.mkeventd.lock': LogLevel,
+    })
 
 
 class ReplicationBase(TypedDict):
@@ -102,19 +120,44 @@ class Rule(TypedDict):
     sl: ServiceLevel
 
 
+AuthenticationProtocol = Union[Literal['md5'], Literal['sha'], Literal['SHA-224'],
+                               Literal['SHA-256'], Literal['SHA-384'], Literal['SHA-512']]
+
+PrivacyProtocol = Union[Literal['DES'], Literal['AES'], Literal['3DES-EDE'], Literal['AES-192'],
+                        Literal['AES-256'], Literal['AES-192-Blumenthal'],
+                        Literal['AES-256-Blumenthal']]
+
+SNMPV1V2Credentials = str
+SNMPV3NoAuthNoPrivCredentials = Tuple[Literal['noAuthNoPriv'], str]
+SNMPV3AuthNoPrivCredentials = Tuple[Literal['authNoPriv'], AuthenticationProtocol, str, str]
+SNMPV3AuthPrivCredentials = Tuple[Literal['authPriv'], AuthenticationProtocol, str, str,
+                                  PrivacyProtocol, str]
+SNMPCredentials = Union[SNMPV1V2Credentials, SNMPV3NoAuthNoPrivCredentials,
+                        SNMPV3AuthNoPrivCredentials, SNMPV3AuthPrivCredentials]
+
+
+class SNMPCredentialBase(TypedDict):
+    description: str
+    credentials: SNMPCredentials
+
+
+class SNMPCredential(SNMPCredentialBase, total=False):
+    engine_ids: Iterable[str]
+
+
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
-    archive_mode: str
+    archive_mode: Union[Literal['file'], Literal['mongodb']]
     archive_orphans: bool
     debug_rules: bool
-    event_limit: Mapping[str, EventLimit]
+    event_limit: EventLimits
     eventsocket_queue_len: int
     history_lifetime: int
-    history_rotation: str
+    history_rotation: Union[Literal['daily'], Literal['weekly']]
     hostname_translation: HostnameTranslation  # TODO: Mutable???
     housekeeping_interval: int
-    log_level: MutableMapping[str, int]  # TODO: Mutable???
+    log_level: LogConfig  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
     mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
@@ -124,7 +167,7 @@ class ConfigFromWATO(TypedDict):
     rule_optimizer: bool
     rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable??? TypedDict
     rules: Iterable[Rule]
-    snmp_credentials: Iterable[Mapping[str, str]]
+    snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int
     translate_snmptraps: SNMPTrapTranslation

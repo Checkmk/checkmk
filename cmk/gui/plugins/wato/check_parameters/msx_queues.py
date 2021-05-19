@@ -29,37 +29,56 @@ def transform_msx_queues(params):
     return params
 
 
+def transform_msx_queues_inventory(params):
+    if isinstance(params, list):
+        # do not overwrite default discovery parameters with empty list
+        return {
+            "queue_names": params,
+        } if params else {}
+    return params
+
+
 def _valuespec_winperf_msx_queues_inventory():
-    return ListOf(
-        Tuple(
-            orientation="horizontal",
-            elements=[
-                TextInput(
-                    title=_("Name of Counter"),
-                    help=_("Name of the Counter to be monitored."),
-                    size=50,
-                    allow_empty=False,
-                ),
-                Integer(
-                    title=_("Offset"),
-                    help=_("The offset of the information relative to counter base"),
-                ),
-            ],
+    return Transform(
+        Dictionary(
+            title=_("Queue names"),
+            elements=
+            [('queue_names',
+              ListOf(
+                  Tuple(
+                      orientation="horizontal",
+                      elements=[
+                          TextInput(
+                              title=_("Name of Queue"),
+                              size=50,
+                              allow_empty=False,
+                          ),
+                          Integer(
+                              title=_("Offset"),
+                              help=_(
+                                  "The offset of the information relative to counter base."
+                                  " You can get a detailed list of available counters in a windows shell with the command 'lodctr /s:counters.txt'."
+                              ),
+                          ),
+                      ],
+                  ),
+                  title=_('MS Exchange message queues discovery'),
+                  help=
+                  _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
+                    'If the format of your counters object is not compatible then you can adapt the counter '
+                    'offsets manually.'),
+                  movable=False,
+                  add_label=_("Add Counter"),
+              ))],
         ),
-        title=_('MS Exchange message queues discovery'),
-        help=
-        _('Per default the offsets of all Windows performance counters are preconfigured in the check. '
-          'If the format of your counters object is not compatible then you can adapt the counter '
-          'offsets manually.'),
-        movable=False,
-        add_label=_("Add Counter"),
+        forth=transform_msx_queues_inventory,
     )
 
 
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
-        match_type="all",
+        match_type="dict",
         name="winperf_msx_queues_inventory",
         valuespec=_valuespec_winperf_msx_queues_inventory,
     ))
@@ -89,11 +108,9 @@ def _parameter_valuespec_msx_queues():
                  Integer(
                      title=_("Offset"),
                      help=
-                     _("Use this only if you want to overwrite the postion of the information in the agent "
-                       "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> "
+                     _("This parameter should only be used for enforced services, otherwise it will be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</i>."
                       ))),
             ],
-            optional_keys=["offset"],
         ),
         forth=transform_msx_queues,
     )

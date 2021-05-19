@@ -248,7 +248,6 @@ def test_section_parse_function_does_something(fix_register):
         'windows_multipath',
         'windows_updates',
         'winperf_mem',
-        'winperf_msx_queues',
         'winperf_ts_sessions',
         'wmic_process',
         'dmraid',

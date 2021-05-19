@@ -703,30 +703,25 @@ def _tags_or_labels_cache_id(tag_or_label_spec):
 
 
 def matches_tag_condition(tag_condition: TagCondition, hosttags: TagIDs) -> bool:
-    is_not = False
     if isinstance(tag_condition, dict):
         if "$ne" in tag_condition:
-            is_not = True
-            tag_condition = cast(TagConditionNE, tag_condition)["$ne"]
+            return cast(TagConditionNE, tag_condition)["$ne"] not in hosttags
 
-        elif "$or" in tag_condition:
-            return any(
-                matches_tag_condition(sub_tag_condition, hosttags) for sub_tag_condition in cast(
-                    TagConditionOR,
-                    tag_condition,
-                )["$or"])
+        if "$or" in tag_condition:
+            return bool(hosttags.intersection(cast(
+                TagConditionOR,
+                tag_condition,
+            )["$or"]))
 
-        elif "$nor" in tag_condition:
-            return not any(
-                matches_tag_condition(sub_tag_condition, hosttags) for sub_tag_condition in cast(
-                    TagConditionNOR,
-                    tag_condition,
-                )["$nor"])
+        if "$nor" in tag_condition:
+            return not hosttags.intersection(cast(
+                TagConditionNOR,
+                tag_condition,
+            )["$nor"])
 
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
-    return (tag_condition in hosttags) is not is_not
+    return tag_condition in hosttags
 
 
 def matches_labels(object_labels, required_labels) -> bool:

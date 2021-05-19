@@ -3050,7 +3050,7 @@ def run_eventd(terminate_main_event: Any, settings: Settings, config: Config,
     next_housekeeping = now + config["housekeeping_interval"]
     next_retention = now + config["retention_interval"]
     next_statistics = now + config["statistics_interval"]
-    next_replication = 0  # force immediate replication after restart
+    next_replication = 0.0  # force immediate replication after restart
 
     while not terminate_main_event.is_set():
         try:

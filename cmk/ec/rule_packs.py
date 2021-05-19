@@ -26,6 +26,7 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
+    Tuple,
     Union,
 )
 from pathlib import Path
@@ -251,10 +252,11 @@ def load_config(settings: Settings) -> ConfigFromWATO:
         levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
     config["log_level"] = levels
 
+    # TODO: Move this up to avoid the need for casting?
     # Convert pre 1.4 hostname translation config
     translation = config["hostname_translation"]
-    if "regex" in translation and not isinstance(translation["regex"], list):
-        translation["regex"] = [translation["regex"]]
+    if isinstance(translation.get('regex'), tuple):
+        translation["regex"] = [cast(Tuple[str, str], translation.get('regex'))]
 
     return config
 

@@ -59,24 +59,49 @@ Action = Union[EMailAction, ScriptAction]
 ################################################################################
 
 
+class EventLimit(TypedDict):
+    action: str
+    limit: int
+
+
+class HostnameTranslation(TypedDict, total=False):
+    case: Union[Literal['lower'], Literal['upper']]
+    drop_domain: bool
+    mapping: Iterable[Tuple[str, str]]
+    regex: Iterable[Tuple[str, str]]
+
+
+class ReplicationBase(TypedDict):
+    connect_timeout: int
+    interval: int
+    master: Tuple[str, int]
+
+
+class Replication(ReplicationBase, total=False):
+    fallback: int
+    disabled: Literal['true']
+    logging: Literal['true']
+    takeover: int
+
+
 # This is what we get from the outside.
 class ConfigFromWATO(TypedDict):
     actions: Sequence[Action]
     archive_mode: str
     archive_orphans: bool
     debug_rules: bool
-    event_limit: Mapping[str, Mapping[str, Any]]  # TODO: TypedDict
+    event_limit: Mapping[str, EventLimit]
     eventsocket_queue_len: int
     history_lifetime: int
     history_rotation: str
-    hostname_translation: MutableMapping[str, Any]  # TODO: Mutable??? TypedDict
+    hostname_translation: HostnameTranslation  # TODO: Mutable???
     housekeeping_interval: int
     log_level: MutableMapping[str, int]  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
     mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
     remote_status: Optional[Tuple[int, bool, Optional[Sequence[str]]]]
-    replication: Optional[Mapping[str, Any]]  # TODO: TypedDict
+    replication: Optional[Replication]
     retention_interval: int
     rule_optimizer: bool
     rule_packs: Sequence[Dict[str, Any]]  # TODO: Mutable??? TypedDict

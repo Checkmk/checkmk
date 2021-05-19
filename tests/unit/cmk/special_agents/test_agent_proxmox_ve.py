@@ -423,6 +423,19 @@ from cmk.special_agents.agent_proxmox_ve import (
         },
         None,
     ),
+    (
+        "proxmox_ve-backup-2021-05-17.log",
+        {
+            '103': {
+                'started_time': '2021-05-17 20:15:02',
+                'backup_amount': 28248637,
+                'backup_total': 2695091978,
+                'backup_time': 24.72,
+                'total_duration': 34,
+            },
+        },
+        None,
+    ),
 ))
 def test_parse_backup_logs(logfile, expected_results, expected_exception) -> None:
     file_path = Path(os.path.dirname(__file__)) / "proxmox_ve-files" / logfile

@@ -38,6 +38,9 @@ class BackupData(TypedDict, total=False):
     upload_amount: int
     upload_total: int
     upload_time: float
+    backup_amount: int
+    backup_total: int
+    backup_time: float
     error: str
 
 
@@ -69,6 +72,12 @@ def parse_proxmox_ve_vm_backup_status(string_table: StringTable) -> Section:
         result['upload_total'] = int(backup_data['upload_total'])
     if 'upload_time' in backup_data:
         result['upload_time'] = float(backup_data['upload_time'])
+    if 'backup_amount' in backup_data:
+        result['backup_amount'] = int(backup_data['backup_amount'])
+    if 'backup_total' in backup_data:
+        result['backup_total'] = int(backup_data['backup_total'])
+    if 'backup_time' in backup_data:
+        result['backup_time'] = float(backup_data['backup_time'])
     if 'error' in backup_data:
         result['error'] = str(backup_data['error'])
     return {'last_backup': result}
@@ -159,6 +168,13 @@ def check_proxmox_ve_vm_backup_status(
         if last_backup['upload_time'] == 0:
             return
         bandwidth = last_backup['upload_amount'] / last_backup['upload_time']
+    elif all(k in last_backup for k in {'backup_amount', 'backup_total', 'backup_time'}):
+        if last_backup['backup_amount'] > 0:
+            dedup_rate = last_backup['backup_total'] / last_backup['backup_amount']
+            yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")
+        if last_backup['backup_time'] == 0:
+            return
+        bandwidth = last_backup['backup_amount'] / last_backup['backup_time']
     else:
         return
 

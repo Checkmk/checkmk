@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict as _Dict, List as _List, Optional as _Optional
+from cmk.utils.type_defs import TagsOfHosts
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -149,7 +150,7 @@ special_agents: _Dict = {}
 custom_checks: _List = []
 all_hosts: _List = []
 # store host tag config per host
-host_tags: _Dict = {}
+host_tags: TagsOfHosts = {}
 # store explicit host labels per host
 host_labels: _Dict = {}
 # Assign labels via ruleset to hosts

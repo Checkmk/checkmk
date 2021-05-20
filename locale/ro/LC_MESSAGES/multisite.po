@@ -26885,6 +26885,9 @@ msgstr ""
 msgid "MSSQL Page Activity"
 msgstr ""
 
+msgid "MSSQL Page Life Expectancy"
+msgstr ""
+
 msgid "MSSQL SQL Stats"
 msgstr ""
 
@@ -28471,6 +28474,9 @@ msgid "Minimum Levels for Voltage"
 msgstr ""
 
 msgid "Minimum Levels for load in percent"
+msgstr ""
+
+msgid "Minimum Page Life Expectancy"
 msgstr ""
 
 #, fuzzy
@@ -33031,6 +33037,9 @@ msgid "Page Activity"
 msgstr ""
 
 msgid "Page Activity Levels"
+msgstr ""
+
+msgid "Page Life Expectancy"
 msgstr ""
 
 msgid "Page Lookups"
@@ -47273,6 +47282,9 @@ msgstr ""
 msgid ""
 "This check is used to monitor successful email delivery through Symantec "
 "Brightmail Scanner appliances."
+msgstr ""
+
+msgid "This check monitors MSSQL page life expectancies."
 msgstr ""
 
 msgid "This check monitors backups configured for domains in plesk."

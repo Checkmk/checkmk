@@ -28127,6 +28127,10 @@ msgstr "MSSQL Log- und Daten-Dateigrößen"
 msgid "MSSQL Page Activity"
 msgstr "MSSQL Seitenaktivität"
 
+#, fuzzy
+msgid "MSSQL Page Life Expectancy"
+msgstr "MSSQL Seitenaktivität"
+
 msgid "MSSQL SQL Stats"
 msgstr "MSSQL-SQL-Statistiken"
 
@@ -29615,6 +29619,9 @@ msgstr "Untergrenze für die Spannung"
 
 msgid "Minimum Levels for load in percent"
 msgstr "Untergrenze für die Last in Prozent"
+
+msgid "Minimum Page Life Expectancy"
+msgstr ""
 
 msgid "Minimum Required Checkmk version"
 msgstr "Minimal benötigte Checkmk-Version"
@@ -34074,6 +34081,10 @@ msgstr "Seitenaktivität"
 
 msgid "Page Activity Levels"
 msgstr "Schwellwerte für Seitenaktivität"
+
+#, fuzzy
+msgid "Page Life Expectancy"
+msgstr "Zu erwartende Seitengröße"
 
 msgid "Page Lookups"
 msgstr "Seitenlookup"
@@ -49510,6 +49521,10 @@ msgid ""
 msgstr ""
 "Diese Regel dient der Beobachtung der Mailqueue der Symantec Brightmail "
 "Scanner Appliance."
+
+#, fuzzy
+msgid "This check monitors MSSQL page life expectancies."
+msgstr "Dieser Check überwacht Anzahl und Alter von Mails in Maiulboxen."
 
 msgid "This check monitors backups configured for domains in plesk."
 msgstr "Dieser Check überwacht konfigurierte Domain-Backups in Plesk."

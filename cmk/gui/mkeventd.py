@@ -134,22 +134,23 @@ def service_levels():
     return config.mkeventd_service_levels
 
 
-def action_choices(omit_hidden=False):
+def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return [ ( "@NOTIFY", _("Send monitoring notification")) ] + \
-           [ (a["id"], a["title"])
+    return ([("@NOTIFY", _("Send monitoring notification"))] +
+            [(a["id"], a["title"])
              for a in eventd_configuration().get("actions", [])
-             if not omit_hidden or not a.get("hidden") ]
+             if not omit_hidden or not a.get("hidden")])
 
 
 cached_config = None
 
 
-def eventd_configuration():
+def eventd_configuration() -> ec.ConfigFromWATO:
     global cached_config
+    # TODO: Huh??? Why do we use html simply as a tag here???
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 

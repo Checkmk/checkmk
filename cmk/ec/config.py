@@ -40,6 +40,8 @@ class EMailActionConfig(TypedDict):
 
 class EMailAction(TypedDict):
     id: str
+    title: str
+    hidden: bool
     disabled: bool
     action: Tuple[Literal['email'], EMailActionConfig]
 
@@ -50,6 +52,8 @@ class ScriptActionConfig(TypedDict):
 
 class ScriptAction(TypedDict):
     id: str
+    title: str
+    hidden: bool
     disabled: bool
     action: Tuple[Literal['script'], ScriptActionConfig]
 
@@ -114,10 +118,22 @@ class ServiceLevel(TypedDict):
     precedence: Union[Literal['message'], Literal['rule']]
 
 
-class Rule(TypedDict):
+# TODO: This is only a rough approximation.
+class Rule(TypedDict, total=False):
+    actions: Iterable[Tuple[str, str]]
+    actions_in_downtime: bool
+    autodelete: Any
     contact_groups: ContactGroups
-    livetime: Tuple[Seconds, Union[Literal['open'], Literal['ack']]]
+    expect: Any
+    id: Any
+    livetime: Tuple[Seconds, Iterable[Union[Literal['open'], Literal['ack']]]]
+    set_application: Any
+    set_comment: Any
+    set_contact: Any
+    set_host: Any
+    set_text: Any
     sl: ServiceLevel
+    state: Any
 
 
 AuthenticationProtocol = Union[Literal['md5'], Literal['sha'], Literal['SHA-224'],

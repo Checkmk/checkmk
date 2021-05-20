@@ -68,7 +68,7 @@ from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
-from .config import ConfigFromWATO, Config
+from .config import ConfigFromWATO, Config, Rule
 from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .event import Event
@@ -1147,7 +1147,7 @@ class EventServer(ECServerThread):
                 for nr in events_to_delete[::-1]:
                     self._event_status.remove_event(events[nr])
 
-    def _handle_absent_event(self, rule: Dict[str, Any], event_count: int, expected_count: int,
+    def _handle_absent_event(self, rule: Rule, event_count: int, expected_count: int,
                              interval_start: float) -> None:
         now = time.time()
         if event_count:
@@ -1519,7 +1519,7 @@ class EventServer(ECServerThread):
         if self._config["archive_orphans"]:
             self._event_status.archive_event(event)
 
-    def _add_rule_contact_groups_to_event(self, rule: Dict[str, Any], event: Event) -> None:
+    def _add_rule_contact_groups_to_event(self, rule: Rule, event: Event) -> None:
         if rule.get("contact_groups") is None:
             event.update({
                 "contact_groups": None,
@@ -1574,7 +1574,7 @@ class EventServer(ECServerThread):
             return result
 
     # Rewrite texts and compute other fields in the event
-    def rewrite_event(self, rule: Dict[str, Any], event: Event, groups, set_first=True) -> None:
+    def rewrite_event(self, rule: Rule, event: Event, groups, set_first=True) -> None:
         if rule["state"] == -1:
             prio = event["priority"]
             if prio >= 5:

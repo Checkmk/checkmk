@@ -15,11 +15,14 @@ import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ContactgroupName
 
-from .config import Action, Config, EMailActionConfig, ScriptActionConfig
+from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .event import Event
 from .host_config import HostConfig
 from .settings import Settings
+
+# TODO: Improve this!
+NotificationContext = Dict[str, Any]
 
 #.
 #   .--Actions-------------------------------------------------------------.
@@ -36,8 +39,8 @@ from .settings import Settings
 
 
 def event_has_opened(history: Any, settings: Settings, config: Config, logger: Logger,
-                     host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
-                     rule: Dict[str, Any], event: Event) -> None:
+                     host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]], rule: Rule,
+                     event: Event) -> None:
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -321,7 +324,7 @@ def do_notify(host_config: HostConfig,
 
 
 def _create_notification_context(host_config: HostConfig, event: Event, username: Optional[bool],
-                                 is_cancelling: bool, logger: Logger) -> Dict[str, Any]:
+                                 is_cancelling: bool, logger: Logger) -> NotificationContext:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
@@ -329,7 +332,7 @@ def _create_notification_context(host_config: HostConfig, event: Event, username
 
 
 def _base_notification_context(event: Event, username: Optional[bool],
-                               is_cancelling: bool) -> Dict[str, Any]:
+                               is_cancelling: bool) -> NotificationContext:
     rule_id = event["rule_id"]
     return {
         "WHAT": "SERVICE",
@@ -380,7 +383,7 @@ def _base_notification_context(event: Event, username: Optional[bool],
 
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
-def _add_infos_from_monitoring_host(host_config: HostConfig, context: Dict[str, Any],
+def _add_infos_from_monitoring_host(host_config: HostConfig, context: NotificationContext,
                                     event: Event) -> None:
     def _add_artificial_context_info() -> None:
         context.update({
@@ -420,7 +423,7 @@ def _add_infos_from_monitoring_host(host_config: HostConfig, context: Dict[str, 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context: Dict[str, Any], event: Event, logger: Logger) -> None:
+def _add_contacts_from_rule(context: NotificationContext, event: Event, logger: Logger) -> None:
     # Add contact information from the rule, but only if the
     # host is unknown or if contact groups in rule have precedence
 
@@ -431,7 +434,7 @@ def _add_contacts_from_rule(context: Dict[str, Any], event: Event, logger: Logge
         _add_contact_information_to_context(context, contact_groups, logger)
 
 
-def _add_contact_information_to_context(context: Dict[str, Any],
+def _add_contact_information_to_context(context: NotificationContext,
                                         contact_groups: Iterable[ContactgroupName],
                                         logger: Logger) -> None:
     try:

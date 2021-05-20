@@ -7,16 +7,17 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
+from .config import (
+    ConfigFromWATO,)
+
 from .defaults import (
     default_config,
     default_rule_pack,
 )
 
-from .settings import (
-    PortNumber,
-    FileDescriptor,
-    Settings,
-    settings,
+from .forward import (
+    SyslogMessage,
+    SyslogForwarderUnixSocket,
 )
 
 from .rule_packs import (
@@ -37,7 +38,9 @@ from .rule_packs import (
     release_packaged_rule_packs,
 )
 
-from .forward import (
-    SyslogMessage,
-    SyslogForwarderUnixSocket,
+from .settings import (
+    PortNumber,
+    FileDescriptor,
+    Settings,
+    settings,
 )

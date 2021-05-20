@@ -33,8 +33,9 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
+from cmk.gui.plugins.views.painters import service_state_short
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
@@ -1081,3 +1082,13 @@ def purge_metric_for_js(metric):
 
 def make_mk_missing_data_error() -> MKMissingDataError:
     return MKMissingDataError(_("No data was found with the current parameters of this dashlet."))
+
+
+def svc_map(
+    conf: Optional[Tuple[str, str]],
+    row: Row,
+    message_template: str = "{}",
+) -> Dict[str, str]:
+    style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
+    state, status_name = service_state_short(row)
+    return {"css": "svcstate state%s" % state, "msg": message_template.format(status_name), **style}

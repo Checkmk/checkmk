@@ -883,6 +883,11 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
     )
 
     yield PageMenuTopic(
+        title=_("State"),
+        entries=list(_dashboard_add_state_dashlet_entries(name)),
+    )
+
+    yield PageMenuTopic(
         title=_("Checkmk"),
         entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
     )
@@ -1143,6 +1148,15 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
             'emblem': 'add',  # TODO: Need its own icon
         },
         item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
+    )
+
+
+def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
+
+    yield PageMenuEntryCEEOnly(
+        title='Service State',
+        icon_name='dashboard',  # TODO: Needs its own icon!
+        item=_dashboard_add_non_view_dashlet_link(name, "state_service"),
     )
 
 

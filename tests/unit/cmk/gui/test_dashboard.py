@@ -66,6 +66,7 @@ def test_dashlet_registry_plugins():
             'ntop_flows',
             'ntop_top_talkers',
             'single_timeseries',
+            'state_service',
         ]
 
     dashboard._transform_old_dict_based_dashlets()

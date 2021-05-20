@@ -2084,7 +2084,8 @@ class ListOfMultiple(ValueSpec):
     def _show_content(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_td(class_=["vlof_content"])
-        self._choice_dict[ident].render_input(prefix, value.get(ident))
+        vs = self._choice_dict[ident]
+        vs.render_input(prefix, value.get(ident, vs.default_value()))
         html.close_td()
 
     def _show_del_button(self, varprefix: str, ident: str) -> None:

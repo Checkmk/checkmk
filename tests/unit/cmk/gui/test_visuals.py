@@ -3852,3 +3852,25 @@ def test_context_uri_vars(request_context):
         assert request.var("hu") == "hu"
 
     assert list(dict(request.itervars()).keys()) == ["bla"]
+
+
+@pytest.mark.parametrize("context, expected_context", [
+    pytest.param(
+        {
+            "discovery_state": {
+                'discovery_state_ignored': True,
+                'discovery_state_vanished': False,
+                'discovery_state_unmonitored': True
+            }
+        }, {
+            "discovery_state": {
+                'discovery_state_ignored': 'on',
+                'discovery_state_vanished': '',
+                'discovery_state_unmonitored': 'on'
+            }
+        },
+        id="1.6.0->2.1.0 CMK-6606")
+])
+def test_cleanup_contexts(context, expected_context):
+    visuals._cleaup_context_filters(context)
+    assert context == expected_context

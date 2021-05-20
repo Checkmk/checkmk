@@ -296,6 +296,16 @@ def transform_old_visual(visual):
     visual.setdefault("sort_index", 99)
     visual.setdefault("is_show_more", False)
 
+    # 2.1
+    _cleaup_context_filters(visual['context'])
+
+
+def _cleaup_context_filters(context):
+    # Fix context into type VisualContext
+    if filter_conf := context.get("discovery_state"):
+        # CMK-6606: States were saved as bools instead of str
+        context['discovery_state'] = {key: "on" if val else "" for key, val in filter_conf.items()}
+
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
                       skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
@@ -1186,7 +1196,7 @@ def page_edit_visual(
 #   '----------------------------------------------------------------------'
 
 
-def show_filter(f: Filter) -> None:
+def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
     html.open_div(class_=["floatfilter", f.ident])
     html.open_div(class_="legend")
     html.span(f.title)
@@ -1194,7 +1204,7 @@ def show_filter(f: Filter) -> None:
     html.open_div(class_="content")
     try:
         with output_funnel.plugged():
-            f.display({"value": "from context"})
+            f.display(value)
             html.write_html(HTML(output_funnel.drain()))
     except LivestatusTestingError:
         raise
@@ -1667,16 +1677,9 @@ class VisualFilter(ValueSpec):
     def canonical_value(self):
         return {}
 
-    def render_input(self, varprefix, value):
-        # kind of a hack to make the current/old filter API work. This should
-        # be cleaned up some day
-        if value is not None:
-            self.set_value(value)
-
+    def render_input(self, varprefix: str, value: FilterHTTPVariables):
         # A filter can not be used twice on a page, because the varprefix is not used
-        # The value spec compatibility does not allow to control value input
-        # and unset values can come as None instead of the expected FilterHTTPVariables
-        show_filter(self._filter)
+        show_filter(self._filter, value)
 
     def from_html_vars(self, varprefix):
         # A filter can not be used twice on a page, because the varprefix is not used
@@ -1689,30 +1692,6 @@ class VisualFilter(ValueSpec):
 
     def validate_value(self, value, varprefix):
         self._filter.validate_value(value)
-
-    def set_value(self, value):
-        """Is used to populate a value, for example loaded from persistance, into
-        the HTML context where it can be used by e.g. the display() method."""
-        if isinstance(value, str):
-            request.set_var(self._filter.htmlvars[0], value)
-            return
-
-        for varname in self._filter.htmlvars:
-            var_value = value.get(varname)
-            if var_value is not None:
-                # Workaround a bug we had in Checkmk <2.0.0 in the "discovery_state" filter.
-                # It persisted the checkbox states as booleans instead of using the HTTP
-                # request variable values. See CMK-6606.
-                if varname in [
-                        "discovery_state_ignored", "discovery_state_vanished",
-                        "discovery_state_unmonitored"
-                ]:
-                    if var_value is True:
-                        var_value = "on"
-                    elif var_value is False:
-                        var_value = ""
-
-                request.set_var(varname, var_value)
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:

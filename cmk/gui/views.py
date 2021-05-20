@@ -1738,10 +1738,11 @@ def create_view_from_valuespec(old_view, view):
 
 
 def show_filter_form(view: View, show_filters: List[Filter]) -> None:
-    visuals.show_filter_form(info_list=view.datasource.infos,
-                             context={f.ident: {} for f in show_filters if f.available()},
-                             page_name=view.name,
-                             reset_ajax_page="ajax_initial_view_filters")
+    visuals.show_filter_form(
+        info_list=view.datasource.infos,
+        context={f.ident: view.context.get(f.ident, {}) for f in show_filters if f.available()},
+        page_name=view.name,
+        reset_ajax_page="ajax_initial_view_filters")
 
 
 class ABCAjaxInitialFilters(AjaxPage):
@@ -1780,11 +1781,7 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
         view_context = view_spec.get("context", {})
 
         # Return a visual filters dict filled with the view context values
-        return {
-            f.ident: view_context[f.ident] if f.ident in view_context else {}
-            for f in show_filters
-            if f.available()
-        }
+        return {f.ident: view_context.get(f.ident, {}) for f in show_filters if f.available()}
 
 
 @cmk.gui.pages.register("view")
@@ -1797,14 +1794,10 @@ def page_view():
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
-        # TODO: there shouldn't be any merging because the html forms have
-        # already all the information for the page and even include the posibility
-        # of deleting a configured filter
-        context = visuals.get_merged_context(
-            view_spec["context"],
-            visuals.get_context_from_uri_vars(datasource.infos,
-                                              single_infos=view_spec["single_infos"]),
-        )
+        context = view_spec["context"]
+        if html.request.has_var("_active"):
+            context = visuals.VisualFilterListWithAddPopup(
+                info_list=datasource.infos).from_html_vars("")
 
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()

@@ -113,41 +113,56 @@ class ContactGroups(TypedDict):
     precedence: Union[Literal['host'], Literal['rule']]
 
 
+class Expect(TypedDict):
+    merge: Union[Literal['open'], Literal['acked'], Literal['never']]
+
+
 class ServiceLevel(TypedDict):
     value: int
     precedence: Union[Literal['message'], Literal['rule']]
+
+
+StatePatterns = TypedDict('StatePatterns', {
+    '0': str,
+    '1': str,
+    '2': str,
+}, total=False)
+
+# TODO: Use StatePatterns in last case.
+State = Union[Literal[-1], Literal[0], Literal[1], Literal[2], Literal[3],
+              Tuple[Literal['text_pattern'], Dict[str, str]]]
 
 
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
     actions: Iterable[Tuple[str, str]]
     actions_in_downtime: bool
-    autodelete: Any
-    cancel_application: Any
+    autodelete: bool
+    cancel_application: str
     cancel_priority: Tuple[int, int]
     contact_groups: ContactGroups
-    expect: Any
-    id: Any
+    expect: Expect
+    id: str
     invert_matching: bool
     livetime: Tuple[Seconds, Iterable[Union[Literal['open'], Literal['ack']]]]
-    match: Any
-    match_application: Any
+    match: str
+    match_application: str
     match_facility: int
-    match_host: Any
-    match_ipaddress: Any
-    match_ok: Any
+    match_host: str
+    match_ipaddress: str
+    match_ok: str
     match_priority: Tuple[int, int]
-    match_site: Any
-    match_sl: Any
-    match_timeperiod: Any
-    pack: Any
-    set_application: Any
-    set_comment: Any
-    set_contact: Any
-    set_host: Any
-    set_text: Any
+    match_site: Iterable[str]
+    match_sl: Tuple[int, int]
+    match_timeperiod: str
+    pack: str
+    set_application: str
+    set_comment: str
+    set_contact: str
+    set_host: str
+    set_text: str
     sl: ServiceLevel
-    state: Any
+    state: State
 
 
 AuthenticationProtocol = Union[Literal['md5'], Literal['sha'], Literal['SHA-224'],

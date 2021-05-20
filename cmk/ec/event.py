@@ -6,6 +6,8 @@
 
 from typing import Iterable, Optional, TypedDict
 
+from cmk.utils.type_defs import HostName
+
 
 # This is far from perfect, but at least we see all possible keys.
 class Event(TypedDict, total=False):
@@ -18,7 +20,7 @@ class Event(TypedDict, total=False):
     application: str
     pid: int
     time: float
-    core_host: str
+    core_host: Optional[HostName]
     host_in_downtime: bool
     # added later
     comment: str

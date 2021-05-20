@@ -396,13 +396,14 @@ def _add_infos_from_monitoring_host(host_config: HostConfig, context: Notificati
             "SERVICECONTACTGROUPNAMES": "",
         })
 
-    if not event["core_host"]:
+    core_host = event["core_host"]
+    if not core_host:
         # Host not known in active monitoring. Create artificial host context
         # as good as possible.
         _add_artificial_context_info()
         return
 
-    config = host_config.get_config_for_host(event["core_host"])
+    config = host_config.get_config_for_host(core_host)
     if config is None:
         _add_artificial_context_info()  # No config found - Host has vanished?
         return

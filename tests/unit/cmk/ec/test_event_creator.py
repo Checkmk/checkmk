@@ -36,7 +36,7 @@ def event_creator():
                 'facility': 1,
                 'text': 'message',
                 'pid': 8046,
-                'core_host': '',
+                'core_host': None,
                 'host_in_downtime': False,
                 'application': 'CRON',
                 'host': 'Klapprechner',
@@ -48,7 +48,7 @@ def event_creator():
             "Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET",
             {
                 'application': 'pfsp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 1,
                 'host': '127.0.0.1',
                 'host_in_downtime': False,
@@ -64,7 +64,7 @@ def event_creator():
             "<78>May 26 13:45:01 Klapprechner CRON[8046]:  message",
             {
                 'application': 'CRON',
-                'core_host': '',
+                'core_host': None,
                 'facility': 9,
                 'host': 'Klapprechner',
                 'host_in_downtime': False,
@@ -79,7 +79,7 @@ def event_creator():
             "<134>Jan 24 10:04:57 xygtldc-blaaa-pn02 pfsp: The configuration was changed on leader xygtldc-blaaa-pn02 to version 1111111 by xygtldc-blaaa-pn02/admin at 2019-01-18 11:04:54 CET",
             {
                 'application': 'pfsp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'xygtldc-blaaa-pn02',
                 'host_in_downtime': False,
@@ -96,7 +96,7 @@ def event_creator():
             {
                 'application': 'My Service',
                 'contact': 'Contact Info',
-                'core_host': '',
+                'core_host': None,
                 'facility': 19,
                 'host': 'MyHost',
                 'host_in_downtime': False,
@@ -114,7 +114,7 @@ def event_creator():
             {
                 'application': 'My Service',
                 'contact': 'Contact Info',
-                'core_host': '',
+                'core_host': None,
                 'facility': 19,
                 'host': 'MyHost',
                 'host_in_downtime': False,
@@ -131,7 +131,7 @@ def event_creator():
             "<166>2013-04-05T13:49:31.625Z esx Vpxa: message....",
             {
                 'application': 'Vpxa',
-                'core_host': '',
+                'core_host': None,
                 'facility': 20,
                 'host': 'esx',
                 'host_in_downtime': False,
@@ -147,7 +147,7 @@ def event_creator():
             "<166>2013-04-05T13:49:31+02:00 esx Vpxa: message....",
             {
                 'application': 'Vpxa',
-                'core_host': '',
+                'core_host': None,
                 'facility': 20,
                 'host': 'esx',
                 'host_in_downtime': False,
@@ -163,7 +163,7 @@ def event_creator():
             "<5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan",
             {
                 'application': 'SYSTEM_INFO',
-                'core_host': '',
+                'core_host': None,
                 'facility': 0,
                 'host': '127.0.0.1',
                 'host_in_downtime': False,
@@ -179,7 +179,7 @@ def event_creator():
             "<78>@1341847712 Klapprechner /var/log/syslog: message....",
             {
                 'application': '/var/log/syslog',
-                'core_host': '',
+                'core_host': None,
                 'facility': 9,
                 'host': 'Klapprechner',
                 'host_in_downtime': False,
@@ -195,7 +195,7 @@ def event_creator():
             "<78>@1341847712;3 Klapprechner /var/log/syslog: bzong",
             {
                 'application': '/var/log/syslog',
-                'core_host': '',
+                'core_host': None,
                 'facility': 9,
                 'host': 'Klapprechner',
                 'host_in_downtime': False,
@@ -212,7 +212,7 @@ def event_creator():
             "<84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages",
             {
                 'application': 'pluto',
-                'core_host': '',
+                'core_host': None,
                 'facility': 10,
                 'host': 'gw',
                 'host_in_downtime': False,
@@ -227,7 +227,7 @@ def event_creator():
             "<134>1 2016-06-02T12:49:05.125Z chrissw7 ChrisApp - TestID - coming from  java code",
             {
                 'application': 'ChrisApp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'chrissw7',
                 'host_in_downtime': False,
@@ -243,7 +243,7 @@ def event_creator():
             "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code",
             {
                 'application': 'ChrisApp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'chrissw7',
                 'host_in_downtime': False,
@@ -259,7 +259,7 @@ def event_creator():
             '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
             {
                 'application': 'ChrisApp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'chrissw7',
                 'host_in_downtime': False,
@@ -275,7 +275,7 @@ def event_creator():
             r'<134>1 2016-06-02T12:49:05-01:30 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
             {
                 'application': 'ChrisApp',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'chrissw7',
                 'host_in_downtime': False,
@@ -292,7 +292,7 @@ def event_creator():
             "2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:",
             {
                 'application': 'Ebra',
-                'core_host': '',
+                'core_host': None,
                 'facility': 1,
                 'host': 'XYZ',
                 'host_in_downtime': False,

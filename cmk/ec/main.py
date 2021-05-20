@@ -1538,8 +1538,7 @@ class EventServer(ECServerThread):
             })
 
     def add_core_host_to_event(self, event: Event) -> None:
-        name = self.host_config.get_canonical_name(event["host"])
-        event["core_host"] = "" if name is None else name
+        event["core_host"] = self.host_config.get_canonical_name(event["host"])
 
     def _add_core_host_to_new_event(self, event: Event) -> None:
         self.add_core_host_to_event(event)
@@ -1547,7 +1546,7 @@ class EventServer(ECServerThread):
         # Add some state dependent information (like host is in downtime etc.)
         event["host_in_downtime"] = self._is_host_in_downtime(event["core_host"])
 
-    def _is_host_in_downtime(self, host_name: HostName) -> bool:
+    def _is_host_in_downtime(self, host_name: Optional[HostName]) -> bool:
         if not host_name:
             return False  # Found no host in core: Not in downtime!
         try:
@@ -1692,7 +1691,7 @@ class EventServer(ECServerThread):
     def get_hosts_with_active_event_limit(self) -> List[str]:
         hosts = []
         for (hostname, core_host), count in self._event_status.num_existing_events_by_host.items():
-            host_config = self.host_config.get_config_for_host(core_host)
+            host_config = self.host_config.get_config_for_host(core_host) if core_host else None
             if count >= self._get_host_event_limit(host_config)[0]:
                 hosts.append(hostname)
         return hosts
@@ -1715,7 +1714,8 @@ class EventServer(ECServerThread):
         self._logger.log(VERBOSE, "Checking limit for message from %s (rule '%s')",
                          (event["host"], event["rule_id"]))
 
-        host_config = self.host_config.get_config_for_host(event["core_host"])
+        core_host = event["core_host"]
+        host_config = self.host_config.get_config_for_host(core_host) if core_host else None
         with self._event_status.lock:
             if self._handle_event_limit("overall", event, host_config):
                 return False
@@ -1843,7 +1843,7 @@ class EventServer(ECServerThread):
             "match_groups_syslog_application": (),
             "state": 2,  # crit
             "sl": event["sl"],
-            "core_host": "",
+            "core_host": None,
             "host_in_downtime": False,
         }
         self._add_rule_contact_groups_to_event({}, new_event)
@@ -1913,7 +1913,7 @@ class EventCreator:
         event: Event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress": address and address[0] or "",
-            "core_host": "",
+            "core_host": None,
             "host_in_downtime": False,
         }
         try:
@@ -2083,7 +2083,7 @@ class EventCreator:
                 "application": "",
                 "pid": 0,
                 "time": time.time(),
-                "core_host": "",
+                "core_host": None,
                 "host_in_downtime": False,
             }
 
@@ -2179,7 +2179,7 @@ class EventCreator:
             'facility': 31,  # not used by syslog -> we use this for all traps
             'application': application,
             'text': text,
-            'core_host': '',
+            'core_host': None,
             'host_in_downtime': False,
         }
 
@@ -3272,7 +3272,7 @@ class EventStatus:
     def _initialize_event_limit_status(self):
         self.num_existing_events = len(self._events)
 
-        self.num_existing_events_by_host: Dict[Tuple[str, HostName], int] = {}
+        self.num_existing_events_by_host: Dict[Tuple[str, Optional[HostName]], int] = {}
         self.num_existing_events_by_rule = {}
         for event in self._events:
             self._count_event_add(event)

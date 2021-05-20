@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for trying out the logwatch patterns"""
 
-from typing import Optional, Type, Iterable
+from typing import Optional, Type, Iterable, List
 import re
 from six import ensure_str
 
@@ -264,9 +264,9 @@ class ModePatternEditor(WatoMode):
                     table.cell(_('Match'))
                     html.icon("rule%s" % match_img, match_title)
 
-                    cls = ''
+                    cls: List[str] = []
                     if match_class == 'match first':
-                        cls = 'state%d' % logwatch.level_state(state)
+                        cls = ['state%d' % logwatch.level_state(state), 'fillbackground']
                     table.cell(_('State'), html.render_span(logwatch.level_name(state)), css=cls)
                     table.cell(_('Pattern'), html.render_tt(pattern))
                     table.cell(_('Comment'), comment)

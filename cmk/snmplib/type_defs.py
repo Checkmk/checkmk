@@ -36,12 +36,12 @@ from cmk.utils.type_defs import SNMPDetectBaseType as _SNMPDetectBaseType
 
 SNMPContextName = str
 SNMPDecodedString = str
-SNMPDecodedBinary = List[int]
+SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
 SNMPValueEncoding = Literal["string", "binary"]
-SNMPTable = List[List[SNMPDecodedValues]]
+SNMPTable = Sequence[Sequence[SNMPDecodedValues]]
 SNMPContext = Optional[str]
-SNMPRawDataSection = Union[SNMPTable, List[SNMPTable]]
+SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
 # The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
 #
 #     **WE DO NOT WANT `NewType` HERE** because this prevents us to
@@ -135,7 +135,10 @@ class SNMPHostConfig(
     def is_snmpv3_host(self) -> bool:
         return isinstance(self.credentials, tuple)
 
-    def snmpv3_contexts_of(self, section_name: Optional[_SectionName]) -> List[SNMPContext]:
+    def snmpv3_contexts_of(
+        self,
+        section_name: Optional[_SectionName],
+    ) -> Sequence[SNMPContext]:
         if not section_name or not self.is_snmpv3_host:
             return [None]
         section_name_str = str(section_name)

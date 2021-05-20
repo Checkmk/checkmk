@@ -86,7 +86,8 @@ from cmk.gui.watolib.activate_changes import (clear_site_replication_status,
 from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
 
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import (makeuri_contextless, make_confirm_link, makeactionuri,
+                                makeactionuri_contextless)
 
 
 @mode_registry.register
@@ -546,7 +547,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         # Make sure that site is not being used by hosts and folders
         if delete_id in watolib.Folder.root_folder().all_site_ids():
-            search_url = html.makeactionuri_contextless([
+            search_url = makeactionuri_contextless(request, transactions, [
                 ("host_search_change_site", "on"),
                 ("host_search_site", DropdownChoice.option_id(delete_id)),
                 ("host_search", "1"),
@@ -698,7 +699,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.empty_icon_button()
         else:
             delete_url = make_confirm_link(
-                url=html.makeactionuri([("_delete", site_id)]),
+                url=makeactionuri(request, transactions, [("_delete", site_id)]),
                 message=_("Do you really want to delete the connection to the site %s?") %
                 html.render_tt(site_id))
             html.icon_button(delete_url, _("Delete"), "delete")
@@ -1255,7 +1256,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if cert_detail.is_ca:
-                    url = html.makeactionuri([
+                    url = makeactionuri(request, transactions, [
                         ("_action", "trust"),
                         ("_digest", cert_detail.digest_sha256),
                     ])

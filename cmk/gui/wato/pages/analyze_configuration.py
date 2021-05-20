@@ -28,7 +28,8 @@ import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -171,7 +172,7 @@ class ModeAnalyzeConfig(WatoMode):
         is_test_disabled = self._is_test_disabled(test_id)
         if is_test_disabled:
             html.icon_button(
-                html.makeactionuri([
+                makeactionuri(request, transactions, [
                     ("_do", "enable"),
                     ("_test_id", worst_result.test_id),
                 ]),
@@ -180,7 +181,7 @@ class ModeAnalyzeConfig(WatoMode):
             )
         else:
             html.icon_button(
-                html.makeactionuri([
+                makeactionuri(request, transactions, [
                     ("_do", "disable"),
                     ("_test_id", worst_result.test_id),
                 ]),
@@ -222,7 +223,7 @@ class ModeAnalyzeConfig(WatoMode):
             if result.status != 0:
                 if is_acknowledged:
                     html.icon_button(
-                        html.makeactionuri([
+                        makeactionuri(request, transactions, [
                             ("_do", "unack"),
                             ("_site_id", result.site_id),
                             ("_status_id", result.status),
@@ -233,7 +234,7 @@ class ModeAnalyzeConfig(WatoMode):
                     )
                 else:
                     html.icon_button(
-                        html.makeactionuri([
+                        makeactionuri(request, transactions, [
                             ("_do", "ack"),
                             ("_site_id", result.site_id),
                             ("_status_id", result.status),

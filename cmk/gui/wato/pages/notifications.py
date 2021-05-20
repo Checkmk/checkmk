@@ -74,7 +74,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
     make_display_options_dropdown,
 )
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, makeactionuri
 
 NotificationRule = Dict[str, Any]
 
@@ -491,7 +491,7 @@ class ModeNotifications(ABCNotificationsMode):
                             'emblem': 'disable' if self._show_user_rules else 'enable'
                         },
                         item=make_simple_link(
-                            html.makeactionuri([
+                            makeactionuri(request, transactions, [
                                 ("_show_user", "" if self._show_user_rules else "1"),
                             ])),
                     ),
@@ -502,7 +502,7 @@ class ModeNotifications(ABCNotificationsMode):
                             'emblem': 'disable' if self._show_backlog else "enable",
                         },
                         item=make_simple_link(
-                            html.makeactionuri([
+                            makeactionuri(request, transactions, [
                                 ("_show_backlog", "" if self._show_backlog else "1"),
                             ])),
                         is_shortcut=True,
@@ -515,7 +515,7 @@ class ModeNotifications(ABCNotificationsMode):
                             'emblem': 'disable' if self._show_bulks else "enable",
                         },
                         item=make_simple_link(
-                            html.makeactionuri([
+                            makeactionuri(request, transactions, [
                                 ("_show_bulks", "" if self._show_bulks else "1"),
                             ])),
                         is_shortcut=True,
@@ -673,7 +673,7 @@ class ModeNotifications(ABCNotificationsMode):
                                  onclick="cmk.wato.toggle_container('notification_context_%d')" %
                                  nr)
 
-                replay_url = html.makeactionuri([("_replay", str(nr))])
+                replay_url = makeactionuri(request, transactions, [("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
                                  "reload_cmk")
 

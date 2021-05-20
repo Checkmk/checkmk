@@ -90,7 +90,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.main_menu import mega_menu_registry
 
 from cmk.gui.utils import unique_default_name_suggestion
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, urlencode
+from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
+                                makeactionuri)
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
@@ -667,7 +668,8 @@ class Overridable(Base):
             owned_by = ""
         message = _("Please confirm the deletion of \"%s\"%s.") % (self.title(), owned_by)
 
-        return make_confirm_link(url=html.makeactionuri(add_vars), message=message)
+        return make_confirm_link(url=makeactionuri(request, transactions, add_vars),
+                                 message=message)
 
     @classmethod
     def create_url(cls):

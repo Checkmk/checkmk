@@ -13,7 +13,8 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri_contextless
 from cmk.gui.plugins.sidebar import (
     PageHandlers,
     SidebarSnapin,
@@ -121,12 +122,13 @@ class MasterControlSnapin(SidebarSnapin):
                 continue
 
             colvalue = site_info[i]
-            url = html.makeactionuri_contextless([
-                ("site", site_id),
-                ("switch", colname),
-                ("state", "%d" % (1 - colvalue)),
-            ],
-                                                 filename="switch_master_state.py")
+            url = makeactionuri_contextless(request,
+                                            transactions, [
+                                                ("site", site_id),
+                                                ("switch", colname),
+                                                ("state", "%d" % (1 - colvalue)),
+                                            ],
+                                            filename="switch_master_state.py")
             onclick = "cmk.ajax.get_url('%s', cmk.utils.update_contents, 'snapin_master_control')" % url
 
             html.open_tr()

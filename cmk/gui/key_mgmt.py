@@ -35,7 +35,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link, makeactionuri
 from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 
 
@@ -179,7 +179,7 @@ class PageKeyManagement:
                                     ) % key["owner"]
 
                     delete_url = make_confirm_link(
-                        url=html.makeactionuri([("_delete", key_id)]),
+                        url=makeactionuri(request, transactions, [("_delete", key_id)]),
                         message=message,
                     )
                     html.icon_button(delete_url, _("Delete this key"), "delete")

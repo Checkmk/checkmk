@@ -61,7 +61,8 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import (makeuri_contextless, make_confirm_link, makeactionuri,
+                                makeactionuri_contextless)
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect
 
@@ -427,8 +428,9 @@ class Jobs(BackupEntityCollection):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 delete_url = make_confirm_link(
-                    url=html.makeactionuri_contextless([("mode", "backup"), ("_action", "delete"),
-                                                        ("_job", job_ident)]),
+                    url=makeactionuri_contextless(request, transactions, [("mode", "backup"),
+                                                                          ("_action", "delete"),
+                                                                          ("_job", job_ident)]),
                     message=_("Do you really want to delete this job?"),
                 )
                 edit_url = makeuri_contextless(
@@ -451,7 +453,7 @@ class Jobs(BackupEntityCollection):
                                      "backup_state")
 
                 if not job.is_running():
-                    start_url = html.makeactionuri_contextless([
+                    start_url = makeactionuri_contextless(request, transactions, [
                         ("mode", "backup"),
                         ("_action", "start"),
                         ("_job", job_ident),
@@ -459,7 +461,7 @@ class Jobs(BackupEntityCollection):
 
                     html.icon_button(start_url, _("Manually start this backup"), "backup_start")
                 else:
-                    stop_url = html.makeactionuri_contextless([
+                    stop_url = makeactionuri_contextless(request, transactions, [
                         ("mode", "backup"),
                         ("_action", "stop"),
                         ("_job", job_ident),
@@ -1008,14 +1010,16 @@ class Target(BackupEntity):
                 table.cell(_("Actions"), css="buttons")
 
                 delete_url = make_confirm_link(
-                    url=html.makeactionuri([("_action", "delete"), ("_backup", backup_ident)]),
+                    url=makeactionuri(request, transactions, [("_action", "delete"),
+                                                              ("_backup", backup_ident)]),
                     message=_("Do you really want to delete this backup?"),
                 )
 
                 html.icon_button(delete_url, _("Delete this backup"), "delete")
 
                 start_url = make_confirm_link(
-                    url=html.makeactionuri([("_action", "start"), ("_backup", backup_ident)]),
+                    url=makeactionuri(request, transactions, [("_action", "start"),
+                                                              ("_backup", backup_ident)]),
                     message=_("Do you really want to start the restore of this backup?"),
                 )
 
@@ -1091,8 +1095,9 @@ class Targets(BackupEntityCollection):
 
                 if editable:
                     delete_url = make_confirm_link(
-                        url=html.makeactionuri_contextless([("mode", "backup_targets"),
-                                                            ("target", target_ident)]),
+                        url=makeactionuri_contextless(request, transactions,
+                                                      [("mode", "backup_targets"),
+                                                       ("target", target_ident)]),
                         message=_("Do you really want to delete this target?"),
                     )
                     edit_url = makeuri_contextless(
@@ -1687,7 +1692,8 @@ class PageBackupRestore:
                                     icon_name="backup_stop",
                                     item=make_simple_link(
                                         make_confirm_link(
-                                            url=html.makeactionuri([("_action", "stop")]),
+                                            url=makeactionuri(request, transactions,
+                                                              [("_action", "stop")]),
                                             message=_(
                                                 "Do you really want to stop the restore of "
                                                 "this backup? This will - leave your environment in "
@@ -1701,7 +1707,8 @@ class PageBackupRestore:
                                     title=_("Complete the restore"),
                                     icon_name="save",
                                     item=make_simple_link(
-                                        html.makeactionuri([("_action", "complete")])),
+                                        makeactionuri(request, transactions,
+                                                      [("_action", "complete")])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                     is_enabled=self._restore_was_started(),

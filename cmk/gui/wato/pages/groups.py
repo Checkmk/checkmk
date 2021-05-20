@@ -17,7 +17,8 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
     Dictionary,
     CascadingDropdown,
@@ -161,7 +162,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
         delete_url = make_confirm_link(
-            url=html.makeactionuri([("_delete", name)]),
+            url=makeactionuri(request, transactions, [("_delete", name)]),
             message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name))
         clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                     ("clone", name)])

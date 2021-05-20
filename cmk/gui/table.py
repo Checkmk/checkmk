@@ -29,8 +29,8 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeuri, makeactionuri
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
@@ -559,7 +559,8 @@ class Table:
                     if sort_col == nr:
                         reverse = 1 if sort_reverse == 0 else 0
 
-                action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
+                action_uri = makeactionuri(request, transactions,
+                                           [('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
                 html.open_th(class_=css_class,
                              title=_("Sort by %s") % header.title,
                              onclick="location.href='%s'" % action_uri)

@@ -16,7 +16,8 @@ import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -166,7 +167,8 @@ def render_page_confirm(acktime, failed_notifications):
 
     confirm_url = make_simple_link(
         make_confirm_link(
-            url=html.makeactionuri([("acktime", str(acktime)), ("_confirm", "1")]),
+            url=makeactionuri(request, transactions, [("acktime", str(acktime)),
+                                                      ("_confirm", "1")]),
             message=_("Do you really want to acknowledge all failed notifications up to %s?") %
             cmk.utils.render.date_and_time(acktime),
         ))

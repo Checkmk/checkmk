@@ -27,9 +27,9 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.type_defs import Choices
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, makeactionuri
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import html, request, display_options, user_errors
+from cmk.gui.globals import html, request, display_options, user_errors, transactions
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -135,7 +135,7 @@ class ModeAuditLog(WatoMode):
                 icon_name="delete",
                 item=make_simple_link(
                     make_confirm_link(
-                        url=html.makeactionuri([("_action", "clear")]),
+                        url=makeactionuri(request, transactions, [("_action", "clear")]),
                         message=_("Do you really want to clear the audit log?"),
                     )),
             )
@@ -156,7 +156,7 @@ class ModeAuditLog(WatoMode):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(html.makeactionuri([("_action", "csv")])),
+            item=make_simple_link(makeactionuri(request, transactions, [("_action", "csv")])),
         )
 
     def _extend_display_dropdown(self, menu: PageMenu) -> None:
@@ -186,7 +186,7 @@ class ModeAuditLog(WatoMode):
                         title=_("Show details"),
                         icon_name="checked_checkbox" if self._show_details else "checkbox",
                         item=make_simple_link(
-                            html.makeactionuri([
+                            makeactionuri(request, transactions, [
                                 ("show_details", "0" if self._show_details else "1"),
                             ])),
                         name="show_details",
@@ -367,18 +367,18 @@ class ModeAuditLog(WatoMode):
             ]
 
         if next_log_time is not None:
-            html.icon_button(html.makeactionuri([
+            html.icon_button(makeactionuri(request, transactions, [
                 ("options_start_sel", "0"),
             ]), _("Most recent events"), "start")
 
-            html.icon_button(html.makeactionuri(time_url_args(next_log_time)),
+            html.icon_button(makeactionuri(request, transactions, time_url_args(next_log_time)),
                              "%s: %s" % (_("Newer events"), render.date(next_log_time)), "back")
         else:
             html.empty_icon_button()
             html.empty_icon_button()
 
         if previous_log_time is not None:
-            html.icon_button(html.makeactionuri(time_url_args(previous_log_time)),
+            html.icon_button(makeactionuri(request, transactions, time_url_args(previous_log_time)),
                              "%s: %s" % (_("Older events"), render.date(previous_log_time)),
                              "forth")
         else:

@@ -70,7 +70,7 @@ from cmk.gui.plugins.wato import (
     mode_url,
 )
 from cmk.gui.type_defs import Choices
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -166,7 +166,7 @@ class ModeUsers(WatoMode):
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
                     icon_name="replicate",
-                    item=make_simple_link(html.makeactionuri([("_sync", 1)])),
+                    item=make_simple_link(makeactionuri(request, transactions, [("_sync", 1)])),
                 )
 
                 yield PageMenuEntry(

@@ -7,7 +7,8 @@
 import json
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 
@@ -69,10 +70,11 @@ class SiteStatus(SidebarSnapin):
             if switch == "missing":
                 html.status_label(content=state, status=state, title=_("Site is missing"))
             else:
-                url = html.makeactionuri_contextless([
-                    ("_site_switch", "%s:%s" % (sitename, switch)),
-                ],
-                                                     filename="switch_site.py")
+                url = makeactionuri_contextless(request,
+                                                transactions, [
+                                                    ("_site_switch", "%s:%s" % (sitename, switch)),
+                                                ],
+                                                filename="switch_site.py")
                 html.status_label_button(
                     content=state,
                     status=state,

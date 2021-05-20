@@ -103,7 +103,8 @@ from cmk.gui.plugins.visuals.utils import (
 
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, urlencode
+from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
+                                makeactionuri)
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -560,7 +561,7 @@ def page_list(what,
                         add_vars.append(('_user_id', owner))
                     html.icon_button(
                         make_confirm_link(
-                            url=html.makeactionuri(add_vars),
+                            url=makeactionuri(global_request, transactions, add_vars),
                             message=_("Please confirm the deletion of \"%s\".") % visual['title'],
                         ), _("Delete!"), "delete")
 

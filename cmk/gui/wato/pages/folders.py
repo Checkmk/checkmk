@@ -61,7 +61,7 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_confirmed_form_submit_link,
 )
-from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless
+from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless, makeactionuri
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -738,7 +738,7 @@ class ModeFolder(WatoMode):
                               url_vars=[
                                   ("what", what),
                                   ("ident", ident),
-                                  ("back_url", html.makeactionuri([])),
+                                  ("back_url", makeactionuri(global_request, transactions, [])),
                               ]),
             style=style,
         )

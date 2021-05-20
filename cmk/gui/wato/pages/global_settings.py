@@ -53,7 +53,7 @@ from cmk.gui.page_menu import (
 )
 
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
 
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -209,7 +209,8 @@ class ABCGlobalSettingsMode(WatoMode):
                     html.toggle_switch(
                         enabled=value,
                         help_txt=_("Immediately toggle this setting"),
-                        href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
+                        href=makeactionuri(request, transactions, [("_action", "toggle"),
+                                                                   ("_varname", varname)]),
                         class_=modified_cls,
                         title=value_title,
                     )
@@ -441,7 +442,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             title=_("Show all settings"),
             icon_name="checked_checkbox" if self._show_only_modified else "checkbox",
             item=make_simple_link(
-                html.makeactionuri([
+                makeactionuri(request, transactions, [
                     ("_show_only_modified", "0" if self._show_only_modified else "1"),
                 ])),
         )

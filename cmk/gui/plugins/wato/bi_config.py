@@ -95,7 +95,8 @@ from cmk.utils.bi.bi_actions import BICallARuleAction
 from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_compiler import BICompiler
 
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, makeactionuri,
+                                makeactionuri_contextless)
 
 
 @main_module_registry.register
@@ -489,7 +490,7 @@ class ModeBIPacks(ABCBIMode):
                     )
                     html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
                     delete_url = make_confirm_link(
-                        url=html.makeactionuri([("_delete", pack.id)]),
+                        url=makeactionuri(request, transactions, [("_delete", pack.id)]),
                         message=_("Do you really want to delete the BI pack "
                                   "<b>%s</b> <i>%s</i> with <b>%d</b> aggregations?") %
                         (pack.id, pack.title, pack.num_aggregations()))
@@ -849,9 +850,10 @@ class ModeBIRules(ABCBIMode):
 
                     if refs == 0:
                         delete_url = make_confirm_link(
-                            url=html.makeactionuri_contextless([("mode", "bi_rules"),
-                                                                ("_del_rule", rule_id),
-                                                                ("pack", self.bi_pack.id)]),
+                            url=makeactionuri_contextless(request, transactions,
+                                                          [("mode", "bi_rules"),
+                                                           ("_del_rule", rule_id),
+                                                           ("pack", self.bi_pack.id)]),
                             message=_("Do you really want to delete the rule with "
                                       "the ID <b>%s</b>?") % rule_id,
                         )
@@ -1914,7 +1916,7 @@ class BIModeAggregations(ABCBIMode):
 
                 if bi_valuespecs.is_contact_for_pack(self.bi_pack):
                     delete_url = make_confirm_link(
-                        url=html.makeactionuri([("_del_aggr", aggregation_id)]),
+                        url=makeactionuri(request, transactions, [("_del_aggr", aggregation_id)]),
                         message=_("Do you really want to delete the aggregation <b>%s</b>?") %
                         (aggregation_id),
                     )

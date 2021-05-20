@@ -38,7 +38,7 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato import (WatoMode, ActionResult, add_change, mode_registry,
                                   make_confirm_link, redirect, mode_url)
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
 
 
 def update_user_custom_attrs():
@@ -495,7 +495,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
                                                            ("edit", custom_attr['name'])])
                 delete_url = make_confirm_link(
-                    url=html.makeactionuri([("_delete", custom_attr['name'])]),
+                    url=makeactionuri(request, transactions, [("_delete", custom_attr['name'])]),
                     message=_('Do you really want to delete the custom attribute "%s"?') %
                     custom_attr['name'],
                 )

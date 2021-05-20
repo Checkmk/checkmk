@@ -17,7 +17,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_display_options_dropdown,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -421,7 +421,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
                     title=_("Show context"),
                     icon_name="checkbox" if context_hidden else "checked_checkbox",
                     item=make_simple_link(
-                        html.makeactionuri([
+                        makeactionuri(request, transactions, [
                             ("_show_backlog", "no") if context_hidden else ("_hidecontext", "yes"),
                         ])),
                 ),
@@ -464,7 +464,7 @@ def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
         icon_name="delete",
         item=make_simple_link(
             make_confirm_link(
-                url=html.makeactionuri(urivars),
+                url=makeactionuri(request, transactions, urivars),
                 message=_("Do you really want to acknowledge %s "
                           "by <b>deleting</b> all stored messages?") % ack_msg,
             )),

@@ -17,7 +17,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import g, html, request, timeout_manager
+from cmk.gui.globals import g, html, request, timeout_manager, transactions
 from cmk.gui.utils.html import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
@@ -26,7 +26,7 @@ from cmk.gui.permissions import (
     permission_registry,
     Permission,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link, makeactionuri
 
 
 @permission_section_registry.register
@@ -376,7 +376,8 @@ class JobRenderer:
         if job_status.get("may_stop"):
             html.icon_button(
                 make_confirm_link(
-                    url=html.makeactionuri([(ActionHandler.stop_job_var, job_id)]),
+                    url=makeactionuri(request, transactions,
+                                      [(ActionHandler.stop_job_var, job_id)]),
                     message=_("Stop job %s%s?") % (job_id, cls._get_extra_info(job_status)),
                 ),
                 _("Stop this job"),
@@ -385,7 +386,8 @@ class JobRenderer:
         if job_status.get("may_delete"):
             html.icon_button(
                 make_confirm_link(
-                    url=html.makeactionuri([(ActionHandler.delete_job_var, job_id)]),
+                    url=makeactionuri(request, transactions,
+                                      [(ActionHandler.delete_job_var, job_id)]),
                     message=_("Delete job %s%s?") % (job_id, cls._get_extra_info(job_status)),
                 ),
                 _("Delete this job"),
@@ -515,11 +517,13 @@ class JobRenderer:
         # Actions
         html.open_td(css="job_actions")
         if job_status.get("may_stop"):
-            html.icon_button(html.makeactionuri([(ActionHandler.stop_job_var, job_id)]),
-                             _("Stop this job"), "disable_test")
+            html.icon_button(
+                makeactionuri(request, transactions, [(ActionHandler.stop_job_var, job_id)]),
+                _("Stop this job"), "disable_test")
         if job_status.get("may_delete"):
-            html.icon_button(html.makeactionuri([(ActionHandler.delete_job_var, job_id)]),
-                             _("Delete this job"), "delete")
+            html.icon_button(
+                makeactionuri(request, transactions, [(ActionHandler.delete_job_var, job_id)]),
+                _("Delete this job"), "delete")
         html.close_td()
 
         # Job ID

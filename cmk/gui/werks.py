@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 from cmk.gui.page_state import PageState
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -212,7 +212,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
         is_suggested=True,
         item=make_simple_link(
             make_confirm_link(
-                url=html.makeactionuri([("_ack_all", "1")]),
+                url=makeactionuri(request, transactions, [("_ack_all", "1")]),
                 message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
             )),
         is_enabled=bool(unacknowledged_incompatible_werks()),
@@ -334,7 +334,9 @@ def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]
     if not may_acknowledge():
         return
 
-    ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
+    ack_url = makeactionuri(request,
+                            transactions, [("_werk_ack", werk["id"])],
+                            filename="version.py")
     yield PageMenuEntry(
         title=_("Acknowledge"),
         icon_name="werk_ack",

@@ -20,7 +20,8 @@ import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.i18n import _, _l, ungettext
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.urls import urlencode_vars
 
@@ -747,7 +748,11 @@ def render_delete_event_icons(row):
         ("_delete_event", _("Archive Event")),
         ("_show_result", "0"),
     ]
-    url = html.makeactionuri(urlvars, filename=filename, delvars=["selection", "show_checkboxes"])
+    url = makeactionuri(request,
+                        transactions,
+                        urlvars,
+                        filename=filename,
+                        delvars=["selection", "show_checkboxes"])
     return html.render_icon_button(url, _("Archive this event"), "archive_event")
 
 

@@ -1330,7 +1330,7 @@ class EventServer(ECServerThread):
             return re.compile(value, re.IGNORECASE)
         return val.lower()
 
-    def hash_rule(self, rule: Dict[str, Any]) -> None:
+    def hash_rule(self, rule: Rule) -> None:
         # Construct rule hash for faster execution.
         facility = rule.get("match_facility")
         if facility and not rule.get("invert_matching"):
@@ -1339,18 +1339,22 @@ class EventServer(ECServerThread):
             for facility in range(32):  # all syslog facilities
                 self.hash_rule_facility(rule, facility)
 
-    def hash_rule_facility(self, rule: Dict[str, Any], facility: int) -> None:
+    def hash_rule_facility(self, rule: Rule, facility: int) -> None:
         needed_prios = [False] * 8
-        for key in ["match_priority", "cancel_priority"]:
-            if key in rule:
-                prio_from, prio_to = rule[key]
-                # Beware: from > to!
-                for p in range(prio_to, prio_from + 1):
-                    needed_prios[p] = True
-            elif key == "match_priority":  # all priorities match
-                needed_prios = [True] * 8  # needed to check this rule for all event priorities
-            elif "match_ok" in rule:  # a cancelling rule where all priorities cancel
-                needed_prios = [True] * 8  # needed to check this rule for all event priorities
+
+        if "match_priority" in rule:
+            prio_from, prio_to = rule["match_priority"]
+            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+                needed_prios[p] = True
+        else:  # all priorities match
+            needed_prios = [True] * 8  # needed to check this rule for all event priorities
+
+        if "cancel_priority" in rule:
+            prio_from, prio_to = rule["cancel_priority"]
+            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+                needed_prios[p] = True
+        elif "match_ok" in rule:  # a cancelling rule where all priorities cancel
+            needed_prios = [True] * 8  # needed to check this rule for all event priorities
 
         if rule.get("invert_matching"):
             needed_prios = [True] * 8
@@ -1556,7 +1560,7 @@ class EventServer(ECServerThread):
     # normal match and True for a cancelling match and the groups is a tuple
     # if matched regex groups in either text (normal) or match_ok (cancelling)
     # match.
-    def event_rule_matches(self, rule: Dict[str, Any], event: Event) -> MatchResult:
+    def event_rule_matches(self, rule: Rule, event: Event) -> MatchResult:
         self._perfcounters.count("rule_tries")
         with self._lock_configuration:
             result = self._rule_matcher.event_rule_matches_non_inverted(rule, event)
@@ -2193,7 +2197,7 @@ class RuleMatcher:
     def _debug_rules(self) -> bool:
         return self._config["debug_rules"]
 
-    def event_rule_matches_non_inverted(self, rule: Dict[str, Any], event: Event) -> MatchResult:
+    def event_rule_matches_non_inverted(self, rule: Rule, event: Event) -> MatchResult:
         if self._debug_rules:
             self._logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
             self._logger.info("  Text:   %s" % event["text"])
@@ -2218,7 +2222,7 @@ class RuleMatcher:
 
         return self._check_match_outcome(rule, match_groups, match_priority)
 
-    def _check_match_outcome(self, rule: Dict[str, Any], match_groups: Dict[str, Any],
+    def _check_match_outcome(self, rule: Rule, match_groups: Dict[str, Any],
                              match_priority: Dict[str, Any]) -> MatchResult:
         """Decide or not a event is created, canceled or nothing is done"""
 
@@ -2266,7 +2270,7 @@ class RuleMatcher:
 
         return MatchFailure()
 
-    def event_rule_matches_generic(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_generic(self, rule: Rule, event: Event) -> bool:
         generic_match_functions = [
             self.event_rule_matches_site,
             self.event_rule_matches_host,
@@ -2281,7 +2285,7 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_determine_match_priority(self, rule: Dict[str, Any], event: Event,
+    def event_rule_determine_match_priority(self, rule: Rule, event: Event,
                                             match_priority: Dict[str, bool]) -> bool:
         p = event["priority"]
 
@@ -2303,10 +2307,10 @@ class RuleMatcher:
 
         return True
 
-    def event_rule_matches_site(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_site(self, rule: Rule, event: Event) -> bool:
         return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
 
-    def event_rule_matches_host(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_host(self, rule: Rule, event: Event) -> bool:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             if self._debug_rules:
                 self._logger.info("  did not match because of wrong host '%s' (need '%s')" %
@@ -2314,7 +2318,7 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_matches_ip(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_ip(self, rule: Rule, event: Event) -> bool:
         if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             if self._debug_rules:
                 self._logger.info(
@@ -2323,14 +2327,14 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_matches_facility(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_facility(self, rule: Rule, event: Event) -> bool:
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
             if self._debug_rules:
                 self._logger.info("  did not match because of wrong syslog facility")
             return False
         return True
 
-    def event_rule_matches_service_level(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_service_level(self, rule: Rule, event: Event) -> bool:
         if "match_sl" in rule:
             sl_from, sl_to = rule["match_sl"]
             if sl_from > sl_to:
@@ -2344,7 +2348,7 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_matches_timeperiod(self, rule: Dict[str, Any], event: Event) -> bool:
+    def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> bool:
         if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info("  did not match, because timeperiod %s is not active" %
@@ -2352,7 +2356,7 @@ class RuleMatcher:
             return False
         return True
 
-    def event_rule_determine_match_groups(self, rule: Dict[str, Any], event: Event,
+    def event_rule_determine_match_groups(self, rule: Rule, event: Event,
                                           match_groups: MatchGroups) -> bool:
         match_group_functions = [
             self.event_rule_matches_syslog_application,
@@ -2363,7 +2367,7 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_matches_syslog_application(self, rule: Dict[str, Any], event: Event,
+    def event_rule_matches_syslog_application(self, rule: Rule, event: Event,
                                               match_groups: MatchGroups) -> bool:
         if "match_application" not in rule and "cancel_application" not in rule:
             return True
@@ -2388,7 +2392,7 @@ class RuleMatcher:
 
         return True
 
-    def event_rule_matches_message(self, rule: Dict[str, Any], event: Event,
+    def event_rule_matches_message(self, rule: Rule, event: Event,
                                    match_groups: MatchGroups) -> bool:
         # Message matching, this condition is always active
         match_groups["match_groups_message"] = match(rule.get("match"),

@@ -123,10 +123,24 @@ class Rule(TypedDict, total=False):
     actions: Iterable[Tuple[str, str]]
     actions_in_downtime: bool
     autodelete: Any
+    cancel_application: Any
+    cancel_priority: Tuple[int, int]
     contact_groups: ContactGroups
     expect: Any
     id: Any
+    invert_matching: bool
     livetime: Tuple[Seconds, Iterable[Union[Literal['open'], Literal['ack']]]]
+    match: Any
+    match_application: Any
+    match_facility: int
+    match_host: Any
+    match_ipaddress: Any
+    match_ok: Any
+    match_priority: Tuple[int, int]
+    match_site: Any
+    match_sl: Any
+    match_timeperiod: Any
+    pack: Any
     set_application: Any
     set_comment: Any
     set_contact: Any

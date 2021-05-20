@@ -794,9 +794,8 @@ def check_discovery(
         params,
     )
 
-    if host_label_discovery_result.per_plugin:
-        infotexts.append("%d new host labels" %
-                         sum(host_label_discovery_result.per_plugin.values()))
+    if host_label_discovery_result.new_labels:
+        infotexts.append("%d new host labels" % len(host_label_discovery_result.new_labels))
         status = cmk.base.utils.worst_service_state(status,
                                                     params.get("severity_new_host_label", 1))
 

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: The rulesets in this file were deprecated in version 2.0.0p5
+
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -42,6 +44,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_pods_cpu,
         title=lambda: _("Kubernetes Namespaced pods cpu usage"),
+        is_deprecated=True,
     ))
 
 
@@ -81,6 +84,7 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_pods_memory,
         title=lambda: _("Kubernetes Namespaced pods memory usage"),
+        is_deprecated=True,
     ))
 
 
@@ -104,4 +108,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_pods_fs,
         title=lambda: _("Kubernetes Namespaced pods Filesystem usage"),
+        is_deprecated=True,
     ))

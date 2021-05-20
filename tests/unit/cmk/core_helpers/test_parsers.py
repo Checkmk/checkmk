@@ -17,7 +17,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import AgentRawData, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers.agent import AgentParser, SectionMarker
 from cmk.core_helpers.cache import PersistedSections, SectionStore
@@ -497,7 +497,7 @@ class MockStore(SectionStore):
         return copy.copy(self._data)
 
 
-class TestPersistentSectionHandling:
+class TestAgentPersistentSectionHandling:
     def test_update_with_empty_store_and_persisted(self):
         section_store = MockStore({})
         raw_data = AgentRawData(b"")
@@ -562,7 +562,7 @@ class TestPersistentSectionHandling:
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == {}
 
-    def test_updates_with_persisted_and_store(self):
+    def test_update_with_persisted_and_store(self):
         section_store = MockStore(PersistedSections[AgentRawDataSection]({
             SectionName("stored"): (0, 0, []),
         }))
@@ -641,3 +641,123 @@ class TestPersistentSectionHandling:
         assert section_store.load() == PersistedSections[AgentRawDataSection]({
             SectionName("section"): (1000, 0, []),
         })
+
+
+class TestSNMPPersistedSectionHandling:
+    def test_update_with_empty_store_and_persisted(self):
+        section_store = MockStore({})
+        raw_data: SNMPRawData = {}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {}
+        assert shs.cache_info == {}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {}
+
+    def test_update_with_empty_persisted(self):
+        section_store = MockStore({SectionName("stored"): (0, 0, [["old"]])})
+        raw_data: SNMPRawData = {}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("stored"): [["old"]]}
+        assert shs.cache_info == {SectionName("stored"): (0, 0)}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {
+            SectionName("stored"): (0, 0, [["old"]]),
+        }
+
+    def test_update_with_empty_store(self):
+        section_store = MockStore({})
+        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("fresh"): _new}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("fresh"): [["new"]]}
+        assert shs.cache_info == {}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {}
+
+    def test_update_with_persisted_and_store(self):
+        section_store = MockStore({SectionName("stored"): (0, 0, [["old"]])})
+        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("fresh"): _new}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {
+            SectionName("stored"): [["old"]],
+            SectionName("fresh"): [["new"]],
+        }
+        assert shs.cache_info == {SectionName("stored"): (0, 0)}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {
+            SectionName("stored"): (0, 0, [["old"]]),
+        }
+
+    def test_update_store_with_newest_BORKED(self):
+        section_store = MockStore({SectionName("section"): (0, 0, [["old"]])})
+        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("section"): _new}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("section"): [["new"]]}
+        assert shs.cache_info == {}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {
+            SectionName("section"): (0, 0, [["old"]]),
+        }
+
+    def test_keep_outdated_is_noop(self, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda: 1000)
+
+        section_store = MockStore({SectionName("section"): (0, 0, [["old"]])})
+        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("section"): _new}
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={},
+            keep_outdated=False,
+            logger=logging.getLogger("test"),
+        )
+        shs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("section"): [["new"]]}
+        assert shs.cache_info == {}
+        assert shs.piggybacked_raw_data == {}
+        assert section_store.load() == {
+            SectionName("section"): (0, 0, [["old"]]),
+        }

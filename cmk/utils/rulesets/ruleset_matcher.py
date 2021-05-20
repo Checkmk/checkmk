@@ -315,10 +315,6 @@ class RulesetOptimizer:
         # Reference hostname -> tag group reference
         self._host_grouped_ref: Dict[HostName, Tuple[TagID, ...]] = {}
 
-        # TODO: The folder will not be part of new dict tags anymore. This can
-        # be cleaned up then.
-        self._hosttags_without_folder: Dict[HostName, TagIDs] = {}
-
         # TODO: Clean this one up?
         self._initialize_host_lookup()
 
@@ -680,19 +676,8 @@ class RulesetOptimizer:
         return self._folder_host_lookup[cache_id]
 
     def _initialize_host_lookup(self):
-        # Determine hosttags without folder tag
         for hostname in self._all_configured_hosts:
-            tags_without_folder = self._host_tags_as_sets[hostname]
-            try:
-                tags_without_folder.remove(self._host_paths.get(hostname, "/"))
-            except (KeyError, ValueError):
-                pass
-
-            self._hosttags_without_folder[hostname] = tags_without_folder
-
-        # Determine hosts with same tag setup (ignoring folder tag)
-        for hostname in self._all_configured_hosts:
-            group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
+            group_ref = tuple(sorted(self._host_tags_as_sets[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
 

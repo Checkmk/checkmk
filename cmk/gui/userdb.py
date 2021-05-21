@@ -477,7 +477,7 @@ def _cleanup_old_sessions(session_infos: Dict[str, SessionInfo]) -> Dict[str, Se
 
     return {
         s.session_id: s
-        for s in sorted(session_infos.values(), key=lambda s: s.last_activity)[:20]
+        for s in sorted(session_infos.values(), key=lambda s: s.last_activity, reverse=True)[:20]
         if time.time() - s.last_activity < 86400 * 7
     }
 

@@ -551,6 +551,32 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     ).split(header.separator) for line in content)
             return out
 
+        def flatten_piggyback_section(
+            sections: ImmutableSection,
+            *,
+            cached_at: int,
+            cache_age: int,
+            selection: SectionNameCollection,
+        ) -> Iterator[bytes]:
+            for header, content in sections.items():
+                if not (selection is NO_SELECTION or header.name in selection):
+                    continue
+
+                if header.cached is not None or header.persist is not None:
+                    yield str(header).encode(header.encoding)
+                else:
+                    # Add cache information.
+                    yield str(
+                        SectionMarker(
+                            header.name,
+                            (cached_at, cache_age),
+                            header.encoding,
+                            header.nostrip,
+                            header.persist,
+                            header.separator,
+                        )).encode(header.encoding)
+                yield from (bytes(line) for line in content)
+
         host_sections = AgentHostSections(
             sections={
                 name: content
@@ -559,7 +585,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             },
             piggybacked_raw_data={
                 header.hostname: list(
-                    self._flatten_piggyback_section(
+                    flatten_piggyback_section(
                         content,
                         cached_at=now,
                         cache_age=cache_age,
@@ -605,33 +631,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             parser = parser(line.rstrip(b"\r"))
 
         return parser.sections, parser.piggyback_sections
-
-    @staticmethod
-    def _flatten_piggyback_section(
-        sections: ImmutableSection,
-        *,
-        cached_at: int,
-        cache_age: int,
-        selection: SectionNameCollection,
-    ) -> Iterator[bytes]:
-        for header, content in sections.items():
-            if not (selection is NO_SELECTION or header.name in selection):
-                continue
-
-            if header.cached is not None or header.persist is not None:
-                yield str(header).encode(header.encoding)
-            else:
-                # Add cache information.
-                yield str(
-                    SectionMarker(
-                        header.name,
-                        (cached_at, cache_age),
-                        header.encoding,
-                        header.nostrip,
-                        header.persist,
-                        header.separator,
-                    )).encode(header.encoding)
-            yield from (bytes(line) for line in content)
 
 
 class AgentSummarizer(Summarizer[AgentHostSections]):

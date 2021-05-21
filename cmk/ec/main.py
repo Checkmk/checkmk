@@ -82,8 +82,7 @@ from .settings import FileDescriptor, PortNumber, Settings, settings as create_s
 from .snmp import SNMPTrapEngine
 
 
-# TODO: Make this total.
-class MatchPriority(TypedDict, total=False):
+class MatchPriority(TypedDict):
     has_match: bool
     has_canceling_match: bool
 
@@ -2228,8 +2227,8 @@ class RuleMatcher:
             return MatchFailure()
 
         # Determine syslog priority
-        match_priority: MatchPriority = {}
-        if not self.event_rule_determine_match_priority(rule, event, match_priority):
+        match_priority = self.event_rule_determine_match_priority(rule, event)
+        if match_priority is None:
             # Abort on negative outcome, neither positive nor negative
             return MatchFailure()
 
@@ -2304,27 +2303,28 @@ class RuleMatcher:
                 return False
         return True
 
-    def event_rule_determine_match_priority(self, rule: Rule, event: Event,
-                                            match_priority: MatchPriority) -> bool:
+    def event_rule_determine_match_priority(self, rule: Rule,
+                                            event: Event) -> Optional[MatchPriority]:
         p = event["priority"]
 
         if "match_priority" in rule:
             prio_from, prio_to = sorted(rule["match_priority"])
-            match_priority["has_match"] = prio_from <= p <= prio_to
+            has_match = prio_from <= p <= prio_to
         else:
-            match_priority["has_match"] = True
+            has_match = True
 
         if "cancel_priority" in rule:
             cancel_from, cancel_to = sorted(rule["cancel_priority"])
-            match_priority["has_canceling_match"] = cancel_from <= p <= cancel_to
+            has_canceling_match = cancel_from <= p <= cancel_to
         else:
-            match_priority["has_canceling_match"] = False
+            has_canceling_match = False
 
-        if (match_priority["has_match"] is False and
-                match_priority["has_canceling_match"] is False):
-            return False
-
-        return True
+        if (has_match is False and has_canceling_match is False):
+            return None
+        return {
+            "has_match": has_match,
+            "has_canceling_match": has_canceling_match,
+        }
 
     def event_rule_matches_site(self, rule: Rule, event: Event) -> bool:
         return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]

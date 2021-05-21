@@ -106,10 +106,14 @@ def test_match_priority(m, priority, match_priority, cancel_priority, has_match,
 
     event = {"priority": priority}
 
-    matched_match_priority: Dict = {}
-    assert m.event_rule_determine_match_priority(rule, event, matched_match_priority) == result
-    assert matched_match_priority["has_match"] == has_match
-    assert matched_match_priority["has_canceling_match"] == has_canceling_match
+    # TODO: Clean this up.
+    actual = m.event_rule_determine_match_priority(rule, event)
+    if actual is None:
+        assert not result
+    else:
+        assert result
+        assert actual["has_match"] == has_match
+        assert actual["has_canceling_match"] == has_canceling_match
 
 
 @pytest.mark.parametrize(

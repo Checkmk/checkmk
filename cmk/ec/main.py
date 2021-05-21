@@ -82,7 +82,7 @@ from .settings import FileDescriptor, PortNumber, Settings, settings as create_s
 from .snmp import SNMPTrapEngine
 
 
-class MatchPriority(TypedDict):
+class MatchPriority(NamedTuple):
     has_match: bool
     has_canceling_match: bool
 
@@ -2251,7 +2251,7 @@ class RuleMatcher:
             if ("match_ok" not in rule or match_groups.get("match_groups_message_ok", False) is not False) and\
                ("cancel_application" not in rule or
                 match_groups.get("match_groups_syslog_application_ok", False) is not False) and\
-               ("cancel_priority" not in rule or match_priority["has_canceling_match"] is True):
+               ("cancel_priority" not in rule or match_priority.has_canceling_match):
                 if self._debug_rules:
                     self._logger.info("  found canceling event")
                 return MatchSuccess(cancelling=True, match_groups=match_groups)
@@ -2259,7 +2259,7 @@ class RuleMatcher:
         # Check create-event
         if (match_groups["match_groups_message"] is not False and
                 match_groups.get("match_groups_syslog_application",
-                                 ()) is not False and match_priority["has_match"] is True):
+                                 ()) is not False and match_priority.has_match):
             if self._debug_rules:
                 self._logger.info("  found new event")
             return MatchSuccess(cancelling=False, match_groups=match_groups)
@@ -2272,7 +2272,7 @@ class RuleMatcher:
             if "match_application" in rule and match_groups[
                     "match_groups_syslog_application"] is False:
                 self._logger.info("  did not create event, because of wrong syslog application")
-            if "match_priority" in rule and match_priority["has_match"] is False:
+            if "match_priority" in rule and not match_priority.has_match:
                 self._logger.info("  did not create event, because of wrong syslog priority")
 
             if has_canceling_condition:
@@ -2283,7 +2283,7 @@ class RuleMatcher:
                 if "cancel_application" in rule and \
                    match_groups.get("match_groups_syslog_application_ok", False) is False:
                     self._logger.info("  did not cancel event, because of wrong syslog application")
-                if "cancel_priority" in rule and match_priority["has_canceling_match"] is False:
+                if "cancel_priority" in rule and not match_priority.has_canceling_match:
                     self._logger.info("  did not cancel event, because of wrong cancel priority")
 
         return MatchFailure()
@@ -2321,10 +2321,7 @@ class RuleMatcher:
 
         if (has_match is False and has_canceling_match is False):
             return None
-        return {
-            "has_match": has_match,
-            "has_canceling_match": has_canceling_match,
-        }
+        return MatchPriority(has_match=has_match, has_canceling_match=has_canceling_match)
 
     def event_rule_matches_site(self, rule: Rule, event: Event) -> bool:
         return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]

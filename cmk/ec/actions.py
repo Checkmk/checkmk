@@ -21,8 +21,7 @@ from .event import Event
 from .host_config import HostConfig
 from .settings import Settings
 
-# TODO: Improve this!
-NotificationContext = Dict[str, Any]
+NotificationContext = Dict[str, str]
 
 #.
 #   .--Actions-------------------------------------------------------------.
@@ -284,7 +283,7 @@ def _get_event_tags(
 def do_notify(host_config: HostConfig,
               logger: Logger,
               event: Event,
-              username: Optional[bool] = None,
+              username: Optional[str] = None,
               is_cancelling: bool = False) -> None:
     if not _core_has_notifications_enabled(logger):
         logger.info("Notifications are currently disabled. Skipped notification for event %d" %
@@ -323,7 +322,7 @@ def do_notify(host_config: HostConfig,
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(host_config: HostConfig, event: Event, username: Optional[bool],
+def _create_notification_context(host_config: HostConfig, event: Event, username: Optional[str],
                                  is_cancelling: bool, logger: Logger) -> NotificationContext:
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
@@ -331,7 +330,7 @@ def _create_notification_context(host_config: HostConfig, event: Event, username
     return context
 
 
-def _base_notification_context(event: Event, username: Optional[bool],
+def _base_notification_context(event: Event, username: Optional[str],
                                is_cancelling: bool) -> NotificationContext:
     rule_id = event["rule_id"]
     return {
@@ -345,9 +344,9 @@ def _base_notification_context(event: Event, username: Optional[bool],
         "LASTSERVICEOK": "0",  # 1.1.1970
         "LASTSERVICESTATECHANGE": str(int(event["last"])),
         "LONGSERVICEOUTPUT": "",
-        "NOTIFICATIONAUTHOR": username or "",
-        "NOTIFICATIONAUTHORALIAS": username or "",
-        "NOTIFICATIONAUTHORNAME": username or "",
+        "NOTIFICATIONAUTHOR": "" if username is None else username,
+        "NOTIFICATIONAUTHORALIAS": "" if username is None else username,
+        "NOTIFICATIONAUTHORNAME": "" if username is None else username,
         "NOTIFICATIONCOMMENT": "",
         "NOTIFICATIONTYPE": is_cancelling and "RECOVERY" or "PROBLEM",
         "SERVICEACKAUTHOR": "",

@@ -2991,7 +2991,7 @@ class StatusServer(ECServerThread):
             self._logger.info("Resetting all rule counters")
             self._event_status.reset_counters(None)
 
-    def handle_command_action(self, arguments):
+    def handle_command_action(self, arguments: List[str]) -> None:
         event_id, user, action_id = arguments
         event = self._event_status.event(int(event_id))
         if user:
@@ -3014,7 +3014,7 @@ class StatusServer(ECServerThread):
             do_event_action(self._history, self.settings, self._config, self._logger,
                             self._event_columns, action, event, user)
 
-    def handle_command_switchmode(self, arguments):
+    def handle_command_switchmode(self, arguments: List[str]) -> None:
         new_mode = arguments[0]
         if not is_replication_slave(self._config):
             raise MKClientError("Cannot switch replication mode: this is not a replication slave.")

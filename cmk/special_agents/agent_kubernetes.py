@@ -73,7 +73,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
                    action='count',
                    default=0,
                    help='Verbose mode (for even more output use -vvv)')
-    p.add_argument('--port', type=int, default=443, help='Port to connect to')
+    p.add_argument('--port', type=int, default=None, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
     p.add_argument(
         '--infos',
@@ -1380,11 +1380,12 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
 
     config = client.Configuration()
 
-    config.host = '%s:%s%s' % (
-        arguments.api_server_endpoint,
-        arguments.port,
-        arguments.path_prefix,
-    )
+    host = arguments.api_server_endpoint
+    if arguments.port is not None:
+        host = "%s:%s" % (host, arguments.port)
+    if arguments.path_prefix:
+        host = "%s%s" % (host, arguments.path_prefix)
+    config.host = host
     config.api_key_prefix['authorization'] = 'Bearer'
     config.api_key['authorization'] = arguments.token
 

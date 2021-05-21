@@ -135,7 +135,12 @@ function enable_label_input_fields(container) {
             }
             g_previous_timeout_id = setTimeout(function () {
                 kill_previous_autocomplete_call();
-                ajax_call_autocomplete_labels(post_data, tagify, value);
+                ajax_call_autocomplete_labels(
+                    post_data,
+                    tagify,
+                    value,
+                    element.closest(".tuple_td").querySelector(".tagify__input")
+                );
             }, 300);
         });
     });
@@ -148,7 +153,7 @@ function kill_previous_autocomplete_call() {
     }
 }
 
-function ajax_call_autocomplete_labels(post_data, tagify, value) {
+function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
     g_ajax_obj = ajax.call_ajax("ajax_autocomplete_labels.py", {
         method: "POST",
         post_data: post_data,
@@ -167,6 +172,14 @@ function ajax_call_autocomplete_labels(post_data, tagify, value) {
             // render the suggestions dropdown
             handler_data.tagify.loading(false);
             handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
+            let max = 0;
+            handler_data.tagify.suggestedListItems.forEach(entry => {
+                max = entry.value.length > max ? entry.value.length : max;
+            });
+            let fontSize = parseInt(
+                window.getComputedStyle(element, null).getPropertyValue("font-size")
+            );
+            element.style.width = (max * (fontSize / 2 + 1)).toString() + "px";
         },
         handler_data: {
             value: value,

@@ -109,7 +109,7 @@ multisite_builtin_views.update({
             ('site_host', False),
             ('svcdescr', False),
         ],
-        'title': _('Search'),
+        'title': _('Service search'),
         'topic': 'overview',
     }),
 
@@ -153,7 +153,7 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'title': _('Problems (all)'),
+        'title': _('Service problems (all)'),
         'topic': 'problems',
     }),
 
@@ -203,7 +203,7 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'title': _('Problems (unhandled)'),
+        'title': _('Service problems (unhandled)'),
         'topic': 'problems',
     }),
 
@@ -355,7 +355,7 @@ multisite_builtin_views.update({
             'opthostgroup',
         ],
         'sorters': [],
-        'title': _('Search'),
+        'title': _('Host search'),
         'topic': 'overview',
     }),
 
@@ -394,7 +394,7 @@ multisite_builtin_views.update({
             'host_acknowledged',
         ],
         'sorters': [],
-        'title': _('Problems (all)'),
+        'title': _('Host problems (all)'),
         'topic': 'problems'
     }),
 
@@ -432,7 +432,7 @@ multisite_builtin_views.update({
             'opthostgroup',
         ],
         'sorters': [],
-        'title': _('Problems (unhandled)'),
+        'title': _('Host problems (unhandled)'),
         'topic': 'problems'
     }),
 
@@ -460,7 +460,7 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [('log_time', False), ('log_lineno', False)],
-        'title': 'Events',
+        'title': _('Events'),
         'topic': 'history'
     }),
 
@@ -505,8 +505,8 @@ multisite_builtin_views.update({
             'log_plugin_output',
             'logtime',
         ],
-        'sorters': [('log_time', False), ('log_lineno', False)],
-        'title': _('Notifications'),
+        'sorters': [('log_time', True), ('log_lineno', True)],
+        'title': _('History'),
         'topic': 'history'
     }),
 

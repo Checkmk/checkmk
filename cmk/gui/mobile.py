@@ -19,6 +19,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.views.utils import (
     ABCDataSource,
     command_registry,
@@ -146,7 +147,7 @@ def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None
 
 
 def jqm_page_index(title: str, items: Items) -> None:
-    manual_sort = [_("Hosts"), _("Services"), _("Events")]
+    manual_sort = [_("Overview"), _("Problems"), _("History"), _("Event Console")]
 
     items.sort(key=lambda x: (x[0], x[2]))
     for topic in manual_sort:
@@ -242,11 +243,8 @@ def page_index() -> None:
                 painter_options.load(view_name)
                 count = '<span class="ui-li-count">%d</span>' % views.get_row_count(view)
 
-            topic = view_spec.get("topic")
-            if topic is None:
-                topic = ""
-            this_title = '%s %s' % (view_spec["title"], count)
-            items.append((topic, url, this_title))
+            topic = PagetypeTopics.get_topic(view_spec.get("topic", ""))
+            items.append((topic.title(), url, '%s %s' % (view_spec["title"], count)))
 
     jqm_page_index(_("Checkmk Mobile"), items)
     # Link to non-mobile GUI

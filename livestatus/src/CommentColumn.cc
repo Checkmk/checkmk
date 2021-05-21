@@ -7,12 +7,10 @@
 
 #include "Renderer.h"
 
-void CommentColumn::output(Row row, RowRenderer &r,
-                           const contact * /*auth_user*/,
-                           std::chrono::seconds /*timezone_offset*/) const {
+void detail::CommentRenderer::operator()(Row row, RowRenderer &r) const {
     ListRenderer l(r);
-    for (const auto &comment : getEntries(row)) {
-        switch (_verbosity) {
+    for (const auto &comment : column_.getEntries(row)) {
+        switch (verbosity_) {
             case verbosity::none:
                 l.output(comment._id);
                 break;
@@ -34,4 +32,10 @@ void CommentColumn::output(Row row, RowRenderer &r,
             }
         }
     }
+}
+
+void CommentColumn::output(Row row, RowRenderer &r,
+                           const contact * /*auth_user*/,
+                           std::chrono::seconds /*timezone_offset*/) const {
+    renderer_(row, r);
 }

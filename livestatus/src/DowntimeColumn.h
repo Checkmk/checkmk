@@ -30,20 +30,37 @@ class RowRenderer;
 class Object;
 #endif
 
-class DowntimeColumn : public ListColumn {
+class DowntimeColumn;
+
+namespace detail {
+class DowntimeRenderer {
 public:
     enum class verbosity { none, medium, full };
+    DowntimeRenderer(DowntimeColumn &c, verbosity v)
+        : column_{c}, verbosity_{v} {}
+    void operator()(Row row, RowRenderer &r) const;
+
+private:
+    DowntimeColumn &column_;
+    verbosity verbosity_;
+};
+}  // namespace detail
+
+class DowntimeColumn : public ListColumn {
+public:
+    using verbosity = detail::DowntimeRenderer::verbosity;
     template <class T>
     class Callback;
     DowntimeColumn(const std::string &name, const std::string &description,
                    const ColumnOffsets &offsets, verbosity v)
-        : ListColumn{name, description, offsets}, _verbosity{v} {}
+        : ListColumn{name, description, offsets}, renderer_{*this, v} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
 private:
-    verbosity _verbosity;
+    friend class detail::DowntimeRenderer;
+    detail::DowntimeRenderer renderer_;
     [[nodiscard]] virtual std::vector<DowntimeData> getEntries(
         Row row) const = 0;
 };

@@ -13,12 +13,10 @@
 #include "nagios.h"
 #endif
 
-void DowntimeColumn::output(Row row, RowRenderer &r,
-                            const contact * /*auth_user*/,
-                            std::chrono::seconds /*timezone_offset*/) const {
+void detail::DowntimeRenderer::operator()(Row row, RowRenderer &r) const {
     ListRenderer l(r);
-    for (const auto &downtime : getEntries(row)) {
-        switch (_verbosity) {
+    for (const auto &downtime : column_.getEntries(row)) {
+        switch (verbosity_) {
             case verbosity::none:
                 l.output(downtime._id);
                 break;
@@ -48,4 +46,10 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
             }
         }
     }
+}
+
+void DowntimeColumn::output(Row row, RowRenderer &r,
+                            const contact * /*auth_user*/,
+                            std::chrono::seconds /*timezone_offset*/) const {
+    renderer_(row, r);
 }

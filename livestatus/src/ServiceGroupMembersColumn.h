@@ -29,16 +29,32 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-class ServiceGroupMembersColumn : public deprecated::ListColumn {
+class ServiceGroupMembersColumn;
+
+namespace detail {
+class ServiceGroupMembersRenderer {
 public:
     enum class verbosity { none, full };
+    ServiceGroupMembersRenderer(ServiceGroupMembersColumn &c, verbosity v)
+        : column_{c}, verbosity_{v} {}
+    void operator()(Row row, RowRenderer &r, const contact *auth_user) const;
+
+private:
+    ServiceGroupMembersColumn &column_;
+    verbosity verbosity_;
+};
+}  // namespace detail
+
+class ServiceGroupMembersColumn : public deprecated::ListColumn {
+public:
+    using verbosity = detail::ServiceGroupMembersRenderer::verbosity;
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
                               const ColumnOffsets &offsets, MonitoringCore *mc,
                               verbosity v)
         : deprecated::ListColumn(name, description, offsets)
-        , _mc(mc)
-        , _verbosity(v) {}
+        , mc_{mc}
+        , renderer_{*this, v} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -54,8 +70,9 @@ public:
     static std::string separator() { return ""; }
 
 private:
-    MonitoringCore *_mc;
-    verbosity _verbosity;
+    MonitoringCore *mc_;
+    friend class detail::ServiceGroupMembersRenderer;
+    detail::ServiceGroupMembersRenderer renderer_;
 
     struct Entry {
         Entry(std::string hn, std::string d, ServiceState cs, bool hbc)

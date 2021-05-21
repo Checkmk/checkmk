@@ -31,19 +31,37 @@ class RowRenderer;
 class Object;
 #endif
 
-class CommentColumn : public ListColumn {
+class CommentColumn;
+
+namespace detail {
+class CommentRenderer {
 public:
     enum class verbosity { none, medium, full };
+    CommentRenderer(CommentColumn &c, verbosity v)
+        : column_{c}, verbosity_{v} {}
+    void operator()(Row row, RowRenderer &r) const;
+
+private:
+    CommentColumn &column_;
+    verbosity verbosity_;
+};
+}  // namespace detail
+
+class CommentColumn : public ListColumn {
+public:
+    using verbosity = detail::CommentRenderer::verbosity;
     template <class T>
     class Callback;
     CommentColumn(const std::string &name, const std::string &description,
                   ColumnOffsets offsets, verbosity v)
-        : ListColumn{name, description, std::move(offsets)}, _verbosity{v} {}
+        : ListColumn{name, description, std::move(offsets)}
+        , renderer_{*this, v} {}
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
 
 private:
-    verbosity _verbosity;
+    friend class detail::CommentRenderer;
+    detail::CommentRenderer renderer_;
     [[nodiscard]] virtual std::vector<CommentData> getEntries(
         Row row) const = 0;
 };

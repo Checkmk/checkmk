@@ -24,12 +24,11 @@
 #include "State.h"
 #endif
 
-void ServiceGroupMembersColumn::output(
-    Row row, RowRenderer &r, const contact *auth_user,
-    std::chrono::seconds /*timezone_offset*/) const {
+void detail::ServiceGroupMembersRenderer::operator()(
+    Row row, RowRenderer &r, const contact *auth_user) const {
     ListRenderer l(r);
-    for (const auto &entry : getEntries(row, auth_user)) {
-        switch (_verbosity) {
+    for (const auto &entry : column_.getEntries(row, auth_user)) {
+        switch (verbosity_) {
             case verbosity::none: {
                 SublistRenderer s(l);
                 s.output(entry.host_name);
@@ -46,6 +45,12 @@ void ServiceGroupMembersColumn::output(
             }
         }
     }
+}
+
+void ServiceGroupMembersColumn::output(
+    Row row, RowRenderer &r, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
+    renderer_(row, r, auth_user);
 }
 
 namespace {
@@ -101,7 +106,7 @@ ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
 #ifdef CMC
     if (const auto *p = columnData<Host::services_t>(row)) {
         for (const auto &svc : *p) {
-            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
                                       svc.get())) {
                 entries.emplace_back(
                     svc->host()->name(), svc->name(),
@@ -114,7 +119,7 @@ ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
     if (const auto *p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
                                       svc)) {
                 entries.emplace_back(
                     svc->host_name, svc->description,

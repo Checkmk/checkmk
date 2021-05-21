@@ -28,12 +28,11 @@
 #include "TimeperiodsCache.h"
 #endif
 
-void ServiceListColumn::output(Row row, RowRenderer &r,
-                               const contact *auth_user,
-                               std::chrono::seconds /*timezone_offset*/) const {
+void detail::ServiceListRenderer::operator()(Row row, RowRenderer &r,
+                                             const contact *auth_user) const {
     ListRenderer l(r);
-    for (const auto &entry : getEntries(row, auth_user)) {
-        switch (_verbosity) {
+    for (const auto &entry : column_.getEntries(row, auth_user)) {
+        switch (verbosity_) {
             case verbosity::none:
                 l.output(std::string(entry.description));
                 break;
@@ -68,6 +67,12 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
             }
         }
     }
+}
+
+void ServiceListColumn::output(Row row, RowRenderer &r,
+                               const contact *auth_user,
+                               std::chrono::seconds /*timezone_offset*/) const {
+    renderer_(row, r, auth_user);
 }
 
 /// \sa Apart from the lambda, the code is the same in
@@ -108,7 +113,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
 #ifdef CMC
     if (const auto *mem = columnData<Host::services_t>(row)) {
         for (const auto &svc : *mem) {
-            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
                                       svc.get())) {
                 entries.emplace_back(
                     svc->name(),
@@ -126,7 +131,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
-            if (is_authorized_for_svc(_mc->serviceAuthorization(), auth_user,
+            if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
                                       svc)) {
                 entries.emplace_back(
                     svc->description,
@@ -139,7 +144,7 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     svc->current_attempt, svc->max_attempts,
                     svc->scheduled_downtime_depth,
                     svc->problem_has_been_acknowledged != 0,
-                    inCustomTimeperiod(_mc, svc));
+                    inCustomTimeperiod(mc_, svc));
             }
         }
     }

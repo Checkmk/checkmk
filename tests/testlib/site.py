@@ -265,7 +265,17 @@ class Site:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        return subprocess.call(cmd)
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             encoding="utf-8")
+        stdout, _stderr = p.communicate()
+        logger.debug("Exit code: %d", p.returncode)
+        if stdout:
+            logger.debug("Output:")
+        for line in stdout.strip().split("\n"):
+            logger.debug("> %s", line)
+        return p.returncode
 
     def path(self, rel_path):
         return os.path.join(self.root, rel_path)
@@ -577,10 +587,13 @@ class Site:
                     #print("= BEGIN PROCESSES FAIL ==============================")
                     #self.execute(["ps", "aux"]).wait()
                     #print("= END PROCESSES FAIL ==============================")
-                    raise Exception("Could not start site %s" % self.id)
+                    logger.warning("Could not start site %s. Stop waiting.", self.id)
+                    break
                 logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
+
+            self.ensure_running()
 
         assert os.path.ismount(self.path("tmp")), \
             "The site does not have a tmpfs mounted! We require this for good performing tests"

@@ -19,6 +19,7 @@ DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
 @pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])
 def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+    site.ensure_running()
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 

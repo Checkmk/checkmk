@@ -138,9 +138,16 @@ body.mobile {
     height: 14px;
   }
 
-  .ui-header .ui-title,
-  .ui-footer .ui-title {
-    margin: 0.6em 46px 0.8em;
+  .ui-header,
+  .ui-footer {
+    .ui-title {
+      margin: 0.6em 46px 0.8em;
+      color: $white;
+    }
+
+    .ui-btn-text {
+      color: $white;
+    }
   }
 
   .ui-li-aside.state {

@@ -363,10 +363,14 @@ def test_cleanup_old_sessions_too_many():
             started_at=int(time.time()) - (86400 * 10),
             last_activity=int(time.time()) - (86400 * 5) + num,
             flashes=[],
-        ) for num in range(20)
+        ) for num in range(21)
     }
 
-    assert "keep_20" not in list(userdb._cleanup_old_sessions(sessions).keys())
+    assert sorted([
+        'keep_1', 'keep_2', 'keep_3', 'keep_4', 'keep_5', 'keep_6', 'keep_7', 'keep_8', 'keep_9',
+        'keep_10', 'keep_11', 'keep_12', 'keep_13', 'keep_14', 'keep_15', 'keep_16', 'keep_17',
+        'keep_18', 'keep_19', 'keep_20'
+    ]) == sorted(userdb._cleanup_old_sessions(sessions).keys())
 
 
 def test_create_session_id_is_correct_type():

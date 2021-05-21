@@ -1116,17 +1116,17 @@ def get_final_service_description(hostname: HostName, description: ServiceName) 
     # and trailing spaces in the configuration file.
     description = description.strip()
 
-    # The description for the CMC Core doesn't need to be sanitized
-    if is_cmc():
-        return description
-
     # Sanitize; Remove illegal characters from a service description
     cache = _config_cache.get("final_service_description")
     try:
         new_description = cache[description]
     except KeyError:
-        new_description = "".join([c for c in description if c not in nagios_illegal_chars
-                                  ]).rstrip("\\")
+        if is_cmc():
+            new_description = "".join([c for c in description if c not in cmc_illegal_chars
+                                      ]).rstrip("\\")
+        else:
+            new_description = "".join([c for c in description if c not in nagios_illegal_chars
+                                      ]).rstrip("\\")
         cache[description] = new_description
 
     return new_description

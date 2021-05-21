@@ -54,7 +54,7 @@ Global variables:
     nagios_illegal_chars Characters not allowed to be used in service
                          descriptions. Can be used in discovery functions to
                          remove unwanted characters from a string. The unwanted
-                         chars default are: `;~!$%^&*|\'"<>?,()=
+                         chars default are: `;~!$%^&*|\'"<>?,=
 
 
     OID_BIN              TODO

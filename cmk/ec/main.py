@@ -45,6 +45,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    TypedDict,
     Union,
 )
 
@@ -78,6 +79,11 @@ from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
+
+
+class MatchPriority(TypedDict, total=False):
+    has_match: bool
+    has_canceling_match: bool
 
 
 # Python and mypy have FD stuff internally, but they don't export it. :-/
@@ -2211,7 +2217,7 @@ class RuleMatcher:
             return MatchFailure()
 
         # Determine syslog priority
-        match_priority: Dict[str, bool] = {}
+        match_priority: MatchPriority = {}
         if not self.event_rule_determine_match_priority(rule, event, match_priority):
             # Abort on negative outcome, neither positive nor negative
             return MatchFailure()
@@ -2224,8 +2230,8 @@ class RuleMatcher:
 
         return self._check_match_outcome(rule, match_groups, match_priority)
 
-    def _check_match_outcome(self, rule: Rule, match_groups: Dict[str, Any],
-                             match_priority: Dict[str, Any]) -> MatchResult:
+    def _check_match_outcome(self, rule: Rule, match_groups: MatchGroups,
+                             match_priority: MatchPriority) -> MatchResult:
         """Decide or not a event is created, canceled or nothing is done"""
 
         # Check canceling-event
@@ -2288,7 +2294,7 @@ class RuleMatcher:
         return True
 
     def event_rule_determine_match_priority(self, rule: Rule, event: Event,
-                                            match_priority: Dict[str, bool]) -> bool:
+                                            match_priority: MatchPriority) -> bool:
         p = event["priority"]
 
         if "match_priority" in rule:
@@ -2303,8 +2309,8 @@ class RuleMatcher:
         else:
             match_priority["has_canceling_match"] = False
 
-        if match_priority["has_match"] is False and\
-           match_priority["has_canceling_match"] is False:
+        if (match_priority["has_match"] is False and
+                match_priority["has_canceling_match"] is False):
             return False
 
         return True

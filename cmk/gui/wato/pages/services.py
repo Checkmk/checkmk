@@ -106,7 +106,7 @@ class ModeDiscovery(WatoMode):
         if config.user.may("wato.services"):
             show_checkboxes = config.user.discovery_checkboxes
             if html.request.var("_scan") == "1":
-                action = DiscoveryAction.SCAN
+                action = DiscoveryAction.REFRESH
         else:
             show_checkboxes = False
 
@@ -233,8 +233,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         job_actions = [
             DiscoveryAction.NONE,
-            DiscoveryAction.SCAN,
             DiscoveryAction.REFRESH,
+            DiscoveryAction.TABULA_RASA,
             DiscoveryAction.STOP,
         ]
 
@@ -370,7 +370,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if options.action != DiscoveryAction.NONE and not config.user.may("wato.services"):
             options = options._replace(action=DiscoveryAction.NONE)
 
-        if options.action != DiscoveryAction.REFRESH and not \
+        if options.action != DiscoveryAction.TABULA_RASA and not \
             (config.user.may("wato.service_discovery_to_undecided") and
              config.user.may("wato.service_discovery_to_monitored") and
              config.user.may("wato.service_discovery_to_ignored") and
@@ -383,7 +383,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         if not previous_discovery_result:
             return False
 
-        if self._options.action in [DiscoveryAction.REFRESH, DiscoveryAction.SCAN,
+        if self._options.action in [DiscoveryAction.TABULA_RASA, DiscoveryAction.REFRESH,
                                     DiscoveryAction.STOP] \
                 and transactions.check_transaction():
             return False
@@ -745,7 +745,7 @@ class DiscoveryPageRenderer:
             return
 
         disable_page_menu_entry("stop")
-        enable_page_menu_entry("scan")
+        enable_page_menu_entry("refresh")
 
         if (fixall >= 1 and config.user.may("wato.service_discovery_to_monitored") and
                 config.user.may("wato.service_discovery_to_removed")):
@@ -755,7 +755,7 @@ class DiscoveryPageRenderer:
                 config.user.may("wato.service_discovery_to_monitored") and
                 config.user.may("wato.service_discovery_to_ignored") and
                 config.user.may("wato.service_discovery_to_removed")):
-            enable_page_menu_entry("refresh")
+            enable_page_menu_entry("tabula_rasa")
 
         if discovery_result.host_labels:
             enable_page_menu_entry("update_host_labels")
@@ -1482,11 +1482,11 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
 def _page_menu_service_configuration_entries(host: watolib.CREHost,
                                              options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
-        title=_("Full service scan"),
-        icon_name="services_full_scan",
+        title=_("Refresh"),
+        icon_name="services_refresh",
         item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.SCAN))),
-        name="scan",
+            _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))),
+        name="refresh",
         is_enabled=False,
         is_shortcut=True,
         css_classes=["action"],
@@ -1496,8 +1496,8 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
         title=_("Remove all and find new"),
         icon_name="services_tabula_rasa",
         item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.REFRESH))),
-        name="refresh",
+            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))),
+        name="tabula_rasa",
         is_enabled=False,
         css_classes=["action"],
     )

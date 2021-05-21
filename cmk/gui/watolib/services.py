@@ -80,9 +80,9 @@ class DiscoveryState:
 class DiscoveryAction:
     NONE = ""  # corresponds to Full Scan in WATO
     STOP = "stop"
-    SCAN = "scan"
     FIX_ALL = "fix_all"
-    REFRESH = "refresh"  # corresponds to Tabula Rasa in WATO
+    REFRESH = "refresh"
+    TABULA_RASA = "tabula_rasa"
     SINGLE_UPDATE = "single_update"
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"
@@ -452,7 +452,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
           v
     _get_check_table()
     """
-    if discovery_request.options.action == DiscoveryAction.REFRESH:
+    if discovery_request.options.action == DiscoveryAction.TABULA_RASA:
         watolib.add_service_change(
             discovery_request.host, "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % discovery_request.host.name())
@@ -471,7 +471,7 @@ def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
     job = ServiceDiscoveryBackgroundJob(request.host.name())
 
     if not job.is_active() and request.options.action in [
-            DiscoveryAction.SCAN, DiscoveryAction.REFRESH
+            DiscoveryAction.REFRESH, DiscoveryAction.TABULA_RASA
     ]:
         job.set_function(job.discover, request)
         job.start()
@@ -537,12 +537,12 @@ def _get_check_table_from_remote(request):
 
         # Compatibility for pre 1.6 remote sites.
         # TODO: Replace with helpful exception in 1.7.
-        if request.options.action == DiscoveryAction.REFRESH:
+        if request.options.action == DiscoveryAction.TABULA_RASA:
             _counts, _failed_hosts = check_mk_automation(
                 request.host.site_id(), "inventory",
                 ["@scan", "refresh", request.host.name()])
 
-        if request.options.action == DiscoveryAction.SCAN:
+        if request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
         else:
             options = ["@noscan"]
@@ -598,12 +598,12 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         print("Starting job...")
         self._pre_try_discovery = self._get_try_discovery(request)
 
-        if request.options.action == DiscoveryAction.SCAN:
-            self._jobstatus.update_status({"title": _("Full scan")})
+        if request.options.action == DiscoveryAction.REFRESH:
+            self._jobstatus.update_status({"title": _("Refresh")})
             self._perform_service_scan(request)
 
-        elif request.options.action == DiscoveryAction.REFRESH:
-            self._jobstatus.update_status({"title": _("Automatic refresh")})
+        elif request.options.action == DiscoveryAction.TABULA_RASA:
+            self._jobstatus.update_status({"title": _("Tabula rasa")})
             self._perform_automatic_refresh(request)
 
         else:
@@ -629,7 +629,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         #watolib.add_service_change(request.host, "refresh-autochecks", message)
 
     def _get_automation_options(self, request: StartDiscoveryRequest) -> List[str]:
-        if request.options.action == DiscoveryAction.SCAN:
+        if request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
         else:
             options = ["@noscan"]

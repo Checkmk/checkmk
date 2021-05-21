@@ -33,25 +33,38 @@ void ServiceListColumn::output(Row row, RowRenderer &r,
                                std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &entry : getEntries(row, auth_user)) {
-        if (_info_depth == 0) {
-            l.output(std::string(entry.description));
-        } else {
-            SublistRenderer s(l);
-            s.output(entry.description);
-            if (_info_depth >= 1) {
+        switch (_verbosity) {
+            case verbosity::none:
+                l.output(std::string(entry.description));
+                break;
+            case verbosity::low: {
+                SublistRenderer s(l);
+                s.output(entry.description);
                 s.output(static_cast<int>(entry.current_state));
                 s.output(static_cast<int>(entry.has_been_checked));
+                break;
             }
-            if (_info_depth >= 2) {
+            case verbosity::medium: {
+                SublistRenderer s(l);
+                s.output(entry.description);
+                s.output(static_cast<int>(entry.current_state));
+                s.output(static_cast<int>(entry.has_been_checked));
                 s.output(entry.plugin_output);
+                break;
             }
-            if (_info_depth >= 3) {
+            case verbosity::full: {
+                SublistRenderer s(l);
+                s.output(entry.description);
+                s.output(static_cast<int>(entry.current_state));
+                s.output(static_cast<int>(entry.has_been_checked));
+                s.output(entry.plugin_output);
                 s.output(static_cast<int>(entry.last_hard_state));
                 s.output(entry.current_attempt);
                 s.output(entry.max_check_attempts);
                 s.output(entry.scheduled_downtime_depth);
                 s.output(static_cast<int>(entry.acknowledged));
                 s.output(static_cast<int>(entry.service_period_active));
+                break;
             }
         }
     }

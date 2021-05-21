@@ -29,12 +29,21 @@ void ServiceGroupMembersColumn::output(
     std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &entry : getEntries(row, auth_user)) {
-        SublistRenderer s(l);
-        s.output(entry.host_name);
-        s.output(entry.description);
-        if (_show_state) {
-            s.output(static_cast<int>(entry.current_state));
-            s.output(static_cast<bool>(entry.has_been_checked));
+        switch (_verbosity) {
+            case verbosity::none: {
+                SublistRenderer s(l);
+                s.output(entry.host_name);
+                s.output(entry.description);
+                break;
+            }
+            case verbosity::full: {
+                SublistRenderer s(l);
+                s.output(entry.host_name);
+                s.output(entry.description);
+                s.output(static_cast<int>(entry.current_state));
+                s.output(static_cast<bool>(entry.has_been_checked));
+                break;
+            }
         }
     }
 }

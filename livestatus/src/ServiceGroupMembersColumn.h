@@ -31,13 +31,14 @@ enum class ServiceState;
 
 class ServiceGroupMembersColumn : public deprecated::ListColumn {
 public:
+    enum class verbosity { none, full };
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
                               const ColumnOffsets &offsets, MonitoringCore *mc,
-                              bool show_state)
+                              verbosity v)
         : deprecated::ListColumn(name, description, offsets)
         , _mc(mc)
-        , _show_state(show_state) {}
+        , _verbosity(v) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -54,7 +55,7 @@ public:
 
 private:
     MonitoringCore *_mc;
-    bool _show_state;
+    verbosity _verbosity;
 
     struct Entry {
         Entry(std::string hn, std::string d, ServiceState cs, bool hbc)

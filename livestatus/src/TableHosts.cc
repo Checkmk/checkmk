@@ -767,19 +767,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        offsets_services, mc, 0));
+        offsets_services, mc, ServiceListColumn::verbosity::none));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        offsets_services, mc, 1));
+        offsets_services, mc, ServiceListColumn::verbosity::low));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        offsets_services, mc, 2));
+        offsets_services, mc, ServiceListColumn::verbosity::medium));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        offsets_services, mc, 3));
+        offsets_services, mc, ServiceListColumn::verbosity::full));
 
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "metrics",

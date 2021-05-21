@@ -1,0 +1,16 @@
+Title: Kubernetes: agent: handle pending pods
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1621602628
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p5
+
+Before this werk, the kubernetes special agent could not handle pods that are
+pending. The error message was:
+
+<tt>TypeError: '&lt;' not supported between instances of 'NoneType' and 'str'</tt>
+
+This should now be fixed.

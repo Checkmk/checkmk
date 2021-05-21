@@ -937,7 +937,7 @@ class StatefulSetList(K8sList[StatefulSet]):  # pylint: disable=too-many-ancesto
 
 class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
     def pods_per_node(self) -> Dict[str, Dict[str, Dict[str, int]]]:
-        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        pods_sorted = sorted(self, key=lambda pod: pod.node or '')
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         return {
             node: {
@@ -973,7 +973,7 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
         may consume any amount of resources.
         """
 
-        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        pods_sorted = sorted(self, key=lambda pod: pod.node or '')
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return {

@@ -119,10 +119,6 @@ def schedule_discovery_check(host_name: HostName) -> None:
             raise
 
 
-def _get_rediscovery_parameters(params: Dict) -> Dict:
-    return params.get("inventory_rediscovery", {})
-
-
 #.
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
@@ -511,7 +507,7 @@ def check_discovery(
     params = host_config.discovery_check_parameters
     if params is None:
         params = host_config.default_discovery_check_parameters()
-    rediscovery_parameters = _get_rediscovery_parameters(params)
+    rediscovery_parameters = params.get("inventory_rediscovery", {})
 
     discovery_mode = DiscoveryMode(rediscovery_parameters.get("mode"))
 
@@ -801,11 +797,10 @@ def _discover_marked_host(
     host_name = host_config.hostname
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
-    params = host_config.discovery_check_parameters
-    if params is None:
+    if host_config.discovery_check_parameters is None:
         console.verbose("  failed: discovery check disabled\n")
         return False
-    rediscovery_parameters = _get_rediscovery_parameters(params)
+    rediscovery_parameters = host_config.discovery_check_parameters.get("inventory_rediscovery", {})
 
     reason = _may_rediscover(
         rediscovery_parameters=rediscovery_parameters,

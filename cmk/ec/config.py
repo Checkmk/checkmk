@@ -128,9 +128,8 @@ StatePatterns = TypedDict('StatePatterns', {
     '2': str,
 }, total=False)
 
-# TODO: Use StatePatterns in last case.
 State = Union[Literal[-1], Literal[0], Literal[1], Literal[2], Literal[3],
-              Tuple[Literal['text_pattern'], Dict[str, str]]]
+              Tuple[Literal['text_pattern'], StatePatterns]]
 
 
 # TODO: This is only a rough approximation.

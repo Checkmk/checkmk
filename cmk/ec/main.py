@@ -1580,21 +1580,23 @@ class EventServer(ECServerThread):
     def rewrite_event(self, rule: Rule, event: Event, groups, set_first=True) -> None:
         if rule["state"] == -1:
             prio = event["priority"]
-            if prio >= 5:
-                event["state"] = 0
-            elif prio < 4:
+            if prio <= 3:
                 event["state"] = 2
-            else:
+            elif prio == 4:
                 event["state"] = 1
+            else:
+                event["state"] = 0
         elif isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
-            for key in ['2', '1', '0', '3']:
-                if key in rule["state"][1]:
-                    match_groups = match(rule["state"][1][key], event["text"], complete=False)
-                    if match_groups is not False:
-                        event["state"] = int(key)
-                        break
-                elif key == '3':  # No rule matched!
-                    event["state"] = 3
+            state_patterns = rule["state"][1]
+            text = event["text"]
+            if match(state_patterns['2'], text, complete=False) is not False:
+                event["state"] = 2
+            elif match(state_patterns['1'], text, complete=False) is not False:
+                event["state"] = 1
+            elif match(state_patterns['0'], text, complete=False) is not False:
+                event["state"] = 0
+            else:
+                event["state"] = 3
         else:
             event["state"] = rule["state"]
 

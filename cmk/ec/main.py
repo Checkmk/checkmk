@@ -37,6 +37,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -81,9 +82,19 @@ from .settings import FileDescriptor, PortNumber, Settings, settings as create_s
 from .snmp import SNMPTrapEngine
 
 
+# TODO: Make this total.
 class MatchPriority(TypedDict, total=False):
     has_match: bool
     has_canceling_match: bool
+
+
+# TODO: Make this total.
+class SlaveStatus(TypedDict, total=False):
+    last_master_down: Optional[float]
+    last_sync: float
+    mode: Union[Literal['master'], Literal['sync'], Literal['takeover']]
+    success: bool
+    average_sync_time: Optional[float]  # TODO: Never changed. Bug?
 
 
 # Python and mypy have FD stuff internally, but they don't export it. :-/
@@ -217,7 +228,7 @@ class ECServerThread(threading.Thread):
         raise NotImplementedError()
 
     def __init__(self, name: Any, logger: Logger, settings: Settings, config: Config,
-                 slave_status: Dict[str, Any], profiling_enabled: bool, profile_file: Path) -> None:
+                 slave_status: SlaveStatus, profiling_enabled: bool, profile_file: Path) -> None:
         super().__init__(name=name)
         self.settings = settings
         self._config = config
@@ -577,7 +588,7 @@ class EventServer(ECServerThread):
                  logger: Logger,
                  settings: Settings,
                  config: Config,
-                 slave_status: Dict[str, Any],
+                 slave_status: SlaveStatus,
                  perfcounters: Perfcounters,
                  lock_configuration: ECLock,
                  history: History,
@@ -2655,9 +2666,9 @@ class StatusTableStatus(StatusTable):
 
 class StatusServer(ECServerThread):
     def __init__(self, logger: Logger, settings: Settings, config: Config,
-                 slave_status: Dict[str, Any], perfcounters: Perfcounters,
-                 lock_configuration: ECLock, history: History, event_status: 'EventStatus',
-                 event_server: EventServer, terminate_main_event: threading.Event) -> None:
+                 slave_status: SlaveStatus, perfcounters: Perfcounters, lock_configuration: ECLock,
+                 history: History, event_status: 'EventStatus', event_server: EventServer,
+                 terminate_main_event: threading.Event) -> None:
         super().__init__(name="StatusServer",
                          logger=logger,
                          settings=settings,
@@ -3018,10 +3029,13 @@ class StatusServer(ECServerThread):
         new_mode = arguments[0]
         if not is_replication_slave(self._config):
             raise MKClientError("Cannot switch replication mode: this is not a replication slave.")
-        if new_mode not in ["sync", "takeover"]:
+        if new_mode == "sync":
+            self._slave_status["mode"] = "sync"
+        elif new_mode == "takeover":
+            self._slave_status["mode"] = "takeover"
+        else:
             raise MKClientError("Invalid target mode '%s': allowed are only 'sync' and 'takeover'" %
                                 new_mode)
-        self._slave_status["mode"] = new_mode
         save_slave_status(self.settings, self._slave_status)
         self._logger.info("Switched replication mode to '%s' by external command." % new_mode)
 
@@ -3055,7 +3069,7 @@ class StatusServer(ECServerThread):
 def run_eventd(terminate_main_event: Any, settings: Settings, config: Config,
                lock_configuration: ECLock, history: History, perfcounters: Perfcounters,
                event_status: 'EventStatus', event_server: EventServer, status_server: StatusServer,
-               slave_status: Dict[str, Any], logger: Logger) -> None:
+               slave_status: SlaveStatus, logger: Logger) -> None:
     status_server.start()
     event_server.start()
     now = time.time()
@@ -3600,7 +3614,7 @@ def is_replication_slave(config: ConfigFromWATO) -> bool:
     return repl_settings is not None and not repl_settings.get("disabled")
 
 
-def replication_allow_command(config: Config, command: str, slave_status: Dict[str, Any]) -> None:
+def replication_allow_command(config: Config, command: str, slave_status: SlaveStatus) -> None:
     if is_replication_slave(config) and slave_status["mode"] == "sync" \
        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]:
         raise MKClientError("This command is not allowed on a replication slave "
@@ -3622,8 +3636,7 @@ def replication_send(config: Config, lock_configuration: ECLock, event_status: E
 
 def replication_pull(settings: Settings, config: Config, lock_configuration: ECLock,
                      perfcounters: Perfcounters, event_status: EventStatus,
-                     event_server: EventServer, slave_status: Dict[str,
-                                                                   Any], logger: Logger) -> None:
+                     event_server: EventServer, slave_status: SlaveStatus, logger: Logger) -> None:
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
     #    if the master is not reachable then decide whether to
@@ -3739,7 +3752,7 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
             logger.error("Replication: no previously saved master state available")
 
 
-def get_state_from_master(config: Config, slave_status: Dict[str, Any]) -> Any:
+def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
     repl_settings = config["replication"]
     if repl_settings is None:
         raise ValueError('no replication settings')
@@ -3769,11 +3782,11 @@ def get_state_from_master(config: Config, slave_status: Dict[str, Any]) -> Any:
         raise Exception("Cannot connect to event daemon: %s" % e)
 
 
-def save_slave_status(settings: Settings, slave_status: Dict[str, Any]) -> None:
+def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
     settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
 
 
-def default_slave_status_master() -> Dict[str, Any]:
+def default_slave_status_master() -> SlaveStatus:
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3782,7 +3795,7 @@ def default_slave_status_master() -> Dict[str, Any]:
     }
 
 
-def default_slave_status_sync() -> Dict[str, Any]:
+def default_slave_status_sync() -> SlaveStatus:
     return {
         "last_sync": 0,
         "last_master_down": None,
@@ -3791,7 +3804,7 @@ def default_slave_status_sync() -> Dict[str, Any]:
     }
 
 
-def update_slave_status(slave_status: Dict[str, Any], settings: Settings,
+def update_slave_status(slave_status: SlaveStatus, settings: Settings,
                         config: ConfigFromWATO) -> None:
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
@@ -3829,7 +3842,7 @@ def make_config(config: ConfigFromWATO) -> Config:
     }
 
 
-def load_configuration(settings: Settings, logger: Logger, slave_status: Dict[str, Any]) -> Config:
+def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
     config = load_config_using(settings)
 
     # If not set by command line, set the log level by configuration
@@ -3857,7 +3870,7 @@ def load_configuration(settings: Settings, logger: Logger, slave_status: Dict[st
 
 def reload_configuration(settings: Settings, logger: Logger, lock_configuration: ECLock,
                          history: History, event_status: EventStatus, event_server: EventServer,
-                         status_server: StatusServer, slave_status: Dict[str, Any]) -> None:
+                         status_server: StatusServer, slave_status: SlaveStatus) -> None:
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
         history.reload_configuration(config)

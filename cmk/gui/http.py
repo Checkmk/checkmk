@@ -6,12 +6,14 @@
 """Wrapper layer between WSGI and GUI application code"""
 
 from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
+from contextlib import contextmanager
 
 from six import ensure_binary, ensure_str
 import werkzeug.wrappers
 # NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
 import werkzeug.wrappers.json as json  # type: ignore[import]
 from werkzeug.utils import get_content_type
+import urllib.parse
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -321,6 +323,38 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
         return mandatory_parameter(varname, self.get_float_input(varname, deflt))
+
+    @contextmanager
+    def stashed_vars(self) -> Iterator[None]:
+        """Remember current request variables and restore original state when leaving the context"""
+        saved_vars = dict(self.itervars())
+        try:
+            yield
+        finally:
+            self.del_vars()
+            for varname, value in saved_vars.items():
+                self.set_var(varname, value)
+
+    # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
+    def del_var_from_env(self, varname: str) -> None:
+        """Remove HTTP request variables from the environment
+
+        We need to get rid of query-string entries which can contain secret information.
+        As this is the only location where these are stored on the WSGI environment this
+        should be enough.
+
+        See also cmk.gui.globals:RequestContext
+        """
+        # Filter the variables even if there are multiple copies of them (this is allowed).
+        decoded_qs = [(key, value) for key, value in self.args.items(multi=True) if key != varname]
+        self.environ['QUERY_STRING'] = urllib.parse.urlencode(decoded_qs)
+        # We remove the form entry. As this entity is never copied it will be modified within
+        # it's cache.
+        dict.pop(self.form, varname, None)
+        # We remove the __dict__ entries to allow @cached_property to reload them from
+        # the environment. The rest of the request object stays the same.
+        self.__dict__.pop('args', None)
+        self.__dict__.pop('values', None)
 
 
 class Response(werkzeug.wrappers.Response):

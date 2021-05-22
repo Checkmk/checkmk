@@ -402,8 +402,8 @@ class ModeCheckManPage(WatoMode):
     def breadcrumb(self) -> Breadcrumb:
         # To be able to calculate the breadcrumb with ModeCheckPluginTopic as parent, we need to
         # ensure that the topic is available.
-        with html.stashed_vars():
-            html.request.set_var("topic", self._manpage["header"]["catalog"])
+        with request.stashed_vars():
+            request.request.set_var("topic", self._manpage["header"]["catalog"])
             return super().breadcrumb()
 
     def _from_vars(self):

@@ -328,8 +328,8 @@ def _check_auth_automation() -> UserId:
     user_id = html.request.get_unicode_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
-    html.del_var_from_env('_username')
-    html.del_var_from_env('_secret')
+    global_request.del_var_from_env('_username')
+    global_request.del_var_from_env('_secret')
 
     if verify_automation_secret(user_id, secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case

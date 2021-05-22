@@ -1340,7 +1340,7 @@ def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> H
 @contextmanager
 def context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> Iterator[None]:
     """Updates the current HTTP variable context"""
-    with html.stashed_vars():
+    with global_request.stashed_vars():
         add_context_to_uri_vars(context, single_infos)
         yield
 
@@ -1401,14 +1401,14 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
-    with html.stashed_vars():
+    with global_request.stashed_vars():
         for filter_name, filter_vars in context.items():
             # first set the HTML variables. Sorry - the filters need this
             if isinstance(filter_vars, dict):  # this is a multi-context filter
                 for uri_varname, value in filter_vars.items():
-                    html.request.set_var(uri_varname, value)
+                    global_request.set_var(uri_varname, value)
             else:
-                html.request.set_var(filter_name, filter_vars)
+                global_request.set_var(filter_name, filter_vars)
 
         filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)

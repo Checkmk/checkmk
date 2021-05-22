@@ -65,10 +65,10 @@ class ModePatternEditor(WatoMode):
         # logwatch_rules ruleset in the breadcrumb. We hand over the ruleset variable name that we
         # are interested in to the mode. It's a bit hacky to do it this way, but it's currently the
         # only way to get these information to the modes breadcrumb method.
-        with html.stashed_vars():
-            html.request.set_var("varname", "logwatch_rules")
-            html.request.del_var("host")
-            html.request.del_var("service")
+        with request.stashed_vars():
+            request.set_var("varname", "logwatch_rules")
+            request.del_var("host")
+            request.del_var("service")
             return super().breadcrumb()
 
     def _from_vars(self):

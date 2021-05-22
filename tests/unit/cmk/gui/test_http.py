@@ -11,9 +11,11 @@ import pytest  # type: ignore[import]
 
 from werkzeug.test import create_environ
 
+from cmk.gui import htmllib
 import cmk.gui.http as http
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request, RequestContext, AppContext
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.script_helpers import DummyApplication
 
 
 def test_http_request_allowed_vars():
@@ -321,3 +323,34 @@ def test_pre_16_format_cookie_handling(monkeypatch):
 
     assert request.has_cookie("xyz")
     assert request.has_cookie("abc")
+
+
+def test_del_vars():
+    environ = dict(create_environ(),
+                   REQUEST_URI='',
+                   QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
+    with AppContext(DummyApplication(environ, None)), \
+            RequestContext(htmllib.html(http.Request(environ))):
+        # First we hit the cached property so we can see that the underlying Request object
+        # actually got replaced later.
+        _ = global_request.args
+        _ = html.request.args
+
+        html.request.set_var("foo", "123")
+
+        html.request.del_var_from_env("_username")
+        html.request.del_var_from_env("_password")
+
+        # Make test independent of dict sorting
+        assert html.request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
+
+        assert '_password' not in html.request.args
+        assert '_username' not in html.request.args
+
+        # Check the request local proxied version too.
+        # Make test independent of dict sorting
+        assert global_request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
+        assert '_password' not in global_request.args
+        assert '_username' not in global_request.args
+
+        assert html.request.var("foo") == "123"

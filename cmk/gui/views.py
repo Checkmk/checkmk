@@ -1960,7 +1960,7 @@ def get_row_count(view: View) -> int:
     # This must not modify the request variables of the view currently being processed. It would be
     # ideal to not deal with the global request variables data structure at all, but that would
     # first need a rewrite of the visual filter processing.
-    with html.stashed_vars():
+    with global_request.stashed_vars():
         all_active_filters = _get_view_filters(view)
 
         # Check that all needed information for configured single contexts are available

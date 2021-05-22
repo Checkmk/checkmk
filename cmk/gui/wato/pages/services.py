@@ -24,7 +24,7 @@ from cmk.gui.background_job import JobStatusStates
 from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request as global_request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -294,8 +294,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return html.drain()
 
     def _get_discovery_breadcrumb(self) -> Breadcrumb:
-        with html.stashed_vars():
-            html.request.set_var("host", self._host.name())
+        with global_request.stashed_vars():
+            global_request.set_var("host", self._host.name())
             mode = ModeDiscovery()
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 

@@ -62,7 +62,6 @@ from typing import (
     Union,
 )
 from pathlib import Path
-import urllib.parse
 
 from six import ensure_str
 
@@ -1134,35 +1133,6 @@ class html(ABCHTMLGenerator):
     #
     # HTTP variable processing
     #
-
-    @contextmanager
-    def stashed_vars(self) -> Iterator[None]:
-        saved_vars = dict(self.request.itervars())
-        try:
-            yield
-        finally:
-            self.request.del_vars()
-            for varname, value in saved_vars.items():
-                self.request.set_var(varname, value)
-
-    def del_var_from_env(self, varname: str) -> None:
-        # HACKY WORKAROUND, REMOVE WHEN NO LONGER NEEDED
-        # We need to get rid of query-string entries which can contain secret information.
-        # As this is the only location where these are stored on the WSGI environment this
-        # should be enough.
-        # See also cmk.gui.globals:RequestContext
-        # Filter the variables even if there are multiple copies of them (this is allowed).
-        decoded_qs = [
-            (key, value) for key, value in self.request.args.items(multi=True) if key != varname
-        ]
-        self.request.environ['QUERY_STRING'] = urllib.parse.urlencode(decoded_qs)
-        # We remove the form entry. As this entity is never copied it will be modified within
-        # it's cache.
-        dict.pop(self.request.form, varname, None)
-        # We remove the __dict__ entries to allow @cached_property to reload them from
-        # the environment. The rest of the request object stays the same.
-        self.request.__dict__.pop('args', None)
-        self.request.__dict__.pop('values', None)
 
     def get_item_input(self, varname: str, collection: Mapping[str, Value]) -> Tuple[Value, str]:
         """Helper to get an item from the given collection

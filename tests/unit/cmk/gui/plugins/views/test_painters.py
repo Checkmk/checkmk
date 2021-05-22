@@ -9,7 +9,7 @@ import pytest
 from testlib import on_time
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.utils.html import HTML
 
 from cmk.utils.structured_data import StructuredDataTree
@@ -746,8 +746,9 @@ def fixture_service_painter_names():
 
 
 def test_service_painters(register_builtin_html, service_painter_idents, live):
-    with live(expect_status_query=False), html.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        html.request.del_vars()
+    with live(expect_status_query=False), request.stashed_vars(), on_time(
+            '2018-04-15 16:50', 'CET'):
+        request.del_vars()
 
         for painter_ident in service_painter_idents:
             _test_painter(painter_ident, live)

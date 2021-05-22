@@ -5593,9 +5593,6 @@ msgstr ""
 msgid "Automatic page reload in %d seconds."
 msgstr ""
 
-msgid "Automatic refresh"
-msgstr ""
-
 msgid "Automatic takeover"
 msgstr ""
 
@@ -6589,6 +6586,10 @@ msgstr ""
 
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr ""
+
+#, fuzzy
+msgid "Bucket"
+msgstr "foloseste numele portului"
 
 #, fuzzy
 msgid "Bucket memory"
@@ -9904,6 +9905,9 @@ msgstr ""
 #, fuzzy
 msgid "Connect"
 msgstr "Conexiuni Active"
+
+msgid "Connect Checkmk with your InfluxDB to send metrics."
+msgstr ""
 
 msgid ""
 "Connect Checkmk with your LDAP or Active Directory to create users in "
@@ -18844,13 +18848,6 @@ msgstr ""
 msgid "Full name or alias of the user"
 msgstr ""
 
-msgid "Full scan"
-msgstr ""
-
-#, fuzzy
-msgid "Full service scan"
-msgstr "servicii"
-
 msgid "Full stats"
 msgstr ""
 
@@ -20090,6 +20087,12 @@ msgstr ""
 msgid ""
 "Here you can see all hosts that have sent a negative status to the "
 "deployment server."
+msgstr ""
+
+#, python-format
+msgid ""
+"Here you can select an InfluxDB connection to use. If no choice is available "
+"you have to configure a <a href=\"%s\">%s</a> first."
 msgstr ""
 
 msgid ""
@@ -23223,6 +23226,23 @@ msgstr "Reguli neaplicate"
 msgid "Infections"
 msgstr "Conexiuni Active"
 
+#, fuzzy
+msgid "InfluxDB Connection"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "InfluxDB Connections"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "InfluxDB connections"
+msgstr "Conexiune Noua"
+
+# georgem ##############
+#, fuzzy
+msgid "InfluxDB service rules"
+msgstr "Grup nou"
+
 msgid "Info"
 msgstr ""
 
@@ -24169,6 +24189,9 @@ msgid ""
 msgstr ""
 
 msgid "It is still in use by"
+msgstr ""
+
+msgid "It is still in use by at least 1 rule in ruleset:"
 msgstr ""
 
 msgid "It's not allowed to use a leading \"!\" here."
@@ -32496,6 +32519,10 @@ msgstr "Nume tablespace"
 msgid "Order"
 msgstr ""
 
+#, fuzzy
+msgid "Organisation"
+msgstr "Numele Aplicatiei"
+
 msgid "Organization"
 msgstr ""
 
@@ -34284,6 +34311,11 @@ msgid ""
 "more details."
 msgstr ""
 
+msgid ""
+"Please remove entry \"All sites\" from selected sites, if you want to select "
+"one or multiple sites."
+msgstr ""
+
 msgid "Please select a file."
 msgstr ""
 
@@ -34612,6 +34644,10 @@ msgstr ""
 #, fuzzy
 msgid "Port number"
 msgstr "Portul TCO"
+
+#, fuzzy
+msgid "Port number for HTTPS connection to InfluxDB."
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 #, fuzzy
 msgid "Port number for HTTPS connection to vSphere"
@@ -36150,6 +36186,9 @@ msgstr ""
 #, fuzzy
 msgid "Refine search"
 msgstr "Cautare noua"
+
+msgid "Refresh"
+msgstr ""
 
 msgid "Refresh all services (tabula rasa), add new host labels"
 msgstr ""
@@ -38570,6 +38609,9 @@ msgstr ""
 msgid "Select metric"
 msgstr "Afectat de serviciu"
 
+msgid "Select metrics to send to InfluxDB"
+msgstr ""
+
 #, fuzzy
 msgid "Select sound"
 msgstr "(selectează directorul)"
@@ -38682,6 +38724,9 @@ msgid "Send metrics to Graphite / InfluxDB"
 msgstr ""
 
 msgid "Send metrics to Graphite/InfluxDB"
+msgstr ""
+
+msgid "Send metrics to InfluxDB"
 msgstr ""
 
 msgid "Send monitoring notification"
@@ -39562,6 +39607,9 @@ msgstr ""
 msgid "Set the according numbers to 0 if you want to disable alerting."
 msgstr ""
 
+msgid "Set the bucket of the InfluxDB server."
+msgstr ""
+
 msgid ""
 "Set the credentials to be used to connect to the LDAP server. The used "
 "account must not be allowed to do any changes in the directory the whole "
@@ -39590,6 +39638,9 @@ msgstr ""
 msgid ""
 "Set the monitoring state of tasks which are not enabled (for example because "
 "they were disabled after being discovered)."
+msgstr ""
+
+msgid "Set the organisation of the InfluxDB server."
 msgstr ""
 
 msgid ""
@@ -40540,6 +40591,10 @@ msgstr "Privire de ansamblu"
 msgid "Site restore"
 msgstr ""
 
+#, fuzzy
+msgid "Site restriction"
+msgstr "Conexiune Noua"
+
 msgid "Site setting and global setting are identical."
 msgstr ""
 
@@ -41261,6 +41316,9 @@ msgstr ""
 msgid "Specify matching conditions"
 msgstr "%d condiții"
 
+msgid "Specify one, multiple or all sites this connection should run on."
+msgstr ""
+
 msgid "Specify queue names that the rule should apply to"
 msgstr ""
 
@@ -41376,6 +41434,9 @@ msgstr ""
 msgid ""
 "Specify the threshold levels for the occupied memory. The occupied memory "
 "consists of used and kernel reserved memory."
+msgstr ""
+
+msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 
 msgid "Specify time since last successful backup"
@@ -43299,6 +43360,9 @@ msgid "Tablespaces"
 msgstr ""
 
 msgid "Tabloid"
+msgstr ""
+
+msgid "Tabula rasa"
 msgstr ""
 
 #, fuzzy
@@ -49917,6 +49981,10 @@ msgstr ""
 msgid "Timeout for the execution of alert handlers"
 msgstr ""
 
+#, fuzzy
+msgid "Timeout for the initial connection to InfluxDB in seconds."
+msgstr "cereri/sec"
+
 msgid "Timeout for the initial connection to the LDAP server in seconds."
 msgstr ""
 
@@ -51020,6 +51088,9 @@ msgid "URL prefix for links to Checkmk"
 msgstr ""
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr ""
+
+msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr ""
 
 msgid ""
@@ -56217,6 +56288,10 @@ msgid ""
 "%s</b>."
 msgstr ""
 
+#, fuzzy
+msgid "You cannot delete this connection."
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
 #, python-format
 msgid ""
 "You cannot delete this connection. It has folders/hosts assigned to it. You "
@@ -58794,6 +58869,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Full service scan"
+#~ msgstr "servicii"
 
 #, fuzzy
 #~ msgid "Filesystem grouping"

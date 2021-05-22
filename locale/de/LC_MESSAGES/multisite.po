@@ -5885,9 +5885,6 @@ msgstr "Seite automatisch aktualisieren"
 msgid "Automatic page reload in %d seconds."
 msgstr "Seite wird in %d Sekunden neu geladen."
 
-msgid "Automatic refresh"
-msgstr "Automatische Aktualisierung"
-
 msgid "Automatic takeover"
 msgstr "Automatische Übernahme"
 
@@ -6824,6 +6821,10 @@ msgstr "Defekte GUI-Erweiterungen"
 
 msgid "Browse the catalog of all check plugins, create static checks"
 msgstr "Den Katalog aller Checkplugins durchsuchen, statische Checks erstellen"
+
+#, fuzzy
+msgid "Bucket"
+msgstr "Buckets"
 
 msgid "Bucket memory"
 msgstr "Bucket Speicher"
@@ -10479,6 +10480,9 @@ msgstr "Bestätige Merkmaländerung"
 
 msgid "Connect"
 msgstr "Verbindungsaufbau"
+
+msgid "Connect Checkmk with your InfluxDB to send metrics."
+msgstr ""
 
 msgid ""
 "Connect Checkmk with your LDAP or Active Directory to create users in "
@@ -19356,12 +19360,6 @@ msgstr "Vollständiger Name"
 msgid "Full name or alias of the user"
 msgstr "Vollständiger Name oder Alias des Benutzers"
 
-msgid "Full scan"
-msgstr "Vollständiger Scan"
-
-msgid "Full service scan"
-msgstr "Komplette Service-Suche"
-
 msgid "Full stats"
 msgstr "Vollständige Statistiken"
 
@@ -20748,6 +20746,12 @@ msgid ""
 msgstr ""
 "Hier sehen Sie alle Hosts, die eine negative Antwort an den Updateserver "
 "gesendet haben."
+
+#, python-format
+msgid ""
+"Here you can select an InfluxDB connection to use. If no choice is available "
+"you have to configure a <a href=\"%s\">%s</a> first."
+msgstr ""
 
 msgid ""
 "Here you can select default parameters that are being set for detected "
@@ -24587,6 +24591,22 @@ msgstr "Unwirksame Regeln"
 msgid "Infections"
 msgstr "Infizierungen"
 
+#, fuzzy
+msgid "InfluxDB Connection"
+msgstr "DB-Verbindungen"
+
+#, fuzzy
+msgid "InfluxDB Connections"
+msgstr "DB-Verbindungen"
+
+#, fuzzy
+msgid "InfluxDB connections"
+msgstr "Inaktive Verbindungen"
+
+#, fuzzy
+msgid "InfluxDB service rules"
+msgstr "Servicegruppen ausschließen"
+
 msgid "Info"
 msgstr "Info"
 
@@ -25547,6 +25567,10 @@ msgstr ""
 "<tt>_profile</tt> nutzen."
 
 msgid "It is still in use by"
+msgstr "Noch in Verwendung von"
+
+#, fuzzy
+msgid "It is still in use by at least 1 rule in ruleset:"
 msgstr "Noch in Verwendung von"
 
 msgid "It's not allowed to use a leading \"!\" here."
@@ -33533,6 +33557,10 @@ msgstr "Oracle Tablespaces"
 msgid "Order"
 msgstr "Ordnung"
 
+#, fuzzy
+msgid "Organisation"
+msgstr "Organisation"
+
 msgid "Organization"
 msgstr "Organisation"
 
@@ -35377,6 +35405,11 @@ msgid ""
 "more details."
 msgstr ""
 
+msgid ""
+"Please remove entry \"All sites\" from selected sites, if you want to select "
+"one or multiple sites."
+msgstr ""
+
 msgid "Please select a file."
 msgstr "Bitte wählen Sie eine Datei."
 
@@ -35747,6 +35780,10 @@ msgstr "Portindex oder 'Total'"
 
 msgid "Port number"
 msgstr "Portnummer"
+
+#, fuzzy
+msgid "Port number for HTTPS connection to InfluxDB."
+msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
 
 msgid "Port number for HTTPS connection to vSphere"
 msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
@@ -37181,6 +37218,10 @@ msgstr "Referer"
 
 msgid "Refine search"
 msgstr "Suche verfeinern"
+
+#, fuzzy
+msgid "Refresh"
+msgstr "Aktualisierungsintervall"
 
 msgid "Refresh all services (tabula rasa), add new host labels"
 msgstr "Alle Services auffrischen (tabula rasa), neue Hostlabel hinzufügen"
@@ -39559,6 +39600,10 @@ msgstr "Schnittstellentypen auswählen"
 msgid "Select metric"
 msgstr "Wähle Metrik"
 
+#, fuzzy
+msgid "Select metrics to send to InfluxDB"
+msgstr "Metriken zu Graphite / InfluxDB senden"
+
 msgid "Select sound"
 msgstr "Klang auswählen"
 
@@ -39691,6 +39736,10 @@ msgid "Send metrics to Graphite / InfluxDB"
 msgstr "Metriken zu Graphite / InfluxDB senden"
 
 msgid "Send metrics to Graphite/InfluxDB"
+msgstr "Metriken zu Graphite / InfluxDB senden"
+
+#, fuzzy
+msgid "Send metrics to InfluxDB"
 msgstr "Metriken zu Graphite / InfluxDB senden"
 
 msgid "Send monitoring notification"
@@ -40525,6 +40574,10 @@ msgstr ""
 "Bitte setzen Sie die Zahlen für die Schwellwerte auf 0, um diese jeweils zu "
 "deaktivieren."
 
+#, fuzzy
+msgid "Set the bucket of the InfluxDB server."
+msgstr "Den Zustand verwenden von Service..."
+
 msgid ""
 "Set the credentials to be used to connect to the LDAP server. The used "
 "account must not be allowed to do any changes in the directory the whole "
@@ -40564,6 +40617,10 @@ msgid ""
 msgstr ""
 "Setze den Monitoring-Status von Aufgaben, die nicht aktiviert sind (z.B. "
 "weil sie nach der Erkennung deaktiviert wurden)."
+
+#, fuzzy
+msgid "Set the organisation of the InfluxDB server."
+msgstr "Den Zustand verwenden von Service..."
 
 msgid ""
 "Set the range in which data is displayed. Having selected a metric before "
@@ -41515,6 +41572,10 @@ msgstr "Instanzübersicht"
 msgid "Site restore"
 msgstr "Wiederherstellung der Instanz"
 
+#, fuzzy
+msgid "Site restriction"
+msgstr "Instanz-Symbol"
+
 msgid "Site setting and global setting are identical."
 msgstr "Die Instanz-Einstellungen und die globalen Einstellungen sind gleich."
 
@@ -42358,6 +42419,9 @@ msgstr "Spezifizieren Sie Zuordnungen von Remote-IPs zu Clusternamen."
 msgid "Specify matching conditions"
 msgstr "Übereinstimmende Bedingungen spezifizieren"
 
+msgid "Specify one, multiple or all sites this connection should run on."
+msgstr ""
+
 msgid "Specify queue names that the rule should apply to"
 msgstr "Geben Sie die Namen der Schlangen an, auf die diese Regel greifen soll"
 
@@ -42520,6 +42584,10 @@ msgid ""
 msgstr ""
 "Geben Sie die Schwellwerte für den belegten Speicher an. Der belegte "
 "Speicher besteht aus verwendetem und vom Kernel reserviertem Speicher."
+
+#, fuzzy
+msgid "Specify the token to be used to connect to InfluxDB."
+msgstr "Bestimmen Sie das Protokoll für die Verbindung zum Management-Board."
 
 msgid "Specify time since last successful backup"
 msgstr "Zeit seit dem letzten erfolgreichen Backup"
@@ -44382,6 +44450,9 @@ msgstr "Tablespaces"
 
 msgid "Tabloid"
 msgstr "Tabloid"
+
+msgid "Tabula rasa"
+msgstr ""
 
 msgid "Tag"
 msgstr "Merkmal"
@@ -53160,6 +53231,10 @@ msgstr "Timeout für Antworten"
 msgid "Timeout for the execution of alert handlers"
 msgstr "Timeout für die Ausführung der Alert Handler"
 
+#, fuzzy
+msgid "Timeout for the initial connection to InfluxDB in seconds."
+msgstr "Timeout für die erste Verbindung zum LDAP Server in Sekunden."
+
 msgid "Timeout for the initial connection to the LDAP server in seconds."
 msgstr "Timeout für die erste Verbindung zum LDAP Server in Sekunden."
 
@@ -54198,6 +54273,10 @@ msgid "URL prefix for links to Checkmk"
 msgstr "URL-Präfix für Links zu Checkmk"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
+msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
+
+#, fuzzy
+msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
 
 msgid ""
@@ -60246,6 +60325,10 @@ msgstr ""
 "Dieses Hilfs-Merkmal können Sie nicht löschen. Es wird von dieser Merkmal-"
 "Gruppe <b>%s</b> verwendet."
 
+#, fuzzy
+msgid "You cannot delete this connection."
+msgstr "Dieses Zeitintervall können Sie nicht löschen."
+
 #, python-format
 msgid ""
 "You cannot delete this connection. It has folders/hosts assigned to it. You "
@@ -62883,6 +62966,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Automatic refresh"
+#~ msgstr "Automatische Aktualisierung"
+
+#~ msgid "Full scan"
+#~ msgstr "Vollständiger Scan"
+
+#~ msgid "Full service scan"
+#~ msgstr "Komplette Service-Suche"
 
 #~ msgid "The value must be of type str or unicode, but it has type %s"
 #~ msgstr "Der Wert muss vom Typ str oder unicode sein - ist aber %s"

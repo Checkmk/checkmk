@@ -879,7 +879,8 @@ ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
 
 
 class DiscoveryTestCase(NamedTuple):
-    parameters: discovery.DiscoveryParameters
+    load_labels: bool
+    save_labels: bool
     only_host_labels: bool
     expected_services: Set[Tuple[CheckPluginName, str]]
     on_realhost: ExpectedDiscoveryResultRealHost
@@ -890,10 +891,8 @@ _discovery_test_cases = [
     # do discovery: only_new == True
     # discover on host: mode != "remove"
     DiscoveryTestCase(
-        parameters=discovery.DiscoveryParameters(
-            load_labels=True,
-            save_labels=True,
-        ),
+        load_labels=True,
+        save_labels=True,
         only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -976,10 +975,8 @@ _discovery_test_cases = [
     ),
     # check discovery
     DiscoveryTestCase(
-        parameters=discovery.DiscoveryParameters(
-            load_labels=True,
-            save_labels=False,
-        ),
+        load_labels=True,
+        save_labels=False,
         only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1036,10 +1033,8 @@ _discovery_test_cases = [
     ),
     # do discovery: only_new == False
     DiscoveryTestCase(
-        parameters=discovery.DiscoveryParameters(
-            load_labels=False,
-            save_labels=True,
-        ),
+        load_labels=False,
+        save_labels=True,
         only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1093,10 +1088,8 @@ _discovery_test_cases = [
     # do discovery: only_new == False
     # preview
     DiscoveryTestCase(
-        parameters=discovery.DiscoveryParameters(
-            load_labels=False,
-            save_labels=False,
-        ),
+        load_labels=False,
+        save_labels=False,
         only_host_labels=False,
         expected_services={
             (CheckPluginName('df'), '/boot/test-efi'),
@@ -1147,10 +1140,8 @@ _discovery_test_cases = [
     # discover on host: mode == "only-host-labels"
     # Only discover host labels
     DiscoveryTestCase(
-        parameters=discovery.DiscoveryParameters(
-            load_labels=False,
-            save_labels=False,
-        ),
+        load_labels=False,
+        save_labels=False,
         only_host_labels=True,
         expected_services=set(),
         on_realhost=ExpectedDiscoveryResultRealHost(
@@ -1209,14 +1200,13 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
 
     scenario = realhost_scenario
 
-    discovery_parameters = discovery_test_case.parameters
-
     # we're depending on the changed host labels:
     _ = discovery.analyse_node_labels(
         host_name=scenario.hostname,
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
@@ -1239,14 +1229,13 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
 def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_test_case):
     scenario = realhost_scenario
 
-    discovery_parameters = discovery_test_case.parameters
-
     with cmk_debug_enabled():
         host_label_result = discovery.analyse_node_labels(
             host_name=scenario.hostname,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            load_labels=discovery_test_case.load_labels,
+            save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
         )
 
@@ -1268,14 +1257,13 @@ def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
 
     scenario = cluster_scenario
 
-    discovery_parameters = discovery_test_case.parameters
-
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
         host_config=scenario.host_config,
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=discovery_test_case.load_labels,
+        save_labels=discovery_test_case.save_labels,
         on_error=OnError.RAISE,
     )
 
@@ -1297,14 +1285,13 @@ def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
 def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_test_case):
     scenario = cluster_scenario
 
-    discovery_parameters = discovery_test_case.parameters
-
     with cmk_debug_enabled():
         host_label_result = discovery._host_labels.analyse_cluster_labels(
             host_config=scenario.host_config,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            load_labels=discovery_test_case.load_labels,
+            save_labels=discovery_test_case.save_labels,
             on_error=OnError.RAISE,
         )
 

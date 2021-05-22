@@ -31,7 +31,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.discovered_labels import HostLabel
 
-from .type_defs import DiscoveryParameters
 from .utils import QualifiedDiscovery
 
 
@@ -39,21 +38,24 @@ def analyse_host_labels(
     *,
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
+    load_labels: bool,
+    save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     return analyse_cluster_labels(
         host_config=host_config,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=load_labels,
+        save_labels=save_labels,
         on_error=on_error,
     ) if host_config.is_cluster else analyse_node_labels(
         host_name=host_config.hostname,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=load_labels,
+        save_labels=save_labels,
         on_error=on_error,
     )
 
@@ -63,7 +65,8 @@ def analyse_node_labels(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    load_labels: bool,
+    save_labels: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per real host or node
@@ -86,11 +89,8 @@ def analyse_node_labels(
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
-        existing_host_labels=_load_existing_host_labels(
-            host_name=host_name,
-            discovery_parameters=discovery_parameters,
-        ),
-        discovery_parameters=discovery_parameters,
+        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
+        save_labels=save_labels,
     )
 
 
@@ -99,7 +99,8 @@ def analyse_cluster_labels(
     host_config: config.HostConfig,
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    load_labels: bool,
+    save_labels: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per cluster host
@@ -128,7 +129,8 @@ def analyse_cluster_labels(
             host_name=node,
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            load_labels=load_labels,
+            save_labels=save_labels,
             on_error=on_error,
         )
 
@@ -144,11 +146,9 @@ def analyse_cluster_labels(
     return _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=_load_existing_host_labels(
-            host_name=host_config.hostname,
-            discovery_parameters=discovery_parameters,
-        ),
-        discovery_parameters=discovery_parameters,
+        existing_host_labels=_load_existing_host_labels(host_config.hostname) if load_labels else
+        (),
+        save_labels=save_labels,
     )
 
 
@@ -157,7 +157,7 @@ def _analyse_host_labels(
     host_name: HostName,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
-    discovery_parameters: DiscoveryParameters,
+    save_labels: bool,
 ) -> QualifiedDiscovery[HostLabel]:
 
     host_labels = QualifiedDiscovery(
@@ -166,7 +166,7 @@ def _analyse_host_labels(
         key=lambda hl: hl.label,
     )
 
-    if discovery_parameters.save_labels:
+    if save_labels:
         DiscoveredHostLabelsStore(host_name).save({
             # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
             # Whenever we do not load the host labels, vanished will be empty.
@@ -200,15 +200,7 @@ def _analyse_host_labels(
     return host_labels
 
 
-def _load_existing_host_labels(
-    *,
-    host_name: HostName,
-    discovery_parameters: DiscoveryParameters,
-) -> Sequence[HostLabel]:
-    # Take over old items if -I is selected
-    if not discovery_parameters.load_labels:
-        return []
-
+def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
     raw_label_dict = DiscoveredHostLabelsStore(host_name).load()
     return [HostLabel.from_dict(name, value) for name, value in raw_label_dict.items()]
 

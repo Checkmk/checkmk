@@ -76,7 +76,6 @@ from cmk.base.discovered_labels import HostLabel
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, analyse_node_labels
-from .type_defs import DiscoveryParameters
 from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
 
 ServicesTableEntry = Tuple[str, Service, List[HostName]]
@@ -149,11 +148,6 @@ def do_discovery(
     use_caches = not arg_hostnames or cmk.core_helpers.cache.FileCacheFactory.maybe
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
 
-    discovery_parameters = DiscoveryParameters(
-        load_labels=arg_only_new,
-        save_labels=True,
-    )
-
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
     mode = Mode.DISCOVERY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
@@ -181,7 +175,8 @@ def do_discovery(
                 parsed_sections_broker,
                 run_plugin_names,
                 arg_only_new,
-                discovery_parameters,
+                load_labels=arg_only_new,
+                save_labels=True,
                 only_host_labels=only_host_labels,
                 on_error=on_error,
             )
@@ -231,8 +226,9 @@ def _do_discovery_for(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
-    discovery_parameters: DiscoveryParameters,
     *,
+    load_labels: bool,
+    save_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
 ) -> None:
@@ -243,7 +239,8 @@ def _do_discovery_for(
         host_name=host_name,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=load_labels,
+        save_labels=save_labels,
         on_error=on_error,
     )
 
@@ -332,10 +329,8 @@ def discover_on_host(
                 host_config=host_config,
                 ipaddress=ipaddress,
                 parsed_sections_broker=parsed_sections_broker,
-                discovery_parameters=DiscoveryParameters(
-                    load_labels=True,
-                    save_labels=True,
-                ),
+                load_labels=True,
+                save_labels=True,
                 on_error=on_error,
             )
             result.self_new_host_labels = len(host_labels.new)
@@ -496,10 +491,6 @@ def check_discovery(
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
-    discovery_parameters = DiscoveryParameters(
-        load_labels=True,
-        save_labels=False,
-    )
 
     params = host_config.discovery_check_parameters
     if params is None:
@@ -530,7 +521,8 @@ def check_discovery(
         host_config=host_config,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=True,
+        save_labels=False,
         on_error=OnError.RAISE,
     )
     services = _get_host_services(
@@ -1133,10 +1125,6 @@ def get_check_preview(
     host_config = config_cache.get_host_config(host_name)
 
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
-    discovery_parameters = DiscoveryParameters(
-        load_labels=True,
-        save_labels=False,
-    )
 
     _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
 
@@ -1156,7 +1144,8 @@ def get_check_preview(
         host_config=host_config,
         ipaddress=ip_address,
         parsed_sections_broker=parsed_sections_broker,
-        discovery_parameters=discovery_parameters,
+        load_labels=True,
+        save_labels=False,
         on_error=on_error,
     )
 

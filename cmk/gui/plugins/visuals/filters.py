@@ -22,7 +22,7 @@ import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, user_errors
+from cmk.gui.globals import html, user_errors, request
 from cmk.gui.valuespec import (
     DualListChoice,
     Labels,
@@ -1945,7 +1945,7 @@ class TagFilter(Filter):
             html.open_td()
 
             if html.request.var(prefix + "_grp"):
-                choices: Choices = html.get_item_input(prefix + "_grp", grouped)[0]
+                choices: Choices = request.get_item_input(prefix + "_grp", grouped)[0]
             else:
                 choices = [("", "")]
 
@@ -2140,7 +2140,7 @@ class FilterCustomAttribute(Filter):
             return ""
 
         items = {k: v for k, v in self._custom_attribute_choices() if k is not None}
-        attribute_id = html.get_item_input(self.name_varname(self.ident), items)[1]
+        attribute_id = request.get_item_input(self.name_varname(self.ident), items)[1]
         value = html.request.get_unicode_input_mandatory(self.value_varname(self.ident))
         return "Filter: %s_custom_variables ~~ %s ^%s\n" % (
             self.info, livestatus.lqencode(attribute_id.upper()), livestatus.lqencode(value))

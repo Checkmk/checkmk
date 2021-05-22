@@ -1298,7 +1298,7 @@ def show_create_view_dialog(next_url=None):
 
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
-    ds_class, ds_name = html.get_item_input("datasource", data_source_registry)
+    ds_class, ds_name = global_request.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual('views',
                                ds_class().infos,
                                next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' %
@@ -1777,7 +1777,7 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
 def page_view():
     """Central entry point for the initial HTML page rendering of a view"""
     with CPUTracker() as page_view_tracker:
-        view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
+        view_spec, view_name = global_request.get_item_input("view_name", get_permitted_views())
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()

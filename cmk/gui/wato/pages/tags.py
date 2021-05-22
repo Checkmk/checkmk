@@ -17,7 +17,7 @@ from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
 from cmk.gui.i18n import _, _u
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -186,7 +186,8 @@ class ModeTags(ABCTagMode):
         return redirect(mode_url("tags"))
 
     def _delete_tag_group(self) -> ActionResult:
-        del_id = html.get_item_input("_delete", dict(self._tag_config.get_tag_group_choices()))[1]
+        del_id = request.get_item_input("_delete",
+                                        dict(self._tag_config.get_tag_group_choices()))[1]
 
         if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
                 del_id):
@@ -236,8 +237,8 @@ class ModeTags(ABCTagMode):
         return builtin_tg.get_tag_ids() == user_tg.get_tag_ids()
 
     def _delete_aux_tag(self) -> ActionResult:
-        del_id = html.get_item_input("_del_aux",
-                                     dict(self._tag_config.aux_tag_list.get_choices()))[1]
+        del_id = request.get_item_input("_del_aux",
+                                        dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
         # Make sure that this aux tag is not begin used by any tag group
         for group in self._tag_config.tag_groups:
@@ -598,7 +599,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         if not html.request.has_var("edit"):
             return None
 
-        return html.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
+        return request.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
 
     def title(self):
         if self._new:

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
+from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar, Mapping
 from contextlib import contextmanager
 
 from six import ensure_binary, ensure_str
@@ -20,6 +20,7 @@ from cmk.gui.exceptions import MKUserError
 
 UploadedFile = Tuple[str, str, bytes]
 T = TypeVar('T')
+Value = TypeVar('Value')
 
 
 class LegacyVarsMixin:
@@ -323,6 +324,15 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
 
     def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
         return mandatory_parameter(varname, self.get_float_input(varname, deflt))
+
+    def get_item_input(self, varname: str, collection: Mapping[str, Value]) -> Tuple[Value, str]:
+        """Helper to get an item from the given collection
+        Raises a MKUserError() in case the requested item is not available."""
+        item = self.get_ascii_input(varname)
+        if item not in collection:
+            raise MKUserError(varname, _("The requested item %s does not exist") % item)
+        assert item is not None
+        return collection[item], item
 
     @contextmanager
     def stashed_vars(self) -> Iterator[None]:

@@ -53,19 +53,15 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Set,
     Tuple,
     TYPE_CHECKING,
-    TypeVar,
     Union,
 )
 from pathlib import Path
 
 from six import ensure_str
-
-Value = TypeVar('Value')
 
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
@@ -1133,15 +1129,6 @@ class html(ABCHTMLGenerator):
     #
     # HTTP variable processing
     #
-
-    def get_item_input(self, varname: str, collection: Mapping[str, Value]) -> Tuple[Value, str]:
-        """Helper to get an item from the given collection
-        Raises a MKUserError() in case the requested item is not available."""
-        item = self.request.get_ascii_input(varname)
-        if item not in collection:
-            raise MKUserError(varname, _("The requested item %s does not exist") % item)
-        assert item is not None
-        return collection[item], item
 
     # TODO: Invalid default URL is not validated. Should we do it?
     # TODO: This is only protecting against some not allowed URLs but does not

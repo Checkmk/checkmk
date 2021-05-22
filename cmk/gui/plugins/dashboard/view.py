@@ -12,7 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
 from cmk.gui.plugins.views import PainterOptions
 from cmk.gui.type_defs import ViewSpec
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
 from cmk.gui.valuespec import DropdownChoice
 
 
@@ -106,7 +106,7 @@ class ViewDashlet(ABCViewDashlet):
     def infos(self):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
-        if html.myfile == "edit_dashlet" and html.request.has_var("datasource"):
+        if requested_file_name(request) == "edit_dashlet" and html.request.has_var("datasource"):
             ds_name = html.request.get_str_input_mandatory('datasource')
             return views.data_source_registry[ds_name]().infos
 

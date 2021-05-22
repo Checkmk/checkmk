@@ -279,13 +279,11 @@ class ModeUsers(WatoMode):
         return html.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
 
     def _job_details_url(self):
-        return makeuri_contextless(
-            request,
-            [("mode", "background_job_details"),
-             ("back_url",
-              makeuri_contextless(request, [("mode", "users")], filename="%s.py" % html.myfile)),
-             ("job_id", self._job_snapshot.get_job_id())],
-            filename="wato.py")
+        return makeuri_contextless(request,
+                                   [("mode", "background_job_details"),
+                                    ("back_url", makeuri_contextless(request, [("mode", "users")])),
+                                    ("job_id", self._job_snapshot.get_job_id())],
+                                   filename="wato.py")
 
     def _show_job_info(self):
         if self._job_snapshot.is_active():

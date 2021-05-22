@@ -53,7 +53,8 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     make_simple_link,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars, urlencode
+from cmk.gui.utils.urls import (makeuri, makeuri_contextless, urlencode_vars, urlencode,
+                                requested_file_name)
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 CrashInfo = Dict
@@ -122,7 +123,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
     @classmethod
     def from_exception(cls, details=None, type_specific_attributes=None):
         return super(GUICrashReport, cls).from_exception(details={
-            "page": html.myfile + ".py",
+            "page": requested_file_name(request) + ".py",
             "vars": {
                 key: "***" if value in ["password", "_password"] else value
                 for key, value in html.request.itervars()

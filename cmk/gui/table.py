@@ -30,7 +30,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions
-from cmk.gui.utils.urls import makeuri, makeactionuri
+from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
@@ -147,7 +147,7 @@ class Table:
         self.next_header: Optional[str] = None
 
         # Use our pagename as table id if none is specified
-        table_id = table_id if table_id is not None else html.myfile
+        table_id = table_id if table_id is not None else requested_file_name(request)
         assert table_id is not None
 
         # determine row limit

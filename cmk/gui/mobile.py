@@ -29,7 +29,7 @@ from cmk.gui.plugins.views.utils import (
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import makeuri, requested_file_name
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
 Items = List[Tuple[str, str, str]]
@@ -186,7 +186,8 @@ def page_login() -> None:
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
-    default_origtarget = "index.py" if html.myfile in ["login", "logout"] else makeuri(request, [])
+    default_origtarget = "index.py" if requested_file_name(request) in ["login", "logout"
+                                                                       ] else makeuri(request, [])
     origtarget = html.get_url_input("_origtarget", default_origtarget)
     html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 

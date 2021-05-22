@@ -39,7 +39,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
@@ -299,7 +299,7 @@ class ABCUserProfilePage(Page):
                                           breadcrumb,
                                           form_name="profile",
                                           button_name="_save")
-        menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
+        menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
     def page(self) -> None:
@@ -343,7 +343,7 @@ class UserProfileReplicate(Page):
                                           breadcrumb,
                                           form_name="profile",
                                           button_name="_save")
-        menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
+        menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
     def page(self) -> None:

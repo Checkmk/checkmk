@@ -35,7 +35,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
-from cmk.gui.utils.urls import makeuri, urlencode
+from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
 
 auth_logger = logger.getChild("auth")
 
@@ -217,10 +217,11 @@ def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    if (html.myfile != 'logout' and not html.request.has_var('_ajaxid')) \
+    requested_file = requested_file_name(global_request)
+    if (requested_file != 'logout' and not html.request.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
         auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" %
-                          (html.myfile, dict(html.request.itervars())))
+                          (requested_file, dict(html.request.itervars())))
         _renew_auth_session(username, session_id)
 
 
@@ -237,7 +238,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
-    if html.myfile != 'user_change_pw':
+    if requested_file_name(global_request) != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
             raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
@@ -503,8 +504,8 @@ class LoginPage(Page):
         html.add_body_css_class("login")
         html.header(config.get_page_heading(), Breadcrumb(), javascripts=[])
 
-        default_origtarget = ("index.py" if html.myfile in ["login", "logout"] else makeuri(
-            global_request, []))
+        default_origtarget = ("index.py" if requested_file_name(global_request)
+                              in ["login", "logout"] else makeuri(global_request, []))
         origtarget = html.get_url_input("_origtarget", default_origtarget)
 
         # Never allow the login page to be opened in the iframe. Redirect top page to login page.
@@ -514,7 +515,7 @@ class LoginPage(Page):
 }''')
 
         # When someone calls the login page directly and is already authed redirect to main page
-        if html.myfile == 'login' and _check_auth(html.request):
+        if requested_file_name(global_request) == 'login' and _check_auth(html.request):
             raise HTTPRedirect(origtarget)
 
         html.open_div(id_="login")

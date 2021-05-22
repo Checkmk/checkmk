@@ -1032,8 +1032,6 @@ class html(ABCHTMLGenerator):
 
         self.init_mobile()
 
-        self.myfile = requested_file_name(self.request)
-
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
         self.response.headers["Cache-Control"] = "no-cache"
@@ -1058,7 +1056,7 @@ class html(ABCHTMLGenerator):
     def _init_webapi_cors_header(self) -> None:
         # Would be better to put this to page individual code, but we currently have
         # no mechanism for a page to set do this before the authentication is made.
-        if self.myfile == "webapi":
+        if requested_file_name(self.request) == "webapi":
             self.response.headers["Access-Control-Allow-Origin"] = "*"
 
     def init_theme(self) -> None:
@@ -1681,8 +1679,7 @@ class html(ABCHTMLGenerator):
                    add_transid: bool = True) -> None:
         self.form_vars = []
         if action is None:
-            assert self.myfile is not None
-            action = self.myfile + ".py"
+            action = requested_file_name(self.request) + ".py"
         self.current_form = name
         self.open_form(id_="form_%s" % name,
                        name=name,

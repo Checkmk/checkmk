@@ -20,7 +20,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.globals import html, request, g
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
 from cmk.gui.http import Response
 
 # TODO
@@ -66,7 +66,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 def plain_error() -> bool:
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return html.request.has_var("_plain_error") or html.myfile == "webapi"
+    return html.request.has_var("_plain_error") or requested_file_name(request) == "webapi"
 
 
 def fail_silently() -> bool:
@@ -110,9 +110,10 @@ def _handle_not_authenticated() -> Response:
     # Redirect to the login-dialog with the current url as original target
     # Never render the login form directly when accessing urls like "index.py"
     # or "dashboard.py". This results in strange problems.
-    if html.myfile != 'login':
+    requested_file = requested_file_name(request)
+    if requested_file != 'login':
         post_login_url = makeuri(request, [])
-        if html.myfile != "index":
+        if requested_file != "index":
             # Ensure that users start with a navigation after they have logged in
             post_login_url = makeuri_contextless(request, [("start_url", post_login_url)],
                                                  filename="index.py")
@@ -134,7 +135,7 @@ def load_all_plugins() -> None:
     # improves the performance for these requests.
     # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
     # werkzeug.wrappers.Request.script_root would be helpful here, but we don't have that yet.
-    only_modules = ["metrics"] if html.myfile == "ajax_graph" else None
+    only_modules = ["metrics"] if requested_file_name(request) == "ajax_graph" else None
     modules.load_all_plugins(only_modules=only_modules)
 
 

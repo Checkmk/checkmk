@@ -32,6 +32,7 @@ from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.http import Response
 from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
@@ -167,7 +168,7 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         # time before the first login for generating auth.php.
         load_all_plugins()
 
-        page_handler = get_and_wrap_page(html.myfile)
+        page_handler = get_and_wrap_page(requested_file_name(html.request))
         response = page_handler()
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.

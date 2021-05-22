@@ -418,7 +418,7 @@ class Site:
             self._update_with_f12_files()
 
         if not os.path.exists(self.result_dir()):
-            self.makedirs(self.result_dir())
+            os.makedirs(self.result_dir())
 
     def _update_with_f12_files(self):
         paths = [
@@ -819,7 +819,8 @@ class Site:
 
         shutil.copytree(self.path("var/log"),
                         "%s/logs" % self.result_dir(),
-                        ignore_dangling_symlinks=True)
+                        ignore_dangling_symlinks=True,
+                        ignore=shutil.ignore_patterns('.*'))
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
@@ -828,7 +829,9 @@ class Site:
             shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
 
         with suppress(FileNotFoundError):
-            shutil.copytree(self.path("var/check_mk/crashes"), "%s/crashes" % self.result_dir())
+            shutil.copytree(self.path("var/check_mk/crashes"),
+                            "%s/crashes" % self.result_dir(),
+                            ignore=shutil.ignore_patterns('.*'))
 
     def result_dir(self):
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)

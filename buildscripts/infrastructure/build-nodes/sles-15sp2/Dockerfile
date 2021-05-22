@@ -88,6 +88,7 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
+    valgrind \
     wget \
     which \
     vim \

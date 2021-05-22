@@ -26,7 +26,7 @@ import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.exceptions import MKTimeout
+from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
@@ -143,7 +143,7 @@ def do_check(
                 file_cache_max_age=host_config.max_cachefile_age,
                 fetcher_messages=fetcher_messages,
                 force_snmp_cache_refresh=False,
-                on_scan_error="raise",
+                on_scan_error=OnError.RAISE,
             )
 
             num_success, plugins_missing_data = do_all_checks_on_host(

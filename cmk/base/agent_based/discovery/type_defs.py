@@ -8,6 +8,5 @@ from typing import NamedTuple
 
 
 class DiscoveryParameters(NamedTuple):
-    on_error: str
     load_labels: bool
     save_labels: bool

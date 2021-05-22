@@ -8,7 +8,7 @@ import functools
 from typing import Collection, Iterable, Tuple, Set
 
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
@@ -23,8 +23,8 @@ SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(
     sections: Collection[SNMPScanSection],
-    on_error: str,
     *,
+    on_error: OnError = OnError.RAISE,
     missing_sys_description: bool,
     backend: SNMPBackend,
 ) -> Set[SectionName]:
@@ -39,9 +39,9 @@ def gather_available_raw_section_names(
             backend=backend,
         )
     except Exception as e:
-        if on_error == "raise":
+        if on_error is OnError.RAISE:
             raise
-        if on_error == "warn":
+        if on_error is OnError.WARN:
             console.error("SNMP scan failed: %s\n" % e)
 
     return set()
@@ -53,8 +53,8 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 def _snmp_scan(
     sections: Iterable[SNMPScanSection],
-    on_error: str = "ignore",
     *,
+    on_error: OnError,
     missing_sys_description: bool,
     backend: SNMPBackend,
 ) -> Set[SectionName]:
@@ -110,7 +110,7 @@ def _fake_description_object() -> None:
 def _find_sections(
     sections: Iterable[SNMPScanSection],
     *,
-    on_error: str,
+    on_error: OnError,
     backend: SNMPBackend,
 ) -> Set[SectionName]:
     found_sections: Set[SectionName] = set()
@@ -131,10 +131,10 @@ def _find_sections(
             # should be raised through this
             raise
         except Exception:
-            if on_error == "warn":
-                console.warning("   Exception in SNMP scan function of %s" % name)
-            elif on_error == "raise":
+            if on_error is OnError.RAISE:
                 raise
+            if on_error is OnError.WARN:
+                console.warning("   Exception in SNMP scan function of %s" % name)
     return found_sections
 
 

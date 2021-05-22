@@ -7,6 +7,7 @@
 from pathlib import Path
 from typing import Dict, Optional, Set
 
+from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
@@ -66,7 +67,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
-        on_scan_error: str,
+        on_scan_error: OnError,
     ):
         super().__init__(
             hostname,
@@ -98,7 +99,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         selected_sections: SectionNameCollection,
-        on_scan_error: str,
+        on_scan_error: OnError,
         force_cache_refresh: bool,
     ) -> "SNMPSource":
         return cls(
@@ -119,7 +120,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         ipaddress: HostAddress,
         *,
         selected_sections: SectionNameCollection,
-        on_scan_error: str,
+        on_scan_error: OnError,
         force_cache_refresh: bool,
     ) -> "SNMPSource":
         return cls(

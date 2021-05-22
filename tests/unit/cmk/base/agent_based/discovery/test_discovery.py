@@ -14,6 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from testlib.base import Scenario
 from testlib.debug_utils import cmk_debug_enabled
 
+from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -889,7 +890,6 @@ _discovery_test_cases = [
     # discover on host: mode != "remove"
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
-            on_error="raise",
             load_labels=True,
             save_labels=True,
         ),
@@ -976,7 +976,6 @@ _discovery_test_cases = [
     # check discovery
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
-            on_error="raise",
             load_labels=True,
             save_labels=False,
         ),
@@ -1037,7 +1036,6 @@ _discovery_test_cases = [
     # do discovery: only_new == False
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
-            on_error="raise",
             load_labels=False,
             save_labels=True,
         ),
@@ -1095,7 +1093,6 @@ _discovery_test_cases = [
     # preview
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
-            on_error="raise",
             load_labels=False,
             save_labels=False,
         ),
@@ -1150,7 +1147,6 @@ _discovery_test_cases = [
     # Only discover host labels
     DiscoveryTestCase(
         parameters=discovery.DiscoveryParameters(
-            on_error="raise",
             load_labels=False,
             save_labels=False,
         ),
@@ -1220,6 +1216,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=OnError.RAISE,
     )
 
     with cmk_debug_enabled():
@@ -1227,7 +1224,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
             host_name=scenario.hostname,
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
-            on_error=discovery_parameters.on_error,
+            on_error=OnError.RAISE,
             run_plugin_names=EVERYTHING,
         )
 
@@ -1249,6 +1246,7 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
             discovery_parameters=discovery_parameters,
+            on_error=OnError.RAISE,
         )
 
     assert host_label_result.vanished == discovery_test_case.on_realhost.expected_vanished_host_labels
@@ -1277,6 +1275,7 @@ def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
         ipaddress=scenario.ipaddress,
         parsed_sections_broker=scenario.parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=OnError.RAISE,
     )
 
     with cmk_debug_enabled():
@@ -1284,7 +1283,7 @@ def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
             scenario.host_config,
             scenario.ipaddress,
             scenario.parsed_sections_broker,
-            discovery_parameters,
+            OnError.RAISE,
         )
 
     services = set(discovered_services)
@@ -1305,6 +1304,7 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
             ipaddress=scenario.ipaddress,
             parsed_sections_broker=scenario.parsed_sections_broker,
             discovery_parameters=discovery_parameters,
+            on_error=OnError.RAISE,
         )
 
     assert (
@@ -1359,11 +1359,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         "horst",
         None,
         ParsedSectionsBroker({}),
-        discovery.DiscoveryParameters(
-            on_error="raise",
-            load_labels=True,
-            save_labels=True,
-        ),
+        OnError.RAISE,
         lambda hn, _svcdescr: hn,
     ) == {(service.check_plugin_name, None): (
         discovery_status,

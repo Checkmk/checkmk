@@ -16,7 +16,7 @@ import pytest  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 
 from cmk.snmplib import snmp_table
@@ -409,7 +409,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             sections={},
-            on_error="raise",
+            on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
@@ -436,7 +436,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             sections={},
-            on_error="raise",
+            on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
@@ -464,7 +464,7 @@ class ABCTestSNMPFetcher(ABC):
         return SNMPFetcher(
             file_cache,
             sections={},
-            on_error="raise",
+            on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",

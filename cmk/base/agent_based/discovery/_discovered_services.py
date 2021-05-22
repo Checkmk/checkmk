@@ -19,7 +19,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -48,8 +48,6 @@ from cmk.base.discovered_labels import (
 
 from .utils import QualifiedDiscovery
 
-_OnError = str  # TODO: Literal["raise", "warn", "ignore"]
-
 
 def analyse_discovered_services(
     *,
@@ -58,7 +56,7 @@ def analyse_discovered_services(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,  # TODO: find a better name downwards in the callstack
-    on_error: _OnError,
+    on_error: OnError,
 ) -> QualifiedDiscovery[Service]:
 
     return _analyse_discovered_services(
@@ -148,7 +146,7 @@ def _discover_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
-    on_error: _OnError,
+    on_error: OnError,
 ) -> List[Service]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
@@ -174,9 +172,9 @@ def _discover_services(
                 except (KeyboardInterrupt, MKTimeout):
                     raise
                 except Exception as e:
-                    if on_error == "raise":
+                    if on_error is OnError.RAISE:
                         raise
-                    if on_error == "warn":
+                    if on_error is OnError.WARN:
                         console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
             return list(service_table.values())
@@ -269,7 +267,7 @@ def _discover_plugins_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    on_error: _OnError,
+    on_error: OnError,
 ) -> Iterator[Service]:
     # Skip this check type if is ignored for that host
     if config.service_ignored(host_name, check_plugin_name, None):
@@ -290,9 +288,9 @@ def _discover_plugins_services(
     try:
         kwargs = parsed_sections_broker.get_section_kwargs(host_key, check_plugin.sections)
     except Exception as exc:
-        if cmk.utils.debug.enabled() or on_error == "raise":
+        if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
-        if on_error == "warn":
+        if on_error is OnError.WARN:
             console.warning("  Exception while parsing agent section: %s\n" % exc)
         return
 
@@ -307,9 +305,9 @@ def _discover_plugins_services(
         plugins_services = check_plugin.discovery_function(**kwargs)
         yield from _enriched_discovered_services(host_name, check_plugin.name, plugins_services)
     except Exception as e:
-        if on_error == "raise":
+        if on_error is OnError.RAISE:
             raise
-        if on_error == "warn":
+        if on_error is OnError.WARN:
             console.warning("  Exception in discovery function of check plugin '%s': %s" %
                             (check_plugin.name, e))
 

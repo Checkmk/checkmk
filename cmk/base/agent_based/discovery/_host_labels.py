@@ -17,8 +17,7 @@ from typing import (
     Optional,
     Sequence,
 )
-import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -42,17 +41,20 @@ def analyse_host_labels(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     return analyse_cluster_labels(
         host_config=host_config,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=on_error,
     ) if host_config.is_cluster else analyse_node_labels(
         host_name=host_config.hostname,
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=on_error,
     )
 
 
@@ -62,6 +64,7 @@ def analyse_node_labels(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per real host or node
 
@@ -81,7 +84,7 @@ def analyse_node_labels(
             host_name=host_name,
             ipaddress=ipaddress,
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            on_error=on_error,
         ),
         existing_host_labels=_load_existing_host_labels(
             host_name=host_name,
@@ -97,6 +100,7 @@ def analyse_cluster_labels(
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
     """Discovers and processes host labels per cluster host
 
@@ -125,6 +129,7 @@ def analyse_cluster_labels(
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             discovery_parameters=discovery_parameters,
+            on_error=on_error,
         )
 
         # keep the latest for every label.name
@@ -213,7 +218,7 @@ def _discover_host_labels(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> Sequence[HostLabel]:
 
     # make names unique
@@ -221,12 +226,12 @@ def _discover_host_labels(
         **_discover_host_labels_for_source_type(
             host_key=HostKey(host_name, ipaddress, SourceType.HOST),
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
             host_key=HostKey(host_name, ipaddress, SourceType.MANAGEMENT),
             parsed_sections_broker=parsed_sections_broker,
-            discovery_parameters=discovery_parameters,
+            on_error=on_error,
         ),
     }
     return list(labels_by_name.values())
@@ -236,7 +241,7 @@ def _discover_host_labels_for_source_type(
     *,
     host_key: HostKey,
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> Mapping[str, HostLabel]:
 
     try:
@@ -281,11 +286,11 @@ def _discover_host_labels_for_source_type(
             except (KeyboardInterrupt, MKTimeout):
                 raise
             except Exception as exc:
-                if cmk.utils.debug.enabled() or discovery_parameters.on_error == "raise":
+                if on_error is OnError.RAISE:
                     raise
-                if discovery_parameters.on_error == "warn":
-                    console.error("Host label discovery of '%s' failed: %s\n" %
-                                  (section_plugin.name, exc))
+                if on_error is OnError.WARN:
+                    console.error(
+                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n")
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

@@ -30,7 +30,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
@@ -230,7 +230,7 @@ def _do_active_inventory_for(
         file_cache_max_age=host_config.max_cachefile_age,
         fetcher_messages=(),
         force_snmp_cache_refresh=False,
-        on_scan_error="raise",
+        on_scan_error=OnError.RAISE,
     )
 
     return ActiveInventoryResult(

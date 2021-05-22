@@ -13,6 +13,7 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
+from cmk.utils.exceptions import OnError
 from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
 
@@ -245,7 +246,7 @@ def test_snmp_scan_find_plugins__success(backend):
     sections = [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()]
     found = snmp_scan._find_sections(
         sections,
-        on_error="raise",
+        on_error=OnError.RAISE,
         backend=backend,
     )
 
@@ -262,7 +263,7 @@ def test_gather_available_raw_section_names_defaults(backend, mocker):
 
     assert snmp_scan.gather_available_raw_section_names(
         [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
-        on_error="raise",
+        on_error=OnError.RAISE,
         missing_sys_description=False,
         backend=backend,
     ) == {

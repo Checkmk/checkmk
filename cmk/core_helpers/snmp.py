@@ -25,6 +25,7 @@ from typing import (
     Union,
 )
 
+from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostName, SectionName, ServiceDetails, ServiceState
 
 import cmk.snmplib.snmp_table as snmp_table
@@ -175,7 +176,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         file_cache: SNMPFileCache,
         *,
         sections: Dict[SectionName, SectionMeta],
-        on_error: str,
+        on_error: OnError,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
         section_store_path: Union[Path, str],
@@ -236,7 +237,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                 SectionName(s): SectionMeta.deserialize(m)
                 for s, m in serialized["sections"].items()
             },
-            on_error=serialized["on_error"],
+            on_error=OnError(serialized["on_error"]),
             missing_sys_description=serialized["missing_sys_description"],
             do_status_data_inventory=serialized["do_status_data_inventory"],
             section_store_path=serialized["section_store_path"],
@@ -247,7 +248,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         return {
             "file_cache": self.file_cache.to_json(),
             "sections": {str(s): m.serialize() for s, m in self.sections.items()},
-            "on_error": self.on_error,
+            "on_error": self.on_error.value,
             "missing_sys_description": self.missing_sys_description,
             "do_status_data_inventory": self.do_status_data_inventory,
             "section_store_path": str(self._section_store.path),

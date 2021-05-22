@@ -10,7 +10,7 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.exceptions import MKIPAddressLookupError
+from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, result, SourceType
 
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
@@ -48,7 +48,7 @@ def source_fixture(scenario, hostname, ipaddress):
         hostname,
         ipaddress,
         selected_sections=NO_SELECTION,
-        on_scan_error="raise",
+        on_scan_error=OnError.RAISE,
         force_cache_refresh=False,
     )
 
@@ -72,7 +72,7 @@ def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
     assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.id == "snmp"
-    assert source._on_snmp_scan_error == "raise"
+    assert source._on_snmp_scan_error == OnError.RAISE
 
 
 def test_description_with_ipaddress(source, monkeypatch):
@@ -91,7 +91,7 @@ class TestSNMPSource_SNMP:
             hostname,
             ipaddress,
             selected_sections=NO_SELECTION,
-            on_scan_error="raise",
+            on_scan_error=OnError.RAISE,
             force_cache_refresh=False,
         )
         assert source.description == (
@@ -121,7 +121,7 @@ class TestSNMPSource_MGMT:
             ipaddress,
             force_cache_refresh=False,
             selected_sections=NO_SELECTION,
-            on_scan_error="raise",
+            on_scan_error=OnError.RAISE,
         )
         assert source.description == (
             "Management board - SNMP "
@@ -150,7 +150,7 @@ class TestSNMPSummaryResult:
             source_type=SourceType.HOST,
             id_="snmp_id",
             title="snmp title",
-            on_scan_error="raise",
+            on_scan_error=OnError.RAISE,
         )
 
     @pytest.mark.usefixtures("scenario")

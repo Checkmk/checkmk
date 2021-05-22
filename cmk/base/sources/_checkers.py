@@ -12,6 +12,7 @@ from typing import Dict, Final, Iterable, Iterator, Optional, Sequence, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
@@ -39,7 +40,7 @@ class _Builder:
         ipaddress: Optional[HostAddress],
         *,
         selected_sections: SectionNameCollection,
-        on_scan_error: str,
+        on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
     ) -> None:
         super().__init__()
@@ -192,7 +193,7 @@ def make_sources(
     *,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    on_scan_error: str = "raise",
+    on_scan_error: OnError = OnError.RAISE,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(

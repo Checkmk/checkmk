@@ -25,7 +25,7 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKGeneralException, MKBailOut
+from cmk.utils.exceptions import MKGeneralException, MKBailOut, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
@@ -129,10 +129,10 @@ class AutomationDiscovery(DiscoveryAutomation):
         # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]
-            on_error = "raise"
+            on_error = OnError.RAISE
             os.dup2(os.open("/dev/null", os.O_WRONLY), 2)
         else:
-            on_error = "ignore"
+            on_error = OnError.IGNORE
 
         # Do a full service scan
         if args[0] == "@scan":
@@ -221,10 +221,10 @@ class AutomationTryDiscovery(Automation):
             args = args[1:]
 
         if args[0] == '@raiseerrors':
-            on_error = "raise"
+            on_error = OnError.RAISE
             args = args[1:]
         else:
-            on_error = "warn"
+            on_error = OnError.WARN
 
         return discovery.get_check_preview(
             host_name=args[0],

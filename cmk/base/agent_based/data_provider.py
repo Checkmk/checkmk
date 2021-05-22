@@ -21,6 +21,7 @@ from typing import (
 )
 
 import cmk.utils.caching as caching
+from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
@@ -350,7 +351,7 @@ def make_broker(
     file_cache_max_age: int,
     fetcher_messages: Sequence['FetcherMessage'],
     force_snmp_cache_refresh: bool,
-    on_scan_error: str,
+    on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, Sequence[Tuple['Source', result.Result[HostSections, Exception]]]]:
     nodes = make_nodes(
         config_cache,

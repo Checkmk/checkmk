@@ -31,7 +31,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import worst_service_state, wrap_parameters
-from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
 from cmk.utils.type_defs import (
@@ -146,10 +146,9 @@ def do_discovery(
 ) -> None:
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or cmk.core_helpers.cache.FileCacheFactory.maybe
-    on_error = "raise" if cmk.utils.debug.enabled() else "warn"
+    on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
 
     discovery_parameters = DiscoveryParameters(
-        on_error=on_error,
         load_labels=arg_only_new,
         save_labels=True,
     )
@@ -183,6 +182,7 @@ def do_discovery(
                 arg_only_new,
                 discovery_parameters,
                 only_host_labels=only_host_labels,
+                on_error=on_error,
             )
 
         except Exception as e:
@@ -233,6 +233,7 @@ def _do_discovery_for(
     discovery_parameters: DiscoveryParameters,
     *,
     only_host_labels: bool,
+    on_error: OnError,
 ) -> None:
 
     section.section_step("Analyse discovered host labels")
@@ -242,6 +243,7 @@ def _do_discovery_for(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=on_error,
     )
 
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
@@ -258,7 +260,7 @@ def _do_discovery_for(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         only_new=only_new,
-        on_error=discovery_parameters.on_error,
+        on_error=on_error,
     )
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
@@ -284,7 +286,7 @@ def discover_on_host(
     host_config: config.HostConfig,
     mode: DiscoveryMode,
     service_filters: Optional[_ServiceFilters],
-    on_error: str,
+    on_error: OnError,
     use_cached_snmp_data: bool,
     max_cachefile_age: int,
 ) -> DiscoveryResult:
@@ -293,11 +295,6 @@ def discover_on_host(
 
     host_name = host_config.hostname
     result = DiscoveryResult()
-    discovery_parameters = DiscoveryParameters(
-        on_error=on_error,
-        load_labels=(mode is not DiscoveryMode.REMOVE),
-        save_labels=(mode is not DiscoveryMode.REMOVE),
-    )
 
     if host_name not in config_cache.all_active_hosts():
         result.error_text = ""
@@ -335,10 +332,10 @@ def discover_on_host(
                 ipaddress=ipaddress,
                 parsed_sections_broker=parsed_sections_broker,
                 discovery_parameters=DiscoveryParameters(
-                    on_error=on_error,
                     load_labels=True,
                     save_labels=True,
                 ),
+                on_error=on_error,
             )
             result.self_new_host_labels = len(host_labels.new)
             result.self_total_host_labels = len(host_labels.present)
@@ -358,7 +355,7 @@ def discover_on_host(
             host_config,
             ipaddress,
             parsed_sections_broker,
-            discovery_parameters,
+            on_error=on_error,
         )
 
         old_services = services.get("old", [])
@@ -499,7 +496,6 @@ def check_discovery(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
     discovery_parameters = DiscoveryParameters(
-        on_error="raise",
         load_labels=True,
         save_labels=False,
     )
@@ -526,7 +522,7 @@ def check_discovery(
         file_cache_max_age=(config.discovery_max_cachefile_age()
                             if cmk.core_helpers.cache.FileCacheFactory.maybe else 0),
         force_snmp_cache_refresh=False,
-        on_scan_error=discovery_parameters.on_error,
+        on_scan_error=OnError.RAISE,
     )
 
     host_labels = analyse_host_labels(
@@ -534,12 +530,13 @@ def check_discovery(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=OnError.RAISE,
     )
     services = _get_host_services(
         host_config,
         ipaddress,
         parsed_sections_broker,
-        discovery_parameters,
+        on_error=OnError.RAISE,
     )
 
     status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
@@ -816,7 +813,7 @@ def _discover_marked_host(
         host_config=host_config,
         mode=DiscoveryMode(rediscovery_parameters.get("mode")),
         service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
-        on_error="ignore",
+        on_error=OnError.IGNORE,
         use_cached_snmp_data=True,
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
@@ -907,19 +904,19 @@ def _get_host_services(
     host_config: config.HostConfig,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> ServicesByTransition:
 
     services = _get_cluster_services(
         host_config,
         ipaddress,
         parsed_sections_broker,
-        discovery_parameters,
+        on_error,
     ) if host_config.is_cluster else _get_node_services(
         host_config.hostname,
         ipaddress,
         parsed_sections_broker,
-        discovery_parameters,
+        on_error,
         config.get_config_cache().host_of_clustered_service,
     )
 
@@ -936,7 +933,7 @@ def _get_node_services(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
     host_of_clustered_service: Callable[[HostName, str], str],
 ) -> ServicesTable:
 
@@ -946,7 +943,7 @@ def _get_node_services(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         only_new=False,
-        on_error=discovery_parameters.on_error,
+        on_error=on_error,
     )
 
     return {
@@ -1053,7 +1050,7 @@ def _get_cluster_services(
     host_config: config.HostConfig,
     ipaddress: Optional[str],
     parsed_sections_broker: ParsedSectionsBroker,
-    discovery_parameters: DiscoveryParameters,
+    on_error: OnError,
 ) -> ServicesTable:
 
     if not host_config.nodes:
@@ -1074,7 +1071,7 @@ def _get_cluster_services(
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             only_new=True,
-            on_error=discovery_parameters.on_error,
+            on_error=on_error,
         )
 
         for check_source, service in itertools.chain(
@@ -1135,7 +1132,7 @@ def get_check_preview(
     host_name: HostName,
     max_cachefile_age: int,
     use_cached_snmp_data: bool,
-    on_error: str,
+    on_error: OnError,
 ) -> Tuple[CheckPreviewTable, QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
@@ -1144,7 +1141,6 @@ def get_check_preview(
 
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
     discovery_parameters = DiscoveryParameters(
-        on_error=on_error,
         load_labels=True,
         save_labels=False,
     )
@@ -1168,13 +1164,14 @@ def get_check_preview(
         ipaddress=ip_address,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
+        on_error=on_error,
     )
 
     grouped_services = _get_host_services(
         host_config,
         ip_address,
         parsed_sections_broker,
-        discovery_parameters,
+        on_error,
     )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:

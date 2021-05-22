@@ -13,6 +13,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import AgentRawData, HostKey, result, SectionName, SourceType
 
 from cmk.core_helpers import (
@@ -143,7 +144,7 @@ class TestMakeHostSectionsHosts:
                         ipaddress,
                         selected_sections=NO_SELECTION,
                         force_cache_refresh=False,
-                        on_scan_error="raise",
+                        on_scan_error=OnError.RAISE,
                     ),
                 ],
             ),

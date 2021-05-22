@@ -188,7 +188,7 @@ def page_login() -> None:
     # Keep information about original target URL
     default_origtarget = "index.py" if requested_file_name(request) in ["login", "logout"
                                                                        ] else makeuri(request, [])
-    origtarget = html.get_url_input("_origtarget", default_origtarget)
+    origtarget = request.get_url_input("_origtarget", default_origtarget)
     html.hidden_field('_origtarget', escaping.escape_attribute(origtarget))
 
     html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")

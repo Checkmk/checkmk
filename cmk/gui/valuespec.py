@@ -5958,7 +5958,7 @@ class IconSelector(ValueSpec):
 
         if config.user.may('wato.icons'):
             back_param = '&back=' + urlencode(
-                html.get_url_input('back')) if html.request.has_var('back') else ''
+                global_request.get_url_input('back')) if html.request.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
         html.close_div()

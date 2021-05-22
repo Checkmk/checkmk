@@ -148,7 +148,7 @@ class ModeBackgroundJobDetails(WatoMode):
             )
 
     def _back_url(self):
-        return html.get_url_input("back_url", deflt="")
+        return request.get_url_input("back_url", deflt="")
 
     def page(self):
         job_id = html.request.var("job_id")

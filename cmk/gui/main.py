@@ -29,4 +29,4 @@ def _get_start_url() -> str:
     if not utils.is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 
-    return html.get_url_input("start_url", default_start_url)
+    return request.get_url_input("start_url", default_start_url)

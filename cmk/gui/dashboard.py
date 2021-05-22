@@ -1705,7 +1705,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
                     [
                         ("name", name),
                         ("id", str(dashlet_id)),
-                        ("back", html.get_url_input('back')),
+                        ("back", request.get_url_input('back')),
                     ],
                     filename="edit_dashlet.py",
                 ))
@@ -1869,7 +1869,7 @@ class EditDashletPage(Page):
 
                 save_all_dashboards()
                 html.footer()
-                raise HTTPRedirect(html.get_url_input('next', html.get_url_input('back')))
+                raise HTTPRedirect(request.get_url_input('next', request.get_url_input('back')))
 
             except MKUserError as e:
                 html.user_error(e)
@@ -1904,7 +1904,7 @@ def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) ->
     breadcrumb.append(
         BreadcrumbItem(
             visuals.visual_title('dashboard', board, {}),
-            html.get_url_input('back'),
+            request.get_url_input('back'),
         ))
 
     breadcrumb.append(make_current_page_breadcrumb_item(title))
@@ -1941,7 +1941,7 @@ def page_clone_dashlet() -> None:
     dashboard['mtime'] = int(time.time())
     save_all_dashboards()
 
-    raise HTTPRedirect(html.get_url_input('back'))
+    raise HTTPRedirect(request.get_url_input('back'))
 
 
 @cmk.gui.pages.register("delete_dashlet")
@@ -1969,7 +1969,7 @@ def page_delete_dashlet() -> None:
     dashboard['mtime'] = int(time.time())
     save_all_dashboards()
 
-    raise HTTPRedirect(html.get_url_input('back'))
+    raise HTTPRedirect(request.get_url_input('back'))
 
 
 #.

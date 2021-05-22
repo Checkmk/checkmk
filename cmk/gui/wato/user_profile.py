@@ -358,7 +358,8 @@ class UserProfileReplicate(Page):
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
-        user_profile_async_replication_page(back_url=html.get_url_input("back", "user_profile.py"))
+        user_profile_async_replication_page(
+            back_url=request.get_url_input("back", "user_profile.py"))
 
 
 @page_registry.register_page("user_change_pw")

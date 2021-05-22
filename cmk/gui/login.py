@@ -460,7 +460,7 @@ class LoginPage(Page):
                 raise MKUserError('_password', _('No password given.'))
 
             default_origtarget = config.url_prefix() + "check_mk/"
-            origtarget = html.get_url_input("_origtarget", default_origtarget)
+            origtarget = global_request.get_url_input("_origtarget", default_origtarget)
 
             # Disallow redirections to:
             #  - logout.py: Happens after login
@@ -506,7 +506,7 @@ class LoginPage(Page):
 
         default_origtarget = ("index.py" if requested_file_name(global_request)
                               in ["login", "logout"] else makeuri(global_request, []))
-        origtarget = html.get_url_input("_origtarget", default_origtarget)
+        origtarget = global_request.get_url_input("_origtarget", default_origtarget)
 
         # Never allow the login page to be opened in the iframe. Redirect top page to login page.
         # This will result in a full screen login page.

@@ -976,7 +976,7 @@ def page_edit_visual(
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
         visual['single_infos'] = single_infos
 
-    back_url = html.get_url_input("back", "edit_%s.py" % what)
+    back_url = global_request.get_url_input("back", "edit_%s.py" % what)
 
     breadcrumb = visual_page_breadcrumb(what, title, mode)
     page_menu = pagetypes.make_edit_form_page_menu(

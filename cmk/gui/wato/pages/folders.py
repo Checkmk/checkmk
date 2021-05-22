@@ -1019,7 +1019,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
 
         self._ident = html.request.var("ident")
 
-        self._back_url = html.get_url_input("back_url")
+        self._back_url = global_request.get_url_input("back_url")
         if not self._back_url or not self._back_url.startswith("wato.py"):
             raise MKUserError("back_url", _("Invalid back URL provided."))
 

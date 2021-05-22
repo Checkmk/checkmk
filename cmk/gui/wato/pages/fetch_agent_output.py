@@ -90,7 +90,7 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
         if ty not in ["walk", "agent"]:
             raise MKGeneralException(_("Invalid type specified."))
 
-        self._back_url = html.get_url_input("back_url", deflt="") or None
+        self._back_url = global_request.get_url_input("back_url", deflt="") or None
 
         watolib.init_wato_datastructures(with_wato_lock=True)
 

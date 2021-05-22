@@ -1130,34 +1130,6 @@ class html(ABCHTMLGenerator):
     # HTTP variable processing
     #
 
-    # TODO: Invalid default URL is not validated. Should we do it?
-    # TODO: This is only protecting against some not allowed URLs but does not
-    #       really verify that this is some kind of URL.
-    def get_url_input(self, varname: str, deflt: Optional[str] = None) -> str:
-        """Helper function to retrieve a URL from HTTP parameters
-
-        This is mostly used to the "back url" which can then be used to create
-        a link to the previous page. For this kind of functionality it is
-        necessary to restrict the URLs to prevent different attacks on users.
-
-        In case the parameter is not given or is not valid the deflt URL will
-        be used. In case no deflt URL is given a MKUserError() is raised.
-        """
-        if not self.request.has_var(varname):
-            if deflt is not None:
-                return deflt
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-
-        url = self.request.var(varname)
-        assert url is not None
-
-        if not utils.is_allowed_url(url):
-            if deflt:
-                return deflt
-            raise MKUserError(varname, _("The parameter \"%s\" is not a valid URL.") % varname)
-
-        return url
-
     def get_request(self, exclude_vars: Optional[List[str]] = None) -> Dict[str, Any]:
         """Returns a dictionary containing all parameters the user handed over to this request.
 

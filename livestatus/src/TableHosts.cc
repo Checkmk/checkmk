@@ -533,11 +533,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, CommentColumn::verbosity::info, mc));
+        offsets, CommentColumn::verbosity::medium, mc));
     table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, CommentColumn::verbosity::extra_info, mc));
+        offsets, CommentColumn::verbosity::full, mc));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

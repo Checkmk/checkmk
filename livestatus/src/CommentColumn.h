@@ -33,7 +33,7 @@ class Object;
 
 class CommentColumn : public ListColumn {
 public:
-    enum class verbosity { none, info, extra_info };
+    enum class verbosity { none, medium, full };
     template <class T>
     class Callback;
     CommentColumn(const std::string &name, const std::string &description,

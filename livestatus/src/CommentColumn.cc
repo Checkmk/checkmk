@@ -16,14 +16,14 @@ void CommentColumn::output(Row row, RowRenderer &r,
             case verbosity::none:
                 l.output(comment._id);
                 break;
-            case verbosity::info: {
+            case verbosity::medium: {
                 SublistRenderer s(l);
                 s.output(comment._id);
                 s.output(comment._author);
                 s.output(comment._comment);
                 break;
             }
-            case verbosity::extra_info: {
+            case verbosity::full: {
                 SublistRenderer s(l);
                 s.output(comment._id);
                 s.output(comment._author);

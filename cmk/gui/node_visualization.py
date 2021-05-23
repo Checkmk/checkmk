@@ -7,7 +7,7 @@
 import json
 import time
 import itertools
-from typing import List, Optional, Tuple, Dict, Any, Set, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypedDict
 from dataclasses import dataclass, field, asdict
 
 import livestatus
@@ -555,13 +555,27 @@ class AjaxFetchTopology(AjaxPage):
         return topology_class(topology_settings)
 
 
+class _MeshNode(TypedDict, total=False):
+    name: str
+    alias: str
+    site: str
+    hostname: str
+    outgoing: List[str]
+    incoming: List[str]
+    node_type: str
+    mesh_depth: int
+    icon_image: str
+    state: int
+    has_been_checked: bool
+
+
 class Topology:
     def __init__(self, topology_settings: TopologySettings) -> None:
         super(Topology, self).__init__()
         self._settings = topology_settings
 
         # Hosts with complete data
-        self._known_hosts: Dict[str, Any] = {}
+        self._known_hosts: Dict[str, _MeshNode] = {}
 
         # Child/parent hosts at the depth boundary
         self._border_hosts: Set[HostName] = set()
@@ -719,11 +733,11 @@ class Topology:
         self._update_meshes(new_hosts)
         self._check_mesh_size()
 
-    def _query_data(self, hostnames: Set[HostName]) -> List[Dict[str, Any]]:
+    def _query_data(self, hostnames: Set[HostName]) -> List[_MeshNode]:
         if not hostnames:
             return []
 
-        new_hosts: List[Dict[str, Any]] = []
+        new_hosts = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
             missing_keys = mandatory_keys - set(host_data)
@@ -735,7 +749,7 @@ class Topology:
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         return meshes
 
-    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[Dict]:
+    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[_MeshNode]:
         raise NotImplementedError()
 
     def is_root_node(self, hostname: HostName) -> bool:
@@ -744,7 +758,7 @@ class Topology:
     def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
-    def _update_meshes(self, new_hosts: List[Dict[HostName, Any]]):
+    def _update_meshes(self, new_hosts: List[_MeshNode]):
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent
@@ -809,7 +823,7 @@ class ParentChildNetworkTopology(Topology):
     def title(self) -> str:
         return _("Parent / Child topology")
 
-    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[Dict]:
+    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[_MeshNode]:
         hostname_filters = []
         if hostnames:
             for hostname in hostnames:
@@ -826,20 +840,21 @@ class ParentChildNetworkTopology(Topology):
         finally:
             sites.live().set_prepend_site(False)
 
-        headers = ["site"] + columns
-        response = [dict(zip(headers, x)) for x in query_result]
-        # Postprocess data
-        for entry in response:
-            # Abstract parents/children relationship to children(incoming) / parents(outgoing)
-            entry["outgoing"] = entry["parents"]
-            entry["incoming"] = entry["childs"]
-
-        return response
+        return [{
+            "site": str(x[0]),
+            "name": str(x[1]),
+            "state": int(x[2]),
+            "alias": str(x[3]),
+            "icon_image": str(x[4]),
+            "outgoing": [str(i) for i in x[5]],
+            "incoming": [str(i) for i in x[6]],
+            "has_been_checked": bool(x[7]),
+        } for x in query_result]
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         """ Create a central node and add all monitoring sites as childs """
 
-        central_node = {
+        central_node: _MeshNode = {
             "name": "",
             "hostname": "Checkmk",
             "outgoing": [],
@@ -847,7 +862,7 @@ class ParentChildNetworkTopology(Topology):
             "node_type": "topology_center",
         }
 
-        site_nodes: Dict[str, Any] = {}
+        site_nodes: Dict[str, _MeshNode] = {}
         for mesh in meshes:
             for node_name in mesh:
                 site = self._known_hosts[node_name]["site"]
@@ -864,7 +879,7 @@ class ParentChildNetworkTopology(Topology):
                     site_nodes[site_node_name]["incoming"].append(node_name)
 
         central_node["incoming"] = list(site_nodes.keys())
-        self._known_hosts[str(central_node["name"])] = central_node
+        self._known_hosts[central_node["name"]] = central_node
 
         combinator_mesh = set(central_node["name"])  # this is an empty set?!
         for node_name, settings in site_nodes.items():
@@ -899,8 +914,11 @@ class ParentChildNetworkTopology(Topology):
 
         return info
 
-    def _map_host_state_to_service_state(self, info: Dict[str, Any], host_info: Dict[str,
-                                                                                     Any]) -> int:
+    def _map_host_state_to_service_state(
+        self,
+        info: Dict[str, Any],
+        host_info: _MeshNode,
+    ) -> int:
         if info["node_type"] in ["topology_center", "topology_site"]:
             return 0
         if not host_info["has_been_checked"]:

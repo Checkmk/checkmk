@@ -8,14 +8,17 @@
 #include "logger.h"
 
 namespace cma::evl {
-std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &name,
-                                                bool vista_api) {
+std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
+                                      bool vista_api) {
     if (vista_api && g_evt.close)
         return std::unique_ptr<EventLogBase>(new EventLogVista(name));
 
     return std::unique_ptr<EventLogBase>(new EventLog(name));
 }
 
+/// scans whole eventlog to find worst possible case
+///
+/// returns pos and case
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level) {
     // we must seek past the previously read event - if there was one
@@ -25,10 +28,12 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     auto last_pos = pos;
 
     log.seek(seek_pos);
-    while (1) {
-        auto record = log.readRecord();
-        if (record == nullptr) break;
-        ON_OUT_OF_SCOPE(delete record);
+    while (true) {
+        EventLogRecordBase::ptr record{log.readRecord()};
+
+        if (!record) {
+            break;
+        }
 
         last_pos = record->recordId();
         auto calculated = record->calcEventLevel(level);
@@ -38,9 +43,9 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     return {last_pos, worst_state};
 }
 
-// return any(!) positive number or 0.
-// usually this is positive, because Windows keeps numbers very long
-// and do not drop first entry id to 0 even after reset
+/// scans eventlog and applies processor to every entry.
+///
+/// returns last scanned pos where processor returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
                        EvlProcessor processor) {
@@ -51,16 +56,19 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
 
     log.seek(seek_pos);
 
-    while (1) {
-        auto record = log.readRecord();
+    while (true) {
+        EventLogRecordBase::ptr record{log.readRecord()};
 
-        if (record == nullptr) break;
-        ON_OUT_OF_SCOPE(delete record);
+        if (!record) {
+            break;
+        }
 
         last_pos = record->recordId();
         auto str = record->stringize(level, hide_context);
-        if (!str.empty())
-            if (!processor(str)) break;
+        if (!str.empty() && !processor(str)) {
+            // processor request to stop scanning
+            break;
+        }
     }
 
     return last_pos;

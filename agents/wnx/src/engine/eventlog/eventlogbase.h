@@ -19,6 +19,7 @@
 namespace cma::evl {
 class EventLogRecordBase {
 public:
+    using ptr = std::unique_ptr<EventLogRecordBase>;
     enum class Level {
         error,
         warning,

@@ -726,11 +726,9 @@ class Topology:
         new_hosts: List[Dict[str, Any]] = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
-            if len(mandatory_keys - set(host_data.keys())) > 0:
-                raise MKGeneralException(
-                    _("Missing mandatory topology keys: %r") %
-                    (mandatory_keys - set(host_data.keys())))
-            # Mandatory keys in host_data: name, outgoing, incoming
+            missing_keys = mandatory_keys - set(host_data)
+            if missing_keys:
+                raise MKGeneralException(_("Missing mandatory topology keys: %r") % missing_keys)
             new_hosts.append(host_data)
         return new_hosts
 
@@ -860,14 +858,15 @@ class ParentChildNetworkTopology(Topology):
                     "incoming": []
                 })
                 outgoing_nodes = self._known_hosts.get(node_name, {"outgoing": []})["outgoing"]
-                # Attach this node to the site not if it has no parents or if none of its parents are visible in the current mesh
-                if not outgoing_nodes or len(set(outgoing_nodes) - mesh) == len(outgoing_nodes):
+                # Only attach this node to the site if it has no parents that are visible
+                # in the current mesh
+                if not mesh.intersection(outgoing_nodes):
                     site_nodes[site_node_name]["incoming"].append(node_name)
 
         central_node["incoming"] = list(site_nodes.keys())
         self._known_hosts[str(central_node["name"])] = central_node
 
-        combinator_mesh = set(central_node["name"])
+        combinator_mesh = set(central_node["name"])  # this is an empty set?!
         for node_name, settings in site_nodes.items():
             self._known_hosts[node_name] = settings
             combinator_mesh.add(node_name)

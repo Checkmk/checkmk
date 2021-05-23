@@ -70,7 +70,7 @@ def cleanup_host_caches() -> None:
 cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
 
 
-def _clear_other_hosts_oid_cache(hostname: Optional[str]) -> None:
+def _clear_other_hosts_oid_cache(hostname: Optional[HostName]) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
     if _g_single_oid_hostname != hostname:
         _g_single_oid_cache = None

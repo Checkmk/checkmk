@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Generator, MutableMapping, Optional, ove
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
@@ -375,7 +376,7 @@ def check_levels_predictive(
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(
-            plugin_contexts.host_name(),
+            HostName(plugin_contexts.host_name()),
             plugin_contexts.service_description(),
             metric_name,
             levels,

@@ -474,7 +474,7 @@ class RulesetOptimizer:
             if matched_by_tags is not None:
                 return matched_by_tags
 
-        matching: Set[str] = set()
+        matching: Set[HostName] = set()
         only_specific_hosts = (hostlist is not None and not isinstance(hostlist, dict) and
                                all(not isinstance(x, dict) for x in hostlist))
 

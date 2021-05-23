@@ -8,8 +8,9 @@ from typing import Iterable, MutableMapping, NamedTuple, Optional, Tuple
 
 from six import ensure_str
 
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
-from cmk.utils.translations import translate_piggyback_host, TranslationOptions
+from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.type_defs import HostName, SectionName
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
@@ -35,13 +36,14 @@ class PiggybackMarker(NamedTuple):
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
-        hostname = ensure_str(line.strip()[4:-4])
-        assert hostname
-        hostname = translate_piggyback_host(
-            hostname,
-            translation,
-            encoding_fallback=encoding_fallback,
+        raw_host_name = ensure_str_with_fallback(
+            line.strip()[4:-4],
+            encoding='utf-8',
+            fallback=encoding_fallback,
         )
+        assert raw_host_name
+        hostname = translate_hostname(translation, raw_host_name)
+
         # Protect Checkmk against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Checkmk code.

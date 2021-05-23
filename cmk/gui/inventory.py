@@ -31,7 +31,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request as global_request
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
@@ -391,7 +391,7 @@ def page_host_inv_api():
     # b) result      - In case of an error this is the error message, a UTF-8 encoded string.
     #                  In case of success this is a dictionary containing the host inventory.
     try:
-        request = html.get_request()
+        request = global_request.get_request()
         # The user can either specify a single host or provide a list of host names. In case
         # multiple hosts are handled, there is a top level dict added with "host > invdict" pairs
         hosts = request.get("hosts")

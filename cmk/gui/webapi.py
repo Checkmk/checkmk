@@ -26,7 +26,7 @@ import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
@@ -163,7 +163,7 @@ def _get_request(api_call):
     if api_call.get("dont_eval_request"):
         req = html.request.var("request")
         return {} if req is None else req
-    return html.get_request(exclude_vars=["action", "pretty_print"])
+    return global_request.get_request(exclude_vars=["action", "pretty_print"])
 
 
 def _check_formats(api_call, request_object):

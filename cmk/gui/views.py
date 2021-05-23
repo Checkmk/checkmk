@@ -1588,7 +1588,7 @@ def view_editor_sorter_specs(view):
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
     def page(self):
-        request = html.get_request()
+        request = global_request.get_request()
 
         if request["painter_type"] == "painter":
             painters = painters_of_datasource(request["ds_name"])
@@ -3364,7 +3364,7 @@ def ajax_popup_action_menu() -> None:
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
     def page(self) -> AjaxPageResult:
-        request = html.get_request()
+        request = global_request.get_request()
         return self._do_reschedule(request)
 
     def _do_reschedule(self, request: Dict[str, Any]) -> AjaxPageResult:

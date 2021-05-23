@@ -39,7 +39,6 @@
 # - Unify CSS classes attribute to "class_"
 import functools
 import os
-import ast
 import re
 import json
 import json.encoder  # type: ignore[import]
@@ -60,8 +59,6 @@ from typing import (
     Union,
 )
 from pathlib import Path
-
-from six import ensure_str
 
 
 # TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
@@ -1125,46 +1122,6 @@ class html(ABCHTMLGenerator):
             re.I | re.M)
 
         return reg_b.search(user_agent) is not None or reg_v.search(user_agent[0:4]) is not None
-
-    #
-    # HTTP variable processing
-    #
-
-    def get_request(self, exclude_vars: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Returns a dictionary containing all parameters the user handed over to this request.
-
-        The concept is that the user can either provide the data in a single "request" variable,
-        which contains the request data encoded as JSON, or provide multiple GET/POST vars which
-        are then used as top level entries in the request object.
-        """
-
-        if exclude_vars is None:
-            exclude_vars = []
-
-        if self.request.var("request_format") == "python":
-            try:
-                python_request = self.request.var("request", "{}")
-                assert python_request is not None
-                request = ast.literal_eval(python_request)
-            except (SyntaxError, ValueError) as e:
-                raise MKUserError(
-                    "request",
-                    _("Failed to parse Python request: '%s': %s") % (python_request, e))
-        else:
-            try:
-                json_request = self.request.var("request", "{}")
-                assert json_request is not None
-                request = json.loads(json_request)
-                request["request_format"] = "json"
-            except ValueError as e:  # Python3: json.JSONDecodeError
-                raise MKUserError("request",
-                                  _("Failed to parse JSON request: '%s': %s") % (json_request, e))
-
-        for key, val in self.request.itervars():
-            if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = ensure_str(val) if isinstance(val, bytes) else val
-
-        return request
 
     #
     # output funnel

@@ -15,7 +15,7 @@ from cmk.utils.exceptions import MKException
 
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import g, html
+from cmk.gui.globals import g, html, request
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
@@ -65,7 +65,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         given HTTP variables."""
 
     def webapi_request(self) -> Dict[str, Any]:
-        return html.get_request()
+        return request.get_request()
 
     @abc.abstractmethod
     def page(self) -> AjaxPageResult:

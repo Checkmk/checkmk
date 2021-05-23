@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar, Mapping
+from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar, Mapping, List
+import ast
+import json
 from contextlib import contextmanager
 
 from six import ensure_binary, ensure_str
 import werkzeug.wrappers
 # NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
-import werkzeug.wrappers.json as json  # type: ignore[import]
+import werkzeug.wrappers.json  # type: ignore[import]
 from werkzeug.utils import get_content_type
 import urllib.parse
 
@@ -237,8 +239,8 @@ def mandatory_parameter(varname: str, value: Optional[T]) -> T:
     return value
 
 
-class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JSONMixin,
-              werkzeug.wrappers.Request):
+class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
+              werkzeug.wrappers.json.JSONMixin, werkzeug.wrappers.Request):
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
@@ -394,6 +396,45 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin, json.JS
         # the environment. The rest of the request object stays the same.
         self.__dict__.pop('args', None)
         self.__dict__.pop('values', None)
+
+    # TODO: The mixture of request variables and json request argument is a nasty hack. Split this
+    # up into explicit methods that either use the one or the other method, remove the call sites to
+    # this method and then this method.
+    def get_request(self, exclude_vars: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Returns a dictionary containing all parameters the user handed over to this request.
+
+        The concept is that the user can either provide the data in a single "request" variable,
+        which contains the request data encoded as JSON, or provide multiple GET/POST vars which
+        are then used as top level entries in the request object.
+        """
+
+        if exclude_vars is None:
+            exclude_vars = []
+
+        if self.var("request_format") == "python":
+            try:
+                python_request = self.var("request", "{}")
+                assert python_request is not None
+                request = ast.literal_eval(python_request)
+            except (SyntaxError, ValueError) as e:
+                raise MKUserError(
+                    "request",
+                    _("Failed to parse Python request: '%s': %s") % (python_request, e))
+        else:
+            try:
+                json_request = self.var("request", "{}")
+                assert json_request is not None
+                request = json.loads(json_request)
+                request["request_format"] = "json"
+            except ValueError as e:  # Python3: json.JSONDecodeError
+                raise MKUserError("request",
+                                  _("Failed to parse JSON request: '%s': %s") % (json_request, e))
+
+        for key, val in self.itervars():
+            if key not in ["request", "output_format"] + exclude_vars:
+                request[key] = ensure_str(val) if isinstance(val, bytes) else val
+
+        return request
 
 
 class Response(werkzeug.wrappers.Response):

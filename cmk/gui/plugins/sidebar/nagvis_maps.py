@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.i18n import _
 
 from cmk.gui.plugins.sidebar import (
@@ -46,7 +46,7 @@ class NagVisMaps(SidebarSnapin):
         }
 
     def _ajax_show_nagvis_maps_snapin(self):
-        request = html.get_request()
+        request = global_request.get_request()
         if request["type"] == "table":
             self._show_table(request)
         elif request["type"] == "tree":

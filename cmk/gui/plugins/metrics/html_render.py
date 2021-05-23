@@ -651,7 +651,7 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
 def ajax_render_graph_content():
     html.set_output_format("json")
     try:
-        request = html.get_request()
+        request = global_request.get_request()
         response = {
             "result_code": 0,
             "result": render_graph_content_html(request["graph_recipe"],

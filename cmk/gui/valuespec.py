@@ -2154,7 +2154,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def page(self) -> Dict:
-        request = html.get_request()
+        request = global_request.get_request()
         vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
         with html.plugged():
             vs.show_choice_row(ensure_str(request["varprefix"]), ensure_str(request["ident"]), {})
@@ -5699,7 +5699,7 @@ def SingleLabel(world, label_source=None, **kwargs):
 class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
     def page(self):
-        request = html.get_request()
+        request = global_request.get_request()
         return encode_labels_for_tagify(
             self._get_labels(Labels.World(request["world"]), request["search_label"]))
 

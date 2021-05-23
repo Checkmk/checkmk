@@ -14,7 +14,7 @@ import cmk.utils.render
 
 from cmk.gui import config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request, theme
 from cmk.gui.plugins.metrics import unit_info
 
 from cmk.gui.plugins.metrics import timeseries
@@ -90,7 +90,7 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
     # Update the graph colors that are set to "default" with the theme specific colors.
     # When rendering to PDF the theme colors must not be applied, but the regular colors
     # have to be used.
-    theme_colors = _graph_colors(html.get_theme() if not render_unthemed else "pdf")
+    theme_colors = _graph_colors(theme.get() if not render_unthemed else "pdf")
     for attr_name in ["background_color", "foreground_color", "canvas_color"]:
         if options[attr_name] == "default":
             options[attr_name] = theme_colors[attr_name]
@@ -978,7 +978,7 @@ def load_graph_pin():
 
 def save_graph_pin() -> None:
     try:
-        pin_timestamp = html.request.get_integer_input("pin")
+        pin_timestamp = request.get_integer_input("pin")
     except ValueError:
         pin_timestamp = None
     config.user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)

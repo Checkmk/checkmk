@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 
 from cmk.gui.plugins.dashboard import (
     Dashlet,
@@ -41,7 +41,7 @@ class OverviewDashlet(Dashlet):
         html.open_tr()
         html.open_td(valign="top")
         html.open_a(href="https://checkmk.com/")
-        html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
+        html.img(theme.url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()
         html.close_td()
 

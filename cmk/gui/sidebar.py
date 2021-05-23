@@ -26,7 +26,7 @@ import cmk.utils.paths
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, theme
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
@@ -329,7 +329,7 @@ class SidebarRenderer:
         body_classes = ['side', "screenshotmode" if config.screenshotmode else None]
 
         if not config.user.may("general.see_sidebar"):
-            html.open_body(class_=body_classes, data_theme=html.get_theme())
+            html.open_body(class_=body_classes, data_theme=theme.get())
             return
 
         interval = config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
@@ -338,7 +338,7 @@ class SidebarRenderer:
             onload=
             'cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks(%s, %s); '
             % (json.dumps(interval), json.dumps(bool(may_acknowledge()))),
-            data_theme=html.get_theme(),
+            data_theme=theme.get(),
         )
 
     def _show_sidebar(self) -> None:
@@ -532,9 +532,9 @@ class SidebarRenderer:
             title=_("Go to main page"),
         )
         if config.user.get_attribute("nav_hide_icons_title"):
-            html.img(html.theme_url('images/tribe29_icon_min.svg'))
+            html.img(theme.url('images/tribe29_icon_min.svg'))
         else:
-            html.img(html.theme_url('images/tribe29_icon.svg'))
+            html.img(theme.url('images/tribe29_icon.svg'))
         html.close_a()
         html.close_div()
 

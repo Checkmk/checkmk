@@ -18,7 +18,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, request, g
+from cmk.gui.globals import html, request, g, theme
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
 from cmk.gui.http import Response
@@ -53,8 +53,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
             assert config.user.id is not None
-            theme = cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x)
-            html.set_theme(theme)
+            theme.set(cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x))
 
             func()
 

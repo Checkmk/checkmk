@@ -11,7 +11,7 @@ from six import ensure_binary, ensure_str
 import cmk.gui.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors
+from cmk.gui.globals import html, transactions, user_errors, theme
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.config as config
 
@@ -163,7 +163,7 @@ def _table_head(
     html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
     html.img(id_=img_id,
              class_=["treeangle", "nform", "open" if isopen else "closed"],
-             src="themes/%s/images/tree_closed.svg" % (html.get_theme()),
+             src=theme.url("images/tree_closed.svg"),
              align="absbottom")
     html.write_text(title)
     html.help(help_text)

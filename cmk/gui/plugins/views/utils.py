@@ -51,7 +51,7 @@ from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
-from cmk.gui.globals import g, html, request, display_options
+from cmk.gui.globals import g, html, request, display_options, theme
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
@@ -2016,13 +2016,12 @@ class Cell:
     def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
-            themes = html.icon_themes()
+            themes = theme.icon_themes()
             for file_path in [
                     cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
-                for path_in_theme in (
-                        str(file_path).replace(theme, "facelift") for theme in themes):
+                for path_in_theme in (str(file_path).replace(t, "facelift") for t in themes):
                     if os.path.exists(path_in_theme):
                         return path_in_theme
 

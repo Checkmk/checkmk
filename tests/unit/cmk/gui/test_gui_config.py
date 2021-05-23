@@ -18,7 +18,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html
+from cmk.gui.globals import theme
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -914,17 +914,6 @@ def test_theme_broken_meta(my_theme):
     assert config.theme_choices() == sorted([
         ("my_theme", u"my_theme"),
     ])
-
-
-def test_html_set_theme(my_theme, register_builtin_html):
-    html.set_theme("")
-    assert html.get_theme() == "facelift"
-
-    html.set_theme("not_existing")
-    assert html.get_theme() == "facelift"
-
-    html.set_theme("my_theme")
-    assert html.get_theme() == "my_theme"
 
 
 @pytest.mark.usefixtures("load_config")

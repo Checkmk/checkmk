@@ -17,7 +17,7 @@ import cmk.utils.render
 import cmk.gui.config as config
 from cmk.gui import escaping
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 from cmk.gui.globals import request as global_request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
@@ -253,7 +253,7 @@ def render_graph_html_content(graph_artwork, graph_data_range, graph_render_opti
             css=["time", "inline" if graph_render_options["show_title"] == "inline" else None])
 
     if graph_render_options["show_controls"] and graph_render_options["resizable"]:
-        output += '<img class=resize src="%s">' % html.theme_url("images/resize_graph.png")
+        output += '<img class=resize src="%s">' % theme.url("images/resize_graph.png")
 
     output += render_html_graph_title(graph_artwork, graph_render_options)
     output += render_graph_canvas(graph_render_options)

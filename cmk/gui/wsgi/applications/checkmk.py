@@ -33,6 +33,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.http import Response
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.urls import requested_file_name
+from cmk.gui.utils.theme import Theme
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
@@ -143,13 +144,17 @@ class CheckmkApp:
         timeout_manager = TimeoutManager()
         timeout_manager.enable_timeout(req.request_timeout)
 
+        theme = Theme()
+
         with AppContext(self), RequestContext(
                 req=req,
                 html_obj=htmllib.html(req),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
+                theme=theme,
         ):
             config.initialize()
+            theme.from_config(config.ui_theme, config.theme_choices())
             html.init_modes()
             return self.wsgi_app(environ, start_response)
 

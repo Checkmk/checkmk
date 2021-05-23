@@ -8,7 +8,7 @@ import json
 
 from cmk.gui.plugins.sidebar import snapin_width
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 import cmk.gui.sites as sites
 
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
@@ -33,7 +33,7 @@ class Speedometer(SidebarSnapin):
 
     def show(self):
         html.open_div(class_="speedometer")
-        html.img(html.theme_url("images/speedometer.svg"), id_="speedometerbg")
+        html.img(theme.url("images/speedometer.svg"), id_="speedometerbg")
         html.canvas('', width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 

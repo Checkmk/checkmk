@@ -15,7 +15,7 @@ from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, theme
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
@@ -227,7 +227,7 @@ def _render_tag_group(
 
 def get_themed_perfometer_bg_color() -> str:
     """Return the theme specific background color for perfometer rendering"""
-    if html.get_theme() == "modern-dark":
+    if theme.get() == "modern-dark":
         return "#bdbdbd"
     # else (classic and modern theme)
     return "#ffffff"

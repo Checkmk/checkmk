@@ -14,7 +14,7 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.views import (
@@ -272,7 +272,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_closed.svg"),
+    html.img(theme.url("images/tree_closed.svg"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))

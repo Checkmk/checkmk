@@ -24,6 +24,7 @@ from cmk.gui.utils.user_errors import UserErrors
 if TYPE_CHECKING:
     from cmk.gui import htmllib, http, config, userdb
     from cmk.gui.utils.timeout_manager import TimeoutManager
+    from cmk.gui.utils.theme import Theme
 
 _sentinel = object()
 
@@ -114,12 +115,14 @@ class RequestContext:
         req=None,
         resp=None,
         timeout_manager: Optional['TimeoutManager'] = None,  # pylint: disable=redefined-outer-name
+        theme: Optional['Theme'] = None,  # pylint: disable=redefined-outer-name
         display_options=None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
     ):
         self.html = html_obj
         self.auth_type = None
         self.timeout_manager = timeout_manager
+        self.theme = theme
         self.display_options = display_options
         self.session: Optional["userdb.SessionInfo"] = None
         self.flashes: Optional[List[str]] = None
@@ -194,5 +197,6 @@ user_errors: 'UserErrors' = request_local_attr('user_errors')
 
 html: 'htmllib.html' = request_local_attr('html')
 timeout_manager: 'TimeoutManager' = request_local_attr('timeout_manager')
+theme: 'Theme' = request_local_attr('theme')
 transactions: 'TransactionManager' = request_local_attr('transactions')
 display_options = request_local_attr('display_options')

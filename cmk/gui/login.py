@@ -29,7 +29,7 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, local, request as global_request, transactions, user_errors
+from cmk.gui.globals import html, local, request as global_request, transactions, user_errors, theme
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
@@ -522,7 +522,7 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.img(src=html.theme_url("images/mk-logo.svg"), id_="logo")
+        html.img(src=theme.url("images/mk-logo.svg"), id_="logo")
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')

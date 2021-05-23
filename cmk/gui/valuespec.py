@@ -81,7 +81,7 @@ import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 from cmk.gui.globals import request as global_request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
@@ -5771,10 +5771,10 @@ class IconSelector(ValueSpec):
             return {}
 
         icons = {}
-        for theme in html.icon_themes():
-            dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme / "images"]
+        for theme_id in theme.icon_themes():
+            dirs = [Path(cmk.utils.paths.local_web_dir) / "htdocs/themes" / theme_id / "images"]
             if not only_local:
-                dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/themes" / theme / "images")
+                dirs.append(Path(cmk.utils.paths.web_dir) / "htdocs/themes" / theme_id / "images")
 
             for file_stem, category in self._get_icons_from_directories(
                     dirs, default_category="builtin").items():
@@ -5938,7 +5938,7 @@ class IconSelector(ValueSpec):
                     title=icon,
                 )
 
-                icon_path = (html.detect_icon_path(icon, prefix="emblem")
+                icon_path = (theme.detect_icon_path(icon, prefix="emblem")
                              if is_emblem and icon != 'empty' else icon)
                 html.write_html(
                     self._render_icon(icon_path, id_=varprefix + '_i_' + icon, title=icon))

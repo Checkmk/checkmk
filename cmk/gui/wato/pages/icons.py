@@ -16,7 +16,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, theme
 from cmk.gui.valuespec import (
     IconSelector,
     ImageUpload,
@@ -86,7 +86,7 @@ class ModeIcons(WatoMode):
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
-        browser_url = html.theme_url("images/icon_%s" % file_name)
+        browser_url = theme.url("images/icon_%s" % file_name)
         if os.path.exists("%s/share/check_mk/web/htdocs/%s" % (cmk.utils.paths.omd_root, browser_url)) \
            or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)):
             raise MKUserError(

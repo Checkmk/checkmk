@@ -27,7 +27,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, theme
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -91,7 +91,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
 
         html.open_div(id_="release_title")
         html.h1(_("Everything") + html.render_br() + _("monitored"))
-        html.img(html.theme_url("images/tribe29.svg"))
+        html.img(theme.url("images/tribe29.svg"))
         html.close_div()
 
         html.div(None, id_="release_underline")
@@ -103,7 +103,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
             ("release_automated", _("Highly automated"), _("Let Checkmk do the work for you")),
         ]:
             html.open_div(class_="container")
-            html.img(html.theme_url(f'images/{icon}.svg'))
+            html.img(theme.url(f'images/{icon}.svg'))
             html.div(headline)
             html.div(subline)
             html.close_div()

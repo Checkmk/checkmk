@@ -28,7 +28,7 @@ from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors, theme
 from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -50,7 +50,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def _get_current_theme_titel() -> str:
-    return [titel for theme_id, titel in config.theme_choices() if theme_id == html.get_theme()][0]
+    return [titel for theme_id, titel in config.theme_choices() if theme_id == theme.get()][0]
 
 
 def _get_sidebar_position() -> str:
@@ -157,7 +157,7 @@ class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
     def page(self) -> AjaxPageResult:
         themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
-        current_theme = html.get_theme()
+        current_theme = theme.get()
         try:
             theme_index = themes.index(current_theme)
         except ValueError:

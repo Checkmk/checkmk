@@ -29,7 +29,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, g, request
+from cmk.gui.globals import html, g, request, theme
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -595,7 +595,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=html.theme_url("images/tree_closed.svg"),
+                html.img(src=theme.url("images/tree_closed.svg"),
                          class_=["treeangle", img_class],
                          onclick=mousecode)
 

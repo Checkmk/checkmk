@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, theme
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import DropdownChoice
 
@@ -73,7 +73,7 @@ class SnapinDashlet(IFrameDashlet):
 
         html.set_browser_reload(self.refresh_interval())
         html.html_head(_('Sidebar element'))
-        html.open_body(class_="side", data_theme=html.get_theme())
+        html.open_body(class_="side", data_theme=theme.get())
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")
         html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")

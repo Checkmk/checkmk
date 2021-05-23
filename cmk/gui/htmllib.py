@@ -103,7 +103,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.globals import transactions, user_errors
+from cmk.gui.globals import transactions, user_errors, theme
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.escaping as escaping
 import cmk.gui.utils as utils
@@ -1009,7 +1009,6 @@ class html(ABCHTMLGenerator):
 
         # Settings
         self.mobile = False
-        self._theme = "facelift"
 
         # Forms
         self.form_name: Optional[str] = None
@@ -1043,39 +1042,12 @@ class html(ABCHTMLGenerator):
         self._init_screenshot_mode()
         self._init_debug_mode()
         self._init_webapi_cors_header()
-        self.init_theme()
 
     def _init_webapi_cors_header(self) -> None:
         # Would be better to put this to page individual code, but we currently have
         # no mechanism for a page to set do this before the authentication is made.
         if requested_file_name(self.request) == "webapi":
             self.response.headers["Access-Control-Allow-Origin"] = "*"
-
-    def init_theme(self) -> None:
-        self.set_theme(config.ui_theme)
-
-    def set_theme(self, theme_id: str) -> None:
-        if not theme_id:
-            theme_id = config.ui_theme
-
-        if theme_id not in dict(config.theme_choices()):
-            theme_id = "facelift"
-
-        self._theme = theme_id
-
-    def get_theme(self) -> str:
-        return self._theme
-
-    def icon_themes(self) -> List[str]:
-        """Returns the themes where icons of a theme can be found in increasing order of importance.
-        By default the facelift theme provides all icons. If a theme wants to use different icons it
-        only needs to add those icons under the same name. See detect_icon_path for a detailed list
-        of paths.
-        """
-        return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
-
-    def theme_url(self, rel_url: str) -> str:
-        return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self) -> None:
         if self.request.is_multithread:
@@ -1324,7 +1296,7 @@ class html(ABCHTMLGenerator):
         self.write_html(
             self._render_start_tag('link',
                                    rel="shortcut icon",
-                                   href="themes/%s/images/favicon.ico" % self._theme,
+                                   href=theme.url("images/favicon.ico"),
                                    type_="image/ico",
                                    close_tag=True))
 
@@ -1342,7 +1314,7 @@ class html(ABCHTMLGenerator):
         if self.link_target:
             self.base(target=self.link_target)
 
-        fname = self._css_filename_for_browser("themes/%s/theme" % self._theme)
+        fname = self._css_filename_for_browser(theme.url("theme"))
         if fname is not None:
             self.stylesheet(fname)
 
@@ -1457,7 +1429,7 @@ class html(ABCHTMLGenerator):
                    javascripts: Optional[List[str]] = None,
                    force: bool = False) -> None:
         self.html_head(title, javascripts, force)
-        self.open_body(class_=self._get_body_css_classes(), data_theme=self.get_theme())
+        self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
 
     def _get_body_css_classes(self) -> List[str]:
         classes = self._body_classes[:]
@@ -2087,8 +2059,7 @@ class html(ABCHTMLGenerator):
             self.option(text,
                         value=value if value else "",
                         selected='' if selected else None,
-                        style="background-image:url(themes/%s/images/icon_%s.png);" %
-                        (self._theme, icon))
+                        style="background-image:url(%s);" % theme.url(f"images/icon_{icon}.png"))
         self.close_select()
 
     def upload_file(self, varname: str) -> None:
@@ -2226,12 +2197,12 @@ class html(ABCHTMLGenerator):
                     "icon" if icon != "foldable_sidebar" else None,
                     "open" if isopen else "closed",
                 ],
-                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                src=theme.url(f"images/icon_{icon}.svg"),
                 onclick=onclick)
         else:
             self.img(id_=img_id,
                      class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.svg" % (self._theme),
+                     src=theme.url("images/tree_closed.svg"),
                      onclick=onclick)
 
         if indent != "form" or not isinstance(title, HTML):
@@ -2305,7 +2276,7 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
-        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon")
         if src.endswith(".png"):
             classes.append("png")
         if src.endswith("/icon_missing.svg") and title:
@@ -2335,7 +2306,7 @@ class html(ABCHTMLGenerator):
         """ Render emblem to corresponding icon (icon_element in function call)
         or render emblem itself as icon image, used e.g. in view options."""
 
-        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        emblem_path = theme.detect_icon_path(emblem, prefix="emblem")
         if not icon_element:
             return self._render_start_tag(
                 'img',
@@ -2350,35 +2321,6 @@ class html(ABCHTMLGenerator):
             icon_element + self.render_img(emblem_path, class_="emblem"),
             class_="emblem",
         )
-
-    def detect_icon_path(self, icon_name: str, prefix: str) -> str:
-        """Detect from which place an icon shall be used and return it's path relative to htdocs/
-
-        Priority:
-        1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
-        2. In case the modern-dark theme is active: <theme> = facelift -> priorities 3-6
-        3. In case a theme is active: themes/<theme>/images/icon_[name].svg in site local hierarchy
-        4. In case a theme is active: themes/<theme>/images/icon_[name].svg in standard hierarchy
-        5. In case a theme is active: themes/<theme>/images/icon_[name].png in site local hierarchy
-        6. In case a theme is active: themes/<theme>/images/icon_[name].png in standard hierarchy
-        7. images/icons/[name].png in site local hierarchy
-        8. images/icons/[name].png in standard hierarchy
-        """
-        path = "share/check_mk/web/htdocs"
-        for theme in self.icon_themes():
-            theme_path = path + "/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
-            for file_type in ["svg", "png"]:
-                for base_dir in [
-                        cmk.utils.paths.omd_root + "/", cmk.utils.paths.omd_root + "/local/"
-                ]:
-                    if os.path.exists(base_dir + theme_path + "." + file_type):
-                        return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
-                                                              file_type)
-                    if os.path.exists(base_dir + path + "/images/icons/%s.%s" %
-                                      (icon_name, file_type)):
-                        return "images/icons/%s.%s" % (icon_name, file_type)
-
-        return "themes/facelift/images/icon_missing.svg"
 
     def render_icon_button(self,
                            url: Union[None, str, str],

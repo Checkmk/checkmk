@@ -13,6 +13,7 @@ from typing import (
     Any,
     Iterator,
     Mapping,
+    Optional,
 )
 
 from werkzeug.test import create_environ
@@ -22,6 +23,7 @@ from cmk.gui.config import (
     set_super_user,
 )
 from cmk.gui.display_options import DisplayOptions
+from cmk.gui.utils.theme import Theme
 from cmk.gui.globals import (
     AppContext,
     RequestContext,
@@ -49,14 +51,16 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
     with RequestContext(
             html(Request(environ)),
             display_options=DisplayOptions(),
+            theme=Theme(),
             prefix_logs_with_url=False,
     ):
         yield
 
 
 @contextmanager
-def application_and_request_context() -> Iterator[None]:
-    environ = dict(create_environ(), REQUEST_URI='')
+def application_and_request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+    if environ is None:
+        environ = dict(create_environ(), REQUEST_URI='')
     with application_context(environ), request_context(environ):
         yield
 

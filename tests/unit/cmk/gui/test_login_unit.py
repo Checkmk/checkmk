@@ -7,15 +7,12 @@
 import pytest
 from werkzeug.test import create_environ
 
-from testlib.utils import DummyApplication
-
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
-import cmk.gui.http as http
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import AppContext, RequestContext, user, request, session
+from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.globals import user, request, session
 from cmk.gui.exceptions import MKAuthException
 
 
@@ -50,8 +47,7 @@ def fixture_pre_16_cookie():
         u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
             "utf-8"))
 
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))):
+    with application_and_request_context(environ):
         yield "auth_stable"
 
 
@@ -63,8 +59,7 @@ def fixture_pre_20_cookie():
         u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
             "utf-8"))
 
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))):
+    with application_and_request_context(environ):
         yield "auth_stable"
 
 
@@ -82,8 +77,7 @@ def fixture_current_cookie(with_user, session_id):
 
     environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode("utf-8"))
 
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))):
+    with application_and_request_context(environ):
         yield cookie_name
 
 
@@ -120,9 +114,7 @@ def test_auth_cookie_is_valid_allow_current(current_cookie):
 def test_web_server_auth_session(user_id):
     environ = dict(create_environ(), REMOTE_USER=str(user_id))
 
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))):
-
+    with application_and_request_context(environ):
         assert user.id is None
         with login.authenticate(request) as authenticated:
             assert authenticated is True

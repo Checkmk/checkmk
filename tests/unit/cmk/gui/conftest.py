@@ -19,26 +19,20 @@ from functools import lru_cache
 import pytest  # type: ignore[import]
 import webtest  # type: ignore[import]
 from mock import MagicMock
-from werkzeug.test import create_environ
 
 from cmk.gui import watolib
-from testlib.utils import DummyApplication
 
 import cmk.utils.log
 import cmk.utils.paths as paths
 
 import cmk.gui.config as config
-import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
-from cmk.gui.display_options import DisplayOptions
-from cmk.gui.globals import AppContext, RequestContext
-from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
-from cmk.gui.utils.theme import Theme
 from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 import cmk.gui.watolib.activate_changes as activate_changes
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 SPEC_LOCK = threading.Lock()
 
@@ -58,10 +52,7 @@ HTTPMethod = Literal[
 @pytest.fixture(scope='function')
 def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    environ = create_environ()
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions(),
-                    theme=Theme()):
+    with application_and_request_context():
         yield
 
 
@@ -70,10 +61,7 @@ def module_wide_request_context():
     # This one is kind of an hack because some other test-fixtures touch the user object AFTER the
     # request context has already ended. If we increase our scope this won't matter, but it is of
     # course wrong. These other fixtures have to be fixed.
-    environ = create_environ()
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions(),
-                    theme=Theme()):
+    with application_and_request_context():
         yield
 
 

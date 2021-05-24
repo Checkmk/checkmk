@@ -9,19 +9,13 @@ import os
 import shutil
 
 import pytest  # type: ignore[import]
-from werkzeug.test import create_environ
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui.watolib.search import MatchItem
-import cmk.gui.htmllib as htmllib
 from cmk.gui.watolib.utils import has_agent_bakery
-
-from cmk.gui.http import Request
-from cmk.gui.globals import AppContext, RequestContext
-
-from testlib.utils import DummyApplication
 
 
 @pytest.fixture(name="mocked_user")
@@ -138,9 +132,7 @@ def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
     # Used to read the previously written data
     read_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+    with application_and_request_context():
         # Write data
         # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
         write_data_folder.create_hosts([("testhost", attributes, [])])

@@ -10,12 +10,11 @@ import time
 import pytest  # type: ignore[import]
 
 from werkzeug.test import create_environ
+from cmk.gui.utils.script_helpers import application_and_request_context
 
-from cmk.gui import htmllib
 import cmk.gui.http as http
-from cmk.gui.globals import html, request as global_request, RequestContext, AppContext
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.script_helpers import DummyApplication
 
 
 def test_http_request_allowed_vars():
@@ -329,8 +328,7 @@ def test_del_vars():
     environ = dict(create_environ(),
                    REQUEST_URI='',
                    QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(http.Request(environ))):
+    with application_and_request_context(environ):
         # First we hit the cached property so we can see that the underlying Request object
         # actually got replaced later.
         _ = global_request.args

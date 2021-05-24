@@ -79,7 +79,7 @@ def do_scan_parents(hosts: List[HostName]) -> None:
                     if dns_name:
                         gateway = dns_name
                     else:
-                        gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                        gateway = HostName("gw-%s" % (gateway_ip.replace(".", "-")))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
@@ -326,6 +326,6 @@ def _ip_to_hostname(config_cache: config.ConfigCache,
 
 def _ip_to_dnsname(ip: HostAddress) -> Optional[HostName]:
     try:
-        return socket.gethostbyaddr(ip)[0]
+        return HostName(socket.gethostbyaddr(ip)[0])
     except Exception:
         return None

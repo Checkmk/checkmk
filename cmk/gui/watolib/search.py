@@ -34,7 +34,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import RequestContext, g, request
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
-from cmk.gui.http import Request
+from cmk.gui.http import Request, Response
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
@@ -301,8 +301,9 @@ class IndexSearcher:
     @contextmanager
     def _SearchContext(self) -> Iterator[None]:
         _request = Request(create_environ())
+        _response = Response()
         with RequestContext(
-                html_obj=html(_request),
+                html_obj=html(_request, _response),
                 req=_request,
                 display_options=DisplayOptions(),
         ), UserContext(self._user_id):

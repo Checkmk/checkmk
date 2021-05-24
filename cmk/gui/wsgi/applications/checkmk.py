@@ -140,6 +140,7 @@ class CheckmkApp:
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
+        resp = Response()
 
         timeout_manager = TimeoutManager()
         timeout_manager.enable_timeout(req.request_timeout)
@@ -148,7 +149,8 @@ class CheckmkApp:
 
         with AppContext(self), RequestContext(
                 req=req,
-                html_obj=htmllib.html(req),
+                resp=resp,
+                html_obj=htmllib.html(req, resp),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
                 theme=theme,

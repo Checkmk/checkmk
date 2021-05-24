@@ -29,7 +29,7 @@ from cmk.gui.globals import (
     RequestContext,
 )
 from cmk.gui.htmllib import html
-from cmk.gui.http import Request
+from cmk.gui.http import Request, Response
 from cmk.gui.modules import load_all_plugins
 
 
@@ -49,7 +49,7 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 @contextmanager
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
     with RequestContext(
-            html(Request(environ)),
+            html(Request(environ), Response()),
             display_options=DisplayOptions(),
             theme=Theme(),
             prefix_logs_with_url=False,

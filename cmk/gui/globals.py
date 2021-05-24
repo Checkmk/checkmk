@@ -128,6 +128,7 @@ class RequestContext:
         self.flashes: Optional[List[str]] = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
+        # TODO: Find all call sites and clean this up
         if req is None and html_obj:
             req = html_obj.request
         if resp is None and html_obj:
@@ -192,6 +193,7 @@ local = request_local_attr()  # None as name will get the whole object.
 # tools in general.
 user: 'config.LoggedInUser' = request_local_attr('user')
 request: 'http.Request' = request_local_attr('request')
+response: 'http.Response' = request_local_attr('response')
 session: 'userdb.Session' = request_local_attr('session')
 user_errors: 'UserErrors' = request_local_attr('user_errors')
 

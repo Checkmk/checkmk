@@ -82,7 +82,7 @@ class BIStructureFetcher:
         self._hosts.clear()
 
     @property
-    def hosts(self) -> Dict[str, BIHostData]:
+    def hosts(self) -> Dict[HostName, BIHostData]:
         return self._hosts
 
     def get_cached_program_starts(self) -> Set[SiteProgramStart]:

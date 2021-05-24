@@ -399,7 +399,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def services_of_host(self, host_name: str) -> Set[ServiceName]:
+    def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
         raise NotImplementedError()
 
     @abc.abstractmethod

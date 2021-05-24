@@ -30,6 +30,7 @@ from cmk.gui.globals import (
 )
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
+from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.modules import load_all_plugins
 
 
@@ -48,8 +49,9 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 
 @contextmanager
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
+    resp = Response()
     with RequestContext(
-            html(Request(environ), Response()),
+            html(Request(environ), resp, OutputFunnel(resp)),
             display_options=DisplayOptions(),
             theme=Theme(),
             prefix_logs_with_url=False,

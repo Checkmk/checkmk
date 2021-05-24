@@ -110,7 +110,6 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.i18n import _
@@ -134,7 +133,7 @@ if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
     from cmk.gui.type_defs import VisualContext
     from cmk.gui.valuespec import ValueSpec
-    from cmk.gui.utils.output_funnel import OutputFunnelInput
+    from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput
 
 HTMLTagName = str
 HTMLTagValue = Optional[str]
@@ -978,7 +977,12 @@ OUTPUT_FORMAT_MIME_TYPES = {
 
 
 class html(ABCHTMLGenerator):
-    def __init__(self, request: 'Request', response: 'Response') -> None:
+    def __init__(
+        self,
+        request: 'Request',
+        response: 'Response',
+        output_funnel: 'OutputFunnel',
+    ) -> None:
         super(html, self).__init__()
 
         self._logger = log.logger.getChild("html")
@@ -1015,7 +1019,7 @@ class html(ABCHTMLGenerator):
 
         # Register helpers
         self.response = response
-        self.output_funnel = OutputFunnel(self.response)
+        self.output_funnel = output_funnel
         self.request = request
 
         self.response.headers["Content-type"] = "text/html; charset=UTF-8"

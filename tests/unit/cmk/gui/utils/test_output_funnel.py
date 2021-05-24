@@ -4,11 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import pytest  # type: ignore[import]
 
-from cmk.gui.htmllib import OutputFunnel
+from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.http import Response
 
 
@@ -21,8 +19,8 @@ class OutputFunnelTester(OutputFunnel):
         self.written += text
 
 
-@pytest.fixture()
-def html():
+@pytest.fixture(name="html")
+def fixture_html():
     response = Response()
     return OutputFunnelTester(response)
 

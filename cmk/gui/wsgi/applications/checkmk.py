@@ -34,6 +34,7 @@ from cmk.gui.http import Response
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
@@ -141,6 +142,7 @@ class CheckmkApp:
     def __call__(self, environ, start_response):
         req = http.Request(environ)
         resp = Response()
+        funnel = OutputFunnel(resp)
 
         timeout_manager = TimeoutManager()
         timeout_manager.enable_timeout(req.request_timeout)
@@ -150,7 +152,7 @@ class CheckmkApp:
         with AppContext(self), RequestContext(
                 req=req,
                 resp=resp,
-                html_obj=htmllib.html(req, resp),
+                html_obj=htmllib.html(req, resp, funnel),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
                 theme=theme,

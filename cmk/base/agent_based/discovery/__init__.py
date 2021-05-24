@@ -176,7 +176,6 @@ def do_discovery(
                 run_plugin_names,
                 arg_only_new,
                 load_labels=arg_only_new,
-                save_labels=True,
                 only_host_labels=only_host_labels,
                 on_error=on_error,
             )
@@ -228,7 +227,6 @@ def _do_discovery_for(
     only_new: bool,
     *,
     load_labels: bool,
-    save_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
 ) -> None:
@@ -240,7 +238,7 @@ def _do_discovery_for(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=load_labels,
-        save_labels=save_labels,
+        save_labels=True,
         on_error=on_error,
     )
 

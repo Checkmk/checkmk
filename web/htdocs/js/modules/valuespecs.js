@@ -162,10 +162,11 @@ export function list_of_strings_add_new_field(input) {
         let new_select = input.cloneNode();
         new_select.name = new_name;
         new_select.id = new_name;
+        delete new_select.dataset.select2Id;
         new_div.appendChild(new_select);
     }
+    forms.enable_dynamic_form_elements(new_div);
     container.appendChild(new_div);
-    forms.enable_dynamic_form_elements(container);
 
     return new_div.getElementsByTagName(tagtype)[0];
 }

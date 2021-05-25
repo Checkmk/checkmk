@@ -48,6 +48,17 @@ BACKUP_DATA3 = [[
     '  }}'
 ]]
 
+BACKUP_DATA4 = [[
+    '{"last_backup": {'
+    '    "started_time": "2020-04-16 22:20:43",'
+    '    "total_duration": 140,'
+    '    "archive_name": "/some/file.name.vma.lzo",'
+    '    "backup_amount": 10995116277,'
+    '    "backup_total": 1099511627776,'
+    '    "backup_time": 120'
+    '}}'
+]]
+
 
 def set_null_values(backup_data):
     backup_data["last_backup"].update({
@@ -125,6 +136,19 @@ def set_null_values(backup_data):
             Result(state=State.OK, summary='Duration: 2 minutes 20 seconds'),
             Result(state=State.OK, summary='Name: /some/file.name.vma.lzo'),
             Result(state=State.OK, summary='Bandwidth: 10.0 kB/s'),
+        ),
+    ),
+    (
+        {},
+        parse_proxmox_ve_vm_backup_status(BACKUP_DATA4),
+        (
+            Result(state=State.OK, summary='Age: 18 hours 39 minutes'),
+            Metric('age', 67157.0, boundaries=(0.0, None)),
+            Result(state=State.OK, summary='Time: 2020-04-16 22:20:43'),
+            Result(state=State.OK, summary='Duration: 2 minutes 20 seconds'),
+            Result(state=State.OK, summary='Name: /some/file.name.vma.lzo'),
+            Result(state=State.OK, summary='Dedup rate: 100.00'),
+            Result(state=State.OK, summary='Bandwidth: 91.6 MB/s'),
         ),
     ),
     (

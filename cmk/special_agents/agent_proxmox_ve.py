@@ -175,12 +175,17 @@ class BackupTask:
                     "archive_size",
                     r"^INFO: archive file size: (.*)",
                 ),
+                (
+                    "backuped",
+                    r"^INFO: (.*): had to backup (.*) of (.*) \(compressed (.*)\) in (.*)s",
+                ),
             )
         }
         required_keys = (
             {'started_time', 'total_duration', 'bytes_written_bandwidth', 'bytes_written_size'},
             {'started_time', 'total_duration', 'transfer_size', 'transfer_time'},
             {'started_time', 'total_duration', 'upload_amount', 'upload_time', 'upload_total'},
+            {'started_time', 'total_duration', 'backup_amount', 'backup_time', 'backup_total'},
         )
 
         #required_keys = {"transfer_time", "archive_name", "archive_size", "started_time"}
@@ -325,6 +330,17 @@ class BackupTask:
                     current_dataset["upload_amount"] = to_bytes(upload_amount)
                     current_dataset["upload_total"] = to_bytes(upload_total)
                     current_dataset["upload_time"] = float(upload_time)
+                    continue
+
+                backuped = extract_tuple(line, "backuped", 5)
+                if backuped:
+                    _, backup_amount, backup_total, _, backup_time = backuped
+                    if not current_vmid:
+                        raise BackupTask.LogParseWarning(
+                            linenr, "Found backup information while no VM was active")
+                    current_dataset["backup_amount"] = to_bytes(backup_amount)
+                    current_dataset["backup_total"] = to_bytes(backup_total)
+                    current_dataset["backup_time"] = float(backup_time)
                     continue
 
             except BackupTask.LogParseWarning as exc:

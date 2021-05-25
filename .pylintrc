@@ -155,7 +155,6 @@ disable=
     consider-using-min-builtin,
     consider-using-max-builtin,
     consider-using-with,
-    arguments-differ,
 
 enable=
     #---------------------------------------------------------------------------

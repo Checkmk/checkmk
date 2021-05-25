@@ -20,7 +20,7 @@ VARIABLES:
       SH: "${WORKSPACE}/scripts/find-python-files | grep -h ${GREP_PATTERNS} - | sort"
 
     - NAME: CHANGED_PYLINT_RC_FILE
-      SH: "echo '$CHANGED_FILES_ABS' | grep -h '${WORKSPACE}/.pylintrc' - || true"
+      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.pylintrc' - || true"
 
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS

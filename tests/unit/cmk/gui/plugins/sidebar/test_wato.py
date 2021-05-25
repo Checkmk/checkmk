@@ -83,7 +83,7 @@ def expected_items() -> Dict[str, List[str]]:
     if cmk_version.is_managed_edition():
         users_items.insert(0, 'customer_management')
 
-    return {
+    expected_items = {
         'agents': agents_items,
         'events': events_items,
         'general': [
@@ -109,9 +109,13 @@ def expected_items() -> Dict[str, List[str]]:
             'check_plugins',
         ],
         'bi': ['bi_packs'],
-        'custom': ['influxdb_connections'],
         'users': users_items,
     }
+
+    if not cmk_version.is_raw_edition():
+        expected_items.update({'custom': ['influxdb_connections']})
+
+    return expected_items
 
 
 @pytest.mark.usefixtures("register_builtin_html", "load_plugins", "with_admin_login")

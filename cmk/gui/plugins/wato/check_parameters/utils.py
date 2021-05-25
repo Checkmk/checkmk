@@ -356,6 +356,7 @@ def vs_filesystem(extra_elements=None):
                 "include_volume_name",
                 "item_appearance",
                 "grouping_behaviour",
+                "mountpoint_for_block_devices",
             ],
         ),
         forth=_transform_discovered_filesystem_params,

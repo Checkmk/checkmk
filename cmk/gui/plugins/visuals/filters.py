@@ -89,7 +89,7 @@ class FilterText(Filter):
         current_value = self._current_value()
         column = self.link_columns[0]
 
-        if column in ["host_name", "service_description"]:
+        if column in ["host_name", "service_description"] and not html.is_mobile():
             input_type = "monitored_hostname" if column == "host_name" else "monitored_service_description"
             choices = [(current_value, current_value)] if current_value else []
             html.dropdown(self.htmlvars[0],

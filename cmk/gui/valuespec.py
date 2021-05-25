@@ -1655,16 +1655,13 @@ class ListOfStrings(ValueSpec):
         return u", ".join([self._valuespec.value_to_text(v) for v in value])
 
     def from_html_vars(self, varprefix: str) -> List[str]:
-        value: List[str] = []
-        nr = 0
-        while True:
-            varname = varprefix + "_%d" % nr
-            if not html.request.has_var(varname):
-                break
-            if html.request.get_str_input_mandatory(varname, "").strip():
-                value.append(self._valuespec.from_html_vars(varname))
-            nr += 1
-        return value
+        list_prefix = varprefix + "_"
+        return [
+            self._valuespec.from_html_vars(varname)
+            for varname, value in html.request.itervars()
+            if varname.startswith(list_prefix) and varname[len(list_prefix):].isdigit() and
+            value.strip()
+        ]
 
     def validate_datatype(self, value: List[str], varprefix: str) -> None:
         if not isinstance(value, list):

@@ -780,10 +780,11 @@ class AgentSummarizerDefault(AgentSummarizer):
         agent_failed_plugins: Optional[str],
         agent_fail_reason: Optional[str],
     ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
-        if agent_failed_plugins is None or agent_fail_reason is None:
+        if agent_failed_plugins is None:
             return None
 
-        return 1, f"Failed to execute python plugins: {agent_failed_plugins} ({agent_fail_reason})"
+        return 1, f"Failed to execute python plugins: {agent_failed_plugins}" + (
+            f" ({agent_fail_reason})" if agent_fail_reason else "")
 
     def _check_agent_update(
         self,

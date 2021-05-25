@@ -1,0 +1,11 @@
+Title: Permissions for mkbackup
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1621944185
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Subfolder mkbackup needs correct permissions for backup to run successfully.

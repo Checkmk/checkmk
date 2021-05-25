@@ -52,6 +52,7 @@ import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.store import mkdir
 
 import omdlib
 import omdlib.certs
@@ -3863,6 +3864,22 @@ def hash_password(password: str) -> str:
     return sha256_crypt.hash(password)
 
 
+def ensure_mkbackup_lock_dir_exists() -> None:
+
+    mkbackup_dir = "/var/lock/mkbackup"
+    try:
+        mkdir(mkbackup_dir)
+        shutil.chown(mkbackup_dir, group="omd")
+    except PermissionError:
+        logger.log(
+            VERBOSE, "Unable to create %s needed for mkbackup. "
+            "This may be due to the fact that your system does not use systemd "
+            "(and therefore systemd-tmpfiles mechanism doesn't work) and your SITE "
+            "User isn't allowed to create the backup directory. "
+            "You could resolve this issue by running 'sudo omd start' as root "
+            "(and not as SITE user).", mkbackup_dir)
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -3883,6 +3900,8 @@ def hash_password(password: str) -> str:
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:
+    ensure_mkbackup_lock_dir_exists()
+
     main_args = sys.argv[1:]
     site: AbstractSiteContext = RootContext()
 

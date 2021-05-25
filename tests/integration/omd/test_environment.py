@@ -5,6 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+from pathlib import Path
+
+
+def test_backup_dir(site):
+    backup_path = Path("/var/lock/mkbackup")
+    backup_permission_mask = oct(backup_path.stat().st_mode)[-4:]
+
+    assert backup_permission_mask == "0770"
+    assert backup_path.owner() == "root"
+    assert backup_path.group() == "omd"
 
 
 def test_locales(site):

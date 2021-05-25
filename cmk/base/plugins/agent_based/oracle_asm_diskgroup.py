@@ -311,11 +311,7 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
     free_space_mb = int(free_mb) // dg_sizefactor
 
     if params.get('req_mir_free'):
-        req_mir_free_mb = int(req_mir_free_mb)
-        if req_mir_free_mb < 0:
-            # requirred mirror free space could be negative!
-            req_mir_free_mb = 0
-
+        req_mir_free_mb = max(int(req_mir_free_mb), 0)  # requirred mirror free space could be negative!
         add_text = ', required mirror free space used'
 
     result_list = list(

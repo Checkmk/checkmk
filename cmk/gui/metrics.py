@@ -463,9 +463,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             half_value = float(half_value)
             h = math.log(half_value, base)  # value to be displayed at 50%
             pos = 50 + 10.0 * (math.log(value, base) - h)
-            if pos < 2:
-                pos = 2
-            pos = min(pos, 98)
+            pos = min(max(2, pos), 98)
 
         return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
 

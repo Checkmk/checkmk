@@ -38,8 +38,8 @@ def do_scan_parents(hosts: List[HostName]) -> None:
     parent_rules = []
     gateway_hosts: Set[HostName] = set()
 
-    if config.max_num_processes < 1:
-        config.max_num_processes = 1
+    # TODO: Sneakily changing a global variable looks like a bad idea!
+    config.max_num_processes = max(config.max_num_processes, 1)
 
     outfilename = cmk.utils.paths.check_mk_config_dir + "/parents.mk"
 

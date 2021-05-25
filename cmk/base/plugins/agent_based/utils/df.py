@@ -154,10 +154,8 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
 
         # Make sure, levels do never get too low due to magic factor
         lowest_warning_level, lowest_critical_level = levels["levels_low"]
-        if warn_scaled < lowest_warning_level:
-            warn_scaled = lowest_warning_level
-        if crit_scaled < lowest_critical_level:
-            crit_scaled = lowest_critical_level
+        warn_scaled = max(warn_scaled, lowest_warning_level)
+        crit_scaled = max(crit_scaled, lowest_critical_level)
 
     else:
         if not isinstance(warn, float):

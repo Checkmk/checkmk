@@ -135,11 +135,7 @@ class MemorySection(NamedTuple):
         # https://github.com/google/cadvisor/blob/c6ad44633aa0cee60a28430ddec632dca53becac/container/libcontainer/handler.go#L823
         # https://github.com/containerd/cri/blob/bc08a19f3a44bda9fd141e6ee4b8c6b369e17e6b/pkg/server/container_stats_list_linux.go#L123
         # https://github.com/docker/cli/blob/70a00157f161b109be77cd4f30ce0662bfe8cc32/cli/command/container/stats_helpers.go#L245
-        container_memory_usage = self.mem_usage - self.mem_cache
-
-        if container_memory_usage < 0:
-            container_memory_usage = 0
-
+        container_memory_usage = max(self.mem_usage - self.mem_cache, 0)
         return {
             "MemTotal": self.mem_total,
             "MemFree": self.mem_total - container_memory_usage,

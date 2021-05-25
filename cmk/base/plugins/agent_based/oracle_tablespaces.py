@@ -202,7 +202,7 @@ def check_oracle_tablespaces(
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
-        params = Mapping[str, Any]({"autoextend": params[0], "levels": params[1:]})
+        params = {"autoextend": params[0], "levels": params[1:]}
 
     autoext = params.get("autoextend", None)
     uses_default_increment = False

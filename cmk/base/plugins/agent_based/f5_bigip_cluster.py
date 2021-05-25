@@ -129,7 +129,7 @@ def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Opti
 def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: State) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
-    ...         params=Mapping[str, Any](CONFIG_SYNC_DEFAULT_PARAMETERS),
+    ...         params=CONFIG_SYNC_DEFAULT_PARAMETERS,
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
     Result(state=<state.OK: 0>, summary='Node [node1] is standby')

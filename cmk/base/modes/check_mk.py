@@ -1380,7 +1380,7 @@ modes.register(
 
 
 def mode_check_discovery(hostname: HostName) -> int:
-    return discovery.check_discovery(hostname, ipaddress=None)
+    return discovery.active_check_discovery(hostname, ipaddress=None)
 
 
 modes.register(
@@ -1545,7 +1545,7 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    discovery.do_discovery(
+    discovery.commandline_discovery(
         set(hostnames),
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
@@ -1739,7 +1739,7 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
         sources.agent.AgentSource.use_outdated_persisted_sections = True
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
-    inventory.do_inv(
+    inventory.commandline_inventory(
         hostnames,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
@@ -1782,7 +1782,7 @@ modes.register(
 
 
 def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
-    return inventory.do_inv_check(hostname, options)
+    return inventory.active_check_inventory(hostname, options)
 
 
 modes.register(

@@ -646,13 +646,13 @@ _expected_host_labels = {
 
 
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_do_discovery(monkeypatch):
+def test_commandline_discovery(monkeypatch):
     ts = Scenario().add_host("test-host", ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output("test-host")
     ts.apply(monkeypatch)
 
     with cmk_debug_enabled():
-        discovery.do_discovery(
+        discovery.commandline_discovery(
             arg_hostnames={"test-host"},
             selected_sections=NO_SELECTION,
             run_plugin_names=EVERYTHING,

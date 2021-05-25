@@ -154,7 +154,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
-            results[hostname] = discovery.discover_on_host(
+            results[hostname] = discovery.automation_discovery(
                 config_cache=config_cache,
                 host_config=host_config,
                 mode=mode,

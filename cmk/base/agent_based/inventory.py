@@ -86,7 +86,7 @@ class ActiveInventoryResult(NamedTuple):
 #   '----------------------------------------------------------------------'
 
 
-def do_inv(
+def commandline_inventory(
     hostnames: List[HostName],
     *,
     selected_sections: SectionNameCollection,
@@ -99,7 +99,7 @@ def do_inv(
         section.section_begin(hostname)
         try:
             host_config = config.HostConfig.make_host_config(hostname)
-            inv_result = _do_active_inventory_for(
+            inv_result = _inventorize_host(
                 host_config=host_config,
                 selected_sections=selected_sections,
                 run_plugin_names=run_plugin_names,
@@ -127,7 +127,7 @@ def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
 
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
-def do_inv_check(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
+def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
@@ -135,7 +135,7 @@ def do_inv_check(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResu
 
     host_config = config.HostConfig.make_host_config(hostname)
 
-    inv_result = _do_active_inventory_for(
+    inv_result = _inventorize_host(
         host_config=host_config,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
@@ -200,7 +200,7 @@ def do_inv_check(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResu
     return status, infotexts, long_infotexts, []
 
 
-def _do_active_inventory_for(
+def _inventorize_host(
     *,
     host_config: config.HostConfig,
     run_plugin_names: Container[InventoryPluginName],

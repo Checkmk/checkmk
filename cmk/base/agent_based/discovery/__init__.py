@@ -132,11 +132,7 @@ def schedule_discovery_check(host_name: HostName) -> None:
 #   '----------------------------------------------------------------------'
 
 
-# Function implementing cmk -I and cmk -II. This is directly
-# being called from the main option parsing code. The list of
-# hostnames is already prepared by the main code. If it is
-# empty then we use all hosts and switch to using cache files.
-def do_discovery(
+def commandline_discovery(
     arg_hostnames: Set[HostName],
     *,
     selected_sections: SectionNameCollection,
@@ -144,6 +140,12 @@ def do_discovery(
     arg_only_new: bool,
     only_host_labels: bool = False,
 ) -> None:
+    """Implementing cmk -I and cmk -II
+
+    This is directly called from the main option parsing code.
+    The list of hostnames is already prepared by the main code.
+    If it is empty then we use all hosts and switch to using cache files.
+    """
     config_cache = config.get_config_cache()
     use_caches = not arg_hostnames or cmk.core_helpers.cache.FileCacheFactory.maybe
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
@@ -169,7 +171,7 @@ def do_discovery(
                 force_snmp_cache_refresh=False,
                 on_scan_error=on_error,
             )
-            _do_discovery_for(
+            _commandline_discovery_on_host(
                 host_name,
                 ipaddress,
                 parsed_sections_broker,
@@ -219,7 +221,7 @@ def _preprocess_hostnames(
     return host_names
 
 
-def _do_discovery_for(
+def _commandline_discovery_on_host(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -276,7 +278,7 @@ def _do_discovery_for(
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
-def discover_on_host(
+def automation_discovery(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
@@ -472,12 +474,12 @@ def _get_post_discovery_services(
 
 
 @decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
-def check_discovery(
+def active_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
     # The next argument *must* remain optional for the DiscoCheckExecutor.
-    #   See Also: `cmk.base.agent_based.checking.do_check()`.
+    #   See Also: `cmk.base.agent_based.checking.active_check_checking()`.
     fetcher_messages: Sequence[FetcherMessage] = (),
 ) -> ActiveCheckResult:
 
@@ -705,6 +707,8 @@ class _AutodiscoveryQueue:
 
 
 def discover_marked_hosts(core: MonitoringCore) -> None:
+    """Autodiscovery"""
+
     console.verbose("Doing discovery for all marked hosts:\n")
     autodiscovery_queue = _AutodiscoveryQueue()
 
@@ -791,7 +795,7 @@ def _discover_marked_host(
         console.verbose(f"  skipped: {reason}\n")
         return False
 
-    result = discover_on_host(
+    result = automation_discovery(
         config_cache=config_cache,
         host_config=host_config,
         mode=DiscoveryMode(rediscovery_parameters.get("mode")),

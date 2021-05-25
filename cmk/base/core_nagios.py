@@ -1165,7 +1165,7 @@ if '-d' in sys.argv:
 
     # perform actual check with a general exception handler
     output.write("try:\n")
-    output.write("    sys.exit(checking.do_check(%r, None))\n" % hostname)
+    output.write("    sys.exit(checking.active_check_checking(%r, None))\n" % hostname)
     output.write("except MKTerminate:\n")
     output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")
     output.write("    sys.exit(1)\n")

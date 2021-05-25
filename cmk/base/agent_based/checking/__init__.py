@@ -89,12 +89,12 @@ from .utils import (
 
 
 @cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
-def do_check(
+def active_check_checking(
     hostname: HostName,
     ipaddress: Optional[HostAddress],
     *,
     # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
-    #   See Also: `cmk.base.discovery.check_discovery()`
+    #   See Also: `cmk.base.discovery.active_check_discovery()`
     # TODO: can we drop them now that we slit up 'commandline_checking'?
     fetcher_messages: Sequence[FetcherMessage] = (),
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
@@ -189,7 +189,7 @@ def _execute_checkmk_checks(
                 on_scan_error=OnError.RAISE,
             )
 
-            num_success, plugins_missing_data = do_all_checks_on_host(
+            num_success, plugins_missing_data = check_host_services(
                 config_cache=config_cache,
                 host_config=host_config,
                 ipaddress=ipaddress,
@@ -297,9 +297,7 @@ def _check_plugins_missing_data(
     return generic_plugins_status, ", ".join(infotexts)
 
 
-# Loops over all checks for ANY host (cluster, real host), gets the data, calls the check
-# function that examines that data and sends the result to the Core.
-def do_all_checks_on_host(
+def check_host_services(
     *,
     config_cache: config.ConfigCache,
     host_config: config.HostConfig,
@@ -310,6 +308,12 @@ def do_all_checks_on_host(
     dry_run: bool,
     show_perfdata: bool,
 ) -> Tuple[int, List[CheckPluginName]]:
+    """Compute service state results for all given services on node or cluster
+
+     * Loops over all services,
+     * calls the check
+     * examines the result and sends it to the core (unless `dry_run` is True).
+    """
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 

@@ -4432,7 +4432,7 @@ class PainterLogContactName(Painter):
                             ("view_name", target_view_name),
                             ("log_contact_name", contact),
                         ],
-                        filename="view.py",
+                        filename="mobile_view.py" if is_mobile(request, response) else "view.py",
                     )) for contact in row["log_contact_name"].split(",")),
         )
 

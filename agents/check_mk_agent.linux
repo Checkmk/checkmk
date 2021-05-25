@@ -1255,7 +1255,7 @@ run_agent_plugin() {
         return
     fi
 
-    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
+    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
         return
     fi
 

@@ -263,10 +263,15 @@ class AgentSummarizerDefault(AgentSummarizer):
     ) -> Optional[ServiceCheckResult]:
         failed_plugins = agent_info.get("failedpythonplugins")
         fail_reason = agent_info.get("failedpythonreason")
-        if failed_plugins is None or fail_reason is None:
+        if failed_plugins is None:
             return None
 
-        return (1, f"Failed to execute python plugins: {failed_plugins} ({fail_reason})", [])
+        return (
+            1,
+            f"Failed to execute python plugins: {failed_plugins}" +
+            (f" ({fail_reason})" if fail_reason else ""),
+            [],
+        )
 
     @staticmethod
     def _is_expected_agent_version(

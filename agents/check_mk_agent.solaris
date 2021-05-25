@@ -501,6 +501,14 @@ then
 
 fi
 
+add_failed_python_plugin() {
+    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+        FAILED_PYTHON_PLUGINS=("$1")
+    else
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+    fi
+}
+
 run_agent_plugin() {
     if [ "${1:(0):(2)}" == "./" ]; then
         agent_plugin="${1:2}"
@@ -509,32 +517,39 @@ run_agent_plugin() {
     fi
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
+
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
         ./"$agent_plugin"
         return
     fi
+
     if [ "${filename:(-2):(2)}" != "_2" ]; then
         if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-                FAILED_PYTHON_PLUGINS=("$agent_plugin")
-            else
-                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
-            fi
+            add_failed_python_plugin "$agent_plugin"
             return
         fi
         if [ -n "$PYTHON3" ]; then
             $PYTHON3 "$agent_plugin"
             return
         fi
+        if [ ! -e "${filename}_2.py" ]; then
+            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
+            return
+        fi
         return
     fi
+
     if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
         return
     fi
+
     if [ -n "$PYTHON2" ]; then
         $PYTHON2 "$agent_plugin"
+        return
     fi
+
+    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
 }
 
 # Plugins

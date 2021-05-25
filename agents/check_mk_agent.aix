@@ -145,6 +145,14 @@ function run_cached {
     fi
 }
 
+function add_failed_python_plugin {
+    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+        FAILED_PYTHON_PLUGINS=("$1")
+    else
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+    fi
+}
+
 function run_agent_plugin {
     if [ "${1:0:2}" == "./" ]; then
         agent_plugin="${1:2}"
@@ -160,15 +168,15 @@ function run_agent_plugin {
     fi
     if [ "${filename#${filename%??}}" != "_2" ]; then
         if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-                FAILED_PYTHON_PLUGINS=("$agent_plugin")
-            else
-                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
-            fi
+            add_failed_python_plugin "$agent_plugin"
             return
         fi
         if [ -n "$PYTHON3" ]; then
             $PYTHON3 "$agent_plugin"
+            return
+        fi
+        if [ ! -e "${filename}_2.py" ]; then
+            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
             return
         fi
         return
@@ -176,9 +184,13 @@ function run_agent_plugin {
     if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
         return
     fi
+
     if [ -n "$PYTHON2" ]; then
         $PYTHON2 "$agent_plugin"
+        return
     fi
+
+    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
 }
 
 echo "<<<check_mk>>>"

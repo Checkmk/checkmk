@@ -133,7 +133,8 @@ class OK(Result[T_co, E_co]):
     def __init__(self, ok: T_co):
         if isinstance(ok, Error):
             raise TypeError(ok)
-        self._ok: Final[T_co] = ok
+        # TODO: Remove the suppression when https://github.com/PyCQA/astroid/issues/999 is fixed.
+        self._ok: Final[T_co] = ok  # pylint: disable=assigning-non-slot
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.ok)
@@ -217,7 +218,8 @@ class Error(Result[T_co, E_co]):
     def __init__(self, error: E_co):
         if isinstance(error, OK):
             raise TypeError(error)
-        self._error: Final[E_co] = error
+        # TODO: Remove the suppression when https://github.com/PyCQA/astroid/issues/999 is fixed.
+        self._error: Final[E_co] = error  # pylint: disable=assigning-non-slot
 
     def __repr__(self):
         return "%s(%r)" % (type(self).__name__, self.error)

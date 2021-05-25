@@ -15,6 +15,7 @@ import six
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.python_printer import PythonPrinter
 
 from cmk.gui.htmllib import HTML
 import cmk.gui.escaping as escaping
@@ -188,8 +189,23 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         # Be compatible with pre-2.0.0p1 central sites. The version was not sent before this
         # version. We need to skip the new_labels, vanished_labels and replaced_labels.
         version = html.request.headers.get("x-checkmk-version")
-        if not version:
-            return repr(tuple(execute_discovery_job(request))[:4])
+        if not version or version.startswith("1.6.0"):
+            data = execute_discovery_job(request)
+            # Shorten check_table entries, alienate paramstring to store additional info
+            # The paramstring is not evaluated in 1.6, but it will be returned in set-autochecks
+            # set-autochecks in 2.0 requires params, found_on_nodes, description
+            new_check_table = []
+            for entry in data[2]:
+                tmp_entry = list(entry[:-1])
+                paramstring_piggyback = {
+                    "params": entry[5],
+                    "service_description": entry[6],
+                    "found_on_nodes": entry[11],
+                }
+                tmp_entry[4] = paramstring_piggyback
+                new_check_table.append(tuple(tmp_entry))
+            fixed_data = tuple([data[0], data[1], new_check_table, data[3]])
+            return PythonPrinter().pformat(fixed_data)
         return repr(execute_discovery_job(request)._asdict())
 
 

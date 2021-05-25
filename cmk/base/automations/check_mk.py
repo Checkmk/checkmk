@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from contextlib import redirect_stdout, redirect_stderr
 
 from six import ensure_binary
@@ -52,6 +52,7 @@ from cmk.utils.type_defs import (
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
+    SetAutochecksTablePre20,
     AutomationDiscoveryResponse,
     DiscoveryResult,
     LegacyCheckParameters,
@@ -232,7 +233,8 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # from a new inventory.
     def execute(self, args: List[str]) -> None:
         hostname = args[0]
-        new_items: SetAutochecksTable = ast.literal_eval(sys.stdin.read())
+        new_items: Union[SetAutochecksTable,
+                         SetAutochecksTablePre20] = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -246,9 +248,11 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         if host_config.is_cluster:
             config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
+        # Fix data from version <2.0
         new_services: List[ServiceWithNodes] = []
-        for (raw_check_plugin_name, item), (descr, params, raw_service_labels,
-                                            found_on_nodes) in new_items.items():
+        for (raw_check_plugin_name,
+             item), (descr, params, raw_service_labels,
+                     found_on_nodes) in _transform_pre_20_items(new_items).items():
             check_plugin_name = CheckPluginName(raw_check_plugin_name)
 
             service_labels = DiscoveredServiceLabels()
@@ -261,6 +265,33 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         host_config.set_autochecks(new_services)
         self._trigger_discovery_check(config_cache, host_config)
+
+
+def _transform_pre_20_items(
+        new_items: Union[SetAutochecksTablePre20, SetAutochecksTable]) -> SetAutochecksTable:
+    if _is_20_set_autochecks_format(new_items):
+        return cast(SetAutochecksTable, new_items)
+
+    fixed_items: SetAutochecksTable = {}
+    for (check_type, item), (data_container, service_labels) in cast(SetAutochecksTablePre20,
+                                                                     new_items).items():
+        fixed_items[(check_type, item)] = (
+            data_container["service_description"],
+            data_container["params"],
+            service_labels,
+            data_container["found_on_nodes"],
+        )
+    return fixed_items
+
+
+def _is_20_set_autochecks_format(
+        new_items: Union[SetAutochecksTablePre20, SetAutochecksTable]) -> bool:
+    # try-inventory in 2.0 generates a different data format if it detects that the remote version
+    # is too old (<2.0). It reports a shorter tuple. The paramstring gets repurposed and
+    # acts as generic data container.
+    for _key, value in new_items.items():
+        return len(value) > 2
+    return True
 
 
 automations.register(AutomationSetAutochecks())

@@ -50,9 +50,13 @@ class ABCViewDashlet(IFrameDashlet):
         painter_options = PainterOptions.get_instance()
         painter_options.load(self._dashlet_spec["name"])
 
-        view = views.View(self._dashlet_spec["name"], view_spec, self.context)
+        # Here the linked view default context has the highest priority
+        # linkedview default>dashlet>url active filter, dashboard
+        context = visuals.get_merged_context(self.context, view_spec["context"])
+
+        view = views.View(self._dashlet_spec["name"], view_spec, context)
         view.row_limit = views.get_limit()
-        view.only_sites = visuals.get_only_sites_from_context(self.context)
+        view.only_sites = visuals.get_only_sites_from_context(context)
         view.user_sorters = views.get_user_sorters()
 
         views.process_view(views.GUIViewRenderer(view, show_buttons=False))

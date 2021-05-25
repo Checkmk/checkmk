@@ -527,11 +527,12 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == 'edit')
     board = _add_context_to_dashboard(board)
 
-    # Like _dashboard_info_handler we assume that only host / service filters are relevant
-    board_context = visuals.get_merged_context(
-        visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
-        board["context"])
-    board["context"] = board_context
+    board_context = board["context"]
+    if html.request.has_var("_active"):
+        # Like _dashboard_info_handler we assume that only host / service filters are relevant
+        board_context = visuals.VisualFilterListWithAddPopup(
+            info_list=["host", "service"]).from_html_vars("")
+        board["context"] = board_context
 
     title = visuals.visual_title('dashboard', board, board_context)
 
@@ -702,15 +703,7 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
                             mtime: int) -> str:
 
-    # All outer variables are completely reset for the dashlets to have a clean, well known state.
-    # The context that has been built based on the relevant HTTP variables is applied again.
-    dashlet_context = dashlet.context if dashlet.has_context() else {}
-    with visuals.context_uri_vars(dashlet_context, dashlet.single_infos()):
-        # Set some dashboard related variables that are needed by some dashlets
-        request.set_var("name", dashlet.dashboard_name)
-        request.set_var("mtime", str(mtime))
-
-        return _update_or_show(board, dashlet, is_update, mtime)
+    return _update_or_show(board, dashlet, is_update, mtime)
 
 
 def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int) -> str:
@@ -1446,11 +1439,9 @@ def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: Union[str, HTML]) 
 
 @cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet() -> None:
-    name = request.var('name')
+    name = request.get_ascii_input_mandatory("name", "")
     if not name:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
-
-    ident = request.get_integer_input_mandatory("id")
 
     try:
         board = get_permitted_dashboards()[name]
@@ -1459,11 +1450,9 @@ def ajax_dashlet() -> None:
 
     board = _add_context_to_dashboard(board)
 
-    dashlet_spec = None
-    for nr, this_dashlet_spec in enumerate(board['dashlets']):
-        if nr == ident:
-            dashlet_spec = this_dashlet_spec
-            break
+    ident = request.get_integer_input_mandatory("id")
+    dashlet_spec = next(
+        dashlet_spec for nr, dashlet_spec in enumerate(board['dashlets']) if nr == ident)
 
     if not dashlet_spec:
         raise MKUserError("id", _('The element can not be found on the dashboard.'))

@@ -421,14 +421,18 @@ def test_refresh_interval():
     assert dashlet.refresh_interval() == 22
 
 
-def test_dashlet_context_inheritance(request_context):
-    HostStats = dashboard.dashlet_registry["hoststats"]
-
-    # Set some context filter vars from URL
-    html.request.set_var("host", "bla")
-    html.request.set_var("wato_folder", "/aaa/eee")
-
-    dashboard_spec = dashboard._add_context_to_dashboard({})
+def test_dashlet_context_inheritance():
+    dashboard_spec = dashboard._add_context_to_dashboard({
+        'context': {
+            'wato_folder': {
+                'wato_folder': '/aaa/eee'
+            },
+            'host': {
+                'host': 'bla',
+                'neg_host': ''
+            },
+        }
+    })
 
     dashlet_spec = {
         'type': 'hoststats',
@@ -447,6 +451,7 @@ def test_dashlet_context_inheritance(request_context):
         'size': (30, 18),
     }
 
+    HostStats = dashboard.dashlet_registry["hoststats"]
     dashlet = HostStats(dashboard_name="bla",
                         dashboard=dashboard_spec,
                         dashlet_id=1,
@@ -454,11 +459,13 @@ def test_dashlet_context_inheritance(request_context):
 
     assert dashlet.context == {
         'host': {
-            'host': 'bla'
+            'host': 'bla',
+            'neg_host': ''
         },
         'wato_folder': {
             'wato_folder': ''
         },
     }
 
-    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('wato_folder', '')])
+    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('neg_host', ''),
+                                                              ('wato_folder', '')])

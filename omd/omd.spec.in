@@ -169,12 +169,6 @@ if [ -e /etc/fstab ]; then
     sed -i "s/^tmpfs  \/omd\/sites/tmpfs  \/opt\/omd\/sites/" /etc/fstab
 fi
 
-# Fix backup issues in RHEL / CENTOS
-cat >/usr/lib/tmpfiles.d/checkmk.conf <<EOL
-#Type Path            Mode UID      GID    Age Argument
-d /var/lock/mkbackup  0775 root     omd    -   -
-EOL
-
 # ensure apache is running
 service @APACHE_NAME@ start >/dev/null 2>&1
 exit 0

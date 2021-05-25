@@ -100,6 +100,8 @@ LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 SetAutochecksTable = Dict[Tuple[str, Item], Tuple[ServiceName, LegacyCheckParameters, Labels,
                                                   List[HostName]]]
 
+SetAutochecksTablePre20 = Dict[Tuple[str, Item], Tuple[Dict[str, Any], Labels]]
+
 
 @dataclass
 class DiscoveryResult:

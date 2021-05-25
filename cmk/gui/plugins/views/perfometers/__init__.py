@@ -99,8 +99,7 @@ def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base
         pos = 25 + 10.0 * (math.log(value, base) - h)
         if pos < 1:
             pos = 1
-        if pos > 49:
-            pos = 49
+        pos = min(pos, 49)
     if left_or_right == "right":
         return [(pos, color), (50 - pos, get_themed_perfometer_bg_color())]
     return [(50 - pos, get_themed_perfometer_bg_color()), (pos, color)]

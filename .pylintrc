@@ -152,7 +152,6 @@ disable=
     R0801,
     #---------------------------------------------------------------------------
     # Emergency suppressions, must be removed SOON!
-    consider-using-min-builtin,
     consider-using-max-builtin,
     consider-using-with,
 

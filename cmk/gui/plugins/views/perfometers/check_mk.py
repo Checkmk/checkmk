@@ -123,8 +123,7 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
     absoffset = abs(offset)
     crit = float(perf_data[0][4])
     max_ = crit * 2
-    if absoffset > max_:
-        absoffset = max_
+    absoffset = min(absoffset, max_)
     rel = 50 * (absoffset / max_)  # fixed: true-division
 
     color = {0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]

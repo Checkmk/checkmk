@@ -465,8 +465,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             pos = 50 + 10.0 * (math.log(value, base) - h)
             if pos < 2:
                 pos = 2
-            if pos > 98:
-                pos = 98
+            pos = min(pos, 98)
 
         return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
 

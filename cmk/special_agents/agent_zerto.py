@@ -18,6 +18,7 @@ import sys
 import requests
 
 from cmk.utils.exceptions import MKException
+
 LOGGER = logging.getLogger(__name__)
 
 

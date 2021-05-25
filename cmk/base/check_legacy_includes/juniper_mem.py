@@ -8,6 +8,7 @@
 # pylint: disable=no-else-return
 
 from cmk.base.check_api import get_bytes_human_readable
+
 juniper_mem_default_levels = (80.0, 90.0)
 
 

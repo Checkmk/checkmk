@@ -5,4 +5,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.plugin_loader import load_plugins
+
 load_plugins(__file__, __package__)

@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-i
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 cmctc_lcp_sensors = {
     4: (None, "access"),
     12: (None, "humidity"),

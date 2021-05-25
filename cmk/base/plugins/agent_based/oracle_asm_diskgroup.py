@@ -225,7 +225,7 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
 
             if fg_count == 1:
 
-                # we miss the 2nd requirred fg.
+                # we miss the 2nd required fg.
                 # => factor is down from 2 to 1
                 dg_sizefactor = 1
 
@@ -236,7 +236,7 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
 
             if fg_count <= 3:
 
-                # we are under the minimum requirred fgs for the dg.
+                # we are under the minimum required fgs for the dg.
                 dg_sizefactor = fg_count
 
             else:
@@ -311,7 +311,8 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
     free_space_mb = int(free_mb) // dg_sizefactor
 
     if params.get('req_mir_free'):
-        req_mir_free_mb = max(int(req_mir_free_mb), 0)  # requirred mirror free space could be negative!
+        req_mir_free_mb = max(int(req_mir_free_mb),
+                              0)  # required mirror free space could be negative!
         add_text = ', required mirror free space used'
 
     result_list = list(

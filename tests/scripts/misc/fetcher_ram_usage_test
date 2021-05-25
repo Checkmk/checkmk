@@ -93,6 +93,7 @@ def _vm_size() -> int:
 
 
 from pathlib import Path
+
 a_path = Path(os.path.realpath(cmk.utils.paths.make_helper_config_path("latest")))
 
 

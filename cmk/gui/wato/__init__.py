@@ -255,6 +255,7 @@ multisite_dir = watolib.multisite_dir
 
 # TODO: Kept for old plugin compatibility. Remove this one day
 from cmk.gui.valuespec import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES

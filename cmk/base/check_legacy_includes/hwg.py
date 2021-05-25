@@ -9,6 +9,7 @@ from cmk.base.config import factory_settings
 from .humidity import check_humidity
 from cmk.base.check_api import get_parsed_item_data
 from .temperature import check_temperature
+
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}
 
 map_dev_states = {

@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 import cmk.base.plugins.agent_based.docker_container_status as docker
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 from cmk.base.plugins.agent_based.utils import uptime
+
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
     [

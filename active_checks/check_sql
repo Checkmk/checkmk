@@ -16,6 +16,7 @@ import os
 import sys
 
 import cmk.utils.password_store
+
 cmk.utils.password_store.replace_passwords()
 
 LOG = logging.getLogger(__name__)

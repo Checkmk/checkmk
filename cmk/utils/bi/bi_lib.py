@@ -33,6 +33,7 @@ from marshmallow.fields import (
 )
 
 from functools import partial
+
 ReqList = partial(MList, required=True)
 ReqDict = partial(MDict, required=True)
 ReqConstant = partial(Constant, required=True)

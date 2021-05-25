@@ -7,6 +7,7 @@
 from werkzeug.debug import DebuggedApplication
 
 import cmk.gui.log as log
+
 log.init_logging()  # Initialize logging as early as possible
 
 import cmk.gui.modules as modules

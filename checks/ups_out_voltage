@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wild
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_out_voltage import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
 check_info['ups_out_voltage'] = {

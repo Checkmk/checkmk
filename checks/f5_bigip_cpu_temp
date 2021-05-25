@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcar
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 f5_bigip_cpu_temp_default_params = (60, 80)
 
 

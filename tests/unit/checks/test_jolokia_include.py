@@ -8,6 +8,7 @@ import os
 import pytest  # type: ignore[import]
 
 from cmk.base.check_legacy_includes.jolokia import *
+
 pytestmark = pytest.mark.checks
 
 

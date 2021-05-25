@@ -19,6 +19,7 @@ import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 import cmk.base.plugins.agent_based.utils.df as df
 
 from cmk.base.api.agent_based import value_store
+
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 NOW_EPOCH = (datetime.strptime(NOW_SIMULATED, "%Y-%m-%d %H:%M:%S.%f") -
              datetime(1970, 1, 1)).total_seconds()

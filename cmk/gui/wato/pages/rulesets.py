@@ -621,7 +621,7 @@ class ModeEditRuleset(WatoMode):
         # To be able to calculate the breadcrumb with the ModeRulesetGroup as parent, we need to
         # ensure that the group identity is available.
         with request.stashed_vars():
-            request.request.set_var("group", self._rulespec.main_group_name)
+            request.set_var("group", self._rulespec.main_group_name)
             return super().breadcrumb()
 
     def __init__(self):
@@ -1464,7 +1464,7 @@ class ABCEditRuleMode(WatoMode):
     def breadcrumb(self) -> Breadcrumb:
         # Let the ModeRulesetGroup know the group we are currently editing
         with request.stashed_vars():
-            request.request.set_var("group", self._ruleset.rulespec.main_group_name)
+            request.set_var("group", self._ruleset.rulespec.main_group_name)
             return super().breadcrumb()
 
     def _back_url(self):

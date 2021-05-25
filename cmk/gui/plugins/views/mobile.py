@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
+from cmk.gui.utils.mobile import is_mobile
 
 from cmk.gui.plugins.views import (
     multisite_builtin_views,
@@ -704,7 +705,7 @@ multisite_builtin_views.update({
 
 
 def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
@@ -763,7 +764,7 @@ class LayoutMobileTable(Layout):
 
 
 def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
@@ -824,7 +825,7 @@ class LayoutMobileList(Layout):
 
 
 def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 

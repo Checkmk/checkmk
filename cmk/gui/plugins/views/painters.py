@@ -24,7 +24,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, response
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -78,6 +78,7 @@ from cmk.gui.plugins.views.graphs import (
 
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 
 #   .--Painter Options-----------------------------------------------------.
@@ -4419,7 +4420,7 @@ class PainterLogContactName(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         target_view_name = ("mobile_contactnotifications"
-                            if html.is_mobile() else "contactnotifications")
+                            if is_mobile(request, response) else "contactnotifications")
         return (
             "nowrap",
             HTML(", ").join(

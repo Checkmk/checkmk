@@ -29,13 +29,15 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, local, request as global_request, transactions, user_errors, theme
+from cmk.gui.globals import (html, local, request as global_request, response, transactions,
+                             user_errors, theme)
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
 from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
 from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
+from cmk.gui.utils.mobile import is_mobile
 
 auth_logger = logger.getChild("auth")
 
@@ -434,7 +436,7 @@ class LoginPage(Page):
         if self._no_html_output:
             raise MKAuthException(_("Invalid login credentials."))
 
-        if html.mobile:
+        if is_mobile(global_request, response):
             cmk.gui.mobile.page_login()
             return
 

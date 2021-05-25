@@ -51,7 +51,7 @@ from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
-from cmk.gui.globals import g, html, request, display_options, theme
+from cmk.gui.globals import g, html, request, response, display_options, theme
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
@@ -86,6 +86,7 @@ from cmk.gui.type_defs import (
 )
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.mobile import is_mobile
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
@@ -1142,7 +1143,8 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
         visual["name"], row, infos, visual["single_infos"], link_filters)
 
-    return make_linked_visual_url(visual_type, visual, singlecontext_request_vars, html.mobile)
+    return make_linked_visual_url(visual_type, visual, singlecontext_request_vars,
+                                  is_mobile(request, response))
 
 
 def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Visual]:

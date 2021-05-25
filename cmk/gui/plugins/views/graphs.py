@@ -9,7 +9,7 @@ import copy
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import request, response
 from cmk.gui.valuespec import (
     DropdownChoice,
     Transform,
@@ -30,6 +30,7 @@ from cmk.gui.plugins.views import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.mobile import is_mobile
 
 multisite_builtin_views.update({
     'service_graphs': {
@@ -147,7 +148,7 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     if painter_option_pnp_timerange is not None:
         graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
 
-    if html.is_mobile():
+    if is_mobile(request, response):
         graph_render_options.update({
             "interaction": False,
             "show_controls": False,

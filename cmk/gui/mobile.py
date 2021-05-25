@@ -38,7 +38,6 @@ NavigationBar = List[Tuple[str, str, str, str]]
 
 
 def mobile_html_head(title: str) -> None:
-    html.mobile = True
     html.write(
         """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
     )

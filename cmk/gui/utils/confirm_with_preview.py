@@ -6,8 +6,9 @@
 
 from typing import List, Tuple, Union, Optional
 from cmk.gui.utils.html import HTML
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
+from cmk.gui.utils.mobile import is_mobile
 
 
 def confirm_with_preview(msg: Union[str, HTML],
@@ -32,7 +33,8 @@ def confirm_with_preview(msg: Union[str, HTML],
         return None  # None --> "Cancel"
 
     if not any(html.request.has_var(varname) for _title, varname in confirm_options):
-        if html.mobile:
+        mobile = is_mobile(request, response)
+        if mobile:
             html.open_center()
         html.open_div(class_="really")
         html.write_text(msg)
@@ -43,7 +45,7 @@ def confirm_with_preview(msg: Union[str, HTML],
         html.button("_do_actions", _("Cancel"))
         html.end_form()
         html.close_div()
-        if html.mobile:
+        if mobile:
             html.close_center()
 
         return False  # False --> "Dialog shown, no answer yet"

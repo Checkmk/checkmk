@@ -25,7 +25,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.globals import html, request, response, transactions, user_errors
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
@@ -55,6 +55,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.utils.urls import (makeuri, makeuri_contextless, urlencode_vars, urlencode,
                                 requested_file_name)
+from cmk.gui.utils.mobile import is_mobile
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 CrashInfo = Dict
@@ -131,7 +132,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
             "username": config.user.id,
             "user_agent": html.request.user_agent.string,
             "referer": html.request.referer,
-            "is_mobile": html.is_mobile(),
+            "is_mobile": is_mobile(request, response),
             "is_ssl_request": html.request.is_ssl_request,
             "language": cmk.gui.i18n.get_current_language(),
             "request_method": html.request.request_method,

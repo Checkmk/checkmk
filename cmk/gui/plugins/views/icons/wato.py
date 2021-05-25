@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
-from cmk.gui.globals import html, request, display_options
+from cmk.gui.globals import request, response, display_options
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.mobile import is_mobile
 
 
 @icon_and_action_registry.register
@@ -29,7 +30,7 @@ class WatoIcon(Icon):
             return config.user.may("wato.use") and \
                 (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
-        if not may_see_hosts() or html.mobile:
+        if not may_see_hosts() or is_mobile(request, response):
             return None
 
         wato_folder = _wato_folder_from_filename(row["host_filename"])

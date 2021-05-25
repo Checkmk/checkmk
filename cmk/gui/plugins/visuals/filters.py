@@ -22,7 +22,8 @@ import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, user_errors, request
+from cmk.gui.globals import html, user_errors, request, response
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.valuespec import (
     DualListChoice,
     Labels,
@@ -89,7 +90,7 @@ class FilterText(Filter):
         current_value = self._current_value()
         column = self.link_columns[0]
 
-        if column in ["host_name", "service_description"] and not html.is_mobile():
+        if column in ["host_name", "service_description"] and not is_mobile(request, response):
             input_type = "monitored_hostname" if column == "host_name" else "monitored_service_description"
             choices = [(current_value, current_value)] if current_value else []
             html.dropdown(self.htmlvars[0],
@@ -1771,6 +1772,7 @@ class FilterLogState(Filter):
         html.open_tr()
         html.open_td()
         html.begin_checkbox_group()
+        mobile = is_mobile(request, response)
         for varsuffix, what, state, text in self._items:
             if state == 0:
                 title = _("Host") if what == "host" else _("Service")
@@ -1778,7 +1780,7 @@ class FilterLogState(Filter):
                 html.close_td()
                 html.open_td()
             html.checkbox("logst_" + varsuffix, True, label=text)
-            if not html.mobile:
+            if not mobile:
                 html.br()
             if varsuffix == "h2":
                 html.close_td()

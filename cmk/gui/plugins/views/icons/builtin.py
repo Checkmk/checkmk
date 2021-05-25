@@ -44,7 +44,7 @@ import cmk.gui.bi as bi
 import cmk.gui.config as config
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -58,6 +58,7 @@ from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars, urlencode
+from cmk.gui.utils.mobile import is_mobile
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -399,7 +400,7 @@ class PerfgraphIcon(Icon):
         # Don't show the icon with Checkmk graphing. The hover makes no sense and there is no
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
         # for the moment.
-        if html.is_mobile():
+        if is_mobile(request, response):
             return
 
         return html.render_a(

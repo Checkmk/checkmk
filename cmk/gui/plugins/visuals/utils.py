@@ -336,7 +336,7 @@ class FilterTristate(Filter):
         self.deflt = deflt
 
     def display(self, value: FilterHTTPVariables) -> None:
-        current = value[self.varname]
+        current = value.get(self.varname, "")
         html.begin_radio_group(horizontal=True)
         for state, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == state or (current in [None, ""] and int(state) == self.deflt)

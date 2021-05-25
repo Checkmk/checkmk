@@ -1076,6 +1076,7 @@ def test_filters_display_with_empty_request(request_context, live):
                 filt.display({k:"" for k in filt.htmlvars})
 
 
+# TODO: Does this ever work testing something?
 def _set_expected_queries(filt_ident, live):
     if filt_ident in ["hostgroups", "opthostgroup", "hostgroup"]:
         live.expect_query(
@@ -1108,6 +1109,7 @@ def _set_expected_queries(filt_ident, live):
             )
         return
 
+    # TODO: This does
     if filt_ident in ["host_check_command", "check_command"]:
         live.expect_query(
             'GET commands\nCache: reload\nColumns: name\nColumnHeaders: off'

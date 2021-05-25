@@ -361,7 +361,7 @@ class FilterInvText(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        html.text_input(htmlvar, value[htmlvar])
+        html.text_input(htmlvar, value[htmlvar] if value else "")
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})

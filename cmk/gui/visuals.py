@@ -1678,6 +1678,8 @@ class VisualFilter(ValueSpec):
             self.set_value(value)
 
         # A filter can not be used twice on a page, because the varprefix is not used
+        # The value spec compatibility does not allow to control value input
+        # and unset values can come as None instead of the expected FilterHTTPVariables
         show_filter(self._filter)
 
     def from_html_vars(self, varprefix):

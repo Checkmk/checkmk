@@ -112,6 +112,9 @@ _log_section_time() {
     fi
 }
 
+export PROFILING_LOGFILE
+export -f _log_section_time
+
 # Function to replace "if type [somecmd]" idiom
 # 'command -v' tends to be more robust vs 'which' and 'type' based tests
 inpath() {
@@ -1284,7 +1287,7 @@ run_plugins() {
                 run_agent_plugin "$skript"
             fi
         done
-        # Call some plugins only every Xth second
+        # Call some plugins only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
                 run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
@@ -1320,7 +1323,7 @@ run_agent_plugin() {
 
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        _log_section_time "plugin_$agent_plugin" "./$agent_plugin"
+        _log_section_time "agent_plugin_$agent_plugin" "./$agent_plugin"
         return
     fi
 
@@ -1334,7 +1337,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            _log_section_time "plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
+            _log_section_time "agent_plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
             return
         fi
         return
@@ -1345,7 +1348,7 @@ run_agent_plugin() {
     fi
 
     if [ -n "$PYTHON2" ]; then
-        _log_section_time "plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
+        _log_section_time "agent_plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
     fi
 }
 
@@ -1385,7 +1388,8 @@ run_cached() {
     local CMDLINE=$section$*
 
     if $DISABLE_CACHING; then
-        "$CMDLINE"
+        # shellcheck disable=SC2090
+        $CMDLINE
         return
     fi
 

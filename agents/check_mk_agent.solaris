@@ -100,6 +100,9 @@ _log_section_time() {
     fi
 }
 
+export PROFILING_LOGFILE
+export -f _log_section_time
+
 read_python_version() {
     if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
         echo "$1"
@@ -169,7 +172,8 @@ run_cached() {
     local AGE
 
     if $DISABLE_CACHING; then
-        "$CMDLINE"
+        # shellcheck disable=SC2090
+        $CMDLINE
         return
     fi
 
@@ -608,7 +612,7 @@ run_agent_plugin() {
     filename="${agent_plugin%.*}"
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        _log_section_time "plugin_$agent_plugin" "./$agent_plugin"
+        _log_section_time "agent_plugin_$agent_plugin" "./$agent_plugin"
         return
     fi
     if [ "${filename:(-2):(2)}" != "_2" ]; then
@@ -621,7 +625,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            _log_section_time "plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
+            _log_section_time "agent_plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
             return
         fi
         return
@@ -630,17 +634,15 @@ run_agent_plugin() {
         return
     fi
     if [ -n "$PYTHON2" ]; then
-        _log_section_time "plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
+        _log_section_time "agent_plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
     fi
 }
 
 run_plugins() {
     # Plugins
-    if cd $PLUGINSDIR 2>/dev/null
-    then
-        for skript in $(ls)
-        do
-            if [ -x "$skript" ] ; then
+    if cd $PLUGINSDIR 2>/dev/null; then
+        for skript in ./*; do
+            if [ ! -d "$skript" ] && [ -x "$skript" ] ; then
                 run_agent_plugin $skript
             fi
         done

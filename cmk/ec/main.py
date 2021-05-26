@@ -200,9 +200,7 @@ class ECLock:
 
     def acquire(self, blocking: bool = True) -> bool:
         self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
-        # Suppression due to https://github.com/PyCQA/pylint/issues/3212,
-        # already fixed in astroid, but no released version yet. :-/
-        ret = self._lock.acquire(blocking)  # pylint: disable=assignment-from-no-return
+        ret = self._lock.acquire(blocking)
         if ret is True:
             self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
         else:

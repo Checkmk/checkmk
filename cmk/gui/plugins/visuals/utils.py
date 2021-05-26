@@ -314,6 +314,15 @@ class Filter(metaclass=abc.ABCMeta):
         return {varname: request.get_str_input_mandatory(varname, '') for varname in self.htmlvars}
 
 
+def display_filter_radiobuttons(*, varname: str, options: List[Tuple[str, str]], default: str,
+                                value: FilterHTTPVariables) -> None:
+    pick = value.get(varname, default)
+    html.begin_radio_group(horizontal=True)
+    for state, text in options:
+        html.radiobutton(varname, state, pick == state, text + " &nbsp; ")
+    html.end_radio_group()
+
+
 class FilterTristate(Filter):
     def __init__(self,
                  *,
@@ -336,12 +345,11 @@ class FilterTristate(Filter):
         self.deflt = deflt
 
     def display(self, value: FilterHTTPVariables) -> None:
-        current = value.get(self.varname, "")
-        html.begin_radio_group(horizontal=True)
-        for state, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
-            checked = current == state or (current in [None, ""] and int(state) == self.deflt)
-            html.radiobutton(self.varname, state, checked, text + u" &nbsp; ")
-        html.end_radio_group()
+        display_filter_radiobuttons(varname=self.varname,
+                                    options=[("1", _("yes")), ("0", _("no")),
+                                             ("-1", _("(ignore)"))],
+                                    default=str(self.deflt),
+                                    value=value)
 
     def tristate_value(self, value: FilterHTTPVariables) -> int:
         try:

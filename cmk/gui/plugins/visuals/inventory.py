@@ -27,6 +27,8 @@ from cmk.gui.plugins.visuals import (
     VisualInfo,
     visual_info_registry,
 )
+from cmk.gui.plugins.visuals.utils import display_filter_radiobuttons
+
 from cmk.gui.type_defs import (
     Rows,
     VisualContext,
@@ -223,12 +225,15 @@ class FilterInvtableAdminStatus(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self, _value) -> None:
-        html.begin_radio_group(horizontal=True)
-        # TODO radio hell
-        for value, text in [("1", _("up")), ("2", _("down")), ("-1", _("(ignore)"))]:
-            html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.ident,
+                                    options=[
+                                        ("1", _("up")),
+                                        ("2", _("down")),
+                                        ("-1", _("(ignore)")),
+                                    ],
+                                    default="-1",
+                                    value=value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
@@ -249,12 +254,15 @@ class FilterInvtableAvailable(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self, _value) -> None:
-        html.begin_radio_group(horizontal=True)
-        # TODO radio hell
-        for value, text in [("no", _("used")), ("yes", _("free")), ("", _("(ignore)"))]:
-            html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.ident,
+                                    options=[
+                                        ("no", _("used")),
+                                        ("yes", _("free")),
+                                        ("", _("(ignore)")),
+                                    ],
+                                    default="",
+                                    value=value)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
@@ -541,16 +549,13 @@ class FilterInvHasSoftwarePackage(Filter):
         return bool(value.get(self._varprefix + "name"))
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # TODO radio hell
         html.text_input(self._varprefix + "name")
         html.br()
-        html.begin_radio_group(horizontal=True)
-        html.radiobutton(self._varprefix + "match", "exact", True, label=_("exact match"))
-        html.radiobutton(self._varprefix + "match",
-                         "regex",
-                         False,
-                         label=_("regular expression, substring match"))
-        html.end_radio_group()
+        display_filter_radiobuttons(varname=self._varprefix + "match",
+                                    options=[("exact", _("exact match")),
+                                             ("regex", _("regular expression, substring match"))],
+                                    default="exact",
+                                    value=value)
         html.br()
         html.open_span(class_="min_max_row")
         html.write_text(_("Min.&nbsp;Version: "))

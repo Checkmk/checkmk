@@ -45,6 +45,7 @@ from cmk.gui.plugins.visuals.utils import (
     filter_cre_choices,
     filter_cre_heading_info,
     get_only_sites_from_context,
+    display_filter_radiobuttons,
 )
 
 
@@ -274,14 +275,13 @@ class FilterIPAddress(Filter):
                          is_show_more=is_show_more)
         self._what = what
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[0], value.get(self.htmlvars[0], ""))
         html.br()
-        html.begin_radio_group()
-        # TODO: The radio button logic is hell
-        html.radiobutton(self.htmlvars[1], "yes", True, _("Prefix match"))
-        html.radiobutton(self.htmlvars[1], "no", False, _("Exact match"))
-        html.end_radio_group()
+        display_filter_radiobuttons(varname=self.htmlvars[1],
+                                    options=[("yes", _("Prefix match")), ("no", _("Exact match"))],
+                                    default="yes",
+                                    value=value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         address_val = value.get(self.htmlvars[0])
@@ -348,13 +348,15 @@ class FilterAddressFamily(Filter):
                          link_columns=[],
                          is_show_more=True)
 
-    def display(self, value) -> None:
-        html.begin_radio_group()
-        # TODO: Radio button hell
-        html.radiobutton("address_family", "4", False, _("IPv4"))
-        html.radiobutton("address_family", "6", False, _("IPv6"))
-        html.radiobutton("address_family", "both", True, _("Both"))
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.htmlvars[0],
+                                    options=[
+                                        ("4", _("IPv4")),
+                                        ("6", _("IPv6")),
+                                        ("both", _("Both")),
+                                    ],
+                                    default="both",
+                                    value=value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         family = value.get("address_family", "both")
@@ -370,22 +372,22 @@ class FilterAddressFamilies(Filter):
                          title=_("Host address families"),
                          sort_index=103,
                          info="host",
-                         htmlvars=[
-                             "address_families",
-                         ],
+                         htmlvars=["address_families"],
                          link_columns=[],
                          is_show_more=True)
 
-    def display(self, value) -> None:
-        html.begin_radio_group()
-        # TODO: Radio button hell
-        html.radiobutton("address_families", "4", False, label="v4")
-        html.radiobutton("address_families", "6", False, label="v6")
-        html.radiobutton("address_families", "both", False, label=_("both"))
-        html.radiobutton("address_families", "4_only", False, label=_("only v4"))
-        html.radiobutton("address_families", "6_only", False, label=_("only v6"))
-        html.radiobutton("address_families", "", True, label=_("(ignore)"))
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.htmlvars[0],
+                                    options=[
+                                        ("4", "v4"),
+                                        ("6", "v6"),
+                                        ("both", _("Both")),
+                                        ("4_only", _("only v4")),
+                                        ("6_only", _("only v6")),
+                                        ("", _("(ignore)")),
+                                    ],
+                                    default="",
+                                    value=value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         family = value.get("address_families")
@@ -1071,14 +1073,14 @@ class FilterStateType(FilterTristate):
                          is_show_more=True)
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # From show can have value None
-        current = value[self.varname] if value is not None else ""
-        html.begin_radio_group(horizontal=True)
-        for state_name, text in [("0", _("SOFT")), ("1", _("HARD")), ("-1", _("(ignore)"))]:
-            checked = current == state_name or (current in [None, ""] and
-                                                int(state_name) == self.deflt)
-            html.radiobutton(self.varname, state_name, checked, text + " &nbsp; ")
-        html.end_radio_group()
+        display_filter_radiobuttons(varname=self.varname,
+                                    options=[
+                                        ("0", _("SOFT")),
+                                        ("1", _("HARD")),
+                                        ("-1", _("(ignore)")),
+                                    ],
+                                    default=str(self.deflt),
+                                    value=value)
 
     def filter_code(self, positive: bool) -> str:
         return "Filter: state_type = %d\n" % int(positive)
@@ -1803,19 +1805,15 @@ class FilterLogNotificationPhase(FilterTristate):
                          info="log",
                          column="log_command_name")
 
-    def display(self, value) -> None:
-        current = value.get(self.varname, "")
-        # TODO radio hell
-        html.begin_radio_group(horizontal=False)
-        for state_name, text in [
-            ("-1", _("Show all phases of notifications")),
-            ("1", _("Show just preliminary notifications")),
-            ("0", _("Show just end-user-notifications")),
-        ]:
-            checked = current == state_name or (current == "" and int(state_name) == self.deflt)
-            html.radiobutton(self.varname, state_name, checked, text + " &nbsp; ")
-            html.br()
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.varname,
+                                    options=[
+                                        ("-1", _("Show all phases of notifications")),
+                                        ("1", _("Show just preliminary notifications")),
+                                        ("0", _("Show just end-user-notifications")),
+                                    ],
+                                    default=str(self.deflt),
+                                    value=value)
 
     def filter_code(self, positive: bool) -> str:
         # Note: this filter also has to work for entries that are no notification.

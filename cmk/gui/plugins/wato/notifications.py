@@ -307,7 +307,7 @@ class NotificationParameterSlack(NotificationParameter):
         return Transform(
             Dictionary(
                 title=_("Create notification with the following parameters"),
-                optional_keys=["url_prefix", "proxy_url"],
+                optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
                 elements=[
                     ("webhook_url",
                      CascadingDropdown(
@@ -327,6 +327,13 @@ class NotificationParameterSlack(NotificationParameter):
                                        choices=passwordstore_choices,
                                    ))],
                      )),
+                    ("ignore_ssl",
+                     FixedValue(
+                         True,
+                         title=_("Disable SSL certificate verification"),
+                         totext=_("Disable SSL certificate verification"),
+                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                     )),
                     ("url_prefix", _get_url_prefix_specs(local_site_url)),
                     ("proxy_url", HTTPProxyReference()),
                 ],
@@ -345,7 +352,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix", "proxy_url"],
+            optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
             elements=[
                 ("webhook_url",
                  CascadingDropdown(
@@ -364,6 +371,13 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                                ))],
                  )),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
                 ("proxy_url", HTTPProxyReference()),
             ],
         )
@@ -379,7 +393,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix"],
+            optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
             elements=[
                 ("webhook_url",
                  CascadingDropdown(
@@ -401,6 +415,14 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
+                ("proxy_url", HTTPProxyReference()),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
@@ -416,7 +438,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix"],
+            optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
             hidden_keys=["webhook_url"],
             elements=[
                 ("routing_key",
@@ -431,6 +453,14 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ("webhook_url",
                  FixedValue("https://events.pagerduty.com/v2/enqueue",
                             title=_("API Endpoint from PagerDuty V2"))),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
+                ("proxy_url", HTTPProxyReference()),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
@@ -446,7 +476,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=[],
+            optional_keys=["ignore_ssl", "proxy_url"],
             elements=[
                 ("password",
                  IndividualOrStoredPassword(
@@ -455,6 +485,14 @@ class NotificationParameterSIGNL4(NotificationParameter):
                             "your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
                      allow_empty=False,
                  )),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
+                ("proxy_url", HTTPProxyReference()),
                 ("url_prefix", _get_url_prefix_specs(local_site_url)),
             ],
         )
@@ -520,7 +558,7 @@ class NotificationILert(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=[],
+            optional_keys=["ignore_ssl", "proxy_url"],
             elements=[
                 ("ilert_api_key",
                  CascadingDropdown(title=_("iLert alert source API key"),
@@ -533,6 +571,14 @@ class NotificationILert(NotificationParameter):
                                             ("store", _("API key from password store"),
                                              DropdownChoice(sorted=True,
                                                             choices=passwordstore_choices))])),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
+                ("proxy_url", HTTPProxyReference()),
                 ("ilert_priority",
                  DropdownChoice(
                      sorted=True,

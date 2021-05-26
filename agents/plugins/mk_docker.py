@@ -41,8 +41,6 @@ try:
 except ImportError:
     pass
 
-__version__ = "2.1.0i1"
-
 
 def which(prg):
     for path in os.environ["PATH"].split(os.pathsep):

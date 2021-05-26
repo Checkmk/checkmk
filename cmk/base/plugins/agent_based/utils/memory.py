@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Literal, Mapping, Optional, Tuple, Union
+from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
 from ..agent_based_api.v1.type_defs import CheckResult
 
 from ..agent_based_api.v1 import Metric, render, Result, State as state
@@ -12,7 +12,15 @@ from ..agent_based_api.v1 import Metric, render, Result, State as state
 SectionMem = Mapping[str, int]
 
 
-def is_linux_section(section: Dict[str, int]) -> bool:
+class SectionMemUsed(TypedDict, total=False):
+    Cached: int
+    MemFree: int
+    MemTotal: int
+    SwapFree: int
+    SwapTotal: int
+
+
+def is_linux_section(section: SectionMem) -> bool:
     # match these to the keys required by checks/mem
     return {
         "Buffers",

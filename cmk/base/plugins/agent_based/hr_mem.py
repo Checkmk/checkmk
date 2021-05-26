@@ -8,7 +8,7 @@ from contextlib import suppress
 
 from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register, SNMPTree
-from .utils import ucd_hr_detection
+from .utils import ucd_hr_detection, memory
 
 PreParsed = Dict[str, List[Tuple[str, int, int]]]
 
@@ -51,8 +51,8 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
             # interesting data anyway so we can ignore them silently by returning None (rather
             # than "unknown")
             '.1.3.6.1.2.1.25.3.9': None,  # not relevant, contains info about file systems
-            '.0.0': None,  #                   Arris modems set ".0.0"
-            '': None,  #                       ClearPass Policy Manager doesn't even send a type..
+            '.0.0': None,  # Arris modems set ".0.0"
+            '': None,  # ClearPass Policy Manager doesn't even send a type..
         }
 
         with suppress(KeyError):
@@ -97,9 +97,9 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     return parsed
 
 
-def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
+def aggregate_meminfo(parsed: PreParsed) -> memory.SectionMemUsed:
     """return a meminfo dict as expected by check_memory from mem.include"""
-    meminfo = {'Cached': 0., 'Buffers': 0.}
+    meminfo: memory.SectionMemUsed = {'Cached': 0}
 
     for type_readable, entries in parsed.items():
         for descr, size, used in entries:
@@ -117,19 +117,16 @@ def aggregate_meminfo(parsed: PreParsed) -> Dict[str, float]:
                     meminfo.setdefault("SwapTotal", size)
                     meminfo.setdefault("SwapFree", (size - used))
 
-            if descr in ["cached memory", "memory buffers"] and used > 0:
+            if descr == "cached memory" and used > 0:
                 # Account for cached memory (this works at least for systems using
                 # the UCD snmpd (such as Linux based applicances)
                 # some devices report negative used cache values...
-                if descr == "cached memory":
-                    meminfo["Cached"] += used
-                else:
-                    meminfo["Buffers"] += used
+                meminfo["Cached"] += used
 
     return meminfo
 
 
-def parse_hr_mem(string_table: List[StringTable]) -> Optional[Dict[str, float]]:
+def parse_hr_mem(string_table: List[StringTable]) -> Optional[memory.SectionMemUsed]:
     pre_parsed = pre_parse_hr_mem(string_table)
 
     # Do we find at least one entry concerning memory?

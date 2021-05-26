@@ -8,6 +8,8 @@ import json
 
 from ..agent_based_api.v1.type_defs import StringTable
 
+from .memory import SectionMemUsed
+
 INVENTORY_BASE_PATH = ["software", "applications", "docker"]
 
 
@@ -128,7 +130,7 @@ class MemorySection(NamedTuple):
     mem_usage: int
     mem_cache: int
 
-    def to_mem_used(self) -> Dict[str, int]:
+    def to_mem_used(self) -> SectionMemUsed:
         # it seems to be a common problem, that mem_cache > mem_usage,
         # so we make sure that we don't report negative values for memory usage.
         # all container runtimes seem to do it this way:

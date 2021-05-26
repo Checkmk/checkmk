@@ -7,10 +7,10 @@ from typing import Dict
 from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
-from .utils import docker
+from .utils import docker, memory
 
 
-def parse_docker_container_mem_cgroupv2(string_table: StringTable) -> Dict[str, int]:
+def parse_docker_container_mem_cgroupv2(string_table: StringTable) -> memory.SectionMemUsed:
     parsed = docker.parse_container_memory(string_table, cgroup=2)
     return parsed.to_mem_used()
 

@@ -495,27 +495,21 @@ def is_user_file(filepath) -> bool:
     return entry.startswith('user_') or entry in ['tableoptions.mk', 'treestates.mk', 'sidebar.mk']
 
 
-def _update_check_mk(path, tar_file):
-    "extract check_mk/conf.d/wato folder but skip overwriting user notification_rules"
+def _update_check_mk(target_dir, tar_file):
+    """extract check_mk/conf.d/wato folder, but keep information in contacts.mk
+    (need to retain user notification rules)"""
+    site_vars: Dict[str, Any] = {"contacts": {}}
+    with Path(target_dir).joinpath("contacts.mk").open(encoding="utf-8") as f:
+        exec(f.read(), {}, site_vars)
 
-    members = [m for m in tar_file.getmembers() if m.name != "./contacts.mk"]
-    for entry in members:
-        filepath = os.path.join(path, entry.name)
-        if os.path.isfile(filepath):
-            os.remove(filepath)
-
-    tar_file.extractall(path, members=members)
+    _wipe_directory(target_dir)
+    tar_file.extractall(target_dir)
 
     master_vars: Dict[str, Any] = {"contacts": {}}
     exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
-    site_vars: Dict[str, Any] = {"contacts": {}}
-    with Path(path).joinpath("contacts.mk").open(encoding="utf-8") as f:
-        exec(f.read(), {}, site_vars)
-
     site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])
-
-    store.save_to_mk_file(os.path.join(path, "contacts.mk"), "contacts", site_contacts)
+    store.save_to_mk_file(os.path.join(target_dir, "contacts.mk"), "contacts", site_contacts)
 
 
 def _update_contacts_dict(master: Dict, site: Dict) -> Dict:

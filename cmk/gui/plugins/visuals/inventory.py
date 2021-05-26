@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.plugins.visuals import (
@@ -44,20 +44,15 @@ class FilterInvtableText(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        value = request.get_unicode_input(htmlvar)
-        html.text_input(htmlvar, value if value is not None else '')
+        html.text_input(htmlvar, value.get(htmlvar, ""))
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         assert not isinstance(value, str)
         htmlvar = self.htmlvars[0]
-        request_var = value[htmlvar]
-        if request_var is None:
-            return rows
-
-        filtertext = request_var.strip().lower()
+        filtertext = value.get(htmlvar, "").strip().lower()
         if not filtertext:
             return rows
 
@@ -84,20 +79,21 @@ class FilterInvtableTimestampAsAge(Filter):
                          htmlvars=[self._from_varprefix + "_days", self._to_varprefix + "_days"],
                          link_columns=[])
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.open_table()
 
+        from_value, to_value = (self._days_to_seconds(value.get(v, "")) for v in self.htmlvars)
         html.open_tr()
         html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
-        self._valuespec().render_input(self._from_varprefix, 0)
+        self._valuespec().render_input(self._from_varprefix, from_value)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
-        self._valuespec().render_input(self._to_varprefix, 0)
+        self._valuespec().render_input(self._to_varprefix, to_value)
         html.close_td()
         html.close_tr()
 
@@ -106,16 +102,18 @@ class FilterInvtableTimestampAsAge(Filter):
     def _valuespec(self) -> ValueSpec:
         return Age(display=["days"])
 
+    @staticmethod
+    def _days_to_seconds(value: str) -> int:
+        try:
+            return int(value) * 3600 * 24
+        except ValueError:
+            return 0
+
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        def days_to_seconds(value: str) -> int:
-            try:
-                return int(value) * 3600 * 24
-            except ValueError:
-                return 0
 
         values = context.get(self.ident, {})
         assert not isinstance(values, str)
-        from_value, to_value = (days_to_seconds(values[v]) for v in self.htmlvars)
+        from_value, to_value = (self._days_to_seconds(values.get(v, "")) for v in self.htmlvars)
 
         if not from_value and not to_value:
             return rows
@@ -145,16 +143,22 @@ class FilterInvtableIDRange(Filter):
                          htmlvars=[ident + "_from", ident + "_to"],
                          link_columns=[])
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("from:") + " ")
-        html.text_input(self.ident + "_from", size=8, cssclass="number")
+        html.text_input(self.ident + "_from",
+                        default_value=value.get(self.ident + "_from", ""),
+                        size=8,
+                        cssclass="number")
         html.write_text("&nbsp; %s: " % _("to"))
-        html.text_input(self.ident + "_to", size=8, cssclass="number")
+        html.text_input(self.ident + "_to",
+                        default_value=value.get(self.ident + "_to", ""),
+                        size=8,
+                        cssclass="number")
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
         assert not isinstance(values, str)
-        from_value, to_value = (utils.saveint(values[v]) for v in self.htmlvars)
+        from_value, to_value = (utils.saveint(values.get(v, 0)) for v in self.htmlvars)
 
         if not from_value and not to_value:
             return rows
@@ -182,6 +186,7 @@ class FilterInvtableOperStatus(Filter):
                          link_columns=[])
 
     def display(self, value) -> None:
+        # TODO checkbox hell
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
             if not isinstance(state, int):  # needed because of silly types
@@ -220,6 +225,7 @@ class FilterInvtableAdminStatus(Filter):
 
     def display(self, _value) -> None:
         html.begin_radio_group(horizontal=True)
+        # TODO radio hell
         for value, text in [("1", _("up")), ("2", _("down")), ("-1", _("(ignore)"))]:
             html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
         html.end_radio_group()
@@ -227,16 +233,11 @@ class FilterInvtableAdminStatus(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
         assert not isinstance(values, str)
-        current = values[self.ident]
-        if current not in ("1", "2"):
+        current = values.get(self.ident, '-1')
+        if current == "-1":
             return rows
 
-        new_rows = []
-        for row in rows:
-            admin_status = str(row["invinterface_admin_status"])
-            if admin_status == current:
-                new_rows.append(row)
-        return new_rows
+        return [row for row in rows if str(row["invinterface_admin_status"]) == current]
 
 
 class FilterInvtableAvailable(Filter):
@@ -250,13 +251,14 @@ class FilterInvtableAvailable(Filter):
 
     def display(self, _value) -> None:
         html.begin_radio_group(horizontal=True)
+        # TODO radio hell
         for value, text in [("no", _("used")), ("yes", _("free")), ("", _("(ignore)"))]:
             html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
         html.end_radio_group()
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        current = value if isinstance(value, str) else value[self.ident]
+        current = value if isinstance(value, str) else value.get(self.ident, "")
 
         if current not in ("no", "yes"):
             return rows
@@ -286,13 +288,12 @@ class FilterInvtableInterfaceType(Filter):
         )
 
     def selection(self, value: FilterHTTPVariables) -> List[str]:
-        request_var = value[self.ident]
-        current = request_var.strip().split("|")
+        current = value.get(self.ident, "").strip().split("|")
         if current == ['']:
             return []
         return current
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
         self.valuespec().render_input(self.ident, self.selection(value))
         html.close_div()
@@ -315,12 +316,12 @@ class FilterInvtableVersion(Filter):
                          htmlvars=[ident + "_from", ident + "_to"],
                          link_columns=[])
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], size=7)
+        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
         html.write_text(" &nbsp; ")
         html.write_text(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], size=7)
+        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
@@ -409,18 +410,18 @@ class FilterInvFloat(Filter):
         self._unit = unit
         self._scale = scale if scale is not None else 1.0
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
-        current_value = request.var(htmlvar, "")
-        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
+        current_value = value.get(htmlvar, "")
+        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
         if self._unit:
             html.write_text(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
-        current_value = request.var(htmlvar, "")
-        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
+        current_value = value.get(htmlvar, "")
+        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
         if self._unit:
             html.write_text(" %s" % self._unit)
 
@@ -536,10 +537,11 @@ class FilterInvHasSoftwarePackage(Filter):
                          link_columns=[],
                          is_show_more=True)
 
-    def need_inventory(self, value) -> bool:
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self._varprefix + "name"))
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
+        # TODO radio hell
         html.text_input(self._varprefix + "name")
         html.br()
         html.begin_radio_group(horizontal=True)
@@ -552,10 +554,14 @@ class FilterInvHasSoftwarePackage(Filter):
         html.br()
         html.open_span(class_="min_max_row")
         html.write_text(_("Min.&nbsp;Version: "))
-        html.text_input(self._varprefix + "version_from", size=9)
+        html.text_input(self._varprefix + "version_from",
+                        default_value=value.get(self._varprefix + "version_from", ""),
+                        size=9)
         html.write_text(" &nbsp; ")
         html.write_text(_("Max.&nbsp;Vers.: "))
-        html.text_input(self._varprefix + "version_to", size=9)
+        html.text_input(self._varprefix + "version_to",
+                        default_value=value.get(self._varprefix + "version_from", ""),
+                        size=9)
         html.close_span()
         html.br()
         html.checkbox(self._varprefix + "negate",

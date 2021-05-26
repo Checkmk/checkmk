@@ -105,7 +105,7 @@ class FilterText(Filter):
 
         if self.negateable:
             html.open_nobr()
-            html.checkbox(self.htmlvars[1], False, label=_("negate"))
+            html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
 
     def _negate_symbol(self, value: FilterHTTPVariables) -> str:
@@ -450,8 +450,7 @@ class FilterMultigroup(Filter):
         self.valuespec().render_input(self.htmlvars[0], self.selection(value))
         if self._get_choices():
             html.open_nobr()
-            # TODO: Checkbox hell
-            html.checkbox(self.htmlvars[1], False, label=_("negate"))
+            html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
         html.close_div()
 
@@ -526,8 +525,7 @@ class FilterGroupCombo(Filter):
                       ordered=True)
         if not self.enforce:
             html.open_nobr()
-            # TODO: Checkbox hell
-            html.checkbox(self.htmlvars[1], False, label=_("negate"))
+            html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
 
     def current_value(self):
@@ -740,7 +738,9 @@ class FilterHostgroupVisibility(Filter):
                          description=_("You can enable this checkbox to show empty hostgroups"))
 
     def display(self, value: FilterHTTPVariables) -> None:
-        html.checkbox("hostgroupshowempty", False, label="Show empty groups")
+        html.checkbox(self.htmlvars[0],
+                      bool(value.get(self.htmlvars[0])),
+                      label="Show empty groups")
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if value.get(self.htmlvars[0]):
@@ -779,10 +779,13 @@ class FilterHostgroupProblems(Filter):
             ("pending", _("PEND")),
             ("unknown", _("UNKNOWN")),
         ]:
-            html.checkbox("hostgroups_having_services_%s" % svc_var, True, label=svc_text)
+            namevar = "hostgroups_having_services_%s" % svc_var
+            html.checkbox(namevar, bool(value.get(namevar, True)), label=svc_text)
 
         html.br()
-        html.checkbox("hostgroups_show_unhandled_svc", False, label=_("Unhandled service problems"))
+        html.checkbox("hostgroups_show_unhandled_svc",
+                      bool(value.get("hostgroups_show_unhandled_svc")),
+                      label=_("Unhandled service problems"))
 
         html.br()
         html.write_text("Host states:" + " ")
@@ -791,9 +794,12 @@ class FilterHostgroupProblems(Filter):
             ("unreach", _("UNREACH")),
             ("pending", _("PEND")),
         ]:
-            html.checkbox("hostgroups_having_hosts_%s" % host_var, True, label=host_text)
+            namevar = "hostgroups_having_hosts_%s" % host_var
+            html.checkbox(namevar, bool(value.get(namevar, True)), label=host_text)
 
-        html.checkbox("hostgroups_show_unhandled_host", False, label=_("Unhandled host problems"))
+        html.checkbox("hostgroups_show_unhandled_host",
+                      bool(value.get("hostgroups_show_unhandled_host")),
+                      label=_("Unhandled host problems"))
 
         html.end_checkbox_group()
 
@@ -922,14 +928,13 @@ class FilterServiceState(Filter):
         self.prefix = prefix
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # TODO checkbox hell
         html.begin_checkbox_group()
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
+        checkbox_default = not self._filter_used(value)
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")),
                           (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKN")),
                           (self.prefix + "stp", _("PEND"))]:
-            # From valuespecs can come value as None
-            html.checkbox(var, not self._filter_used(value or {}), label=text)
+            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
         html.end_checkbox_group()
 
     def _filter_used(self, value: FilterHTTPVariables) -> bool:
@@ -989,18 +994,16 @@ class FilterHostState(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # TODO checkbox hell
         html.begin_checkbox_group()
         html.hidden_field("hoststate_filled", "1", add_var=True)
+        checkbox_default = not self._filter_used(value)
         for var, text in [
             ("hst0", _("UP")),
             ("hst1", _("DOWN")),
             ("hst2", _("UNREACH")),
             ("hstp", _("PEND")),
         ]:
-            # Need the or because upper show functions from valuespec can return None to value
-            # mypy doesn't get it
-            html.checkbox(var, bool(not self._filter_used(value or {})), label=text)
+            html.checkbox(var, bool(value.get(var, checkbox_default)), label=text)
         html.end_checkbox_group()
 
     def _filter_used(self, value: FilterHTTPVariables) -> bool:
@@ -1041,16 +1044,17 @@ class FilterHostsHavingServiceProblems(Filter):
                          link_columns=[],
                          is_show_more=True)
 
-    def display(self, value) -> None:
-        # TODO checkbox hell
+    def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
+        checkbox_default = not any(value.values())  # everything by default
         for var, text in [
             ("warn", _("WARN")),
             ("crit", _("CRIT")),
             ("pending", _("PEND")),
             ("unknown", _("UNKNOWN")),
         ]:
-            html.checkbox("hosts_having_services_%s" % var, True, label=text)
+            varname = "hosts_having_services_%s" % var
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=text)
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -1601,9 +1605,9 @@ class FilterLogClass(Filter):
         )
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # TODO: checkbox hell
         html.hidden_field("logclass_filled", "1", add_var=True)
         html.open_table(cellspacing="0", cellpadding="0")
+        checkbox_default = not any(value.values())  # everything by default
         if config.filter_columns == 1:
             num_cols = 4
         else:
@@ -1613,8 +1617,8 @@ class FilterLogClass(Filter):
             if col == 1:
                 html.open_tr()
             html.open_td()
-            html.checkbox("logclass%d" % l, True)
-            html.write_text(c)
+            html.checkbox("logclass%d" % l, bool(value.get("logclass%d" % l, checkbox_default)))
+            html.write(c)
             html.close_td()
             if col == num_cols:
                 html.close_tr()
@@ -1754,21 +1758,23 @@ class FilterLogState(Filter):
             link_columns=[],
         )
 
-    def display(self, value) -> None:
-        # TODO: checkbox hell
+    def display(self, value: FilterHTTPVariables) -> None:
         html.hidden_field("log_state_filled", "1", add_var=True)
         html.open_table(class_="alertstatefilter")
         html.open_tr()
         html.open_td()
         html.begin_checkbox_group()
         mobile = is_mobile(request, response)
+        checkbox_default = not any(value.values())  # everything by default
         for varsuffix, what, state, text in self._items:
             if state == 0:
                 title = _("Host") if what == "host" else _("Service")
                 html.u("%s:" % title)
                 html.close_td()
                 html.open_td()
-            html.checkbox("logst_" + varsuffix, True, label=text)
+            html.checkbox("logst_" + varsuffix,
+                          bool(value.get("logst_" + varsuffix, checkbox_default)),
+                          label=text)
             if not mobile:
                 html.br()
             if varsuffix == "h2":
@@ -2015,12 +2021,17 @@ class FilterHostAuxTags(Filter):
             is_show_more=True,
         )
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         aux_tag_choices = [("", "")] + config.tags.aux_tag_list.get_choices()
         for num in range(self.count):
-            html.dropdown('%s_%d' % (self.prefix, num), aux_tag_choices, ordered=True, class_='neg')
+            varname = '%s_%d' % (self.prefix, num)
+            html.dropdown(varname,
+                          aux_tag_choices,
+                          deflt=value.get(varname, ""),
+                          ordered=True,
+                          class_='neg')
             html.open_nobr()
-            html.checkbox('%s_%d_neg' % (self.prefix, num), False, label=_("negate"))
+            html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))
             html.close_nobr()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -2076,8 +2087,7 @@ class LabelFilter(Filter):
         return Labels(world=Labels.World.CORE)
 
     def display(self, value: FilterHTTPVariables) -> None:
-        # Value could be None from Valuespec so transform to dict
-        self._valuespec().render_input(self._var_prefix, value or {})
+        self._valuespec().render_input(self._var_prefix, value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         value = self._valuespec()._from_html_vars(value.get(self._var_prefix, ""), self._var_prefix)
@@ -2348,11 +2358,11 @@ class FilterDiscoveryState(Filter):
             link_columns=[],
         )
 
-    def display(self, value) -> None:
-        # TODO checkbox hell
+    def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
+        checkbox_default = not any(value.values())  # everything by default
         for varname, title in self.__options:
-            html.checkbox(varname, True, label=title)
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=title)
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -2639,8 +2649,8 @@ class BIStatusFilter(Filter):
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.hidden_field(self.prefix + "_filled", "1", add_var=True)
+        checkbox_default = not self._filter_used(value)  # everything by default
 
-        # TODO checkboxm hell
         for varend, text in [
             ('0', _('OK')),
             ('1', _('WARN')),
@@ -2654,7 +2664,7 @@ class BIStatusFilter(Filter):
             if varend == 'n':
                 html.br()
             var = self.prefix + varend
-            html.checkbox(var, defval=str(not self._filter_used(value)), label=text)
+            html.checkbox(var, deflt=bool(value.get(var, checkbox_default)), label=text)
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
@@ -2892,11 +2902,12 @@ class EventFilterState(Filter):
                          link_columns=[ident])
         self._choices = choices
 
-    def display(self, value) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
-        # TODO checkbox hell
+        checkbox_default = not any(value.values())  # everything by default
         for name, title in self._choices:
-            html.checkbox(self.ident + "_" + name, True, label=title)
+            varname = self.ident + "_" + name
+            html.checkbox(varname, bool(value.get(varname, checkbox_default)), label=title)
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:

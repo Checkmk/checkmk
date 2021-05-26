@@ -187,8 +187,7 @@ class FilterInvtableOperStatus(Filter):
                          htmlvars=[ident + "_" + str(x) for x in defines.interface_oper_states()],
                          link_columns=[])
 
-    def display(self, value) -> None:
-        # TODO checkbox hell
+    def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
             if not isinstance(state, int):  # needed because of silly types
@@ -196,7 +195,7 @@ class FilterInvtableOperStatus(Filter):
             if state >= 8:
                 continue  # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.ident + "_" + str(state)
-            html.checkbox(varname, True, label=state_name)
+            html.checkbox(varname, bool(value.get(varname, True)), label=state_name)
             if state in (4, 7):
                 html.br()
         html.end_checkbox_group()

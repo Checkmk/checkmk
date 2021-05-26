@@ -296,11 +296,16 @@ def post_request(message_constructor, url=None, headers=None):
     proxy_url = context.get("PARAMETER_PROXY_URL")
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
+    verify: bool = True
+    if "PARAMETER_IGNORE_SSL" in context:
+        verify = False
+
     try:
         response = requests.post(url=url,
                                  json=message_constructor(context),
                                  proxies=proxies,
-                                 headers=headers)
+                                 headers=headers,
+                                 verify=verify)
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
         sys.exit(2)

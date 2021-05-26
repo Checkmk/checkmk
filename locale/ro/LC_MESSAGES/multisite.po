@@ -20912,6 +20912,14 @@ msgstr ""
 msgid "Host problems"
 msgstr ""
 
+#, fuzzy
+msgid "Host problems (all)"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Host problems (unhandled)"
+msgstr "Confirmă"
+
 msgid "Host problems for NagStaMon"
 msgstr ""
 
@@ -35060,12 +35068,6 @@ msgstr ""
 msgid "Problems"
 msgstr "Probleme"
 
-msgid "Problems (all)"
-msgstr ""
-
-msgid "Problems (unhandled)"
-msgstr ""
-
 #, fuzzy
 msgid "Problems in total"
 msgstr "Probleme"
@@ -39194,6 +39196,14 @@ msgstr ""
 
 msgid "Service problems"
 msgstr ""
+
+#, fuzzy
+msgid "Service problems (all)"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Service problems (unhandled)"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Service problems for NagStaMon"
 msgstr ""
@@ -59063,10 +59073,6 @@ msgstr ""
 #~ msgstr "foloseste descrierea"
 
 #, fuzzy
-#~ msgid "Host problem history"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Main dashboard $SITE$"
 #~ msgstr "Adaugă element"
 
@@ -59082,10 +59088,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Number of services (excluded)"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Service problem history"
-#~ msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 #~ msgid "Timezone"
@@ -60124,10 +60126,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Host needs agent update"
 #~ msgstr "actualizare"
-
-#, fuzzy
-#~ msgid "Host problem has been acknowledged"
-#~ msgstr "Confirmă"
 
 #, fuzzy
 #~ msgid "Host state type"

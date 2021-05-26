@@ -21633,6 +21633,14 @@ msgstr "Hostproblem quittiert"
 msgid "Host problems"
 msgstr "Hostprobleme"
 
+#, fuzzy
+msgid "Host problems (all)"
+msgstr "Hostprobleme"
+
+#, fuzzy
+msgid "Host problems (unhandled)"
+msgstr "Hostprobleme (unbehandelt)"
+
 msgid "Host problems for NagStaMon"
 msgstr "Hostprobleme für NagStaMon"
 
@@ -36180,12 +36188,6 @@ msgstr ""
 msgid "Problems"
 msgstr "Probleme"
 
-msgid "Problems (all)"
-msgstr "Probleme (alle)"
-
-msgid "Problems (unhandled)"
-msgstr "Probleme (offen)"
-
 msgid "Problems in total"
 msgstr "Probleme insgesamt"
 
@@ -40168,6 +40170,14 @@ msgstr "Service Problem quittiert"
 
 msgid "Service problems"
 msgstr "Serviceprobleme"
+
+#, fuzzy
+msgid "Service problems (all)"
+msgstr "Serviceprobleme"
+
+#, fuzzy
+msgid "Service problems (unhandled)"
+msgstr "Serviceprobleme (unbehandelt)"
 
 msgid "Service problems for NagStaMon"
 msgstr "Serviceprobleme für NagStaMon"
@@ -62966,6 +62976,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Problems (all)"
+#~ msgstr "Probleme (alle)"
+
+#~ msgid "Problems (unhandled)"
+#~ msgstr "Probleme (offen)"
 
 #~ msgid "Automatic refresh"
 #~ msgstr "Automatische Aktualisierung"

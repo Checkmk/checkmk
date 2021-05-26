@@ -198,24 +198,14 @@ class ECLock:
         self._logger = logger
         self._lock = threading.Lock()
 
-    def acquire(self, blocking: bool = True) -> bool:
-        self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
-        ret = self._lock.acquire(blocking)
-        if ret is True:
-            self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
-        else:
-            self._logger.debug("[%s] Non-blocking aquire failed", threading.current_thread().name)
-        return ret
-
-    def release(self) -> None:
-        self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
-        self._lock.release()
-
     def __enter__(self) -> None:
-        self.acquire()
+        self._logger.debug("[%s] Trying to acquire lock", threading.current_thread().name)
+        self._lock.acquire()
+        self._logger.debug("[%s] Acquired lock", threading.current_thread().name)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.release()
+        self._logger.debug("[%s] Releasing lock", threading.current_thread().name)
+        self._lock.release()
         return False  # Do not swallow exceptions
 
 

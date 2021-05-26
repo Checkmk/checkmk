@@ -1382,6 +1382,10 @@ class CommandRemoveComments(Command):
     def tables(self):
         return ["comment"]
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return _("remove the following %d %s?") % (
+            len_action_rows, ungettext("comment", "comments", len_action_rows))
+
     def render(self, what):
         html.button("_remove_comments", _("Remove"))
 
@@ -1396,7 +1400,7 @@ class CommandRemoveComments(Command):
                 else:
                     commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s" % (cmdtag, row["host_name"])))
 
-            return commands, _("remove")
+            return commands, ""
         return None
 
 

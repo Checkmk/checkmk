@@ -89,30 +89,31 @@ elif [ -e "$PROFILING_CONFIG" ]; then
     . "$PROFILING_CONFIG"
 fi
 
-PROFILING_LOGFILE="${MK_LOGDIR}"/profiling_$(date +"%Y%m%d_%H%M%S").log
+PROFILING_LOGFILE_DIR="${MK_LOGDIR}/$(date +"%Y%m%d_%H%M%S")"
 if $LOG_SECTION_TIME; then
-    mkdir -p "$MK_LOGDIR"
+    mkdir -p "$PROFILING_LOGFILE_DIR"
 fi
 
 _log_section_time() {
-    local section_name="$1"
+    local section_name="${1//\//\\}"
     shift
     local section_func="$*"
+
+    profiling_logfile="${PROFILING_LOGFILE_DIR}/profiling_${section_name}.log"
 
     # TODO In the future
     # echo "<<<check_mk_agent_profiling>>>"
     if $LOG_SECTION_TIME; then
-        echo -e "[${section_name}]" >>"$PROFILING_LOGFILE"
         start="$(perl -MTime::HiRes=time -le 'print time()')"
-        { time $section_func; } 2>>"$PROFILING_LOGFILE"
+        { time $section_func; } 2>>"$profiling_logfile"
         end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo -e "runtime $(echo "$end - $start" | bc)\n" >>"$PROFILING_LOGFILE"
+        echo -e "runtime $(echo "$end - $start" | bc)\n" >>"$profiling_logfile"
     else
         $section_func
     fi
 }
 
-export PROFILING_LOGFILE
+export PROFILING_LOGFILE_DIR
 export -f _log_section_time
 
 # Function to replace "if type [somecmd]" idiom
@@ -1818,7 +1819,7 @@ spooldir_files() {
 _log_section_time "spooldir_files" spooldir_files
 
 if $LOG_SECTION_TIME; then
-    echo -e "[check_mk_agent]" >>"$PROFILING_LOGFILE"
+    profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
     agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-    echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$PROFILING_LOGFILE"
+    echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
 fi

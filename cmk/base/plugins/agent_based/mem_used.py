@@ -7,9 +7,10 @@
 import time
 from typing import List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
 
 from .agent_based_api.v1 import (
+    Attributes,
     get_average,
     get_value_store,
     Metric,
@@ -213,4 +214,20 @@ register.check_plugin(
     check_function=check_mem_used,
     check_default_parameters={"levels": (80.0, 90.0)},
     check_ruleset_name="memory",
+)
+
+
+def inventory_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
+    yield Attributes(
+        path=["hardware", "memory"],
+        inventory_attributes={
+            "total_ram_usable": section["MemTotal"],
+            "total_swap": section["SwapTotal"],
+        },
+    )
+
+
+register.inventory_plugin(
+    name="mem_used",
+    inventory_function=inventory_mem_used,
 )

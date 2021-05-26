@@ -1,0 +1,21 @@
+Title: Service label conditions could lead to wrong rule matches
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1622024423
+Class: fix
+
+The matching of service rule sets (which are used for a lot of different
+settings in Checkmk) could lead to wrong rule matching results in case service
+labels were used.
+
+This issue was only triggered in a specific condition: Multiple services on
+different hosts on the same site with the same service description had to use
+the exact same set of label keys (the text before the ":") with different label
+values (the text after the ":").
+
+In this case it could happen that the rule value of one service affected the
+rule value of another service. For example, this could lead to services being
+added to a service group which should not be added to that group.

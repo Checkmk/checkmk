@@ -762,6 +762,10 @@ def vs_mkeventd_rule(customer=None):
              title=_("Match site"),
              help=_("Apply this rule only on the following sites"),
              choices=config.get_event_console_site_choices(),
+             locked_choices=list(config.allsites().keys() -
+                                 dict(config.get_event_console_site_choices()).keys()),
+             locked_choices_text_singular=_("%d locked site"),
+             locked_choices_text_plural=_("%d locked sites"),
          )),
         ("match_host",
          RegExpUnicode(

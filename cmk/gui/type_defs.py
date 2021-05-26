@@ -27,7 +27,9 @@ LivestatusQuery = str
 PermissionName = str
 RoleName = str
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
-Choices = List[Tuple[Optional[str], str]]
+ChoiceText = str
+ChoiceId = Optional[str]
+Choices = List[Tuple[ChoiceId, ChoiceText]]
 ChoiceGroup = NamedTuple("ChoiceGroup", [
     ("title", Text),
     ("choices", Choices),

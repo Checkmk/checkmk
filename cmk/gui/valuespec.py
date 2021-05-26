@@ -84,9 +84,9 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html
 from cmk.gui.globals import request as global_request
 from cmk.gui.http import UploadedFile
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.type_defs import ChoiceGroup, Choices, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, ChoiceId, ChoiceText, Choices, GroupedChoices
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -3284,6 +3284,9 @@ class DualListChoice(ListChoice):
         help: _Optional[ValueSpecHelp] = None,
         default_value: Any = DEF_VALUE,
         validate: _Optional[ValueSpecValidateFunc] = None,
+        locked_choices: _Optional[List[ChoiceId]] = None,
+        locked_choices_text_singular: _Optional[ChoiceText] = None,
+        locked_choices_text_plural: _Optional[ChoiceText] = None,
     ):
         super().__init__(
             choices=choices,
@@ -3309,6 +3312,11 @@ class DualListChoice(ListChoice):
         else:
             self._rows = 5
         self._size = size  # Total width in ex
+        self._locked_choices = [] if locked_choices is None else locked_choices
+        self._locked_choices_text_singular = locked_choices_text_singular if locked_choices_text_singular is not None else _(
+            "%%d locked element")
+        self._locked_choices_text_plural = locked_choices_text_plural if locked_choices_text_plural is not None else _(
+            "%%d locked elements")
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -3382,6 +3390,7 @@ class DualListChoice(ListChoice):
                 style='height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
                 ondblclick=select_func if not self._instant_add else '',
                 onchange=onchange_func,
+                locked_choice=self._locked_choice_text(value) if suffix == "selected" else None,
             )
 
             html.close_td()
@@ -3393,12 +3402,20 @@ class DualListChoice(ListChoice):
                           id_=varprefix,
                           add_var=True)
 
-    def _validate_value(self, value, varprefix):
-        try:
-            super()._validate_value(value, varprefix)
-        except MKUserError as e:
-            v = "" if e.varname is None else e.varname
-            raise MKUserError(v + "_selected", e.message)
+    def _locked_choice_text(self, value: Any) -> _Optional[ChoiceText]:
+        locked_choices_text: _Optional[ChoiceText] = None
+        num_locked_choices: int = sum(1 for choice_id in value if choice_id in self._locked_choices)
+        if num_locked_choices:
+            locked_choices_text = ungettext(
+                self._locked_choices_text_singular,
+                self._locked_choices_text_plural,
+                num_locked_choices,
+            ) % num_locked_choices
+        return locked_choices_text
+
+    def _value_is_invalid(self, value: ListChoiceChoiceValue) -> bool:
+        all_elements: List[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices
+        return all(value != val for val in all_elements)
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -3417,6 +3434,10 @@ class DualListChoice(ListChoice):
             for key, _title in self._elements:
                 if key in selected:
                     value.append(key)
+
+        for locked_choice in self._locked_choices:
+            value.append(locked_choice)
+
         return value
 
 

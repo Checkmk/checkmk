@@ -239,7 +239,7 @@ class NotificationsMode(EventsMode):
                 title = code + _("Notification rules of user %s") % userid
             else:
                 title = _("Global notification rules")
-            with table_element(title=title, limit=None, sortable=False) as table:
+            with table_element("notify_rules", title=title, limit=None, sortable=False) as table:
 
                 if analyse:
                     analyse_rules, _analyse_plugins = analyse
@@ -538,7 +538,7 @@ class ModeNotifications(NotificationsMode):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with table_element(title=title) as table:
+        with table_element("notify_bulk", title=title) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]

@@ -1081,7 +1081,7 @@ class ModeBIPacks(ModeBI):
                 return ""
 
     def page(self):
-        with table_element(title=_("BI Configuration Packs")) as table:
+        with table_element(self.name(), title=_("BI Configuration Packs")) as table:
             for pack_id, pack in sorted(self._packs.items()):
                 if not self.may_use_rules_in_pack(pack):
                     continue
@@ -1721,7 +1721,7 @@ class ModeBIRuleTree(ModeBI):
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
         if rule_refs == 0:
-            with table_element(sortable=False, searchable=False) as table:
+            with table_element(self.name(), sortable=False, searchable=False) as table:
                 table.row()
                 table.cell(_("Rule Tree"), css="bi_rule_tree")
                 self.render_rule_tree(self._ruleid, self._ruleid)

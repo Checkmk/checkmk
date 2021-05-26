@@ -1368,7 +1368,8 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
 
         have_match = False
-        with table_element(css="ruleset", limit=None, sortable=False, title=title) as table:
+        with table_element(self.name(), css="ruleset", limit=None, sortable=False,
+                           title=title) as table:
             for nr, rule_pack in enumerate(self._rule_packs):
                 id_ = rule_pack['id']
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
@@ -1656,7 +1657,7 @@ class ModeEventConsoleRules(EventConsoleMode):
             html.begin_form("move_to", method="POST")
 
         # Show content of the rule package
-        with table_element(css="ruleset", limit=None, sortable=False) as table:
+        with table_element(self.name(), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:

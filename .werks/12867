@@ -1,0 +1,13 @@
+Title: Fix remaining search entry while switching to other pages
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1622040990
+Class: fix
+
+If you searched in tables of pages like "Business Intelligence" and switched to a page like
+"Notifications", the search was still filled with the entry from the last page.
+
+The tables of affected pages now have unique table IDs to avoid such behaviour.

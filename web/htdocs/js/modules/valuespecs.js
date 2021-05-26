@@ -497,6 +497,7 @@ function sort_select(select, cmp_func) {
         choices[i] = [];
         choices[i][0] = select.options[i].text;
         choices[i][1] = select.options[i].value;
+        choices[i][2] = select.options[i].disabled;
     }
 
     choices.sort(cmp_func);
@@ -506,6 +507,7 @@ function sort_select(select, cmp_func) {
 
     for (i = 0; i < choices.length; i++) {
         var op = new Option(choices[i][0], choices[i][1]);
+        op.disabled = choices[i][2];
         select.options[i] = op;
     }
 

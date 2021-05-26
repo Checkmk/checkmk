@@ -86,6 +86,7 @@ from cmk.gui.type_defs import (
     Icon,
     Choice,
     ChoiceGroup,
+    ChoiceText,
     GroupedChoices,
 )
 
@@ -1835,6 +1836,7 @@ class html(ABCHTMLGenerator):
     def dropdown(self,
                  varname: str,
                  choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],
+                 locked_choice: Optional[ChoiceText] = None,
                  deflt: DefaultChoice = '',
                  ordered: bool = False,
                  label: Optional[str] = None,
@@ -1893,7 +1895,14 @@ class html(ABCHTMLGenerator):
                     group.choices, key=lambda a: a[1].lower())):
                 # if both the default in choices and current was '' then selected depended on the order in choices
                 selected = (value == current) or (not value and not current)
-                self.option(text, value=value if value else "", selected="" if selected else None)
+                self.option(
+                    text,
+                    value=value if value else "",
+                    selected="" if selected else None,
+                )
+
+            if locked_choice:
+                self.option(locked_choice, value="", disabled="")
 
             if group.title:
                 self.close_optgroup()

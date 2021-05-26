@@ -54,11 +54,11 @@ class RulesetMatchObject:
         self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels
-        self.service_cache_id = (self.service_description, self._generate_hash(self.service_labels)
-                                 if self.service_labels else None)
+        self.service_cache_id = (self.service_description,
+                                 self._generate_service_labels_hash(self.service_labels))
 
-    def _generate_hash(self, service_labels: Optional[Dict[str, str]]) -> int:
-        return hash(None if service_labels is None else frozenset(service_labels))
+    def _generate_service_labels_hash(self, service_labels: Optional[Dict[str, str]]) -> int:
+        return hash(None if service_labels is None else frozenset(service_labels.items()))
 
     def to_dict(self) -> Dict:
         # TODO: Two getattr()?

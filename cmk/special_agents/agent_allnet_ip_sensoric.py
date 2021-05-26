@@ -63,7 +63,7 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
         raise RequestError('Error during http call')
 
     infos = handle.info()
-    contents = handle.read()
+    contents = handle.read().decode('utf-8')
 
     if opt_debug:
         sys.stdout.write('----------------------------\n')

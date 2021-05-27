@@ -1797,7 +1797,7 @@ def page_view():
 
         # Gather the page context which is needed for the "add to visual" popup menu
         # to add e.g. views to dashboards or reports
-        html.set_page_context(context)
+        visuals.set_page_context(context)
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit

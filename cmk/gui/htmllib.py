@@ -1009,7 +1009,6 @@ class html(ABCHTMLGenerator):
 
         # Browser options
         self.final_javascript_code = ""
-        self.page_context: 'VisualContext' = {}
 
         # Forms
         self.form_name: Optional[str] = None
@@ -1104,9 +1103,6 @@ class html(ABCHTMLGenerator):
     #
     # Other things
     #
-
-    def set_page_context(self, c: 'VisualContext') -> None:
-        self.page_context = c
 
     def set_link_target(self, framename: str) -> None:
         self.link_target = framename

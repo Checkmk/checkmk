@@ -81,7 +81,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request as global_request, transactions
+from cmk.gui.globals import html, request as global_request, transactions, g
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -2061,7 +2061,7 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuD
             title=_("Add to"),
             topics=pagetypes.page_menu_add_to_topics(add_type) + visual_topics,
             popup_data=[add_type,
-                        _encode_page_context(html.page_context), {
+                        _encode_page_context(g.get("page_context", {})), {
                             "name": name,
                         }],
         )
@@ -2070,6 +2070,10 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuD
 
 def _encode_page_context(page_context: VisualContext) -> VisualContext:
     return {k: "" if v is None else v for k, v in page_context.items()}
+
+
+def set_page_context(page_context: VisualContext) -> None:
+    g.page_context = page_context
 
 
 @cmk.gui.pages.register("ajax_add_visual")

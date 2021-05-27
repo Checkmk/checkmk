@@ -2467,7 +2467,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'sap_hana_full_backup',
         'sap_hana_mem',
         'sap_hana_mem.database',
-        'sap_hana_proc',
         'sap_hana_process_list',
         'sap_hana_replication_status',
         'sap_hana_version',

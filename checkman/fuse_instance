@@ -1,0 +1,11 @@
+title: Fuse Management Central: Instance
+agents: Fuse Management Central
+catalog: opentextfuse
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the connection to Fuse Management Central.
+ If the agent could not connect to Fuse Management Central or no data is sent, the check will return {CRIT}, otherwise {OK}.
+
+inventory:
+ One service is created.

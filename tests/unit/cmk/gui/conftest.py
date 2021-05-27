@@ -32,6 +32,7 @@ from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 import cmk.gui.watolib.activate_changes as activate_changes
+
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 SPEC_LOCK = threading.Lock()

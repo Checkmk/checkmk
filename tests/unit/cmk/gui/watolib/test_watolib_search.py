@@ -22,7 +22,73 @@ from cmk.gui.watolib.search import (
     MatchItemGeneratorRegistry,
     PermissionsHandler,
     URLChecker,
+    match_item_generator_registry as real_match_item_generator_registry,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.plugins.wato.omd_configuration import (
+    ConfigDomainDiskspace,
+    ConfigDomainApache,
+    ConfigDomainRRDCached,
+)
+
+
+@pytest.fixture(scope='function')
+def fake_omd_default_globals(monkeypatch):
+    monkeypatch.setattr(
+        ConfigDomainOMD, "default_globals", lambda s: {
+            'site_admin_mail': '',
+            'site_apache_mode': 'own',
+            'site_apache_tcp_addr': '127.0.0.1',
+            'site_apache_tcp_port': '5000',
+            'site_autostart': False,
+            'site_core': 'cmc',
+            'site_liveproxyd': True,
+            'site_livestatus_tcp': None,
+            'site_livestatus_tcp_only_from': '0.0.0.0 ::/0',
+            'site_livestatus_tcp_port': '6557',
+            'site_livestatus_tcp_tls': True,
+            'site_mkeventd': ['SYSLOG'],
+            'site_mkeventd_snmptrap': False,
+            'site_mkeventd_syslog': True,
+            'site_mkeventd_syslog_tcp': False,
+            'site_multisite_authorisation': True,
+            'site_multisite_cookie_auth': True,
+            'site_nagios_theme': 'classicui',
+            'site_nsca': None,
+            'site_nsca_tcp_port': '5667',
+            'site_pnp4nagios': True,
+            'site_tmpfs': True,
+        })
+
+
+@pytest.fixture(scope='function')
+def fake_diskspace_default_globals(monkeypatch):
+    monkeypatch.setattr(ConfigDomainDiskspace, "default_globals", lambda s: {
+        'diskspace_cleanup': {
+            'cleanup_abandoned_host_files': 2592000
+        },
+    })
+
+
+@pytest.fixture(scope='function')
+def fake_apache_default_globals(monkeypatch):
+    monkeypatch.setattr(ConfigDomainApache, "default_globals",
+                        lambda s: {'apache_process_tuning': {
+                            'number_of_processes': 64
+                        }})
+
+
+@pytest.fixture(scope='function')
+def fake_rrdcached_default_globals(monkeypatch):
+    monkeypatch.setattr(
+        ConfigDomainRRDCached, "default_globals", lambda s: {
+            'rrdcached_tuning': {
+                'TIMEOUT': 3600,
+                'RANDOM_DELAY': 1800,
+                'FLUSH_TIMEOUT': 7200,
+                'WRITE_THREADS': 4,
+            },
+        })
 
 
 def test_match_item():
@@ -227,3 +293,31 @@ class TestIndexSearcher:
                 ('Other topic', [SearchResult(title='other_item', url='')]),
                 ('Global settings', [SearchResult(title='global_setting', url='')]),
             ]
+
+    @pytest.mark.usefixtures(
+        "load_plugins",
+        "with_admin_login",
+        "fake_omd_default_globals",
+        "fake_diskspace_default_globals",
+        "fake_apache_default_globals",
+        "fake_rrdcached_default_globals",
+        "suppress_automation_calls",
+    )
+    def test_real_search_without_exception(self, mock_livestatus) -> None:
+        builder = IndexBuilder(real_match_item_generator_registry)
+
+        with self._livestatus_mock(mock_livestatus):
+            builder.build_full_index()
+
+        assert builder.index_is_built(builder._redis_client)
+
+        searcher = IndexSearcher()
+        searcher._redis_client = builder._redis_client
+
+        assert len(list(searcher.search("Host"))) > 4
+
+    def _livestatus_mock(self, live):
+        live.add_table('eventconsolerules', [])
+        live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
+        live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
+        return live

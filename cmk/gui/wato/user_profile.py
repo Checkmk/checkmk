@@ -28,7 +28,7 @@ from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request, transactions, user_errors, theme
+from cmk.gui.globals import html, request, response, transactions, user_errors, theme
 from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -41,6 +41,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
@@ -494,7 +495,7 @@ class UserProfile(ABCUserProfilePage):
         if language != "_default_":
             user['language'] = language
             config.user.language = language
-            html.set_language_cookie(language)
+            set_language_cookie(request, response, language)
 
         else:
             if 'language' in user:

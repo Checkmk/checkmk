@@ -1192,18 +1192,6 @@ class html(ABCHTMLGenerator):
                                      "language. You can configure the localizations %s.") %
             self.render_a("in the global settings", href=url))
 
-    def del_language_cookie(self) -> None:
-        self.response.delete_cookie("language")
-
-    def set_language_cookie(self, lang: Optional[str]) -> None:
-        cookie_lang = self.request.cookie("language")
-        if cookie_lang == lang:
-            return
-        if lang is None:
-            self.del_language_cookie()
-        else:
-            self.response.set_http_cookie("language", lang, secure=self.request.is_secure)
-
     def help(self, text: Union[None, HTML, str]) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.
 

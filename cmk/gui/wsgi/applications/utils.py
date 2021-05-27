@@ -18,9 +18,10 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, request, g, theme
+from cmk.gui.globals import html, request, response, g, theme
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
+from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.http import Response
 
 # TODO
@@ -142,7 +143,7 @@ def _localize_request() -> None:
     previous_language = cmk.gui.i18n.get_current_language()
     user_language = html.request.get_ascii_input("lang", config.user.language)
 
-    html.set_language_cookie(user_language)
+    set_language_cookie(request, response, user_language)
     cmk.gui.i18n.localize(user_language)
 
     # All plugins might have to be reloaded due to a language change. Only trigger

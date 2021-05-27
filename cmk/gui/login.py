@@ -38,6 +38,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, M
 
 from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.language_cookie import del_language_cookie
 
 auth_logger = logger.getChild("auth")
 
@@ -160,7 +161,7 @@ def _auth_cookie_value(username: UserId, session_id: str) -> str:
 
 def _invalidate_auth_session() -> None:
     del_auth_cookie()
-    html.del_language_cookie()
+    del_language_cookie(response)
 
 
 def _renew_auth_session(username: UserId, session_id: str) -> None:

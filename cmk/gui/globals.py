@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from cmk.gui import htmllib, http, config, userdb
     from cmk.gui.utils.timeout_manager import TimeoutManager
     from cmk.gui.utils.theme import Theme
+    from cmk.gui.display_options import DisplayOptions
 
 _sentinel = object()
 
@@ -107,26 +108,23 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
-_unset = object()
-
-
 class RequestContext:
     def __init__(
         self,
         req: http.Request,
         resp: http.Response,
-        html_obj=None,
-        timeout_manager: Optional['TimeoutManager'] = None,  # pylint: disable=redefined-outer-name
-        theme: Optional['Theme'] = None,  # pylint: disable=redefined-outer-name
-        display_options=None,  # pylint: disable=redefined-outer-name
+        html_obj: Optional[htmllib.html] = None,
+        timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
+        theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
+        display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
     ):
         self.html = html_obj
-        self.auth_type = None
+        self.auth_type: Optional[str] = None
         self.timeout_manager = timeout_manager
         self.theme = theme
         self.display_options = display_options
-        self.session: Optional["userdb.SessionInfo"] = None
+        self.session: Optional[userdb.Session] = None
         self.flashes: Optional[List[str]] = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
@@ -137,7 +135,7 @@ class RequestContext:
 
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
-        self.user = LoggedInNobody()
+        self.user: config.LoggedInUser = LoggedInNobody()
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = _PrependURLFilter()
@@ -181,20 +179,20 @@ def request_local_attr(name=None):
     return LocalProxy(partial(_lookup_req_object, name))
 
 
-local = request_local_attr()  # None as name will get the whole object.
-
 # NOTE: All types FOO below are actually a Union[Foo, LocalProxy], but
 # LocalProxy is meant as a transparent proxy, so we leave it out to de-confuse
 # mypy. LocalProxy uses a lot of reflection magic, which can't be understood by
 # tools in general.
-user: 'config.LoggedInUser' = request_local_attr('user')
-request: 'http.Request' = request_local_attr('request')
-response: 'http.Response' = request_local_attr('response')
-session: 'userdb.Session' = request_local_attr('session')
-user_errors: 'UserErrors' = request_local_attr('user_errors')
 
-html: 'htmllib.html' = request_local_attr('html')
-timeout_manager: 'TimeoutManager' = request_local_attr('timeout_manager')
-theme: 'Theme' = request_local_attr('theme')
-transactions: 'TransactionManager' = request_local_attr('transactions')
-display_options = request_local_attr('display_options')
+local: RequestContext = request_local_attr()  # None as name will get the whole object.
+user: config.LoggedInUser = request_local_attr('user')
+request: http.Request = request_local_attr('request')
+response: http.Response = request_local_attr('response')
+session: userdb.Session = request_local_attr('session')
+user_errors: UserErrors = request_local_attr('user_errors')
+
+html: htmllib.html = request_local_attr('html')
+timeout_manager: TimeoutManager = request_local_attr('timeout_manager')
+theme: Theme = request_local_attr('theme')
+transactions: TransactionManager = request_local_attr('transactions')
+display_options: DisplayOptions = request_local_attr('display_options')

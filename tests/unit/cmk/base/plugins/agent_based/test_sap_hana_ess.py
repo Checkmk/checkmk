@@ -6,9 +6,12 @@
 
 import pytest
 
-from testlib import Check
+from cmk.base.api.agent_based import register
+from cmk.utils.type_defs import SectionName, CheckPluginName
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
 
 
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("info, expected_result", [
     (
         [
@@ -49,7 +52,9 @@ from testlib import Check
     ),
 ])
 def test_parse_sap_hana_ess(info, expected_result):
-    result = Check("sap_hana_ess").run_parse(info)
+    section_name = SectionName("sap_hana_ess")
+    section_plugin = register.get_section_plugin(section_name)
+    result = section_plugin.parse_function(info)
     assert result == expected_result
 
 
@@ -60,13 +65,17 @@ def test_parse_sap_hana_ess(info, expected_result):
             ["started", "0"],
             ["active", "no"],
         ],
-        [("HXE 90 HXE", {})],
+        [Service(item="HXE 90 HXE")],
     ),
 ])
 def test_inventory_sap_hana_ess(info, expected_result):
-    section = Check("sap_hana_ess").run_parse(info)
-    result = Check("sap_hana_ess").run_discovery(section)
-    assert list(result) == expected_result
+    section_name = SectionName("sap_hana_ess")
+    section = register.get_section_plugin(section_name).parse_function(info)
+
+    plugin_name = CheckPluginName("sap_hana_ess")
+    plugin = register.get_check_plugin(plugin_name)
+    if plugin:
+        assert list(plugin.discovery_function(section)) == expected_result
 
 
 @pytest.mark.parametrize("item, info, expected_result", [
@@ -78,8 +87,9 @@ def test_inventory_sap_hana_ess(info, expected_result):
             ["active", "no"],
         ],
         [
-            (2, "Active status: no"),
-            (2, "Started threads: 0", [("threads", 0)]),
+            Result(state=State.CRIT, summary="Active status: no"),
+            Result(state=State.CRIT, summary="Started threads: 0"),
+            Metric("threads", 0)
         ],
     ),
     (
@@ -90,8 +100,9 @@ def test_inventory_sap_hana_ess(info, expected_result):
             ["active", "yes"],
         ],
         [
-            (0, "Active status: yes"),
-            (0, "Started threads: 1", [("threads", 1)]),
+            Result(state=State.OK, summary="Active status: yes"),
+            Result(state=State.OK, summary="Started threads: 1"),
+            Metric("threads", 1),
         ],
     ),
     (
@@ -102,12 +113,17 @@ def test_inventory_sap_hana_ess(info, expected_result):
             ["active", "unknown"],
         ],
         [
-            (3, "Active status: unknown"),
-            (0, "Started threads: 1", [("threads", 1)]),
+            Result(state=State.UNKNOWN, summary="Active status: unknown"),
+            Result(state=State.OK, summary="Started threads: 1"),
+            Metric("threads", 1),
         ],
     ),
 ])
 def test_check_sap_hana_ess(item, info, expected_result):
-    section = Check("sap_hana_ess").run_parse(info)
-    result = Check("sap_hana_ess").run_check(item, {}, section)
-    assert list(result) == expected_result
+    section_name = SectionName("sap_hana_ess")
+    section = register.get_section_plugin(section_name).parse_function(info)
+
+    plugin_name = CheckPluginName("sap_hana_ess")
+    plugin = register.get_check_plugin(plugin_name)
+    if plugin:
+        assert list(plugin.check_function(item, section)) == expected_result

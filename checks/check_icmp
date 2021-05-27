@@ -59,7 +59,11 @@ def check_icmp_arguments(params):
     else:  # custom
         args.append(target[1])
 
-    return args
+    # Unfortunately, we must return a single string here.
+    # Otherwise shell quoting will be applied to every element
+    # of the list, which will interfere with macro replacements like
+    # "$HOST_ADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
+    return ' '.join(args)
 
 
 def check_icmp_description(params):

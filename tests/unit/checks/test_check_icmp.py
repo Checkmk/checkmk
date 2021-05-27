@@ -11,7 +11,7 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize("params,expected_args",
-                         [({}, ["-w", "200.00,80%", "-c", "500.00,100%", "$HOSTADDRESS$"])])
+                         [({}, "-w 200.00,80% -c 500.00,100% $HOSTADDRESS$")])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_icmp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""

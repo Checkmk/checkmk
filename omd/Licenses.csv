@@ -154,7 +154,6 @@ Python module: marshmallow,3.7.1,MIT,https://opensource.org/licenses/MIT,omd/pac
 Python module: marshmallow-oneofschema,2.0.1,MIT,https://opensource.org/licenses/MIT,omd/packages/python3-modules/src/marshmallow-oneofschema-2.0.1.tar.gz,,,,
 Python module: more-itertools,8.0.2,MIT,https://opensource.org/licenses/MIT,omd/packages/python3-modules/src/more-itertools-8.0.2.tar.gz,,,,
 Python module: multidict,4.7.6,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python3-modules/src/multidict-4.7.6.tar.gz,,,,
-Python module: mypy_extensions,0.4.3,MIT,https://opensource.org/licenses/MIT,omd/packages/python3-modules/src/mypy_extensions-0.4.3.tar.gz,,,,
 Python module: numpy,1.18.4,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/python3-modules/src/numpy-1.18.4.tar.gz,,,,
 Python module: oauthlib,3.1.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/python3-modules/src/oauthlib-3.1.0.tar.gz,,,,
 Python module: openapi-spec-validator,0.2.9,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python3-modules/src/openapi-spec-validator-0.2.9.tar.gz,,,,

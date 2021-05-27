@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4579523dec4857026e7a6bd974e9d8de1aa9b6c47da94c328eb8df33427d1f53"
+            "sha256": "98021eff06f1f2b972d69a96a7e40bca6f8f53ca82258bd2426fb3657578dac5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -461,14 +461,6 @@
             ],
             "index": "pypi",
             "version": "==4.7.6"
-        },
-        "mypy-extensions": {
-            "hashes": [
-                "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d",
-                "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"
-            ],
-            "index": "pypi",
-            "version": "==0.4.3"
         },
         "numpy": {
             "hashes": [
@@ -1444,7 +1436,7 @@
                 "sha256:f0b278ce10936db1a37e6954e15a3730bea96a0997c26d7fee88e6c396c2086d",
                 "sha256:f11642dddbb0253cc8853254301b51390ba0081750a8ac03f20ea8103f0c56b6"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4.0'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
             "version": "==5.5"
         },
         "distlib": {
@@ -1483,11 +1475,11 @@
                 "lua"
             ],
             "hashes": [
-                "sha256:1ac0cef767c37f51718874a33afb5413e69d132988cb6a80c6e6dbeddf8c7623",
-                "sha256:e0416e4941cecd3089b0d901e60c8dc3c944f6384f5e29e2261c0d3c5fa99669"
+                "sha256:7f85faf640a0da564d8342a7d62936b07f23f4a85f756118fbd35b55f64f281c",
+                "sha256:afeb843b031697b3faff0eef8eedadef110741486b37e2bfb95167617785040f"
             ],
             "index": "pypi",
-            "version": "==1.5.0"
+            "version": "==1.5.1"
         },
         "filelock": {
             "hashes": [
@@ -1821,7 +1813,6 @@
                 "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d",
                 "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"
             ],
-            "index": "pypi",
             "version": "==0.4.3"
         },
         "mypy-ls": {

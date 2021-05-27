@@ -97,12 +97,16 @@ def paint_host_inventory_tree(row: Row,
         tree_renderer: NodeRenderer = AttributeRenderer(
             row["site"],
             row["host_name"],
-            "",
             invpath,
             show_internal_tree_paths=painter_options.get('show_internal_tree_paths'))
     else:
         tree_id = "/" + str(row["invhist_time"])
-        tree_renderer = DeltaNodeRenderer(row["site"], row["host_name"], tree_id, invpath)
+        tree_renderer = DeltaNodeRenderer(
+            row["site"],
+            row["host_name"],
+            invpath,
+            tree_id=tree_id,
+        )
 
     parsed_path, attribute_keys = inventory.parse_tree_path(invpath)
     if attribute_keys is None:
@@ -1689,11 +1693,18 @@ def _sort_by_index(keyorder, item):
 
 
 class NodeRenderer:
-    def __init__(self, site_id, hostname, tree_id, invpath, show_internal_tree_paths=False):
+    def __init__(
+        self,
+        site_id,
+        hostname,
+        invpath,
+        tree_id="",
+        show_internal_tree_paths=False,
+    ):
         self._site_id = site_id
         self._hostname = hostname
-        self._tree_id = tree_id
         self._invpath = invpath
+        self._tree_id = tree_id
         if show_internal_tree_paths:
             self._show_internal_tree_paths = "on"
         else:
@@ -1704,9 +1715,7 @@ class NodeRenderer:
     def show_container(self, container, path=None):
         for _x, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
-
-            raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
-            invpath = ".%s." % raw_invpath
+            invpath = ".%s." % self._get_raw_path(node_abs_path)
 
             icon, title = _inv_titleinfo(invpath, node)
 
@@ -1735,7 +1744,7 @@ class NodeRenderer:
                                              fetch_url=fetch_url):
                 # Render only if it is open. We'll get the stuff via ajax later if it's closed
                 for child in inventory.sort_children(node.get_node_children()):
-                    child.show(self, path=raw_invpath)
+                    child.show(self, path=node_abs_path)
             html.end_foldable_container()
 
     def _replace_placeholders(self, raw_title, invpath):
@@ -1874,9 +1883,8 @@ class NodeRenderer:
     #   ---helper---------------------------------------------------------------
 
     def _get_raw_path(self, path):
-        if path is None:
-            return self._invpath.strip(".")
-        return path.strip(".")
+        raw_path = ".".join(map(str, path)) if path else self._invpath
+        return raw_path.strip(".")
 
     def _get_header(self, title, key, hex_color):
         header = HTML(title)
@@ -1955,7 +1963,12 @@ def ajax_inv_render_tree():
                     _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
                      ) % ", ".join(corrupted_history_files)))
             return
-        tree_renderer: NodeRenderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
+        tree_renderer: NodeRenderer = DeltaNodeRenderer(
+            site_id,
+            hostname,
+            invpath,
+            tree_id=tree_id,
+        )
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)
@@ -1968,11 +1981,12 @@ def ajax_inv_render_tree():
                     _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
                     inventory.get_short_inventory_filepath(hostname)))
             return
-        tree_renderer = AttributeRenderer(site_id,
-                                          hostname,
-                                          "",
-                                          invpath,
-                                          show_internal_tree_paths=show_internal_tree_paths)
+        tree_renderer = AttributeRenderer(
+            site_id,
+            hostname,
+            invpath,
+            show_internal_tree_paths=show_internal_tree_paths,
+        )
 
     if struct_tree is None:
         html.show_error(_("No such inventory tree."))

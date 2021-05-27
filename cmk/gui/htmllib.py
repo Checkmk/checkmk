@@ -37,11 +37,9 @@
 #   the different tasks clearer. For ABCHTMLGenerator() or similar.
 #
 # - Unify CSS classes attribute to "class_"
-import functools
 import os
 import re
 import json
-import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
@@ -59,45 +57,6 @@ from typing import (
     Union,
 )
 from pathlib import Path
-
-
-# TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
-# the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
-# custom subclass of the JSONEncoder.
-#
-# Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
-def _default(self: json.JSONEncoder, obj: object) -> str:
-    # ignore attr-defined: See hack below
-    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
-
-
-# TODO: suppress mypy warnings for this monkey patch right now. See also:
-# https://github.com/python/mypy/issues/2087
-# Save unmodified default:
-_default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
-# replacement:
-json.JSONEncoder.default = _default  # type: ignore[assignment]
-
-# And here we go for another dirty JSON hack. We often use he JSON we produce for adding it to HTML
-# tags and the JSON produced by json.dumps() can not directly be added to <script> tags in a save way.
-# TODO: This is something which should be realized by using a custom JSONEncoder. The slash encoding
-# is not necessary when the resulting string is not added to HTML content, but there is no problem
-# to apply it to all encoded strings.
-
-
-def _patch_json(json_module):
-    # We make this a function which is called on import-time because mypy fell into an endless-loop
-    # due to changes outside this scope.
-    orig_func = json_module.encoder.encode_basestring_ascii
-
-    @functools.wraps(orig_func)
-    def _escaping_wrapper(s):
-        return orig_func(s).replace('/', '\\/')
-
-    json_module.encoder.encode_basestring_ascii = _escaping_wrapper
-
-
-_patch_json(json)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -132,7 +91,6 @@ from cmk.gui.type_defs import (
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
-    from cmk.gui.type_defs import VisualContext
     from cmk.gui.valuespec import ValueSpec
     from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput
 

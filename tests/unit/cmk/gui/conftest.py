@@ -32,7 +32,7 @@ from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 import cmk.gui.watolib.activate_changes as activate_changes
-
+from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 SPEC_LOCK = threading.Lock()
@@ -141,6 +141,12 @@ def _create_and_destroy_user(automation=False, role="user"):
 
     # User directories are not deleted by WATO by default. Clean it up here!
     shutil.rmtree(str(profile_path))
+
+
+@pytest.fixture(scope='function', name="patch_json", autouse=True)
+def fixture_patch_json():
+    with patch_json(json):
+        yield
 
 
 @pytest.fixture(scope='function')

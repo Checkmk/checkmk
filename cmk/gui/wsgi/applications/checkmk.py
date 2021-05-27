@@ -8,6 +8,7 @@ from typing import Callable
 import functools
 import http.client as http_client
 import traceback
+import json
 
 import livestatus
 
@@ -35,6 +36,7 @@ from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.json import patch_json
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,
@@ -156,7 +158,7 @@ class CheckmkApp:
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
                 theme=theme,
-        ):
+        ), patch_json(json):
             config.initialize()
             theme.from_config(config.ui_theme, config.theme_choices())
             html.init_modes()

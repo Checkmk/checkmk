@@ -48412,6 +48412,10 @@ msgstr ""
 "Download von <a href=\"https://checkmk.de/download\">Checkmk<a> verwendet "
 "werden."
 
+msgid ""
+"The suffix .new is a reserved keyword an cannot be used as aggregation id"
+msgstr ""
+
 #, fuzzy
 msgid "The synchronization finished."
 msgstr "Die Synchronisation ist fehlgeschlagen."

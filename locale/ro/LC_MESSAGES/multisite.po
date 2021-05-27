@@ -46441,6 +46441,10 @@ msgid ""
 "checkmk.de/download\">Checkmk<a>."
 msgstr ""
 
+msgid ""
+"The suffix .new is a reserved keyword an cannot be used as aggregation id"
+msgstr ""
+
 #, fuzzy
 msgid "The synchronization finished."
 msgstr "foloseste descrierea"

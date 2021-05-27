@@ -21,7 +21,7 @@ def with_context_middleware(app):
     def with_context(environ, start_response):
         req = http.Request(environ)
         with AppContext(app), \
-                RequestContext(req=req, display_options=DisplayOptions()), \
+                RequestContext(req=req, resp=http.Response(), display_options=DisplayOptions()), \
                 cmk.utils.store.cleanup_locks(), \
                 sites.cleanup_connections():
             config.initialize()

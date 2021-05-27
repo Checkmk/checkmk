@@ -308,8 +308,9 @@ class IndexSearcher:
         _theme = Theme()
         _theme.from_config(config.ui_theme, config.theme_choices())
         with RequestContext(
-                html_obj=html(_request, _response, OutputFunnel(_response)),
                 req=_request,
+                resp=_response,
+                html_obj=html(_request, _response, OutputFunnel(_response)),
                 display_options=DisplayOptions(),
                 theme=_theme,
         ), UserContext(self._user_id):

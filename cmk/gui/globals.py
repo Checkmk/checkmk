@@ -7,6 +7,8 @@
 # This is our home-grown version of flask.globals and flask.ctx. It
 # can be removed when fully do things the flasky way.
 
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -111,9 +113,9 @@ _unset = object()
 class RequestContext:
     def __init__(
         self,
+        req: http.Request,
+        resp: http.Response,
         html_obj=None,
-        req=None,
-        resp=None,
         timeout_manager: Optional['TimeoutManager'] = None,  # pylint: disable=redefined-outer-name
         theme: Optional['Theme'] = None,  # pylint: disable=redefined-outer-name
         display_options=None,  # pylint: disable=redefined-outer-name
@@ -127,12 +129,6 @@ class RequestContext:
         self.session: Optional["userdb.SessionInfo"] = None
         self.flashes: Optional[List[str]] = None
         self._prefix_logs_with_url = prefix_logs_with_url
-
-        # TODO: Find all call sites and clean this up
-        if req is None and html_obj:
-            req = html_obj.request
-        if resp is None and html_obj:
-            resp = html_obj.response
 
         self.request = req
         self.response = resp

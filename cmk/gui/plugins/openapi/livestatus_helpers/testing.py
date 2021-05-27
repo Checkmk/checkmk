@@ -743,14 +743,14 @@ def mock_livestatus(with_context=False):
     live = MockLiveStatusConnection()
 
     env = EnvironBuilder().get_environ()
-    req = http.Request(env)
 
     app_context: ContextManager
     req_context: ContextManager
     if with_context:
         app_context = AppContext(None)
         req_context = RequestContext(
-            req=req,
+            req=http.Request(env),
+            resp=http.Response(),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
         )

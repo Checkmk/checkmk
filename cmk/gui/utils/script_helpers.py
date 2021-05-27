@@ -49,9 +49,12 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 
 @contextmanager
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
+    req = Request(environ)
     resp = Response()
     with RequestContext(
-            html(Request(environ), resp, OutputFunnel(resp)),
+            req=req,
+            resp=resp,
+            html_obj=html(req, resp, OutputFunnel(resp)),
             display_options=DisplayOptions(),
             theme=Theme(),
             prefix_logs_with_url=False,

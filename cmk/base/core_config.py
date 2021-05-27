@@ -204,7 +204,7 @@ def duplicate_service_warning(
                    (checktype, description, host_name, *first_occurrence, *second_occurrence))
 
 
-# TODO: Just for documentation purposes for now, add typing_extensions and use this.
+# TODO: Just for documentation purposes for now.
 #
 # HostCheckCommand = NewType('HostCheckCommand',
 #                            Union[Literal["smart"],

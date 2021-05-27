@@ -1,7 +1,10 @@
 import sys
 from _typeshed.wsgi import WSGIEnvironment
 from typing import Any, Generic, Optional, Text, Tuple, Type, TypeVar, overload
-from typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 if sys.version_info >= (3, 0):
     from http.cookiejar import CookieJar

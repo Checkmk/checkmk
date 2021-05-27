@@ -204,7 +204,6 @@ Python module: six,1.15.0,MIT,https://opensource.org/licenses/MIT,omd/packages/p
 Python module: snmpsim,0.4.7,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,omd/packages/python3-modules/src/snmpsim-0.4.7.tar.gz,,,,
 Python module: swagger_ui_bundle,0.0.6,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python3-modules/src/swagger_ui_bundle-0.0.6.tar.gz,,,,
 Python module: tenacity,6.3.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,omd/packages/python3-modules/src/tenacity-6.3.1.tar.gz,,,,
-Python module: typing_extensions,3.7.4.3,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/python3-modules/src/typing_extensions-3.7.4.3.tar.gz,,,,
 Python module: urllib3,1.25.10,MIT,https://opensource.org/licenses/MIT,omd/packages/python3-modules/src/urllib3-1.25.10.tar.gz,,,,
 Python module: vcrpy,4.1.0,MIT,https://opensource.org/licenses/MIT,omd/packages/python3-modules/src/vcrpy-4.1.0.tar.gz,,,,
 Python module: websocket_client,0.57.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/python3-modules/src/websocket_client-0.57.0.tar.gz,,,,

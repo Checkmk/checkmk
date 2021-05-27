@@ -20,3 +20,6 @@ item:
 
 inventory:
  One service is created for each available PLE counter.
+
+cluster:
+ On a cluster, the check accumulates all results for each cluster node.

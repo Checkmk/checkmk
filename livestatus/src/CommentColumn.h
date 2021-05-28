@@ -49,6 +49,10 @@ public:
     using ListColumn::ListColumn;
     template <class T, class U>
     class Callback;
+
+protected:
+    template <class U>
+    static std::string serialize(const U &);
 };
 
 template <class T, class U>
@@ -100,8 +104,13 @@ std::vector<std::string> CommentColumn::Callback<T, U>::getValue(
     auto entries = getEntries(row);
     std::vector<std::string> values;
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
-                   [](const auto &entry) { return std::to_string(entry._id); });
+                   serialize<U>);
     return values;
+}
+
+template <>
+inline std::string CommentColumn::serialize(const CommentData &entry) {
+    return std::to_string(entry._id);
 }
 
 #endif

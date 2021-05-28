@@ -11,6 +11,7 @@
 // We use `std::transform` but IWYU does not want the header.
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>
+#include <functional>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -30,18 +31,18 @@ class RowRenderer;
 class Object;
 #endif
 
-class DowntimeColumn;
-
 namespace detail {
 class DowntimeRenderer {
+    using function_type = std::function<std::vector<DowntimeData>(Row)>;
+
 public:
     enum class verbosity { none, medium, full };
-    DowntimeRenderer(DowntimeColumn &c, verbosity v)
-        : column_{c}, verbosity_{v} {}
+    DowntimeRenderer(const function_type &f, verbosity v)
+        : f_{f}, verbosity_{v} {}
     void operator()(Row row, RowRenderer &r) const;
 
 private:
-    DowntimeColumn &column_;
+    function_type f_;
     verbosity verbosity_;
 };
 }  // namespace detail
@@ -53,7 +54,8 @@ public:
     class Callback;
     DowntimeColumn(const std::string &name, const std::string &description,
                    const ColumnOffsets &offsets, verbosity v)
-        : ListColumn{name, description, offsets}, renderer_{*this, v} {}
+        : ListColumn{name, description, offsets}
+        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;

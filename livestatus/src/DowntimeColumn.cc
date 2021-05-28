@@ -15,7 +15,7 @@
 
 void detail::DowntimeRenderer::operator()(Row row, RowRenderer &r) const {
     ListRenderer l(r);
-    for (const auto &downtime : column_.getEntries(row)) {
+    for (const auto &downtime : f_(row)) {
         switch (verbosity_) {
             case verbosity::none:
                 l.output(downtime._id);

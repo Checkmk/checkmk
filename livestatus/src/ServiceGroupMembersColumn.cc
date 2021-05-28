@@ -27,7 +27,7 @@
 void detail::ServiceGroupMembersRenderer::operator()(
     Row row, RowRenderer &r, const contact *auth_user) const {
     ListRenderer l(r);
-    for (const auto &entry : column_.getEntries(row, auth_user)) {
+    for (const auto &entry : f_(row, auth_user)) {
         switch (verbosity_) {
             case verbosity::none: {
                 SublistRenderer s(l);

@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -16,10 +17,10 @@
 
 #include "Filter.h"
 #include "ListColumn.h"
+#include "Row.h"
 #include "opids.h"
 class ColumnOffsets;
 class MonitoringCore;
-class Row;
 class RowRenderer;
 enum class ServiceState;
 
@@ -29,23 +30,42 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-class ServiceGroupMembersColumn;
-
 namespace detail {
+namespace service_group_members {
+struct Entry {
+    Entry(std::string hn, std::string d, ServiceState cs, bool hbc)
+        : host_name(std::move(hn))
+        , description(std::move(d))
+        , current_state(cs)
+        , has_been_checked(hbc) {}
+
+    std::string host_name;
+    std::string description;
+    ServiceState current_state;
+    bool has_been_checked;
+};
+}  // namespace service_group_members
+
 class ServiceGroupMembersRenderer {
+    using function_type =
+        std::function<std::vector<service_group_members::Entry>(
+            Row, const contact *)>;
+
 public:
     enum class verbosity { none, full };
-    ServiceGroupMembersRenderer(ServiceGroupMembersColumn &c, verbosity v)
-        : column_{c}, verbosity_{v} {}
+    ServiceGroupMembersRenderer(const function_type &f, verbosity v)
+        : f_{f}, verbosity_{v} {}
     void operator()(Row row, RowRenderer &r, const contact *auth_user) const;
 
 private:
-    ServiceGroupMembersColumn &column_;
+    function_type f_;
     verbosity verbosity_;
 };
 }  // namespace detail
 
 class ServiceGroupMembersColumn : public deprecated::ListColumn {
+    using Entry = detail::service_group_members::Entry;
+
 public:
     using verbosity = detail::ServiceGroupMembersRenderer::verbosity;
     ServiceGroupMembersColumn(const std::string &name,
@@ -54,7 +74,10 @@ public:
                               verbosity v)
         : deprecated::ListColumn(name, description, offsets)
         , mc_{mc}
-        , renderer_{*this, v} {}
+        , renderer_{[this](Row row, const contact *auth_user) {
+                        return this->getEntries(row, auth_user);
+                    },
+                    v} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -73,19 +96,6 @@ private:
     MonitoringCore *mc_;
     friend class detail::ServiceGroupMembersRenderer;
     detail::ServiceGroupMembersRenderer renderer_;
-
-    struct Entry {
-        Entry(std::string hn, std::string d, ServiceState cs, bool hbc)
-            : host_name(std::move(hn))
-            , description(std::move(d))
-            , current_state(cs)
-            , has_been_checked(hbc) {}
-
-        std::string host_name;
-        std::string description;
-        ServiceState current_state;
-        bool has_been_checked;
-    };
 
     std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };

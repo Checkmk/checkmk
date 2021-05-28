@@ -169,20 +169,6 @@ if [ -e /etc/fstab ]; then
     sed -i "s/^tmpfs  \/omd\/sites/tmpfs  \/opt\/omd\/sites/" /etc/fstab
 fi
 
-TMPFILES_DIR="/usr/lib/tmpfiles.d/"
-TMPFILES_CONF="${TMPFILES_DIR}checkmk.conf"
-
-mkdir -p "$TMPFILES_DIR"
-# Fix backup issues
-cat >"$TMPFILES_CONF" <<EOL
-#Type Path            Mode UID      GID    Age Argument
-d /var/lock/mkbackup  0770 root     omd    -   -
-EOL
-
-if command -v systemd-tmpfiles > /dev/null; then
-    systemd-tmpfiles --create "$TMPFILES_CONF" &> /dev/null || true
-fi
-
 # ensure apache is running
 service @APACHE_NAME@ start >/dev/null 2>&1
 exit 0

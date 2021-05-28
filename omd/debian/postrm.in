@@ -25,7 +25,6 @@ set -e
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 APACHE_OMD_EMPTY_CONF="/opt/omd/apache/empty.conf"
 OMD="omd-###OMD_VERSION###"
-ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | egrep -v 'No alternatives'` || /bin/true
 
 case "$1" in
     upgrade)
@@ -33,12 +32,10 @@ case "$1" in
 
     remove|failed-upgrade|abort-install|abort-upgrade|disappear)
       # update-alternatives --remove  omd /omd/versions/###OMD_VERSION###
-      if [ -z "$ALTERNATIVES" ]; then
-        rm -f /usr/lib/tmpfiles.d/checkmk.conf
-      fi
     ;;
 
     purge)
+      ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | egrep -v 'No alternatives'` || /bin/true
       if [ -z "$ALTERNATIVES" ]; then
 	  echo "Removing system group 'omd'"
 	  groupdel omd || true

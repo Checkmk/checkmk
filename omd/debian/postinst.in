@@ -12,8 +12,7 @@ set -e
 BASE_PATH="/omd/versions/###OMD_VERSION###"
 CAP_PROGRAMS="bin/mkeventd_open514 lib/nagios/plugins/check_icmp lib/nagios/plugins/check_dhcp lib/cmc/icmpsender lib/cmc/icmpreceiver"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
-TMPFILES_DIR="/usr/lib/tmpfiles.d/"
-TMPFILES_CONF="${TMPFILES_DIR}checkmk.conf"
+
 # Source debconf library.
 . /usr/share/debconf/confmodule
 
@@ -139,17 +138,6 @@ case "$1" in
         fi
     fi
 
-    mkdir -p "$TMPFILES_DIR"
-    # Fix backup issues
-    cat >"$TMPFILES_CONF" <<EOL
-#Type Path            Mode UID      GID    Age Argument
-d /var/lock/mkbackup  0770 root     omd    -   -
-EOL
-
-    if command -v systemd-tmpfiles > /dev/null; then
-        systemd-tmpfiles --create "$TMPFILES_CONF" &> /dev/null || true
-    fi
-
     ;;
 
   abort-upgrade|abort-remove|abort-deconfigure)
@@ -160,7 +148,6 @@ EOL
     echo "postinst called with unknown argument \`$1'" >&2
     exit 1
     ;;
-
 esac
 
 # dh_installdeb will replace this with shell code automatically

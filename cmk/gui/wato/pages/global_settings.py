@@ -205,7 +205,8 @@ class ABCGlobalSettingsMode(WatoMode):
                     value_title = None
 
                 if is_a_checkbox(valuespec):
-                    html.open_div(class_=["toggle_switch_container", modified_cls])
+                    html.open_div(
+                        class_=["toggle_switch_container", modified_cls, "on" if value else None])
                     html.toggle_switch(
                         enabled=value,
                         help_txt=_("Immediately toggle this setting"),

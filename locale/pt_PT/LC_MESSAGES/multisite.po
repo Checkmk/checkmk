@@ -10361,8 +10361,10 @@ msgstr ""
 "correspondências sensíveis a maiúsculas e minúsculas, <tt>!</tt> para "
 "negação e <tt>~~</tt> para correspondências regex."
 
+#, fuzzy, python-format
 msgid ""
-"Configure the language to be used by the user in the user interface here."
+"Configure the language of the user interface. Feel free to contribute to the "
+"translations on %s."
 msgstr ""
 "Configure aqui o idioma a ser usado pelo usuário na interface do usuário."
 
@@ -61283,6 +61285,12 @@ msgstr "colapsou"
 msgid "command"
 msgstr "comando"
 
+#, fuzzy
+msgid "comment"
+msgid_plural "comments"
+msgstr[0] "Comente"
+msgstr[1] "Comente"
+
 msgid "complete"
 msgstr "completo"
 
@@ -62439,6 +62447,10 @@ msgstr ""
 
 msgid "remove"
 msgstr "remover"
+
+#, fuzzy, python-format
+msgid "remove the following %d %s?"
+msgstr " as seguintes %d crash %s"
 
 msgid "repeat every 20'th row"
 msgstr "repetir a cada 20'th row"

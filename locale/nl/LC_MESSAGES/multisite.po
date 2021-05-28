@@ -10345,8 +10345,10 @@ msgstr ""
 "hoofdlettergevoelige overeenkomsten, <tt>!</tt> voor negatie en <tt>~</tt> "
 "voor regex overeenkomsten."
 
+#, fuzzy, python-format
 msgid ""
-"Configure the language to be used by the user in the user interface here."
+"Configure the language of the user interface. Feel free to contribute to the "
+"translations on %s."
 msgstr ""
 "Configureer hier de taal die door de gebruiker in de gebruikersinterface "
 "moet worden gebruikt."
@@ -61329,6 +61331,12 @@ msgstr "ingestort"
 msgid "command"
 msgstr "commando"
 
+#, fuzzy
+msgid "comment"
+msgid_plural "comments"
+msgstr[0] "Commentaar"
+msgstr[1] "Commentaar"
+
 msgid "complete"
 msgstr "volledig"
 
@@ -62486,6 +62494,10 @@ msgstr ""
 
 msgid "remove"
 msgstr "verwijder"
+
+#, fuzzy, python-format
+msgid "remove the following %d %s?"
+msgstr " de volgende %d crash %s"
 
 msgid "repeat every 20'th row"
 msgstr "herhaal elke 20ste rij"

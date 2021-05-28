@@ -9799,8 +9799,10 @@ msgid ""
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
 
+#, python-format
 msgid ""
-"Configure the language to be used by the user in the user interface here."
+"Configure the language of the user interface. Feel free to contribute to the "
+"translations on %s."
 msgstr ""
 
 msgid ""
@@ -57162,6 +57164,13 @@ msgstr ""
 msgid "command"
 msgstr ""
 
+#, fuzzy
+msgid "comment"
+msgid_plural "comments"
+msgstr[0] "Adaugă comentariu"
+msgstr[1] "Adaugă comentariu"
+msgstr[2] "Adaugă comentariu"
+
 msgid "complete"
 msgstr ""
 
@@ -58391,6 +58400,10 @@ msgstr ""
 
 msgid "remove"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "remove the following %d %s?"
+msgstr "Adaugă instanță NGINX"
 
 msgid "repeat every 20'th row"
 msgstr ""

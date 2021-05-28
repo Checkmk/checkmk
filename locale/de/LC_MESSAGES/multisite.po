@@ -10348,8 +10348,10 @@ msgstr ""
 "Übereinstimmung. <tt>!</tt> am Anfang bedeutet Negation, <tt>~</tt> leitet "
 "einen regulären Ausdruck ein."
 
+#, fuzzy, python-format
 msgid ""
-"Configure the language to be used by the user in the user interface here."
+"Configure the language of the user interface. Feel free to contribute to the "
+"translations on %s."
 msgstr ""
 "Stellen Sie hier die Sprache ein, die der Benutzer in der Benutzeroberfläche "
 "verwenden soll."
@@ -61345,6 +61347,12 @@ msgstr "zugeklappt"
 msgid "command"
 msgstr "Kommando"
 
+#, fuzzy
+msgid "comment"
+msgid_plural "comments"
+msgstr[0] "Kommentar"
+msgstr[1] "Kommentar"
+
 msgid "complete"
 msgstr "vollständig"
 
@@ -62506,6 +62514,10 @@ msgstr ""
 
 msgid "remove"
 msgstr "Entferne"
+
+#, fuzzy, python-format
+msgid "remove the following %d %s?"
+msgstr " die folgenden %d Absturz-%s"
 
 msgid "repeat every 20'th row"
 msgstr "Wiederhole jede 20. Zeile"

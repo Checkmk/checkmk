@@ -527,17 +527,30 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
         offsets, DowntimeColumn::verbosity::full, mc));
-    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
-        prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, CommentColumn::verbosity::none, mc));
-    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
-        prefix + "comments_with_info",
-        "A list of all comments of the host with id, author and comment",
-        offsets, CommentColumn::verbosity::medium, mc));
-    table->addColumn(std::make_unique<CommentColumn::Callback<host>>(
+    table->addColumn(
+        std::make_unique<CommentColumn::Callback<host, CommentData>>(
+            prefix + "comments",
+            "A list of the ids of all comments of this host", offsets,
+            CommentColumn::verbosity::none, [mc](const host &hst) {
+                return mc->comments(
+                    reinterpret_cast<const MonitoringCore::Host *>(&hst));
+            }));
+    table->addColumn(
+        std::make_unique<CommentColumn::Callback<host, CommentData>>(
+            prefix + "comments_with_info",
+            "A list of all comments of the host with id, author and comment",
+            offsets, CommentColumn::verbosity::medium, [mc](const host &hst) {
+                return mc->comments(
+                    reinterpret_cast<const MonitoringCore::Host *>(&hst));
+            }));
+    table->addColumn(std::make_unique<
+                     CommentColumn::Callback<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, CommentColumn::verbosity::full, mc));
+        offsets, CommentColumn::verbosity::full, [mc](const host &hst) {
+            return mc->comments(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

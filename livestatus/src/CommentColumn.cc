@@ -33,9 +33,3 @@ void detail::CommentRenderer::operator()(Row row, RowRenderer &r) const {
         }
     }
 }
-
-void CommentColumn::output(Row row, RowRenderer &r,
-                           const contact * /*auth_user*/,
-                           std::chrono::seconds /*timezone_offset*/) const {
-    renderer_(row, r);
-}

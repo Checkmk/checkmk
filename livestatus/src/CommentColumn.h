@@ -14,10 +14,8 @@
 #include <functional>
 #include <iterator>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "Row.h"
@@ -27,10 +25,7 @@
 #include "nagios.h"
 #endif
 class RowRenderer;
-
-#ifdef CMC
-class Object;
-#endif
+class ColumnOffsets;
 
 namespace detail {
 class CommentRenderer {
@@ -51,48 +46,55 @@ private:
 class CommentColumn : public ListColumn {
 public:
     using verbosity = detail::CommentRenderer::verbosity;
-    template <class T>
+    using ListColumn::ListColumn;
+    template <class T, class U>
     class Callback;
-    CommentColumn(const std::string &name, const std::string &description,
-                  ColumnOffsets offsets, verbosity v)
-        : ListColumn{name, description, std::move(offsets)}
-        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-
-private:
-    friend class detail::CommentRenderer;
-    detail::CommentRenderer renderer_;
-    [[nodiscard]] virtual std::vector<CommentData> getEntries(
-        Row row) const = 0;
 };
 
-template <class T>
+template <class T, class U>
 class CommentColumn::Callback : public CommentColumn {
+    using function_type = std::function<std::vector<U>(const T &)>;
+
 public:
     Callback(const std::string &name, const std::string &description,
              const ColumnOffsets &offsets, CommentColumn::verbosity v,
-             MonitoringCore *mc)
-        : CommentColumn{name, description, offsets, v}, _mc{mc} {}
+             const function_type &f)
+        : CommentColumn{name, description, offsets}
+        , renderer_{[this](Row row) { return this->getEntries(row); }, v}
+        , f_{f} {}
+
+    void output(Row row, RowRenderer &r, const contact *auth_user,
+                std::chrono::seconds timezone_offset) const override;
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    MonitoringCore *_mc;
+    friend class detail::CommentRenderer;
+    detail::CommentRenderer renderer_;
+    const function_type f_;
 
-    [[nodiscard]] std::vector<CommentData> getEntries(Row row) const override;
-    [[nodiscard]] std::vector<CommentData> comments(const void *data) const;
+    [[nodiscard]] std::vector<U> getEntries(Row row) const {
+        const T *data = columnData<T>(row);
+        return data == nullptr ? std::vector<U>{} : f_(*data);
+    }
 };
+
+template <class T, class U>
+void CommentColumn::Callback<T, U>::output(
+    Row row, RowRenderer &r, const contact * /*auth_user*/,
+    std::chrono::seconds /*timezone_offset*/) const {
+    renderer_(row, r);
+}
 
 /// \sa Apart from the lambda, the code is the same in
 ///    * CommentColumn::getValue()
 ///    * DowntimeColumn::getValue()
 ///    * ServiceGroupMembersColumn::getValue()
 ///    * ServiceListColumn::getValue()
-template <class T>
-std::vector<std::string> CommentColumn::Callback<T>::getValue(
+template <class T, class U>
+std::vector<std::string> CommentColumn::Callback<T, U>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
     auto entries = getEntries(row);
@@ -102,32 +104,4 @@ std::vector<std::string> CommentColumn::Callback<T>::getValue(
     return values;
 }
 
-template <class T>
-std::vector<CommentData> CommentColumn::Callback<T>::getEntries(Row row) const {
-    if (const auto *const data = columnData<void>(row)) {
-        return comments(data);
-    }
-    return {};
-}
-
-#ifdef CMC
-template <>
-inline std::vector<CommentData> CommentColumn::Callback<Object>::comments(
-    const void *const data) const {
-    return _mc->comments(reinterpret_cast<const MonitoringCore::Host *>(data));
-}
-#else
-template <>
-inline std::vector<CommentData> CommentColumn::Callback<host>::comments(
-    const void *const data) const {
-    return _mc->comments(reinterpret_cast<const MonitoringCore::Host *>(data));
-}
-
-template <>
-inline std::vector<CommentData> CommentColumn::Callback<service>::comments(
-    const void *const data) const {
-    return _mc->comments(
-        reinterpret_cast<const MonitoringCore::Service *>(data));
-}
 #endif
-#endif  // CommentColumn_h

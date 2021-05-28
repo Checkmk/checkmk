@@ -827,9 +827,14 @@ div.varname {
   td.simple a.modified,
   td.simple div.toggle_switch_container.modified,
   td.content a.modified > table {
-    padding: 2px 4px;
-    margin-left: -4px;
-    border: 1px solid $globalvars-modified-border-color;
+    padding: 2px;
+    margin-left: -2px;
+    border: 1px solid $span-dots-color;
+
+    &.on {
+      border: 1px solid $success;
+    }
+
     border-radius: $spacing;
     box-shadow: $globalvars-modified-box-shadow;
   }

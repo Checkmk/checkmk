@@ -92,7 +92,7 @@ from cmk.gui.type_defs import (
 if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
     from cmk.gui.valuespec import ValueSpec
-    from cmk.gui.utils.output_funnel import OutputFunnel, OutputFunnelInput
+    from cmk.gui.utils.output_funnel import OutputFunnel
 
 HTMLTagName = str
 HTMLTagValue = Optional[str]
@@ -272,7 +272,7 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
         self.write(content)
 
     @abc.abstractmethod
-    def write(self, text: 'OutputFunnelInput') -> None:
+    def write(self, text: HTMLContent) -> None:
         raise NotImplementedError()
 
     #
@@ -1030,11 +1030,20 @@ class html(ABCHTMLGenerator):
     # output funnel
     #
 
-    def write(self, text: 'OutputFunnelInput') -> None:
-        self.output_funnel.write(text)
+    def write(self, text: HTMLContent) -> None:
+        if not text:
+            return
+
+        if isinstance(text, (int, HTML)):
+            text = str(text)
+
+        if not isinstance(text, str):
+            raise MKGeneralException(_('Type Error: html.write accepts str input objects only!'))
+
+        self.output_funnel.write(text.encode("utf-8"))
 
     def write_binary(self, data: bytes) -> None:
-        self.output_funnel.write_binary(data)
+        self.output_funnel.write(data)
 
     @contextmanager
     def plugged(self) -> Iterator[None]:

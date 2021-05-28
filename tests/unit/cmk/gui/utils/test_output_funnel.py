@@ -11,12 +11,13 @@ from cmk.gui.http import Response
 
 
 class OutputFunnelTester(OutputFunnel):
-    def __init__(self, response):
-        super(OutputFunnelTester, self).__init__(response)
-        self.written = b""
+    @property
+    def written(self):
+        return self._response_stack[-1].get_data()
 
-    def _lowlevel_write(self, text):
-        self.written += text
+    @property
+    def plug_text(self):
+        return [[e.decode("utf-8") for e in r.iter_encoded()] for r in self._response_stack[1:]]
 
 
 @pytest.fixture(name="html")

@@ -169,12 +169,12 @@ def get_history_deltas(hostname, search_timestamp=None):
     if '/' in hostname:
         return None, []  # just for security reasons
 
-    inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
+    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
     if not os.path.exists(inventory_path):
         return [], []
 
     latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
-    inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.utils.paths.var_dir, hostname)
+    inventory_archive_dir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
     try:
         archived_timestamps = sorted(os.listdir(inventory_archive_dir))
     except OSError:
@@ -467,7 +467,7 @@ def page_host_inv_api():
 def has_inventory(hostname):
     if not hostname:
         return False
-    inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
+    inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
     return os.path.exists(inventory_path)
 
 
@@ -532,8 +532,8 @@ def _write_python(response):
 class InventoryHousekeeping:
     def __init__(self):
         super(InventoryHousekeeping, self).__init__()
-        self._inventory_path = Path(cmk.utils.paths.var_dir) / "inventory"
-        self._inventory_archive_path = Path(cmk.utils.paths.var_dir) / "inventory_archive"
+        self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
+        self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):

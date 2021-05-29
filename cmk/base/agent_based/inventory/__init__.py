@@ -83,36 +83,56 @@ def commandline_inventory(
 
     for hostname in hostnames:
         section.section_begin(hostname)
+        host_config = config.HostConfig.make_host_config(hostname)
         try:
-            host_config = config.HostConfig.make_host_config(hostname)
-            inv_result = _inventorize_host(
+            _commandline_inventory_on_host(
                 host_config=host_config,
                 selected_sections=selected_sections,
                 run_plugin_names=run_plugin_names,
             )
 
-            _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
-            # TODO: inv_results.source_results is completely ignored here.
-            # We should process the results to make errors visible on the console
-            _show_inventory_results_on_console(inv_result.trees)
-
-            for detail in check_parsing_errors(errors=inv_result.parsing_errors).details:
-                console.warning(detail)
-
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-
             section.section_error("%s" % e)
         finally:
             cmk.utils.cleanup.cleanup_globals()
 
 
-def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
-    section.section_success("Found %s%s%d%s inventory entries" %
-                            (tty.bold, tty.yellow, trees.inventory.count_entries(), tty.normal))
-    section.section_success("Found %s%s%d%s status entries" %
-                            (tty.bold, tty.yellow, trees.status_data.count_entries(), tty.normal))
+def _commandline_inventory_on_host(
+    *,
+    host_config: config.HostConfig,
+    run_plugin_names: Container[InventoryPluginName],
+    selected_sections: SectionNameCollection,
+) -> None:
+
+    section.section_step("Inventorizing")
+
+    inv_result = _inventorize_host(
+        host_config=host_config,
+        selected_sections=selected_sections,
+        run_plugin_names=run_plugin_names,
+    )
+
+    for detail in check_parsing_errors(errors=inv_result.parsing_errors).details:
+        console.warning(detail)
+
+    # TODO: inv_results.source_results is completely ignored here.
+    # We should process the results to make errors visible on the console
+    count_i = inv_result.trees.inventory.count_entries()
+    count_s = inv_result.trees.status_data.count_entries()
+    section.section_success(f"Found {count_i} inventory entries")
+    section.section_success(f"Found {count_s} status entries")
+
+    if not host_config.inventory_export_hooks:
+        return
+
+    section.section_step("Execute inventory export hooks")
+
+    _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
+
+    count = len(host_config.inventory_export_hooks)
+    section.section_success(f"Sucessfully ran {count} export hooks")
 
 
 #.
@@ -400,13 +420,7 @@ def _save_inventory_tree(
 def _run_inventory_export_hooks(host_config: config.HostConfig,
                                 inventory_tree: StructuredDataNode) -> None:
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
-    hooks = host_config.inventory_export_hooks
-
-    if not hooks:
-        return
-
-    section.section_step("Execute inventory export hooks")
-    for hookname, params in hooks:
+    for hookname, params in host_config.inventory_export_hooks:
         console.verbose("Execute export hook: %s%s%s%s" %
                         (tty.blue, tty.bold, hookname, tty.normal))
         try:

@@ -91,8 +91,8 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         # the persisted_sections) in `__init__()` and not
         # modify it just after instantiation.
         self.cache_info.update({
-            section_name: (entry[0], entry[1] - entry[0])
-            for section_name, entry in persisted_sections.items()
+            section_name: (created_at, valid_until - created_at)
+            for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
             if section_name not in self.sections
         })
 

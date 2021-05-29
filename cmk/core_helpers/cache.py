@@ -124,24 +124,20 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
     @classmethod
     def from_sections(
         cls,
-        sections: Mapping[SectionName, TRawDataSection],
-        interval_lookup: Mapping[SectionName, Optional[int]],
         *,
-        cached_at: int,
+        sections: Mapping[SectionName, TRawDataSection],
+        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
     ) -> "PersistedSections[TRawDataSection]":
-        self = cls({})
-        for section_name, section_content in sections.items():
-            fetch_interval = interval_lookup[section_name]
-            if fetch_interval is None:
-                continue
-            self[section_name] = (cached_at, fetch_interval, section_content)
-
-        return self
+        return cls({
+            section_name: persist_info + (section_content,)
+            for section_name, section_content in sections.items()
+            if (persist_info := lookup_persist(section_name)) is not None
+        })
 
     def cached_at(self, section_name: SectionName) -> int:
         entry = self[section_name]
         if len(entry) == 2:
-            return 0
+            return 0  # epoch? why?
         return entry[0]
 
 
@@ -177,9 +173,9 @@ class SectionStore(Generic[TRawDataSection]):
 
     def update(
         self,
-        sections: Mapping[SectionName, TRawDataSection],
-        fetch_interval: Callable[[SectionName], Optional[int]],
         *,
+        sections: Mapping[SectionName, TRawDataSection],
+        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
         now: int,
         keep_outdated: bool,
     ) -> PersistedSections[TRawDataSection]:
@@ -188,16 +184,13 @@ class SectionStore(Generic[TRawDataSection]):
         # reading and unlock after writing
         persisted_sections = self.load()
         persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
-            sections,
-            {section_name: fetch_interval(section_name) for section_name in sections},
-            cached_at=now,
+            sections=sections,
+            lookup_persist=lookup_persist,
         ))
         if not keep_outdated:
             for section_name in tuple(persisted_sections):
-                interval = fetch_interval(section_name)
-                if interval is None:
-                    continue
-                if persisted_sections.cached_at(section_name) < now - interval:
+                (_created_at, valid_until, _section_content) = persisted_sections[section_name]
+                if valid_until < now:
                     del persisted_sections[section_name]
 
         self.store(persisted_sections)

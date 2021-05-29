@@ -33,14 +33,13 @@ class TestPersistedSections:
         sections = {section_a: content_a, section_b: content_b}
         cached_at = 69
         fetch_interval = 42
-        interval_lookup = {section_a: fetch_interval, section_b: None}
+        persist_info = {section_a: (cached_at, cached_at + fetch_interval), section_b: None}
 
         persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            sections,
-            interval_lookup,
-            cached_at=cached_at,
+            sections=sections,
+            lookup_persist=persist_info.get,
         )
 
         assert persisted_sections == {  # type: ignore[comparison-overlap]
-            section_a: (cached_at, fetch_interval, content_a)
+            section_a: (cached_at, cached_at + fetch_interval, content_a)
         }

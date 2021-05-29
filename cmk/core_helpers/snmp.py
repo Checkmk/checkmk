@@ -415,15 +415,14 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         host_sections = SNMPHostSections(dict(raw_data))
         now = int(time.time())
 
-        def fetch_interval(section_name: SectionName) -> Optional[int]:
-            fetch_interval = self.check_intervals.get(section_name)
-            if fetch_interval is None:
-                return fetch_interval
-            return now + fetch_interval
+        def lookup_persist(section_name: SectionName) -> Optional[Tuple[int, int]]:
+            if (interval := self.check_intervals.get(section_name)) is not None:
+                return now, now + interval
+            return None
 
         persisted_sections = self.section_store.update(
-            raw_data,
-            fetch_interval=fetch_interval,
+            sections=raw_data,
+            lookup_persist=lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )

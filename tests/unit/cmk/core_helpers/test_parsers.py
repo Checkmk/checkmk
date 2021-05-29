@@ -609,20 +609,17 @@ class TestAgentPersistentSectionHandling:
             SectionName("section"): (0, 0, [["oldest"]]),
         })
 
-    # I cannot trigger the `!keep_outdated` feature.  It seems
-    # broken:  It is triggered on data that just arrived and can
-    # therefore never be outdated.
-    def test_keep_outdated_is_noop(self, monkeypatch):
+    def test_keep_outdated_false(self, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
-        raw_data = AgentRawData(b"<<<section:persist(0)>>>")
+        raw_data = AgentRawData(b"<<<another_section>>>")
         section_store = MockStore(PersistedSections[AgentRawDataSection]({
-            SectionName("section"): (500, 100, []),
+            SectionName("section"): (500, 600, []),
         }))
         parser = AgentParser(
             "testhost",
             section_store,
-            check_interval=0,
+            check_interval=42,
             keep_outdated=False,
             translation={},
             encoding_fallback="ascii",
@@ -631,11 +628,38 @@ class TestAgentPersistentSectionHandling:
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert ahs.sections == {SectionName("section"): []}
-        assert ahs.cache_info == {SectionName("section"): (1000, -1000)}
+        assert ahs.sections == {SectionName('another_section'): []}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+        assert section_store.load() == {}
+
+    def test_keep_outdated_true(self, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+
+        raw_data = AgentRawData(b"<<<another_section>>>")
+        section_store = MockStore(PersistedSections[AgentRawDataSection]({
+            SectionName("section"): (500, 600, []),
+        }))
+        parser = AgentParser(
+            "testhost",
+            section_store,
+            check_interval=42,
+            keep_outdated=True,
+            translation={},
+            encoding_fallback="ascii",
+            simulation=False,
+            logger=logging.getLogger("test"),
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("another_section"): [],
+            SectionName("section"): [],
+        }
+        assert ahs.cache_info == {SectionName("section"): (500, 100)}
         assert ahs.piggybacked_raw_data == {}
         assert section_store.load() == PersistedSections[AgentRawDataSection]({
-            SectionName("section"): (1000, 0, []),
+            SectionName("section"): (500, 600, []),
         })
 
 
@@ -744,14 +768,12 @@ class TestSNMPPersistedSectionHandling:
             SectionName("section"): (1000, 1042, [["new"]]),
         })
 
-    def test_keep_outdated_is_noop(self, monkeypatch):
+    def test_keep_outdated_false(self, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
 
         section_store = MockStore(PersistedSections[SNMPRawDataSection]({
-            SectionName("section"): (0, 0, [["old"]]),
+            SectionName("section"): (500, 600, [["old"]]),
         }))
-        _new: SNMPRawDataSection = [["new"]]  # For the type checker only
-        raw_data: SNMPRawData = {SectionName("section"): _new}
         parser = SNMPParser(
             "testhost",
             section_store,
@@ -759,10 +781,31 @@ class TestSNMPPersistedSectionHandling:
             keep_outdated=False,
             logger=logging.getLogger("test"),
         )
-        shs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert shs.sections == {SectionName("section"): [["new"]]}
+        shs = parser.parse({}, selection=NO_SELECTION)
+        assert shs.sections == {}
         assert shs.cache_info == {}
         assert shs.piggybacked_raw_data == {}
-        assert section_store.load() == PersistedSections[SNMPRawDataSection]({
-            SectionName("section"): (1000, 1042, [["new"]]),
+        assert section_store.load() == {}
+
+    def test_keep_outdated_true(self, monkeypatch):
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+
+        section_store = MockStore(PersistedSections[SNMPRawDataSection]({
+            SectionName("section"): (500, 600, [["old"]]),
+        }))
+        parser = SNMPParser(
+            "testhost",
+            section_store,
+            check_intervals={SectionName("section"): 42},
+            keep_outdated=True,
+            logger=logging.getLogger("test"),
+        )
+        shs = parser.parse({}, selection=NO_SELECTION)
+        assert shs.sections == {SectionName("section"): [["old"]]}
+        assert shs.cache_info == {
+            SectionName("section"): (500, 100),
+        }
+        assert shs.piggybacked_raw_data == {}
+        assert not section_store.load() == PersistedSections[SNMPRawDataSection]({
+            SectionName("section"): (1000, 1042, [["old"]]),
         })

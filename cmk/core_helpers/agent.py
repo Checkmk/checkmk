@@ -598,13 +598,19 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 if header.cache_info(now) is not None
             },
         )
+
+        def lookup_persist(section_name: SectionName) -> Optional[Tuple[int, int]]:
+            default = SectionMarker.default(section_name)
+            if (until := section_info.get(section_name, default).persist) is not None:
+                return now, until
+            return None
+
         persisted_sections = self.section_store.update(
-            {
+            sections={
                 marker.name: [[str(line) for line in lines] for lines in section
                              ] for marker, section in sections.items()
             },
-            fetch_interval=lambda section_name: section_info.get(
-                section_name, SectionMarker.default(section_name)).persist,
+            lookup_persist=lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )

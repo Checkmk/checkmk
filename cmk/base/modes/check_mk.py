@@ -805,7 +805,7 @@ def mode_scan_parents(options: Dict, args: List[str]) -> None:
     if "procs" in options:
         config.max_num_processes = options["procs"]
 
-    cmk.base.parent_scan.do_scan_parents(args)
+    cmk.base.parent_scan.do_scan_parents([HostName(hn) for hn in args])
 
 
 modes.register(
@@ -890,7 +890,7 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
 
     config_cache = config.get_config_cache()
 
-    for hostname in hostnames:
+    for hostname in (HostName(hn) for hn in hostnames):
         ipaddress = config.lookup_ip_address(config_cache.get_host_config(hostname))
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
@@ -958,7 +958,7 @@ def mode_snmpget(args: List[str]) -> None:
                          if config_cache.get_host_config(host).is_snmp_host)
 
     assert hostnames
-    for hostname in hostnames:
+    for hostname in (HostName(hn) for hn in hostnames):
         host_config = config_cache.get_host_config(hostname)
         ipaddress = config.lookup_ip_address(host_config)
         if not ipaddress:
@@ -1652,7 +1652,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
-    hostname: HostName = args[0]
+    hostname = HostName(args[0])
     ipaddress: Optional[HostAddress] = None
     if len(args) == 2:
         ipaddress = args[1]

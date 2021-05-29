@@ -142,7 +142,7 @@ def commandline_discovery(
     If it is empty then we use all hosts and switch to using cache files.
     """
     config_cache = config.get_config_cache()
-    use_caches = not arg_hostnames or cmk.core_helpers.cache.FileCacheFactory.maybe
+
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
 
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
@@ -161,7 +161,7 @@ def commandline_discovery(
                 ip_address=ipaddress,
                 mode=mode,
                 selected_sections=selected_sections,
-                file_cache_max_age=config.max_cachefile_age(discovery=None if use_caches else 0),
+                file_cache_max_age=config.max_cachefile_age(),
                 fetcher_messages=(),
                 force_snmp_cache_refresh=False,
                 on_scan_error=on_error,

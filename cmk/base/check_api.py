@@ -153,12 +153,18 @@ from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=
 )
 
 from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    check_type, host_name, service_description,
+    check_type, host_name as _internal_host_name, service_description,
 )
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+
+def host_name() -> str:
+    """compatibility for making HostName a own class
+    if somebody make type comparision to str or some other weird stuff we want to be compatible"""
+    return str(_internal_host_name())
 
 
 def HostLabel(*_a, **_kw):
@@ -233,8 +239,8 @@ def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _confi
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname: HostName, ruleset: _config.Ruleset) -> List:
-    return _config.get_config_cache().host_extra_conf(hostname, ruleset)
+def host_extra_conf(hostname: str, ruleset: _config.Ruleset) -> List:
+    return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
@@ -243,8 +249,8 @@ def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname: HostName, conf: _config.Ruleset) -> Dict[str, Any]:
-    return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
+def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, Any]:
+    return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
@@ -481,7 +487,7 @@ def check_levels(value: Union[int, float],
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _prediction.get_levels(host_name(),
+            ref_value, levels = _prediction.get_levels(_internal_host_name(),
                                                        service_description(),
                                                        dsname,
                                                        params,
@@ -519,11 +525,14 @@ def get_effective_service_level() -> ServiceState:
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
-    service_level = config_cache.service_level_of_service(host_name(), service_description())
+    service_level = config_cache.service_level_of_service(
+        _internal_host_name(),
+        service_description(),
+    )
     if service_level is not None:
         return service_level
 
-    service_level = config_cache.get_host_config(host_name()).service_level
+    service_level = config_cache.get_host_config(_internal_host_name()).service_level
     if service_level is not None:
         return service_level
 
@@ -563,7 +572,7 @@ def get_agent_data_time() -> Optional[float]:
     of tcp or snmp hosts or None in case of piggyback data because
     we do not exactly know the latest agent data. Maybe one time
     we can handle this. For cluster hosts an exception is raised."""
-    return _agent_cache_file_age(host_name(), check_type())
+    return _agent_cache_file_age(_internal_host_name(), check_type())
 
 
 def _agent_cache_file_age(

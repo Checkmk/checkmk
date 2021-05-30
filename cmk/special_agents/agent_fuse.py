@@ -33,7 +33,7 @@ class LayoutResponse:
 
 
 class SummaryResponse:
-    def __init__(self, code: int, data: dict) -> None:
+    def __init__(self, code: int, data: list) -> None:
         self.code: int = code
         self.data: list = data
 

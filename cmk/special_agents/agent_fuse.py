@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-Checkmk special agent for Fuse Management Central.
-"""
-
 import json
 import sys
-import requests
-from requests.auth import HTTPBasicAuth
 import argparse
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
+import requests
 
 
 class SummaryStructure:
-    def __init__(self, system_alerts: Dict[Tuple[str, str], dict], env_alerts: Dict[str, dict], fuse_alerts: dict) -> None:
+    def __init__(self, system_alerts: Dict[Tuple[str, str], dict],
+                    env_alerts: Dict[Tuple[str, str], dict],
+                    fuse_alerts: Dict[str, dict]
+                ) -> None:
         self.system_alerts: Dict[Tuple[str, str], dict] = system_alerts
         self.env_alerts: Dict[Tuple[str, str], dict] = env_alerts
         self.fuse_alerts: Dict[str, dict] = fuse_alerts
@@ -37,12 +35,15 @@ class LayoutResponse:
 class SummaryResponse:
     def __init__(self, code: int, data: dict) -> None:
         self.code: int = code
-        self.data: dict = data
+        self.data: list = data
 
 
 class Alert:
-    def __init__(self, id: str, name: str, own_type: str, component_type: str, errors: int, warnings: int, link: str) -> None:
-        self.id: str = id
+    def __init__(self, fuse_id: str, name: str,
+                    own_type: str, component_type: str,
+                    errors: int, warnings: int, link: str
+                ) -> None:
+        self.fuse_id: str = fuse_id
         self.name: str = name
         self.type: str = own_type
         self.component_type: str = component_type
@@ -52,7 +53,7 @@ class Alert:
     def __eq__(self, other):
         try:
             return (
-                self.id == other.id and 
+                self.fuse_id == other.fuse_id and
                 self.name == other.name and
                 self.type == other.type and
                 self.component_type == other.component_type and
@@ -79,26 +80,24 @@ class FuseRequest:
         self.endpoint: str = "%s" % connection_url
         self.username: str = username
         self.password: str = password
-    
     def get_layout(self) -> LayoutResponse:
         data: dict = {}
         try:
-            response: requests.Response = requests.get(self.endpoint, auth=(self.username, self.password))
+            response = requests.get(self.endpoint, auth=(self.username, self.password))
             code: int = response.status_code
             if code == 200:
                 data = json.loads(response.text)
-        except:
+        except requests.exceptions.RequestException:
             code = 404
         return LayoutResponse(code, data)
-    
     def get_summary(self) -> SummaryResponse:
         data: list = []
         try:
-            response: requests.Response = requests.get(self.endpoint, auth=(self.username, self.password))
+            response = requests.get(self.endpoint, auth=(self.username, self.password))
             code: int = response.status_code
             if code == 200:
                 data = json.loads(response.text)
-        except:
+        except requests.exceptions.RequestException:
             code = 404
         return SummaryResponse(code, data)
 
@@ -122,7 +121,10 @@ def get_systems_alerts(layout: dict, system_alerts_map: Dict[Tuple[str, str], di
     if "systems" in layout:
         for system in layout["systems"]:
             for component in system["componentTypes"]:
-                system_alert: Alert = Alert(system["id"], system["name"], system["type"], component["displayName"], 0, 0, "")
+                system_alert: Alert = Alert(system["id"], system["name"],
+                                                system["type"], component["displayName"],
+                                                0, 0, ""
+                                            )
                 if (system["id"], component["id"]) in system_alerts_map:
                     alert = system_alerts_map[(system["id"], component["id"])]
                     if "errors" in alert:
@@ -135,14 +137,16 @@ def get_systems_alerts(layout: dict, system_alerts_map: Dict[Tuple[str, str], di
     return system_alerts
 
 
-def get_environment_alerts(layout: dict, env_alerts_map: Dict[Tuple[str, str], dict]) -> List[Alert]:
+def get_environment_alerts(layout: dict, env_alert_map: Dict[Tuple[str, str], dict]) -> List[Alert]:
     env_alerts: List[Alert] = []
     if "environments" in layout:
         for environment in layout["environments"]:
             for component in environment["componentTypes"]:
-                env_alert: Alert = Alert(environment["id"], environment["name"], "", component["displayName"], 0, 0, "")
-                if (environment["id"], component["id"]) in env_alerts_map:
-                    alert = env_alerts_map[(environment["id"], component["id"])]
+                env_alert: Alert = Alert(environment["id"], environment["name"],
+                                            "", component["displayName"], 0, 0, ""
+                                        )
+                if (environment["id"], component["id"]) in env_alert_map:
+                    alert = env_alert_map[(environment["id"], component["id"])]
                     if "errors" in alert:
                         env_alert.errors = int(alert["errors"])
                     if "warnings" in alert:
@@ -173,7 +177,6 @@ def get_admin_alerts(layout: dict, env_admin_map: Dict[str, dict]) -> List[Alert
 
 def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-
     parser.add_argument("user",
                         metavar="USER",
                         help="")
@@ -186,14 +189,13 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("host",
                         metavar="HOST",
                         help="")
-
     return parser.parse_args(argv)
 
 
-def main(argv: List[str] = None):
-    if argv is None:
-        argv = sys.argv[1:]
-    opt: argparse.Namespace = parse_arguments(argv)
+def main(args: Optional[List[str]] = None) -> int:
+    if args is None:
+        args = sys.argv[1:]
+    opt: argparse.Namespace = parse_arguments(args)
 
     layout_connection: LayoutConnection = LayoutConnection(opt.url)
     layout_request: FuseRequest  = FuseRequest(layout_connection.base_url, opt.user, opt.password)
@@ -211,9 +213,6 @@ def main(argv: List[str] = None):
     elif not layout_response.data:
         state = "empty"
 
-    """
-    Fuse Management Central Instance
-    """
     sys.stdout.write("<<<fuse_instance:sep(0)>>>\n")
     sys.stdout.write("{}\n".format(state))
 
@@ -223,23 +222,14 @@ def main(argv: List[str] = None):
 
         summary_structure: SummaryStructure = get_summary_structure(summary)
 
-        """
-        Fuse Management Central System Alerts
-        """
         system_alerts: List[Alert] = get_systems_alerts(layout, summary_structure.system_alerts)
         sys.stdout.write("<<<fuse_system_alerts:sep(0)>>>\n")
         sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in system_alerts])))
 
-        """
-        Fuse Management Central Environment Alerts
-        """
         env_alerts: List[Alert] = get_environment_alerts(layout, summary_structure.env_alerts)
         sys.stdout.write("<<<fuse_env_alerts:sep(0)>>>\n")
         sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in env_alerts])))
 
-        """
-        Fuse Management Central Admin Alerts
-        """
         admin_alerts: List[Alert] = get_admin_alerts(layout, summary_structure.fuse_alerts)
         sys.stdout.write("<<<fuse_admin_alerts:sep(0)>>>\n")
         sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in admin_alerts])))

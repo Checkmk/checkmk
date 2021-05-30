@@ -28,28 +28,26 @@ def discovery_fuse_env_alerts(section: list) -> DiscoveryResult:
     for alert in section:
         service_name: str = "%s - %s" % (alert["name"], alert["component_type"])
         yield Service(
-            item=service_name, 
+            item=service_name,
             parameters={
-                "id": alert["id"],
+                "fuse_id": alert["fuse_id"],
                 "component_type": alert["component_type"]
             })
 
 
 def check_fuse_env_alerts(item: str, params: Mapping[str, str], section: list) -> CheckResult:
     for alert in section:
-        if alert["id"] == params.get("id") and alert["component_type"] == params.get("component_type"):
+        if (alert["fuse_id"] == params.get("fuse_id") and alert["component_type"]) == params.get("component_type"):
             errors: int = alert["errors"]
             warnings: int = alert["warnings"]
             link: str = alert["link"]
             if link:
                 link = " | <a href=\"%s\" target=\"_blank\">click here for more info</a>" % link
-
             state = State.OK
             if errors > 0:
                 state = State.CRIT
             elif warnings > 0:
                 state = State.WARN
-
             yield Result(
                 state=state,
                 summary="Errors: %s | Warnings: %s%s" % (errors, warnings, link),

@@ -40,23 +40,21 @@ def check_fuse_instance(params: Mapping[str, Any], section: str) -> CheckResult:
         state=State.CRIT,
         summary=CONNECTION_FAILED,
     )
-    
-    if (section == "up"):
+    if section == "up":
         result = Result(
             state=State.OK,
             summary=FUSE_UP,
         )
-    elif (section == "unauth"):
+    elif section == "unauth":
         result = Result(
             state=State.CRIT,
             summary=FAILED_AUTH,
         )
-    elif (section == "empty"):
+    elif section == "empty":
         result = Result(
             state=State.CRIT,
             summary=NO_DATA,
         )
-    
     yield result
 
 

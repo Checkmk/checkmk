@@ -3,10 +3,6 @@
 
 import pytest
 
-pytestmark = pytest.mark.checks
-
-from typing import List
-
 from cmk.special_agents.agent_fuse import (
     SummaryStructure,
     Alert,
@@ -16,6 +12,7 @@ from cmk.special_agents.agent_fuse import (
     get_admin_alerts
 )
 
+pytestmark = pytest.mark.checks
 
 LAYOUT: dict = {
     "systems": [
@@ -97,7 +94,7 @@ SUMMARY: list = [
 
 
 SUMMARY_STRUCTURE: SummaryStructure = SummaryStructure(
-    {("78fea62b-1a14-4e82-8385-70817ccd6312", "OTAC_ARCHIVE"): 
+    {("78fea62b-1a14-4e82-8385-70817ccd6312", "OTAC_ARCHIVE"):
         {
             "componentType": "OTAC_ARCHIVE",
             "envId": "378ae807-48f8-44b4-9da4-159413b17157",
@@ -106,7 +103,7 @@ SUMMARY_STRUCTURE: SummaryStructure = SummaryStructure(
             "link": "link_system-2_OTAC_ARCHIVE"
         }
     },
-    {("378ae807-48f8-44b4-9da4-159413b17157", "SOV"): 
+    {("378ae807-48f8-44b4-9da4-159413b17157", "SOV"):
         {
             "componentType": "SOV",
             "envId": "378ae807-48f8-44b4-9da4-159413b17157",
@@ -115,7 +112,7 @@ SUMMARY_STRUCTURE: SummaryStructure = SummaryStructure(
             "link": "link_PRODUCTION_SOV"
         }
     },
-    {"HEALTH": 
+    {"HEALTH":
         {
             "componentType": "HEALTH",
             "warnings": 7.0,
@@ -141,9 +138,33 @@ def test_get_summary_structure(params, result):
             "system_alerts": SUMMARY_STRUCTURE.system_alerts
         },
         [
-            Alert("45fa59b7-cf49-40fb-ab19-7de59f80da57", "system-1", "OTCS", "System Status", 0, 0, ""),
-            Alert("78fea62b-1a14-4e82-8385-70817ccd6312", "system-2", "OTAC", "System Status", 0, 0, ""),
-            Alert("78fea62b-1a14-4e82-8385-70817ccd6312", "system-2", "OTAC", "Logical Archives", 0, 12, "link_system-2_OTAC_ARCHIVE")
+            Alert(
+                "45fa59b7-cf49-40fb-ab19-7de59f80da57",
+                "system-1",
+                "OTCS",
+                "System Status",
+                0,
+                0,
+                ""
+            ),
+            Alert(
+                "78fea62b-1a14-4e82-8385-70817ccd6312",
+                "system-2",
+                "OTAC",
+                "System Status",
+                0,
+                0,
+                ""
+            ),
+            Alert(
+                "78fea62b-1a14-4e82-8385-70817ccd6312",
+                "system-2",
+                "OTAC",
+                "Logical Archives",
+                0,
+                12,
+                "link_system-2_OTAC_ARCHIVE"
+            )
         ]
     )
 ])
@@ -158,8 +179,24 @@ def test_get_systems_alerts(params, result):
             "env_alerts": SUMMARY_STRUCTURE.env_alerts
         },
         [
-            Alert("378ae807-48f8-44b4-9da4-159413b17157", "PRODUCTION", "", "System Object Volume", 10, 2, "link_PRODUCTION_SOV"),
-            Alert("378ae807-48f8-44b4-9da4-159413b17157", "PRODUCTION", "", "Agents", 0, 0, "")
+            Alert(
+                "378ae807-48f8-44b4-9da4-159413b17157",
+                "PRODUCTION",
+                "",
+                "System Object Volume",
+                10,
+                2,
+                "link_PRODUCTION_SOV"
+            ),
+            Alert(
+                "378ae807-48f8-44b4-9da4-159413b17157",
+                "PRODUCTION",
+                "",
+                "Agents",
+                0,
+                0,
+                ""
+            )
         ]
     )
 ])

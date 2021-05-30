@@ -22,7 +22,7 @@ register.agent_section(
 )
 
 
-def discovery_fuse_admin_alerts(section: list) -> DiscoveryResult: 
+def discovery_fuse_admin_alerts(section: list) -> DiscoveryResult:
     for alert in section:
         service_name: str = "%s" % alert["component_type"]
         yield Service(item=service_name)
@@ -36,13 +36,11 @@ def check_fuse_admin_alerts(item: str, section: list) -> CheckResult:
             link: str = alert["link"]
             if link:
                 link = " | <a href=\"%s\" target=\"_blank\">click here for more info</a>" % link
-
             state = State.OK
             if errors > 0:
                 state = State.CRIT
             elif warnings > 0:
                 state = State.WARN
-
             yield Result(
                 state=state,
                 summary="Errors: %s | Warnings: %s%s" % (errors, warnings, link),

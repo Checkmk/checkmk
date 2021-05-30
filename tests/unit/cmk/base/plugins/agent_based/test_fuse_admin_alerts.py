@@ -3,8 +3,6 @@
 
 import pytest
 
-pytestmark = pytest.mark.checks
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result, Service
 
 from cmk.base.plugins.agent_based.fuse_admin_alerts import (
@@ -12,15 +10,16 @@ from cmk.base.plugins.agent_based.fuse_admin_alerts import (
     check_fuse_admin_alerts
 )
 
+pytestmark = pytest.mark.checks
 
 PARSED = [
     {
-        "id": "", 
-        "name": "", 
-        "type": "", 
-        "component_type": "Health", 
-        "errors": 0, 
-        "warnings": 7, 
+        "id": "",
+        "name": "",
+        "type": "",
+        "component_type": "Health",
+        "errors": 0,
+        "warnings": 7,
         "link": "link_FUSE_HEALTH"
     }
 ]
@@ -41,7 +40,7 @@ def test_discovery_fuse_admin_alerts(params, result):
     (
         "Health",
         Result(
-            state=State.WARN, 
+            state=State.WARN,
             summary="Errors: 0 | Warnings: 7 | <a href=\"link_FUSE_HEALTH\" target=\"_blank\">click here for more info</a>"
         )
     )

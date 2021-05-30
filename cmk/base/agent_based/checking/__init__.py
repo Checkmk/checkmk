@@ -30,6 +30,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
+    ActiveCheckResult,
     CheckPluginName,
     EVERYTHING,
     ExitSpec,
@@ -74,8 +75,6 @@ from .utils import (
     RECEIVED_NO_DATA,
 )
 
-ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-
 #.
 #   .--Checking------------------------------------------------------------.
 #   |               ____ _               _    _                            |
@@ -101,7 +100,7 @@ def do_check(
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
-) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
+) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()

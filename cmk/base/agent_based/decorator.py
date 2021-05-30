@@ -19,23 +19,26 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName
+from cmk.utils.type_defs import ActiveCheckResult, CheckPluginNameStr, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
 
+ActiveCheckFunction = Callable[..., ActiveCheckResult]
+WrappedActiveCheckFunction = Callable[..., int]
 
-def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
-                                 description: ServiceName) -> Callable:
+
+def handle_check_mk_check_result(
+    check_plugin_name: CheckPluginNameStr,
+    description: ServiceName,
+) -> Callable[[ActiveCheckFunction], WrappedActiveCheckFunction]:
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
-    def wrap(check_func: Callable) -> Callable:
+    def wrap(check_func: ActiveCheckFunction) -> WrappedActiveCheckFunction:
         def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
-
-            status, infotexts, long_infotexts, perfdata = 0, [], [], []
 
             try:
                 status, infotexts, long_infotexts, perfdata = check_func(hostname, *args, **kwargs)
@@ -43,16 +46,19 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
             except MKTimeout:
                 if _in_keepalive_mode():
                     raise
-                infotexts.append("Timed out")
                 status = max(status, exit_spec.get("timeout", 2))
+                infotexts = ["Timed out"]
+                long_infotexts, perfdata = [], []
 
             except (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError) as e:
-                infotexts.append("%s" % e)
                 status = exit_spec.get("connection", 2)
+                infotexts = ["%s" % e]
+                long_infotexts, perfdata = [], []
 
             except MKGeneralException as e:
-                infotexts.append("%s" % e)
                 status = max(status, exit_spec.get("exception", 3))
+                infotexts = ["%s" % e]
+                long_infotexts, perfdata = [], []
 
             except Exception:
                 if cmk.utils.debug.enabled():
@@ -64,8 +70,9 @@ def handle_check_mk_check_result(check_plugin_name: CheckPluginNameStr,
                     plugin_kwargs={},
                     is_manual=False,
                 )
-                infotexts.append(crash_output.replace("Crash dump:\n", "Crash dump:\\n"))
                 status = max(status, exit_spec.get("exception", 3))
+                infotexts = [crash_output.replace("Crash dump:\n", "Crash dump:\\n")]
+                long_infotexts, perfdata = [], []
 
             # Produce the service check result output
             output_txt = ", ".join(infotexts)

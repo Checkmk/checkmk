@@ -34,16 +34,13 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
+    ActiveCheckResult,
     EVERYTHING,
     HostAddress,
     HostName,
     HostKey,
     InventoryPluginName,
-    MetricTuple,
     result,
-    ServiceAdditionalDetails,
-    ServiceDetails,
-    ServiceState,
     SourceType,
     state_markers,
 )
@@ -130,9 +127,7 @@ def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
 
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
-def do_inv_check(
-    hostname: HostName, options: Dict[str, int]
-) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], List[MetricTuple]]:
+def do_inv_check(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)

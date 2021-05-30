@@ -35,6 +35,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
 from cmk.utils.type_defs import (
+    ActiveCheckResult,
     CheckPluginName,
     CheckPluginNameStr,
     DiscoveryResult,
@@ -87,7 +88,7 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           List[MetricTuple], Dict[str, str], List[HostName]]
 CheckPreviewTable = List[CheckPreviewEntry]
 
-_DiscoverySubresult = Tuple[int, List[str], List[str], List[Tuple], bool]
+_DiscoverySubresult = Tuple[ActiveCheckResult, bool]
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -485,7 +486,7 @@ def check_discovery(
     # The next argument *must* remain optional for the DiscoCheckExecutor.
     #   See Also: `cmk.base.agent_based.checking.do_check()`.
     fetcher_messages: Sequence[FetcherMessage] = (),
-) -> Tuple[int, List[str], List[str], List[Tuple]]:
+) -> ActiveCheckResult:
 
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -539,7 +540,7 @@ def check_discovery(
         on_error=OnError.RAISE,
     )
 
-    status, infotexts, long_infotexts, perfdata, need_rediscovery = _aggregate_subresults(
+    (status, infotexts, long_infotexts, perfdata), need_rediscovery = _aggregate_subresults(
         _check_service_lists(
             host_name=host_name,
             services_by_transition=services,
@@ -562,20 +563,19 @@ def check_discovery(
                 autodiscovery_queue.add(nodename)
         else:
             autodiscovery_queue.add(host_name)
-        infotexts.append(u"rediscovery scheduled")
+        infotexts = list(infotexts) + ["rediscovery scheduled"]
 
     return status, infotexts, long_infotexts, perfdata
 
 
 def _aggregate_subresults(*subresults: _DiscoverySubresult) -> _DiscoverySubresult:
-    stati, texts, long_texts, perfdata_list, need_rediscovery_flags = zip(*subresults)
-    return (
+    stati, texts, long_texts, perfdata_list = zip(*(result for result, _ in subresults))
+    return ((
         worst_service_state(*stati, default=0),
-        sum(texts, []),
-        sum(long_texts, []),
-        sum(perfdata_list, []),
-        any(need_rediscovery_flags),
-    )
+        sum((list(t) for t in texts), []),
+        sum((list(l) for l in long_texts), []),
+        sum((list(p) for p in perfdata_list), []),
+    ), any(need_rediscovery_flag for _, need_rediscovery_flag in subresults))
 
 
 def _check_service_lists(
@@ -590,7 +590,6 @@ def _check_service_lists(
     status = 0
     infotexts = []
     long_infotexts = []
-    perfdata: List[Tuple] = []
     need_rediscovery = False
 
     for transition, title, params_key, default_state, service_filter in [
@@ -640,7 +639,7 @@ def _check_service_lists(
             u"ignored: %s: %s" %
             (discovered_service.check_plugin_name, discovered_service.description))
 
-    return status, infotexts, long_infotexts, perfdata, need_rediscovery
+    return (status, infotexts, long_infotexts, []), need_rediscovery
 
 
 def _check_host_labels(
@@ -649,16 +648,10 @@ def _check_host_labels(
     discovery_mode: DiscoveryMode,
 ) -> _DiscoverySubresult:
     return (
-        severity_new_host_label,
-        [f"{len(host_labels.new)} new host labels"],
-        [],
-        [],
+        (severity_new_host_label, [f"{len(host_labels.new)} new host labels"], [], []),
         discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
     ) if host_labels.new else (
-        0,
-        ["no new host labels"],
-        [],
-        [],
+        (0, ["no new host labels"], [], []),
         False,
     )
 
@@ -672,14 +665,14 @@ def _check_data_sources(
         (source, source.summarize(host_sections, mode=mode)) for source, host_sections in result
     ]
     return (
-        worst_service_state(*(state for _s, (state, _t) in summaries), default=0),
-        # Do not output informational (state = 0) things.  These information
-        # are shown by the "Check_MK" service
-        [f"[{src.id}] {text}" for src, (state, text) in summaries if state != 0],
-        [],
-        [],
-        False,
-    )
+        (
+            worst_service_state(*(state for _s, (state, _t) in summaries), default=0),
+            # Do not output informational (state = 0) things.  These information
+            # are shown by the "Check_MK" service
+            [f"[{src.id}] {text}" for src, (state, text) in summaries if state != 0],
+            [],
+            []),
+        False)
 
 
 class _AutodiscoveryQueue:

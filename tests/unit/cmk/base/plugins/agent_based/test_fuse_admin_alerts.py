@@ -14,7 +14,7 @@ pytestmark = pytest.mark.checks
 
 PARSED = [
     {
-        "id": "",
+        "fuse_id": "",
         "name": "",
         "type": "",
         "component_type": "Health",
@@ -28,22 +28,24 @@ PARSED = [
 @pytest.mark.parametrize('params,result', [
     (
         PARSED,
-        Service(item="Health")
+        [Service(item="Health")]
     )
 ])
 def test_discovery_fuse_admin_alerts(params, result):
     service = discovery_fuse_admin_alerts(params)
-    assert next(service) == result
+    assert list(service) == result
 
 
 @pytest.mark.parametrize('params,result', [
     (
         "Health",
-        Result(
-            state=State.WARN,
-            summary="Errors: 0 | Warnings: 7 | <a href=\"link_FUSE_HEALTH\" target=\"_blank\">click here for more info</a>"
-        )
+        [
+            Result(
+                state=State.WARN,
+                summary="Errors: 0 | Warnings: 7 | <a href=\"link_FUSE_HEALTH\" target=\"_blank\">click here for more info</a>"
+            )
+        ]
     )
 ])
 def test_check_fuse_admin_alerts(params, result):
-    assert next(check_fuse_admin_alerts(params, PARSED)) == result
+    assert list(check_fuse_admin_alerts(params, PARSED)) == result

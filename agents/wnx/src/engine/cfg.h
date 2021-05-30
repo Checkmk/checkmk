@@ -185,29 +185,32 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring& file_name,
 // ***********************************************************
 // usage auto x = GetVal("global", "name", false);
 template <typename T>
-T GetVal(std::string_view section_name, std::string_view key,
-         T Default) noexcept {
+T GetVal(std::string_view section_name, std::string_view key, T dflt) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) return Default;
+    if (yaml.size() == 0) {
+        return dflt;
+    }
 
     try {
         auto section = yaml[section_name];
         auto val = section[key];
         if (val.IsScalar()) return val.as<T>();
-        return Default;
+        return dflt;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
                 wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
                 e.what());
     }
-    return Default;
+    return dflt;
 }
 
 // usage auto x = GetVal("global", "name");
 inline YAML::Node GetNode(std::string_view section_name,
                           std::string_view key) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) return {};
+    if (yaml.size() == 0) {
+        return {};
+    }
 
     try {
         auto section = yaml[section_name];
@@ -223,7 +226,9 @@ inline YAML::Node GetNode(std::string_view section_name,
 // usage auto x = GetVal("global", "name");
 inline std::optional<YAML::Node> GetGroup(
     const YAML::Node& yaml, std::string_view section_name) noexcept {
-    if (yaml.size() == 0) return {};
+    if (yaml.size() == 0) {
+        return {};
+    }
 
     try {
         return yaml[section_name];
@@ -277,7 +282,9 @@ inline YAML::Node GetNode(const YAML::Node& yaml, std::string_view name,
 template <typename T>
 std::vector<T> ConvertNode2Sequence(const YAML::Node& Val) noexcept {
     try {
-        if (!Val.IsDefined() || !Val.IsSequence()) return {};
+        if (!Val.IsDefined() || !Val.IsSequence()) {
+            return {};
+        }
 
         auto sz = Val.size();
         std::vector<T> arr;
@@ -362,10 +369,10 @@ std::vector<T> GetArray(std::string_view Section, std::string_view Name,
 // sequences of maps  '- name: value'
 inline StringPairArray GetPairArray(std::string_view section_name,
                                     std::string_view value_name,
-                                    int* ErrorOut = nullptr) noexcept {
+                                    int* error_out = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
-        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        if (error_out) *error_out = Error::kEmpty;
 
         return {};
     }
@@ -898,9 +905,9 @@ public:
     PluginInfo() {}
 
     // Async:
-    PluginInfo(int timeout, int age, int retry)
+    PluginInfo(int the_timeout, int age, int retry)
         : async_(true)
-        , timeout_(timeout)
+        , timeout_(the_timeout)
         , cache_age_(age)
         , retry_(retry)
         , defined_(true) {
@@ -908,9 +915,9 @@ public:
     }
 
     // Sync:
-    PluginInfo(int timeout, int retry)
+    PluginInfo(int the_timeout, int retry)
         : async_(false)
-        , timeout_(timeout)
+        , timeout_(the_timeout)
         , cache_age_(0)
         , retry_(retry)
         , defined_(true) {}
@@ -978,18 +985,18 @@ public:
 
         // deprecated
         // Sync
-        ExeUnit(std::string_view Pattern, int Timeout, int Retry, bool Run)
-            : PluginInfo(Timeout, Retry)  //
-            , pattern_(Pattern)           //
-            , run_(Run) {}
+        ExeUnit(std::string_view pattern, int timeout, int retry, bool run)
+            : PluginInfo(timeout, retry)  //
+            , pattern_(pattern)           //
+            , run_(run) {}
 
         // deprecated
         // Async
-        ExeUnit(std::string_view Pattern, int Timeout, int Age, int Retry,
-                bool Run)
-            : PluginInfo(Timeout, Age, Retry)  //
-            , pattern_(Pattern)                //
-            , run_(Run) {
+        ExeUnit(std::string_view pattern, int the_timeout, int age, int retry,
+                bool run_mode)
+            : PluginInfo(the_timeout, age, retry)  //
+            , pattern_(pattern)                    //
+            , run_(run_mode) {
             validateAndFix();
         }
 
@@ -1002,11 +1009,11 @@ public:
         }
 
         // Only For Testing Automation with Initializer Lists
-        ExeUnit(std::string_view Pattern, bool Async, int Timeout, int Age,
-                int Retry, bool Run)
-            : pattern_(Pattern)  //
-            , run_(Run) {
-            debugInit(Async, Timeout, Age, Retry);
+        ExeUnit(std::string_view pattern, bool async_mode, int the_timeout,
+                int age, int retry, bool run_mode)
+            : pattern_(pattern)  //
+            , run_(run_mode) {
+            debugInit(async_mode, the_timeout, age, retry);
             // validation
             if (!async_ && cache_age_ != 0) {
                 XLOG::d(
@@ -1021,10 +1028,10 @@ public:
         auto group() const noexcept { return group_; }
         auto user() const noexcept { return user_; }
         auto run() const noexcept { return run_; }
-        void assign(const YAML::Node& node) noexcept;
-        void assignGroup(std::string_view group) noexcept;
-        void assignUser(std::string_view user) noexcept;
-        void apply(std::string_view filename, const YAML::Node& node) noexcept;
+        void assign(const YAML::Node& node);
+        void assignGroup(std::string_view group);
+        void assignUser(std::string_view user);
+        void apply(std::string_view filename, const YAML::Node& node);
         const YAML::Node source() const noexcept { return source_; }
         const std::string sourceText() const noexcept { return source_text_; }
 
@@ -1071,7 +1078,7 @@ public:
     Plugins() : max_wait_(kDefaultPluginTimeout), async_start_(true) {}
 
     // API:
-    void loadFromMainConfig(std::string_view GroupName);
+    void loadFromMainConfig(std::string_view group_name);
 
     // relative high level API to build intermediate data structures
     // from raw data inside the class

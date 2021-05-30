@@ -595,7 +595,6 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
 
         WaitForAsyncPluginThreads(5000ms);
         if (ex_port == nullptr) {
-            // test mode
             sendDebugData();
             return;
         }
@@ -664,8 +663,6 @@ bool SystemMailboxCallback(const MailSlot* /*nothing*/, const void* data,
         XLOG::l("error in param");
         return false;
     }
-
-    auto fname = cfg::GetCurrentLogFileName();
 
     const auto* dt = static_cast<const carrier::CarrierDataHeader*>(data);
     XLOG::d.i("Received [{}] bytes from '{}'\n", len, dt->providerId());

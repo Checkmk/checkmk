@@ -12,7 +12,7 @@ from typing import NamedTuple, List, Optional, Union
 import cmk.gui.config as config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html
+from cmk.gui.globals import html, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.main_menu import (
@@ -110,7 +110,7 @@ class MainMenuRenderer:
 
 @register("sidebar_message_read")
 def ajax_message_read():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     try:
         notify.delete_gui_message(html.request.var('id'))
         html.write("OK")

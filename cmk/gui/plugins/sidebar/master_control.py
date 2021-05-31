@@ -13,7 +13,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.utils.urls import makeactionuri_contextless
 from cmk.gui.plugins.sidebar import (
     PageHandlers,
@@ -154,7 +154,7 @@ class MasterControlSnapin(SidebarSnapin):
         }
 
     def _ajax_switch_masterstate(self) -> None:
-        html.set_output_format("text")
+        response.set_content_type("text/plain")
 
         if not config.user.may("sidesnap.master_control"):
             return

@@ -22,7 +22,7 @@ import cmk.gui.userdb as userdb
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.log import logger
-from cmk.gui.globals import html
+from cmk.gui.globals import html, response
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
@@ -45,20 +45,20 @@ class ModeAutomationLogin(AjaxPage):
         if not config.user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
-        html.set_output_format("python")
+        response.set_content_type("text/plain")
 
         if not html.request.has_var("_version"):
             # Be compatible to calls from sites using versions before 1.5.0p10.
             # Deprecate with 1.7 by throwing an exception in this situation.
-            response = _get_login_secret(create_on_demand=True)
+            resp = _get_login_secret(create_on_demand=True)
         else:
-            response = {
+            resp = {
                 "version": cmk_version.__version__,
                 "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
 
-        html.write(repr(response))
+        response.set_data(repr(resp))
 
 
 @page_registry.register_page("noauth:automation")

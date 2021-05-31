@@ -29,7 +29,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request as global_request, transactions
+from cmk.gui.globals import html, request as global_request, transactions, response
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKUserError,
@@ -416,9 +416,9 @@ class PageDownloadDiagnosticsDump(Page):
         tarfile_name = html.request.get_ascii_input_mandatory("tarfile_name")
         file_content = self._get_diagnostics_dump_file(site, tarfile_name)
 
-        html.set_output_format("x-tgz")
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
-        html.write_binary(file_content)
+        response.set_content_type("application/x-tgz")
+        response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
+        response.set_data(file_content)
 
     def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
         if config.site_is_local(site):

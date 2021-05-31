@@ -17,7 +17,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
 
-from cmk.gui.globals import html, request as global_request, transactions
+from cmk.gui.globals import html, request as global_request, transactions, response
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
@@ -277,9 +277,9 @@ class PageDownloadAgentOutput(AgentOutputPage):
         file_name = self.file_name(self._request)
         file_content = self._get_agent_output_file()
 
-        html.set_output_format("text")
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
-        html.write_binary(file_content)
+        response.set_content_type("text/plain")
+        response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
+        response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:
         if config.site_is_local(self._request.host.site_id()):

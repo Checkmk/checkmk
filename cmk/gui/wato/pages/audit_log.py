@@ -29,7 +29,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri, makeactionuri
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import html, request, display_options, user_errors, transactions
+from cmk.gui.globals import html, request, display_options, user_errors, transactions, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -482,7 +482,7 @@ class ModeAuditLog(WatoMode):
         self._store.clear()
 
     def _export_audit_log(self, audit: List[AuditLogStore.Entry]) -> ActionResult:
-        html.set_output_format("csv")
+        response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
             filename = "wato-auditlog-%s_%s.csv" % (render.date(
@@ -491,7 +491,7 @@ class ModeAuditLog(WatoMode):
             filename = "wato-auditlog-%s_%s_days.csv" % (render.date(
                 time.time()), self._options["display"][1])
 
-        html.response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename
+        response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename
 
         titles = [
             _('Date'),

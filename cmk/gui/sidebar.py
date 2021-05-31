@@ -26,7 +26,7 @@ import cmk.utils.paths
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, theme
+from cmk.gui.globals import html, request, theme, response
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
@@ -558,7 +558,7 @@ def page_side():
 @cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
     snapin_id = html.request.var("name")
@@ -607,7 +607,7 @@ def ajax_snapin():
 
 @cmk.gui.pages.register("sidebar_fold")
 def ajax_fold():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
     user_config.folded = html.request.var("fold") == "yes"
     user_config.save()
@@ -615,7 +615,7 @@ def ajax_fold():
 
 @cmk.gui.pages.register("sidebar_openclose")
 def ajax_openclose() -> None:
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     if not config.user.may("general.configure_sidebar"):
         return None
 
@@ -644,7 +644,7 @@ def ajax_openclose() -> None:
 
 @cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin() -> None:
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     if not config.user.may("general.configure_sidebar"):
         return None
 
@@ -849,7 +849,7 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
 # TODO: This is snapin specific. Move this handler to the snapin file
 @cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     ident = html.request.var("ident")
     if ident not in snapin_registry:
         raise MKUserError(None, _("Invalid ident"))

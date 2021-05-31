@@ -103,8 +103,8 @@ def _show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_sil
                      "and use the form for reporting the problem.") % crash_url
 
     if plain_text:
-        html.set_output_format("text")
-        html.write("%s\n" % escaping.strip_tags(message))
+        response.set_content_type("text/plain")
+        response.set_data("%s\n" % escaping.strip_tags(message))
         return
 
     if fail_silently:

@@ -8,7 +8,7 @@ import json
 
 from cmk.gui.plugins.sidebar import snapin_width
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html, theme, response
 import cmk.gui.sites as sites
 
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
@@ -49,7 +49,7 @@ class Speedometer(SidebarSnapin):
         }
 
     def _ajax_speedometer(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled

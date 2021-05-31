@@ -10,7 +10,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, response
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.urls import makeuri_contextless
@@ -457,7 +457,7 @@ function virtual_host_tree_enter(path)
         }
 
     def _ajax_tag_tree(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         self._load()
         new_tree = html.request.var("tree_id")
 
@@ -470,7 +470,7 @@ function virtual_host_tree_enter(path)
 
     # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         self._load()
         path = (html.request.get_str_input_mandatory("path").split("|")
                 if html.request.var("path") else [])

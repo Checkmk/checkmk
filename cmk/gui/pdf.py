@@ -26,7 +26,7 @@ from reportlab.pdfgen import canvas  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.gui.exceptions import MKInternalError
-from cmk.gui.globals import html
+from cmk.gui.globals import response
 from cmk.gui.i18n import _
 
 RawIconColumn = Tuple[str, Optional[str]]
@@ -175,9 +175,9 @@ class Document:
 
     @classmethod
     def send(cls, pdf_source, sendas):
-        html.set_output_format("pdf")
-        html.response.headers["Content-Disposition"] = "inline; filename=" + ensure_str(sendas)
-        html.write_binary(pdf_source)
+        response.set_content_type("application/pdf")
+        response.headers["Content-Disposition"] = "inline; filename=" + ensure_str(sendas)
+        response.set_data(pdf_source)
 
     # Methods dealing with manipulating the graphics state (font size, etc.)
 

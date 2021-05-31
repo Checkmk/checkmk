@@ -26,7 +26,7 @@ import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, response as global_response
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
@@ -94,9 +94,9 @@ def page_api():
     try:
         pretty_print = False
         if not html.request.has_var("output_format"):
-            html.set_output_format("json")
+            global_response.set_content_type("application/json")
         if html.output_format not in _FORMATTERS:
-            html.set_output_format("python")
+            global_response.set_content_type("text/plain")
             raise MKUserError(
                 None, "Only %s are supported as output formats" %
                 " and ".join('"%s"' % f for f in _FORMATTERS))

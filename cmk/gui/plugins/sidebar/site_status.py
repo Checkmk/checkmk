@@ -7,7 +7,7 @@
 import json
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -93,7 +93,7 @@ class SiteStatus(SidebarSnapin):
         }
 
     def _ajax_switch_site(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not config.user.may("sidesnap.sitestatus"):
             return

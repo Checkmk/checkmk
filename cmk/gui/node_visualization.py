@@ -307,7 +307,6 @@ class AjaxFetchAggregationData(AjaxPage):
                 data["layout"] = layout
                 aggregation_info["aggregations"][aggr_name] = data
 
-        html.set_output_format("json")
         return aggregation_info
 
     def _get_line_style_config(self, aggr_settings: Dict[str, Any]) -> Dict[str, Any]:

@@ -123,12 +123,14 @@ def _page_not_found() -> Response:
 
 def _render_exception(e: Exception, title: str) -> Response:
     if plain_error():
-        html.set_output_format("text")
-        if title:
-            title = "%s: " % title
-        html.write("%s%s\n" % (title, e))
+        return Response(
+            response=[
+                "%s%s\n" % (("%s: " % title) if title else "", e),
+            ],
+            mimetype="text/plain",
+        )
 
-    elif not fail_silently():
+    if not fail_silently():
         html.header(title, Breadcrumb())
         html.show_error(str(e))
         html.footer()

@@ -18,7 +18,7 @@ import cmk.gui.config as config
 from cmk.gui import escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import html, theme
-from cmk.gui.globals import request as global_request
+from cmk.gui.globals import request as global_request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -457,7 +457,7 @@ def _graph_margin_ex(graph_render_options, defaults=(8, 16, 4, 8)):
 
 @cmk.gui.pages.register("ajax_graph")
 def ajax_graph():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     try:
         context_var = html.request.get_str_input_mandatory("context")
         context = json.loads(context_var)
@@ -649,10 +649,10 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
 # Called from javascript code via JSON to initially render a graph
 @cmk.gui.pages.register("ajax_render_graph_content")
 def ajax_render_graph_content():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     try:
         request = global_request.get_request()
-        response = {
+        resp = {
             "result_code": 0,
             "result": render_graph_content_html(request["graph_recipe"],
                                                 request["graph_data_range"],
@@ -660,12 +660,12 @@ def ajax_render_graph_content():
         }
     except Exception:
         logger.exception("could not render graph")
-        response = {
+        resp = {
             "result_code": 1,
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    html.write(json.dumps(response))
+    html.write(json.dumps(resp))
 
 
 def render_graph_content_html(graph_recipe, graph_data_range, graph_render_options):
@@ -758,7 +758,7 @@ def estimate_graph_step_for_html(time_range, graph_render_options):
 
 @cmk.gui.pages.register("ajax_graph_hover")
 def ajax_graph_hover():
-    html.set_output_format("json")
+    response.set_content_type("application/json")
     try:
         context_var = html.request.get_str_input_mandatory("context")
         context = json.loads(context_var)

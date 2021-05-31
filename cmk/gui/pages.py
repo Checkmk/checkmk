@@ -15,7 +15,7 @@ from cmk.utils.exceptions import MKException
 
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import g, html, request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
@@ -79,10 +79,10 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
             # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()
         except MKException as e:
-            html.response.status_code = http_client.BAD_REQUEST
+            response.status_code = http_client.BAD_REQUEST
             html.write(str(e))
         except Exception as e:
-            html.response.status_code = http_client.INTERNAL_SERVER_ERROR
+            response.status_code = http_client.INTERNAL_SERVER_ERROR
             if config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
@@ -96,14 +96,14 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         """The page handler, called by the page registry"""
         # FIXME: cyclical link between crash_reporting.py and pages.py
         from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         try:
             action_response = self.page()
-            response = {"result_code": 0, "result": action_response, "severity": "success"}
+            resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
-            response = {"result_code": 1, "result": "%s" % e, "severity": "success"}
+            resp = {"result_code": 1, "result": "%s" % e, "severity": "success"}
         except MKException as e:
-            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
         except Exception as e:
             if config.debug:
@@ -113,9 +113,9 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
-        html.write(json.dumps(response))
+        html.write(json.dumps(resp))
 
 
 class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):

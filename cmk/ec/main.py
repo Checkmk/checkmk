@@ -1685,7 +1685,7 @@ class EventServer(ECServerThread):
                         time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
                         event["host"],
                         event["application"],
-                        event["pid"] and ("[%s]" % event["pid"]) or "",
+                        ("[%s]" % event["pid"]) if event["pid"] else "",
                         event["text"])))
         except Exception:
             if self.settings.options.debug:
@@ -1918,7 +1918,7 @@ class EventCreator:
     def create_event_from_line(self, line: str, address: str) -> Event:
         event: Event = {
             # address is either None or a tuple of (ipaddress, port)
-            "ipaddress": address and address[0] or "",
+            "ipaddress": address[0] if address else "",
             "core_host": None,
             "host_in_downtime": False,
         }
@@ -2085,7 +2085,7 @@ class EventCreator:
                 "priority": 0,
                 "text": line,
                 "host": "",
-                "ipaddress": address and address[0] or "",
+                "ipaddress": address[0] if address else "",
                 "application": "",
                 "pid": 0,
                 "time": time.time(),
@@ -3746,7 +3746,7 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
         sock.settimeout(repl_settings["connect_timeout"])
         sock.connect(repl_settings["master"])
         sock.sendall(b"REPLICATE %d\n" %
-                     (slave_status["last_sync"] and slave_status["last_sync"] or 0))
+                     (slave_status["last_sync"] if slave_status["last_sync"] else 0))
         sock.shutdown(socket.SHUT_WR)
 
         response_text = b""

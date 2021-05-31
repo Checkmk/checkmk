@@ -340,7 +340,7 @@ def _base_notification_context(event: Event, username: Optional[str],
         "MICROTIME": str(int(event["last"] * 1000000)),
         "LASTSERVICESTATE": is_cancelling and "CRITICAL"
                             or "OK",  # better assume OK, we have no transition information
-        "LASTSERVICESTATEID": is_cancelling and "2" or "0",  # -> immer OK
+        "LASTSERVICESTATEID": "2" if is_cancelling else "0",  # -> immer OK
         "LASTSERVICEOK": "0",  # 1.1.1970
         "LASTSERVICESTATECHANGE": str(int(event["last"])),
         "LONGSERVICEOUTPUT": "",
@@ -348,7 +348,7 @@ def _base_notification_context(event: Event, username: Optional[str],
         "NOTIFICATIONAUTHORALIAS": "" if username is None else username,
         "NOTIFICATIONAUTHORNAME": "" if username is None else username,
         "NOTIFICATIONCOMMENT": "",
-        "NOTIFICATIONTYPE": is_cancelling and "RECOVERY" or "PROBLEM",
+        "NOTIFICATIONTYPE": "RECOVERY" if is_cancelling else "PROBLEM",
         "SERVICEACKAUTHOR": "",
         "SERVICEACKCOMMENT": "",
         "SERVICEATTEMPT": "1",

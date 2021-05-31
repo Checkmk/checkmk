@@ -13,7 +13,7 @@ from werkzeug.test import create_environ
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 import cmk.gui.http as http
-from cmk.gui.globals import html, request as global_request
+from cmk.gui.globals import html, request as global_request, response
 from cmk.gui.exceptions import MKUserError
 
 
@@ -279,25 +279,25 @@ def test_request_processing(register_builtin_html):
 
 
 def test_response_set_http_cookie(register_builtin_html):
-    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
+    response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
-    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+    assert response.headers.getlist("Set-Cookie")[-1] == \
         "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
-    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
+    response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
-    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+    assert response.headers.getlist("Set-Cookie")[-1] == \
             "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 0)
 
-    html.response.delete_cookie("auth_SITE")
+    response.delete_cookie("auth_SITE")
 
-    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+    assert response.headers.getlist("Set-Cookie")[-1] == \
             "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
 
 

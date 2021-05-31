@@ -152,7 +152,7 @@ def del_auth_cookie() -> None:
 
     cookie = _fetch_cookie(cookie_name)
     if auth_cookie_is_valid(cookie):
-        html.response.delete_cookie(cookie_name)
+        response.delete_cookie(cookie_name)
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:
@@ -183,9 +183,9 @@ def update_auth_cookie(username: UserId) -> None:
 
 
 def _set_auth_cookie(username: UserId, session_id: str) -> None:
-    html.response.set_http_cookie(auth_cookie_name(),
-                                  _auth_cookie_value(username, session_id),
-                                  secure=html.request.is_secure)
+    response.set_http_cookie(auth_cookie_name(),
+                             _auth_cookie_value(username, session_id),
+                             secure=html.request.is_secure)
 
 
 def user_from_cookie(raw_cookie: str) -> Tuple[UserId, str, str]:
@@ -598,10 +598,10 @@ class LogoutPage(Page):
 
         # Implement HTTP logout with cookie hack
         if not html.request.has_cookie('logout'):
-            html.response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
-                                                         config.omd_site())
-            html.response.set_http_cookie('logout', '1', secure=html.request.is_secure)
+            response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
+                                                    config.omd_site())
+            response.set_http_cookie('logout', '1', secure=html.request.is_secure)
             raise FinalizeRequest(http.client.UNAUTHORIZED)
 
-        html.response.delete_cookie('logout')
+        response.delete_cookie('logout')
         raise HTTPRedirect(config.url_prefix() + 'check_mk/')

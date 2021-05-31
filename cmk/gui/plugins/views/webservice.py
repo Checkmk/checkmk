@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from six import ensure_str
 
 import cmk.gui.escaping as escaping
-from cmk.gui.globals import html
+from cmk.gui.globals import html, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.type_defs import Rows
 from cmk.gui.plugins.views import (
@@ -104,8 +104,7 @@ exporter_registry.register(Exporter(
 def _export_json_export(view: "View", rows: Rows) -> None:
     filename = '%s-%s.json' % (view.name,
                                time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
-        filename)
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(filename)
 
     _show_json(view, rows)
 

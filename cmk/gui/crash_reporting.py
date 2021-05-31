@@ -632,9 +632,9 @@ class PageDownloadCrashReport(ABCCrashReportPage):
         filename = "Checkmk_Crash_%s_%s_%s.tar.gz" % \
             (urlencode(self._site_id), urlencode(self._crash_id), time.strftime("%Y-%m-%d_%H-%M-%S"))
 
-        html.response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
-        html.response.headers['Content-Type'] = 'application/x-tar'
-        html.write_binary(_pack_crash_report(self._get_serialized_crash_report()))
+        response.headers['Content-Disposition'] = 'Attachment; filename=%s' % filename
+        response.headers['Content-Type'] = 'application/x-tar'
+        response.set_data(_pack_crash_report(self._get_serialized_crash_report()))
 
 
 def _pack_crash_report(serialized_crash_report: Mapping[str, Optional[bytes]]) -> bytes:

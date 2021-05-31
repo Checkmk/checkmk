@@ -2195,8 +2195,7 @@ class EmptyCell(Cell):
 def output_csv_headers(view: ViewSpec) -> None:
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
-        filename)
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(filename)
 
 
 def _get_sorter_name_of_painter(

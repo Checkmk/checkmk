@@ -37,7 +37,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.page_menu import (
@@ -1398,4 +1398,4 @@ def _av_output_set_content_disposition(title: str) -> None:
         title,
         time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())),
     )
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename

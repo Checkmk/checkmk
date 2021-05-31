@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.valuespec import (
     Dictionary,
     Password,
@@ -454,11 +454,10 @@ class PageDownloadKey:
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
+        response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key)
-        html.response.headers["Content-type"] = "application/x-pem-file"
-        html.write_text(key["private_key"])
-        html.write_text(key["certificate"])
+        response.headers["Content-type"] = "application/x-pem-file"
+        response.set_data(key["private_key"] + key["certificate"])
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()

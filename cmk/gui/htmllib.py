@@ -959,7 +959,6 @@ class html(ABCHTMLGenerator):
         self.form_vars: List[str] = []
 
         # Register helpers
-        self.response = response
         self.output_funnel = output_funnel
         self.request = request
 

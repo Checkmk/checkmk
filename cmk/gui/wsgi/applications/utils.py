@@ -18,7 +18,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, request, response, g, theme
+from cmk.gui.globals import request, response, g, theme
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -58,7 +58,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 
             func()
 
-            return html.response
+            return response
 
     return _call_auth
 
@@ -66,13 +66,13 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 def plain_error() -> bool:
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return html.request.has_var("_plain_error") or requested_file_name(request) == "webapi"
+    return request.has_var("_plain_error") or requested_file_name(request) == "webapi"
 
 
 def fail_silently() -> bool:
     """Ajax-Functions want no HTML output in case of an error but
     just a plain server result code of 500"""
-    return html.request.has_var("_ajaxid")
+    return request.has_var("_ajaxid")
 
 
 def _ensure_general_access() -> None:
@@ -127,7 +127,7 @@ def _handle_not_authenticated() -> Response:
     login_page.set_no_html_output(plain_error())
     login_page.handle_page()
 
-    return html.response
+    return response
 
 
 def load_all_plugins() -> None:
@@ -141,7 +141,7 @@ def load_all_plugins() -> None:
 
 def _localize_request() -> None:
     previous_language = cmk.gui.i18n.get_current_language()
-    user_language = html.request.get_ascii_input("lang", config.user.language)
+    user_language = request.get_ascii_input("lang", config.user.language)
 
     set_language_cookie(request, response, user_language)
     cmk.gui.i18n.localize(user_language)
@@ -160,4 +160,4 @@ def handle_unhandled_exception() -> Response:
         show_crash_link=getattr(g, "may_see_crash_reports", False),
     )
     # This needs to be cleaned up.
-    return html.response
+    return response

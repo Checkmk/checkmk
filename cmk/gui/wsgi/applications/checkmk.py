@@ -27,7 +27,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, RequestContext, AppContext
+from cmk.gui.globals import html, RequestContext, AppContext, request, response as global_response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -69,7 +69,7 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
             if config.debug:
                 html.write_text(traceback.format_exc())
 
-        return html.response
+        return global_response
 
     return _call_noauth
 
@@ -99,7 +99,7 @@ def get_and_wrap_page(script_name: str) -> Callable[[], Response]:
 def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
-    if html.request.has_var("_plain_error"):
+    if request.has_var("_plain_error"):
         html.write(_("Page not found"))
     else:
         title = _("Page not found")
@@ -118,7 +118,7 @@ def _page_not_found() -> Response:
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
-    return html.response
+    return global_response
 
 
 def _render_exception(e: Exception, title: str) -> Response:
@@ -135,7 +135,7 @@ def _render_exception(e: Exception, title: str) -> Response:
         html.show_error(str(e))
         html.footer()
 
-    return html.response
+    return global_response
 
 
 def default_response_headers(req: http.Request) -> Dict[str, str]:
@@ -223,14 +223,14 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         # time before the first login for generating auth.php.
         load_all_plugins()
 
-        page_handler = get_and_wrap_page(requested_file_name(html.request))
+        page_handler = get_and_wrap_page(requested_file_name(request))
         response = page_handler()
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.
         # TODO: Remove all HTTPRedirect exceptions from all pages. Making the Exception a subclass
         #       of Response may also work as it can then be directly returned from here.
-        response = html.response
+        response = global_response
         response.status_code = e.status
         response.headers["Location"] = e.url
 
@@ -239,7 +239,7 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         #       It may be necessary to rewire the control-flow a bit as this exception could have
         #       been used to short-circuit some code and jump directly to the response. This
         #       needs to be changed as well.
-        response = html.response
+        response = global_response
         response.status_code = e.status
 
     except livestatus.MKLivestatusNotFoundError as e:

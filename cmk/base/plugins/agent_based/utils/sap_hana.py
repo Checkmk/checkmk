@@ -4,8 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Any, Tuple
-from ..agent_based_api.v1.type_defs import StringTable
+from typing import Dict, List, Any, Tuple, NamedTuple, Union
+
+from ..agent_based_api.v1 import Result, State, Metric, IgnoreResults
+from ..agent_based_api.v1.type_defs import StringTable, CheckResult
+
+
+class CheckResults(NamedTuple):
+    overall_state: State
+    results: List[Union[IgnoreResults, Metric, Result]] = []
+
 
 ParsedSection = Dict[str, Dict]
 
@@ -33,3 +41,30 @@ def parse_sap_hana_cluster_aware(info):
         elif instance is not None:
             instance.append([e.strip('"') for e in line])
     return parsed
+
+
+def get_cluster_check(check_function):
+    def cluster_check(
+        item,
+        section,
+    ) -> CheckResult:
+
+        yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+
+        node_results: Dict[str, CheckResults] = {}
+        for node, node_section in section.items():
+            if item in node_section:
+                all_results = list(check_function(item, node_section))
+
+                all_states = [r.state for r in all_results if isinstance(r, Result)]
+                node_results[node] = CheckResults(State.worst(*all_states), all_results)
+
+        node_states = [r.overall_state for r in node_results.values()]
+        best_state = State.best(*node_states)
+
+        for result in node_results.values():
+            if result.overall_state == best_state:
+                yield from result.results
+                return
+
+    return cluster_check

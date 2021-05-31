@@ -942,7 +942,6 @@ class html(ABCHTMLGenerator):
 
         # behaviour options
         self.render_headfoot = True
-        self.enable_debug = False
         self.screenshotmode = False
         self.have_help = False
 
@@ -971,13 +970,6 @@ class html(ABCHTMLGenerator):
         after the Check_MK GUI configuration has been loaded, so it is safe
         to rely on the config."""
         self._init_screenshot_mode()
-        self._init_debug_mode()
-
-    def _init_debug_mode(self) -> None:
-        # Debug flag may be set via URL to override the configuration
-        if self.request.var("debug"):
-            config.debug = True
-        self.enable_debug = config.debug
 
     # Enabling the screenshot mode omits the fancy background and
     # makes it white instead.
@@ -1236,7 +1228,7 @@ class html(ABCHTMLGenerator):
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
         rel_path = "/share/check_mk/web/htdocs/js"
-        if self.enable_debug:
+        if config.debug:
             min_parts = ["", "_min"]
         else:
             min_parts = ["_min", ""]
@@ -1354,7 +1346,7 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuPopupsRenderer().show(page_menu)
 
-        if self.enable_debug:
+        if config.debug:
             self._dump_get_vars()
 
     def _make_default_page_state(self) -> Optional[PageState]:

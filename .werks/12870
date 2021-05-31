@@ -1,0 +1,13 @@
+Title: Jira: Make site custom field ID optional
+Knowledge: doc
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p25
+Date: 1622452306
+
+Werk #11202 introduced the option "Site custom field ID", which was mandatory
+instead of optional.

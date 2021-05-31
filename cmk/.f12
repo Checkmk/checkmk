@@ -34,7 +34,6 @@ PYTHON3_PATHS=(
     special_agents/agent_azure.py
     special_agents/agent_bi.py
     special_agents/agent_couchbase.py
-    special_agents/agent_datadog.py
     special_agents/agent_ddn_s2a.py
     special_agents/agent_elasticsearch.py
     special_agents/agent_emcvnx.py

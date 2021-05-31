@@ -480,6 +480,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
     }
 
 
+@managedtest
 def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -669,6 +670,7 @@ def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
     assert user_endpoint_attrs["customer"] == "global"
 
 
+@managedtest
 def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
@@ -775,6 +777,7 @@ def test_managed_idle_internal(wsgi_app, with_automation_user, monkeypatch):
     assert user_endpoint_attrs["idle_timeout"] == {"option": "global"}
 
 
+@managedtest
 def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
@@ -851,6 +854,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
     }
 
 
+@managedtest
 def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",

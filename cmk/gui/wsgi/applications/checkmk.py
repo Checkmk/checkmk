@@ -208,7 +208,6 @@ class CheckmkApp:
         ), patch_json(json):
             config.initialize()
             theme.from_config(config.ui_theme, config.theme_choices())
-            html.init_modes()
             return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):
@@ -219,8 +218,6 @@ class CheckmkApp:
 
 def _process_request(environ, start_response, debug=False) -> Response:  # pylint: disable=too-many-branches
     try:
-        html.init_modes()
-
         # Make sure all plugins are available as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the
         # time before the first login for generating auth.php.

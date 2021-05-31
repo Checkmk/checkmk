@@ -942,7 +942,6 @@ class html(ABCHTMLGenerator):
 
         # behaviour options
         self.render_headfoot = True
-        self.screenshotmode = False
         self.have_help = False
 
         # browser options
@@ -965,17 +964,10 @@ class html(ABCHTMLGenerator):
 
         self._mobile = is_mobile(request, response)
 
-    def init_modes(self) -> None:
-        """Initializes the operation mode of the html() object. This is called
-        after the Check_MK GUI configuration has been loaded, so it is safe
-        to rely on the config."""
-        self._init_screenshot_mode()
-
-    # Enabling the screenshot mode omits the fancy background and
-    # makes it white instead.
-    def _init_screenshot_mode(self) -> None:
-        if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
-            self.screenshotmode = True
+    @property
+    def screenshotmode(self) -> bool:
+        """Enabling the screenshot mode omits the fancy background and makes it white instead."""
+        return bool(self.request.var("screenshotmode", "1" if config.screenshotmode else ""))
 
     #
     # output funnel

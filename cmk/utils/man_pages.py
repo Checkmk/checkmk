@@ -246,7 +246,6 @@ catalog_titles = {
         "azure"       : "Microsoft Azure",
         "aws"         : "Amazon Web Services",
         "quanta"      : "Quanta Cloud Technology",
-        "datadog"     : "Datadog",
     "containerization" : "Containerization",
         "cadvisor"     : "cAdvisor",
         "docker"       : "Docker",

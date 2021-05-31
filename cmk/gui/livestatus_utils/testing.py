@@ -38,6 +38,7 @@ def mock_livestatus(with_context=False, with_html=False):
             request=req,
             response=resp,
             output_funnel=OutputFunnel(resp),
+            output_format="html",
         )
     if with_context:
         app_context = AppContext(None)

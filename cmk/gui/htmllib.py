@@ -920,20 +920,6 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 #   | Caution! The class needs to be derived from Outputfunnel first!      |
 #   '----------------------------------------------------------------------'
 
-OUTPUT_FORMAT_MIME_TYPES = {
-    "json": "application/json",
-    "json_export": "application/json",
-    "jsonp": "application/javascript",
-    "csv": "text/csv",
-    "csv_export": "text/csv",
-    "python": "text/plain",
-    "text": "text/plain",
-    "html": "text/html",
-    "xml": "text/xml",
-    "pdf": "application/pdf",
-    "x-tgz": "application/x-tgz",
-}
-
 
 class html(ABCHTMLGenerator):
     def __init__(
@@ -941,6 +927,7 @@ class html(ABCHTMLGenerator):
         request: 'Request',
         response: 'Response',
         output_funnel: 'OutputFunnel',
+        output_format: str,
     ) -> None:
         super(html, self).__init__()
 
@@ -960,7 +947,7 @@ class html(ABCHTMLGenerator):
         self.have_help = False
 
         # browser options
-        self.output_format = "html"
+        self.output_format = output_format
         self.browser_reload = 0.0
         self.browser_redirect = ''
         self.link_target: Optional[str] = None
@@ -979,40 +966,12 @@ class html(ABCHTMLGenerator):
 
         self._mobile = is_mobile(request, response)
 
-        self.response.headers["Content-type"] = "text/html; charset=UTF-8"
-
-        # Disable caching for all our pages as they are mostly dynamically generated,
-        # user related and are required to be up-to-date on every refresh
-        self.response.headers["Cache-Control"] = "no-cache"
-
-        try:
-            output_format = self.request.get_ascii_input_mandatory("output_format", "html")
-            self.set_output_format(output_format.lower())
-        except (MKUserError, MKGeneralException):
-            pass  # Silently ignore unsupported formats
-
     def init_modes(self) -> None:
         """Initializes the operation mode of the html() object. This is called
         after the Check_MK GUI configuration has been loaded, so it is safe
         to rely on the config."""
-        self._verify_not_using_threaded_mpm()
-
         self._init_screenshot_mode()
         self._init_debug_mode()
-        self._init_webapi_cors_header()
-
-    def _init_webapi_cors_header(self) -> None:
-        # Would be better to put this to page individual code, but we currently have
-        # no mechanism for a page to set do this before the authentication is made.
-        if requested_file_name(self.request) == "webapi":
-            self.response.headers["Access-Control-Allow-Origin"] = "*"
-
-    def _verify_not_using_threaded_mpm(self) -> None:
-        if self.request.is_multithread:
-            raise MKGeneralException(
-                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
-                  "Check_MK is only working with the prefork module. Please change the MPM module to make "
-                  "Check_MK work."))
 
     def _init_debug_mode(self) -> None:
         # Debug flag may be set via URL to override the configuration
@@ -1056,13 +1015,6 @@ class html(ABCHTMLGenerator):
     #
     # Content Type
     #
-
-    def set_output_format(self, f: str) -> None:
-        if f not in OUTPUT_FORMAT_MIME_TYPES:
-            raise MKGeneralException(_("Unsupported context type '%s'") % f)
-
-        self.output_format = f
-        self.response.set_content_type(OUTPUT_FORMAT_MIME_TYPES[f])
 
     def is_api_call(self) -> bool:
         return self.output_format != "html"

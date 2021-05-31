@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable
+from typing import Callable, Dict
 import functools
 import http.client as http_client
 import traceback
@@ -138,6 +138,46 @@ def _render_exception(e: Exception, title: str) -> Response:
     return html.response
 
 
+def default_response_headers(req: http.Request) -> Dict[str, str]:
+    headers = {
+        # Disable caching for all our pages as they are mostly dynamically generated,
+        # user related and are required to be up-to-date on every refresh
+        "Cache-Control": "no-cache",
+    }
+
+    # Would be better to put this to page individual code, but we currently have
+    # no mechanism for a page to set do this before the authentication is made.
+    if requested_file_name(req) == "webapi":
+        headers["Access-Control-Allow-Origin"] = "*"
+
+    return headers
+
+
+_OUTPUT_FORMAT_MIME_TYPES = {
+    "json": "application/json",
+    "json_export": "application/json",
+    "jsonp": "application/javascript",
+    "csv": "text/csv",
+    "csv_export": "text/csv",
+    "python": "text/plain",
+    "text": "text/plain",
+    "html": "text/html",
+    "xml": "text/xml",
+    "pdf": "application/pdf",
+    "x-tgz": "application/x-tgz",
+}
+
+
+def get_output_format(output_format: str) -> str:
+    if output_format not in _OUTPUT_FORMAT_MIME_TYPES:
+        return "html"
+    return output_format
+
+
+def get_mime_type_from_output_format(output_format: str) -> str:
+    return _OUTPUT_FORMAT_MIME_TYPES[output_format]
+
+
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
     def __init__(self, debug=False):
@@ -145,7 +185,12 @@ class CheckmkApp:
 
     def __call__(self, environ, start_response):
         req = http.Request(environ)
-        resp = Response()
+
+        output_format = get_output_format(
+            req.get_ascii_input_mandatory("output_format", "html").lower())
+        mime_type = get_mime_type_from_output_format(output_format)
+
+        resp = Response(headers=default_response_headers(req), mimetype=mime_type)
         funnel = OutputFunnel(resp)
 
         timeout_manager = TimeoutManager()
@@ -156,7 +201,7 @@ class CheckmkApp:
         with AppContext(self), RequestContext(
                 req=req,
                 resp=resp,
-                html_obj=htmllib.html(req, resp, funnel),
+                html_obj=htmllib.html(req, resp, funnel, output_format),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),
                 theme=theme,

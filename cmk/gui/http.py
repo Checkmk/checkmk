@@ -18,7 +18,7 @@ from werkzeug.utils import get_content_type
 import urllib.parse
 
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 import cmk.gui.utils as utils
 
 UploadedFile = Tuple[str, str, bytes]
@@ -247,7 +247,20 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
     and provides some low level functions to the application for accessing this information.
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
+
     # pylint: disable=too-many-ancestors
+
+    def __init__(self, environ, populate_request=True, shallow=False):
+        super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self._verify_not_using_threaded_mpm()
+
+    def _verify_not_using_threaded_mpm(self) -> None:
+        if self.is_multithread:
+            raise MKGeneralException(
+                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
+                  "Check_MK is only working with the prefork module. Please change the MPM module to make "
+                  "Check_MK work."))
+
     @property
     def request_timeout(self) -> int:
         """The system web servers configured request timeout.
@@ -440,6 +453,8 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
 class Response(werkzeug.wrappers.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
+
+    default_mimetype = "text/html"
 
     def set_http_cookie(self, key: str, value: str, *, secure: bool) -> None:
         super().set_cookie(key, value, secure=secure, httponly=True, samesite="Lax")

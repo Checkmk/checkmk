@@ -310,7 +310,7 @@ class IndexSearcher:
         with RequestContext(
                 req=_request,
                 resp=_response,
-                html_obj=html(_request, _response, OutputFunnel(_response)),
+                html_obj=html(_request, _response, OutputFunnel(_response), output_format="html"),
                 display_options=DisplayOptions(),
                 theme=_theme,
         ), UserContext(self._user_id):

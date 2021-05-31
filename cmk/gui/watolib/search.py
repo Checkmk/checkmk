@@ -354,7 +354,8 @@ class IndexSearcher:
         results: DefaultDict[str, List[SearchResult]],
     ) -> None:
         for category in self._redis_client.smembers(key_categories):
-            if not self._may_see_category(category):
+            # category is a Union[bytes, float, int, str]
+            if not (isinstance(category, str) and self._may_see_category(category)):
                 continue
 
             prefix_category = IndexBuilder.add_to_prefix(

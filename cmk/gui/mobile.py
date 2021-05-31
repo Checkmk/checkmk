@@ -48,7 +48,7 @@ def mobile_html_head(title: str) -> None:
     html.meta(name="apple-mobile-web-app-capable", content="yes")
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
     html.title(title)
-    html.stylesheet(href="jquery/jquery.mobile-1.2.1.css")
+    html.stylesheet(href="jquery/jquery.mobile-1.4.5.min.css")
     html.stylesheet(href="themes/facelift/theme.css")
 
     html.write(
@@ -57,18 +57,6 @@ def mobile_html_head(title: str) -> None:
                                href="themes/facelift/images/ios_logo.png",
                                close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
-
-    # Never allow the mobile page to be opened in an iframe. Redirect top page to the current content page.
-    # This will result in a full screen mobile interface page.
-    html.javascript('''if(top != self) { window.top.location.href = location; }''')
-
-    html.javascript("""
-      $(document).ready(function() {
-          $("a").click(function (event) {
-            event.preventDefault();
-            window.location = $(this).attr("href");
-          });
-      });""")
 
     html.close_head()
     html.open_body(class_="mobile")

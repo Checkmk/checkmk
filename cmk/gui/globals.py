@@ -65,6 +65,22 @@ def _lookup_app_object(name):
 
 
 class AppContext:
+    """Application state handling during a request
+
+    The application context keeps track of the application-level data during a request, CLI
+    command, or other activity. Rather than passing the application around to each function, the
+    current_app and g proxies are accessed instead.
+
+    This is similar to the The Request Context, which keeps track of request-level data during a
+    request. A corresponding application context is pushed when a request context is pushed.
+
+    The application context is a good place to store common data during a request or CLI command.
+
+    See:
+
+        https://flask.palletsprojects.com/en/1.1.x/appcontext/
+        https://flask.palletsprojects.com/en/1.1.x/reqcontext/
+    """
     def __init__(self, app):
         self.app = app
         self.g = _AppCtxGlobals()
@@ -109,6 +125,28 @@ def _lookup_req_object(name):
 
 
 class RequestContext:
+    """
+    The request context keeps track of the request-level data during a request. Rather than passing
+    the request object to each function that runs during a request, the request and session proxies
+    are accessed instead.
+
+    This is similar to the The Application Context, which keeps track of the application-level data
+    independent of a request. A corresponding application context is pushed when a request context is
+    pushed.
+
+    When a Flask application begins handling a request, it pushes a request context, which also
+    pushes an The Application Context. When the request ends it pops the request context then the
+    application context.
+
+    The context is unique to each thread (or other worker type). request cannot be passed to another
+    thread, the other thread will have a different context stack and will not know about the request
+    the parent thread was pointing to.
+
+    See:
+
+        https://flask.palletsprojects.com/en/1.1.x/appcontext/
+        https://flask.palletsprojects.com/en/1.1.x/reqcontext/
+    """
     def __init__(
         self,
         req: http.Request,

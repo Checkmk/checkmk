@@ -77,4 +77,5 @@ register.check_plugin(
     discovery_function=discovery_sap_hana_proc,
     check_function=check_sap_hana_proc,
     check_default_parameters={},
+    cluster_check_function=sap_hana.get_cluster_check_with_params(check_sap_hana_proc),
 )

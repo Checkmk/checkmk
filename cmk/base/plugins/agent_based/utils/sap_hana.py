@@ -43,28 +43,47 @@ def parse_sap_hana_cluster_aware(info):
     return parsed
 
 
+def assume_best_state_cluster_check(item, section, check_function, params=None):
+    yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+
+    node_results: Dict[str, CheckResults] = {}
+    for node, node_section in section.items():
+        if item in node_section:
+            if params is not None:
+                all_results = list(check_function(item, params, node_section))
+            else:
+                all_results = list(check_function(item, node_section))
+
+            all_states = [r.state for r in all_results if isinstance(r, Result)]
+            node_results[node] = CheckResults(State.worst(*all_states), all_results)
+
+    node_states = [r.overall_state for r in node_results.values()]
+    best_state = State.best(*node_states)
+
+    for result in node_results.values():
+        if result.overall_state == best_state:
+            yield from result.results
+            return
+
+
 def get_cluster_check(check_function):
     def cluster_check(
         item,
         section,
     ) -> CheckResult:
 
-        yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
+        yield from assume_best_state_cluster_check(item, section, check_function)
 
-        node_results: Dict[str, CheckResults] = {}
-        for node, node_section in section.items():
-            if item in node_section:
-                all_results = list(check_function(item, node_section))
+    return cluster_check
 
-                all_states = [r.state for r in all_results if isinstance(r, Result)]
-                node_results[node] = CheckResults(State.worst(*all_states), all_results)
 
-        node_states = [r.overall_state for r in node_results.values()]
-        best_state = State.best(*node_states)
+def get_cluster_check_with_params(check_function):
+    def cluster_check(
+        item,
+        params,
+        section,
+    ) -> CheckResult:
 
-        for result in node_results.values():
-            if result.overall_state == best_state:
-                yield from result.results
-                return
+        yield from assume_best_state_cluster_check(item, section, check_function, params)
 
     return cluster_check

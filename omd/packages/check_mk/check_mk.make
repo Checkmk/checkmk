@@ -9,6 +9,8 @@ CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 #CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
 
+CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
+
 # This step creates a tar archive containing the sources
 # which are need for the build step
 $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
@@ -102,12 +104,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/de/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/de/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/ro/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/ro/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro
+	# Install localizations
+	for lang in $(CHECK_MK_LANGUAGES) ; do \
+		$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang ; \
+	done
 
 	# Install hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks

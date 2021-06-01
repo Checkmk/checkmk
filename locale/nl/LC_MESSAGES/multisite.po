@@ -30499,9 +30499,6 @@ msgstr "Naam van het kanaal"
 msgid "Name of Checkmk site of update server"
 msgstr "Naam van Checkmk site van update server"
 
-msgid "Name of Counter"
-msgstr "Naam van de teller"
-
 msgid "Name of Queue"
 msgstr "Naam van wachtrij"
 
@@ -30576,9 +30573,6 @@ msgstr "Naam van de toepassing"
 
 msgid "Name of the Buckets to monitor."
 msgstr "Naam van de emmers die moeten worden bewaakt."
-
-msgid "Name of the Counter to be monitored."
-msgstr "Naam van de te bewaken teller."
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr "Naam van de harde schijf zoals gerapporteerd door OHM: hdd0, hdd1, ..."
@@ -36534,6 +36528,10 @@ msgid "Queue manager state"
 msgstr "Wachtrij manager status"
 
 msgid "Queue name"
+msgstr "Naam wachtrij"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "Naam wachtrij"
 
 msgid "Queue time long"
@@ -47549,8 +47547,11 @@ msgstr "De offset in s waarbij een kritieke toestand wordt getriggerd."
 msgid "The offset in s at which a warning state is triggered."
 msgstr "De offset in s waarbij een waarschuwingstoestand wordt geactiveerd."
 
-msgid "The offset of the information relative to counter base"
-msgstr "De offset van de informatie ten opzichte van de tellerbasis"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
+msgstr ""
 
 msgid "The operational transmit power"
 msgstr "Het operationele zendvermogen"
@@ -50661,6 +50662,12 @@ msgstr "Deze pagina met navigatie"
 
 msgid "This page without navigation"
 msgstr "Deze pagina zonder navigatie"
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
+msgstr ""
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -55989,15 +55996,6 @@ msgstr ""
 
 msgid "Use this metric for a forecast graph..."
 msgstr "Gebruik deze metriek voor een voorspellingsgrafiek..."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
-"Gebruik dit alleen als u de positie van de informatie in de uitvoer van de "
-"agent wilt overschrijven. Zie ook de regel <i>Microsoft Exchange Queues "
-"Discovery</i> "
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "
@@ -62973,6 +62971,24 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Name of Counter"
+#~ msgstr "Naam van de teller"
+
+#~ msgid "Name of the Counter to be monitored."
+#~ msgstr "Naam van de te bewaken teller."
+
+#~ msgid "The offset of the information relative to counter base"
+#~ msgstr "De offset van de informatie ten opzichte van de tellerbasis"
+
+#~ msgid ""
+#~ "Use this only if you want to overwrite the postion of the information in "
+#~ "the agent output. Also refer to the rule <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
+#~ msgstr ""
+#~ "Gebruik dit alleen als u de positie van de informatie in de uitvoer van "
+#~ "de agent wilt overschrijven. Zie ook de regel <i>Microsoft Exchange "
+#~ "Queues Discovery</i> "
 
 #~ msgid "Problems (all)"
 #~ msgstr "Problemen (alle)"

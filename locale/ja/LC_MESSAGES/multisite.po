@@ -29411,9 +29411,6 @@ msgstr "チャンネル名"
 msgid "Name of Checkmk site of update server"
 msgstr "更新サーバーのCheckmkサイトの名前"
 
-msgid "Name of Counter"
-msgstr "カウンター名"
-
 msgid "Name of Queue"
 msgstr "キューの名前"
 
@@ -29488,9 +29485,6 @@ msgstr "アプリケーションの名前"
 
 msgid "Name of the Buckets to monitor."
 msgstr "監視するバケットの名前。"
-
-msgid "Name of the Counter to be monitored."
-msgstr "監視するカウンターの名前。"
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr "OHMによって報告されたハードディスクの名前: hdd0, hdd1, …"
@@ -35275,6 +35269,10 @@ msgid "Queue manager state"
 msgstr "キューマネージャーの状態"
 
 msgid "Queue name"
+msgstr "キュー名"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "キュー名"
 
 msgid "Queue time long"
@@ -45726,8 +45724,11 @@ msgstr "クリティカル状態がトリガーされる秒単位のオフセッ
 msgid "The offset in s at which a warning state is triggered."
 msgstr "警告状態がトリガーされる秒単位のオフセット"
 
-msgid "The offset of the information relative to counter base"
-msgstr "カウンターベースに対する情報のオフセット"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
+msgstr ""
 
 msgid "The operational transmit power"
 msgstr "動作送信電力"
@@ -48507,6 +48508,12 @@ msgstr "ナビゲーションつきのこのページ"
 
 msgid "This page without navigation"
 msgstr "ナビゲーションなしのこのページ"
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
+msgstr ""
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -53506,14 +53513,6 @@ msgstr ""
 
 msgid "Use this metric for a forecast graph..."
 msgstr "このメトリックを予測グラフに使用します..."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
-"これは、エージェント出力の情報の位置を上書きする場合にのみ使用してください。"
-"ルール<i>Microsoft Exchange Queues Discovery</i>も参照してください。 "
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "
@@ -60028,3 +60027,20 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Name of Counter"
+#~ msgstr "カウンター名"
+
+#~ msgid "Name of the Counter to be monitored."
+#~ msgstr "監視するカウンターの名前。"
+
+#~ msgid "The offset of the information relative to counter base"
+#~ msgstr "カウンターベースに対する情報のオフセット"
+
+#~ msgid ""
+#~ "Use this only if you want to overwrite the postion of the information in "
+#~ "the agent output. Also refer to the rule <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
+#~ msgstr ""
+#~ "これは、エージェント出力の情報の位置を上書きする場合にのみ使用してくださ"
+#~ "い。ルール<i>Microsoft Exchange Queues Discovery</i>も参照してください。 "

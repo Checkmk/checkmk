@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-05-31 12:57+0000\n"
 "Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
@@ -30891,9 +30891,6 @@ msgstr "Nom de la chaîne"
 msgid "Name of Checkmk site of update server"
 msgstr "Nom du site Checkmk du serveur de mise à jour"
 
-msgid "Name of Counter"
-msgstr "Nom du compteur"
-
 msgid "Name of Queue"
 msgstr "Nom de la file d'attente"
 
@@ -30968,9 +30965,6 @@ msgstr "Nom de l'application"
 
 msgid "Name of the Buckets to monitor."
 msgstr "Nom des seaux à surveiller."
-
-msgid "Name of the Counter to be monitored."
-msgstr "Nom du compteur à surveiller."
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr "Nom du disque dur tel que rapporté par OHM : hdd0, hdd1, ..."
@@ -37022,6 +37016,10 @@ msgid "Queue manager state"
 msgstr "État du gestionnaire de la file d'attente"
 
 msgid "Queue name"
+msgstr "Nom de la file d'attente"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "Nom de la file d'attente"
 
 msgid "Queue time long"
@@ -48175,8 +48173,11 @@ msgstr "Le décalage en s auquel un état critique est déclenché."
 msgid "The offset in s at which a warning state is triggered."
 msgstr "Le décalage en s auquel un état d'alerte est déclenché."
 
-msgid "The offset of the information relative to counter base"
-msgstr "Le décalage de l'information par rapport à la base du compteur"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
+msgstr ""
 
 msgid "The operational transmit power"
 msgstr "La puissance d'émission opérationnelle"
@@ -51313,6 +51314,12 @@ msgstr "Cette page avec la navigation"
 
 msgid "This page without navigation"
 msgstr "Cette page sans navigation"
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
+msgstr ""
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -56724,15 +56731,6 @@ msgstr ""
 
 msgid "Use this metric for a forecast graph..."
 msgstr "Utilisez cette métrique pour un graphique de prévision..."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
-"Utilisez cette règle uniquement si vous souhaitez écraser la position des "
-"informations dans la sortie de l'agent. Reportez-vous également à la règle "
-"<i>Découverte des files d'attente Microsoft Exchange</i>. "
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "
@@ -63823,6 +63821,24 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Name of Counter"
+#~ msgstr "Nom du compteur"
+
+#~ msgid "Name of the Counter to be monitored."
+#~ msgstr "Nom du compteur à surveiller."
+
+#~ msgid "The offset of the information relative to counter base"
+#~ msgstr "Le décalage de l'information par rapport à la base du compteur"
+
+#~ msgid ""
+#~ "Use this only if you want to overwrite the postion of the information in "
+#~ "the agent output. Also refer to the rule <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
+#~ msgstr ""
+#~ "Utilisez cette règle uniquement si vous souhaitez écraser la position des "
+#~ "informations dans la sortie de l'agent. Reportez-vous également à la "
+#~ "règle <i>Découverte des files d'attente Microsoft Exchange</i>. "
 
 #~ msgid "Problems (all)"
 #~ msgstr "Problèmes (tous)"

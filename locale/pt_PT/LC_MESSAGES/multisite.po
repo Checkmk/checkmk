@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-05-31 12:57+0000\n"
 "Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
@@ -30521,9 +30521,6 @@ msgstr "Nome do Canal"
 msgid "Name of Checkmk site of update server"
 msgstr "Nome do site Checkmk do servidor de atualização"
 
-msgid "Name of Counter"
-msgstr "Nome do Contador"
-
 msgid "Name of Queue"
 msgstr "Nome da Fila de espera"
 
@@ -30598,9 +30595,6 @@ msgstr "Nome da Aplicação"
 
 msgid "Name of the Buckets to monitor."
 msgstr "Nome dos baldes a monitorizar."
-
-msgid "Name of the Counter to be monitored."
-msgstr "Nome do Contador a ser monitorado."
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr "Nome do Disco Rígido como relatado por OHM: hdd0, hdd1, ..."
@@ -36572,6 +36566,10 @@ msgid "Queue manager state"
 msgstr "Gerente de fila estado"
 
 msgid "Queue name"
+msgstr "Nome da fila"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "Nome da fila"
 
 msgid "Queue time long"
@@ -47572,8 +47570,11 @@ msgstr "A compensação em s em que um estado crítico é desencadeado."
 msgid "The offset in s at which a warning state is triggered."
 msgstr "O offset em s em que um estado de alerta é desencadeado."
 
-msgid "The offset of the information relative to counter base"
-msgstr "A compensação da informação relativa à base do contador"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
+msgstr ""
 
 msgid "The operational transmit power"
 msgstr "A potência de transmissão operacional"
@@ -50647,6 +50648,12 @@ msgstr "Esta página com navegação"
 
 msgid "This page without navigation"
 msgstr "Esta página sem navegação"
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
+msgstr ""
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -55960,15 +55967,6 @@ msgstr ""
 
 msgid "Use this metric for a forecast graph..."
 msgstr "Use esta métrica para um gráfico de previsão..."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
-"Usar isso somente se desejar sobregravar a posiç³o das informaç³es na saída "
-"do agente. Consultar também a regra <i>Microsoft Exchange Queues Discovery</"
-"i> "
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "
@@ -62926,6 +62924,24 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Name of Counter"
+#~ msgstr "Nome do Contador"
+
+#~ msgid "Name of the Counter to be monitored."
+#~ msgstr "Nome do Contador a ser monitorado."
+
+#~ msgid "The offset of the information relative to counter base"
+#~ msgstr "A compensação da informação relativa à base do contador"
+
+#~ msgid ""
+#~ "Use this only if you want to overwrite the postion of the information in "
+#~ "the agent output. Also refer to the rule <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
+#~ msgstr ""
+#~ "Usar isso somente se desejar sobregravar a posiç³o das informaç³es na "
+#~ "saída do agente. Consultar também a regra <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
 
 #~ msgid "Problems (all)"
 #~ msgstr "Problemas (todos)"

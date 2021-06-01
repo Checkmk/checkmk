@@ -30552,9 +30552,6 @@ msgstr "Name des Kanals"
 msgid "Name of Checkmk site of update server"
 msgstr "Name der Checkmk-Instanz des Updateservers"
 
-msgid "Name of Counter"
-msgstr "Name des Zählers"
-
 msgid "Name of Queue"
 msgstr "Queuename"
 
@@ -30629,9 +30626,6 @@ msgstr "Name der Anwendung"
 
 msgid "Name of the Buckets to monitor."
 msgstr "Name der zu überwachenden Buckets."
-
-msgid "Name of the Counter to be monitored."
-msgstr "Name des überwachten Zählers"
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr "Name der Platte so wie vom OHM angezeigt: hdd0, hdd1, ..."
@@ -36614,6 +36608,10 @@ msgid "Queue manager state"
 msgstr "Zustand des Warteschlangenmanagers"
 
 msgid "Queue name"
+msgstr "Name der Warteschlange"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "Name der Warteschlange"
 
 msgid "Queue time long"
@@ -47609,8 +47607,11 @@ msgstr "Der Offset in s, bei dem ein kritischer Zustand ausgelöst wird."
 msgid "The offset in s at which a warning state is triggered."
 msgstr "Der Offset in s, bei dem ein Warnzustand ausgelöst wird."
 
-msgid "The offset of the information relative to counter base"
-msgstr "Der Offset der Information relativ zur Nummer des Counterobjektes"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
+msgstr ""
 
 msgid "The operational transmit power"
 msgstr "Operationelle Übertragungsleistung"
@@ -50691,6 +50692,12 @@ msgstr "Diese Seite mit Navigation"
 
 msgid "This page without navigation"
 msgstr "Diese Seite ohne Navigation"
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
+msgstr ""
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -56030,15 +56037,6 @@ msgstr ""
 
 msgid "Use this metric for a forecast graph..."
 msgstr "Verwenden Sie diese Metrik für ein Prognosegrafik....."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
-"Verwenden Sie dies nur, wenn Sie die Position der Informationen in der "
-"Ausgabe des Agenten umdefinieren wollen. Bitte beachten Sie auch den "
-"Regelsatz  <i>Microsoft Exchange Queues Erkennung</i>."
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "
@@ -62992,6 +62990,24 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Name of Counter"
+#~ msgstr "Name des Zählers"
+
+#~ msgid "Name of the Counter to be monitored."
+#~ msgstr "Name des überwachten Zählers"
+
+#~ msgid "The offset of the information relative to counter base"
+#~ msgstr "Der Offset der Information relativ zur Nummer des Counterobjektes"
+
+#~ msgid ""
+#~ "Use this only if you want to overwrite the postion of the information in "
+#~ "the agent output. Also refer to the rule <i>Microsoft Exchange Queues "
+#~ "Discovery</i> "
+#~ msgstr ""
+#~ "Verwenden Sie dies nur, wenn Sie die Position der Informationen in der "
+#~ "Ausgabe des Agenten umdefinieren wollen. Bitte beachten Sie auch den "
+#~ "Regelsatz  <i>Microsoft Exchange Queues Erkennung</i>."
 
 #~ msgid "Problems (all)"
 #~ msgstr "Probleme (alle)"

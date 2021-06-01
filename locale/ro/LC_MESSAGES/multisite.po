@@ -29442,9 +29442,6 @@ msgstr "Numele elementului pentru eveniment"
 msgid "Name of Checkmk site of update server"
 msgstr " pe siteul de monitorizare: "
 
-msgid "Name of Counter"
-msgstr ""
-
 #, fuzzy
 msgid "Name of Queue"
 msgstr "Numele elementului pentru eveniment"
@@ -29534,9 +29531,6 @@ msgstr "Numele elementului pentru eveniment"
 #, fuzzy
 msgid "Name of the Buckets to monitor."
 msgstr " pe siteul de monitorizare: "
-
-msgid "Name of the Counter to be monitored."
-msgstr ""
 
 msgid "Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."
 msgstr ""
@@ -35526,6 +35520,10 @@ msgstr "Nume nou"
 
 #, fuzzy
 msgid "Queue name"
+msgstr "Nume nou"
+
+#, fuzzy
+msgid "Queue names"
 msgstr "Nume nou"
 
 #, fuzzy
@@ -45808,7 +45806,10 @@ msgstr ""
 msgid "The offset in s at which a warning state is triggered."
 msgstr ""
 
-msgid "The offset of the information relative to counter base"
+msgid ""
+"The offset of the information relative to counter base. You can get a "
+"detailed list of available counters in a windows shell with the command "
+"'lodctr /s:counters.txt'."
 msgstr ""
 
 msgid "The operational transmit power"
@@ -48132,6 +48133,12 @@ msgid "This page with navigation"
 msgstr ""
 
 msgid "This page without navigation"
+msgstr ""
+
+msgid ""
+"This parameter should only be used for enforced services, otherwise it will "
+"be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
+"i>."
 msgstr ""
 
 msgid ""
@@ -52851,12 +52858,6 @@ msgstr ""
 #, fuzzy
 msgid "Use this metric for a forecast graph..."
 msgstr "Adaugă acesta vedere la..."
-
-msgid ""
-"Use this only if you want to overwrite the postion of the information in the "
-"agent output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</"
-"i> "
-msgstr ""
 
 msgid ""
 "Use this option to configure one or several proxy servers that can then be "

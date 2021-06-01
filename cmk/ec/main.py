@@ -880,11 +880,11 @@ class EventServer(ECServerThread):
                         if data[-1:] != b'\n':
                             if b'\n' in data:  # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit(b'\n', 1)
-                                self.process_raw_lines(messages + b'\n')  # got lost in split
+                                self.process_raw_lines(messages + b'\n', None)  # got lost in split
                             else:
                                 pipe_fragment = data  # keep beginning of message, wait for \n
                         else:
-                            self.process_raw_lines(data)
+                            self.process_raw_lines(data, None)
                     else:  # EOF
                         os.close(pipe)
                         pipe = self.open_pipe()
@@ -900,7 +900,8 @@ class EventServer(ECServerThread):
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
-                self.process_raw_lines(*self._syslog_udp.recvfrom(4096))
+                message, sender_address = self._syslog_udp.recvfrom(4096)
+                self.process_raw_lines(message, sender_address)
 
             # Read events from builtin snmptrap server
             if self._snmptrap is not None and self._snmptrap in readable:
@@ -916,7 +917,7 @@ class EventServer(ECServerThread):
             try:
                 # process the first spool file we get
                 spool_file = next(self.settings.paths.spool_dir.value.glob('[!.]*'))
-                self.process_raw_lines(spool_file.read_bytes())
+                self.process_raw_lines(spool_file.read_bytes(), None)
                 spool_file.unlink()
                 select_timeout = 0  # enable fast processing to process further files
             except StopIteration:
@@ -936,7 +937,7 @@ class EventServer(ECServerThread):
         self._perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data: bytes, address: Optional[Any] = None) -> None:
+    def process_raw_lines(self, data: bytes, address: Optional[Any]) -> None:
         lines = data.splitlines()
         for line_bytes in lines:
             line = scrub_and_decode(line_bytes.rstrip())

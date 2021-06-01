@@ -637,11 +637,18 @@ export class FigureTooltip {
     }
 }
 
+/**
+ * Component to draw a label at the bottom of the dashlet
+ * @param {FigureBase} figurebase - Draw label on this dashlet
+ * @param {Object} options - Configuration of the label
+ * @param {string} options.label - Text to draw in the label
+ * @param {string} options.css_class - Css classes to append to the label
+ * @param {boolean} options.visible - Whether to draw the label at all
+ */
 // Figure which inherited from FigureBase. Needs access to svg and size
-export function state_component(figurebase, params) {
-    const paint_style = getIn(params, "paint");
-    let status_cls = svc_status_css(paint_style, params);
-    if (!(paint_style && status_cls)) {
+export function state_component(figurebase, options) {
+    // TODO: use figurebase.svg as first parameter and move size to options
+    if (!options.visible) {
         figurebase.svg.selectAll(".state_component").remove();
         return;
     }
@@ -649,7 +656,7 @@ export function state_component(figurebase, params) {
     let font_size = 14;
     let state_component = figurebase.svg
         .selectAll(".state_component")
-        .data([params])
+        .data([options])
         .join("g")
         .classed("state_component", true)
         .attr(
@@ -664,7 +671,7 @@ export function state_component(figurebase, params) {
         .selectAll("rect.status_label")
         .data(d => [d])
         .join("rect")
-        .attr("class", `status_label ${status_cls}`)
+        .attr("class", d => `status_label ${d.css_class}`)
         // status_label css class is also defined for WATO and not encapsulated
         // it predifines other sizes, we use thus style instead of attr for size
         // to override that
@@ -682,7 +689,7 @@ export function state_component(figurebase, params) {
         .style("font-size", font_size + "px")
         .style("fill", "black")
         .style("font-weight", "bold")
-        .text(d => d.msg);
+        .text(d => d.label);
 }
 
 export function renderable_value(value, domain, plot) {
@@ -723,37 +730,69 @@ export function plot_render_function(plot) {
 }
 export function svc_status_css(paint, params) {
     let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
-
     if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
     return status_cls;
 }
-export function background_status_component(selection, params, rect_size) {
-    let status_cls = svc_status_css("background", params);
 
-    if (status_cls) {
-        selection
-            .selectAll("rect.status_background")
-            .data([null])
-            .join(enter => enter.insert("rect", ":first-child"))
-            .attr("class", `status_background ${status_cls}`)
-            .attr("y", 0)
-            .attr("x", 0)
-            .attr("width", rect_size.width)
-            .attr("height", rect_size.height);
-    } else {
-        selection.selectAll("rect.status_background").remove();
-    }
+/**
+ * Draw an individual shape
+ *
+ * @callback pathCallback
+ * @param {d3.path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
+ */
+
+/**
+ * Component to draw a background color on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the background
+ * @param {Object} options.size - When path_callback is not given draw a rect
+ * @param {number} options.size.height - Height of the background rect
+ * @param {number} options.size.width - Width of the background rect
+ * @param {pathCallback} options.path_callback - Draw individual shape instead of rect
+ * @param {string} options.css_class - Css classes to append to the background
+ * @param {boolean} options.visible - Whether to draw the background at all
+ */
+export function background_status_component(selection, options) {
+    const data = options.visible ? [null] : [];
+
+    let path_callback =
+        options.path_callback ||
+        function (path) {
+            path.rect(0, 0, options.size.width, options.size.height);
+        };
+
+    let background_path = d3.path();
+    path_callback(background_path);
+
+    selection
+        .selectAll("path.status_background")
+        .data(data)
+        .join(enter => enter.insert("path", ":first-child"))
+        .attr("class", `status_background ${options.css_class}`)
+        .attr("d", background_path.toString());
 }
 
-export function metric_value_component(selection, value, attr, style) {
-    let css_class = svc_status_css("text", style);
-    if (!css_class) css_class = "single_value";
-
-    const font_size = clamp(style.font_size, [12, 50]);
+/**
+ * Component to draw a big centered value on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the value
+ * @param {Object} options.value - Configuration of the text to draw
+ * @param {string} options.value.url - When given, add a link to the text
+ * @param {string} options.value.unit - Append a unit to the value. e.g. '%'
+ * @param {string} options.value.value - Text to display
+ * @param {Object} options.position - Where to draw the Text
+ * @param {number} options.position.x - X position relative to the center of the text
+ * @param {number} options.position.y - Y position relative to the baseline of the text
+ * @param {number} options.font_size - Size of the font, clamped to [12, 50]
+ * @param {boolean} options.visible - Whether to draw the value at all
+ */
+export function metric_value_component(selection, options) {
+    const font_size = clamp(options.font_size, [12, 50]);
+    const data = options.visible ? [options.value] : [];
 
     let link = selection
         .selectAll("a.single_value")
-        .data([value])
+        .data(data)
         .join("a")
         .classed("single_value", true)
         .attr("xlink:href", d => d.url || null);
@@ -762,10 +801,9 @@ export function metric_value_component(selection, value, attr, style) {
         .data(d => [d])
         .join("text")
         .text(d => d.value)
-        .attr("x", attr.x)
-        .attr("y", attr.y)
+        .attr("x", options.position.x)
+        .attr("y", options.position.y)
         .attr("text-anchor", "middle")
-        //.attr("class", css_class)
         .style("font-weight", "bold")
         .style("font-size", font_size + "px");
 
@@ -776,5 +814,5 @@ export function metric_value_component(selection, value, attr, style) {
         .style("font-size", font_size / 2 + "px")
         .style("font-weight", "lighter")
         .text(d => d.unit);
-    if (value.unit !== "%") unit.attr("x", attr.x).attr("dy", "1em");
+    if (options.value.unit !== "%") unit.attr("x", options.position.x).attr("dy", "1em");
 }

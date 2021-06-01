@@ -68,7 +68,11 @@ def _bailout_with_message(message):
 
 
 class BIRuleEndpointSchema(BIRuleSchema):
-    pack_id = ReqString(default="", example="pack1")
+    pack_id = ReqString(
+        default="",
+        example="pack1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
 @Endpoint(constructors.object_href("bi_rule", "{rule_id}"),
@@ -168,7 +172,11 @@ def delete_bi_rule(params):
 
 
 class BIAggregationEndpointSchema(BIAggregationSchema):
-    pack_id = ReqString(default="", example="pack1")
+    pack_id = ReqString(
+        default="",
+        example="pack1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
 @Endpoint(constructors.object_href("bi_aggregation", "{aggregation_id}"),
@@ -371,9 +379,22 @@ def delete_bi_pack(params):
 
 
 class BIPackEndpointSchema(Schema):
-    title = ReqString(default="", example="BI Title")
-    contact_groups = ReqList(fields.String(), default=[], example=["contact", "contactgroup_b"])
-    public = ReqBoolean(default=False, example="false")
+    title = ReqString(
+        default="",
+        example="BI Title",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    contact_groups = ReqList(
+        fields.String(),
+        default=[],
+        example=["contact", "contactgroup_b"],
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    public = ReqBoolean(
+        default=False,
+        example="false",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
 
 
 @Endpoint(constructors.object_href("bi_pack", "{pack_id}"),

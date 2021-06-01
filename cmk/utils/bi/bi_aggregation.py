@@ -119,7 +119,11 @@ class BIAggregationSchema(Schema):
     class Meta:
         ordered = True
 
-    id = ReqString(default="", example="aggr1")
+    id = ReqString(
+        default="",
+        example="aggr1",
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
     customer = String(
         description="CME Edition only: The customer id for this aggregation.",
         allow_none=True,

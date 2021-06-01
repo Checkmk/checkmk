@@ -204,6 +204,7 @@ def create_nested_schema(base_schema,
         base_schema,
         default=default_config,
         example=example,
+        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
 
 

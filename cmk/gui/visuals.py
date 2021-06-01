@@ -404,7 +404,7 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
             user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
             return bool(user_groups.intersection(visual["public"][1]))
 
-        return config.user.may("general.edit_foreign_%s" % what)
+        return False
 
     def restricted_visual(visualname: VisualName):
         permname = "%s.%s" % (permprefix, visualname)

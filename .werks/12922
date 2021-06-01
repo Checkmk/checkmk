@@ -1,0 +1,11 @@
+Title: Fix crash in parsing netapp agent output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1622558792
+Class: fix
+
+A crash occured during discovery while parsing netapp agent output.
+This is now fixed.

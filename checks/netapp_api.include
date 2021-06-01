@@ -34,6 +34,8 @@ def netapp_api_parse_lines(info, custom_keys=None, as_dict_list=False, item_func
     instances = {}
     for line in info:
         instance = {}
+        if len(line) < 2:
+            continue
         name = line[0].split(" ", 1)[1]
         for element in line:
             tokens = element.split(" ", 1)

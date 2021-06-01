@@ -882,10 +882,12 @@ class CommandScheduleDowntimes(Command):
 
     def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple]:
         if cmdtag == "SVC" and not html.request.var("_down_remove"):
-            return [(_("Schedule downtime on host"), "_do_confirm_host_downtime"),
-                    (_("Schedule downtime for %d %s") %
-                     (len_rows, ungettext("service", "services", len_rows)),
-                     "_do_confirm_service_downtime")]
+            return [
+                (_("Schedule downtime for %d %s") %
+                 (len_rows, ungettext("service", "services", len_rows)),
+                 "_do_confirm_service_downtime"),
+                (_("Schedule downtime on host"), "_do_confirm_host_downtime"),
+            ]
         return super().user_confirm_options(len_rows, cmdtag)
 
     def render(self, what):

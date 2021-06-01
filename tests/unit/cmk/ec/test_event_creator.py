@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,line-too-long
+# pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
 import logging
 from typing import Any, Mapping
@@ -249,7 +250,7 @@ def event_creator():
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
-                'text': '\ufeffcoming from  java code',
+                'text': 'coming from  java code',
                 'time': 1464864545,
                 'pid': 0,
             },
@@ -265,7 +266,7 @@ def event_creator():
                 'host_in_downtime': False,
                 'ipaddress': '127.0.0.1',
                 'priority': 6,
-                'text': '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
+                'text': '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] coming \ufefffrom  java code',
                 'time': 1464864545.125,
                 'pid': 0,
             },
@@ -285,7 +286,25 @@ def event_creator():
                 'time': 1464877145,
                 'pid': 0,
             },
-            id="variant 9: syslog message (RFC 5424) with mean structured data",
+            id="variant 9: syslog message (RFC 5424) with mean structured data, no override",
+        ),
+        pytest.param(
+            r'<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
+            {
+                'application': 'weird Ƈ ƒ',
+                'core_host': '',
+                'facility': 16,
+                'host': 'host with spaces',
+                'host_in_downtime': False,
+                'ipaddress': '1.2.3.4',
+                'priority': 6,
+                'text': r'[exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
+                'time': 1464864545.181,
+                'pid': 0,
+                'sl': 0,
+            },
+            id="variant 9: syslog message (RFC 5424) with structured data and override",
+            marks=pytest.mark.skip,
         ),
         (
             # Variant 10:
@@ -326,15 +345,30 @@ class TestEventCreator:
                 id="no structured data",
             ),
             pytest.param(
-                '1 2021-04-08T06:47:17+00:00 - - - - [whatever@345 a="b" c="d"][Checkmk@18662 ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
+                '1 2021-04-08T06:47:17+00:00 - - - - [whatever@345 a="b" c="d"][Checkmk@18662 sl="30" ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
                 {
-                    'application': '',
-                    'host': '',
-                    'text': '[whatever@345 a="b" c="d"][Checkmk@18662 ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
+                    'application': 'Legolas Greenleaf',
+                    'host': 'Westfold, Middleearth, 3rd Age of the Ring',
+                    'ipaddress': '3.6.9.0',
+                    'text': '[whatever@345 a="b" c="d"] They\'re taking the Hobbits to Isengard!',
                     'time': 1617864437.0,
                     'pid': 0,
+                    'sl': 30,
                 },
-                id="with structured data",
+                id="with structured data and override",
+                marks=pytest.mark.skip,
+            ),
+            pytest.param(
+                "1 - herbert some_deamon - - - \ufeffsomething is wrong with herbert",
+                {
+                    'application': 'some_deamon',
+                    'host': 'herbert',
+                    'text': 'something is wrong with herbert',
+                    'time': 1550000000.0,
+                    'pid': 0,
+                },
+                id="no timestamp",
+                # marks=pytest.mark.skip,
             ),
         ],
     )
@@ -345,5 +379,5 @@ class TestEventCreator:
         expected_result: Mapping[str, Any],
     ) -> None:
         # this is currently needed because we do not use the timezone information from the log message
-        with set_timezone("UTC"):
+        with on_time(1550000000.0, "UTC"):
             assert event_creator._parse_rfc5424_syslog_info(line) == expected_result

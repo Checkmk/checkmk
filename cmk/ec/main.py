@@ -2128,7 +2128,8 @@ class EventCreator:
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
 
-        event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
+        event['time'] = (time.time()
+                         if timestamp == '-' else dateutil.parser.isoparse(timestamp).timestamp())
         event["host"] = "" if hostname == "-" else hostname
         event["application"] = "" if app_name == "-" else app_name
         event["pid"] = 0 if procid == "-" else int(procid)
@@ -2141,6 +2142,8 @@ class EventCreator:
             structured_data, message = rest.split(" ", 1)
         else:
             raise Exception("Invalid RFC 5424 syslog message")
+        if message.startswith("\ufeff"):  # remove BOM if it's there
+            message = message[1:]
 
         if structured_data != "-":
             event["text"] = "[%s] %s" % (structured_data, message)

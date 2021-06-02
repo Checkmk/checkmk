@@ -15,6 +15,7 @@ import pytest
 from testlib import on_time
 
 from cmk.ec.main import (
+    _split_syslog_nonnil_sd_and_message,
     create_event_from_line,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
@@ -435,15 +436,7 @@ def test_remove_leading_bom(teststr: str, expected_result: str) -> None:
                 '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
                 'Red alert, shields up!',
             ),
-            id="with normal structured data",
-        ),
-        pytest.param(
-            r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"] Red alert, shields up!',
-            (
-                r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"]',
-                'Red alert, shields up!',
-            ),
-            id="with mean structured data",
+            id="with structured data",
         ),
         pytest.param(
             '- Red alert, shields up!',
@@ -461,11 +454,79 @@ def test_split_syslog_structured_data_and_message(
 
 
 @pytest.mark.parametrize(
+    "sd_and_message, expected_result",
+    [
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"] Red alert, shields up!',
+            (
+                '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
+                'Red alert, shields up!',
+            ),
+            id="normal structured data",
+        ),
+        pytest.param(
+            r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"] Red alert, shields up!',
+            (
+                r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"]',
+                'Red alert, shields up!',
+            ),
+            id="mean structured data",
+        ),
+        pytest.param(
+            '[exampleSDID@32473][examplePriority@32473] Red alert, shields up!',
+            (
+                '[exampleSDID@32473][examplePriority@32473]',
+                'Red alert, shields up!',
+            ),
+            id="structured data without parameters",
+        ),
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application"][examplePriority@32473] Red alert, shields up!',
+            (
+                '[exampleSDID@32473 iut="3" eventSource="Application"][examplePriority@32473]',
+                'Red alert, shields up!',
+            ),
+            id="structured data with and without parameters mixed 1",
+        ),
+        pytest.param(
+            '[examplePriority@32473][exampleSDID@32473 iut="3" eventSource="Application"] Red alert, shields up!',
+            (
+                '[examplePriority@32473][exampleSDID@32473 iut="3" eventSource="Application"]',
+                'Red alert, shields up!',
+            ),
+            id="structured data with and without parameters mixed 2",
+        ),
+        pytest.param(
+            '[exampleSDID@32473 iut="3"] funny message which looks like sd: [exampleSDID@32473 iut="3"] abc',
+            (
+                '[exampleSDID@32473 iut="3"]',
+                'funny message which looks like sd: [exampleSDID@32473 iut="3"] abc',
+            ),
+            id="mean message which contains something which looks like structured data",
+        ),
+        pytest.param(
+            '[exampleSDID@32473 iut="3"][examplePriority@32473 eventSource="Application"]',
+            (
+                '[exampleSDID@32473 iut="3"][examplePriority@32473 eventSource="Application"]',
+                '',
+            ),
+            id="no message",
+        ),
+    ],
+)
+def test_split_syslog_nonnil_sd_and_message(
+    sd_and_message: str,
+    expected_result: Tuple[str, str],
+) -> None:
+    assert _split_syslog_nonnil_sd_and_message(sd_and_message) == expected_result
+
+
+@pytest.mark.parametrize(
     "sd_and_message",
     [
         pytest.param(
-            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] [examplePriority@32473 class="high"] \ufeffRed alert, shields up!',
-            id="space between two structured data elements",
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high" \ufeffRed alert, shields up!',
+            id="missing closing bracket",
         ),
         pytest.param(
             '\ufeffRed alert, shields up!',

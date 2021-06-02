@@ -2049,14 +2049,25 @@ def parse_syslog_message_structured_data(structured_data: str) -> Tuple[Mapping[
 def split_syslog_structured_data_and_message(sd_and_message: str) -> Tuple[Optional[str], str]:
     """Split a string containing structured data and the message into the two parts"""
     if sd_and_message.startswith("["):
-        sd_matches = re.findall(r'\[.*?"\] ', sd_and_message)
-        if len(sd_matches) != 1:
-            raise ValueError(
-                "Invalid RFC 5424 syslog message: structured data has the wrong format")
-        return sd_matches[0][:-1], sd_and_message.replace(sd_matches[0], "")
+        return _split_syslog_nonnil_sd_and_message(sd_and_message)
     nil_value = "-"  # SyslogMessage.nilvalue()
     if sd_and_message.startswith(f"{nil_value} "):
         return None, sd_and_message.split(" ", 1)[1]
+    raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
+
+
+def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> Tuple[str, str]:
+    currently_outside_sd_element = True
+    for idx, char in enumerate(sd_and_message):
+        if char == "[" and currently_outside_sd_element:
+            currently_outside_sd_element = False
+        if char == "]" and sd_and_message[idx - 1] != "\\":
+            currently_outside_sd_element = True
+        if char == " " and currently_outside_sd_element:
+            return sd_and_message[:idx], sd_and_message[idx + 1:]
+    # Special case: no message
+    if currently_outside_sd_element:
+        return sd_and_message, ""
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 

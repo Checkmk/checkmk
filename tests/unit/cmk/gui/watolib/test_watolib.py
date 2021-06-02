@@ -112,6 +112,7 @@ def test_registered_configvars():
         'inventory_check_autotrigger',
         'inventory_check_interval',
         'inventory_check_severity',
+        'log_logon_failures',
         'lock_on_logon_failures',
         'log_level',
         'log_levels',

@@ -1935,6 +1935,27 @@ class ConfigVariableGroupUserManagement(ConfigVariableGroup):
 
 
 @config_variable_registry.register
+class ConfigVariableLogLogonFailures(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserManagement
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "log_logon_failures"
+
+    def valuespec(self):
+        return Checkbox(
+            title=_("Logging of logon failures"),
+            label=_("Enable logging of logon failures"),
+            help=_("This options enables automatic logging of failed logons. "
+                   "If enabled, the username and client IP, the request "
+                   "is coming from, is logged."),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableLockOnLogonFailures(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserManagement

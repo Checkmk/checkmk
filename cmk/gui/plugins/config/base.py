@@ -321,6 +321,7 @@ default_user_profile: _Dict[str, _Any] = {
     'roles': ['user'],
     'force_authuser': False,
 }
+log_logon_failures = True
 lock_on_logon_failures = False
 user_idle_timeout = 5400
 single_user_session = None

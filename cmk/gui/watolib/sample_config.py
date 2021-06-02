@@ -387,6 +387,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "zfsget",
             ],
             "enable_rulebased_notifications": True,
+            "log_logon_failures": True,
             "lock_on_logon_failures": 10,
         }
 

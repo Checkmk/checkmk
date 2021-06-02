@@ -225,13 +225,6 @@ class LegacyDeprecatedMixin:
         # TODO: Deprecated
         return self.is_secure  # type: ignore[attr-defined]
 
-    @property
-    def remote_ip(self) -> str:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # TODO: Deprecated
-        return self.remote_addr  # type: ignore[attr-defined]
-
 
 def mandatory_parameter(varname: str, value: Optional[T]) -> T:
     if value is None:
@@ -269,6 +262,19 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         # TODO: Found no way to get this information from WSGI environment. Hard code
         #       the timeout for the moment.
         return 110
+
+    @property
+    def remote_ip(self) -> str:
+        """Selects remote addr from the given list of ips in
+        X-Forwarded-For. Picks first non-trusted ip address.
+        """
+        trusted_proxies: List[str] = ["127.0.0.1", "::1"]
+        remote_addr: str = self.remote_addr
+        forwarded_for = self.environ.get('HTTP_X_FORWARDED_FOR', '').split(',')
+        if remote_addr in trusted_proxies:
+            return next((ip for ip in reversed([x for x in [x.strip() for x in forwarded_for] if x])
+                         if ip not in trusted_proxies), remote_addr)
+        return self.remote_addr
 
     def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
         try:

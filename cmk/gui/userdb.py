@@ -326,6 +326,28 @@ def on_failed_login(username: UserId) -> None:
 
         save_users(users)
 
+    if config.log_logon_failures:
+        log_details: List[str] = []
+        if users.get(username):
+            log_msg_until_locked: int = config.lock_on_logon_failures - users[username][
+                "num_failed_logins"]
+            log_msg_locked: str = "No"
+            if users[username].get("locked"):
+                log_msg_locked = "Yes"
+                if log_msg_until_locked == 0:
+                    log_msg_locked += " (now)"
+
+            log_details.extend([
+                "existing: Yes",
+                "locked: %s" % log_msg_locked,
+                "failed logins until locked: %d" % log_msg_until_locked,
+            ])
+        else:
+            log_details.extend(["existing: No", "locked: N/A", "failed logins until locked: N/A"])
+
+        auth_logger.warn("Login failed for username: %s (%s), client: %s", username,
+                         ", ".join(log_details), html.request.remote_ip)
+
 
 def on_logout(username: UserId, session_id: str) -> None:
     _invalidate_session(username, session_id)

@@ -91,6 +91,8 @@ def parse_netapp_api_multiple_instances(
     instances: SectionMultipleInstances = {}
     for line in string_table:
         instance = {}
+        if len(line) < 2:
+            continue
         name = line[0].split(" ", 1)[1]
         for element in line:
             tokens = element.split(" ", 1)

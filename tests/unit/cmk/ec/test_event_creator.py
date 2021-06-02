@@ -12,10 +12,15 @@ from typing import Any, Mapping
 
 import pytest
 
-from testlib import on_time, set_timezone
+from testlib import on_time
 
 import cmk.ec.export as ec
-from cmk.ec.main import EventCreator, make_config, parse_iso_8601_timestamp
+from cmk.ec.main import (
+    EventCreator,
+    make_config,
+    parse_iso_8601_timestamp,
+    parse_rfc5424_syslog_info,
+)
 
 
 @pytest.fixture
@@ -323,93 +328,84 @@ def event_creator():
             },
         ),
     ])
-def test_create_event_from_line(event_creator, monkeypatch, line, expected):
+def test_create_event_from_line(event_creator, line, expected):
     address = ("127.0.0.1", 1234)
     with on_time(1550000000.0, "CET"):
         assert event_creator.create_event_from_line(line, address) == expected
 
 
-class TestEventCreator:
-    @pytest.mark.parametrize(
-        "line, expected_result",
-        [
-            pytest.param(
-                "1 2021-04-08T06:47:17+00:00 herbert some_deamon - - - something is wrong with herbert",
-                {
-                    'application': 'some_deamon',
-                    'host': 'herbert',
-                    'text': 'something is wrong with herbert',
-                    'time': 1617864437.0,
-                    'pid': 0,
-                },
-                id="no structured data",
-            ),
-            pytest.param(
-                '1 2021-04-08T06:47:17+00:00 - - - - [whatever@345 a="b" c="d"][Checkmk@18662 sl="30" ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
-                {
-                    'application': 'Legolas Greenleaf',
-                    'host': 'Westfold, Middleearth, 3rd Age of the Ring',
-                    'ipaddress': '3.6.9.0',
-                    'text': '[whatever@345 a="b" c="d"] They\'re taking the Hobbits to Isengard!',
-                    'time': 1617864437.0,
-                    'pid': 0,
-                    'sl': 30,
-                },
-                id="with structured data and override",
-                marks=pytest.mark.skip,
-            ),
-            pytest.param(
-                "1 - herbert some_deamon - - - \ufeffsomething is wrong with herbert",
-                {
-                    'application': 'some_deamon',
-                    'host': 'herbert',
-                    'text': 'something is wrong with herbert',
-                    'time': 1550000000.0,
-                    'pid': 0,
-                },
-                id="no timestamp",
-                # marks=pytest.mark.skip,
-            ),
-        ],
-    )
-    def test_parse_rfc5424_syslog_info(
-        self,
-        event_creator: EventCreator,
-        line: str,
-        expected_result: Mapping[str, Any],
-    ) -> None:
-        # this is currently needed because we do not use the timezone information from the log message
-        with on_time(1550000000.0, "UTC"):
-            assert event_creator._parse_rfc5424_syslog_info(line) == expected_result
+@pytest.mark.parametrize(
+    "line, expected_result",
+    [
+        pytest.param(
+            "1 2021-04-08T06:47:17+00:00 herbert some_deamon - - - something is wrong with herbert",
+            {
+                'application': 'some_deamon',
+                'host': 'herbert',
+                'text': 'something is wrong with herbert',
+                'time': 1617864437.0,
+                'pid': 0,
+            },
+            id="no structured data",
+        ),
+        pytest.param(
+            '1 2021-04-08T06:47:17+00:00 - - - - [whatever@345 a="b" c="d"][Checkmk@18662 sl="30" ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"] They\'re taking the Hobbits to Isengard!',
+            {
+                'application': 'Legolas Greenleaf',
+                'host': 'Westfold, Middleearth, 3rd Age of the Ring',
+                'ipaddress': '3.6.9.0',
+                'text': '[whatever@345 a="b" c="d"] They\'re taking the Hobbits to Isengard!',
+                'time': 1617864437.0,
+                'pid': 0,
+                'sl': 30,
+            },
+            id="with structured data and override",
+            marks=pytest.mark.skip,
+        ),
+        pytest.param(
+            "1 - herbert some_deamon - - - \ufeffsomething is wrong with herbert",
+            {
+                'application': 'some_deamon',
+                'host': 'herbert',
+                'text': 'something is wrong with herbert',
+                'time': 1550000000.0,
+                'pid': 0,
+            },
+            id="no timestamp",
+            # marks=pytest.mark.skip,
+        ),
+    ],
+)
+def test_parse_rfc5424_syslog_info(line: str, expected_result: Mapping[str, Any]) -> None:
+    # this is currently needed because we do not use the timezone information from the log message
+    with on_time(1550000000.0, "UTC"):
+        assert parse_rfc5424_syslog_info(line) == expected_result
 
-    @pytest.mark.parametrize(
-        "timestamp, expected_result",
-        [
-            pytest.param(
-                "2003-10-11T22:14:15Z",
-                1065910455.0,
-                id="UTC, no fractional seconds",
-            ),
-            pytest.param(
-                "2003-10-11T22:14:15.25Z",
-                1065910455.25,
-                id="UTC with fractional seconds",
-            ),
-            pytest.param(
-                "2003-10-11T22:14:15+01:00",
-                1065906855.0,
-                id="custom timezone, no fractional seconds",
-            ),
-            pytest.param(
-                "2003-10-11T22:14:15.75+01:00",
-                1065906855.75,
-                id="custom timezone, with fractional seconds",
-            ),
-        ],
-    )
-    def test_parse_syslog_timestamp(
-        self,
-        timestamp: str,
-        expected_result: float,
-    ) -> None:
-        assert parse_iso_8601_timestamp(timestamp) == expected_result
+
+@pytest.mark.parametrize(
+    "timestamp, expected_result",
+    [
+        pytest.param(
+            "2003-10-11T22:14:15Z",
+            1065910455.0,
+            id="UTC, no fractional seconds",
+        ),
+        pytest.param(
+            "2003-10-11T22:14:15.25Z",
+            1065910455.25,
+            id="UTC with fractional seconds",
+        ),
+        pytest.param(
+            "2003-10-11T22:14:15+01:00",
+            1065906855.0,
+            id="custom timezone, no fractional seconds",
+        ),
+        pytest.param(
+            "2003-10-11T22:14:15.75+01:00",
+            1065906855.75,
+            id="custom timezone, with fractional seconds",
+        ),
+    ],
+)
+def test_parse_syslog_timestamp(timestamp: str, expected_result: float) -> None:
+    assert parse_iso_8601_timestamp(timestamp) == expected_result

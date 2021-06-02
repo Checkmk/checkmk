@@ -1954,8 +1954,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
         structured_data, message = rest.split(" ", 1)
     else:
         raise Exception("Invalid RFC 5424 syslog message")
-    if message.startswith("\ufeff"):  # remove BOM if it's there
-        message = message[1:]
+    message = remove_leading_bom(message)
 
     if structured_data != "-":
         event["text"] = "[%s] %s" % (structured_data, message)
@@ -2030,6 +2029,10 @@ def create_event_from_trap(trap: List[Tuple[str, Any]], ipaddress: AnyStr) -> Ev
         'host_in_downtime': False,
     }
     return event
+
+
+def remove_leading_bom(message: str) -> str:
+    return message[1:] if message.startswith("\ufeff") else message
 
 
 class EventCreator:

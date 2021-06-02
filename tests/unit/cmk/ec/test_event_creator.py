@@ -20,6 +20,7 @@ from cmk.ec.main import (
     make_config,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
+    remove_leading_bom,
 )
 
 
@@ -409,3 +410,27 @@ def test_parse_rfc5424_syslog_info(line: str, expected_result: Mapping[str, Any]
 )
 def test_parse_syslog_timestamp(timestamp: str, expected_result: float) -> None:
     assert parse_iso_8601_timestamp(timestamp) == expected_result
+
+
+@pytest.mark.parametrize(
+    "teststr, expected_result",
+    [
+        pytest.param(
+            "abc123",
+            "abc123",
+            id="no bom",
+        ),
+        pytest.param(
+            "\ufeffabc123",
+            "abc123",
+            id="bom at the beginning",
+        ),
+        pytest.param(
+            "\ufeffabc\ufeff123",
+            "abc\ufeff123",
+            id="bom at the beginning at in the middle",
+        ),
+    ],
+)
+def test_remove_leading_bom(teststr: str, expected_result: str) -> None:
+    assert remove_leading_bom(teststr) == expected_result

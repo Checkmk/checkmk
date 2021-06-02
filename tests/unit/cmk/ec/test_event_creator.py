@@ -8,7 +8,7 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
 import logging
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional, Tuple
 
 import pytest
 
@@ -20,7 +20,9 @@ from cmk.ec.main import (
     make_config,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
+    parse_syslog_message_structured_data,
     remove_leading_bom,
+    split_syslog_structured_data_and_message,
 )
 
 
@@ -434,3 +436,120 @@ def test_parse_syslog_timestamp(timestamp: str, expected_result: float) -> None:
 )
 def test_remove_leading_bom(teststr: str, expected_result: str) -> None:
     assert remove_leading_bom(teststr) == expected_result
+
+
+@pytest.mark.parametrize(
+    "sd_and_message, expected_result",
+    [
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"] Red alert, shields up!',
+            (
+                '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
+                'Red alert, shields up!',
+            ),
+            id="with normal structured data",
+        ),
+        pytest.param(
+            r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"] Red alert, shields up!',
+            (
+                r'[exampleSDID@32473 iut="3" eventSource="App\"lication" eventID="1011"][exampleP\"\]riority@32473 class="h\] igh"]',
+                'Red alert, shields up!',
+            ),
+            id="with mean structured data",
+        ),
+        pytest.param(
+            '- Red alert, shields up!',
+            (
+                None,
+                'Red alert, shields up!',
+            ),
+            id="without structured data",
+        )
+    ],
+)
+def test_split_syslog_structured_data_and_message(
+        sd_and_message: str, expected_result: Tuple[Optional[str], str]) -> None:
+    assert split_syslog_structured_data_and_message(sd_and_message) == expected_result
+
+
+@pytest.mark.parametrize(
+    "sd_and_message",
+    [
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] [examplePriority@32473 class="high"] \ufeffRed alert, shields up!',
+            id="space between two structured data elements",
+        ),
+        pytest.param(
+            '\ufeffRed alert, shields up!',
+            id="no structured data",
+        ),
+    ],
+)
+def test_split_syslog_structured_data_and_message_exception(sd_and_message: str) -> None:
+    with pytest.raises(ValueError):
+        split_syslog_structured_data_and_message(sd_and_message)
+
+
+@pytest.mark.parametrize(
+    "structured_data, expected_result",
+    [
+        pytest.param(
+            '[Checkmk@18662 sl="0" ipaddress="3.6.9.0" host="Westfold, Middleearth, 3rd Age of the Ring" application="Legolas Greenleaf"]',
+            (
+                {
+                    'sl': '0',
+                    'ipaddress': '3.6.9.0',
+                    'host': 'Westfold, Middleearth, 3rd Age of the Ring',
+                    'application': 'Legolas Greenleaf',
+                },
+                "",
+            ),
+            id="checkmk structured data only",
+        ),
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][Checkmk@18662 sl="0" ipaddress="127.0.0.1" host="locÄl hést" application="ŕŖŗ"][examplePriority@32473 class="high"]',
+            (
+                {
+                    'sl': '0',
+                    'ipaddress': '127.0.0.1',
+                    'host': 'locÄl hést',
+                    'application': 'ŕŖŗ',
+                },
+                '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
+            ),
+            id="checkmk and other structured data",
+        ),
+        pytest.param(
+            '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
+            (
+                {},
+                '[exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"][examplePriority@32473 class="high"]',
+            ),
+            id="no checkmk structured data",
+        ),
+        pytest.param(
+            r'[Checkmk@18662 sl="10" host="abc\\" def" application="[mean\]"]',
+            (
+                {
+                    'sl': '10',
+                    'host': r'abc\\" def',
+                    'application': r'[mean\]',
+                },
+                '',
+            ),
+            id="with escaping in checkmk structured data",
+        ),
+    ],
+)
+def test_parse_syslog_message_structured_data(
+    structured_data: str,
+    expected_result: Tuple[Mapping[str, str], str],
+) -> None:
+    assert parse_syslog_message_structured_data(structured_data) == expected_result
+
+
+def test_parse_syslog_message_structured_data_exception() -> None:
+    with pytest.raises(ValueError):
+        parse_syslog_message_structured_data(
+            '[Checkmk@18662 sl="0" ipaddress="127.0.0.1"][Checkmk@18662 sl="0" ipaddress="127.0.0.2"]'
+        )

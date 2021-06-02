@@ -2035,6 +2035,35 @@ def remove_leading_bom(message: str) -> str:
     return message[1:] if message.startswith("\ufeff") else message
 
 
+def parse_syslog_message_structured_data(structured_data: str) -> Tuple[Mapping[str, str], str]:
+    """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
+    checkmk_id = "Checkmk@18662"  # SyslogMessage.structured_data_id()
+    if not (checkmk_elements := re.findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):
+        return {}, structured_data
+    if len(checkmk_elements) != 1:
+        raise ValueError(
+            "Invalid RFC 5424 syslog message: Found Checkmk structured data element multiple times")
+    event_update = {}
+    for sd_param in re.findall(r' .*?=".*?(?<!\\)"', checkmk_elements[0]):
+        name, value = sd_param[1:].split("=", 1)
+        event_update[name] = value[1:-1]
+    return event_update, structured_data.replace(checkmk_elements[0], "")
+
+
+def split_syslog_structured_data_and_message(sd_and_message: str) -> Tuple[Optional[str], str]:
+    """Split a string containing structured data and the message into the two parts"""
+    if sd_and_message.startswith("["):
+        sd_matches = re.findall(r'\[.*?"\] ', sd_and_message)
+        if len(sd_matches) != 1:
+            raise ValueError(
+                "Invalid RFC 5424 syslog message: structured data has the wrong format")
+        return sd_matches[0][:-1], sd_and_message.replace(sd_matches[0], "")
+    nil_value = "-"  # SyslogMessage.nilvalue()
+    if sd_and_message.startswith(f"{nil_value} "):
+        return None, sd_and_message.split(" ", 1)[1]
+    raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
+
+
 class EventCreator:
     def __init__(self, logger: Logger, config: Config) -> None:
         super().__init__()

@@ -10,10 +10,11 @@
 namespace cma::evl {
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
                                       bool vista_api) {
-    if (vista_api && g_evt.close)
-        return std::unique_ptr<EventLogBase>(new EventLogVista(name));
+    if (vista_api && g_evt.close != nullptr) {
+        return std::make_unique<EventLogVista>(name);
+    }
 
-    return std::unique_ptr<EventLogBase>(new EventLog(name));
+    return std::make_unique<EventLog>(name);
 }
 
 /// scans whole eventlog to find worst possible case
@@ -22,12 +23,11 @@ std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level) {
     // we must seek past the previously read event - if there was one
-    const auto seek_pos = choosePos(pos);
+    log.seek(choosePos(pos));
 
     auto worst_state = cma::cfg::EventLevels::kAll;
     auto last_pos = pos;
 
-    log.seek(seek_pos);
     while (true) {
         EventLogRecordBase::ptr record{log.readRecord()};
 
@@ -48,13 +48,11 @@ std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
 /// returns last scanned pos where processor returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
-                       EvlProcessor processor) {
+                       const EvlProcessor &processor) {
     // we must seek past the previously read event - if there was one
-    const auto seek_pos = choosePos(from_pos);
+    log.seek(choosePos(from_pos));
 
     auto last_pos = from_pos;
-
-    log.seek(seek_pos);
 
     while (true) {
         EventLogRecordBase::ptr record{log.readRecord()};

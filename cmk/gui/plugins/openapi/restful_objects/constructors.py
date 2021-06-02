@@ -861,8 +861,6 @@ def serve_json(data: Serializable, profile: Optional[Dict[str, str]] = None) -> 
     response = Response()
     response.set_content_type(content_type)
     response.set_data(json.dumps(data))
-    # HACK: See wrap_with_validation.
-    response.original_data = data  # type: ignore[attr-defined]
     return response
 
 

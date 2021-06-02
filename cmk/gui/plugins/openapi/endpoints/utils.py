@@ -81,18 +81,11 @@ def serialize_group(name: GroupName) -> Any:
         elif is_managed_edition():
             extensions["customer"] = managed.default_customer_id()
 
+        extensions['alias'] = group['alias']
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
-            title=group['alias'],
-            members={
-                'title': constructors.object_property(
-                    name='title',
-                    value=group['alias'],
-                    prop_format='string',
-                    base=constructors.object_href(name, ident),
-                ),
-            },
+            title=group['alias'] or ident,
             extensions=extensions,
         )
 

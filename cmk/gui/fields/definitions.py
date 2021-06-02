@@ -8,8 +8,10 @@ import collections.abc
 import json
 import re
 import typing
+from datetime import datetime
 from typing import Any, Optional, Protocol, Tuple
 
+import pytz
 from marshmallow import fields as _fields
 from marshmallow import utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -936,6 +938,9 @@ def attributes_field(object_type: ObjectType,
                      missing: Any = utils.missing,
                      many: bool = False,
                      names_only: bool = False) -> _fields.Field:
+    if description is None:
+        # SPEC won't validate without description, though the error message is very obscure.
+        raise ValueError("description is necessary.")
     if not names_only:
         return Nested(
             attr_openapi_schema(object_type, object_context),
@@ -1183,6 +1188,62 @@ class PasswordShare(String):
             raise self.make_error("invalid", name=value)
 
 
+def from_timestamp(value: float) -> datetime:
+    stamp = datetime.utcfromtimestamp(value)
+    return stamp.replace(tzinfo=pytz.utc)
+
+
+def to_timestamp(value: datetime) -> float:
+    return float(datetime.timestamp(value))
+
+
+class Timestamp(_fields.DateTime):
+    """A timestamp field for Checkmk timestamp
+
+    Examples:
+
+        >>> from marshmallow import Schema
+        >>> class TestSchema(Schema):
+        ...      ts_field = Timestamp()
+
+        >>> value = {'ts_field': 0.0}
+
+        >>> schema = TestSchema()
+        >>> schema.dump({'ts_field': '0.0'})
+        {'ts_field': '1970-01-01T00:00:00+00:00'}
+
+        >>> schema.dump({'ts_field': 1622620683.60371})
+        {'ts_field': '2021-06-02T07:58:03.603710+00:00'}
+
+        >>> dumped = schema.dump(value)
+        >>> dumped
+        {'ts_field': '1970-01-01T00:00:00+00:00'}
+
+        >>> loaded = schema.load(dumped)
+        >>> loaded
+        {'ts_field': 0.0}
+
+        >>> assert loaded == value, f"{loaded!r} != {value!r}"
+
+        >>> schema.load({'ts_field': 'foo'})  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: ...
+
+    """
+    OBJ_TYPE = 'timestamp'
+
+    default_error_messages = {'invalid': 'Not a valid timestamp: {input!r}'}
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        dt_obj = from_timestamp(float(value))
+        return super()._serialize(dt_obj, attr, obj, **kwargs)
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        val = super()._deserialize(value, attr, data, **kwargs)
+        return datetime.timestamp(val)
+
+
 __all__ = [
     'attributes_field',
     'customer_field',
@@ -1201,4 +1262,5 @@ __all__ = [
     'query_field',
     'SiteField',
     'String',
+    'Timestamp',
 ]

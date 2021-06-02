@@ -45,6 +45,7 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, An
         )
 
     generated_spec = SPEC.to_dict()
+    #   return generated_spec
     _add_cookie_auth(generated_spec)
     if not validate:
         return generated_spec

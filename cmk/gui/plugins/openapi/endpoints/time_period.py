@@ -15,7 +15,7 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from marshmallow.utils import from_iso_time
 
@@ -322,13 +322,40 @@ def _format_time_range(time_range: Dict[str, dt.time]) -> TIME_RANGE:
     return _mk_time_format(time_range['start']), _mk_time_format(time_range['end'])
 
 
-def _mk_time_format(time: dt.time) -> str:
-    minutes = time.strftime("%M")
-    minutes = "00" if minutes == "0" else minutes
-    return f"{time.strftime('%H')}:{minutes}"
+def _mk_time_format(time_or_str: Union[str, dt.time]) -> str:
+    """
+
+    Examples:
+
+        >>> _mk_time_format("12:00:05")
+        '12:00'
+
+        >>> _mk_time_format("09:00:30")
+        '09:00'
+
+    """
+    if isinstance(time_or_str, str):
+        parts = time_or_str.split(":")
+        time = dt.time(int(parts[0]), int(parts[1]))
+    elif isinstance(time_or_str, dt.time):
+        time = time_or_str
+    else:
+        raise NotImplementedError()
+    return f"{time.hour:02d}:{time.minute:02d}"
 
 
 def _mk_date_format(exception_date: dt.date) -> str:
+    """
+
+    Examples:
+
+        >>> _mk_date_format(dt.date(2021, 12, 21))
+        '2021-12-21'
+
+        >>> _mk_date_format(dt.date(2021, 1, 1))
+        '2021-01-01'
+
+    """
     return exception_date.strftime("%Y-%m-%d")
 
 

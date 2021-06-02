@@ -273,6 +273,7 @@ def show_downtimes(param):
             example="1",
         )
     }],
+    convert_response=True,
     response_schema=response_schemas.DomainObject,
 )
 def show_downtime(params):
@@ -360,11 +361,9 @@ def _serialize_downtimes(downtimes):
     for downtime in downtimes:
         entries.append(_serialize_single_downtime(downtime))
 
-    return constructors.object_collection(
-        name='all',
-        domain_type='downtime',
-        entries=entries,
-        base='',
+    return constructors.collection_object(
+        'downtime',
+        value=entries,
     )
 
 
@@ -386,7 +385,7 @@ def _serialize_single_downtime(downtime):
     downtime_id = downtime['id']
     return constructors.domain_object(
         domain_type='downtime',
-        identifier=downtime_id,
+        identifier=str(downtime_id),
         title='Downtime for %s' % downtime_detail,
         extensions=_downtime_properties(downtime),
         links=[

@@ -47,6 +47,7 @@ from cmk.gui.fields.definitions import (
     query_field,
     SiteField,
     String,
+    Timestamp,
 )
 from cmk.gui.fields.validators import (
     ValidateAnyOfValidators,
@@ -94,6 +95,7 @@ __all__ = [
     'Str',
     'String',
     'Time',
+    'Timestamp',
     'ValidateAnyOfValidators',
     'ValidateIPv4',
     'ValidateIPv4Network',

@@ -95,15 +95,23 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         status=200,
     )
 
+    attributes = {
+        "ipaddress": "127.0.0.1",
+        "snmp_community": {
+            "type": "v1_v2_community",
+            "community": "blah",
+        },
+    }
     resp = wsgi_app.follow_link(
         resp,
         '.../update',
         status=200,
-        params='{"attributes": {"ipaddress": "127.0.0.1"}}',
+        params=json.dumps({'attributes': attributes}),
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
-    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
+    got_attributes = resp.json['extensions']['attributes']
+    assert attributes.items() <= got_attributes.items()  # pylint: disable=dict-items-not-iterating
 
     resp = wsgi_app.follow_link(
         resp,
@@ -113,7 +121,7 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
-    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1', 'alias': 'bar'}
+    assert resp.json['extensions']['attributes']['alias'] == "bar"
 
     resp = wsgi_app.follow_link(
         resp,
@@ -123,10 +131,11 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
-    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
+    assert resp.json['extensions']['attributes'].items() >= {'ipaddress': '127.0.0.1'}.items()  # pylint: disable=dict-items-not-iterating
+
     # make sure changes are written to disk:
     resp = wsgi_app.follow_link(resp, 'self', status=200)
-    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
+    assert resp.json['extensions']['attributes'].items() >= {'ipaddress': '127.0.0.1'}.items()  # pylint: disable=dict-items-not-iterating
 
     # also try to update with wrong attribute
     wsgi_app.follow_link(

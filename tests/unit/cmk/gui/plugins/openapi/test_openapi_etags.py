@@ -66,4 +66,4 @@ def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
-    assert resp.json['extensions']['attributes'] == {'ipaddress': '127.0.0.1'}
+    assert {'ipaddress': '127.0.0.1'}.items() <= resp.json['extensions']['attributes'].items()  # pylint: disable=dict-items-not-iterating

@@ -337,7 +337,7 @@ def test_openapi_show_downtime_with_params(
             base + '/domain-types/downtime/collections/all?host_name=example.com',
             status=200,
         )
-        assert resp.json_body["value"][0]['id'] == 124
+        assert resp.json_body["value"][0]['id'] == '124'
 
 
 def test_openapi_show_downtime_of_non_existing_host(

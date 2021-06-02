@@ -12,6 +12,7 @@ which then has to be dumped into the checkmk.yaml file.
 import functools
 import hashlib
 import http.client
+import json
 from types import FunctionType
 from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, TypeVar, Union
 
@@ -258,6 +259,7 @@ class Endpoint:
         output_empty: bool = False,
         response_schema: Optional[RawParameter] = None,
         request_schema: Optional[RawParameter] = None,
+        convert_response: bool = False,  # FIXME: True for all!
         skip_locking: bool = False,
         path_params: Optional[Sequence[RawParameter]] = None,
         query_params: Optional[Sequence[RawParameter]] = None,
@@ -280,6 +282,7 @@ class Endpoint:
         self.content_type = content_type
         self.output_empty = output_empty
         self.response_schema = response_schema
+        self.convert_response = convert_response
         self.skip_locking = skip_locking
         self.request_schema = request_schema
         self.path_params = path_params
@@ -503,19 +506,15 @@ class Endpoint:
                 if request_schema:
                     # Try to decode only when there is data. Decoding an empty string will fail.
                     if request.get_data(cache=True):
-                        json = request.json or {}
+                        json_data = request.json or {}
                     else:
-                        json = {}
-                    param['body'] = request_schema().load(json)
+                        json_data = {}
+                    param['body'] = request_schema().load(json_data)
             except ValidationError as exc:
                 return _problem(exc, status_code=400)
 
             # make pylint happy
             assert callable(self.func)
-            # FIXME
-            # We need to get the "original data" somewhere and are currently "piggy-backing"
-            # it on the response instance. This is somewhat problematic because it's not
-            # expected behaviour and not a valid interface of Response. Needs refactoring.
 
             if self.tag_group == 'Setup' and not config.wato_enabled:
                 return problem(status=403,
@@ -582,22 +581,35 @@ class Endpoint:
                 if config.wato_use_git:
                     do_git_commit()
 
-            if hasattr(response, 'original_data') and response_schema:
+            if (self.content_type == 'application/json' and response.status_code < 300 and
+                    response_schema and response.data):
                 try:
-                    response_schema().load(response.original_data)
-                    return response
+                    data = json.loads(response.data.decode('utf-8'))
+                except json.decoder.JSONDecodeError as exc:
+                    return problem(status=500,
+                                   title="Server was about to send invalid JSON data.",
+                                   detail="This is an error of the implementation.",
+                                   ext={
+                                       'errors': str(exc),
+                                       'orig': response.data,
+                                   })
+                try:
+                    outbound = response_schema().dump(data)
                 except ValidationError as exc:
-                    # Hope we never get here in production.
                     return problem(
                         status=500,
                         title="Server was about to send an invalid response.",
                         detail="This is an error of the implementation.",
                         ext={
                             'errors': exc.messages,
-                            'orig': response.original_data
+                            'orig': data,
                         },
                     )
 
+                if self.convert_response:
+                    response.set_data(json.dumps(outbound))
+
+            response.freeze()
             return response
 
         return _validating_wrapper

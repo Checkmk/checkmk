@@ -176,11 +176,12 @@ class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
     value = fields.List(fields.Nested(LinkSchema()))
     name = fields.String(example="important_values")
+    title = fields.String(description="A human readable title of this object. Can be used for "
+                          "user interfaces.",)
 
 
 class ObjectProperty(Linkable):
     id = fields.String(description="The unique name of this property, local to this domain type.")
-    # FIXME: This is the only use-case right now. Needs to be expanded when this is used more.
     value = fields.List(
         fields.String(),
         description="The value of the property. In this case a list.",
@@ -190,13 +191,18 @@ class ObjectProperty(Linkable):
 
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant('property')
-    name = fields.String(example="important_value")
+    name = fields.String(example="important")
+    value = fields.String(example="the value")
+    title = fields.String(description="A human readable title of this object. Can be used for "
+                          "user interfaces.",)
 
 
 class ObjectActionMember(ObjectMemberBase):
     memberType = fields.Constant('action')
     parameters = fields.Dict()
     name = fields.String(example="frobnicate_foo")
+    title = fields.String(description="A human readable title of this object. Can be used for "
+                          "user interfaces.",)
 
 
 class ObjectMember(OneOfSchema):
@@ -278,11 +284,43 @@ class DomainObject(Linkable):
     id = fields.String(description="The unique identifier for this domain-object type.",)
     title = fields.String(description="A human readable title of this object. Can be used for "
                           "user interfaces.",)
-    members = fields.Nested(
-        ObjectMemberDict(),
+    members: fields.Field = fields.Dict(
         description="The container for external resources, like linked foreign objects or actions.",
     )
-    extensions = fields.Dict(description="All the attributes of the domain object.")
+    extensions: fields.Field = fields.Dict(description="All the attributes of the domain object.")
+
+
+class HostExtensions(BaseSchema):
+    attributes = fields.attributes_field(
+        "host",
+        "update",
+        description="Attributes of this host.",
+        example={'ipaddress': '192.168.0.123'},
+    )
+    effective_attributes = fields.Dict(
+        description="All attributes of this host and all parent folders. Format may change!",
+        allow_none=True,
+        example={'tag_snmp_ds': None},
+    )
+    is_cluster = fields.Boolean(
+        description="If this is a cluster host, i.e. a container for other hosts.",)
+    is_offline = fields.Boolean(description="Whether the host is offline",)
+    cluster_nodes = fields.List(
+        fields.HostField(),
+        allow_none=True,
+        missing=None,
+        description="In the case this is a cluster host, these are the cluster nodes.",
+    )
+
+
+class HostObject(DomainObject):
+    domainType = fields.Constant("host_config",
+                                 required=True,
+                                 description="The domain type of the object.")
+    extensions = fields.Nested(
+        HostExtensions,
+        description="All the data and metadata of this host.",
+    )
 
 
 class FolderMembers(BaseSchema):
@@ -437,8 +475,9 @@ class User(Linkable):
     )
 
 
-TIME_FIELD = fields.Time(
+TIME_FIELD = fields.String(
     example="14:00",
+    format="time",
     description="The hour of the time period.",
 )
 
@@ -455,8 +494,9 @@ class ConcreteTimeRangeActive(BaseSchema):
 
 
 class ConcreteTimePeriodException(BaseSchema):
-    date = fields.Date(
+    date = fields.String(
         example="2020-01-01",
+        format="date",
         description="The date of the time period exception."
         "8601 profile",
     )

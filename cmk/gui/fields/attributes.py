@@ -13,24 +13,13 @@ from marshmallow.decorators import post_load, pre_dump, validates_schema
 from marshmallow.fields import Time
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import fields, userdb
+from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.definitions import Integer, List, Nested, String
+from cmk.gui.fields.definitions import Integer, List, Nested, String, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
 from cmk.gui.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
-
-
-class Constant(Converter):
-    def __init__(self, constant):
-        self.constant = constant
-
-    def to_checkmk(self, data):
-        return self.constant
-
-    def from_checkmk(self, data):
-        return self.constant
 
 
 class RegexpRewrites(BaseSchema, CheckmkTuple):
@@ -113,7 +102,7 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
     tuple_fields = ('type', ('from_address', 'to_address'))
     cast_to_dict = True
 
-    type = fields.Constant(
+    type = _fields.Constant(
         description="A range of addresses.",
         constant='ip_range',
     )
@@ -131,7 +120,7 @@ class IPNetwork(BaseSchema, CheckmkTuple):
     tuple_fields = ('type', 'network')
     cast_to_dict = True
 
-    type = fields.Constant(
+    type = _fields.Constant(
         description="A single IPv4 network in CIDR notation.",
         constant='ip_network',
     )
@@ -159,7 +148,7 @@ class IPAddresses(BaseSchema, CheckmkTuple):
     tuple_fields = ('type', 'addresses')
     cast_to_dict = True
 
-    type = fields.Constant(
+    type = _fields.Constant(
         description="A list of single IPv4 addresses.",
         constant='ip_list',
     )
@@ -178,7 +167,7 @@ class IPRegexp(BaseSchema, CheckmkTuple):
     tuple_fields = ('type', 'regexp_list')
     cast_to_dict = True
 
-    type = fields.Constant(
+    type = _fields.Constant(
         description="IPv4 addresses which match a regexp pattern",
         constant='ip_regex_list',
     )
@@ -701,6 +690,6 @@ class IPMIParameters(BaseSchema):
 
 
 class MetaData(BaseSchema):
-    created_at = _fields.DateTime(description="When has this object been created.",)
-    created_by = _fields.String(
-        description="The user id under which this object has been created.",)
+    created_at = Timestamp(description="When has this object been created.",)
+    updated_at = Timestamp(description="When this object was last changed.",)
+    created_by = String(description="The user id under which this object has been created.",)

@@ -612,13 +612,15 @@ class TimePeriodAlias(fields.String):
 
 
 class TimeRange(BaseSchema):
-    start = fields.Time(
+    start = fields.String(
         required=True,
+        format="time",
         example="14:00",
         description="The start time of the period's time range",
     )
-    end = fields.Time(
+    end = fields.String(
         required=True,
+        format="time",
         example="16:00",
         description="The end time of the period's time range",
     )
@@ -632,9 +634,10 @@ class TimeRangeActive(BaseSchema):
 
 
 class TimePeriodException(BaseSchema):
-    date = fields.Date(
+    date = fields.String(
         required=True,
         example="2020-01-01",
+        format="date",
         description="The date of the time period exception."
         "8601 profile",
     )

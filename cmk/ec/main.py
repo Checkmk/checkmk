@@ -607,7 +607,6 @@ class EventServer(ECServerThread):
         self._event_columns = event_columns
         self._message_period = ActiveHistoryPeriod()
         self._rule_matcher = RuleMatcher(self._logger, config)
-        self._event_creator = EventCreator(self._logger, config)
 
         # HACK for testing: The real fix would involve breaking up these huge
         # class monsters.
@@ -959,10 +958,8 @@ class EventServer(ECServerThread):
 
     # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data: bytes, address: Optional[Tuple[str, int]]) -> None:
-        lines = data.splitlines()
-        for line_bytes in lines:
-            line = scrub_and_decode(line_bytes.rstrip())
-            if line:
+        for line_bytes in data.splitlines():
+            if line := scrub_and_decode(line_bytes.rstrip()):
                 try:
 
                     def handler(line=line):
@@ -1408,15 +1405,9 @@ class EventServer(ECServerThread):
                                (100.0 * count / float(total_count))))
 
     def process_line(self, line: str, address: Optional[Tuple[str, int]]) -> None:
-        line = line.rstrip()
-        if self._config["debug_rules"]:
-            if address:
-                self._logger.info(u"Processing message from %r: '%s'" % (address, line))
-            else:
-                self._logger.info(u"Processing message '%s'" % line)
-
-        event = self._event_creator.create_event_from_line(line, address)
-        self.process_event(event)
+        self.process_event(
+            create_event_from_line(line, address, self._logger,
+                                   verbose=self._config["debug_rules"]))
 
     def process_event(self, event: Event) -> None:
         self.do_translate_hostname(event)
@@ -2069,196 +2060,199 @@ def split_syslog_structured_data_and_message(sd_and_message: str) -> Tuple[Optio
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
-class EventCreator:
-    def __init__(self, logger: Logger, config: Config) -> None:
-        super().__init__()
-        self._logger = logger
-        self._config = config
+def create_event_from_line(line: str,
+                           address: Optional[Tuple[str, int]],
+                           logger: Logger,
+                           *,
+                           verbose: bool = False) -> Event:
+    if verbose:
+        if address:
+            logger.info("Processing message from %r: '%s'", address, line)
+        else:
+            logger.info("Processing message '%s'", line)
+    # TODO: Is it really never a domain name?
+    ipaddress = "" if address is None else address[0]
+    event: Event = {
+        "ipaddress": ipaddress,
+        "core_host": None,
+        "host_in_downtime": False,
+    }
+    try:
+        # Variant 1: plain syslog message without priority/facility:
+        # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
-    def create_event_from_line(self, line: str, address: Optional[Tuple[str, int]]) -> Event:
-        # TODO: Is it really never a domain name?
-        ipaddress = "" if address is None else address[0]
-        event: Event = {
+        # Variant 1a: plain syslog message without priority/facility/host:
+        # May 26 13:45:01 Klapprechner CRON[8046]:  message....
+
+        # Variant 2: syslog message including facility (RFC 3164)
+        # <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
+
+        # Variant 3: local Nagios alert posted by mkevent -n
+        # <154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che
+
+        # Variant 4: remote Nagios alert posted by mkevent -n -> syslog
+        # <154>Jul  9 17:28:32 Klapprechner @1341847712;5;Contact Info;  MyHost My Service: CRIT - This che
+
+        # Variant 5: syslog message
+        #  Timestamp is RFC3339 with additional restrictions:
+        #  - The "T" and "Z" characters in this syntax MUST be upper case.
+        #  - Usage of the "T" character is REQUIRED.
+        #  - Leap seconds MUST NOT be used.
+        # <166>2013-04-05T13:49:31.685Z esx Vpxa: message....
+
+        # Variant 6: syslog message without date / host:
+        # <5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan
+
+        # Variant 7: logwatch.ec event forwarding
+        # <78>@1341847712 Klapprechner /var/log/syslog: message....
+
+        # Variant 7a: Event simulation
+        # <%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag%: %msg%
+
+        # Variant 8: syslog message from sophos firewall
+        # <84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages
+
+        # Variant 9: syslog message (RFC 5424)
+        # <134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - coming from  java code
+
+        # Variant 10:
+        # 2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up
+        # year month day hh:mm:ss timezone HOSTNAME KeyAgent:
+
+        # FIXME: Would be better to parse the syslog messages in another way:
+        # Split the message by the first ":", then split the syslog header part
+        # and detect which information are present. Take a look at the syslog RFCs
+        # for details.
+
+        # Variant 2,3,4,5,6,7,7a,8
+        if line.startswith('<'):
+            i = line.find('>')
+            prio = int(line[1:i])
+            line = line[i + 1:]
+            event["facility"] = prio >> 3
+            event["priority"] = prio & 7
+
+        # Variant 1,1a
+        else:
+            event["facility"] = 1  # user
+            event["priority"] = 5  # notice
+
+        # Variant 7 and 7a
+        if line[0] == '@' and line[11] in [' ', ';'] and line.split(' ', 1)[0].count(';') <= 1:
+            details, event['host'], line = line.split(' ', 2)
+            detail_tokens = details.split(';')
+            timestamp = detail_tokens[0]
+            if len(detail_tokens) > 1:
+                event["sl"] = int(detail_tokens[1])
+            event['time'] = float(timestamp[1:])
+            event.update(parse_syslog_info(line))
+
+        # Variant 3
+        elif line.startswith("@"):
+            event.update(parse_monitoring_info(line))
+
+        # Variant 5
+        elif len(line) > 24 and line[10] == 'T':
+            timestamp, event['host'], rest = line.split(' ', 2)
+            event['time'] = parse_iso_8601_timestamp(timestamp)
+            event.update(parse_syslog_info(rest))
+
+        # Variant 9
+        elif len(line) > 24 and line[12] == "T":
+            event.update(parse_rfc5424_syslog_info(line))
+
+        # Variant 8
+        elif line[10] == '-' and line[19] == ' ':
+            timestamp, event['host'], rest = line.split(' ', 2)
+            timestamp = fix_broken_sophos_timestamp(timestamp)
+            event['time'] = parse_iso_8601_timestamp(timestamp)
+            event.update(parse_syslog_info(rest))
+
+        # Variant 6
+        elif len(line.split(': ', 1)[0].split(' ')) == 1:
+            event.update(parse_syslog_info(line))
+            # There is no datetime information in the message, use current time
+            event['time'] = time.time()
+            # There is no host information, use the provided address
+            event["host"] = ipaddress
+
+        # Variant 10
+        elif line[4] == " " and line[:4].isdigit():
+            time_part = line[:20]  # ignoring tz info
+            event["host"], application, line = line[25:].split(" ", 2)
+            event["application"] = application.rstrip(":")
+            event["pid"] = 0
+            event["text"] = line
+            event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
+
+        # Variant 1,1a,2,4
+        else:
+            month_name, day, timeofday, rest = line.split(None, 3)
+
+            # Special handling for variant 1a. Detect whether or not host
+            # is a hostname or syslog tag
+            host, tmp_rest = rest.split(None, 1)
+            if host.endswith(":"):
+                # There is no host information sent, use the source address as "host"
+                host = ipaddress
+            else:
+                # Use the extracted host and continue with the remaining message text
+                rest = tmp_rest
+
+            event["host"] = host
+
+            # Variant 4
+            if rest.startswith("@"):
+                # TODO: host gets overwritten, strange... Is this OK?
+                event.update(parse_monitoring_info(rest))
+
+            # Variant 1, 2
+            else:
+                event.update(parse_syslog_info(rest))
+
+                month = EventServer.month_names[month_name]
+                iday = int(day)
+
+                # Nasty: the year is not contained in the message. We cannot simply
+                # assume that the message if from the current year.
+                lt = time.localtime()
+                if lt.tm_mon < 6 < month:  # Assume that message is from last year
+                    year = lt.tm_year - 1
+                else:
+                    year = lt.tm_year  # Assume the current year
+
+                hours, minutes, seconds = map(int, timeofday.split(":"))
+
+                # A further problem here: we do not now whether the message is in DST or not
+                event["time"] = time.mktime(
+                    (year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
+
+        # The event simulator ships the simulated original IP address in the
+        # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
+        if isinstance(event["host"], str) and "|" in event["host"]:
+            event["host"], event["ipaddress"] = event["host"].split("|", 1)
+
+    except Exception as e:
+        if verbose:
+            logger.exception('Got non-syslog message "%s" (%s)' % (line, e))
+        event = {
+            "facility": 1,
+            "priority": 0,
+            "text": line,
+            "host": "",
             "ipaddress": ipaddress,
+            "application": "",
+            "pid": 0,
+            "time": time.time(),
             "core_host": None,
             "host_in_downtime": False,
         }
-        try:
-            # Variant 1: plain syslog message without priority/facility:
-            # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
-            # Variant 1a: plain syslog message without priority/facility/host:
-            # May 26 13:45:01 Klapprechner CRON[8046]:  message....
-
-            # Variant 2: syslog message including facility (RFC 3164)
-            # <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
-
-            # Variant 3: local Nagios alert posted by mkevent -n
-            # <154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che
-
-            # Variant 4: remote Nagios alert posted by mkevent -n -> syslog
-            # <154>Jul  9 17:28:32 Klapprechner @1341847712;5;Contact Info;  MyHost My Service: CRIT - This che
-
-            # Variant 5: syslog message
-            #  Timestamp is RFC3339 with additional restrictions:
-            #  - The "T" and "Z" characters in this syntax MUST be upper case.
-            #  - Usage of the "T" character is REQUIRED.
-            #  - Leap seconds MUST NOT be used.
-            # <166>2013-04-05T13:49:31.685Z esx Vpxa: message....
-
-            # Variant 6: syslog message without date / host:
-            # <5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan
-
-            # Variant 7: logwatch.ec event forwarding
-            # <78>@1341847712 Klapprechner /var/log/syslog: message....
-
-            # Variant 7a: Event simulation
-            # <%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag%: %msg%
-
-            # Variant 8: syslog message from sophos firewall
-            # <84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages
-
-            # Variant 9: syslog message (RFC 5424)
-            # <134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID - coming from  java code
-
-            # Variant 10:
-            # 2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up
-            # year month day hh:mm:ss timezone HOSTNAME KeyAgent:
-
-            # FIXME: Would be better to parse the syslog messages in another way:
-            # Split the message by the first ":", then split the syslog header part
-            # and detect which information are present. Take a look at the syslog RFCs
-            # for details.
-
-            # Variant 2,3,4,5,6,7,7a,8
-            if line.startswith('<'):
-                i = line.find('>')
-                prio = int(line[1:i])
-                line = line[i + 1:]
-                event["facility"] = prio >> 3
-                event["priority"] = prio & 7
-
-            # Variant 1,1a
-            else:
-                event["facility"] = 1  # user
-                event["priority"] = 5  # notice
-
-            # Variant 7 and 7a
-            if line[0] == '@' and line[11] in [' ', ';'] and line.split(' ', 1)[0].count(';') <= 1:
-                details, event['host'], line = line.split(' ', 2)
-                detail_tokens = details.split(';')
-                timestamp = detail_tokens[0]
-                if len(detail_tokens) > 1:
-                    event["sl"] = int(detail_tokens[1])
-                event['time'] = float(timestamp[1:])
-                event.update(parse_syslog_info(line))
-
-            # Variant 3
-            elif line.startswith("@"):
-                event.update(parse_monitoring_info(line))
-
-            # Variant 5
-            elif len(line) > 24 and line[10] == 'T':
-                timestamp, event['host'], rest = line.split(' ', 2)
-                event['time'] = parse_iso_8601_timestamp(timestamp)
-                event.update(parse_syslog_info(rest))
-
-            # Variant 9
-            elif len(line) > 24 and line[12] == "T":
-                event.update(parse_rfc5424_syslog_info(line))
-
-            # Variant 8
-            elif line[10] == '-' and line[19] == ' ':
-                timestamp, event['host'], rest = line.split(' ', 2)
-                timestamp = fix_broken_sophos_timestamp(timestamp)
-                event['time'] = parse_iso_8601_timestamp(timestamp)
-                event.update(parse_syslog_info(rest))
-
-            # Variant 6
-            elif len(line.split(': ', 1)[0].split(' ')) == 1:
-                event.update(parse_syslog_info(line))
-                # There is no datetime information in the message, use current time
-                event['time'] = time.time()
-                # There is no host information, use the provided address
-                event["host"] = ipaddress
-
-            # Variant 10
-            elif line[4] == " " and line[:4].isdigit():
-                time_part = line[:20]  # ignoring tz info
-                event["host"], application, line = line[25:].split(" ", 2)
-                event["application"] = application.rstrip(":")
-                event["pid"] = 0
-                event["text"] = line
-                event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
-
-            # Variant 1,1a,2,4
-            else:
-                month_name, day, timeofday, rest = line.split(None, 3)
-
-                # Special handling for variant 1a. Detect whether or not host
-                # is a hostname or syslog tag
-                host, tmp_rest = rest.split(None, 1)
-                if host.endswith(":"):
-                    # There is no host information sent, use the source address as "host"
-                    host = ipaddress
-                else:
-                    # Use the extracted host and continue with the remaining message text
-                    rest = tmp_rest
-
-                event["host"] = host
-
-                # Variant 4
-                if rest.startswith("@"):
-                    # TODO: host gets overwritten, strange... Is this OK?
-                    event.update(parse_monitoring_info(rest))
-
-                # Variant 1, 2
-                else:
-                    event.update(parse_syslog_info(rest))
-
-                    month = EventServer.month_names[month_name]
-                    iday = int(day)
-
-                    # Nasty: the year is not contained in the message. We cannot simply
-                    # assume that the message if from the current year.
-                    lt = time.localtime()
-                    if lt.tm_mon < 6 < month:  # Assume that message is from last year
-                        year = lt.tm_year - 1
-                    else:
-                        year = lt.tm_year  # Assume the current year
-
-                    hours, minutes, seconds = map(int, timeofday.split(":"))
-
-                    # A further problem here: we do not now whether the message is in DST or not
-                    event["time"] = time.mktime(
-                        (year, month, iday, hours, minutes, seconds, 0, 0, lt.tm_isdst))
-
-            # The event simulator ships the simulated original IP address in the
-            # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
-            if isinstance(event["host"], str) and "|" in event["host"]:
-                event["host"], event["ipaddress"] = event["host"].split("|", 1)
-
-        except Exception as e:
-            if self._config["debug_rules"]:
-                self._logger.exception('Got non-syslog message "%s" (%s)' % (line, e))
-            event = {
-                "facility": 1,
-                "priority": 0,
-                "text": line,
-                "host": "",
-                "ipaddress": ipaddress,
-                "application": "",
-                "pid": 0,
-                "time": time.time(),
-                "core_host": None,
-                "host_in_downtime": False,
-            }
-
-        if self._config["debug_rules"]:
-            self._logger.info('Parsed message:\n' + ("".join(
-                [" %-15s %s\n" % (k + ":", v) for (k, v) in sorted(event.items())])).rstrip())
-
-        return event
+    if verbose:
+        logger.info('Parsed message:\n' +
+                    ("".join([" %-15s %s\n" % (k + ":", v)
+                              for (k, v) in sorted(event.items())])).rstrip())
+    return event
 
 
 class RuleMatcher:

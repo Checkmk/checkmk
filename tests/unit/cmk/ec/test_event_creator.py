@@ -14,24 +14,14 @@ import pytest
 
 from testlib import on_time
 
-import cmk.ec.export as ec
 from cmk.ec.main import (
-    EventCreator,
-    make_config,
+    create_event_from_line,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
     parse_syslog_message_structured_data,
     remove_leading_bom,
     split_syslog_structured_data_and_message,
 )
-
-
-@pytest.fixture
-def event_creator():
-    logger = logging.getLogger("cmk.mkeventd")
-    config = ec.default_config()
-    config["debug_rules"] = True
-    return EventCreator(logger, make_config(config))
 
 
 @pytest.mark.parametrize(
@@ -330,10 +320,11 @@ def event_creator():
             },
         ),
     ])
-def test_create_event_from_line(event_creator, line, expected):
+def test_create_event_from_line(line, expected):
     address = ("127.0.0.1", 1234)
+    logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
-        assert event_creator.create_event_from_line(line, address) == expected
+        assert create_event_from_line(line, address, logger, verbose=True) == expected
 
 
 @pytest.mark.parametrize(

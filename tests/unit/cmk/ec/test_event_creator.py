@@ -304,6 +304,22 @@ from cmk.ec.main import (
             },
             id="variant 9: syslog message (RFC 5424) with structured data and override",
         ),
+        pytest.param(
+            '<134>1 2021-06-02T13:54:35+00:00 heute /var/log/syslog - - [Checkmk@18662] Jun 2 15:54:24 klappjohe systemd[540514]: Stopped target Main User Target.',
+            {
+                'application': '/var/log/syslog',
+                'core_host': None,
+                'facility': 16,
+                'host': 'heute',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'pid': 0,
+                'priority': 6,
+                'text': 'Jun 2 15:54:24 klappjohe systemd[540514]: Stopped target Main User Target.',
+                'time': 1622642075.0,
+            },
+            id="variant 9: syslog message (RFC 5424) from logwatch forwarding",
+        ),
         (
             # Variant 10:
             "2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:",
@@ -587,6 +603,14 @@ def test_split_syslog_structured_data_and_message_exception(sd_and_message: str)
                 '',
             ),
             id="with escaping in checkmk structured data",
+        ),
+        pytest.param(
+            '[Checkmk@18662]',
+            (
+                {},
+                '',
+            ),
+            id="checkmk structured data without parameters",
         ),
     ],
 )

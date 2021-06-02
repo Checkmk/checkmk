@@ -297,22 +297,21 @@ def event_creator():
             id="variant 9: syslog message (RFC 5424) with mean structured data, no override",
         ),
         pytest.param(
-            r'<134>1 2016-06-02T12:49:05.181+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
+            r'<134>1 2016-06-02T12:49:05.5+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
             {
                 'application': 'weird Ƈ ƒ',
-                'core_host': '',
+                'core_host': None,
                 'facility': 16,
                 'host': 'host with spaces',
                 'host_in_downtime': False,
                 'ipaddress': '1.2.3.4',
                 'priority': 6,
                 'text': r'[exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
-                'time': 1464864545.181,
+                'time': 1464864545.5,
                 'pid': 0,
                 'sl': 0,
             },
             id="variant 9: syslog message (RFC 5424) with structured data and override",
-            marks=pytest.mark.skip,
         ),
         (
             # Variant 10:
@@ -363,7 +362,6 @@ def test_create_event_from_line(event_creator, line, expected):
                 'sl': 30,
             },
             id="with structured data and override",
-            marks=pytest.mark.skip,
         ),
         pytest.param(
             "1 - herbert some_deamon - - - \ufeffsomething is wrong with herbert",
@@ -375,7 +373,6 @@ def test_create_event_from_line(event_creator, line, expected):
                 'pid': 0,
             },
             id="no timestamp",
-            # marks=pytest.mark.skip,
         ),
     ],
 )

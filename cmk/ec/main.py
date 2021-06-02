@@ -1937,30 +1937,35 @@ def parse_iso_8601_timestamp(timestamp: str) -> float:
 
 def parse_rfc5424_syslog_info(line: str) -> Event:
     event: Event = {}
+    (
+        _unused_version,
+        timestamp,
+        hostname,
+        app_name,
+        procid,
+        _unused_msgid,
+        sd_and_message,
+    ) = line.split(" ", 6)
+    nil_value = "-"  # SyslogMessage.nilvalue()
+    event['time'] = (time.time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp))
+    event["host"] = "" if hostname == nil_value else hostname
+    event["application"] = "" if app_name == nil_value else app_name
+    event["pid"] = 0 if procid == nil_value else int(procid)
 
-    (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
-     rest) = line.split(" ", 6)
-
-    event['time'] = (time.time() if timestamp == '-' else parse_iso_8601_timestamp(timestamp))
-    event["host"] = "" if hostname == "-" else hostname
-    event["application"] = "" if app_name == "-" else app_name
-    event["pid"] = 0 if procid == "-" else int(procid)
-
-    if rest[0] == "[":
-        # has stuctured data
-        structured_data, message = rest[1:].split("] ", 1)
-    elif rest.startswith("- "):
-        # has no stuctured data
-        structured_data, message = rest.split(" ", 1)
-    else:
-        raise Exception("Invalid RFC 5424 syslog message")
+    structured_data, message = split_syslog_structured_data_and_message(sd_and_message)
     message = remove_leading_bom(message)
-
-    if structured_data != "-":
-        event["text"] = "[%s] %s" % (structured_data, message)
+    if structured_data:
+        event_update, remaining_structured_data = parse_syslog_message_structured_data(
+            structured_data)
+        # TODO: Fix the typing chaos below. We really need to parse the attributes.
+        event.update(event_update)  # type: ignore[arg-type]
+        # TODO: What about the other non-string attributes of an event?
+        if (service_level := event.get("sl")) is not None:
+            event["sl"] = int(service_level)
+        event["text"] = (
+            f"{(remaining_structured_data +  ' ') if remaining_structured_data else ''}{message}")
     else:
         event["text"] = message
-
     return event
 
 

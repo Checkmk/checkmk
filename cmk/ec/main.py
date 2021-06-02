@@ -1931,6 +1931,10 @@ def fix_broken_sophos_timestamp(timestamp: str) -> str:
     return timestamp + f'{"-" if offset < 0 else "+"}{hours:02}{minutes:02}'
 
 
+def parse_iso_8601_timestamp(timestamp: str) -> float:
+    return dateutil.parser.isoparse(timestamp).timestamp()
+
+
 class EventCreator:
     def __init__(self, logger: Logger, config: Config) -> None:
         super().__init__()
@@ -2022,7 +2026,7 @@ class EventCreator:
             # Variant 5
             elif len(line) > 24 and line[10] == 'T':
                 timestamp, event['host'], rest = line.split(' ', 2)
-                event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
+                event['time'] = parse_iso_8601_timestamp(timestamp)
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 9
@@ -2033,7 +2037,7 @@ class EventCreator:
             elif line[10] == '-' and line[19] == ' ':
                 timestamp, event['host'], rest = line.split(' ', 2)
                 timestamp = fix_broken_sophos_timestamp(timestamp)
-                event['time'] = dateutil.parser.isoparse(timestamp).timestamp()
+                event['time'] = parse_iso_8601_timestamp(timestamp)
                 event.update(self._parse_syslog_info(rest))
 
             # Variant 6
@@ -2128,8 +2132,7 @@ class EventCreator:
         (_unused_version, timestamp, hostname, app_name, procid, _unused_msgid,
          rest) = line.split(" ", 6)
 
-        event['time'] = (time.time()
-                         if timestamp == '-' else dateutil.parser.isoparse(timestamp).timestamp())
+        event['time'] = (time.time() if timestamp == '-' else parse_iso_8601_timestamp(timestamp))
         event["host"] = "" if hostname == "-" else hostname
         event["application"] = "" if app_name == "-" else app_name
         event["pid"] = 0 if procid == "-" else int(procid)

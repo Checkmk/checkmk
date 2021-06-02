@@ -15,7 +15,7 @@ import pytest
 from testlib import on_time, set_timezone
 
 import cmk.ec.export as ec
-from cmk.ec.main import EventCreator, make_config
+from cmk.ec.main import EventCreator, make_config, parse_iso_8601_timestamp
 
 
 @pytest.fixture
@@ -381,3 +381,35 @@ class TestEventCreator:
         # this is currently needed because we do not use the timezone information from the log message
         with on_time(1550000000.0, "UTC"):
             assert event_creator._parse_rfc5424_syslog_info(line) == expected_result
+
+    @pytest.mark.parametrize(
+        "timestamp, expected_result",
+        [
+            pytest.param(
+                "2003-10-11T22:14:15Z",
+                1065910455.0,
+                id="UTC, no fractional seconds",
+            ),
+            pytest.param(
+                "2003-10-11T22:14:15.25Z",
+                1065910455.25,
+                id="UTC with fractional seconds",
+            ),
+            pytest.param(
+                "2003-10-11T22:14:15+01:00",
+                1065906855.0,
+                id="custom timezone, no fractional seconds",
+            ),
+            pytest.param(
+                "2003-10-11T22:14:15.75+01:00",
+                1065906855.75,
+                id="custom timezone, with fractional seconds",
+            ),
+        ],
+    )
+    def test_parse_syslog_timestamp(
+        self,
+        timestamp: str,
+        expected_result: float,
+    ) -> None:
+        assert parse_iso_8601_timestamp(timestamp) == expected_result

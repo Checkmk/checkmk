@@ -6,7 +6,6 @@
 import urllib
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.gui.plugins.openapi.endpoints import service
 
 
 def test_openapi_livestatus_service(

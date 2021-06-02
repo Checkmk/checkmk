@@ -705,6 +705,6 @@ class IPMIParameters(BaseSchema):
 
 
 class MetaData(BaseSchema):
-    created_at = _fields.DateTime(description="When has this object been created.",)
-    created_by = _fields.String(
-        description="The user id under which this object has been created.",)
+    created_at = fields.Timestamp(description="When has this object been created.",)
+    updated_at = fields.Timestamp(description="When this object was last changed.",)
+    created_by = fields.String(description="The user id under which this object has been created.",)

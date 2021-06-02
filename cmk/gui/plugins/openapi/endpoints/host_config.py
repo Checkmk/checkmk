@@ -69,7 +69,8 @@ import cmk.gui.watolib.activate_changes as activate_changes
           method='post',
           etag='output',
           request_schema=request_schemas.CreateHost,
-          response_schema=response_schemas.DomainObject)
+          convert_response=True,
+          response_schema=response_schemas.HostObject)
 def create_host(params):
     """Create a host"""
     body = params['body']
@@ -87,7 +88,8 @@ def create_host(params):
           method='post',
           etag='output',
           request_schema=request_schemas.CreateClusterHost,
-          response_schema=response_schemas.DomainObject)
+          convert_response=True,
+          response_schema=response_schemas.HostObject)
 def create_cluster_host(params):
     """Create a cluster host
 
@@ -204,7 +206,8 @@ def update_nodes(params):
           path_params=[HOST_NAME],
           etag='both',
           request_schema=request_schemas.UpdateHost,
-          response_schema=response_schemas.DomainObject)
+          convert_response=True,
+          response_schema=response_schemas.HostObject)
 def update_host(params):
     """Update a host"""
     host_name = params['host_name']
@@ -305,7 +308,8 @@ def bulk_update_hosts(params):
               422: 'The host could not be renamed.',
           },
           request_schema=request_schemas.RenameHost,
-          response_schema=response_schemas.DomainObject)
+          convert_response=True,
+          response_schema=response_schemas.HostObject)
 def rename_host(params):
     """Rename a host"""
     if activate_changes.get_pending_changes_info():
@@ -336,7 +340,8 @@ def rename_host(params):
           path_params=[HOST_NAME],
           etag='both',
           request_schema=request_schemas.MoveHost,
-          response_schema=response_schemas.DomainObject)
+          convert_response=True,
+          response_schema=response_schemas.HostObject)
 def move(params):
     """Move a host to another folder"""
     host_name = params['host_name']
@@ -409,7 +414,8 @@ def bulk_delete(params):
         )
     }],
     etag='output',
-    response_schema=response_schemas.DomainObject)
+    convert_response=True,
+    response_schema=response_schemas.HostObject)
 def show_host(params):
     """Show a host"""
     host_name = params['host_name']
@@ -430,19 +436,17 @@ def _serve_host(host, effective_attributes=False):
 
 
 def serialize_host(host: watolib.CREHost, effective_attributes: bool):
-    if effective_attributes:
-        attributes = host.effective_attributes()
-    else:
-        attributes = host.attributes()
-
-    if 'meta_data' in attributes:
-        attributes = attributes.copy()
-        del attributes['meta_data']
-
+    extensions = {
+        'attributes': host.attributes(),
+        'effective_attributes': host.effective_attributes() if effective_attributes else None,
+        'is_cluster': host.is_cluster(),
+        'is_offline': host.is_offline(),
+        'cluster_nodes': host.cluster_nodes(),
+    }
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
-        title=host.alias(),
+        title=host.alias() or host.name(),
         links=[
             constructors.link_rel(
                 rel='cmk/folder_config',
@@ -451,12 +455,7 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
                 title='The folder config of the host.',
             ),
         ],
-        extensions={
-            'attributes': attributes,
-            'is_cluster': host.is_cluster(),
-            'is_offline': host.is_offline(),
-            'cluster_nodes': host.cluster_nodes(),
-        },
+        extensions=extensions,
     )
 
 

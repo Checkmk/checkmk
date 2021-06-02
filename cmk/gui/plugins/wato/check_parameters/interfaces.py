@@ -30,6 +30,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
     defines,
+    Float,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -601,6 +602,11 @@ def _transform_if_check_parameters(v):
     if new_traffic:
         v['traffic'] = new_traffic
 
+    if "discards" in v:
+        warn, crit = v["discards"]
+        if isinstance(warn, int):
+            v["discards"] = (float(warn), float(crit))
+
     _transform_packet_levels(v, "errors", "errors", "both")
 
     # The following 4 calls transform rule entries that have been introduced in
@@ -1108,8 +1114,8 @@ def _parameter_valuespec_if():
                     Tuple(
                         title=_("Absolute levels for discards rates"),
                         elements=[
-                            Integer(title=_("Warning at"), unit=_("discards")),
-                            Integer(title=_("Critical at"), unit=_("discards")),
+                            Float(title=_("Warning at"), unit=_("discards")),
+                            Float(title=_("Critical at"), unit=_("discards")),
                         ],
                     ),
                 ),

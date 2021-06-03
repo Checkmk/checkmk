@@ -984,9 +984,6 @@ class html(ABCHTMLGenerator):
 
         self.output_funnel.write(text.encode("utf-8"))
 
-    def write_binary(self, data: bytes) -> None:
-        self.output_funnel.write(data)
-
     #
     # Content Type
     #

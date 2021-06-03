@@ -22,7 +22,8 @@ from livestatus import MultiSiteConnection
 
 
 @contextlib.contextmanager
-def mock_livestatus(with_context=False, with_html=False):
+def mock_livestatus(with_context: bool = False,
+                    with_html: bool = False) -> Generator[MockLiveStatusConnection, None, None]:
     live = MockLiveStatusConnection()
 
     env = EnvironBuilder().get_environ()
@@ -46,6 +47,7 @@ def mock_livestatus(with_context=False, with_html=False):
             html_obj=html_obj,
             req=req,
             resp=resp,
+            funnel=OutputFunnel(resp),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
         )

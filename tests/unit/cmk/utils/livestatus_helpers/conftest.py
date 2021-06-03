@@ -9,14 +9,17 @@ from werkzeug.test import create_environ
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request, Response
+from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.script_helpers import DummyApplication
 
 
 @pytest.fixture
 def with_request_context():
     environ = create_environ()
+    resp = Response()
     with AppContext(DummyApplication(environ, None)), \
             RequestContext(req=Request(environ),
-                           resp=Response(),
+                           resp=resp,
+                           funnel=OutputFunnel(resp),
                            display_options=DisplayOptions()):
         yield

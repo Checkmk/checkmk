@@ -13,7 +13,7 @@ import cmk.utils.tags
 
 import cmk.gui.config
 import cmk.gui.inventory
-from cmk.gui.globals import html, request
+from cmk.gui.globals import output_funnel, request
 import cmk.gui.plugins.visuals
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 
@@ -1083,7 +1083,7 @@ def test_filters_display_with_empty_request(register_builtin_html, live):
         request.del_vars()
 
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
-            with html.plugged():
+            with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
                 filt.display()
 

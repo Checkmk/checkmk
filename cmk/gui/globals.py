@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from cmk.gui.utils.timeout_manager import TimeoutManager
     from cmk.gui.utils.theme import Theme
     from cmk.gui.display_options import DisplayOptions
+    from cmk.gui.utils.output_funnel import OutputFunnel
 
 _sentinel = object()
 
@@ -151,6 +152,7 @@ class RequestContext:
         self,
         req: http.Request,
         resp: http.Response,
+        funnel: OutputFunnel,
         html_obj: Optional[htmllib.html] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
@@ -168,6 +170,7 @@ class RequestContext:
 
         self.request = req
         self.response = resp
+        self.output_funnel = funnel
 
         self.transactions = TransactionManager(req)
 
@@ -226,6 +229,7 @@ local: RequestContext = request_local_attr()  # None as name will get the whole 
 user: config.LoggedInUser = request_local_attr('user')
 request: http.Request = request_local_attr('request')
 response: http.Response = request_local_attr('response')
+output_funnel: OutputFunnel = request_local_attr('output_funnel')
 session: userdb.Session = request_local_attr('session')
 user_errors: UserErrors = request_local_attr('user_errors')
 

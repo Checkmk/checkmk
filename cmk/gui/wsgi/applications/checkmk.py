@@ -201,6 +201,7 @@ class CheckmkApp:
         with AppContext(self), RequestContext(
                 req=req,
                 resp=resp,
+                funnel=funnel,
                 html_obj=htmllib.html(req, resp, funnel, output_format),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),

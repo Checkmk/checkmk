@@ -51,10 +51,12 @@ def application_context(environ: Mapping[str, Any]) -> Iterator[None]:
 def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
     req = Request(environ)
     resp = Response(mimetype="text/html")
+    funnel = OutputFunnel(resp)
     with RequestContext(
             req=req,
             resp=resp,
-            html_obj=html(req, resp, OutputFunnel(resp), output_format="html"),
+            funnel=funnel,
+            html_obj=html(req, resp, funnel, output_format="html"),
             display_options=DisplayOptions(),
             theme=Theme(),
             prefix_logs_with_url=False,

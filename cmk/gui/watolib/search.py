@@ -305,12 +305,14 @@ class IndexSearcher:
     def _SearchContext(self) -> Iterator[None]:
         _request = Request(create_environ())
         _response = Response()
+        _funnel = OutputFunnel(_response)
         _theme = Theme()
         _theme.from_config(config.ui_theme, config.theme_choices())
         with RequestContext(
                 req=_request,
                 resp=_response,
-                html_obj=html(_request, _response, OutputFunnel(_response), output_format="html"),
+                funnel=_funnel,
+                html_obj=html(_request, _response, _funnel, output_format="html"),
                 display_options=DisplayOptions(),
                 theme=_theme,
         ), UserContext(self._user_id):

@@ -81,7 +81,7 @@ import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html, theme, output_funnel
 from cmk.gui.globals import request as global_request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _, ungettext
@@ -2153,9 +2153,9 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
     def page(self) -> Dict:
         request = global_request.get_request()
         vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
-        with html.plugged():
+        with output_funnel.plugged():
             vs.show_choice_row(ensure_str(request["varprefix"]), ensure_str(request["ident"]), {})
-            return {"html_code": html.drain()}
+            return {"html_code": output_funnel.drain()}
 
 
 class Float(ValueSpec):
@@ -2973,7 +2973,7 @@ class CascadingDropdown(ValueSpec):
             return title
 
         if self._render == CascadingDropdown.Render.foldable:
-            with html.plugged():
+            with output_funnel.plugged():
                 html.begin_foldable_container(
                     "foldable_cascading_dropdown",
                     id_=hashlib.sha256(ensure_binary(repr(value))).hexdigest(),
@@ -2983,7 +2983,7 @@ class CascadingDropdown(ValueSpec):
                 )
                 html.write(rendered_value)
                 html.end_foldable_container()
-            return html.drain()
+            return output_funnel.drain()
 
         return title + self._separator + rendered_value
 

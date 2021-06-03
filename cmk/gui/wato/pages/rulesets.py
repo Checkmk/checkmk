@@ -52,7 +52,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, output_funnel
 from cmk.gui.valuespec import (
     FixedValue,
     Transform,
@@ -1990,13 +1990,13 @@ class VSExplicitConditions(Transform):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
     def value_to_text(self, value: RuleConditions) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
             for condition in renderer.render(self._rulespec, value):
                 html.li(condition, class_="condition")
             html.close_ul()
-            return html.drain()
+            return output_funnel.drain()
 
 
 class RuleConditionRenderer:

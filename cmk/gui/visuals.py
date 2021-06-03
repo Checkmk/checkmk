@@ -81,7 +81,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request as global_request, transactions, g
+from cmk.gui.globals import html, request as global_request, transactions, g, output_funnel
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -1168,9 +1168,9 @@ def show_filter(f: Filter) -> None:
     html.close_div()
     html.open_div(class_="content")
     try:
-        with html.plugged():
+        with output_funnel.plugged():
             f.display()
-            html.write(html.drain())
+            html.write(output_funnel.drain())
     except LivestatusTestingError:
         raise
     except Exception as e:
@@ -1576,9 +1576,9 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 
 def render_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
                        context: VisualContext, page_name: str, reset_ajax_page: str) -> str:
-    with html.plugged():
+    with output_funnel.plugged():
         show_filter_form(info_list, mandatory_filters, context, page_name, reset_ajax_page)
-        return html.drain()
+        return output_funnel.drain()
 
 
 def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],

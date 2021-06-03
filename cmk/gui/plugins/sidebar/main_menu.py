@@ -12,7 +12,7 @@ from typing import NamedTuple, List, Optional, Union
 import cmk.gui.config as config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html, response
+from cmk.gui.globals import html, response, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.main_menu import (
@@ -95,7 +95,7 @@ class MainMenuRenderer:
         return items
 
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             menu = mega_menu_registry[menu_item.name]
             html.open_div(id_="popup_menu_%s" % menu_item.name,
                           class_=[
@@ -105,7 +105,7 @@ class MainMenuRenderer:
                           ])
             MegaMenuRenderer().show(menu)
             html.close_div()
-            return html.drain()
+            return output_funnel.drain()
 
 
 @register("sidebar_message_read")

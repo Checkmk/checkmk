@@ -28,7 +28,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, output_funnel
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import (
@@ -1299,11 +1299,11 @@ class MenuSearchResultsRenderer:
         return self._render_results(results)
 
     def _render_error(self, error: MKException) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             html.open_div(class_="error")
             html.write_text(f"{error}")
             html.close_div()
-            error_as_html = html.drain()
+            error_as_html = output_funnel.drain()
         return error_as_html
 
     def _get_icon_mapping(
@@ -1345,7 +1345,7 @@ class MenuSearchResultsRenderer:
         self,
         results: SearchResultsByTopic,
     ) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
             icon_mapping = self._get_icon_mapping(default_icons)
 
@@ -1380,7 +1380,7 @@ class MenuSearchResultsRenderer:
 
                 html.close_ul()
                 html.close_div()
-            html_text = html.drain()
+            html_text = output_funnel.drain()
         return html_text
 
     def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
@@ -1490,10 +1490,10 @@ class PageSearchSetup(AjaxPage):
         try:
             return MenuSearchResultsRenderer("setup").render(query)
         except IndexNotFoundException:
-            with html.plugged():
+            with output_funnel.plugged():
                 html.open_div(class_="topic")
                 html.open_ul()
                 html.write_text(_("Currently indexing, please try again shortly."))
                 html.close_ul()
                 html.close_div()
-                return html.drain()
+                return output_funnel.drain()

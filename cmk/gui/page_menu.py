@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import List, Iterator, Optional, Dict, Union, Tuple
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, output_funnel
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
@@ -511,9 +511,9 @@ class PageMenuRenderer:
         )
 
     def _render_dropdown_area(self, dropdown: PageMenuDropdown) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             self._show_dropdown_area(dropdown)
-            return html.drain()
+            return output_funnel.drain()
 
     def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
         id_ = "menu_%s" % dropdown.name

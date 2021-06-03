@@ -42,7 +42,6 @@ import re
 import json
 import abc
 import pprint
-from contextlib import contextmanager
 from typing import (
     Any,
     cast,
@@ -987,14 +986,6 @@ class html(ABCHTMLGenerator):
 
     def write_binary(self, data: bytes) -> None:
         self.output_funnel.write(data)
-
-    @contextmanager
-    def plugged(self) -> Iterator[None]:
-        with self.output_funnel.plugged():
-            yield
-
-    def drain(self) -> str:
-        return self.output_funnel.drain()
 
     #
     # Content Type

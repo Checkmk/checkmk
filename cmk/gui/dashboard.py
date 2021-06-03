@@ -48,7 +48,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, output_funnel
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -708,7 +708,7 @@ def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update:
 
 
 def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int) -> str:
-    with html.plugged():
+    with output_funnel.plugged():
         if is_update:
             dashlet.update()
         else:
@@ -722,7 +722,7 @@ def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                             '    parent.location.reload();\n'
                             '}' % board['mtime'])
 
-        return html.drain()
+        return output_funnel.drain()
 
 
 def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
@@ -735,7 +735,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
         logger.exception("Problem while rendering dashboard element %d of type %s",
                          dashlet.dashlet_id, dashlet.type_name())
 
-    with html.plugged():
+    with output_funnel.plugged():
         if isinstance(e, MKException):
             # Unify different string types from exception messages to a unicode string
             try:
@@ -747,7 +747,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
                 _("Problem while rendering dashboard element %d of type %s: %s. Have a look at "
                   "<tt>var/log/web.log</tt> for further information.") %
                 (dashlet.dashlet_id, dashlet.type_name(), exc_txt))
-            return html.drain()
+            return output_funnel.drain()
 
         crash_reporting.handle_exception_as_gui_crash_report(
             details={
@@ -755,7 +755,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
                 "dashlet_type": dashlet.type_name(),
                 "dashlet_spec": dashlet.dashlet_spec,
             })
-        return html.drain()
+        return output_funnel.drain()
 
 
 def _fallback_dashlet(name: DashboardName,

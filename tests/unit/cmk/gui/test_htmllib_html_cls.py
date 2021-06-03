@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html, user_errors
+from cmk.gui.globals import html, user_errors, output_funnel
 from cmk.gui.htmllib import HTML
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKUserError
@@ -71,9 +71,9 @@ def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
 
 
 def test_user_error(register_builtin_html):
-    with html.plugged():
+    with output_funnel.plugged():
         html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
-        c = html.drain()
+        c = output_funnel.drain()
     assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
 
 
@@ -82,7 +82,7 @@ def test_show_user_errors(register_builtin_html):
     user_errors.add(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
     assert user_errors
 
-    with html.plugged():
+    with output_funnel.plugged():
         html.show_user_errors()
-        c = html.drain()
+        c = output_funnel.drain()
     assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"

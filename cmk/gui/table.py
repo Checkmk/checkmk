@@ -29,7 +29,7 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, output_funnel
 from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
 
 if TYPE_CHECKING:
@@ -83,7 +83,7 @@ def table_element(
     help: Optional[str] = None,  # pylint: disable=redefined-builtin
     css: Optional[str] = None,
 ) -> Iterator['Table']:
-    with html.plugged():
+    with output_funnel.plugged():
         table = Table(table_id=table_id,
                       title=title,
                       searchable=searchable,
@@ -241,7 +241,7 @@ class Table:
         else:
             content = html.render_text(str(text) if not isinstance(text, str) else text)
 
-        htmlcode: HTML = content + HTML(html.drain())
+        htmlcode: HTML = content + HTML(output_funnel.drain())
 
         if isinstance(title, HTML):
             header_title = title

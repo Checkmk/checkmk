@@ -44,7 +44,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import display_options, g, html, transactions, user_errors
+from cmk.gui.globals import display_options, g, html, transactions, user_errors, output_funnel
 from cmk.gui.globals import request as global_request
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
@@ -999,18 +999,18 @@ class GUIViewRenderer(ABCViewRenderer):
         if not display_options.enabled(display_options.F) or not show_filters:
             return ""
 
-        with html.plugged():
+        with output_funnel.plugged():
             show_filter_form(self.view, show_filters)
-            return html.drain()
+            return output_funnel.drain()
 
     def _render_painter_options_form(self) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
             painter_options.show_form(self.view)
-            return html.drain()
+            return output_funnel.drain()
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             if not _should_show_command_form(self.view.datasource):
                 return ""
 
@@ -1026,7 +1026,7 @@ class GUIViewRenderer(ABCViewRenderer):
             html.hidden_fields()
             html.end_form()
 
-            return html.drain()
+            return output_funnel.drain()
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:
         # TODO
@@ -1602,9 +1602,9 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         sub_vs = self._get_sub_vs(vs, ast.literal_eval(request["choice_id"]))
         value = ast.literal_eval(request["encoded_value"])
 
-        with html.plugged():
+        with output_funnel.plugged():
             vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
-            return {"html_code": html.drain()}
+            return {"html_code": output_funnel.drain()}
 
     def _get_sub_vs(self, vs: CascadingDropdown, choice_id: object) -> ValueSpec:
         for val, _title, sub_vs in vs.choices():
@@ -1746,9 +1746,9 @@ class ABCAjaxInitialFilters(AjaxPage):
         assert isinstance(page_request_vars, dict)
         vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"],
                                                           ignore=page_request_vars["ignore"])
-        with html.plugged():
+        with output_funnel.plugged():
             vs_filters.render_input(varprefix, context)
-            return {"filters_html": html.drain()}
+            return {"filters_html": output_funnel.drain()}
 
 
 @page_registry.register_page("ajax_initial_view_filters")

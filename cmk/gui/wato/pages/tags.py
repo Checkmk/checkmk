@@ -17,7 +17,7 @@ from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
 from cmk.gui.i18n import _, _u
-from cmk.gui.globals import html, transactions, request
+from cmk.gui.globals import html, transactions, request, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -866,22 +866,22 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
     if affected_folders:
         message += _("Affected folders with an explicit reference to this tag "
                      "group and that are affected by the change") + ":"
-        with html.plugged():
+        with output_funnel.plugged():
             _show_affected_folders(affected_folders)
-            message += HTML(html.drain())
+            message += HTML(output_funnel.drain())
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
                      "and that are effected by the change") + ":"
-        with html.plugged():
+        with output_funnel.plugged():
             _show_affected_hosts(affected_hosts)
-            message += HTML(html.drain())
+            message += HTML(output_funnel.drain())
 
     if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":"
-        with html.plugged():
+        with output_funnel.plugged():
             _show_affected_rulesets(affected_rulesets)
-            message += HTML(html.drain())
+            message += HTML(output_funnel.drain())
 
     if message:
         wato_html_head(title=operation.confirm_title(), breadcrumb=breadcrumb)

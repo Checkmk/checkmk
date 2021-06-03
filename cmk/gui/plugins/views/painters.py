@@ -24,7 +24,7 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request, response
+from cmk.gui.globals import g, html, request, response, output_funnel
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -576,10 +576,10 @@ class PainterSvcMetrics(Painter):
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
-        with html.plugged():
+        with output_funnel.plugged():
             self._show_metrics_table(translated_metrics, row["host_name"],
                                      row["service_description"])
-            return "", HTML(html.drain())
+            return "", HTML(output_funnel.drain())
 
     def _show_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
                             service_description: str) -> None:

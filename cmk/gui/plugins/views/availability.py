@@ -37,7 +37,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, response
+from cmk.gui.globals import html, request, transactions, user_errors, response, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.page_menu import (
@@ -271,9 +271,9 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         return
 
     # Deletion must take place before computation, since it affects the outcome
-    with html.plugged():
+    with output_funnel.plugged():
         handle_delete_annotations()
-        confirmation_html_code = html.drain()
+        confirmation_html_code = output_funnel.drain()
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     html.request.del_vars("anno_")
@@ -432,9 +432,9 @@ def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av
 
 def _render_avoptions_form(option_type: str, what: AVObjectType, avoptions: AVOptions,
                            valuespecs: AVOptionValueSpecs) -> str:
-    with html.plugged():
+    with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
-        return html.drain()
+        return output_funnel.drain()
 
 
 def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec,
@@ -883,7 +883,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                     lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
-                with html.plugged():
+                with output_funnel.plugged():
                     # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
                     # FIXME: WHAT is wrong in here??
 
@@ -934,7 +934,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode += html.drain()
+                    timewarpcode += output_funnel.drain()
 
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 

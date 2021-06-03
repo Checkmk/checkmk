@@ -26,7 +26,7 @@ import cmk.utils.paths
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, theme, response
+from cmk.gui.globals import html, request, theme, response, output_funnel
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
@@ -590,7 +590,7 @@ def ajax_snapin():
                 snapin_code.append(u'')
                 continue
 
-        with html.plugged():
+        with output_funnel.plugged():
             try:
                 snapin_instance.show()
             except Exception as e:
@@ -600,7 +600,7 @@ def ajax_snapin():
                 logger.error("%s %s: %s", html.request.requested_url, e_message,
                              traceback.format_exc())
             finally:
-                snapin_code.append(html.drain())
+                snapin_code.append(output_funnel.drain())
 
     html.write(json.dumps(snapin_code))
 
@@ -831,11 +831,11 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
         user_config.add_snapin(snapin)
         user_config.save()
 
-        with html.plugged():
+        with output_funnel.plugged():
             try:
                 url = SidebarRenderer().render_snapin(snapin)
             finally:
-                snapin_code = html.drain()
+                snapin_code = output_funnel.drain()
 
         return {
             'name': addname,

@@ -35,7 +35,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request, transactions
+from cmk.gui.globals import html, request as global_request, transactions, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -944,7 +944,7 @@ class ModeFolder(WatoMode):
         return redirect(self._folder.url())
 
     def _render_bulk_move_form(self) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             choices = self._folder.choices_for_moving_host()
             if not choices:
                 return ""
@@ -960,7 +960,7 @@ class ModeFolder(WatoMode):
                           form="form_hosts")
             html.button("_bulk_move", _("Move"), form="form_hosts")
 
-            return html.drain()
+            return output_funnel.drain()
 
     def _move_to_imported_folders(self, host_names_to_move) -> None:
         # Create groups of hosts with the same target folder

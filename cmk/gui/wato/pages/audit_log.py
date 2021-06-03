@@ -29,7 +29,15 @@ from cmk.gui.valuespec import (
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri, makeactionuri
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
-from cmk.gui.globals import html, request, display_options, user_errors, transactions, response
+from cmk.gui.globals import (
+    html,
+    request,
+    display_options,
+    user_errors,
+    transactions,
+    response,
+    output_funnel,
+)
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -196,9 +204,9 @@ class ModeAuditLog(WatoMode):
             ))
 
     def _render_filter_form(self) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             self._display_audit_log_options()
-            return html.drain()
+            return output_funnel.drain()
 
     def _log_exists(self):
         return self._store.exists()

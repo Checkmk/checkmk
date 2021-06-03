@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -770,7 +770,7 @@ class ModeBIRules(ABCBIMode):
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
                 return ""
@@ -795,7 +795,7 @@ class ModeBIRules(ABCBIMode):
                         "submit",
                         form="form_bulk_action_form")
 
-            return html.drain()
+            return output_funnel.drain()
 
     def _show_bulk_move_choices(self):
         return [(pack_id, bi_pack.title)
@@ -1863,7 +1863,7 @@ class BIModeAggregations(ABCBIMode):
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
                 return ""
@@ -1889,7 +1889,7 @@ class BIModeAggregations(ABCBIMode):
                         _("Bulk move"),
                         "submit",
                         form="form_bulk_action_form")
-            return html.drain()
+            return output_funnel.drain()
 
     def _show_bulk_move_choices(self) -> Choices:
         return [(pack_id, bi_pack.title)

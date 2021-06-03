@@ -25,7 +25,7 @@ from cmk.gui.background_job import JobStatusStates
 from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, transactions, request as global_request
+from cmk.gui.globals import html, transactions, request as global_request, output_funnel
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -303,11 +303,11 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         the simpler solution and less error prone.
         """
         page_menu = service_page_menu(self._get_discovery_breadcrumb(), self._host, self._options)
-        with html.plugged():
+        with output_funnel.plugged():
             PageMenuRenderer().show(
                 page_menu,
                 hide_suggestions=not config.user.get_tree_state("suggestions", "all", True))
-            return html.drain()
+            return output_funnel.drain()
 
     def _get_discovery_breadcrumb(self) -> Breadcrumb:
         with global_request.stashed_vars():
@@ -361,7 +361,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         else:
             messages.append(_("Found no services yet. To retry please execute a full scan."))
 
-        with html.plugged():
+        with output_funnel.plugged():
             html.begin_foldable_container(treename="service_discovery",
                                           id_="options",
                                           isopen=False,
@@ -371,7 +371,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
             html.close_div()
             html.end_foldable_container()
-            messages.append(html.drain())
+            messages.append(output_funnel.drain())
 
         if messages:
             return " ".join(messages)
@@ -481,19 +481,19 @@ class DiscoveryPageRenderer:
         self._options = options
 
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             html.div("", id_="row_info")
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
             details_row_count = self._show_discovery_details(discovery_result, request)
             self._update_row_info(host_labels_row_count + details_row_count)
-            return html.drain()
+            return output_funnel.drain()
 
     def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
-        with html.plugged():
+        with output_funnel.plugged():
             self._show_fix_all(discovery_result)
-            return html.drain()
+            return output_funnel.drain()
 
     def _update_row_info(self, abs_row_count: int):
         row_info = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count

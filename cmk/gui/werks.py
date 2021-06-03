@@ -27,7 +27,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, theme
+from cmk.gui.globals import html, request, transactions, theme, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -238,7 +238,7 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
 
 
 def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
-    with html.plugged():
+    with output_funnel.plugged():
         html.begin_form("werks")
         html.hidden_field("wo_set", "set")
 
@@ -252,7 +252,7 @@ def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
         html.hidden_fields()
         html.end_form()
 
-        return html.drain()
+        return output_funnel.drain()
 
 
 def _show_werk_options_controls() -> None:
@@ -648,7 +648,7 @@ def render_werk_title(werk) -> Union[HTML, str]:
 
 
 def render_werk_description(werk) -> HTML:
-    with html.plugged():
+    with output_funnel.plugged():
         html.open_p()
         in_list = False
         in_code = False
@@ -692,7 +692,7 @@ def render_werk_description(werk) -> HTML:
             html.close_ul()
 
         html.close_p()
-        return HTML(html.drain())
+        return HTML(output_funnel.drain())
 
 
 def insert_manpage_links(text: str) -> HTML:

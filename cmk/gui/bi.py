@@ -29,7 +29,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, g, request, theme
+from cmk.gui.globals import html, g, request, theme, output_funnel
 from cmk.gui.htmllib import HTML, HTMLContent
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -380,9 +380,9 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def render(self) -> HTML:
-        with html.plugged():
+        with output_funnel.plugged():
             self._show_tree()
-            return HTML(html.drain())
+            return HTML(output_funnel.drain())
 
     def _show_tree(self):
         tree = self._get_tree()
@@ -744,9 +744,9 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return self._gen_node(tree, height, show_host)
 
     def _gen_leaf(self, tree, height, show_host):
-        with html.plugged():
+        with output_funnel.plugged():
             self._show_leaf(tree, show_host)
-            content = HTML(html.drain())
+            content = HTML(output_funnel.drain())
         return [(content, height, [])]
 
     def _gen_node(self, tree, height, show_host):
@@ -755,12 +755,12 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
             if not node[2].get("hidden"):
                 leaves += self._gen_table(node, height - 1, show_host)
 
-        with html.plugged():
+        with output_funnel.plugged():
             html.open_div(class_="aggr_tree")
             with self._show_node(tree, show_host):
                 html.write_text(tree[2]["title"])
             html.close_div()
-            content = HTML(html.drain())
+            content = HTML(output_funnel.drain())
 
         if leaves:
             leaves[0][2].append((len(leaves), content))

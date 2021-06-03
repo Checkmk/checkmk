@@ -28,7 +28,7 @@ import cmk.gui.inventory as inventory
 from cmk.gui.inventory import RawInventoryPath, InventoryPath
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, user_errors
+from cmk.gui.globals import html, request, user_errors, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
@@ -131,10 +131,10 @@ def _paint_host_inventory_tree_children(
         children = [struct_tree.get_root_container()]
     if children is None:
         return "", ""
-    with html.plugged():
+    with output_funnel.plugged():
         for child in children:
             child.show(tree_renderer)
-        code = HTML(html.drain())
+        code = HTML(output_funnel.drain())
     return "invtree", code
 
 
@@ -153,7 +153,7 @@ def _paint_host_inventory_tree_value(
     if child is None:
         return "", ""
 
-    with html.plugged():
+    with output_funnel.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
             invpath = invpath[:-1]
         if attribute_keys == []:
@@ -163,7 +163,7 @@ def _paint_host_inventory_tree_value(
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
-        code = HTML(html.drain())
+        code = HTML(output_funnel.drain())
     return "", code
 
 

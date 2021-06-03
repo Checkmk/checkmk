@@ -13,7 +13,7 @@ import cmk.gui.bi as bi
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, output_funnel
 
 from cmk.gui.plugins.views import (
     data_source_registry,
@@ -205,7 +205,7 @@ class PainterAggrIcons(Painter):
             ("aggr_name", row["aggr_name"]),
         ])
 
-        with html.plugged():
+        with output_funnel.plugged():
             html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
@@ -221,7 +221,7 @@ class PainterAggrIcons(Painter):
             if not row["aggr_effective_state"]["in_service_period"]:
                 html.icon("outof_serviceperiod",
                           _("This aggregation is currently out of its service period."))
-            code = HTML(html.drain())
+            code = HTML(output_funnel.drain())
         return "buttons", code
 
 

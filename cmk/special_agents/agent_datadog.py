@@ -359,17 +359,20 @@ def _monitors_section(
 
 def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
     LOGGER.debug("Querying events")
+    events = list(EventsQuerier(
+        datadog_api,
+        args.hostname,
+    ).query_events(args.event_tags))
     _forward_events_to_ec(
-        EventsQuerier(
-            datadog_api,
-            args.hostname,
-        ).query_events(args.event_tags),
+        events,
         args.event_tags_show,
         args.event_syslog_facility,
         args.event_syslog_priority,
         args.event_service_level,
         args.event_add_text,
     )
+    with SectionWriter("datadog_events") as writer:
+        writer.append(len(events))
 
 
 def agent_datadog_main(args: Args) -> None:

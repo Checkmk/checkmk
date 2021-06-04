@@ -14,7 +14,7 @@ import pytest
 
 from testlib import on_time
 
-from cmk.ec.main import (
+from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
     create_event_from_line,
     parse_iso_8601_timestamp,

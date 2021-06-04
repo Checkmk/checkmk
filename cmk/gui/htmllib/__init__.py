@@ -22,20 +22,6 @@
 #
 # - change naming of escaping.escape_attribute() to html.render()
 #
-# - General rules:
-# 1. values of type str that are passed as arguments or
-#    return values or are stored in datastructures must not contain
-#    non-Ascii characters! UTF-8 encoding must just be used in
-#    the last few CPU cycles before outputting. Conversion from
-#    input to str or unicode must happen as early as possible,
-#    directly when reading from file or URL.
-#
-# - indentify internal helper methods and prefix them with "_"
-#
-# - Split HTML handling (page generating) code and generic request
-#   handling (vars, cookies, ...) up into separate classes to make
-#   the different tasks clearer. For ABCHTMLGenerator() or similar.
-#
 # - Unify CSS classes attribute to "class_"
 import os
 import re

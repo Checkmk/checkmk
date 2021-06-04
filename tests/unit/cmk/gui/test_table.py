@@ -13,7 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.globals import html, output_funnel
 from cmk.gui.utils.html import HTML
-from tools import compare_html  # type: ignore[import]
+from testlib import compare_html
 
 
 def read_out_simple_table(text):

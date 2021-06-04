@@ -36,6 +36,7 @@ from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unuse
 from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
 from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
+from testlib.compare_html import compare_html
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

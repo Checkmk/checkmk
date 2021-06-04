@@ -6,11 +6,11 @@
 
 import pytest  # type: ignore[import]
 
-import cmk.gui.htmllib as htmllib
+from cmk.gui.utils.html import HTML
 from cmk.gui import escaping
 
 
-def test_htmllib_integration(register_builtin_html):
+def test_htmllib_integration():
     assert escaping.escape_attribute("") == ""
     assert escaping.escape_text("") == ""
 
@@ -19,7 +19,7 @@ def test_htmllib_integration(register_builtin_html):
     ("\">alert(1)", "&quot;&gt;alert(1)"),
     (None, ""),
     (1, "1"),
-    (htmllib.HTML("\">alert(1)"), "\">alert(1)"),
+    (HTML("\">alert(1)"), "\">alert(1)"),
     (1.1, "1.1"),
     ("<", "&lt;"),
     ("'", "&#x27;"),

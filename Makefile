@@ -414,15 +414,15 @@ setup:
 	    autoconf \
 	    bear \
 	    build-essential \
-	    clang-10 \
-	    clang-format-10 \
-	    clang-tidy-10 \
-	    clang-tools-10 \
-	    clangd-10 \
+	    clang-$(CLANG_VERSION) \
+	    clang-format-$(CLANG_VERSION) \
+	    clang-tidy-$(CLANG_VERSION) \
+	    clang-tools-$(CLANG_VERSION) \
+	    clangd-$(CLANG_VERSION) \
+	    lld-$(CLANG_VERSION) \
+	    lldb-$(CLANG_VERSION) \
+	    libclang-$(CLANG_VERSION)-dev \
 	    curl \
-	    libclang-10-dev \
-	    libclang-common-10-dev \
-	    libclang1-10 \
 	    libjpeg-dev \
 	    doxygen \
 	    figlet \

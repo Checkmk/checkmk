@@ -55,3 +55,5 @@ BRANCH_VERSION     := 2.1.0
 SHELL              := /bin/bash
 # TODO: Be more strict - Add this:
 #SHELL              := /bin/bash -e -o pipefail
+
+CLANG_VERSION      := 11

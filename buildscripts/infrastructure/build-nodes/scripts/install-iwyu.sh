@@ -5,8 +5,10 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 INSTALL_PREFIX=""
-CLANG_VERSION=11
+CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
 TARGET_DIR=/opt
 
 failure() {

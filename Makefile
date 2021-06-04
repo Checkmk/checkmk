@@ -17,7 +17,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 11
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck
@@ -79,8 +78,8 @@ LOCK_PATH := .venv.lock
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
         documentation-quick format format-c format-python format-shell format-js \
-        GTAGS headers help install iwyu mrproper mrclean optimize-images packages \
-        setup setversion tidy version am--refresh skel openapi openapi-doc
+        GTAGS show-clang-version headers help install iwyu mrproper mrclean optimize-images \
+        packages setup setversion tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -288,6 +287,9 @@ setversion:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
+
+show-clang-version:
+	@echo $(CLANG_VERSION)
 
 headers:
 	doc/helpers/headrify

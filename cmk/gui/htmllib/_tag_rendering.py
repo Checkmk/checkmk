@@ -93,10 +93,12 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
             elif key == "style" or key.startswith('on'):
                 sep = '; '
             else:
+                # TODO: Can we drop this special Feature? No idea what it is used for.
                 sep = '_'
 
             joined_value = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
 
+            # TODO: Can we drop this special feature? Find an cleanup the call sites
             if sep.startswith(';'):
                 joined_value = re.sub(';+', ';', joined_value)
 

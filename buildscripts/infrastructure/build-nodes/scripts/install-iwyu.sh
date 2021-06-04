@@ -6,7 +6,7 @@
 set -e
 
 INSTALL_PREFIX=""
-CLANG_VERSION=10
+CLANG_VERSION=11
 TARGET_DIR=/opt
 
 failure() {

@@ -17,7 +17,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
 		      --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -g -O3 -Wall -Wextra
-CLANG_VERSION      := 10
+CLANG_VERSION      := 11
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export CPPCHECK    := cppcheck

@@ -13,7 +13,7 @@ set -eux
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # read optional command line argument
-LLVM_VERSION=10
+LLVM_VERSION=11
 if [ "$#" -eq 1 ]; then
     LLVM_VERSION=$1
 fi

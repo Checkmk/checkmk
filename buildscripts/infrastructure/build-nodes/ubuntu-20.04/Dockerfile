@@ -113,7 +113,7 @@ RUN /opt/install-cmk-dependencies.sh
 # containers, ...). Scripts should be usable with other Ubuntu versions.
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
-RUN /opt/install-clang.sh
+RUN /opt/install-clang.sh 12
 RUN /opt/install-cppcheck.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged

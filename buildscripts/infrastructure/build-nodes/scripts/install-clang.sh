@@ -13,9 +13,10 @@ set -eux
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # read optional command line argument
-CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
 if [ "$#" -eq 1 ]; then
     CLANG_VERSION=$1
+else
+    CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
 fi
 
 DISTRO=$(lsb_release -is)

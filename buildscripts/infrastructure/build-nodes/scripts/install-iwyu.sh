@@ -8,7 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 INSTALL_PREFIX=""
-CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
+CLANG_VERSION=""
 TARGET_DIR=/opt
 
 failure() {
@@ -49,6 +49,10 @@ done
 
 if [[ $# -ne 0 ]]; then
     failure "superfluous arguments:" "$@"
+fi
+
+if [ -z "$CLANG_VERSION"]; then
+    CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
 fi
 
 # The tag/version numbering scheme is a big mess...

@@ -129,12 +129,9 @@ else
     cd $(dirname ${IWYU_PATH})
     rm -f iwyu
     ln --symbolic --force $(basename ${IWYU_PATH}) iwyu
-fi
 
-set_symlinks() {
+    # Hack for our containers
     echo "Set symlink"
     mkdir -p "${TARGET_DIR}/bin"
     ln -sf "${IWYU_PATH}/bin/"* "${TARGET_DIR}/bin"
-}
-
-set_symlinks
+fi

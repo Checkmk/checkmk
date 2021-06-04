@@ -19,7 +19,7 @@ import argparse
 import logging
 from pathlib import Path
 
-LOG = logging.getLogger("verify_changes")
+LOG = logging.getLogger("validate_changes")
 
 Vars = Mapping[str, str]  # Just a shortcut for generic str -> str mapping
 

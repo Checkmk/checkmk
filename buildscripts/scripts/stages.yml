@@ -1,7 +1,7 @@
 # some thoughts about this file:
 # - stages should abort early if semantical condition is not met
 # - stages should be sorted by propability to fail * duration
-# - `make` is not needed at this level (but make-target could still call verify_changes)
+# - `make` is not needed at this level (but make-target could still call validate_changes.py)
 # - running inside docker should be optional
 # - some variables are not needed
 

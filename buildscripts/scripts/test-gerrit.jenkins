@@ -32,7 +32,7 @@ node (NODE) {
         /// Generate list of stages to be added - save them locally for reference
         sh("""scripts/run-in-docker.sh \
                 scripts/run-pipenv run \
-                  buildscripts/scripts/verify_changes \
+                  buildscripts/scripts/validate_changes.py \
                   --log-level=DEBUG \
                   --no-skip=False \
                   --env "RESULTS=${RESULTS}" \

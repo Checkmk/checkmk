@@ -145,9 +145,11 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
                      f' Condition: {condition_vars}'),
         ))
 
-    # todo: remove
-    assert not any(isinstance(v, str) and "${" in v for v in result.values())
-    assert not any("${" in v for v in result.get("ENV_VAR_LIST", []))
+    for key, value in result.items():
+        if "${" in str(value):
+            raise RuntimeError(
+                f"There unexpanded variables left in stage {stage['NAME']}: {key}={value}."
+                " Did you forget to provide them with --env?")
 
     return result
 
@@ -189,9 +191,6 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
         LOG.debug("set to %r", cmd_result)
         result[e["NAME"]] = cmd_result
 
-    # todo: remove
-    assert not any("${" in v for v in result.values())
-
     return result
 
 
@@ -229,8 +228,9 @@ def main() -> None:
     LOG.debug("Python: %s %s", '.'.join(map(str, sys.version_info)), sys.executable)
     LOG.debug("Args: %s", args.__dict__)
     env_vars = {key: value for var in args.env for key, value in (var.split("=", 1),)}
-    LOG.debug("Variables: %s", env_vars)
-    LOG.debug("LC_ALL: %s", os.environ.get("LC_ALL"))
+    LOG.debug("Variables provided via command: %s", env_vars)
+    for key, value in os.environ.items():
+        LOG.debug("ENV: %s: %s", key, value)
     variables, stages = compile_stage_info(args.input, env_vars, args.no_skip)
     if args.write_file:
         json.dump(

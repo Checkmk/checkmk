@@ -10,6 +10,8 @@
 
 set -eux
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 # read optional command line argument
 LLVM_VERSION=10
 if [ "$#" -eq 1 ]; then
@@ -69,3 +71,5 @@ apt-get install -y \
         lld-$LLVM_VERSION \
         lldb-$LLVM_VERSION \
         libclang-$LLVM_VERSION-dev
+
+"${SCRIPT_DIR}/install-iwyu.sh" --clang-version=$LLVM_VERSION

@@ -2359,6 +2359,10 @@ msgstr ""
 "Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
 "globale oder Team Keys verwenden."
 
+#, fuzzy
+msgid "API host"
+msgstr "Host hinzufügen"
+
 msgid "API integrations if configured, else Checkmk agent"
 msgstr ""
 
@@ -3491,6 +3495,15 @@ msgstr "Tags hinzufügen"
 
 msgid "Add target"
 msgstr "Ziel hinzufügen"
+
+#, fuzzy
+msgid "Add text of events"
+msgstr "Eigentümer von Ereignis"
+
+msgid ""
+"Add text of events to data forwarded to the Event Console. Newline "
+"characters are replaced by '~'."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -5264,6 +5277,10 @@ msgstr "Anwendung (regulärer Ausdruck)"
 
 msgid "Application / Syslog-Tag"
 msgstr "Anwendung/Syslog Tag"
+
+#, fuzzy
+msgid "Application Key"
+msgstr "Anwendung"
 
 msgid "Application Load Balancer Listeners"
 msgstr "Application Load Balancer Listener"
@@ -8939,6 +8956,10 @@ msgstr "Checker-Hilfsprozesse"
 msgid "Checker helper usage"
 msgstr "Belegung Checker-Hilfsprozesse"
 
+#, fuzzy
+msgid "Checking of Datadog monitors"
+msgstr "Sektion zu überwachender Dateien"
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -10180,6 +10201,10 @@ msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
 
 msgid "Configuration of the Checkmk Hardware and Software Inventory System"
 msgstr "Konfiguration der Checkmk Hardware/Software-Inventur"
+
+#, fuzzy
+msgid "Configuration of the Datadog special agent."
+msgstr "Konfiguration des Updateplugins"
 
 msgid "Configuration of update plugin"
 msgstr "Konfiguration des Updateplugins"
@@ -12658,6 +12683,22 @@ msgstr "Datenbank/Collection Name ('<DB Name> <Collection Name>')"
 msgid "Datacenter %d"
 msgstr "Datacenter %d"
 
+#, fuzzy
+msgid "Datadog"
+msgstr "Daten"
+
+#, fuzzy
+msgid "Datadog instance"
+msgstr "DB-Instanzen"
+
+#, fuzzy
+msgid "Datadog monitor"
+msgstr "Nicht überwachen"
+
+#, fuzzy
+msgid "Datadog tags shown in service output"
+msgstr "Escape von HTML-Codes in der Service-Ausgabe"
+
 msgid "Datafile"
 msgstr "Datendatei"
 
@@ -14274,6 +14315,10 @@ msgstr "Inventarisierungs/Checkmk Einstellungen"
 
 msgid "Discovery mode"
 msgstr "Erkennungsmodus"
+
+#, fuzzy
+msgid "Discovery of Datadog monitors"
+msgstr "Erkennung von leeren DHCP-Pools"
 
 msgid "Discovery of empty DHCP pools"
 msgstr "Erkennung von leeren DHCP-Pools"
@@ -18146,6 +18191,16 @@ msgstr "Holt alle verfügbaren Sub-OIDs."
 msgid "Fetch chunked"
 msgstr "Anfrage chunked"
 
+#, fuzzy
+msgid "Fetch events"
+msgstr "Hole alle"
+
+msgid ""
+"Fetch events from the event stream of your datadog instance. Fetched events "
+"will be forwared to the event console of the site where the special agent is "
+"executed."
+msgstr ""
+
 msgid "Fetch every"
 msgstr "Hole alle"
 
@@ -18160,6 +18215,15 @@ msgstr "Anfrage head"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Abrufintervalle für SNMP-Abschnitte"
+
+#, fuzzy
+msgid "Fetch monitors"
+msgstr "überwachen"
+
+msgid ""
+"Fetch monitors from your datadog instance. Fetched monitors will be "
+"discovered as services on the host where the special agent is executed."
+msgstr ""
 
 msgid "Fetch no body (1xx)"
 msgstr "Fetch kein Body (1xx)"
@@ -28559,6 +28623,10 @@ msgstr "Managerstatus abbilden"
 msgid "Map manager state to service state"
 msgstr "Managerzustand auf Servicezustand abbilden"
 
+#, fuzzy
+msgid "Map monitor states to Checkmk monitoring states"
+msgstr "Systemd Zustände auf Überwachungszustände abbilden"
+
 msgid "Map mount point names"
 msgstr "Einhängepunktnamen zuordnen"
 
@@ -33125,6 +33193,10 @@ msgstr "Nur während der folgenden Tageszeiten prüfen"
 msgid "Only digits and dots are allowed in the version number."
 msgstr "In der Versionsnummer sind nur Ziffern und Punkte erlaubt."
 
+#, fuzzy
+msgid "Only discover monitors in the following states"
+msgstr "Diese Regel nur auf den folgenden Sites anwenden"
+
 msgid "Only discover new host labels"
 msgstr "Nur neue Host-Labels entdecken"
 
@@ -36378,6 +36450,9 @@ msgstr "Serverprotokoll"
 msgid "Protocol to use for fetching updates"
 msgstr "Protokoll zum Holen von Updates"
 
+msgid "Provide API host and credentials for your Datadog instance here."
+msgstr ""
+
 msgid "Provide command for python script execution"
 msgstr "Stelle einen Befehl für die Python Skript Ausführung bereit"
 
@@ -38146,6 +38221,30 @@ msgstr "Anhand von Kontaktgruppe einschränken"
 
 msgid "Restrict by custom macros"
 msgstr "Anhand von Benutzermakros einschränken"
+
+#, fuzzy
+msgid "Restrict by monitor tags"
+msgstr "Anhand von Kontaktgruppe einschränken"
+
+#, fuzzy
+msgid "Restrict by tags"
+msgstr "Anhand von Kontaktgruppe einschränken"
+
+msgid ""
+"Restrict fetched events by tags (API field <tt>tags</tt>). Events must have "
+"all of the configured tags in order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by service and/or custom tags (API field "
+"<tt>monitor_tags</tt>). Monitors must have all of the configured tags in "
+"order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by tags (API field <tt>tags</tt>). Monitors must "
+"have all of the configured tags in order to be fetched."
+msgstr ""
 
 msgid "Restrict interface items"
 msgstr "Schnittstellenkennungen festlegen"
@@ -40114,6 +40213,10 @@ msgstr "Service-Labels"
 
 msgid "Service level"
 msgstr "Servicelevel"
+
+#, fuzzy
+msgid "Service level of forwarded events shown in Event Console."
+msgstr "Leite direkt an Eventkonsole weiter"
 
 msgid "Service limits"
 msgstr "Servicelimits"
@@ -44200,8 +44303,16 @@ msgstr "Event Console Alarme ausliefern mit Syslog Facility"
 msgid "Syslog facility for forwarded messages"
 msgstr "Nachrichten mit Syslog Facility weiterleiten"
 
+#, fuzzy
+msgid "Syslog facility of forwarded events shown in Event Console."
+msgstr "Nachrichten mit Syslog Facility weiterleiten"
+
 msgid "Syslog priority"
 msgstr "Syslog-Priorität"
+
+#, fuzzy
+msgid "Syslog priority of forwarded events shown in Event Console."
+msgstr "Leite direkt an Eventkonsole weiter"
 
 msgid "Syslog priority to cancel event"
 msgstr "Ereignis abbrechen bei Syslog-Priority"
@@ -44525,6 +44636,10 @@ msgstr "Tags des Hosts"
 
 msgid "Tags of the alert."
 msgstr "Tags des Alerts"
+
+#, fuzzy
+msgid "Tags shown in Event Console"
+msgstr "Host auf dem Event Console läuft"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Tags, die dieses Hilfsmerkmal nutzen"
@@ -47273,6 +47388,10 @@ msgstr ""
 
 msgid "The name of the Data Proxy"
 msgstr "Der Name des Datenproxies"
+
+#, fuzzy
+msgid "The name of the Datadog monitor."
+msgstr "Name des Datastore"
 
 msgid "The name of the Datastore"
 msgstr "Name des Datastore"
@@ -50378,6 +50497,19 @@ msgstr ""
 "Sektionen reduziert die CPU-Last auf dem überwachten Host und die Menge der "
 "übertragenen Daten. Es kann jedoch dazu führen, dass der zugehörige Checkmk-"
 "Service bzw. die zugehörigen Services nicht ausgeführt werden."
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"events forwarded to the Event Console. This is done by entering regular "
+"expressions matching one or more Datadog tags. Any matching tag will be "
+"added to the text of the corresponding event."
+msgstr ""
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"service output. This is done by entering regular expressions matching one or "
+"more Datadog tags. Any matching tag will be displayed in the service output."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -65334,10 +65466,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Discovery of Netapp fans"
 #~ msgstr "Erkennung von IMPI-Sensoren"
 
-#, fuzzy
-#~ msgid "Discovery of Netapp ports"
-#~ msgstr "Erkennung von leeren DHCP-Pools"
-
 #~ msgid "Discovery of Windows DHCP Pools"
 #~ msgstr "Erkennung von Windows DHCP-Pools"
 
@@ -69933,9 +70061,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "(local)"
 #~ msgstr "(lokal)"
-
-#~ msgid "Configuration of customer management"
-#~ msgstr "Konfiguration des Updateplugins"
 
 #~ msgid "Customer's identifier"
 #~ msgstr "Instanzkennzeichnung"

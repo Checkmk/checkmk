@@ -2233,6 +2233,10 @@ msgstr ""
 "使用するAPIキー。opsgenieサブスクリプションに応じて、グローバルまたはチーム統"
 "合APIキーを使用できます。"
 
+#, fuzzy
+msgid "API host"
+msgstr "ホストを追加"
+
 msgid "API integrations if configured, else Checkmk agent"
 msgstr ""
 
@@ -3355,6 +3359,15 @@ msgstr "タグを追加する"
 
 msgid "Add target"
 msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add text of events"
+msgstr "イベントのオーナー"
+
+msgid ""
+"Add text of events to data forwarded to the Event Console. Newline "
+"characters are replaced by '~'."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "これらの連絡先グループをホストに追加します"
@@ -5065,6 +5078,10 @@ msgstr "アプリケーション(正規表現)"
 
 msgid "Application / Syslog-Tag"
 msgstr "アプリケーション/ Syslog-タグ"
+
+#, fuzzy
+msgid "Application Key"
+msgstr "アプリケーション"
 
 msgid "Application Load Balancer Listeners"
 msgstr "アプリケーションロードバランサーリスナー"
@@ -8587,6 +8604,10 @@ msgstr "チェッカーヘルパー"
 msgid "Checker helper usage"
 msgstr "チェッカーヘルパーの使用法"
 
+#, fuzzy
+msgid "Checking of Datadog monitors"
+msgstr "監視するファイルのセクション"
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -9784,6 +9805,10 @@ msgstr "Linux、Windows、およびUnix用の監視エージェントの構成"
 
 msgid "Configuration of the Checkmk Hardware and Software Inventory System"
 msgstr "Checkmkハードウェアおよびソフトウェアインベントリシステムの構成"
+
+#, fuzzy
+msgid "Configuration of the Datadog special agent."
+msgstr "更新プラグインの設定"
 
 msgid "Configuration of update plugin"
 msgstr "更新プラグインの設定"
@@ -12178,6 +12203,22 @@ msgstr ""
 msgid "Datacenter %d"
 msgstr "データセンター %d"
 
+#, fuzzy
+msgid "Datadog"
+msgstr "データ"
+
+#, fuzzy
+msgid "Datadog instance"
+msgstr "DBインスタンス"
+
+#, fuzzy
+msgid "Datadog monitor"
+msgstr "監視しない"
+
+#, fuzzy
+msgid "Datadog tags shown in service output"
+msgstr "サービス出力でHTMLコードをエスケープする"
+
 msgid "Datafile"
 msgstr "データファイル"
 
@@ -13735,6 +13776,10 @@ msgstr "DiscoveryとCheckmkの設定"
 
 msgid "Discovery mode"
 msgstr "ディスカバリーモード"
+
+#, fuzzy
+msgid "Discovery of Datadog monitors"
+msgstr "空のDHCPプールの検出"
 
 msgid "Discovery of empty DHCP pools"
 msgstr "空のDHCPプールの検出"
@@ -17528,6 +17573,16 @@ msgstr "利用可能なすべてのサブOIDを取得します"
 msgid "Fetch chunked"
 msgstr "チャンクをフェッチ"
 
+#, fuzzy
+msgid "Fetch events"
+msgstr "すべてをフェッチ"
+
+msgid ""
+"Fetch events from the event stream of your datadog instance. Fetched events "
+"will be forwared to the event console of the site where the special agent is "
+"executed."
+msgstr ""
+
 msgid "Fetch every"
 msgstr "すべてをフェッチ"
 
@@ -17542,6 +17597,15 @@ msgstr "フェッチヘッド"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "SNMPセクションのフェッチ間隔"
+
+#, fuzzy
+msgid "Fetch monitors"
+msgstr "モニター"
+
+msgid ""
+"Fetch monitors from your datadog instance. Fetched monitors will be "
+"discovered as services on the host where the special agent is executed."
+msgstr ""
 
 msgid "Fetch no body (1xx)"
 msgstr "ボディをフェッチしない (1xx)"
@@ -27454,6 +27518,10 @@ msgstr "マップマネージャーの状態"
 msgid "Map manager state to service state"
 msgstr "マップマネージャーからサービス状態へ"
 
+#, fuzzy
+msgid "Map monitor states to Checkmk monitoring states"
+msgstr "systemdの状態を監視状態にマップする"
+
 msgid "Map mount point names"
 msgstr "マウントポイント名をマップします"
 
@@ -31922,6 +31990,10 @@ msgstr "1日の次の時間帯にのみ確認してください"
 msgid "Only digits and dots are allowed in the version number."
 msgstr "バージョン番号には数字とドットのみを使用できます。"
 
+#, fuzzy
+msgid "Only discover monitors in the following states"
+msgstr "このルールは、次のサイトにのみ適用してください"
+
 msgid "Only discover new host labels"
 msgstr "新しいホストラベルを検出するだけです"
 
@@ -35046,6 +35118,9 @@ msgstr "サーバーのプロトコル"
 msgid "Protocol to use for fetching updates"
 msgstr "更新のフェッチに使用するプロトコル"
 
+msgid "Provide API host and credentials for your Datadog instance here."
+msgstr ""
+
 msgid "Provide command for python script execution"
 msgstr "Pythonスクリプト実行用のコマンドを提供する"
 
@@ -36775,6 +36850,30 @@ msgstr "連絡先グループによる制限"
 
 msgid "Restrict by custom macros"
 msgstr "カスタムマクロによる制限"
+
+#, fuzzy
+msgid "Restrict by monitor tags"
+msgstr "連絡先グループによる制限"
+
+#, fuzzy
+msgid "Restrict by tags"
+msgstr "連絡先グループによる制限"
+
+msgid ""
+"Restrict fetched events by tags (API field <tt>tags</tt>). Events must have "
+"all of the configured tags in order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by service and/or custom tags (API field "
+"<tt>monitor_tags</tt>). Monitors must have all of the configured tags in "
+"order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by tags (API field <tt>tags</tt>). Monitors must "
+"have all of the configured tags in order to be fetched."
+msgstr ""
 
 msgid "Restrict interface items"
 msgstr "インターフェイスアイテムを制限する"
@@ -38688,6 +38787,10 @@ msgstr "サービスラベル"
 
 msgid "Service level"
 msgstr "サービスレベル"
+
+#, fuzzy
+msgid "Service level of forwarded events shown in Event Console."
+msgstr "イベントコンソールに直接転送する"
 
 msgid "Service limits"
 msgstr "サービス制限"
@@ -42610,8 +42713,16 @@ msgstr "イベントコンソール通知用のSyslogファシリティ"
 msgid "Syslog facility for forwarded messages"
 msgstr "転送されたメッセージのSyslog機能"
 
+#, fuzzy
+msgid "Syslog facility of forwarded events shown in Event Console."
+msgstr "転送されたメッセージのSyslog機能"
+
 msgid "Syslog priority"
 msgstr "Syslogの優先順位"
+
+#, fuzzy
+msgid "Syslog priority of forwarded events shown in Event Console."
+msgstr "イベントコンソールに直接転送する"
 
 msgid "Syslog priority to cancel event"
 msgstr "イベントをキャンセルするSyslogの優先順位"
@@ -42932,6 +43043,10 @@ msgstr "ホストのタグ"
 
 msgid "Tags of the alert."
 msgstr "アラートのタグ"
+
+#, fuzzy
+msgid "Tags shown in Event Console"
+msgstr "イベントコンソールを実行しているホスト"
 
 msgid "Tags using this auxiliary tag"
 msgstr "この補助タグを使用したタグ"
@@ -45421,6 +45536,10 @@ msgstr ""
 
 msgid "The name of the Data Proxy"
 msgstr "Data Proxyの名前"
+
+#, fuzzy
+msgid "The name of the Datadog monitor."
+msgstr "データストアの名前"
 
 msgid "The name of the Datastore"
 msgstr "データストアの名前"
@@ -48228,6 +48347,19 @@ msgstr ""
 "はエージェントによって実行されません。セクションをスキップすると、監視対象ホ"
 "ストのCPU負荷と転送されるデータの量が削減されます。ただし、関連する1つまたは"
 "複数のCheckmkサービスが存在しない場合があります。"
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"events forwarded to the Event Console. This is done by entering regular "
+"expressions matching one or more Datadog tags. Any matching tag will be "
+"added to the text of the corresponding event."
+msgstr ""
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"service output. This is done by entering regular expressions matching one or "
+"more Datadog tags. Any matching tag will be displayed in the service output."
+msgstr ""
 
 #, python-format
 msgid ""

@@ -2018,6 +2018,10 @@ msgid ""
 "or team integration api keys."
 msgstr ""
 
+#, fuzzy
+msgid "API host"
+msgstr "Numele Elementului"
+
 msgid "API integrations if configured, else Checkmk agent"
 msgstr ""
 
@@ -3316,6 +3320,15 @@ msgstr "Adaugă Condiție"
 #, fuzzy
 msgid "Add target"
 msgstr "Adaugă o alegere de etichetă"
+
+#, fuzzy
+msgid "Add text of events"
+msgstr "Adaugă element"
+
+msgid ""
+"Add text of events to data forwarded to the Event Console. Newline "
+"characters are replaced by '~'."
+msgstr ""
 
 #, fuzzy
 msgid "Add these contact groups to the host"
@@ -5008,6 +5021,10 @@ msgstr ""
 
 msgid "Application / Syslog-Tag"
 msgstr ""
+
+#, fuzzy
+msgid "Application Key"
+msgstr "Numele Aplicatiei"
 
 msgid "Application Load Balancer Listeners"
 msgstr ""
@@ -8459,6 +8476,10 @@ msgid "Checker helper usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Checking of Datadog monitors"
+msgstr "(fără parametri)"
+
+#, fuzzy
 msgid "Checkmk"
 msgstr "Verificări active"
 
@@ -9671,6 +9692,10 @@ msgstr ""
 
 msgid "Configuration of the Checkmk Hardware and Software Inventory System"
 msgstr ""
+
+#, fuzzy
+msgid "Configuration of the Datadog special agent."
+msgstr "Portul TCP pentru conexiune"
 
 msgid "Configuration of update plugin"
 msgstr ""
@@ -12193,6 +12218,21 @@ msgstr ""
 msgid "Datacenter %d"
 msgstr ""
 
+#, fuzzy
+msgid "Datadog"
+msgstr "fire"
+
+#, fuzzy
+msgid "Datadog instance"
+msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+msgid "Datadog monitor"
+msgstr "Adaugă instanță pentru monitorizare"
+
+msgid "Datadog tags shown in service output"
+msgstr ""
+
 msgid "Datafile"
 msgstr ""
 
@@ -13810,6 +13850,10 @@ msgstr "Setari"
 #, fuzzy
 msgid "Discovery mode"
 msgstr "Inventariere in masa"
+
+#, fuzzy
+msgid "Discovery of Datadog monitors"
+msgstr "%d setări de Filtrare"
 
 msgid "Discovery of empty DHCP pools"
 msgstr ""
@@ -17702,6 +17746,16 @@ msgid "Fetch chunked"
 msgstr ""
 
 #, fuzzy
+msgid "Fetch events"
+msgstr "(fără parametri)"
+
+msgid ""
+"Fetch events from the event stream of your datadog instance. Fetched events "
+"will be forwared to the event console of the site where the special agent is "
+"executed."
+msgstr ""
+
+#, fuzzy
 msgid "Fetch every"
 msgstr "(fără parametri)"
 
@@ -17717,6 +17771,15 @@ msgstr ""
 #, fuzzy
 msgid "Fetch intervals for SNMP sections"
 msgstr "Verificare activă"
+
+#, fuzzy
+msgid "Fetch monitors"
+msgstr "nemonitorizat"
+
+msgid ""
+"Fetch monitors from your datadog instance. Fetched monitors will be "
+"discovered as services on the host where the special agent is executed."
+msgstr ""
 
 msgid "Fetch no body (1xx)"
 msgstr ""
@@ -27318,6 +27381,10 @@ msgid "Map manager state to service state"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Map monitor states to Checkmk monitoring states"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 msgid "Map mount point names"
 msgstr " pe siteul de monitorizare: "
 
@@ -32082,6 +32149,11 @@ msgid "Only digits and dots are allowed in the version number."
 msgstr "%s nu este un număr întreg valid."
 
 #, fuzzy
+msgid "Only discover monitors in the following states"
+msgstr ""
+"Arata doar elementele si serviciile pentru care utilizatorul este contact"
+
+#, fuzzy
 msgid "Only discover new host labels"
 msgstr "Nici o schimbare"
 
@@ -35278,6 +35350,9 @@ msgstr ""
 msgid "Protocol to use for fetching updates"
 msgstr ""
 
+msgid "Provide API host and credentials for your Datadog instance here."
+msgstr ""
+
 msgid "Provide command for python script execution"
 msgstr ""
 
@@ -37122,6 +37197,30 @@ msgid "Restrict by contact groups"
 msgstr "Eticheta de grup nou"
 
 msgid "Restrict by custom macros"
+msgstr ""
+
+#, fuzzy
+msgid "Restrict by monitor tags"
+msgstr "Eticheta de grup nou"
+
+#, fuzzy
+msgid "Restrict by tags"
+msgstr "Eticheta de grup nou"
+
+msgid ""
+"Restrict fetched events by tags (API field <tt>tags</tt>). Events must have "
+"all of the configured tags in order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by service and/or custom tags (API field "
+"<tt>monitor_tags</tt>). Monitors must have all of the configured tags in "
+"order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by tags (API field <tt>tags</tt>). Monitors must "
+"have all of the configured tags in order to be fetched."
 msgstr ""
 
 msgid "Restrict interface items"
@@ -39134,6 +39233,10 @@ msgstr "Numele Elementului"
 
 msgid "Service level"
 msgstr ""
+
+#, fuzzy
+msgid "Service level of forwarded events shown in Event Console."
+msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Service limits"
@@ -43078,8 +43181,16 @@ msgid "Syslog facility for forwarded messages"
 msgstr ""
 
 #, fuzzy
+msgid "Syslog facility of forwarded events shown in Event Console."
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
 msgid "Syslog priority"
 msgstr "Prioritatea Syslog"
+
+#, fuzzy
+msgid "Syslog priority of forwarded events shown in Event Console."
+msgstr "Acces la Consola de Evenimente"
 
 msgid "Syslog priority to cancel event"
 msgstr ""
@@ -43437,6 +43548,10 @@ msgstr " pentru elementul %s"
 #, fuzzy
 msgid "Tags of the alert."
 msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "Tags shown in Event Console"
+msgstr "Acces la Consola de Evenimente"
 
 msgid "Tags using this auxiliary tag"
 msgstr ""
@@ -45545,6 +45660,10 @@ msgstr ""
 
 #, fuzzy
 msgid "The name of the Data Proxy"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "The name of the Datadog monitor."
 msgstr "Numele elementului pentru eveniment"
 
 msgid "The name of the Datastore"
@@ -47915,6 +48034,19 @@ msgid ""
 "executed by the agent. Skipping sections reduces CPU load on the monitored "
 "host and the amount of transferred data. However, it may result in the "
 "absence of the associated Checkmk service or services."
+msgstr ""
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"events forwarded to the Event Console. This is done by entering regular "
+"expressions matching one or more Datadog tags. Any matching tag will be "
+"added to the text of the corresponding event."
+msgstr ""
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"service output. This is done by entering regular expressions matching one or "
+"more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
 #, python-format
@@ -59696,10 +59828,6 @@ msgstr ""
 #~ msgstr "Portul TCP pentru conexiune"
 
 #, fuzzy
-#~ msgid "Configuration of Event Console"
-#~ msgstr "Portul TCP pentru conexiune"
-
-#, fuzzy
 #~ msgid "Configure details of the report"
 #~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -59884,10 +60012,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Discovery mode for Disk IO check"
 #~ msgstr "Inventariere in masa"
-
-#, fuzzy
-#~ msgid "Discovery of IPMI sensors"
-#~ msgstr "%d setări de Filtrare"
 
 #, fuzzy
 #~ msgid "Discovery of MSSQL backup"

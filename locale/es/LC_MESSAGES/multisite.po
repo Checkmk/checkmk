@@ -2389,6 +2389,10 @@ msgstr ""
 "Clave API a utilizar. Dependiendo de su suscripción a opsgenie puede "
 "utilizar claves api de integración global o de equipo."
 
+#, fuzzy
+msgid "API host"
+msgstr "Añadir anfitrión"
+
 msgid "API integrations if configured, else Checkmk agent"
 msgstr "Integraciones API si están configuradas, si no el agente Checkmk"
 
@@ -3521,6 +3525,15 @@ msgstr "Añadir etiquetas"
 
 msgid "Add target"
 msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Add text of events"
+msgstr "Propietario del evento"
+
+msgid ""
+"Add text of events to data forwarded to the Event Console. Newline "
+"characters are replaced by '~'."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Añade estos grupos de contactos al anfitrión"
@@ -5321,6 +5334,10 @@ msgstr "Aplicación (expresión regular)"
 
 msgid "Application / Syslog-Tag"
 msgstr "Aplicación / Syslog-Tag"
+
+#, fuzzy
+msgid "Application Key"
+msgstr "Aplicación"
 
 msgid "Application Load Balancer Listeners"
 msgstr "Receptores del equilibrador de carga de aplicaciones"
@@ -9021,6 +9038,10 @@ msgstr "Ayudante de comprobación"
 msgid "Checker helper usage"
 msgstr "Utilización de la ayuda de comprobación"
 
+#, fuzzy
+msgid "Checking of Datadog monitors"
+msgstr "Sección de archivos a vigilar"
+
 msgid "Checkmk"
 msgstr "Checkmk"
 
@@ -10269,6 +10290,10 @@ msgstr "Configuración de agentes de monitorización para Linux, Windows y Unix"
 msgid "Configuration of the Checkmk Hardware and Software Inventory System"
 msgstr ""
 "Configuración del sistema de inventario de hardware y software de Checkmk"
+
+#, fuzzy
+msgid "Configuration of the Datadog special agent."
+msgstr "Configuración del plugin de actualización"
 
 msgid "Configuration of update plugin"
 msgstr "Configuración del plugin de actualización"
@@ -12760,6 +12785,22 @@ msgstr ""
 msgid "Datacenter %d"
 msgstr "Centro de datos %d"
 
+#, fuzzy
+msgid "Datadog"
+msgstr "Datos"
+
+#, fuzzy
+msgid "Datadog instance"
+msgstr "Instancias de la BD"
+
+#, fuzzy
+msgid "Datadog monitor"
+msgstr "No vigilar"
+
+#, fuzzy
+msgid "Datadog tags shown in service output"
+msgstr "Escape de códigos HTML en la salida del servicio"
+
 msgid "Datafile"
 msgstr "Archivo de datos"
 
@@ -14383,6 +14424,10 @@ msgstr "Configuración de Discovery y Checkmk"
 
 msgid "Discovery mode"
 msgstr "Modo de descubrimiento"
+
+#, fuzzy
+msgid "Discovery of Datadog monitors"
+msgstr "Descubrimiento de pools DHCP vacíos"
 
 msgid "Discovery of empty DHCP pools"
 msgstr "Descubrimiento de pools DHCP vacíos"
@@ -18275,6 +18320,16 @@ msgstr "Obtener todos los sub OID disponibles"
 msgid "Fetch chunked"
 msgstr "Recuperación de los trozos"
 
+#, fuzzy
+msgid "Fetch events"
+msgstr "Recoger cada"
+
+msgid ""
+"Fetch events from the event stream of your datadog instance. Fetched events "
+"will be forwared to the event console of the site where the special agent is "
+"executed."
+msgstr ""
+
 msgid "Fetch every"
 msgstr "Recoger cada"
 
@@ -18289,6 +18344,15 @@ msgstr "Cabezal de búsqueda"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalos de búsqueda de secciones SNMP"
+
+#, fuzzy
+msgid "Fetch monitors"
+msgstr "monitor"
+
+msgid ""
+"Fetch monitors from your datadog instance. Fetched monitors will be "
+"discovered as services on the host where the special agent is executed."
+msgstr ""
 
 msgid "Fetch no body (1xx)"
 msgstr "No se puede obtener ningún cuerpo (1xx)"
@@ -28770,6 +28834,10 @@ msgstr "Estado del gestor de mapas"
 msgid "Map manager state to service state"
 msgstr "Asignar el estado del gestor al estado del servicio"
 
+#, fuzzy
+msgid "Map monitor states to Checkmk monitoring states"
+msgstr "Asignar los estados de systemd a los estados de monitorización"
+
 msgid "Map mount point names"
 msgstr "Mapa de nombres de puntos de montaje"
 
@@ -33355,6 +33423,10 @@ msgstr "Compruebe sólo durante las siguientes horas del día"
 msgid "Only digits and dots are allowed in the version number."
 msgstr "Sólo se permiten dígitos y puntos en el número de versión."
 
+#, fuzzy
+msgid "Only discover monitors in the following states"
+msgstr "Aplique esta regla sólo en los siguientes sitios"
+
 msgid "Only discover new host labels"
 msgstr "Sólo descubre nuevas etiquetas de host"
 
@@ -36627,6 +36699,9 @@ msgstr "Protocolo del servidor"
 msgid "Protocol to use for fetching updates"
 msgstr "Protocolo que se utilizará para obtener las actualizaciones"
 
+msgid "Provide API host and credentials for your Datadog instance here."
+msgstr ""
+
 msgid "Provide command for python script execution"
 msgstr "Proporcionar el comando para la ejecución del script de python"
 
@@ -38407,6 +38482,30 @@ msgstr "Restringir por grupos de contacto"
 
 msgid "Restrict by custom macros"
 msgstr "Restringir mediante macros personalizadas"
+
+#, fuzzy
+msgid "Restrict by monitor tags"
+msgstr "Restringir por grupos de contacto"
+
+#, fuzzy
+msgid "Restrict by tags"
+msgstr "Restringir por grupos de contacto"
+
+msgid ""
+"Restrict fetched events by tags (API field <tt>tags</tt>). Events must have "
+"all of the configured tags in order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by service and/or custom tags (API field "
+"<tt>monitor_tags</tt>). Monitors must have all of the configured tags in "
+"order to be fetched."
+msgstr ""
+
+msgid ""
+"Restrict fetched monitors by tags (API field <tt>tags</tt>). Monitors must "
+"have all of the configured tags in order to be fetched."
+msgstr ""
 
 msgid "Restrict interface items"
 msgstr "Restringir los elementos de la interfaz"
@@ -40391,6 +40490,10 @@ msgstr "Etiquetas de servicio"
 
 msgid "Service level"
 msgstr "Nivel de servicio"
+
+#, fuzzy
+msgid "Service level of forwarded events shown in Event Console."
+msgstr "Reenviar directamente a la consola de eventos"
 
 msgid "Service limits"
 msgstr "Límites del servicio"
@@ -44526,8 +44629,16 @@ msgstr "Facilidad de Syslog para las notificaciones de la Consola de Eventos"
 msgid "Syslog facility for forwarded messages"
 msgstr "Facilidad de Syslog para los mensajes reenviados"
 
+#, fuzzy
+msgid "Syslog facility of forwarded events shown in Event Console."
+msgstr "Facilidad de Syslog para los mensajes reenviados"
+
 msgid "Syslog priority"
 msgstr "Prioridad del syslog"
+
+#, fuzzy
+msgid "Syslog priority of forwarded events shown in Event Console."
+msgstr "Reenviar directamente a la consola de eventos"
 
 msgid "Syslog priority to cancel event"
 msgstr "Prioridad del syslog para cancelar el evento"
@@ -44855,6 +44966,10 @@ msgstr "Etiquetas del anfitrión"
 
 msgid "Tags of the alert."
 msgstr "Etiquetas de la alerta."
+
+#, fuzzy
+msgid "Tags shown in Event Console"
+msgstr "Host que ejecuta la Consola de Eventos"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Etiquetas que utilizan esta etiqueta auxiliar"
@@ -47639,6 +47754,10 @@ msgstr ""
 
 msgid "The name of the Data Proxy"
 msgstr "El nombre del Proxy de Datos"
+
+#, fuzzy
+msgid "The name of the Datadog monitor."
+msgstr "El nombre del almacén de datos"
 
 msgid "The name of the Datastore"
 msgstr "El nombre del almacén de datos"
@@ -50779,6 +50898,19 @@ msgstr ""
 "serán ejecutadas por el agente. Omitir secciones reduce la carga de la CPU "
 "en el host monitorizado y la cantidad de datos transferidos. Sin embargo, "
 "puede provocar la ausencia del servicio o servicios Checkmk asociados."
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"events forwarded to the Event Console. This is done by entering regular "
+"expressions matching one or more Datadog tags. Any matching tag will be "
+"added to the text of the corresponding event."
+msgstr ""
+
+msgid ""
+"This option allows you to configure which Datadog tags will be shown in the "
+"service output. This is done by entering regular expressions matching one or "
+"more Datadog tags. Any matching tag will be displayed in the service output."
+msgstr ""
 
 #, python-format
 msgid ""

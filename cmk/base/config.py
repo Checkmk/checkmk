@@ -125,9 +125,9 @@ from cmk.base.autochecks import ServiceWithNodes
 service_service_levels = []
 host_service_levels = []
 
-AllHosts = List[str]
-ShadowHosts = Dict[str, Dict]
-AllClusters = Dict[str, List[HostName]]
+AllHosts = List[HostName]
+ShadowHosts = Dict[HostName, Dict]
+AllClusters = Dict[HostName, List[HostName]]
 RRDConfig = Dict[str, Any]
 CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
@@ -807,14 +807,14 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
 #   '----------------------------------------------------------------------'
 
 
-def strip_tags(tagged_hostlist: List[str]) -> List[str]:
+def strip_tags(tagged_hostlist: List[str]) -> List[HostName]:
     cache = _config_cache.get("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
     try:
         return cache[cache_id]
     except KeyError:
-        return cache.setdefault(cache_id, [h.split('|', 1)[0] for h in tagged_hostlist])
+        return cache.setdefault(cache_id, [HostName(h.split('|', 1)[0]) for h in tagged_hostlist])
 
 
 def _get_shadow_hosts() -> ShadowHosts:
@@ -826,8 +826,8 @@ def _get_shadow_hosts() -> ShadowHosts:
 
 
 def _filter_active_hosts(config_cache: 'ConfigCache',
-                         hostlist: Iterable[str],
-                         keep_offline_hosts: bool = False) -> List[str]:
+                         hostlist: Iterable[HostName],
+                         keep_offline_hosts: bool = False) -> List[HostName]:
     """Returns a set of active hosts for this site"""
     if only_hosts is None:
         if distributed_wato_site is None:
@@ -853,7 +853,7 @@ def _filter_active_hosts(config_cache: 'ConfigCache',
     ]
 
 
-def _host_is_member_of_site(config_cache: 'ConfigCache', hostname: str, site: str) -> bool:
+def _host_is_member_of_site(config_cache: 'ConfigCache', hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return config_cache.tags_of_host(hostname).get("site",
                                                    distributed_wato_site) == distributed_wato_site
@@ -877,7 +877,7 @@ def duplicate_hosts() -> List[str]:
 # are the hosts which have the tag "offline".
 #
 # This is not optimized for performance, so use in specific situations.
-def all_offline_hosts() -> Set[str]:
+def all_offline_hosts() -> Set[HostName]:
     config_cache = get_config_cache()
 
     hostlist = set(
@@ -895,7 +895,7 @@ def all_offline_hosts() -> Set[str]:
     }
 
 
-def all_configured_offline_hosts() -> Set[str]:
+def all_configured_offline_hosts() -> Set[HostName]:
     config_cache = get_config_cache()
     hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
 
@@ -2284,7 +2284,7 @@ def _get_checkgroup_parameters(config_cache: 'ConfigCache', host: HostName, chec
 
 
 class HostConfig:
-    def __init__(self, config_cache: 'ConfigCache', hostname: str) -> None:
+    def __init__(self, config_cache: 'ConfigCache', hostname: HostName) -> None:
         super(HostConfig, self).__init__()
         self.hostname = hostname
 
@@ -3709,12 +3709,12 @@ class ConfigCache:
                 self._clusters_of_cache.setdefault(name, []).append(clustername)
             self._nodes_of_cache[clustername] = hosts
 
-    def clusters_of(self, hostname: str) -> List[HostName]:
+    def clusters_of(self, hostname: HostName) -> List[HostName]:
         """Returns names of cluster hosts the host is a node of"""
         return self._clusters_of_cache.get(hostname, [])
 
     # TODO: cleanup None case
-    def nodes_of(self, hostname: str) -> Optional[List[HostName]]:
+    def nodes_of(self, hostname: HostName) -> Optional[List[HostName]]:
         """Returns the nodes of a cluster. Returns None if no match.
 
         Use host_config.nodes instead of this method to get the node list"""
@@ -3736,10 +3736,12 @@ class ConfigCache:
     def _get_all_configured_clusters(self) -> Set[HostName]:
         return set(strip_tags(list(clusters)))
 
-    def host_of_clustered_service(self,
-                                  hostname: HostName,
-                                  servicedesc: str,
-                                  part_of_clusters: Optional[List[str]] = None) -> str:
+    def host_of_clustered_service(
+        self,
+        hostname: HostName,
+        servicedesc: str,
+        part_of_clusters: Optional[List[HostName]] = None,
+    ) -> str:
         """Return hostname to assign the service to
         Determine weather a service (found on a physical host) is a clustered
         service and - if yes - return the cluster host of the service. If no,

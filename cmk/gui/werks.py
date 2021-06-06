@@ -620,7 +620,7 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 
         werk_table_options.setdefault(name, value)
 
-    from_date, until_date = Timerange().compute_range(werk_table_options["date"])[0]
+    from_date, until_date = Timerange.compute_range(werk_table_options["date"]).range
     werk_table_options["date_range"] = from_date, until_date
 
     return werk_table_options

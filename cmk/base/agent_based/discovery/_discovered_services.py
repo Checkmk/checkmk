@@ -296,7 +296,7 @@ def _discover_plugins_services(
 
     disco_params = config.get_discovery_parameters(host_name, check_plugin)
     if disco_params is not None:
-        kwargs["params"] = disco_params
+        kwargs = {**kwargs, "params": disco_params}
 
     try:
         plugins_services = check_plugin.discovery_function(**kwargs)

@@ -4,23 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, MutableMapping, Optional, Sequence
+from typing import Dict, Iterable, Mapping, Optional, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState, state_markers
 
 from cmk.core_helpers.type_defs import Mode
 
-from .data_provider import ParsedSectionsBroker, SourceResults
+from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
 
-_ParsedSectionContent = Any
+_SectionKwargs = Mapping[str, ParsedSectionContent]
 
 
 def get_section_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_key: HostKey,
     parsed_section_names: Sequence[ParsedSectionName],
-) -> MutableMapping[str, _ParsedSectionContent]:
+) -> _SectionKwargs:
     """Prepares section keyword arguments for a non-cluster host
 
     It returns a dictionary containing one entry (may be None) for each
@@ -35,7 +35,7 @@ def get_section_kwargs(
     }
     # empty it, if nothing was found:
     if all(v is None for v in kwargs.values()):
-        kwargs.clear()
+        return {}
 
     return kwargs
 
@@ -44,20 +44,20 @@ def get_section_cluster_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     node_keys: Sequence[HostKey],
     parsed_section_names: Sequence[ParsedSectionName],
-) -> MutableMapping[str, MutableMapping[str, _ParsedSectionContent]]:
+) -> Mapping[str, _SectionKwargs]:
     """Prepares section keyword arguments for a cluster host
 
     It returns a dictionary containing one optional dictionary[Host, ParsedSection]
     for each of the required sections, or an empty dictionary if no data was found at all.
     """
-    kwargs: MutableMapping[str, MutableMapping[str, Any]] = {}
+    kwargs: Dict[str, Dict[str, ParsedSectionContent]] = {}
     for node_key in node_keys:
         node_kwargs = get_section_kwargs(parsed_sections_broker, node_key, parsed_section_names)
         for key, sections_node_data in node_kwargs.items():
             kwargs.setdefault(key, {})[node_key.hostname] = sections_node_data
     # empty it, if nothing was found:
     if all(v is None for s in kwargs.values() for v in s.values()):
-        kwargs.clear()
+        return {}
 
     return kwargs
 

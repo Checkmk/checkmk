@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 CacheInfo = Optional[Tuple[int, int]]
 
-ParsedSectionContent = Any
+ParsedSectionContent = object  # the parse function may return *anything*.
 
 SourceResults = Sequence[Tuple['Source', result.Result[HostSections, Exception]]]
 

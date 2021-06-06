@@ -15,7 +15,7 @@ from typing import (
     Dict,
     Iterable,
     List,
-    MutableMapping,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -476,7 +476,6 @@ def get_aggregated_result(
 
     config_cache = config.get_config_cache()
 
-    kwargs: MutableMapping[str, Any] = {}
     try:
         kwargs = get_section_cluster_kwargs(
             parsed_sections_broker,
@@ -518,11 +517,15 @@ def get_aggregated_result(
                 cache_info=None,
             )
 
-        if service.item is not None:
-            kwargs["item"] = service.item
-
-        if plugin.check_default_parameters is not None:
-            kwargs["params"] = params_function()
+        kwargs = {
+            **kwargs,
+            **({} if service.item is None else {
+                   "item": service.item
+               }),
+            **({} if plugin.check_default_parameters is None else {
+                   "params": params_function()
+               }),
+        }
 
         with plugin_contexts.current_host(host_config.hostname), \
             plugin_contexts.current_service(service), \
@@ -549,7 +552,7 @@ def get_aggregated_result(
             host_name=host_config.hostname,
             service_name=service.description,
             plugin_name=service.check_plugin_name,
-            plugin_kwargs=kwargs,
+            plugin_kwargs=globals().get("kwargs", {}),
             is_manual=service.id() in table,
         ), []
 

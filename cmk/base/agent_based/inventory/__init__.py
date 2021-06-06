@@ -348,8 +348,11 @@ def _do_inv_for_realhost(
             # Inventory functions can optionally have a second argument: parameters.
             # These are configured via rule sets (much like check parameters).
             if inventory_plugin.inventory_ruleset_name is not None:
-                kwargs["params"] = host_config.inventory_parameters(
-                    inventory_plugin.inventory_ruleset_name)
+                kwargs = {
+                    **kwargs,
+                    "params": host_config.inventory_parameters(
+                        inventory_plugin.inventory_ruleset_name),
+                }
 
             exception = tree_aggregator.aggregate_results(
                 inventory_plugin.inventory_function(**kwargs),)

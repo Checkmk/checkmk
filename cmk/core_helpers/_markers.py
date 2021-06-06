@@ -47,7 +47,8 @@ class PiggybackMarker(NamedTuple):
         # Protect Checkmk against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Checkmk code.
-        return cls(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname))
+        # TODO: this should be moved into the HostName class, if it is ever created.
+        return cls(HostName(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname)))
 
 
 class SectionMarker(NamedTuple):

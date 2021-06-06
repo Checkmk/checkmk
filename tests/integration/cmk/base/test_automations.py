@@ -15,7 +15,7 @@ from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-im
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
-from cmk.utils.type_defs import SetAutochecksTable
+from cmk.utils.type_defs import HostName, SetAutochecksTable
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
@@ -232,7 +232,7 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 
 def test_automation_set_autochecks(test_cfg, site):
-    hostname = "blablahost"
+    hostname = HostName("blablahost")
     new_items: SetAutochecksTable = {
         ("df", "xxx"): ("Filesystem xxx", {}, {
             u"xyz": u"123"

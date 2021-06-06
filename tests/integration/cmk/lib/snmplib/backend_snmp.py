@@ -9,6 +9,8 @@ from typing import List, Optional, Tuple, Type
 
 import pytest
 
+from cmk.utils.type_defs import HostName
+
 from cmk.snmplib.type_defs import (
     OID,
     SNMPBackend,
@@ -213,7 +215,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv1",
+            hostname=HostName("ipv4/snmpv1"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -229,7 +231,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv2",
+            hostname=HostName("ipv4/snmpv2"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -245,7 +247,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="ipv4/snmpv3",
+            hostname=HostName("ipv4/snmpv3"),
             ipaddress="127.0.0.1",
             credentials=(
                 "authPriv",
@@ -273,7 +275,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv1",
+            hostname=HostName("ipv6/snmpv1"),
             ipaddress="::1",
             credentials="public",
             port=1337,
@@ -289,7 +291,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv2",
+            hostname=HostName("ipv6/snmpv2"),
             ipaddress="::1",
             credentials="public",
             port=1337,
@@ -305,7 +307,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=True,
-            hostname="ipv6/snmpv3",
+            hostname=HostName("ipv6/snmpv3"),
             ipaddress="::1",
             credentials=(
                 "authPriv",
@@ -333,7 +335,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="noauthnopriv",
+            hostname=HostName("noauthnopriv"),
             ipaddress="127.0.0.1",
             credentials=(
                 "noAuthNoPriv",
@@ -352,7 +354,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="authonly",
+            hostname=HostName("authonly"),
             ipaddress="127.0.0.1",
             credentials=(
                 "authNoPriv",
@@ -378,7 +380,7 @@ def _create_configs_oidranges():
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/first",
+            hostname=HostName("oidranges/first"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -394,7 +396,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/mid",
+            hostname=HostName("oidranges/mid"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -410,7 +412,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges/last",
+            hostname=HostName("oidranges/last"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,
@@ -426,7 +428,7 @@ def _create_configs_oidranges():
         ),
         SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="oidranges",
+            hostname=HostName("oidranges"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=1337,

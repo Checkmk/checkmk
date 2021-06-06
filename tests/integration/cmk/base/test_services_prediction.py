@@ -13,6 +13,7 @@ import pytest
 
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 from cmk.base import prediction
 
@@ -91,8 +92,8 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
         _, from_time, until_time, _ = prediction._get_prediction_timegroup(
             int(timestamp), prediction._PREDICTION_PERIODS[period])
 
-    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
-                                                   from_time, until_time)
+    timeseries = cmk.utils.prediction.get_rrd_data(HostName('test-prediction'), 'CPU load',
+                                                   'load15', 'MAX', from_time, until_time)
 
     assert timeseries.start <= from_time
     assert timeseries.end >= until_time
@@ -107,8 +108,9 @@ def test_get_rrd_data(cfg_setup, utcdate, timezone, period, result):
                                                  (1200, (60, 1200))])
 def test_get_rrd_data_point_max(cfg_setup, max_entries, result):
     from_time, until_time = 1543430040, 1543502040
-    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
-                                                   from_time, until_time, max_entries)
+    timeseries = cmk.utils.prediction.get_rrd_data(HostName('test-prediction'), 'CPU load',
+                                                   'load15', 'MAX', from_time, until_time,
+                                                   max_entries)
     assert timeseries.start <= from_time
     assert timeseries.end >= until_time
     assert (timeseries.step, len(timeseries.values)) == result
@@ -165,7 +167,7 @@ def test_retieve_grouped_data_from_rrd(cfg_setup, utcdate, timezone, params, ref
         time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
                                                timegroup)
 
-    hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
+    hostname, service_description, dsname = HostName('test-prediction'), "CPU load", 'load15'
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
                                                         "MAX")
     result = prediction._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
@@ -213,7 +215,7 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
         time_windows = prediction._time_slices(now, int(params["horizon"] * 86400), period_info,
                                                timegroup)
 
-    hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
+    hostname, service_description, dsname = HostName('test-prediction'), "CPU load", 'load15'
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
                                                         "MAX")
     data_for_pred = prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
@@ -240,8 +242,8 @@ def test_calculate_data_for_prediction(cfg_setup, utcdate, timezone, params):
 ])
 def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
     from_time, until_time = timerange
-    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
-                                                   from_time, until_time)
+    timeseries = cmk.utils.prediction.get_rrd_data(HostName('test-prediction'), 'CPU load',
+                                                   'load15', 'MAX', from_time, until_time)
 
     assert timeseries.start <= from_time
     assert timeseries.end >= until_time
@@ -255,11 +257,11 @@ def test_get_rrd_data_fails(cfg_setup):
 
     # Fail to get data, because non-existent check
     with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):
-        cmk.utils.prediction.get_rrd_data('test-prediction', 'Nonexistent check', 'util', 'MAX',
-                                          from_time, until_time)
+        cmk.utils.prediction.get_rrd_data(HostName('test-prediction'), 'Nonexistent check', 'util',
+                                          'MAX', from_time, until_time)
 
     # Empty response, because non-existent perf_data variable
-    timeseries = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load',
+    timeseries = cmk.utils.prediction.get_rrd_data(HostName('test-prediction'), 'CPU load',
                                                    'untracked_prefdata', 'MAX', from_time,
                                                    until_time)
 

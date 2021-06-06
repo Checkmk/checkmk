@@ -9,6 +9,8 @@ import subprocess
 from tests.testlib import create_linux_test_host
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils.type_defs import HostName
+
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api as check_api
 import cmk.base.config as config
@@ -65,7 +67,7 @@ check_info["test_check_1"] = {
     web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file(host_name, config.service_description)
+    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
     assert str(services[0].check_plugin_name) == "test_check_1"
     assert services[0].item is None
     assert services[0].parameters == (10.0, 20.0)
@@ -92,7 +94,7 @@ check_info["test_check_1"] = {
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     web.discover_services(host_name)
-    services = autochecks.parse_autochecks_file(host_name, config.service_description)
+    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
     assert services[0].parameters == (5.0, 30.1)
 
 
@@ -156,7 +158,7 @@ check_info["test_check_2"] = {
     web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file(host_name, config.service_description)
+    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
     assert str(services[0].check_plugin_name) == "test_check_2"
     assert services[0].item is None
     assert services[0].parameters == {}
@@ -216,7 +218,7 @@ check_info["test_check_3"] = {
     web.discover_services(host_name)
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file(host_name, config.service_description)
+    services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
     assert str(services[0].check_plugin_name) == "test_check_3"
     assert services[0].item is None
     assert services[0].parameters == {}

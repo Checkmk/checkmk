@@ -1308,7 +1308,7 @@ def test_get_sorted_check_table_cmc(monkeypatch: MonkeyPatch, service_list: List
     monkeypatch.setattr(config, "is_cmc", lambda: True)
 
     assert service_list == config.resolve_service_dependencies(
-        host_name=HostName(""),
+        host_name=HostName("horst"),
         services=service_list,
     )
 
@@ -1324,7 +1324,7 @@ def test_get_sorted_check_table_no_cmc(monkeypatch: MonkeyPatch,
         }.get(descr, []))
 
     sorted_service_list = config.resolve_service_dependencies(
-        host_name=HostName(""),
+        host_name=HostName("horst"),
         services=service_list,
     )
     assert [s.description for s in sorted_service_list] == [

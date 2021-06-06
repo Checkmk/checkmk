@@ -11,7 +11,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
-from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, result, SourceType
+from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
@@ -88,7 +88,7 @@ class TestSNMPSource_SNMP:
         Scenario().add_host(hostname).apply(monkeypatch)
 
         source = SNMPSource.snmp(
-            hostname,
+            HostName(hostname),
             ipaddress,
             selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
@@ -117,7 +117,7 @@ class TestSNMPSource_MGMT:
         ts.apply(monkeypatch)
 
         source = SNMPSource.management_board(
-            hostname,
+            HostName(hostname),
             ipaddress,
             force_cache_refresh=False,
             selected_sections=NO_SELECTION,
@@ -130,18 +130,18 @@ class TestSNMPSource_MGMT:
 
 class TestSNMPSummaryResult:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def hostname(self) -> HostName:
+        return HostName("testhost")
 
     @pytest.fixture
-    def scenario(self, hostname, monkeypatch):
+    def scenario(self, hostname: HostName, monkeypatch):
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)
         return ts
 
     @pytest.fixture
-    def source(self, hostname):
+    def source(self, hostname: HostName):
         return SNMPSource(
             hostname,
             "1.2.3.4",

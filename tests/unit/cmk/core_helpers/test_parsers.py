@@ -16,7 +16,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import AgentRawData, SectionName
+from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
@@ -28,15 +28,15 @@ from cmk.core_helpers.type_defs import AgentRawDataSection, NO_SELECTION
 
 class TestAgentParser:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def hostname(self) -> HostName:
+        return HostName("testhost")
 
     @pytest.fixture
     def logger(self):
         return logging.getLogger("test")
 
     @pytest.fixture
-    def scenario(self, hostname, monkeypatch):
+    def scenario(self, hostname: HostName, monkeypatch):
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)
@@ -50,7 +50,7 @@ class TestAgentParser:
         return SectionStore[AgentRawDataSection](store_path, logger=logger)
 
     @pytest.fixture
-    def parser(self, hostname, store, logger):
+    def parser(self, hostname: HostName, store, logger):
         return AgentParser(
             hostname,
             store,
@@ -77,9 +77,10 @@ class TestAgentParser:
         assert store.load() == {}
 
     @pytest.mark.usefixtures("scenario")
-    def test_piggy_name_as_hostname_is_not_piggybacked(self, parser, store, hostname):
+    def test_piggy_name_as_hostname_is_not_piggybacked(self, parser, store, hostname: HostName):
+        host_name_bytes = str(hostname).encode("ascii")
         raw_data = AgentRawData(b"\n".join((
-            f"<<<<{hostname}>>>>".encode("ascii"),
+            b"<<<<%s>>>>" % host_name_bytes,
             b"line0",
             b"line1",
             b"line2",
@@ -103,7 +104,7 @@ class TestAgentParser:
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {}
         assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {'piggy': []}
+        assert ahs.piggybacked_raw_data == {HostName('piggy'): []}
         assert store.load() == {}
 
     @pytest.mark.usefixtures("scenario")
@@ -554,7 +555,7 @@ class TestAgentPersistentSectionHandling:
         section_store = MockStore(PersistedSections[AgentRawDataSection]({}))
         raw_data = AgentRawData(b"")
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -576,7 +577,7 @@ class TestAgentPersistentSectionHandling:
         }))
         raw_data = AgentRawData(b"")
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -598,7 +599,7 @@ class TestAgentPersistentSectionHandling:
         raw_data = AgentRawData(b"<<<fresh>>>")
         section_store = MockStore(PersistedSections[AgentRawDataSection]({}))
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -620,7 +621,7 @@ class TestAgentPersistentSectionHandling:
         }))
         raw_data = AgentRawData(b"<<<fresh>>>")
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -679,7 +680,7 @@ class TestAgentPersistentSectionHandling:
         }))
         raw_data = AgentRawData(b"<<<section>>>\nnewest")
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -705,7 +706,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("section"): (500, 600, []),
         }))
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=42,
             keep_outdated=False,
@@ -756,7 +757,7 @@ class TestSNMPPersistedSectionHandling:
         section_store = MockStore(PersistedSections[SNMPRawDataSection]({}))
         raw_data: SNMPRawData = {}
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={},
             keep_outdated=True,
@@ -775,7 +776,7 @@ class TestSNMPPersistedSectionHandling:
         }))
         raw_data: SNMPRawData = {}
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={},
             keep_outdated=True,
@@ -795,7 +796,7 @@ class TestSNMPPersistedSectionHandling:
         _new: SNMPRawDataSection = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={},
             keep_outdated=True,
@@ -815,7 +816,7 @@ class TestSNMPPersistedSectionHandling:
         _new: SNMPRawDataSection = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={},
             keep_outdated=True,
@@ -842,7 +843,7 @@ class TestSNMPPersistedSectionHandling:
         _new: SNMPRawDataSection = [["new"]]  # For the type checker only
         raw_data: SNMPRawData = {SectionName("section"): _new}
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
             keep_outdated=True,
@@ -863,7 +864,7 @@ class TestSNMPPersistedSectionHandling:
             SectionName("section"): (500, 600, [["old"]]),
         }))
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
             keep_outdated=False,

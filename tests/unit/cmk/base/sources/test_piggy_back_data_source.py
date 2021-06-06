@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result
+from cmk.utils.type_defs import HostName, result
 
 from cmk.core_helpers.agent import AgentHostSections
 from cmk.core_helpers.type_defs import Mode
@@ -23,7 +23,7 @@ def mode_fixture(request):
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
 def test_attribute_defaults(monkeypatch, ipaddress, mode):
-    hostname = "testhost"
+    hostname = HostName("testhost")
     Scenario().add_host(hostname).apply(monkeypatch)
 
     source = PiggybackSource(hostname, ipaddress)

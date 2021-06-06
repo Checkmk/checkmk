@@ -15,7 +15,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import logger
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
@@ -151,7 +151,7 @@ def test_evaluate_snmp_detection(fix_plugin_legacy, name, oids_data, expected_re
 # C/P from `test_snmplib_snmp_table`.
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
-    hostname="testhost",
+    hostname=HostName("testhost"),
     ipaddress="1.2.3.4",
     credentials="",
     port=42,

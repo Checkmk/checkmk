@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result, SourceType
+from cmk.utils.type_defs import HostName, result, SourceType
 
 from cmk.core_helpers.ipmi import IPMISummarizer
 from cmk.core_helpers.type_defs import Mode
@@ -25,7 +25,7 @@ def mode_fixture(request):
 
 
 def test_attribute_defaults(mode, monkeypatch):
-    hostname = "testhost"
+    hostname = HostName("testhost")
     Scenario().add_host(hostname).apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
@@ -45,7 +45,7 @@ def test_summarizer():
 
 
 def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
-    hostname = "testhost"
+    hostname = HostName("testhost")
     ipaddress = "127.0.0.1"
 
     def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):

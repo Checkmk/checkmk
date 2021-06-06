@@ -13,6 +13,7 @@ from cmk.utils.labels import (
     get_updated_host_label_files,
     save_updated_host_label_files,
 )
+from cmk.utils.type_defs import HostName
 
 # Manager is currently not tested explicitly. Indirect tests can be found
 # at tests/unit/cmk/base/test_config.py::test_host_config_labels*
@@ -59,10 +60,11 @@ def test_get_host_labels_entry_of_host(discovered_host_labels_dir):
         ('host1.mk', 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
     ])
 
-    assert get_host_labels_entry_of_host("host1") == (
-        'host1.mk', 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n")
+    assert get_host_labels_entry_of_host(
+        HostName("host1")) == ('host1.mk', 123,
+                               "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n")
 
 
 def test_get_host_labels_entry_of_host_not_existing():
     with pytest.raises(FileNotFoundError):
-        assert get_host_labels_entry_of_host("not-existing")
+        assert get_host_labels_entry_of_host(HostName("not-existing"))

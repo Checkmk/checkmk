@@ -8,7 +8,7 @@
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
 from cmk.base.agent_based.discovery import _filters
@@ -56,18 +56,18 @@ def test__get_service_filter_func_same_lists(monkeypatch, whitelist, result):
     service = _filters.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
                                None)
     assert service_filters.new is not None
-    assert service_filters.new("hostname", service) is result
+    assert service_filters.new(HostName("hostname"), service) is result
 
     service_filters_inv = _filters.ServiceFilters.from_settings({"service_blacklist": whitelist})
     assert service_filters_inv.new is not None
-    assert service_filters_inv.new("hostname", service) is not result
+    assert service_filters_inv.new(HostName("hostname"), service) is not result
 
     service_filters_both = _filters.ServiceFilters.from_settings({
         "service_whitelist": whitelist,
         "service_blacklist": whitelist,
     })
     assert service_filters_both.new is not None
-    assert service_filters_both.new("hostname", service) is False
+    assert service_filters_both.new(HostName("hostname"), service) is False
 
 
 @pytest.mark.parametrize(
@@ -113,7 +113,7 @@ def test__get_service_filter_func(monkeypatch, parameters_rediscovery, result):
     service = _filters.Service(CheckPluginName("check_plugin_name"), "item", "Test Description",
                                None)
     assert service_filters.new is not None
-    assert service_filters.new("hostname", service) is result
+    assert service_filters.new(HostName("hostname"), service) is result
 
 
 @pytest.mark.parametrize(

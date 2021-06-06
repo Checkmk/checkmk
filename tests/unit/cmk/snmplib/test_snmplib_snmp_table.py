@@ -9,7 +9,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.utils.log import logger
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
@@ -25,7 +25,7 @@ import cmk.base.config as config
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
-    hostname="testhost",
+    hostname=HostName("testhost"),
     ipaddress="1.2.3.4",
     credentials="",
     port=42,

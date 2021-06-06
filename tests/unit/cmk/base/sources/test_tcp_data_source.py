@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.type_defs import HostName
+
 from cmk.core_helpers.agent import AgentSummarizerDefault
 from cmk.core_helpers.cache import MaxAge
 
@@ -34,7 +36,7 @@ def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
     ts.set_option("agent_config", {"only_from": [rule]} if rule else {})
     config_cache = ts.apply(monkeypatch)
 
-    source = TCPSource("hostname", "ipaddress")
+    source = TCPSource(HostName("hostname"), "ipaddress")
     monkeypatch.setattr(config_cache, "host_extra_conf", lambda host, ruleset: ruleset)
 
     summarizer = AgentSummarizerDefault(
@@ -79,16 +81,16 @@ def test_tcpdatasource_restricted_address_mismatch(
     #           before the summarizer obscure the purpose of the test.  This is
     #           way too complicated.  Test the `AgentSummarizerDefault` directly
     #           in `tests.unit.cmk.core_helpers.test_summarizers` instead.
-    hostname = "hostname"
+    hostname = HostName("hostname")
 
     ts = Scenario().add_host(hostname)
-    ts.set_option("agent_config", {"only_from": [(rule, [], [hostname], {})]})
+    ts.set_option("agent_config", {"only_from": [(rule, [], [str(hostname)], {})]})
 
     if restricted_address_mismatch_state is not None:
         ts.set_ruleset("check_mk_exit_status", [
             ({
                 "restricted_address_mismatch": restricted_address_mismatch_state,
-            }, [], [hostname], {}),
+            }, [], [str(hostname)], {}),
         ])
 
     ts.apply(monkeypatch)
@@ -107,7 +109,7 @@ def test_tcpdatasource_restricted_address_mismatch(
 
 def test_attribute_defaults(monkeypatch):
     ipaddress = "1.2.3.4"
-    hostname = "testhost"
+    hostname = HostName("testhost")
     Scenario().add_host(hostname).apply(monkeypatch)
 
     source = TCPSource(hostname, ipaddress)

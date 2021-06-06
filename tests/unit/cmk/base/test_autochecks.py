@@ -13,7 +13,7 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
@@ -113,16 +113,16 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
 
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
-            manager.get_autochecks_of("host", config.compute_check_parameters,
+            manager.get_autochecks_of(HostName("host"), config.compute_check_parameters,
                                       config.service_description)
         return
 
-    result = manager.get_autochecks_of("host", config.compute_check_parameters,
+    result = manager.get_autochecks_of(HostName("host"), config.compute_check_parameters,
                                        config.service_description)
     assert result == expected_result
 
     # Check that the ConfigCache method also returns the correct data
-    assert test_config.get_autochecks_of("host") == result
+    assert test_config.get_autochecks_of(HostName("host")) == result
 
     # Check that there are no str items (None, int, ...)
     assert all(not isinstance(s.item, bytes) for s in result)
@@ -131,7 +131,7 @@ def test_manager_get_autochecks_of(test_config, autochecks_content, expected_res
 
 
 def test_parse_autochecks_file_not_existing():
-    assert autochecks.parse_autochecks_file("host", config.service_description) == []
+    assert autochecks.parse_autochecks_file(HostName("host"), config.service_description) == []
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -218,14 +218,14 @@ def test_parse_autochecks_file(fix_plugin_legacy, test_config, autochecks_conten
     if expected_result is MKGeneralException:
         with pytest.raises(MKGeneralException):
             autochecks.parse_autochecks_file(
-                "host",
+                HostName("host"),
                 config.service_description,
                 fix_plugin_legacy.check_variables,
             )
         return
 
     parsed = autochecks.parse_autochecks_file(
-        "host",
+        HostName("host"),
         config.service_description,
         fix_plugin_legacy.check_variables,
     )
@@ -239,17 +239,17 @@ def test_parse_autochecks_file(fix_plugin_legacy, test_config, autochecks_conten
 
 
 def test_has_autochecks():
-    assert autochecks.has_autochecks("host") is False
-    autochecks.save_autochecks_file("host", [])
-    assert autochecks.has_autochecks("host") is True
+    assert autochecks.has_autochecks(HostName("host")) is False
+    autochecks.save_autochecks_file(HostName("host"), [])
+    assert autochecks.has_autochecks(HostName("host")) is True
 
 
 def test_remove_autochecks_file():
-    assert autochecks.has_autochecks("host") is False
-    autochecks.save_autochecks_file("host", [])
-    assert autochecks.has_autochecks("host") is True
-    autochecks.remove_autochecks_file("host")
-    assert autochecks.has_autochecks("host") is False
+    assert autochecks.has_autochecks(HostName("host")) is False
+    autochecks.save_autochecks_file(HostName("host"), [])
+    assert autochecks.has_autochecks(HostName("host")) is True
+    autochecks.remove_autochecks_file(HostName("host"))
+    assert autochecks.has_autochecks(HostName("host")) is False
 
 
 @pytest.mark.parametrize("items,expected_content", [
@@ -268,7 +268,7 @@ def test_remove_autochecks_file():
 ]\n"""),
 ])
 def test_save_autochecks_file(items, expected_content):
-    autochecks.save_autochecks_file("host", items)
+    autochecks.save_autochecks_file(HostName("host"), items)
 
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("r", encoding="utf-8") as f:

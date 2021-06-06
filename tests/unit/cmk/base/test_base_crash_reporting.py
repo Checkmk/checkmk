@@ -9,7 +9,7 @@ from pathlib import Path
 from tests.testlib.base import Scenario
 
 import cmk.utils.crash_reporting
-import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import HostName
 
 import cmk.base.check_api as check_api
 import cmk.base.config as config
@@ -76,7 +76,7 @@ def test_check_crash_report_from_exception(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={
                 "item": None,
@@ -116,7 +116,7 @@ def test_check_crash_report_save(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_manual_check=False,
@@ -145,7 +145,7 @@ def test_check_crash_report_read_agent_output(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="uptime",
             check_plugin_kwargs={},
             is_manual_check=False,
@@ -174,7 +174,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch):
         raise Exception("DING")
     except Exception:
         crash = crash_reporting.CheckCrashReport.from_exception_and_context(
-            hostname="testhost",
+            hostname=HostName("testhost"),
             check_plugin_name="snmp_uptime",
             check_plugin_kwargs={},
             is_manual_check=False,

@@ -40,7 +40,7 @@ REDIRECT = \#
 CPPCHECK = cppcheck
 endif
 
-.PHONY: clean format-shell help prepare-node-modules \
+.PHONY: clean format-shell help prepare-node-modules bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-format-python test-format-python-docker test-format-shell \

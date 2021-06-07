@@ -10,7 +10,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from pathlib import Path
 
 import dicttoxml  # type: ignore[import]
@@ -36,6 +36,17 @@ from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
 )
+from cmk.gui.valuespec import ValueSpec, TextInput
+
+# TODO Cleanup variation:
+#   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views
+#   - _parse_visible_raw_inventory_path parses visible, internal tree paths for contact groups etc.
+# => Should be unified one day.
+
+RawInventoryPath = str
+InventoryPath = List[Union[str, int]]
+# TODO Cleanup
+AttributesKeys = List[str]
 
 
 def get_inventory_data(inventory_tree, tree_path):
@@ -54,25 +65,31 @@ def get_inventory_data(inventory_tree, tree_path):
     return invdata
 
 
-def parse_tree_path(tree_path):
-    # tree_path may look like:
+def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional[AttributesKeys]]:
+    # raw_path may look like:
     # .                          (ROOT) => path = []                            key = None
     # .hardware.                 (dict) => path = ["hardware"],                 key = None
     # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
     # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
     # .software.packages:17.name (leaf) => path = ["software", "packages", 17], key = "name"
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
-    if tree_path.endswith(":"):
-        path = tree_path[:-1].strip(".").split(".")
-        attribute_keys: Optional[List[str]] = []
-    elif tree_path.endswith("."):
-        path = tree_path[:-1].strip(".").split(".")
+    if not raw_path:
+        return [], None
+
+    path: List[str]
+    attribute_keys: Optional[AttributesKeys]
+
+    if raw_path.endswith(":"):
+        path = raw_path[:-1].strip(".").split(".")
+        attribute_keys = []
+    elif raw_path.endswith("."):
+        path = raw_path[:-1].strip(".").split(".")
         attribute_keys = None
     else:
-        path = tree_path.strip(".").split(".")
+        path = raw_path.strip(".").split(".")
         attribute_keys = [path.pop(-1)]
 
-    parsed_path = []
+    parsed_path: InventoryPath = []
     for part in path:
         if ":" in part:
             # Nested numerations, see also lib/structured_data.py
@@ -84,10 +101,8 @@ def parse_tree_path(tree_path):
             if not part_:
                 continue
             try:
-                part_ = int(part_)
+                parsed_path.append(int(part_))
             except ValueError:
-                pass
-            finally:
                 parsed_path.append(part_)
     return parsed_path, attribute_keys
 
@@ -260,6 +275,32 @@ def parent_path(invpath):
     return invpath[:last_sep + 1]
 
 
+def vs_inventory_path() -> ValueSpec:
+    # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
+    # We keep this format in order to easily copy&paste these tree paths to
+    # 'Contact groups::Permitted HW/SW inventory paths'.
+    return TextInput(
+        title=_("Path to attributes or tables"),
+        size=60,
+        allow_empty=False,
+        help=_("Via <tt>Display options > Show internal tree paths</tt>"
+               " on the HW/SW Inventory page of a host you can make the"
+               " internal tree paths visible which can be inserted here."),
+    )
+
+
+def _parse_visible_raw_inventory_path(raw_path: str) -> InventoryPath:
+    parsed: InventoryPath = []
+    for part in raw_path.split("."):
+        if not part:
+            continue
+        try:
+            parsed.append(int(part))
+        except ValueError:
+            parsed.append(part)
+    return parsed
+
+
 #.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
@@ -357,13 +398,8 @@ def _get_permitted_inventory_paths():
             continue
 
         for entry in inventory_paths[1]:
-            parsed = []
-            for part in entry["path"].split("."):
-                try:
-                    parsed.append(int(part))
-                except ValueError:
-                    parsed.append(part)
-            permitted_paths.append((parsed, entry.get("attributes")))
+            permitted_paths.append(
+                (_parse_visible_raw_inventory_path(entry["path"]), entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
         g.permitted_inventory_paths = []

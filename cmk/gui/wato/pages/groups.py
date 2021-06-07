@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOfStrings,
     ListOf,
-    TextInput,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -46,6 +45,7 @@ from cmk.gui.watolib.groups import (
     load_contact_group_information,
     GroupType,
 )
+from cmk.gui.inventory import vs_inventory_path
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -510,18 +510,16 @@ class ModeEditContactgroup(ABCModeEditGroup):
                 ("paths", _("Allowed to see the following entries"),
                  ListOf(
                      Dictionary(
-                         elements=[("path", TextInput(
-                             title=_("Path"),
-                             size=60,
-                             allow_empty=False,
-                         )),
-                                   ("attributes",
-                                    ListOfStrings(
-                                        orientation="horizontal",
-                                        title=_("Attributes"),
-                                        size=15,
-                                        allow_empty=True,
-                                    ))],
+                         elements=[
+                             ("path", vs_inventory_path()),
+                             ("attributes",
+                              ListOfStrings(
+                                  orientation="horizontal",
+                                  title=_("Attributes"),
+                                  size=15,
+                                  allow_empty=True,
+                              )),
+                         ],
                          optional_keys=["attributes"],
                      ),
                      allow_empty=False,

@@ -57,17 +57,14 @@ def _transform_discovery_filesystem_params(params):
     if isinstance(include_volume_name, tuple):
         params["item_appearance"] = "volume_name_and_mountpoint"
         params["grouping_behaviour"] = include_volume_name[1]
-        return params
 
     if include_volume_name is True:
         params["item_appearance"] = "volume_name_and_mountpoint"
         params["grouping_behaviour"] = "mountpoint"
-        return params
 
     if include_volume_name is False:
         params["item_appearance"] = "mountpoint"
         params["grouping_behaviour"] = "mountpoint"
-        return params
 
     return params
 
@@ -84,6 +81,7 @@ def _valuespec_inventory_df_rules():
                          ("volume_name_as_mountpoint", _("Use volume name as mountpoint")),
                          ("uuid_as_mountpoint", _("Use UUID as mountpoint")),
                      ],
+                     default_value="volume_name_as_mountpoint",
                  )),
                 ("item_appearance",
                  DropdownChoice(
@@ -127,10 +125,6 @@ def _valuespec_inventory_df_rules():
                          "Regular expressions are supported."))),
             ],
             validate=_validate_discovery_filesystem_params,
-            optional_keys=[
-                "ignore_fs_types",
-                "never_ignore_mountpoints",
-            ],
         ),
         forth=_transform_discovery_filesystem_params,
     )

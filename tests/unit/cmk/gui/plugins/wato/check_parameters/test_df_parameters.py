@@ -56,12 +56,12 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
             "grouping_behaviour": "volume_name_and_mountpoint",
         },
         {
-            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "mountpoint_for_block_devices": "volume_name_as_mountpoint",
             "item_appearance": "uuid_and_mountpoint",
             "grouping_behaviour": "volume_name_and_mountpoint",
         },
         {
-            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "mountpoint_for_block_devices": "volume_name_as_mountpoint",
             "item_appearance": "volume_name_and_mountpoint",
             "grouping_behaviour": "uuid_and_mountpoint",
         },
@@ -72,7 +72,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
             "grouping_behaviour": "mountpoint",
         },
         {
-            "mountpoint_for_block_devices": "volume_name_and_mountpoint",
+            "mountpoint_for_block_devices": "volume_name_as_mountpoint",
             "item_appearance": "uuid_and_mountpoint",
             "grouping_behaviour": "mountpoint",
         },

@@ -319,7 +319,7 @@ class UpdateConfig:
             # TODO: in case of known exceptions we don't want the transformed values be combined
             #       with old keys. As soon as we can remove the workaround below we should not
             #       handle any ruleset differently
-            if str(check_plugin.check_ruleset_name) in {"if"}:
+            if str(check_plugin.check_ruleset_name) in {"if", "filesystem"}:
                 return new_params
 
             # TODO: some transform_value() implementations (e.g. 'ps') return parameter with

@@ -20,6 +20,7 @@ import apispec.utils  # type: ignore[import]
 from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
 from werkzeug.datastructures import MultiDict
+from werkzeug.http import parse_options_header
 from werkzeug.utils import import_string
 
 from cmk.utils import store
@@ -404,6 +405,23 @@ class Endpoint:
         self.wrapped.path = self.path
         return self.wrapped
 
+    def _is_expected_content_type(self, content_type_header: Optional[str]) -> None:
+        if content_type_header is None:
+            raise ValueError(f"No content-type specified. Possible value is: {self.content_type}")
+
+        content_type, options = parse_options_header(content_type_header)
+        if content_type == self.content_type:
+            # Content-Type is as expected.
+            if (content_type == "application/json" and 'charset' in options and
+                    options['charset'] is not None):
+                # but there are options
+                if options['charset'].lower() != 'utf-8':
+                    # with a charset we don't understand
+                    raise ValueError(f"Character set {options['charset']!r} not supported "
+                                     f"for content-type {content_type!r}.")
+        else:
+            raise ValueError(f"Content-Type {content_type!r} not supported for this endpoint.")
+
     def wrap_with_validation(
         self,
         request_schema: Optional[Type[Schema]],
@@ -459,12 +477,15 @@ class Endpoint:
                     ext={'fields': messages},
                 )
 
-            if (self.method in ("post", "put") and request.get_data(cache=True) and
-                    request.content_type != self.content_type):
-                return problem(
-                    status=415,
-                    title=f"Content type {request.content_type!r} not supported on this endpoint.",
-                )
+            if self.method in ("post", "put") and request.get_data(cache=True):
+                try:
+                    self._is_expected_content_type(request.content_type)
+                except ValueError as exc:
+                    return problem(
+                        status=415,
+                        detail=str(exc),
+                        title="Content type not valid for this endpoint.",
+                    )
 
             try:
                 if path_schema:

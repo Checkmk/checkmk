@@ -17,7 +17,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
         status=200,
-        content_type='application/json',
+        content_type='application/json; charset=utf-8',
     )
 
     wsgi_app.call_method(
@@ -25,7 +25,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/domain-types/host_config/collections/clusters",
         params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
         status=200,
-        content_type='application/json',
+        content_type='application/json; charset="utf-8"',
     )
 
     wsgi_app.call_method(

@@ -1249,17 +1249,19 @@ def resolve_service_dependencies(
     resolved: List[cmk.base.check_utils.Service] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
-        newly_resolved = [
-            service for service, dependencies in unresolved if dependencies <= resolved_descriptions
-        ]
+        newly_resolved = {
+            service.id(): service
+            for service, dependencies in unresolved
+            if dependencies <= resolved_descriptions
+        }
         if not newly_resolved:
             problems = ", ".join(
                 f"{s.description!r} ({s.check_plugin_name} / {s.item})" for s, _ in unresolved
             )
             raise MKGeneralException(f"Cyclic service dependency of host {host_name}: {problems}")
 
-        unresolved = [(s, d) for s, d in unresolved if s not in newly_resolved]
-        resolved.extend(newly_resolved)
+        unresolved = [(s, d) for s, d in unresolved if s.id() not in newly_resolved]
+        resolved.extend(newly_resolved.values())
 
     return resolved
 

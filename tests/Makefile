@@ -213,6 +213,9 @@ test-mypy:
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
+	`: files are only needed for pylint to understand the module hierarchy` \
+	grep -v $$(realpath '../enterprise/cmk/__init__.py') | \
+	grep -v $$(realpath '../enterprise/cmk/base/__init__.py') | \
 	xargs $(MYPY) $(ADDITIONAL_MYPY_ARGS)
 
 test-mypy-raw:

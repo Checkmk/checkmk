@@ -1833,7 +1833,23 @@ def apply_pre_17_sync_snapshot(site_id: SiteId, tar_content: bytes, base_dir: Pa
     create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
 
     _execute_post_config_sync_actions(site_id)
+    _execute_cmk_update_config()
+
     return True
+
+
+def _execute_cmk_update_config():
+    p = subprocess.Popen(
+        "cmk-update-config",
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        encoding="utf-8",
+    )
+    stdout, _stderr = p.communicate()
+    if p.returncode != 0:
+        raise MKGeneralException(_("Unable to convert configuration into 2.0 format\n%s") % stdout)
 
 
 def _execute_post_config_sync_actions(site_id):

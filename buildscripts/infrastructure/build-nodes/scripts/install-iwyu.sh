@@ -51,7 +51,7 @@ if [[ $# -ne 0 ]]; then
     failure "superfluous arguments:" "$@"
 fi
 
-if [ -z "$CLANG_VERSION"]; then
+if [ -z "$CLANG_VERSION" ]; then
     cd "${SCRIPT_DIR}"
     while true; do
         if [ -e defines.make ]; then

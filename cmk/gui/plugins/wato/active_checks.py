@@ -2335,6 +2335,7 @@ def _valuespec_active_checks_by_ssh():
                 title=_("Command"),
                 help=_("Command to execute on remote host."),
                 allow_empty=False,
+                size=50,
             ),
             Dictionary(
                 title=_("Optional parameters"),
@@ -2345,7 +2346,7 @@ def _valuespec_active_checks_by_ssh():
                          help=_(
                              "Must be unique for every host. Defaults to command that is executed."
                          ),
-                         size=30)),
+                         size=50)),
                     ("hostname",
                      TextAscii(
                          title=_("DNS Hostname or IP address"),
@@ -2379,7 +2380,7 @@ def _valuespec_active_checks_by_ssh():
                                size=30)),
                     ("identity",
                      TextAscii(title=_("Keyfile"), help=_("Identity of an authorized key"),
-                               size=30)),
+                               size=50)),
                     ("accept_new_host_keys",
                      FixedValue(
                          True,

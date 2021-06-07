@@ -58,6 +58,15 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch):
     monkeypatch.setattr(cmk.gui.wato.mkeventd, "_get_rule_stats_from_ec", lambda: {})
 
 
+@pytest.fixture(autouse=True)
+def fixture_disable_cmk_update_config(monkeypatch):
+    # During CME config computation the EC rule packs are loaded which currently also load the
+    # rule usage information from the running EC. Since we do not have a EC running this fails
+    # and causes timeouts. Disable this for these tests.
+    monkeypatch.setattr(cmk.gui.watolib.activate_changes, "_execute_cmk_update_config",
+                        lambda: None)
+
+
 def _create_sync_snapshot(activation_manager, snapshot_data_collector_class, monkeypatch, tmp_path,
                           is_pre_17_site, remote_site):
     _create_test_sync_config(monkeypatch)
@@ -457,7 +466,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
 @pytest.mark.usefixtures("register_builtin_html")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_user_login,
-                                    remote_site):
+                                    remote_site, fixture_disable_cmk_update_config):
     snapshot_data_collector_class = ("CMESnapshotDataCollector"
                                      if edition_short == "cme" else "CRESnapshotDataCollector")
 

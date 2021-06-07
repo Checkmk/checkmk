@@ -6,6 +6,7 @@
 
 import abc
 import random
+from typing import Optional
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
@@ -50,7 +51,7 @@ class List(Entity):
 
 
 class Dict(Entity):
-    def __init__(self, key, values, enumerate_keys=None):
+    def __init__(self, key, values, enumerate_keys: Optional[Entity] = None):
         super(Dict, self).__init__(key)
         self._values = values
         self._enumerate_keys = enumerate_keys
@@ -69,8 +70,12 @@ class Dict(Entity):
 
 
 class Str(Entity):
+    def __init__(self, key, value=None):
+        super().__init__(key)
+        self.value = value
+
     def create(self, idx, amount):
-        return "%s-%s" % (self.key, idx)
+        return "%s-%s" % (self.value or self.key, idx)
 
 
 class Int(Entity):
@@ -147,6 +152,58 @@ class InstanceBuilder(metaclass=abc.ABCMeta):
     @classmethod
     def create_instances(cls, amount, skip_entities=None):
         return [cls(idx, amount, skip_entities)._create_instance() for idx in range(amount)]
+
+
+class DictInstanceBuilder(metaclass=abc.ABCMeta):
+    # This class was created in order to support the fake client for AWS Lambda.
+    # The Lambda API responses contain dictionaries like:
+    # {
+    #   'Tags': {
+    #   'key': 'value'
+    #   }
+    # }
+    #
+    #TODO: Currently complex structures where the value are dictionaries are not yet supported,e.g.
+    #
+    # class ComplexStructureIB(DictInstanceBuilder):
+    #   def _key(self):
+    #     return Str('Foo')
+    #
+    #   def _value(self):
+    #     return Dict(Str('Bar'), [Str('Baz')])
+    #
+    # should return:
+    # {
+    #   'Foo-0': {
+    #     'Bar-0': {"Baz": "Baz"}
+    #   }
+    # }
+    #
+    # but the actual output is:
+    # {
+    #   'Foo-0': {
+    #     "Baz": "Baz",
+    #   }
+    # }
+
+    def __init__(self, idx, amount):
+        self._idx = idx
+        self._amount = amount
+
+    def _key(self):
+        return None
+
+    def _value(self):
+        return None
+
+    @classmethod
+    def create_instances(cls, amount):
+        return {
+            key.create(idx, amount): value.create(idx, amount)
+            for idx in range(amount)
+            if ((key := cls(idx, amount)._key()) is not None and
+                (value := cls(idx, amount)._value()) is not None)
+        }
 
 
 #.
@@ -2143,6 +2200,79 @@ class FakeServiceQuotasClient:
                 'Running On-Demand X instances',
             ]]
         }
+
+
+#   .--Lambda----------------------------------
+
+
+class LambdaListFunctionsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return {
+            Str('FunctionName'),
+            Str('FunctionArn', value='arn:aws:lambda:eu-central-1:123456789:function:FunctionName'),
+            Choice('Runtime', ['nodejs', 'python2.7', 'dotnetcore3.1']),
+            Str('Role'),
+            Str('Handler'),
+            Int('CodeSize'),
+            Str('Description'),
+            Int('Timeout'),
+            Int('MemorySize'),
+            Str('LastModified'),
+            Str('CodeSha256'),
+            Str('Version'),
+            Dict('VpcConfig', [
+                List('SubnetIds', []),
+                List('SecurityGroupIds', []),
+                List('DeadLetterConfig', []),
+                List('DeadLetterConfig', []),
+                Dict('Environment',
+                     [Dict('Variables', []),
+                      Dict('Error', [
+                          Str('ErrorCode'),
+                          Str('Message'),
+                      ])])
+            ]),
+            Str('KMSKeyArn'),
+            Dict('TracingConfig', [
+                Choice('Mode', ['Active', 'PassThrough']),
+            ]),
+            Str('MasterArn'),
+            Str('RevisionId'),
+            List('Layers', []),
+            Choice('State', ['Pending', 'Active', 'Inactive', 'Failed']),
+            Str('StateReason'),
+            Choice('StateReasonCode', ['Idle', 'Creating', 'Restoring']),
+            Str('LastUpdateStatus'),
+            Str('LastUpdateStatusReason'),
+            Choice('LastUpdateStatusReasonCode',
+                   ['EniLimitExceeded', 'InsufficientRolePermissions']),
+            Dict('FileSystemConfigs', [
+                Str('Arn'),
+                Str('LocalMountPath'),
+            ]),
+            Choice('PackageType', ['Zip', 'Image']),
+            Dict('ImageConfigResponse', [
+                Dict('ImageConfig', [
+                    Str('EntryPoint'),
+                    Str('Command'),
+                    Str('WorkingDirectory'),
+                ]),
+                Dict('Error', [
+                    Str('ErrorCode'),
+                    Str('Message'),
+                ])
+            ]),
+            Str('SigningProfileVersionArn'),
+            Str('SigningJobArn')
+        }
+
+
+class LambdaListTagsInstancesIB(DictInstanceBuilder):
+    def _key(self):
+        return Str('Tag')
+
+    def _value(self):
+        return Str('Value')
 
 
 #.

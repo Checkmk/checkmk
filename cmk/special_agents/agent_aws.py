@@ -3790,6 +3790,142 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
 
 #.
+#   .--Lambda--------------------------------------------------------------.
+#   |               _                    _         _                       |
+#   |              | |    __ _ _ __ ___ | |__   __| | __ _                 |
+#   |              | |   / _` | '_ ` _ \| '_ \ / _` |/ _` |                |
+#   |              | |__| (_| | | | | | | |_) | (_| | (_| |                |
+#   |              |_____\__,_|_| |_| |_|_.__/ \__,_|\__,_|                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class LambdaSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super().__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['lambda_names']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['lambda_tags'])
+
+    @property
+    def name(self):
+        return "lambda_summary"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, *args):
+        functions = []
+        for page in self._client.get_paginator('list_functions').paginate():
+            for function in self._get_response_content(page, 'Functions'):
+                if ((self._names is None or
+                     (self._names and function.get('FunctionName') in self._names)) and
+                    (self._tags is None or
+                     self._tags and self._matches_tag_conditions(self._get_tagging_for(function)))):
+                    functions.append(function)
+        return functions
+
+    def _get_tagging_for(self, function):
+        tagging = self._get_response_content(
+            self._client.list_tags(Resource=function.get('FunctionArn')), 'Tags')
+        # adapt to format of _prepare_tags_for_api_response
+        return [{'Key': key, 'Value': value} for key, value in tagging.items()]
+
+    def _matches_tag_conditions(self, tagging):
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
+
+    def _compute_content(self, raw_content, colleague_contents):
+        functions = raw_content.content
+        return AWSComputedContent(
+            functions,
+            raw_content.cache_timestamp,
+        )
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class LambdaCloudwatch(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "lambda"
+
+    @property
+    def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('lambda_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = [
+            ("ConcurrentExecutions", "Count", "Sum"),
+            ("DeadLetterErrors", "Count", "Sum"),
+            ("DestinationDeliveryFailures", "Count", "Sum"),
+            ("Duration", "Milliseconds", "Average"),
+            ("Errors", "Count", "Sum"),
+            ("Invocations", "Count", "Sum"),
+            ("IteratorAge", "Count", "Average"),
+            ("PostRuntimeExtensionsDuration", "Count", "Average"),
+            ("ProvisionedConcurrencyInvocations", "Count", "Sum"),
+            ("ProvisionedConcurrencySpilloverInvocations", "Count", "Sum"),
+            ("ProvisionedConcurrencyUtilization", "Count", "Sum"),
+            ("ProvisionedConcurrentExecutions", "Count", "Sum"),
+            ("Throttles", "Count", "Sum"),
+            ("UnreservedConcurrentExecutions", "Count", "Sum"),
+        ]
+        return [{
+            'Id': self._create_id_for_metric_data_query(idx, metric_name),
+            'Label': lambda_function['FunctionArn'],
+            'MetricStat': {
+                'Metric': {
+                    'Namespace': 'AWS/Lambda',
+                    'MetricName': metric_name,
+                    'Dimensions': [{
+                        'Name': "FunctionName",
+                        'Value': lambda_function['FunctionName'],
+                    }]
+                },
+                'Period': self.period,
+                'Stat': stat,
+                'Unit': unit,
+            },
+        }
+                for idx, lambda_function in enumerate(colleague_contents.content)
+                for metric_name, unit, stat in metrics]
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(
+            raw_content.content,
+            raw_content.cache_timestamp,
+        )
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+#.
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -3970,6 +4106,7 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_client = self._init_client('cloudwatch')
         dynamodb_client = self._init_client('dynamodb')
         wafv2_client = self._init_client('wafv2')
+        lambda_client = self._init_client('lambda')
 
         #---distributors----------------------------------------------------
         ec2_limits_distributor = ResultDistributor()
@@ -3998,6 +4135,8 @@ class AWSSectionsGeneric(AWSSections):
 
         wafv2_limits_distributor = ResultDistributor()
         wafv2_summary_distributor = ResultDistributor()
+
+        lambda_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_limits = EC2Limits(ec2_client, region, config, ec2_limits_distributor,
@@ -4058,7 +4197,12 @@ class AWSSectionsGeneric(AWSSections):
                                      config,
                                      'REGIONAL',
                                      distributor=wafv2_summary_distributor)
-
+        lambda_summary = LambdaSummary(
+            lambda_client,
+            region,
+            config,
+            lambda_summary_distributor,
+        )
         #---sections--------------------------------------------------------
         ec2_labels = EC2Labels(ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
@@ -4093,6 +4237,7 @@ class AWSSectionsGeneric(AWSSections):
 
         wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, True)
 
+        lambda_cloudwatch = LambdaCloudwatch(cloudwatch_client, region, config)
         #---register sections to distributors-------------------------------
         ec2_limits_distributor.add(ec2_summary)
         ec2_summary_distributor.add(ec2_labels)
@@ -4132,6 +4277,8 @@ class AWSSectionsGeneric(AWSSections):
 
         wafv2_limits_distributor.add(wafv2_summary)
         wafv2_summary_distributor.add(wafv2_web_acl)
+
+        lambda_summary_distributor.add(lambda_cloudwatch)
 
         #---register sections for execution---------------------------------
         if 'ec2' in services:
@@ -4204,6 +4351,10 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(wafv2_limits)
             self._sections.append(wafv2_summary)
             self._sections.append(wafv2_web_acl)
+
+        if 'lambda' in services:
+            self._sections.append(lambda_summary)
+            self._sections.append(lambda_cloudwatch)
 
 
 #.
@@ -4292,6 +4443,12 @@ AWSServices = [
                          filter_by_names=True,
                          filter_by_tags=True,
                          limits=True),
+    AWSServiceAttributes(key="lambda",
+                         title="Lambda",
+                         global_service=False,
+                         filter_by_names=True,
+                         filter_by_tags=True,
+                         limits=False),
 ]
 
 
@@ -4607,6 +4764,7 @@ def main(sys_argv=None):
         ("dynamodb", args.dynamodb_names, (args.dynamodb_tag_key, args.dynamodb_tag_values),
          args.dynamodb_limits),
         ("wafv2", args.wafv2_names, (args.wafv2_tag_key, args.wafv2_tag_values), args.wafv2_limits),
+        ("lambda", args.lambda_names, (args.lambda_tag_key, args.lambda_tag_values), None),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

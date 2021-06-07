@@ -1247,3 +1247,105 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_aws_wafv2_web_acl,
         title=lambda: _("AWS/WAFV2 Web ACL Requests"),
     ))
+
+#.
+#   .--Lambda--------------------------------------------------------------.
+#   |               _                    _         _                       |
+#   |              | |    __ _ _ __ ___ | |__   __| | __ _                 |
+#   |              | |   / _` | '_ ` _ \| '_ \ / _` |/ _` |                |
+#   |              | |__| (_| | | | | | | |_) | (_| | (_| |                |
+#   |              |_____\__,_|_| |_| |_|_.__/ \__,_|\__,_|                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _parameter_valuespec_aws_lambda_performance():
+    return Dictionary(elements=[
+        ('levels_duration_percent',
+         Tuple(
+             title=_("Upper levels for duration in percent of the timeout"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+             help=
+             _("Specify the upper levels for the elapsed time of a function’s execution (duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+              ),
+         )),
+        ('levels_duration_absolute',
+         Tuple(
+             title=_("Upper levels for duration in seconds"),
+             elements=[
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
+             ],
+             help=
+             _("Specify the upper levels for the elapsed time of a function’s execution (duration)."
+              ),
+         )),
+        ('levels_errors',
+         Tuple(
+             title=_("Upper levels for errors"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=
+             _("Specify the upper levels for the number of failed invocations per second due to function errors."
+              ),
+         )),
+        ('levels_invocations',
+         Tuple(
+             title=_("Upper levels for invocations"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=_("Specify the upper levels for the number of invocations per second."),
+         )),
+        ('levels_throttles',
+         Tuple(
+             title=_("Upper levels for throttles"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=
+             _("Specify the upper levels for the number of invocations per second that exceeded the concurrent limits (throttles)."
+              ),
+         )),
+        ('levels_iterator_age',
+         Tuple(
+             title=_("Upper levels for iterator age"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=
+             _("Specify the upper levels in seconds for the age of the last record for each batch of records processed (iterator age). "
+               "A high iterator age could result from the following scenarios: a high execution duration for a function, not enough shards in a stream, invocation errors, insufficient batch size. "
+               "This metric is only reported for stream-based invocations."),
+         )),
+        ('levels_dead_letter_errors',
+         Tuple(
+             title=_("Upper levels for dead letter errors"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=_(
+                 "Specify the upper levels for the number of discarded events per second that could not be processed. "
+                 "This metric is only reported for asynchronous invocations."),
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_performance",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_performance,
+        title=lambda: _("AWS/Lambda Performance"),
+    ))

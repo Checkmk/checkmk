@@ -768,6 +768,48 @@ metric_info['aws_cloudwatch_alarms_cloudwatch_alarms'] = {
     'color': '41/a',
 }
 
+metric_info['aws_lambda_duration'] = {
+    'title': _('Duration of Lambda functions'),
+    'unit': 's',
+    'color': '12/a',
+}
+
+metric_info['aws_lambda_duration_in_percent'] = {
+    'title': _('Duration in percent of Lambda timeout'),
+    'unit': '%',
+    'color': '14/a',
+}
+
+metric_info['aws_lambda_invocations'] = {
+    'title': _('Invocations'),
+    'unit': '1/s',
+    'color': '16/a',
+}
+
+metric_info['aws_lambda_throttles'] = {
+    'title': _('Throttles'),
+    'unit': '1/s',
+    'color': '26/a',
+}
+
+metric_info['aws_lambda_timeout'] = {
+    'title': _('Timeout'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_lambda_iterator_age'] = {
+    'title': _('Iterator age'),
+    'unit': 's',
+    'color': '31/a',
+}
+
+metric_info['aws_lambda_dead_letter_errors'] = {
+    'title': _('Dead letter errors'),
+    'unit': '1/s',
+    'color': '41/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

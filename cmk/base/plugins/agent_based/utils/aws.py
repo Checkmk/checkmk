@@ -21,6 +21,7 @@ from ..agent_based_api.v1 import Service
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
+LambdaSummarySection = Mapping[str, float]
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:
@@ -91,3 +92,15 @@ def discover_aws_generic(
 
 def aws_rds_service_item(instance_id: str, region: str) -> str:
     return f'{instance_id} [{region}]'
+
+
+def function_arn_to_item(function_arn: str) -> str:
+    """Human readable representation of the FunctionArn without information loss.
+        The region, lambda function name and account id is extracted from the FunctionArn
+        (arn:aws:lambda:REGION:ACCOUNT_ID:function:LAMBDA_FUNCTION_NAME).
+
+    >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function")
+    'eu-central-1 my_python_test_function 710145618630'
+    """
+    splitted = function_arn.split(':')
+    return f"{splitted[3]} {splitted[-1]} {splitted[4]}"

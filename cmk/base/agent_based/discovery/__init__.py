@@ -846,7 +846,7 @@ def _may_rediscover(
     reference_time: float,
     oldest_queued: float,
 ) -> str:
-    if not {"excluded_time", "group_time"}.issuperset(rediscovery_parameters):
+    if not set(rediscovery_parameters) >= {"excluded_time", "group_time"}:
         return "automatic discovery disabled for this host"
 
     now = time.gmtime(reference_time)

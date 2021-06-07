@@ -52,7 +52,18 @@ if [[ $# -ne 0 ]]; then
 fi
 
 if [ -z "$CLANG_VERSION"]; then
-    CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            CLANG_VERSION=$(make -f defines.make print-CLANG_VERSION)
+            break
+        elif [ $PWD == / ]; then
+            echo "could not determine Clang version" >&2
+            exit 1
+        else
+            cd ..
+        fi
+    done
 fi
 
 # The tag/version numbering scheme is a big mess...

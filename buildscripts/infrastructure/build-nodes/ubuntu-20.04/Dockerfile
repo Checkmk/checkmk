@@ -111,9 +111,10 @@ RUN /opt/install-cmk-dependencies.sh
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other
 # containers, ...). Scripts should be usable with other Ubuntu versions.
+COPY ../../../defines.make /opt/
 RUN /opt/install-docker.sh
 RUN /opt/install-make-dist-deps.sh
-RUN /opt/install-clang.sh 12
+RUN /opt/install-clang.sh
 RUN /opt/install-cppcheck.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged

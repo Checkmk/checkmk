@@ -57,3 +57,6 @@ SHELL              := /bin/bash
 #SHELL              := /bin/bash -e -o pipefail
 
 CLANG_VERSION      := 12
+
+print-%:
+	@echo '$($*)'

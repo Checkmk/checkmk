@@ -78,7 +78,7 @@ LOCK_PATH := .venv.lock
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
         documentation-quick format format-c format-python format-shell format-js \
-        GTAGS show-clang-version headers help install iwyu mrproper mrclean optimize-images \
+        GTAGS headers help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc
 
 
@@ -287,9 +287,6 @@ setversion:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
-
-show-clang-version:
-	@echo $(CLANG_VERSION)
 
 headers:
 	doc/helpers/headrify

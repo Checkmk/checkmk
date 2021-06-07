@@ -12,11 +12,26 @@ set -eux
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+failure() {
+    echo "$(basename $0):" "$@" >&2
+    exit 1
+}
+
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     CLANG_VERSION=$1
 else
-    CLANG_VERSION=$(make --no-print-directory -C "${SCRIPT_DIR}/../../../.." show-clang-version)
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            CLANG_VERSION=$(make -f defines.make print-CLANG_VERSION)
+            break
+        elif [ $PWD == / ]; then
+            failure "could not determine Clang version"
+        else
+            cd ..
+        fi
+    done
 fi
 
 DISTRO=$(lsb_release -is)
@@ -24,8 +39,7 @@ VERSION=$(lsb_release -sr)
 DIST_VERSION="${DISTRO}_${VERSION}"
 
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root!"
-   exit 1
+    failure "This script must be run as root!"
 fi
 
 declare -A CLANG_VERSION_PATTERNS
@@ -35,8 +49,7 @@ CLANG_VERSION_PATTERNS[11]="-11"
 CLANG_VERSION_PATTERNS[12]="-12"
 
 if [ ! ${CLANG_VERSION_PATTERNS[$CLANG_VERSION]+_} ]; then
-    echo "This script does not support LLVM version $CLANG_VERSION"
-    exit 3
+    failure "This script does not support LLVM version $CLANG_VERSION"
 fi
 
 CLANG_VERSION_STRING=${CLANG_VERSION_PATTERNS[$CLANG_VERSION]}
@@ -55,9 +68,7 @@ case "$DIST_VERSION" in
     Ubuntu_20.04 )    REPO_NAME="deb http://apt.llvm.org/focal/    llvm-toolchain-focal$CLANG_VERSION_STRING   main" ;;
     Ubuntu_20.10 )    REPO_NAME="deb http://apt.llvm.org/groovy/   llvm-toolchain-groovy$CLANG_VERSION_STRING  main" ;;
     Ubuntu_21.04 )    REPO_NAME="deb http://apt.llvm.org/hirsute/  llvm-toolchain-hirsute$CLANG_VERSION_STRING main" ;;
-    * )
-        echo "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})."
-        exit 2
+    * ) failure "Distribution '$DISTRO' in version '$VERSION' is not supported by this script (${DIST_VERSION})." >&2
 esac
 
 
@@ -73,4 +84,4 @@ apt-get install -y \
         lldb-$CLANG_VERSION \
         libclang-$CLANG_VERSION-dev
 
-echo "${SCRIPT_DIR}/install-iwyu.sh" --clang-version=$CLANG_VERSION
+"${SCRIPT_DIR}/install-iwyu.sh" --clang-version=$CLANG_VERSION

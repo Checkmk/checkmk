@@ -261,7 +261,7 @@ omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	cp -a configure.ac m4 mk-livestatus-$(VERSION)
+	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
 	    rm -rf autom4te.cache && \

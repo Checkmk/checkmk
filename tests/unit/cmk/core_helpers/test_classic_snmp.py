@@ -8,6 +8,8 @@ import collections
 
 import pytest
 
+from cmk.utils.type_defs import HostName
+
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
 
@@ -24,7 +26,7 @@ from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
 def test_snmp_port_spec(port, expected):
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=False,
-        hostname="localhost",
+        hostname=HostName("localhost"),
         ipaddress="127.0.0.1",
         credentials="public",
         port=port,
@@ -48,7 +50,7 @@ def test_snmp_port_spec(port, expected):
 def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=is_ipv6,
-        hostname="localhost",
+        hostname=HostName("localhost"),
         ipaddress="127.0.0.1",
         credentials="public",
         port=161,
@@ -75,7 +77,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     (SNMPSettings(
         snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="localhost",
+            hostname=HostName("localhost"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=161,
@@ -100,7 +102,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     (SNMPSettings(
         snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="lohost",
+            hostname=HostName("lohost"),
             ipaddress="127.0.0.1",
             credentials="public",
             port=161,
@@ -125,7 +127,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     (SNMPSettings(
         snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="lohost",
+            hostname=HostName("lohost"),
             ipaddress="public",
             credentials=("authNoPriv", "md5", "md5", "abc"),
             port=161,
@@ -150,7 +152,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     (SNMPSettings(
         snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="lohost",
+            hostname=HostName("lohost"),
             ipaddress="public",
             credentials=('noAuthNoPriv', 'secname'),
             port=161,
@@ -175,7 +177,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     (SNMPSettings(
         snmp_config=SNMPHostConfig(
             is_ipv6_primary=False,
-            hostname="lohost",
+            hostname=HostName("lohost"),
             ipaddress="127.0.0.1",
             credentials=('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
             port=161,

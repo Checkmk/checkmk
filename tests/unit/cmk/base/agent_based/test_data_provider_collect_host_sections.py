@@ -13,7 +13,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import AgentRawData, HostKey, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostKey, HostName, result, SectionName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
@@ -379,11 +379,11 @@ class TestMakeHostSectionsClusters:
 
 
 def test_get_host_sections_cluster(monkeypatch, mocker):
-    hostname = "testhost"
+    hostname = HostName("testhost")
     hosts = {
-        "host0": "10.0.0.0",
-        "host1": "10.0.0.1",
-        "host2": "10.0.0.2",
+        HostName("host0"): "10.0.0.0",
+        HostName("host1"): "10.0.0.1",
+        HostName("host2"): "10.0.0.2",
     }
     address = "1.2.3.4"
     tags = {"agent": "no-agent"}

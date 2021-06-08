@@ -17,7 +17,7 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.type_defs import AgentRawData, result, SectionName
+from cmk.utils.type_defs import AgentRawData, HostName, result, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -57,7 +57,7 @@ def json_identity(data):
 
 def clone_file_cache(file_cache):
     return type(file_cache)(
-        file_cache.hostname,
+        HostName(file_cache.hostname),
         base_path=file_cache.base_path,
         max_age=file_cache.max_age,
         disabled=file_cache.disabled,
@@ -70,7 +70,7 @@ class TestFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, NoCache, SNMPFileCache])
     def file_cache(self, request):
         return request.param(
-            "hostname",
+            HostName("hostname"),
             base_path=Path(os.devnull),
             max_age=MaxAge.none(),
             disabled=True,
@@ -93,7 +93,7 @@ class TestNoCache:
     @pytest.fixture
     def file_cache(self, path):
         return NoCache(
-            "hostname",
+            HostName("hostname"),
             base_path=path,
             max_age=MaxAge(checking=0, discovery=999, inventory=0),
             disabled=False,
@@ -137,7 +137,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
     @pytest.fixture(params=[DefaultAgentFileCache, SNMPFileCache])
     def file_cache(self, path, request):
         return request.param(
-            "hostname",
+            HostName("hostname"),
             base_path=path,
             max_age=MaxAge(checking=0, discovery=999, inventory=0),
             disabled=False,

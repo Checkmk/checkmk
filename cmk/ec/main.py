@@ -910,8 +910,9 @@ class EventServer(ECServerThread):
                             isinstance(address[0], str) and  #
                             isinstance(address[1], int)):
                         raise ValueError("Invalid remote address '%r' for SNMP trap" % (address,))
+                    addr: Tuple[str, int] = address  # for mypy's sake (bug!)
                     self.process_raw_data(
-                        lambda: self._snmp_trap_engine.process_snmptrap(message, address))
+                        lambda: self._snmp_trap_engine.process_snmptrap(message, addr))
                 except Exception:
                     self._logger.exception(
                         'exception while handling an SNMP trap, skipping this one')

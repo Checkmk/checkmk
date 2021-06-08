@@ -7,7 +7,7 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 # Needed for receiving traps
 import pysnmp.debug  # type: ignore[import]
@@ -140,7 +140,7 @@ class SNMPTrapEngine:
                     priv_key,
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id))
 
-    def process_snmptrap(self, message: bytes, sender_address: Any) -> None:
+    def process_snmptrap(self, message: bytes, sender_address: Tuple[str, int]) -> None:
         """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
         and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
         self._logger.log(VERBOSE, "Trap received from %s:%d. Checking for acceptance now.",

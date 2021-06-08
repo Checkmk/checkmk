@@ -18,6 +18,7 @@ from cmk.utils.type_defs import ContactgroupName
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
 from .event import Event
+from .history import History, quote_shell_string
 from .host_config import HostConfig
 from .settings import Settings
 
@@ -37,7 +38,7 @@ NotificationContext = Dict[str, str]
 #   '----------------------------------------------------------------------'
 
 
-def event_has_opened(history: Any, settings: Settings, config: Config, logger: Logger,
+def event_has_opened(history: History, settings: Settings, config: Config, logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]], rule: Rule,
                      event: Event) -> None:
     # Prepare for events with a limited livetime. This time starts
@@ -64,7 +65,7 @@ def event_has_opened(history: Any, settings: Settings, config: Config, logger: L
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history: Any, settings: Settings, config: Config, logger: Logger,
+def do_event_actions(history: History, settings: Settings, config: Config, logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
                      actions: Any, event: Event, is_cancelling: bool) -> None:
     for aname in actions:
@@ -86,7 +87,7 @@ def do_event_actions(history: Any, settings: Settings, config: Config, logger: L
 # not hang for more than a couple of ms.
 
 
-def do_event_action(history: Any, settings: Settings, config: Config, logger: Logger,
+def do_event_action(history: History, settings: Settings, config: Config, logger: Logger,
                     event_columns: Iterable[Tuple[str, Any]], action: Action, event: Event,
                     user: Any) -> None:
     action_id = action['id']
@@ -107,7 +108,7 @@ def do_event_action(history: Any, settings: Settings, config: Config, logger: Lo
         logger.exception('Error during execution of action %s', action_id)
 
 
-def _do_email_action(history: Any, config: Config, logger: Logger,
+def _do_email_action(history: History, config: Config, logger: Logger,
                      event_columns: Iterable[Tuple[str, Any]], action_config: EMailActionConfig,
                      event: Event, user: Any) -> None:
     to = _prepare_text(action_config['to'], event_columns, event)
@@ -117,7 +118,7 @@ def _do_email_action(history: Any, config: Config, logger: Logger,
     history.add(event, 'EMAIL', user, f'{to}|{subject}')
 
 
-def _do_script_action(history: Any, logger: Logger, event_columns: Iterable[Tuple[str, Any]],
+def _do_script_action(history: History, logger: Logger, event_columns: Iterable[Tuple[str, Any]],
                       action_config: ScriptActionConfig, action_id: str, event: Event,
                       user: Any) -> None:
     _execute_script(
@@ -166,10 +167,6 @@ def _substitute_event_tags(text: str, event_columns: Iterable[Tuple[str, Any]],
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace('$%s$' % key.upper(), value)
     return text
-
-
-def quote_shell_string(s: str) -> str:
-    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger) -> bool:

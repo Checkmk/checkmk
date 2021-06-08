@@ -1171,7 +1171,17 @@ CLANG_ADD_INC_PATHS    = YES
 # specified with INPUT and INCLUDE_PATH.
 # This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
 
-CLANG_OPTIONS          =
+CLANG_OPTIONS          = -std=c++17 \
+                         -DHAVE_CONFIG_H \
+                         -I. \
+                         -I../.. \
+                         -I.. \
+                         -isystem \
+                         includes/asio \
+                         -DASIO_DISABLE_CONCEPTS \
+                         -I../../omd/packages/re2/destdir/include \
+                         -Iincludes/googletest \
+                         -I../../omd/build/package_build/rrdtool-1.7.2/src
 
 # If clang assisted parsing is enabled you can provide the clang parser with the
 # path to the directory containing a file called compile_commands.json. This

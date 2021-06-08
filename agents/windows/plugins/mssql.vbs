@@ -36,7 +36,7 @@
 Option Explicit
 Const CMK_VERSION = "2.0.0p6"
 
-Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
+Dim WMI, FSO, objStdout, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name, instance_excluded, service_name
 Dim cfg_dir, cfg_file, hostname, tcpport
 
@@ -45,13 +45,16 @@ Const HKLM = &H80000002
 ' Directory of all database instance names
 Set instances = CreateObject("Scripting.Dictionary")
 Set FSO = CreateObject("Scripting.FileSystemObject")
+' Request unicode stdout and add a bom so the agent knows we send utf-16
+Set objStdout = FSO.GetStandardStream(1, True)
+objStdout.Write(chrW(&HFEFF))
 Set SHO = CreateObject("WScript.Shell")
 
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
 cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
 Sub addOutput(text)
-    wscript.echo text
+    objStdout.WriteLine text
 End Sub
 
 Function readIniFile(path)

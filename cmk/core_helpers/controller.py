@@ -47,7 +47,7 @@ class GlobalConfig(NamedTuple):
             0: logging.CRITICAL,  # emergency
             1: logging.CRITICAL,  # alert
             2: logging.CRITICAL,  # critical
-            3: logging.ERROR,  #  error
+            3: logging.ERROR,  # error
             4: logging.WARNING,  # warning
             5: logging.WARNING,  # notice
             6: logging.INFO,  # informational
@@ -98,7 +98,7 @@ class Command(NamedTuple):
         raw_serial, host_name, mode_name, timeout = command.split(sep=";", maxsplit=3)
         return Command(
             serial=ConfigSerial(raw_serial),
-            host_name=host_name,
+            host_name=HostName(host_name),
             mode=Mode.CHECKING if mode_name == "checking" else Mode.DISCOVERY,
             timeout=int(timeout),
         )
@@ -107,7 +107,7 @@ class Command(NamedTuple):
 def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
     with _confirm_command_processed():
         serial: ConfigSerial = ConfigSerial("")
-        host_name: HostName = ""
+        host_name: Optional[HostName] = None
         try:
             command = Command.from_str(raw_command)
             serial = command.serial

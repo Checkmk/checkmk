@@ -84,13 +84,14 @@ PaintFunction = Callable[[Any], PaintResult]
 def paint_host_inventory_tree(row: Row,
                               invpath: SDRawPath = ".",
                               column: str = "host_inventory") -> CellSpec:
-    hostname = row.get("host_name")
-    assert isinstance(hostname, str)
-    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
+    raw_hostname = row.get("host_name")
+    assert isinstance(raw_hostname, str)
+
+    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(HostName(raw_hostname))
     if len(sites_with_same_named_hosts) > 1:
         html.show_error(
             _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
-            (hostname, ", ".join(sites_with_same_named_hosts)))
+            (raw_hostname, ", ".join(sites_with_same_named_hosts)))
         return "", ""
 
     struct_tree = row.get(column)

@@ -7,7 +7,7 @@
 from datetime import datetime
 from logging import Logger
 from re import findall
-from time import localtime, mktime, strptime, time
+from time import localtime, mktime, strptime, time as _time
 from typing import Iterable, Mapping, Optional, Tuple, TypedDict
 
 from dateutil.parser import isoparse
@@ -52,6 +52,21 @@ class Event(TypedDict, total=False):
     state: int
 
 
+def _make_event(text: str, ipaddress: str, time: float) -> Event:
+    return Event(
+        facility=1,
+        priority=0,
+        text=text,
+        host="",
+        ipaddress=ipaddress,
+        application="",
+        pid=0,
+        time=time,
+        core_host=None,
+        host_in_downtime=False,
+    )
+
+
 def create_event_from_line(line: str,
                            address: Optional[Tuple[str, int]],
                            logger: Logger,
@@ -64,28 +79,14 @@ def create_event_from_line(line: str,
             logger.info("Processing message '%s'", line)
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
-    event: Event = {
-        "ipaddress": ipaddress,
-        "core_host": None,
-        "host_in_downtime": False,
-    }
+    time = _time()
+    event = _make_event(line, ipaddress, time)
     try:
         parse_message(event, line, ipaddress)
     except Exception as e:
         if verbose:
             logger.exception('Got non-syslog message "%s" (%s)' % (line, e))
-        event = {
-            "facility": 1,
-            "priority": 0,
-            "text": line,
-            "host": "",
-            "ipaddress": ipaddress,
-            "application": "",
-            "pid": 0,
-            "time": time(),
-            "core_host": None,
-            "host_in_downtime": False,
-        }
+        event = _make_event(line, ipaddress, time)
     if verbose:
         logger.info('Parsed message:\n' +
                     ("".join([" %-15s %s\n" % (k + ":", v)
@@ -188,7 +189,7 @@ def parse_message(event: Event, line: str, ipaddress: str) -> None:
     elif len(line.split(': ', 1)[0].split(' ')) == 1:
         event.update(parse_syslog_info(line))
         # There is no datetime information in the message, use current time
-        event['time'] = time()
+        event['time'] = _time()
         # There is no host information, use the provided address
         event["host"] = ipaddress
 
@@ -316,7 +317,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
         sd_and_message,
     ) = line.split(" ", 6)
     nil_value = "-"  # SyslogMessage.nilvalue()
-    event['time'] = time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
+    event['time'] = _time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
     event["host"] = "" if hostname == nil_value else hostname
     event["application"] = "" if app_name == nil_value else app_name
     event["pid"] = 0 if procid == nil_value else int(procid)

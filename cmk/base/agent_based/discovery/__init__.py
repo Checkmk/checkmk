@@ -44,6 +44,7 @@ from cmk.utils.type_defs import (
     Item,
     MetricTuple,
     RulesetName,
+    ServiceName,
     state_markers,
 )
 
@@ -902,7 +903,7 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
-    host_of_clustered_service: Callable[[HostName, str], str],
+    host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
 ) -> ServicesTable:
 
     service_result = analyse_discovered_services(

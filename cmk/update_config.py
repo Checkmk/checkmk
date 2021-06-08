@@ -33,7 +33,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.type_defs import CheckPluginName, UserId
+from cmk.utils.type_defs import CheckPluginName, HostName, UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -277,7 +277,7 @@ class UpdateConfig:
         all_rulesets.load()
 
         for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
-            hostname = autocheck_file.stem
+            hostname = HostName(autocheck_file.stem)
             try:
                 autochecks = cmk.base.autochecks.parse_autochecks_file(
                     hostname,

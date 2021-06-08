@@ -73,21 +73,20 @@ def create_event_from_line(line: str,
                            *,
                            verbose: bool = False) -> Event:
     if verbose:
-        if address:
-            logger.info("Processing message from %r: '%s'", address, line)
-        else:
-            logger.info("Processing message '%s'", line)
+        adr = '' if address is None else f' from host {address[0]}, port {address[1]}:'
+        logger.info(f'processing message{adr} "{line}"')
     # TODO: Is it really never a domain name?
-    ipaddress = "" if address is None else address[0]
+    ipaddress = '' if address is None else address[0]
     try:
         event = parse_message(line, ipaddress)
     except Exception as e:
         if verbose:
-            logger.exception('Got non-syslog message "%s" (%s)', line, e)
+            logger.exception('could not parse message "%s" (%s)', line, e)
         event = _make_event(line, ipaddress)
     if verbose:
-        logger.info('Parsed message:\n' + ("".join(
-            " %-15s %s\n" % (k + ":", v) for (k, v) in sorted(event.items()))).rstrip())
+        width = max(len(k) for k in event.keys()) + 1
+        logger.info('parsed message:' + ''.join(f'\n {k+":":{width}} {v}'  #
+                                                for k, v in sorted(event.items())))
     return event
 
 

@@ -51,17 +51,17 @@ def _load_prediction_information(
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = HostName(request.get_str_input_mandatory("host"))
+    host_name = HostName(request.get_str_input_mandatory("host"))
     service = request.get_str_input_mandatory("service")
     dsname = request.get_str_input_mandatory("dsname")
 
-    breadcrumb = make_service_breadcrumb(host, service)
-    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname), breadcrumb)
+    breadcrumb = make_service_breadcrumb(host_name, service)
+    html.header(_("Prediction for %s - %s - %s") % (host_name, service, dsname), breadcrumb)
 
     # Get current value from perf_data via Livestatus
-    current_value = get_current_perfdata(host, service, dsname)
+    current_value = get_current_perfdata(host_name, service, dsname)
 
-    prediction_store = prediction.PredictionStore(host, service, dsname)
+    prediction_store = prediction.PredictionStore(host_name, service, dsname)
 
     timegroup, choices = _load_prediction_information(
         tg_name=request.var("timegroup"),
@@ -125,7 +125,8 @@ def page_graph():
     from_time, until_time = timegroup.range
     now = time.time()
     if from_time <= now <= until_time:
-        timeseries = prediction.get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        timeseries = prediction.get_rrd_data(host_name, service, dsname, "MAX", from_time,
+                                             until_time)
         rrd_data = timeseries.values
 
         render_curve(rrd_data, "#0000ff", 2)
@@ -193,7 +194,7 @@ def compute_vertical_scala(low, high):
 def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[float]:
     perf_data = sites.live().query_value(
         "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-        "Columns: perf_data" % (livestatus.lqencode(host), livestatus.lqencode(service)))
+        "Columns: perf_data" % (livestatus.lqencode(str(host)), livestatus.lqencode(service)))
 
     for part in perf_data.split():
         name, rest = part.split("=")

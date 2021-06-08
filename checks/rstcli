@@ -65,11 +65,12 @@ def parse_rstcli_sections(info):
 # interpret the volumes section
 def parse_rstcli_volumes(rows):
     volumes = {}
-    current_volume = None
+    current_volume = {}  # unused!
 
     for row in rows:
         if row[0] == "Name":
-            volumes[row[1].strip()] = current_volume = {}
+            current_volume = {}
+            volumes[row[1].strip()] = current_volume
         else:
             current_volume[row[0]] = row[1].strip()
 

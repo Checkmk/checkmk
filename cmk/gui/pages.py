@@ -101,9 +101,9 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
             action_response = self.page()
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
-            resp = {"result_code": 1, "result": "%s" % e, "severity": "success"}
+            resp = {"result_code": 1, "result": str(e), "severity": "success"}
         except MKException as e:
-            resp = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:
             if config.debug:
@@ -113,7 +113,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            resp = {"result_code": 1, "result": "%s" % e, "severity": "error"}
+            resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         html.write(json.dumps(resp))
 

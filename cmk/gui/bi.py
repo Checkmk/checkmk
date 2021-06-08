@@ -812,20 +812,20 @@ def compute_bi_aggregation_filter(all_active_filters):
     group_prefix = []
 
     for active_filter in all_active_filters:
-        if active_filter.ident == "aggr_host":
+        if active_filter.ident == "aggr_hosts":
             host_match = active_filter.value()
-            if host_match:
-                only_hosts = [host_match]
+            if (host_name := host_match.get("aggr_host_host", "")) != "":
+                only_hosts = [host_name]
         elif active_filter.ident == "aggr_group":
             aggr_group = active_filter.selected_group()
             if aggr_group:
                 only_group = [aggr_group]
         elif active_filter.ident == "aggr_service":
-            # TODO: this is broken, in every version
-            # service_spec: site_id, host, service
-            service_spec = active_filter.service_spec()
-            if service_spec:
-                only_service = [service_spec]
+            if service_spec := active_filter.service_spec():
+                # service_spec: site_id, host, service
+                # Since no data has been fetched yet, the site is also unknown
+                if service_spec[2]:
+                    only_service = [(service_spec[1], service_spec[2])]
         elif active_filter.ident == "aggr_name":
             aggr_name = active_filter.value().get("aggr_name")
             if aggr_name:
@@ -836,8 +836,8 @@ def compute_bi_aggregation_filter(all_active_filters):
                 group_prefix = [group_name]
 
     # BIAggregationFilter
-    #("hosts", List[HostSpec]),
-    #("services", List[Tuple[HostSpec, ServiceName]]),
+    #("hosts", List[HostName]),
+    #("services", List[Tuple[HostName, ServiceName]]),
     #("aggr_ids", List[str]),
     #("aggr_names", List[str]),
     #("aggr_groups", List[str]),

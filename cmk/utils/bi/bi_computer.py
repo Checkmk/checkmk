@@ -8,13 +8,13 @@ import copy
 from typing import NamedTuple, List, Tuple, Set, Dict, Optional, Iterator
 
 import cmk.utils.plugin_registry
-from cmk.utils.type_defs import ServiceName
-from cmk.utils.bi.bi_lib import RequiredBIElement, BIHostSpec
+from cmk.utils.type_defs import ServiceName, HostName
+from cmk.utils.bi.bi_lib import RequiredBIElement
 from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledAggregation, NodeResultBundle
 
 BIAggregationFilter = NamedTuple("BIAggregationFilter", [
-    ("hosts", List[BIHostSpec]),
-    ("services", List[Tuple[BIHostSpec, ServiceName]]),
+    ("hosts", List[HostName]),
+    ("services", List[Tuple[HostName, ServiceName]]),
     ("aggr_ids", List[str]),
     ("aggr_titles", List[str]),
     ("group_names", List[str]),
@@ -153,15 +153,15 @@ class BIComputer:
 
     def _use_aggregation_branch(self, compiled_branch: BICompiledRule,
                                 bi_aggregation_filter: BIAggregationFilter) -> bool:
-        required_elements = compiled_branch.required_elements()
-        required_hosts = {x[1] for x in required_elements}
-        required_services = {x[2] for x in required_elements if x[2] is not None}
+        branch_elements = compiled_branch.required_elements()
+        branch_hosts = {x[1] for x in branch_elements}
+        branch_services = {(x[1], x[2]) for x in branch_elements if x[2] is not None}
         if bi_aggregation_filter.hosts and len(
-                required_hosts.intersection(bi_aggregation_filter.hosts)) == 0:
+                branch_hosts.intersection(bi_aggregation_filter.hosts)) == 0:
             return False
 
         if bi_aggregation_filter.services and len(
-                required_services.intersection(bi_aggregation_filter.services)) == 0:
+                branch_services.intersection(bi_aggregation_filter.services)) == 0:
             return False
 
         if bi_aggregation_filter.aggr_titles and compiled_branch.properties.title not in bi_aggregation_filter.aggr_titles:

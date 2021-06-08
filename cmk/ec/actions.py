@@ -85,7 +85,7 @@ def do_event_actions(history: History, settings: Settings, config: Config, logge
 
 def do_event_action(history: History, settings: Settings, config: Config, logger: Logger,
                     event_columns: Iterable[Tuple[str, Any]], action: Action, event: Event,
-                    user: Any) -> None:
+                    user: str) -> None:
     action_id = action['id']
     if action['disabled']:
         logger.info('Skipping disabled action %s.', action_id)
@@ -106,7 +106,7 @@ def do_event_action(history: History, settings: Settings, config: Config, logger
 
 def _do_email_action(history: History, config: Config, logger: Logger,
                      event_columns: Iterable[Tuple[str, Any]], action_config: EMailActionConfig,
-                     event: Event, user: Any) -> None:
+                     event: Event, user: str) -> None:
     to = _prepare_text(action_config['to'], event_columns, event)
     subject = _prepare_text(action_config['subject'], event_columns, event)
     body = _prepare_text(action_config['body'], event_columns, event)
@@ -116,7 +116,7 @@ def _do_email_action(history: History, config: Config, logger: Logger,
 
 def _do_script_action(history: History, logger: Logger, event_columns: Iterable[Tuple[str, Any]],
                       action_config: ScriptActionConfig, action_id: str, event: Event,
-                      user: Any) -> None:
+                      user: str) -> None:
     _execute_script(
         event_columns,
         _prepare_text(action_config['script'], event_columns, _get_quoted_event(event, logger)),

@@ -2713,6 +2713,7 @@ class StatusServer(ECServerThread):
         if user:
             event["owner"] = user
 
+        # TODO: De-duplicate code from do_event_actions()
         if action_id == "@NOTIFY":
             do_notify(self._event_server.host_config,
                       self._logger,
@@ -2720,6 +2721,7 @@ class StatusServer(ECServerThread):
                       user,
                       is_cancelling=False)
         else:
+            # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
             with self._lock_configuration:
                 actions = self._config["action"]
                 if action_id not in actions:

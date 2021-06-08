@@ -53,7 +53,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.utils.bi.bi_computer import BIAggregationFilter
 from cmk.utils.bi.bi_lib import NodeResultBundle
 
-Mesh = Set[str]
+Mesh = Set[HostName]
 Meshes = List[Mesh]
 
 
@@ -119,7 +119,9 @@ class ParentChildTopologyPage(Page):
             topology_settings.growth_root_nodes = self._get_hostnames_from_filters()
         elif request.var("host_name"):
             # Explicit host_name. Used by icon linking to Topology
-            topology_settings.growth_root_nodes = {request.get_str_input_mandatory("host_name")}
+            topology_settings.growth_root_nodes = {
+                HostName(html.request.get_str_input_mandatory("host_name"))
+            }
         else:
             # Default page without further context
             topology_settings.growth_root_nodes = self._get_default_view_hostnames(
@@ -151,7 +153,7 @@ class ParentChildTopologyPage(Page):
 
         return hostnames
 
-    def _get_hostnames_from_filters(self) -> Set[str]:
+    def _get_hostnames_from_filters(self) -> Set[HostName]:
         # Determine hosts from filters
         filter_headers = self._get_filter_headers()
         query = "GET hosts\nColumns: name"

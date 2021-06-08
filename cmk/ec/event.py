@@ -52,7 +52,7 @@ class Event(TypedDict, total=False):
     state: int
 
 
-def _make_event(text: str, ipaddress: str, time: float) -> Event:
+def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
     return Event(
         facility=1,
         priority=0,
@@ -79,22 +79,19 @@ def create_event_from_line(line: str,
             logger.info("Processing message '%s'", line)
     # TODO: Is it really never a domain name?
     ipaddress = "" if address is None else address[0]
-    time = _time()
-    event = _make_event(line, ipaddress, time)
     try:
-        parse_message(event, line, ipaddress)
+        event = parse_message(line, ipaddress)
     except Exception as e:
         if verbose:
-            logger.exception('Got non-syslog message "%s" (%s)' % (line, e))
-        event = _make_event(line, ipaddress, time)
+            logger.exception('Got non-syslog message "%s" (%s)', line, e)
+        event = _make_event(line, ipaddress)
     if verbose:
-        logger.info('Parsed message:\n' +
-                    ("".join([" %-15s %s\n" % (k + ":", v)
-                              for (k, v) in sorted(event.items())])).rstrip())
+        logger.info('Parsed message:\n' + ("".join(
+            " %-15s %s\n" % (k + ":", v) for (k, v) in sorted(event.items()))).rstrip())
     return event
 
 
-def parse_message(event: Event, line: str, ipaddress: str) -> None:
+def parse_message(line: str, ipaddress: str) -> Event:
     # Variant 1: plain syslog message without priority/facility:
     # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
@@ -141,6 +138,7 @@ def parse_message(event: Event, line: str, ipaddress: str) -> None:
     # and detect which information are present. Take a look at the syslog RFCs
     # for details.
 
+    event = _make_event(line, ipaddress)
     # Variant 2,3,4,5,6,7,7a,8
     if line.startswith('<'):
         i = line.find('>')
@@ -247,6 +245,7 @@ def parse_message(event: Event, line: str, ipaddress: str) -> None:
     # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
     if isinstance(event["host"], str) and "|" in event["host"]:
         event["host"], event["ipaddress"] = event["host"].split("|", 1)
+    return event
 
 
 _MONTH_NAMES = {

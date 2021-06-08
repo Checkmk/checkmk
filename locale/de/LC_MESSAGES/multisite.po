@@ -54244,7 +54244,8 @@ msgstr "Tx-Leistungspegel"
 msgid "Type"
 msgstr "Typ"
 
-msgid "Type Error: html.write accepts str and unicode input objects only!"
+#, fuzzy
+msgid "Type Error: html.write accepts str input objects only!"
 msgstr ""
 "Type Error: Die Funktion html.write erwartet str oder unicode als "
 "Eingabeobjekte!"

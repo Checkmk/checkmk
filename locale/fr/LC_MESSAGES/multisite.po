@@ -54922,7 +54922,8 @@ msgstr "Niveau de puissance Tx"
 msgid "Type"
 msgstr "Type"
 
-msgid "Type Error: html.write accepts str and unicode input objects only!"
+#, fuzzy
+msgid "Type Error: html.write accepts str input objects only!"
 msgstr ""
 "Erreur de type : html.write n'accepte que les objets d'entrée str et "
 "unicode !"

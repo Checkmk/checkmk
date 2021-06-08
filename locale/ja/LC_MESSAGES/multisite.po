@@ -51785,7 +51785,7 @@ msgstr "TXパワーレベル"
 msgid "Type"
 msgstr "タイプ"
 
-msgid "Type Error: html.write accepts str and unicode input objects only!"
+msgid "Type Error: html.write accepts str input objects only!"
 msgstr ""
 
 msgid "Type of Action"

@@ -51059,7 +51059,7 @@ msgstr "trei nivele"
 msgid "Type"
 msgstr ""
 
-msgid "Type Error: html.write accepts str and unicode input objects only!"
+msgid "Type Error: html.write accepts str input objects only!"
 msgstr ""
 
 msgid "Type of Action"

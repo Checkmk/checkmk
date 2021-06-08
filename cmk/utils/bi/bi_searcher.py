@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple
 from cmk.utils.bi.bi_lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition
-from cmk.utils.type_defs import TaggroupIDToTagCondition
+from cmk.utils.type_defs import HostName, TaggroupIDToTagCondition
 
 #   .--Defines-------------------------------------------------------------.
 #   |                  ____        __ _                                    |
@@ -33,7 +33,7 @@ from cmk.utils.type_defs import TaggroupIDToTagCondition
 
 
 class BISearcher(ABCBISearcher):
-    def set_hosts(self, hosts: Dict[str, BIHostData]) -> None:
+    def set_hosts(self, hosts: Dict[HostName, BIHostData]) -> None:
         self.cleanup()
         self.hosts = hosts
 
@@ -51,8 +51,11 @@ class BISearcher(ABCBISearcher):
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_labels"])
         return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
 
-    def filter_host_choice(self, hosts: List[BIHostData],
-                           condition: Dict) -> Tuple[List[BIHostData], Dict]:
+    def filter_host_choice(
+        self,
+        hosts: List[BIHostData],
+        condition: Dict,
+    ) -> Tuple[List[BIHostData], Dict]:
         if condition["type"] == "all_hosts":
             return hosts, self._host_match_groups(hosts)
 
@@ -67,8 +70,11 @@ class BISearcher(ABCBISearcher):
     def _host_match_groups(self, hosts: List[BIHostData], match="name"):
         return {host.name: (getattr(host, match),) for host in hosts}
 
-    def get_host_name_matches(self, hosts: List[BIHostData],
-                              pattern: str) -> Tuple[List[BIHostData], Dict]:
+    def get_host_name_matches(
+        self,
+        hosts: List[BIHostData],
+        pattern: str,
+    ) -> Tuple[List[BIHostData], Dict]:
 
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts)
@@ -110,8 +116,11 @@ class BISearcher(ABCBISearcher):
 
         return matched_hosts, matched_re_groups
 
-    def get_host_alias_matches(self, hosts: List[BIHostData],
-                               pattern: str) -> Tuple[List[BIHostData], Dict]:
+    def get_host_alias_matches(
+        self,
+        hosts: List[BIHostData],
+        pattern: str,
+    ) -> Tuple[List[BIHostData], Dict]:
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts, "alias")
 
@@ -128,8 +137,11 @@ class BISearcher(ABCBISearcher):
             matched_re_groups[host.name] = tuple(match.groups())
         return matched_hosts, matched_re_groups
 
-    def get_service_description_matches(self, host_matches: List[BIHostSearchMatch],
-                                        pattern: str) -> List[BIServiceSearchMatch]:
+    def get_service_description_matches(
+        self,
+        host_matches: List[BIHostSearchMatch],
+        pattern: str,
+    ) -> List[BIServiceSearchMatch]:
         matched_services = []
         regex_pattern = regex(pattern)
         for host_match in host_matches:

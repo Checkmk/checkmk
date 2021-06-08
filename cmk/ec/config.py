@@ -134,7 +134,7 @@ State = Union[Literal[-1], Literal[0], Literal[1], Literal[2], Literal[3],
 
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
-    actions: Iterable[Tuple[str, str]]
+    actions: Iterable[str]
     actions_in_downtime: bool
     autodelete: bool
     cancel_application: str

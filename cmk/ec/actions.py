@@ -67,20 +67,16 @@ def event_has_opened(history: History, settings: Settings, config: Config, logge
 # opened or cancelled.
 def do_event_actions(history: History, settings: Settings, config: Config, logger: Logger,
                      host_config: HostConfig, event_columns: Iterable[Tuple[str, Any]],
-                     actions: Any, event: Event, is_cancelling: bool) -> None:
+                     actions: Iterable[str], event: Event, is_cancelling: bool) -> None:
+    table = config["action"]
     for aname in actions:
-        if aname == "@NOTIFY":
+        if aname == '@NOTIFY':
             do_notify(host_config, logger, event, is_cancelling=is_cancelling)
+        elif action := table.get(aname):
+            logger.info(f'executing action "{action["title"]}" on event {event["id"]}')
+            do_event_action(history, settings, config, logger, event_columns, action, event, "")
         else:
-            actions = config["action"]
-            action = actions.get(aname)
-            if not action:
-                logger.info("Cannot execute undefined action '%s'" % aname)
-                logger.info("We have to following actions: %s" % ", ".join(actions.keys()))
-            else:
-                logger.info("Going to execute action '%s' on event %d" %
-                            (action["title"], event["id"]))
-                do_event_action(history, settings, config, logger, event_columns, action, event, "")
+            logger.info('undefined action "{aname}, must be one of {", ".join(table.keys()}"')
 
 
 # Rule actions are currently done synchronously. Actions should

@@ -2757,6 +2757,9 @@ def _get_availability_entry(view: View, info: VisualInfo,
         title=_("Availability"),
         icon_name="availability",
         item=make_simple_link(makeuri(global_request, [("mode", "availability")])),
+        is_enabled=not view.missing_single_infos,
+        disabled_tooltip=_("Missing required context information")
+        if view.missing_single_infos else None,
     )
 
 

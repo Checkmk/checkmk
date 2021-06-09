@@ -6,7 +6,7 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Any, Dict, Literal, Optional, Type, Union
+from typing import Any, Dict, Literal, Optional, Type
 
 from . import cache
 from ._base import ABCFetcher, ABCFileCache, MKFetcherError, verify_ipaddress
@@ -53,17 +53,6 @@ class FetcherType(enum.Enum):
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
         }[self]
-
-    @staticmethod
-    def from_fetcher(fetcher: Union[ABCFetcher, Type[ABCFetcher]]) -> "FetcherType":
-        cls = type(fetcher) if isinstance(fetcher, ABCFetcher) else fetcher
-        return {
-            IPMIFetcher: FetcherType.IPMI,
-            PiggybackFetcher: FetcherType.PIGGYBACK,
-            ProgramFetcher: FetcherType.PROGRAM,
-            SNMPFetcher: FetcherType.SNMP,
-            TCPFetcher: FetcherType.TCP,
-        }[cls]
 
     def from_json(self, serialized: Dict[str, Any]) -> ABCFetcher:
         """Instantiate the fetcher from serialized data."""

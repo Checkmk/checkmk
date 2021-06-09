@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import contextlib
 import json
 import logging
 import os
 import signal
-import sys
 import traceback
 from pathlib import Path
 from types import FrameType
@@ -19,11 +19,11 @@ import cmk.utils.cleanup
 import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
-from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.type_defs import ConfigSerial, HostName, result
+from cmk.utils.observer import ABCResourceObserver
+from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 
-from . import ABCFetcher, FetcherType, protocol
+from . import FetcherType, protocol
 from .snmp import SNMPFetcher, SNMPPluginStore
 from .type_defs import Mode
 
@@ -32,7 +32,6 @@ logger = logging.getLogger("cmk.helper")
 
 class GlobalConfig(NamedTuple):
     cmc_log_level: int
-    cluster_max_cachefile_age: int
     snmp_plugin_store: SNMPPluginStore
 
     @property
@@ -60,7 +59,6 @@ class GlobalConfig(NamedTuple):
         try:
             return cls(
                 cmc_log_level=fetcher_config["cmc_log_level"],
-                cluster_max_cachefile_age=fetcher_config["cluster_max_cachefile_age"],
                 snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
             )
         except (LookupError, TypeError, ValueError) as exc:
@@ -70,7 +68,6 @@ class GlobalConfig(NamedTuple):
         return {
             "fetcher_config": {
                 "cmc_log_level": self.cmc_log_level,
-                "cluster_max_cachefile_age": self.cluster_max_cachefile_age,
                 "snmp_plugin_store": self.snmp_plugin_store.serialize(),
             },
         }
@@ -156,7 +153,7 @@ def run_fetchers(serial: ConfigSerial, host_name: HostName, mode: Mode, timeout:
         return
 
     # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
-    _run_fetchers_from_file(serial, host_name, mode=mode, timeout=timeout)
+    _run_fetchers_from_file(host_name, file_name=local_config_path, mode=mode, timeout=timeout)
 
     # Cleanup different things (like object specific caches)
     cmk.utils.cleanup.cleanup_globals()
@@ -168,74 +165,62 @@ def load_global_config(serial: ConfigSerial) -> GlobalConfig:
             return GlobalConfig.deserialize(json.load(f))
     except FileNotFoundError:
         logger.warning("fetcher global config %s is absent", serial)
-        return GlobalConfig(
-            cmc_log_level=5,
-            cluster_max_cachefile_age=90,
-            snmp_plugin_store=SNMPPluginStore(),
-        )
+        return GlobalConfig(cmc_log_level=5, snmp_plugin_store=SNMPPluginStore())
 
 
-def run_fetcher(fetcher: ABCFetcher, mode: Mode) -> protocol.FetcherMessage:
+def run_fetcher(entry: Dict[str, Any], mode: Mode) -> protocol.FetcherMessage:
     """ Entrypoint to obtain data from fetcher objects.    """
-    logger.debug("Executing fetcher: %s", fetcher)
-    with CPUTracker() as tracker:
-        try:
-            with fetcher:
-                raw_data = fetcher.fetch(mode)
-        except Exception as exc:
-            raw_data = result.Error(exc)
+
+    try:
+        fetcher_type = FetcherType[entry["fetcher_type"]]
+    except KeyError as exc:
+        raise RuntimeError from exc
+
+    logger.debug("Executing fetcher: %s", entry["fetcher_type"])
+
+    try:
+        fetcher_params = entry["fetcher_params"]
+    except KeyError as exc:
+        return protocol.FetcherMessage.error(fetcher_type, exc)
+
+    try:
+        with CPUTracker() as tracker, fetcher_type.from_json(fetcher_params) as fetcher:
+            raw_data = fetcher.fetch(mode)
+    except Exception as exc:
+        raw_data = result.Error(exc)
 
     return protocol.FetcherMessage.from_raw_data(
         raw_data,
         tracker.duration,
-        FetcherType.from_fetcher(fetcher),
+        fetcher_type,
     )
 
 
-def _parse_config(serial: ConfigSerial, host_name: HostName) -> Iterator[ABCFetcher]:
-    with make_local_config_path(serial=serial, host_name=host_name).open() as f:
-        data = json.load(f)
-
-    if "fetchers" in data:
-        yield from _parse_fetcher_config(data)
-    elif "clusters" in data:
-        yield from _parse_cluster_config(data, serial)
-    else:
-        raise LookupError("invalid config")
-
-
-def _parse_fetcher_config(data: Dict[str, Any]) -> Iterator[ABCFetcher]:
-    # Hard crash on parser errors: The interface is versioned and internal.
-    # Crashing on error really *is* the best way to catch bonehead mistakes.
-    yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
-                for entry in data["fetchers"])
-
-
-def _parse_cluster_config(data: Dict[str, Any], serial: ConfigSerial) -> Iterator[ABCFetcher]:
-    global_config = load_global_config(serial)
-    for host_name in data["clusters"]["nodes"]:
-        for fetcher in _parse_config(serial, host_name):
-            fetcher.file_cache.max_age = global_config.cluster_max_cachefile_age
-            yield fetcher
-
-
-def _run_fetchers_from_file(
-    serial: ConfigSerial,
-    host_name: HostName,
-    mode: Mode,
-    timeout: int,
-) -> None:
+def _run_fetchers_from_file(host_name: HostName, file_name: Path, mode: Mode, timeout: int) -> None:
     """ Writes to the stdio next data:
     Count Answer        Content               Action
     ----- ------        -------               ------
     1     Result        Fetcher Blob          Send to the checker
     0..n  Log           Message to be logged  Log
     1     End of reply  empty                 End IO
+    *) Fetcher blob contains all answers from all fetcher objects including failed
+    **) file_name is serial/host_name.json
+    ***) timeout is not used at the moment"""
+    with file_name.open() as f:
+        data = json.load(f)
 
-    """
+    fetchers = data["fetchers"]
+
+    # CONTEXT: AT the moment we call fetcher-executors sequentially (due to different reasons).
+    # Possibilities:
+    # Sequential: slow fetcher may block other fetchers.
+    # Asyncio: every fetcher must be asyncio-aware. This is ok, but even estimation requires time
+    # Threading: some fetcher may be not thread safe(snmp, for example). May be dangerous.
+    # Multiprocessing: CPU and memory(at least in terms of kernel) hungry. Also duplicates
+    # functionality of the Microcore.
+
     messages: List[protocol.FetcherMessage] = []
     with timeout_control(host_name, timeout):
-        fetchers = tuple(_parse_config(serial, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
             for entry in fetchers:
@@ -244,10 +229,10 @@ def _run_fetchers_from_file(
             # fill missing entries with timeout errors
             messages.extend([
                 protocol.FetcherMessage.timeout(
-                    FetcherType.from_fetcher(fetcher),
+                    FetcherType[entry["fetcher_type"]],
                     exc,
                     Snapshot.null(),
-                ) for fetcher in fetchers[len(messages):]
+                ) for entry in fetchers[len(messages):]
             ])
 
     logger.debug("Produced %d messages", len(messages))

@@ -4,29 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import ABC, abstractmethod
 import json
 import os
 import socket
-from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 
 import pytest  # type: ignore[import]
+
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import AgentRawData, result, SectionName
+import cmk.utils.version as cmk_version
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
     BackendOIDSpec,
     BackendSNMPTree,
-    SNMPBackend,
     SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
     SNMPTable,
+    SNMPBackend,
 )
 
 from cmk.fetchers import FetcherType, MKFetcherError, snmp
@@ -34,13 +35,7 @@ from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
 from cmk.fetchers.program import ProgramFetcher
-from cmk.fetchers.snmp import (
-    SectionMeta,
-    SNMPFetcher,
-    SNMPFileCache,
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-)
+from cmk.fetchers.snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStoreItem, SNMPPluginStore, SectionMeta
 from cmk.fetchers.tcp import TCPFetcher
 from cmk.fetchers.type_defs import Mode
 
@@ -790,6 +785,11 @@ class TestFetcherCaching:
     @pytest.fixture(autouse=True)
     def patch_io(self, fetcher, monkeypatch):
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
+
+    def test_fetch_not_reading_cache_in_checking_mode(self, fetcher):
+        assert fetcher.file_cache.cache == b"cached_section"
+        assert fetcher.fetch(Mode.CHECKING) == result.OK(b"fetched_section")
+        assert fetcher.file_cache.cache == b"fetched_section"
 
     # We are in fact testing a generic feature of the ABCFetcher and use the TCPFetcher for this
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher):

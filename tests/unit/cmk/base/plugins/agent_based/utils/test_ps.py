@@ -6,7 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, Result, State
 from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
@@ -196,3 +196,70 @@ def test_unused_value_remover():
             "new": (2.7, 2.7),
         },
     }
+
+
+def test_memory_perc_check_noop_no_resident_size():
+
+    procs = ps.ProcessAggregator(1, {})
+    assert not list(
+        ps.memory_perc_check(
+            procs,
+            {"resident_levels_perc": None},  # we just need the key here
+            {},
+        ))
+
+
+def test_memory_perc_check_noop_no_rule():
+
+    procs = ps.ProcessAggregator(1, {})
+    # add a fake process
+    procs.resident_size = 42
+
+    assert not list(ps.memory_perc_check(procs, {}, {}))
+
+
+def test_memory_perc_check_missing_mem_total():
+
+    missing_mem_result = [
+        Result(
+            state=State.UNKNOWN,
+            summary="Percentual RAM levels configured, but total RAM is unknown",
+        ),
+    ]
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
+                                     {})) == missing_mem_result
+
+    procs.running_on_nodes = {"A", "B"}
+    mem_map = {"A": 102400.0}
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
+                                     mem_map)) == missing_mem_result
+
+
+def test_memory_perc_check_realnode():
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc":
+        (10.0, 20.0)}, {"": 102400.0})) == [
+            Result(
+                state=State.CRIT,
+                summary='Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)',
+            ),
+        ]
+
+
+def test_memory_perc_check_cluster():
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+    procs.running_on_nodes = {"A", "B"}
+
+    mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
+        Result(state=State.OK, notice='Percentage of total RAM: 21.00%')
+    ]

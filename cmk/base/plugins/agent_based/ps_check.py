@@ -37,7 +37,7 @@ def check_ps(
         # no cluster in this function -> Node name is None:
         process_lines=[(None, ps_info, cmd_line) for ps_info, cmd_line in lines],
         cpu_cores=cpu_cores,
-        total_ram=total_ram,
+        total_ram_map={} if total_ram is None else {"": total_ram},
     )
 
 
@@ -69,7 +69,14 @@ def cluster_check_ps(
         params=params,
         process_lines=process_lines,
         cpu_cores=cpu_cores,
-        total_ram=None,
+        total_ram_map={
+            **{
+                node: section["MemTotal"] for node, section in section_mem.items() if "MemTotal" in section
+            },
+            **{
+                node: v for node, section in section_mem_used.items() if (v := section.get("MemTotal")) is not None
+            },
+        },
     )
 
 

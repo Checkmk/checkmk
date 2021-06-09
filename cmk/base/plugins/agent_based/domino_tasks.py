@@ -71,12 +71,14 @@ def check_domino_tasks(
     cpu_cores, lines = section_domino_tasks
     process_lines: ProcessLines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
 
+    total_ram = section_mem.get("MemTotal") if section_mem else None
+
     yield from ps.check_ps_common(
         label="Tasks",
         item=item,
         params=params,
         process_lines=process_lines,
-        total_ram=section_mem.get("MemTotal") if section_mem else None,
+        total_ram_map={} if total_ram is None else {"": total_ram},
         cpu_cores=cpu_cores,
     )
 
@@ -97,7 +99,11 @@ def cluster_check_domino_tasks(
         item=item,
         params=params,
         process_lines=process_lines,
-        total_ram=None,
+        total_ram_map={
+            node: section["MemTotal"]
+            for node, section in section_mem.items()
+            if "MemTotal" in section
+        },
         cpu_cores=1,
     )
 

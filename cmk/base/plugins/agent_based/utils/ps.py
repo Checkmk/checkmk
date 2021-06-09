@@ -515,7 +515,7 @@ def check_ps_common(
     params: Mapping[str, Any],
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     cpu_cores: int,
-    total_ram: Optional[float],
+    total_ram_map: Mapping[str, float],
 ) -> CheckResult:
     with unused_value_remover(get_value_store(), "collective") as value_store:
         processes = process_capture(process_lines, params, cpu_cores, value_store)
@@ -524,8 +524,7 @@ def check_ps_common(
 
     yield from memory_check(processes, params)
 
-    if processes.resident_size and "resident_levels_perc" in params:
-        yield from memory_perc_check(processes, params, total_ram)
+    yield from memory_perc_check(processes, params, total_ram_map)
 
     # CPU
     if processes.count:
@@ -595,10 +594,17 @@ def memory_check(
 def memory_perc_check(
     processes: ProcessAggregator,
     params: Mapping[str, Any],
-    total_ram: Optional[float],
+    total_ram_map: Mapping[str, float],
 ) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
-    if not total_ram:
+    if not processes.resident_size or "resident_levels_perc" not in params:
+        return
+
+    nodes = processes.running_on_nodes or ("",)
+
+    try:
+        total_ram = sum(total_ram_map[node] for node in nodes)
+    except KeyError:
         yield Result(
             state=state.UNKNOWN,
             summary="Percentual RAM levels configured, but total RAM is unknown",

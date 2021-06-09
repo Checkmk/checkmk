@@ -174,6 +174,9 @@ class Worker(threading.Thread):
             # results in a helpful error message since 1.7. These are not failures that this test
             # should report.
             "Missing context information",
+            # Same for availability views that cannot be accessed any more
+            # from views with missing context
+            "miss some required context information",
             # Same for dashlets that are related to a specific context
             "There are no metrics meeting your context filters",
             # Some of the errors are only visible to the user when trying to submit and

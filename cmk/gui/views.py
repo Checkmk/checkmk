@@ -602,8 +602,6 @@ class GUIViewRenderer(ABCViewRenderer):
             html.body_start(view_title(view_spec, self.view.context))
 
         if display_options.enabled(display_options.T):
-            if self.view.checkboxes_displayed:
-                weblib.selection_id()
             breadcrumb = self.view.breadcrumb()
             html.top_heading(view_title(view_spec, self.view.context),
                              breadcrumb,
@@ -949,6 +947,8 @@ class GUIViewRenderer(ABCViewRenderer):
                     global_request,
                     [
                         ("show_checkboxes", "0" if self.view.checkboxes_displayed else "1"),
+                        ("selection",
+                         "" if self.view.checkboxes_displayed else weblib.selection_id()),
                     ],
                 )),
             is_shortcut=True,

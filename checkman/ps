@@ -29,3 +29,6 @@ inventory:
 cluster:
  On a cluster all processes are accumulated, along with the information
  on which node they are running.
+ The percentual memory displayed is the quotient of the accumulated memory
+ use of the processes and the accumulated total memory of every node the
+ processes are running on.

@@ -502,7 +502,7 @@ def test_check_ps_common(inv_item, reference):
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
         parsed.extend((None, ps_info, cmd_line) for (ps_info, cmd_line) in data)
-    total_ram = 1024**3 if "emacs" in inv_item.item else None
+
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item.parameters)
@@ -512,7 +512,7 @@ def test_check_ps_common(inv_item, reference):
             params=factory_defaults,  # type: ignore[arg-type]
             process_lines=parsed,
             cpu_cores=1,
-            total_ram=total_ram,
+            total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
         ))
         assert test_result == reference
 
@@ -561,7 +561,7 @@ def test_check_ps_common_cpu(data):
                 params=service.parameters,  # type: ignore[arg-type]
                 process_lines=lines_with_node_name,
                 cpu_cores=cpu_cores,
-                total_ram=None,
+                total_ram_map={},
             ))
 
     service = Service(
@@ -620,7 +620,7 @@ def test_check_ps_common_count(levels, reference):
         params=params,  # type: ignore[arg-type]
         process_lines=lines_with_node_name,
         cpu_cores=1,
-        total_ram=None,
+        total_ram_map={},
     ))
     assert output == reference
 
@@ -691,7 +691,7 @@ def test_subset_patterns():
             process_lines=[
                 (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
             cpu_cores=1,
-            total_ram=None,
+            total_ram_map={},
         ))
         assert output[0] == Result(state=state.OK, summary="Processes: %s" % count)
 
@@ -726,7 +726,7 @@ def test_cpu_util_single_process_levels(cpu_cores):
                 params=params,  # type: ignore[arg-type]
                 process_lines=lines_with_node_name,
                 cpu_cores=cpu_cores,
-                total_ram=None,
+                total_ram_map={},
             ))
 
     # CPU utilization is a counter, initialize it

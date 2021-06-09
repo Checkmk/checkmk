@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import logging
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.core_helpers.cache import PersistedSections
+from cmk.core_helpers.cache import PersistedSections, SectionStore
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
 
@@ -43,3 +44,11 @@ class TestPersistedSections:
         assert persisted_sections == {  # type: ignore[comparison-overlap]
             section_a: (cached_at, cached_at + fetch_interval, content_a)
         }
+
+
+class TestSectionStore:
+    def test_repr(self):
+        assert isinstance(repr(SectionStore(
+            "/dev/null",
+            logger=logging.getLogger("test"),
+        )), str)

@@ -152,6 +152,9 @@ class SectionStore(Generic[TRawDataSection]):
         self.path: Final = Path(path)
         self._logger: Final = logger
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self.path!r}, logger={self._logger!r})"
+
     def store(self, sections: PersistedSections[TRawDataSection]) -> None:
         if not sections:
             self._logger.debug("No persisted sections")

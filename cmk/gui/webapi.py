@@ -24,7 +24,6 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
-from cmk.gui.wsgi.applications.checkmk import get_output_format
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request as global_request, response as global_response
@@ -97,8 +96,8 @@ def page_api():
             global_response.set_content_type("application/json")
             output_format = "json"
         else:
-            output_format = get_output_format(
-                global_request.get_ascii_input_mandatory("output_format", "html").lower())
+            output_format = global_request.get_ascii_input_mandatory("output_format",
+                                                                     "json").lower()
 
         if output_format not in _FORMATTERS:
             global_response.set_content_type("text/plain")

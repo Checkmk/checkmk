@@ -28,9 +28,9 @@ class MockStore:
 class TestPersistedSections:
     def test_from_sections(self):
         section_a = SectionName("section_a")
-        content_a = [["first", "line"], ["second", "line"]]
+        content_a: AgentRawDataSection = [["first", "line"], ["second", "line"]]
         section_b = SectionName("section_b")
-        content_b = [["third", "line"], ["forth", "line"]]
+        content_b: AgentRawDataSection = [["third", "line"], ["forth", "line"]]
         sections = {section_a: content_a, section_b: content_b}
         cached_at = 69
         fetch_interval = 42

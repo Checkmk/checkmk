@@ -12,12 +12,14 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
 
+from cmk.core_helpers.type_defs import AgentRawDataSection
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
-from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, SectionsParser
+from cmk.base.check_utils import HOST_ONLY, HOST_PRECEDENCE, MGMT_ONLY
+from cmk.base.sources.agent import AgentHostSections
 
 
 def _test_section(
@@ -81,12 +83,12 @@ MOCK_SECTIONS = {
     SECTION_FOUR.name: SECTION_FOUR,
 }
 
-NODE_1 = [
+NODE_1: AgentRawDataSection = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2 = [
+NODE_2: AgentRawDataSection = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]

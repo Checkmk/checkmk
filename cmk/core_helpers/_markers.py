@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, MutableMapping, NamedTuple, Optional, Tuple
+from typing import Iterable, MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
 from six import ensure_str
 
@@ -143,3 +143,13 @@ class SectionMarker(NamedTuple):
         if self.persist is not None:
             return cached_at, self.persist - cached_at
         return None
+
+    def parse_line(self, line: bytes) -> Sequence[str]:
+        line_str = ensure_str_with_fallback(
+            line,
+            encoding=self.encoding,
+            fallback="latin-1",
+        )
+        if not self.nostrip:
+            line_str = line_str.strip()
+        return line_str.split(self.separator)

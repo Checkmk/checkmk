@@ -28,7 +28,6 @@ from six import ensure_binary
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
-from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.misc import normalize_ip_addresses
 from cmk.utils.translations import TranslationOptions
@@ -543,12 +542,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             sections: ImmutableSection,) -> MutableMapping[SectionName, AgentRawDataSection]:
             out: MutableMapping[SectionName, AgentRawDataSection] = {}
             for header, content in sections.items():
-                out.setdefault(header.name, []).extend(
-                    ensure_str_with_fallback(
-                        line,
-                        encoding=header.encoding,
-                        fallback="latin-1",
-                    ).split(header.separator) for line in content)
+                out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out
 
         def flatten_piggyback_section(
@@ -607,7 +601,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         persisted_sections = self.section_store.update(
             sections={
-                marker.name: [[str(line) for line in lines] for lines in section
+                marker.name: [marker.parse_line(line) for line in section
                              ] for marker, section in sections.items()
             },
             lookup_persist=lookup_persist,

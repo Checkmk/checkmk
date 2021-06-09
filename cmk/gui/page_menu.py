@@ -27,7 +27,6 @@ from cmk.gui.type_defs import CSSSpec, Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 import cmk.gui.escaping as escaping
-import cmk.gui.weblib as weblib
 
 
 def enable_page_menu_entry(name: str):
@@ -378,7 +377,7 @@ def make_checkbox_selection_json_text() -> Tuple[str, str]:
 
 
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    is_selected = user.get_rowselection(weblib.selection_id(), selection_key)
+    is_selected = user.get_rowselection(html.request.var("selection") or "", selection_key)
     name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),

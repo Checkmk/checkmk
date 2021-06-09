@@ -285,6 +285,14 @@ msgstr "(nefolosit)"
 msgid "%% of %s"
 msgstr "% din Flash"
 
+#, fuzzy, python-format
+msgid "%%d locked element"
+msgstr "Adaungă un nou element"
+
+#, fuzzy, python-format
+msgid "%%d locked elements"
+msgstr "Adaungă un nou element"
+
 #, python-format
 msgid "%.1f mm"
 msgstr ""
@@ -364,6 +372,14 @@ msgstr ""
 #, python-format
 msgid "%d links"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%d locked site"
+msgstr "Reguli neaplicate"
+
+#, fuzzy, python-format
+msgid "%d locked sites"
+msgstr "Reguli neaplicate"
 
 #, fuzzy, python-format
 msgid "%d of %d connections used"
@@ -16000,6 +16016,10 @@ msgstr ""
 msgid "Enable listening for passive checks using NSCA"
 msgstr ""
 
+#, fuzzy
+msgid "Enable logging of logon failures"
+msgstr "Dimensiunea maxima pentru cel mai mare fisier"
+
 msgid "Enable new rule based notifications"
 msgstr ""
 
@@ -26503,6 +26523,10 @@ msgstr "Editeaza regulile de loguri"
 msgid "Logging of RRD creation"
 msgstr ""
 
+#, fuzzy
+msgid "Logging of logon failures"
+msgstr "Dimensiunea maxima pentru cel mai mare fisier"
+
 msgid "Logging of the core"
 msgstr ""
 
@@ -33404,6 +33428,10 @@ msgstr ""
 #, fuzzy
 msgid "Path to a CA certificate"
 msgstr "Adaugă notificare"
+
+#, fuzzy
+msgid "Path to attributes or tables"
+msgstr "Atribute personalizate"
 
 msgid "Path to sapgenpse"
 msgstr ""
@@ -48228,6 +48256,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This options enables automatic logging of failed logons. If enabled, the "
+"username and client IP, the request is coming from, is logged."
+msgstr ""
+
+msgid ""
 "This options enables the new 1.7 Checkmk helper model. It will be used "
 "during the 1.7 test phase to be able to toggle between the old and new model "
 "for testing."
@@ -51402,6 +51435,12 @@ msgid ""
 "Settings."
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"Unable to convert configuration into 2.0 format\n"
+"%s"
+msgstr "Adaugă configurație de ajustare"
+
 msgid "Unable to create parent folder(s)."
 msgstr ""
 
@@ -51778,10 +51817,6 @@ msgstr ""
 #, fuzzy
 msgid "Unspecified."
 msgstr " Parametrul este: %r"
-
-#, python-format
-msgid "Unsupported context type '%s'"
-msgstr ""
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -53861,6 +53896,12 @@ msgstr "Numele Elementului"
 #, fuzzy
 msgid "Vhosts"
 msgstr "(fără elemente)"
+
+msgid ""
+"Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
+"Inventory page of a host you can make the internal tree paths visible which "
+"can be inserted here."
+msgstr ""
 
 msgid "Vibrate only"
 msgstr ""

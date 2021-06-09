@@ -290,6 +290,14 @@ msgstr "% gebruikt"
 msgid "%% of %s"
 msgstr "%% van %s"
 
+#, fuzzy, python-format
+msgid "%%d locked element"
+msgstr "Kloon element"
+
+#, fuzzy, python-format
+msgid "%%d locked elements"
+msgstr "Kloon element"
+
 #, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
@@ -369,6 +377,14 @@ msgstr "%d incompatibele Werks zijn bevestigd."
 #, python-format
 msgid "%d links"
 msgstr "%d links"
+
+#, fuzzy, python-format
+msgid "%d locked site"
+msgstr "Op geselecteerde plaatsen"
+
+#, fuzzy, python-format
+msgid "%d locked sites"
+msgstr "Op geselecteerde plaatsen"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -16432,6 +16448,10 @@ msgstr ""
 msgid "Enable listening for passive checks using NSCA"
 msgstr "Activeer luisteren voor passieve controles met NSCA"
 
+#, fuzzy
+msgid "Enable logging of logon failures"
+msgstr "Totale grootte van logbestanden"
+
 msgid "Enable new rule based notifications"
 msgstr "Inschakelen van nieuwe regelgebaseerde meldingen"
 
@@ -27752,6 +27772,10 @@ msgstr "Logging Niveau"
 msgid "Logging of RRD creation"
 msgstr "Loggen van aanmaken RRD"
 
+#, fuzzy
+msgid "Logging of logon failures"
+msgstr "Logboek van de kern"
+
 msgid "Logging of the core"
 msgstr "Logboek van de kern"
 
@@ -34399,6 +34423,10 @@ msgstr "Pad naar <tt>MegaCLI.exe</tt>"
 
 msgid "Path to a CA certificate"
 msgstr "Pad naar een CA-certificaat"
+
+#, fuzzy
+msgid "Path to attributes or tables"
+msgstr "Host attributen om in te stellen"
 
 msgid "Path to sapgenpse"
 msgstr "Pad naar sapgenpse"
@@ -50750,6 +50778,11 @@ msgstr ""
 "en de <tt>!</tt> verwijderen voor het geval u volledig wordt buitengesloten."
 
 msgid ""
+"This options enables automatic logging of failed logons. If enabled, the "
+"username and client IP, the request is coming from, is logged."
+msgstr ""
+
+msgid ""
 "This options enables the new 1.7 Checkmk helper model. It will be used "
 "during the 1.7 test phase to be able to toggle between the old and new model "
 "for testing."
@@ -54584,6 +54617,12 @@ msgstr ""
 "Kan geen verbinding maken met instantie %s. Controleer de credentials onder "
 "Global Settings."
 
+#, fuzzy, python-format
+msgid ""
+"Unable to convert configuration into 2.0 format\n"
+"%s"
+msgstr "Inventariseer netwerk configuratie informatie"
+
 msgid "Unable to create parent folder(s)."
 msgstr "Kan geen bovenliggende map(pen) aanmaken."
 
@@ -54983,10 +55022,6 @@ msgstr "Niet-geregistreerd"
 
 msgid "Unspecified."
 msgstr "Ongespecificeerd."
-
-#, python-format
-msgid "Unsupported context type '%s'"
-msgstr "Niet-ondersteund context type '%s'"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -57092,6 +57127,12 @@ msgstr "Vhost naam"
 
 msgid "Vhosts"
 msgstr "Vhosts"
+
+msgid ""
+"Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
+"Inventory page of a host you can make the internal tree paths visible which "
+"can be inserted here."
+msgstr ""
 
 msgid "Vibrate only"
 msgstr "Alleen trillen"
@@ -63104,6 +63145,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Unsupported context type '%s'"
+#~ msgstr "Niet-ondersteund context type '%s'"
 
 #~ msgid "Name of Counter"
 #~ msgstr "Naam van de teller"

@@ -286,6 +286,14 @@ msgstr "% 利用される"
 msgid "%% of %s"
 msgstr "%s の %%"
 
+#, fuzzy, python-format
+msgid "%%d locked element"
+msgstr "エレメントを追加"
+
+#, fuzzy, python-format
+msgid "%%d locked elements"
+msgstr "エレメントを追加"
+
 #, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
@@ -365,6 +373,14 @@ msgstr "%d 互換性のないWerksが確認されました。"
 #, python-format
 msgid "%d links"
 msgstr "%d リンク"
+
+#, fuzzy, python-format
+msgid "%d locked site"
+msgstr "選択したサイト"
+
+#, fuzzy, python-format
+msgid "%d locked sites"
+msgstr "選択したサイト"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -15884,6 +15900,10 @@ msgstr ""
 msgid "Enable listening for passive checks using NSCA"
 msgstr "NSCAを使用してパッシブチェックのリッスンを有効にする"
 
+#, fuzzy
+msgid "Enable logging of logon failures"
+msgstr "ログファイルの合計サイズ"
+
 msgid "Enable new rule based notifications"
 msgstr "新しいルールベースの通知を有効にする"
 
@@ -26701,6 +26721,10 @@ msgstr "ロギングレベル"
 msgid "Logging of RRD creation"
 msgstr "RRD作成のログ"
 
+#, fuzzy
+msgid "Logging of logon failures"
+msgstr "コアのロギング"
+
 msgid "Logging of the core"
 msgstr "コアのロギング"
 
@@ -33216,6 +33240,10 @@ msgstr "<tt>MegaCLI.exe</tt>へのパス"
 
 msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
+
+#, fuzzy
+msgid "Path to attributes or tables"
+msgstr "設定するホスト属性"
 
 msgid "Path to sapgenpse"
 msgstr "sapgenpseへの道"
@@ -48598,6 +48626,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This options enables automatic logging of failed logons. If enabled, the "
+"username and client IP, the request is coming from, is logged."
+msgstr ""
+
+msgid ""
 "This options enables the new 1.7 Checkmk helper model. It will be used "
 "during the 1.7 test phase to be able to toggle between the old and new model "
 "for testing."
@@ -52139,6 +52172,12 @@ msgid ""
 msgstr ""
 "インスタンス %sに接続できません。グローバル設定で資格情報を確認してください。"
 
+#, fuzzy, python-format
+msgid ""
+"Unable to convert configuration into 2.0 format\n"
+"%s"
+msgstr "ネットワーク構成情報をインベントリする"
+
 msgid "Unable to create parent folder(s)."
 msgstr "親フォルダを作成できません"
 
@@ -52525,10 +52564,6 @@ msgstr "未登録"
 
 msgid "Unspecified."
 msgstr "不特定。"
-
-#, python-format
-msgid "Unsupported context type '%s'"
-msgstr "サポートされていないコンテキストタイプ '%s'"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -54545,6 +54580,12 @@ msgstr "バーチャルホスト名"
 
 msgid "Vhosts"
 msgstr "Vhosts"
+
+msgid ""
+"Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
+"Inventory page of a host you can make the internal tree paths visible which "
+"can be inserted here."
+msgstr ""
 
 msgid "Vibrate only"
 msgstr ""
@@ -60159,6 +60200,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Unsupported context type '%s'"
+#~ msgstr "サポートされていないコンテキストタイプ '%s'"
 
 #~ msgid "Name of Counter"
 #~ msgstr "カウンター名"

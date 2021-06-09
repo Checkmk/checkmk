@@ -289,6 +289,14 @@ msgstr "% verbraucht"
 msgid "%% of %s"
 msgstr "%% %s"
 
+#, fuzzy, python-format
+msgid "%%d locked element"
+msgstr "Element duplizieren"
+
+#, fuzzy, python-format
+msgid "%%d locked elements"
+msgstr "Element duplizieren"
+
 #, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
@@ -369,6 +377,14 @@ msgstr "Es wurden %d inkompatible Werks quittiert."
 #, python-format
 msgid "%d links"
 msgstr "%d Links"
+
+#, fuzzy, python-format
+msgid "%d locked site"
+msgstr "lokale Instanz"
+
+#, fuzzy, python-format
+msgid "%d locked sites"
+msgstr "Bei ausgewählten Instanzen"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -16461,6 +16477,10 @@ msgstr ""
 msgid "Enable listening for passive checks using NSCA"
 msgstr "Verarbeitung von passiven Checkergebnissen über NSCA einschalten"
 
+#, fuzzy
+msgid "Enable logging of logon failures"
+msgstr "Debugging der Anfragen einschalten"
+
 msgid "Enable new rule based notifications"
 msgstr "Regelbasierte Alarmierung einschalten"
 
@@ -27792,6 +27812,10 @@ msgstr "Loglevel"
 msgid "Logging of RRD creation"
 msgstr "Logging der Erzeugung von RRDs"
 
+#, fuzzy
+msgid "Logging of logon failures"
+msgstr "Logging des Kerns"
+
 msgid "Logging of the core"
 msgstr "Logging des Kerns"
 
@@ -34452,6 +34476,10 @@ msgstr "Pfad zu <tt>MegaCLI.exe</tt>"
 
 msgid "Path to a CA certificate"
 msgstr "CA-Zertifikat hinzufügen"
+
+#, fuzzy
+msgid "Path to attributes or tables"
+msgstr "Zu setzende Host-Attribute"
 
 msgid "Path to sapgenpse"
 msgstr "Pfad zu sapgenpse"
@@ -50782,6 +50810,11 @@ msgstr ""
 "Passwort entfernen."
 
 msgid ""
+"This options enables automatic logging of failed logons. If enabled, the "
+"username and client IP, the request is coming from, is logged."
+msgstr ""
+
+msgid ""
 "This options enables the new 1.7 Checkmk helper model. It will be used "
 "during the 1.7 test phase to be able to toggle between the old and new model "
 "for testing."
@@ -54608,6 +54641,12 @@ msgstr ""
 "Die Verbindung zur Instanz %s kann nicht hergestellt werden. Bitte "
 "überprüfen Sie die Anmeldedaten unter Globale Einstellungen."
 
+#, fuzzy, python-format
+msgid ""
+"Unable to convert configuration into 2.0 format\n"
+"%s"
+msgstr "Die Netzwerkkonfiguration inventarisieren"
+
 msgid "Unable to create parent folder(s)."
 msgstr "Kann den/die Parent Ordner nicht erstellen"
 
@@ -55015,10 +55054,6 @@ msgstr "Unregistriert"
 
 msgid "Unspecified."
 msgstr "Unspezifiziert."
-
-#, python-format
-msgid "Unsupported context type '%s'"
-msgstr "Nicht unterstützter Kontexttyp '%s'"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -57130,6 +57165,12 @@ msgstr "Vhost Name"
 
 msgid "Vhosts"
 msgstr "Vhosts"
+
+msgid ""
+"Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
+"Inventory page of a host you can make the internal tree paths visible which "
+"can be inserted here."
+msgstr ""
 
 msgid "Vibrate only"
 msgstr ""
@@ -63124,6 +63165,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Unsupported context type '%s'"
+#~ msgstr "Nicht unterstützter Kontexttyp '%s'"
+
 #~ msgid "Name of Counter"
 #~ msgstr "Name des Zählers"
 
@@ -69054,9 +69098,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "host: "
 #~ msgstr "Host: "
 
-#~ msgid "local site"
-#~ msgstr "lokale Instanz"
-
 #~ msgid " (live scan)"
 #~ msgstr " (Live Scan)"
 
@@ -70913,9 +70954,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Debug queries to Event Console"
 #~ msgstr "Anfragen an Event Console debuggen"
-
-#~ msgid "Enable debugging of queries"
-#~ msgstr "Debugging der Anfragen einschalten"
 
 #~ msgid ""
 #~ "With this option turned on all queries asking for data of the Event "

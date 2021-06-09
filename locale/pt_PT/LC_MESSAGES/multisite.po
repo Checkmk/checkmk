@@ -289,6 +289,14 @@ msgstr "% utilizado"
 msgid "%% of %s"
 msgstr "%% de %s"
 
+#, fuzzy, python-format
+msgid "%%d locked element"
+msgstr "Elemento clone"
+
+#, fuzzy, python-format
+msgid "%%d locked elements"
+msgstr "Elemento clone"
+
 #, python-format
 msgid "%.1f mm"
 msgstr "%.1f mm"
@@ -368,6 +376,14 @@ msgstr "%d Werks incompativeis foram confirmados"
 #, python-format
 msgid "%d links"
 msgstr "%d links"
+
+#, fuzzy, python-format
+msgid "%d locked site"
+msgstr "Em locais selecionados"
+
+#, fuzzy, python-format
+msgid "%d locked sites"
+msgstr "Em locais selecionados"
 
 #, python-format
 msgid "%d of %d connections used"
@@ -16444,6 +16460,10 @@ msgstr ""
 msgid "Enable listening for passive checks using NSCA"
 msgstr "Habilitar a escuta para verificações passivas usando NSCA"
 
+#, fuzzy
+msgid "Enable logging of logon failures"
+msgstr "Tamanho total dos ficheiros de registo"
+
 msgid "Enable new rule based notifications"
 msgstr "Habilitar novas notificações baseadas em regras"
 
@@ -27761,6 +27781,10 @@ msgstr "Nível de registo"
 msgid "Logging of RRD creation"
 msgstr "Registo da criação do RRD"
 
+#, fuzzy
+msgid "Logging of logon failures"
+msgstr "Registo do núcleo"
+
 msgid "Logging of the core"
 msgstr "Registo do núcleo"
 
@@ -34427,6 +34451,10 @@ msgstr "Caminho para <tt>MegaCLI.exe</tt>"
 
 msgid "Path to a CA certificate"
 msgstr "Caminho para um certificado CA"
+
+#, fuzzy
+msgid "Path to attributes or tables"
+msgstr "Atributos do anfitrião a definir"
 
 msgid "Path to sapgenpse"
 msgstr "Caminho para a sapgenpse"
@@ -50736,6 +50764,11 @@ msgstr ""
 "estar completamente bloqueado."
 
 msgid ""
+"This options enables automatic logging of failed logons. If enabled, the "
+"username and client IP, the request is coming from, is logged."
+msgstr ""
+
+msgid ""
 "This options enables the new 1.7 Checkmk helper model. It will be used "
 "during the 1.7 test phase to be able to toggle between the old and new model "
 "for testing."
@@ -54556,6 +54589,12 @@ msgstr ""
 "Incapaz de se conectar a exemplo %s. Por favor verifique as credenciais em "
 "Global Settings."
 
+#, fuzzy, python-format
+msgid ""
+"Unable to convert configuration into 2.0 format\n"
+"%s"
+msgstr "Inventariar a informação de configuração da rede"
+
 msgid "Unable to create parent folder(s)."
 msgstr "Impossível criar a(s) pasta(s) mãe(s)."
 
@@ -54956,10 +54995,6 @@ msgstr "Não registado"
 
 msgid "Unspecified."
 msgstr "Não especificado."
-
-#, python-format
-msgid "Unsupported context type '%s'"
-msgstr "Contexto não suportado tipo '%s"
 
 #, python-format
 msgid "Unsupported image format of \"%s\" (invalid file extension)"
@@ -57060,6 +57095,12 @@ msgstr "Nome do fantasma"
 
 msgid "Vhosts"
 msgstr "Vhosts"
+
+msgid ""
+"Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
+"Inventory page of a host you can make the internal tree paths visible which "
+"can be inserted here."
+msgstr ""
 
 msgid "Vibrate only"
 msgstr "Vibrar apenas"
@@ -63057,6 +63098,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Unsupported context type '%s'"
+#~ msgstr "Contexto não suportado tipo '%s"
 
 #~ msgid "Name of Counter"
 #~ msgstr "Nome do Contador"

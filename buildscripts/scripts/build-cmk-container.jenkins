@@ -67,7 +67,7 @@ node (NODE) {
     try {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def BUILD_IMAGE = docker.image('ubuntu-20.04:' + versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT))
-            BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock") {
+            BUILD_IMAGE.inside("-u 0:0 --ulimit nofile=1024:1024  -v ${PACKAGE_DIR}/${CMK_VERS}:${PACKAGE_DIR}/${CMK_VERS} -v /var/run/docker.sock:/var/run/docker.sock -v /root/.cmk-credentials:/root/.cmk-credentials") {
                 stage('Build Container') {
                     def CREDENTIALS_ID
                     if (EDITION == "raw") {

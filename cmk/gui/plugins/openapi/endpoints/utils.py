@@ -174,7 +174,7 @@ def _retrieve_group(
 @contextlib.contextmanager
 def may_fail(
     exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
-    status: int,
+    status: Optional[int] = None,
 ):
     """Context manager to make Exceptions REST-API safe
 
@@ -195,9 +195,17 @@ def may_fail(
 
         return str(e)
 
+    def _get_status(e):
+        if getattr(e, 'status', None) is not None:
+            return e.status
+        return 500
+
     try:
         yield
     except exc_type as exc:
+        if status is None:
+            status = _get_status(exc)
+
         raise ProblemException(
             status=status,
             title="The operation has failed.",

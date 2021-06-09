@@ -1,0 +1,13 @@
+Title: activate_changes: modifying status codes when activate changes is invoked
+Class: fix
+Compatible: compat
+Component: core
+Date: 1623233953
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p6
+
+In the previous version, the API always returned a 400 status code when the
+activate changes process could not be performed regardless of the reason. This
+werk modifies the behaviour to distinguish the codes.

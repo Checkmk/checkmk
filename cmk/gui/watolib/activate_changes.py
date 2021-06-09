@@ -2328,29 +2328,31 @@ def activate_changes_start(
     known_sites = config.allsites().keys()
     for site in sites:
         if site not in known_sites:
-            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
+            raise MKUserError(None,
+                              _("Unknown site %s") % escaping.escape_attribute(site),
+                              status=400)
 
     manager = ActivateChangesManager()
     manager.load()
     if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."))
+        raise MKUserError(None, _("There is an activation already running."), status=400)
 
     if not manager.has_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."))
+        raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
     if not sites:
         dirty_sites = manager.dirty_sites()
         if not dirty_sites:
-            raise MKUserError(None, _("Currently there are no changes to activate."))
+            raise MKUserError(None, _("Currently there are no changes to activate."), status=422)
 
         sites = manager.filter_not_activatable_sites(dirty_sites)
         if not sites:
-            raise MKUserError(
-                None,
-                _("There are changes to activate, but no site can be "
-                  "activated (The sites %s have changes, but may be "
-                  "offline or not logged in).") %
-                ", ".join([site_id for site_id, _site in dirty_sites]))
+            raise MKUserError(None,
+                              _("There are changes to activate, but no site can be "
+                                "activated (The sites %s have changes, but may be "
+                                "offline or not logged in).") %
+                              ", ".join([site_id for site_id, _site in dirty_sites]),
+                              status=409)
 
     return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
 

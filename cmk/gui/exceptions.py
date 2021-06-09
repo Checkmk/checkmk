@@ -49,9 +49,10 @@ class MKConfigError(MKException):
 
 
 class MKUserError(MKException):
-    def __init__(self, varname: Optional[str], message: str) -> None:
+    def __init__(self, varname: Optional[str], message: str, status: Optional[int] = None) -> None:
         self.varname: Optional[str] = varname
         self.message: str = message
+        self.status = status
         super(MKUserError, self).__init__(varname, message)
 
     def __str__(self):

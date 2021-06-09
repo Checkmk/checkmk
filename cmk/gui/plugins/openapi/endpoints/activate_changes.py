@@ -55,7 +55,7 @@ def activate_changes(params):
     """Activate pending changes"""
     body = params['body']
     sites = body['sites']
-    with may_fail(MKUserError, status=400):
+    with may_fail(MKUserError):
         activation_id = watolib.activate_changes_start(
             sites, force_foreign_changes=body['force_foreign_changes'])
     if body['redirect']:

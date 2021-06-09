@@ -124,3 +124,51 @@ def test_openapi_activate_changes(
         )
         if resp.status_code == 204:
             break
+
+
+def test_openapi_activate_changes_nothing_to_perform(
+    wsgi_app,
+    suppress_automation_calls,
+    with_automation_user,
+    mock_livestatus: MockLiveStatusConnection,
+    inline_background_jobs,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    # We create a host
+    live = mock_livestatus
+
+    _host_created = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "foobar", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    with live(expect_status_query=True):
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=400,
+            params='{"sites": ["asdf"]}',
+            content_type='application/json',
+        )
+        assert "Unknown site" in repr(resp.json), resp.json
+
+        _resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=200,
+            content_type='application/json',
+        )
+
+        _resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            status=422,
+            content_type='application/json',
+        )

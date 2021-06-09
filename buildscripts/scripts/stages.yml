@@ -111,6 +111,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/agent-plugin-unit-junit.xml"
+        DOCKER_ADDOPTS: "-v ${RESULTS}:${RESULTS}"
       COMMAND: "make test-agent-plugin-docker"
       TEXT_ON_SKIP: 'No agent files changed'
 

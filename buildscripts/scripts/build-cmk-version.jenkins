@@ -185,7 +185,7 @@ node(NODE) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         def DISTRO_DIR = WORKSPACE + "/git"
 
-                        docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " --privileged --hostname ${DISTRO}") {
+                        docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --privileged --hostname ${DISTRO}") {
                             initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
 
                             withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {

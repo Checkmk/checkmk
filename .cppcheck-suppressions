@@ -14,3 +14,9 @@ unmatchedSuppression:test/test_*.cc
 unmatchedSuppression:*/includes/*
 unmatchedSuppression:*/include/re2/*
 unmatchedSuppression
+// New warnings after upgrading 1.90 => some version after 2.4, reconsider these!
+duplicateBreak
+knownConditionTrueFalse
+unassignedVariable
+uninitDerivedMemberVar
+unusedVariable

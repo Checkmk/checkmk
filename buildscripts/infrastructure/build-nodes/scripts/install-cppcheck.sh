@@ -6,7 +6,7 @@
 set -e
 
 INSTALL_PREFIX=""
-CPPCHECK_VERSION=1.90
+CPPCHECK_VERSION=2.4.1
 DIR_NAME=cppcheck-${CPPCHECK_VERSION}
 TARGET_DIR=/opt
 
@@ -98,12 +98,8 @@ else
     cd $(dirname ${CPPCHECK_PATH})
     rm -f cppcheck
     ln --symbolic --force $(basename ${CPPCHECK_PATH}) cppcheck
-fi
 
-set_symlinks() {
     echo "Set symlink"
     mkdir -p "${TARGET_DIR}/bin"
     ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${TARGET_DIR}/bin"
-}
-
-set_symlinks
+fi

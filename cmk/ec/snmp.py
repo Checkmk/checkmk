@@ -231,48 +231,32 @@ class SNMPTrapTranslator:
 
     # Convert pysnmp datatypes to simply handable ones
     def _translate_simple(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
-        var_binds: List[Tuple[str, str]] = []
-        for oid, value in var_bind_list:
-            key = str(oid)
+        return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
-            if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
-                val = value.prettyPrint()
-            elif value.__class__.__name__ == 'TimeTicks':
-                val = str(cmk.utils.render.Age(float(value._value) / 100))
-            else:
-                val = value._value
-
-            # Translate some standard SNMPv2 oids
-            if key == '1.3.6.1.2.1.1.3.0':
-                key = 'Uptime'
-
-            var_binds.append((key, val))
-        return var_binds
+    def _translate_binding_simple(self, oid, value) -> Tuple[str, str]:
+        key = str(oid)
+        if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
+            val = value.prettyPrint()
+        elif value.__class__.__name__ == 'TimeTicks':
+            val = str(cmk.utils.render.Age(float(value._value) / 100))
+        else:
+            val = value._value
+        # Translate some standard SNMPv2 oids
+        if key == '1.3.6.1.2.1.1.3.0':
+            key = 'Uptime'
+        return key, val
 
     # Convert pysnmp datatypes to simply handable ones
     def _translate_via_mibs(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
-        var_binds: List[Tuple[str, str]] = []
         if self._mib_resolver is None:
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             # TODO: Fall back to _translate_simple?
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
-        def do_translate(oid, value):
-            # Disable mib_var[0] type detection
-            mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
-                                                    value).resolveWithMib(self._mib_resolver)
-            node = mib_var[0].getMibNode()
-            translated_oid = mib_var[0].prettyPrint().replace("\"", "")
-            translated_value = mib_var[1].prettyPrint()
-            if units := getattr(node, 'getUnits', ''):
-                translated_value += ' %s' % units
-            if description := getattr(node, 'getDescription', ''):
-                translated_value += "(%s)" % description
-            return translated_oid, translated_value
-
+        var_binds: List[Tuple[str, str]] = []
         for oid, value in var_bind_list:
             try:
-                translated_oid, translated_value = do_translate(oid, value)
+                translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
                 self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
                                      '(enable debug logging for details)' %
@@ -283,5 +267,17 @@ class SNMPTrapTranslator:
                 translated_oid = str(oid)
                 translated_value = str(value)
             var_binds.append((translated_oid, translated_value))
-
         return var_binds
+
+    def _translate_binding_via_mibs(self, oid, value) -> Tuple[str, str]:
+        # Disable mib_var[0] type detection
+        mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
+                                                value).resolveWithMib(self._mib_resolver)
+        node = mib_var[0].getMibNode()
+        translated_oid = mib_var[0].prettyPrint().replace("\"", "")
+        translated_value = mib_var[1].prettyPrint()
+        if units := getattr(node, 'getUnits', ''):
+            translated_value += ' %s' % units
+        if description := getattr(node, 'getDescription', ''):
+            translated_value += "(%s)" % description
+        return translated_oid, translated_value

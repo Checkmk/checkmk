@@ -1031,9 +1031,46 @@ class Sorter(metaclass=abc.ABCMeta):
 
 
 class DerivedColumnsSorter(Sorter):
+    """
+    Can be used to transfer an additional parameter to the Sorter instance.
+
+    To transport the additional parameter through the url and other places the
+    parameter is added to the sorter name seperated by a colon.
+
+    This mechanism is used by the Columns "Service: Metric History", "Service:
+    Metric Forecast": Those columns can be sorted by "Sorting"-section in
+    the "Edit View" only after you added the column to the columns list and
+    saved the view, or by clicking on the column header in the view.
+
+    It's also used by host custom attributes: Those can be sorted by the
+    "Sorting"-section in the "Edit View" options independent of the column
+    section.
+    """
+    # TODO: should somehow be harmonized. this is probably not possible as the
+    # metric sorting options can not be serialized into a short/simple string,
+    # this is why the uuid option was introduced. Now there are basically three
+    # different ways to subselect sorting options:
+    # * don't use subselect at all (see Inventory): simply put all the posible
+    #   values with a prefix into the sorting list (drawback: long list)
+    # * don't use explicit options for sorting (see Metrics): link between
+    #   columns and sorting via uuid (drawback: have to display column to
+    #   activate sorting)
+    # * use explicit options for sorting (see Custom Attributes): Encode the
+    #   choosen value in the name (possible because it's only a simple string
+    #   instead of complex options as with the metrics) and append it to the
+    #   name of the column (drawback: it's the third hack)
+
     @abc.abstractmethod
-    def derived_columns(self, view: 'View', uuid: Optional[str]) -> List[str]:
+    def derived_columns(self, view: 'View', uuid: Optional[str]) -> None:
+        # TODO: rename uuid, as this is no longer restricted to uuids
         raise NotImplementedError()
+
+    def get_parameters(self) -> Optional[ValueSpec]:
+        """
+        If not None, this ValueSpec will be visible after selecting this Sorter
+        in the section "Sorting" in the "Edit View" form
+        """
+        return None
 
 
 class SorterRegistry(cmk.utils.plugin_registry.Registry[Type[Sorter]]):
@@ -1950,6 +1987,8 @@ class Cell:
             uuid = ':%s' % self.painter_parameters()['uuid']
             assert sorter_name is not None
             sorter_name += uuid
+        elif painter_name in {'host_custom_variable'}:
+            sorter_name = f'{sorter_name}:{self.painter_parameters()["ident"]}'
 
         this_asc_sorter = SorterSpec(sorter_name, False, self.join_service())
         this_desc_sorter = SorterSpec(sorter_name, True, self.join_service())
@@ -2108,11 +2147,20 @@ class Cell:
         return has_content
 
 
-SorterSpec = NamedTuple("SorterSpec", [
-    ("sorter", SorterName),
-    ("negate", bool),
-    ("join_key", Optional[str]),
-])
+SorterSpec = NamedTuple(
+    "SorterSpec",
+    [
+        # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
+        # The parameter is then encoded in the sorter name. "[sorter]:[param]"
+        # other Sorter (custom host metric) do the same when the information is
+        # coming from the url, but use a CascadingDropdown to let the user
+        # input the information. This results in a Tuple as a result variable.
+        # TODO: perhaps it could be possible to use the ValueSpec to
+        #       transparently transform the tuple into a single string?!
+        ("sorter", Union[SorterName, Tuple[SorterName, Dict[str, str]]]),
+        ("negate", bool),
+        ("join_key", Optional[str]),
+    ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
 
@@ -2124,11 +2172,22 @@ SorterEntry = NamedTuple("SorterEntry", [
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
+SorterListEntry = Union[Tuple[Union[str, Tuple[str, Dict[str, str]]], bool],
+                        Tuple[Union[str, Tuple[str, Dict[str, str]]], bool, Optional[str]]]
+
 
 def _encode_sorter_url(sorters: List[SorterSpec]) -> str:
-    p = []
+    p: List[str] = []
     for s in sorters:
-        url = (u'-' if s.negate else u'') + s.sorter
+        sorter_name = s.sorter
+        if not isinstance(sorter_name, str):
+            # sorter_name is a tuple
+            if sorter_name[0] in {'host_custom_variable'}:
+                sorter_name, params = sorter_name
+                sorter_name = "{}:{}".format(sorter_name, params['ident'])
+            else:
+                raise MKGeneralException(f"Can not handle sorter {sorter_name}")
+        url = ('-' if s.negate else '') + sorter_name
         if s.join_key:
             url += '~' + s.join_key
         p.append(url)

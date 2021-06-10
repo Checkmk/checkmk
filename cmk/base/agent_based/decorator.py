@@ -84,11 +84,7 @@ def handle_check_mk_check_result(
             output_txt += "\n"
 
             if _in_keepalive_mode():
-                if not cmk_version.is_raw_edition():
-                    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-                else:
-                    keepalive = None  # type: ignore[assignment]
-
+                import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
                 keepalive.add_active_check_result(hostname, output_txt)
                 console.verbose(ensure_str(output_txt))
             else:
@@ -102,8 +98,7 @@ def handle_check_mk_check_result(
 
 
 def _in_keepalive_mode() -> bool:
-    if not cmk_version.is_raw_edition():
-        import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-    else:
-        keepalive = None  # type: ignore[assignment]
-    return bool(keepalive and keepalive.enabled())
+    if cmk_version.is_raw_edition():
+        return False
+    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+    return keepalive.enabled()

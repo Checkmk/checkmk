@@ -109,7 +109,6 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
             return result.Error(exc)
 
     def _fetch(self, mode: Mode) -> TRawData:
-        # TODO(ml): EAFP would significantly simplify the code.
         self._logger.debug(
             "[%s] Fetch with cache settings: %r",
             self.__class__.__name__,

@@ -86,7 +86,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     PainterOptions, register_command_group, register_legacy_command, register_painter,
     register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
     SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title, CommandExecutor,
-    CommandSpec, PainterRegistry, SorterRegistry,
+    CommandSpec, PainterRegistry, SorterRegistry, SorterListEntry,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -369,17 +369,30 @@ class View:
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"])
 
-    # TODO: Improve argument type
-    def _get_sorter_entries(self, sorter_list: List) -> List[SorterEntry]:
-        sorters = []
+    # TODO: make sure sorter_list type is correct
+    def _get_sorter_entries(self, sorter_list: List[SorterListEntry]) -> List[SorterEntry]:
+        sorters: List[SorterEntry] = []
         for entry in sorter_list:
-            if not isinstance(entry, SorterEntry):
-                entry = SorterEntry(*entry)
+            sorter_name: Union[str, _Tuple[str, Dict[str, str]]] = entry[0]
+            negate: bool = entry[1]
+            join_key: Optional[str] = None
+            if len(entry) == 3:
+                # mypy can not understand the if statement:
+                # https://github.com/python/mypy/issues/1178
+                # https://github.com/python/mypy/issues/7509
+                # so we use an ugly cast,..
+                join_key = cast(List[Optional[str]], entry)[2]
 
-            sorter_name = entry.sorter
             uuid = None
-            if ":" in entry.sorter:
-                sorter_name, uuid = entry.sorter.split(':', 1)
+            if isinstance(sorter_name, tuple):
+                sorter_name, parameters = sorter_name
+                if sorter_name not in {'host_custom_variable'}:
+                    raise MKGeneralException(
+                        f"Don't know how to proceed with sorter {sorter_name} parameters {parameters}"
+                    )
+                uuid = parameters['ident']
+            elif ":" in sorter_name:
+                sorter_name, uuid = sorter_name.split(':', 1)
 
             sorter = sorter_registry.get(sorter_name, None)
 
@@ -390,8 +403,7 @@ class View:
             if isinstance(sorter_instance, DerivedColumnsSorter):
                 sorter_instance.derived_columns(self, uuid)
 
-            sorters.append(
-                SorterEntry(sorter=sorter_instance, negate=entry.negate, join_key=entry.join_key))
+            sorters.append(SorterEntry(sorter=sorter_instance, negate=negate, join_key=join_key))
         return sorters
 
     @property
@@ -1537,23 +1549,31 @@ def _column_link_choices() -> List[CascadingDropdownChoice]:
 
 
 def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
-    def _sorter_choices(view: ViewSpec) -> Iterator[DropdownChoiceEntry]:
+    def _sorter_choices(
+            view: ViewSpec) -> Iterator[Union[DropdownChoiceEntry, CascadingDropdownChoice]]:
         ds_name = view['datasource']
 
         for name, p in sorters_of_datasource(ds_name).items():
-            yield name, get_plugin_title_for_choices(p)
+            # add all regular sortes. they may provide a third element: this
+            # ValueSpec will be displayed after the sorter was choosen in the
+            # CascadingDropdown.
+            if isinstance(p, DerivedColumnsSorter) and (parameters := p.get_parameters()):
+                yield name, get_plugin_title_for_choices(p), parameters
+            else:
+                yield name, get_plugin_title_for_choices(p)
 
         painter_spec: PainterSpec
         for painter_spec in view.get('painters', []):
-            if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
+            # look through all defined columns and add sorters for
+            # svc_metrics_hist and svc_metrics_forecast columns.
+            if isinstance(painter_spec[0], tuple) and (painter_name := painter_spec[0][0]) in [
                     "svc_metrics_hist", "svc_metrics_forecast"
             ]:
-                hist_sort = sorters_of_datasource(ds_name).get(painter_spec[0][0])
+                hist_sort = sorters_of_datasource(ds_name).get(painter_name)
                 uuid = painter_spec[0][1].get('uuid', "")
                 if hist_sort and uuid:
-                    title = "History" if "hist" in painter_spec[0][0] else "Forecast"
-                    yield ('%s:%s' % (painter_spec[0][0], uuid),
-                           "Services: Metric %s - Column: %s" %
+                    title = "History" if "hist" in painter_name else "Forecast"
+                    yield ('%s:%s' % (painter_name, uuid), "Services: Metric %s - Column: %s" %
                            (title, painter_spec[0][1]['column_title']))
 
     return ('sorting',
@@ -1566,7 +1586,7 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
                      ListOf(
                          Tuple(
                              elements=[
-                                 DropdownChoice(
+                                 CascadingDropdown(
                                      title=_('Column'),
                                      choices=list(_sorter_choices(view)),
                                      sorted=True,

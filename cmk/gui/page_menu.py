@@ -23,7 +23,7 @@ from cmk.gui.globals import html, request, output_funnel
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.type_defs import CSSSpec, Icon
+from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
 import cmk.gui.escaping as escaping
@@ -109,14 +109,14 @@ def make_confirmed_form_submit_link(*, form_name: str, button_name: str,
 class PageMenuPopup(ABCPageMenuItem):
     """A link opening a pre-rendered hidden area (not necessarily a popup window)"""
     content: str
-    css_classes: CSSSpec = None
+    css_classes: List[Optional[str]] = field(default_factory=list)
 
 
 @dataclass
 class PageMenuSidePopup(PageMenuPopup):
     """A link opening a pre-rendered popup on the right of the page"""
     content: str
-    css_classes: CSSSpec = None
+    css_classes: List[Optional[str]] = field(default_factory=list)
 
 
 @dataclass
@@ -140,7 +140,7 @@ class PageMenuEntry:
     is_shortcut: bool = False
     is_suggested: bool = True
     shortcut_title: Optional[str] = None
-    css_classes: CSSSpec = None
+    css_classes: List[Optional[str]] = field(default_factory=list)
     disabled_tooltip: Optional[str] = None
     sort_index: int = 1
 
@@ -550,9 +550,8 @@ class PageMenuRenderer:
         html.close_div()
 
     def _show_entry(self, entry: PageMenuEntry) -> None:
-        classes = [
-            "entry",
-        ] + self._get_entry_css_classes(entry)
+        classes: List[Optional[str]] = ["entry"]
+        classes += self._get_entry_css_classes(entry)
 
         html.open_div(
             class_=classes,
@@ -578,17 +577,21 @@ class PageMenuRenderer:
         html.open_tr(id_="suggestions")
         html.open_td(colspan=3)
         for entry in entries:
-            html.open_div(class_=["suggestion"] + self._get_entry_css_classes(entry))
+            classes: List[Optional[str]] = ["suggestion"]
+            classes += self._get_entry_css_classes(entry)
+            html.open_div(class_=classes)
             SuggestedEntryRenderer().show(entry)
             html.close_div()
         html.close_td()
         html.close_tr()
 
-    def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[str]:
-        return [
+    def _get_entry_css_classes(self, entry: PageMenuEntry) -> List[Optional[str]]:
+        classes: List[Optional[str]] = [
             ("enabled" if entry.is_enabled else "disabled"),
             ("show_more_mode" if entry.is_show_more else "basic"),
-        ] + html.normalize_css_spec(entry.css_classes)
+        ]
+        classes += entry.css_classes
+        return classes
 
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
         html.open_td(class_="inpage_search")
@@ -765,7 +768,8 @@ class PageMenuPopupsRenderer:
         if entry.name is None:
             raise ValueError("Missing \"name\" attribute on entry \"%s\"" % entry.title)
 
-        classes = ["page_menu_popup"] + html.normalize_css_spec(entry.item.css_classes)
+        classes: List[Optional[str]] = ["page_menu_popup"]
+        classes += entry.item.css_classes
         if isinstance(entry.item, PageMenuSidePopup):
             classes.append("side_popup")
 

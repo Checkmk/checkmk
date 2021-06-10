@@ -6,11 +6,12 @@
 
 import os
 from pathlib import Path
+
 from six import ensure_binary
 
 from cmk.utils.type_defs import AgentRawData
 
-from ._base import ABCFileCache, ABCFetcher
+from ._base import ABCFetcher, ABCFileCache
 from .type_defs import Mode
 
 
@@ -21,7 +22,7 @@ class AgentFileCache(ABCFileCache[AgentRawData]):
 class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
     def cache_read(mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
+        return mode is not Mode.FORCE_SECTIONS
 
     @staticmethod
     def cache_write(mode: Mode) -> bool:

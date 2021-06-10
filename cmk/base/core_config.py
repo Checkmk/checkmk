@@ -9,7 +9,7 @@ import numbers
 import os
 import sys
 import shutil
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator, Final, Iterable
+from typing import AnyStr, Callable, Dict, List, Literal, Optional, Tuple, Union, Iterator, Final, Iterable
 from contextlib import contextmanager, suppress
 from pathlib import Path
 
@@ -778,7 +778,8 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
+def ip_address_of(host_config: config.HostConfig,
+                  family: Optional[Literal[4, 6]] = None) -> Optional[str]:
     try:
         return ip_lookup.lookup_ip_address(host_config, family)
     except Exception as e:

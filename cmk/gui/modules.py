@@ -95,6 +95,9 @@ def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
+        # initial config is already loaded, do not load it again
+        if module.__name__ == "cmk.gui.config":
+            continue
         if (only_modules is None or module.__name__ in only_modules) and \
            hasattr(module, "load_plugins"):
             # hasattr above ensures the function is available. Mypy does not understand this.

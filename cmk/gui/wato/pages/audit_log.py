@@ -554,8 +554,8 @@ class ModeAuditLog(WatoMode):
                 return False
 
         if self._options["filter_regex"]:
-            for val in [entry.user_id, entry.action, entry.text]:
-                if not re.search(self._options["filter_regex"], val):
-                    return False
+            return any(
+                re.search(self._options["filter_regex"], val)
+                for val in [entry.user_id, entry.action, entry.text])
 
         return True

@@ -19,14 +19,20 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import ActiveCheckResult, CheckPluginNameStr, HostName, ServiceName
+from cmk.utils.type_defs import (
+    ActiveCheckResult,
+    CheckPluginNameStr,
+    HostName,
+    ServiceName,
+    ServiceState,
+)
 
 import cmk.base.config as config
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
 
 ActiveCheckFunction = Callable[..., ActiveCheckResult]
-WrappedActiveCheckFunction = Callable[..., int]
+WrappedActiveCheckFunction = Callable[..., ServiceState]
 
 
 def handle_check_mk_check_result(

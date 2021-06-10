@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="10"
+GCC_MAJOR="11"
 GCC_MINOR="1"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
@@ -31,7 +31,7 @@ PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR=/opt/src
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=3
+BUILD_ID=1
 
 download_sources() {
     # Get the sources from nexus or upstream

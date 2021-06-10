@@ -4,9 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable
-
-from six import ensure_str
+from typing import Any, Callable, Tuple
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
@@ -45,62 +43,56 @@ def handle_check_mk_check_result(
         def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
-            status = 0
 
             try:
-                status, infotexts, long_infotexts, perfdata = check_func(hostname, *args, **kwargs)
+                status, output_text = _combine_texts(check_func(hostname, *args, **kwargs))
 
             except MKTimeout:
                 if _in_keepalive_mode():
                     raise
-                status = max(status, exit_spec.get("timeout", 2))
-                infotexts = ["Timed out"]
-                long_infotexts, perfdata = [], []
+                status = exit_spec.get("timeout", 2)
+                output_text = "Timed out\n"
 
             except (MKAgentError, MKFetcherError, MKSNMPError, MKIPAddressLookupError) as e:
                 status = exit_spec.get("connection", 2)
-                infotexts = ["%s" % e]
-                long_infotexts, perfdata = [], []
+                output_text = f"{e}\n"
 
             except MKGeneralException as e:
                 status = max(status, exit_spec.get("exception", 3))
-                infotexts = ["%s" % e]
-                long_infotexts, perfdata = [], []
+                output_text = f"{e}\n"
 
             except Exception:
                 if cmk.utils.debug.enabled():
                     raise
-                crash_output = cmk.base.crash_reporting.create_check_crash_dump(
+                status = exit_spec.get("exception", 3)
+                output_text = cmk.base.crash_reporting.create_check_crash_dump(
                     host_name=hostname,
                     service_name=description,
                     plugin_name=check_plugin_name,
                     plugin_kwargs={},
                     is_manual=False,
-                )
-                status = max(status, exit_spec.get("exception", 3))
-                infotexts = [crash_output.replace("Crash dump:\n", "Crash dump:\\n")]
-                long_infotexts, perfdata = [], []
-
-            # Produce the service check result output
-            output_txt = ", ".join(infotexts)
-            if perfdata:
-                output_txt += " | %s" % " ".join(perfdata)
-            if long_infotexts:
-                output_txt = "%s\n%s" % (output_txt, "\n".join(long_infotexts))
-            output_txt += "\n"
+                ).replace("Crash dump:\n", "Crash dump:\\n")
 
             if _in_keepalive_mode():
                 import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
-                keepalive.add_active_check_result(hostname, output_txt)
-                console.verbose(ensure_str(output_txt))
+                keepalive.add_active_check_result(hostname, output_text)
+                console.verbose(output_text)
             else:
-                out.output(ensure_str(output_txt))
+                out.output(output_text)
 
             return status
 
         return wrapped_check_func
 
     return wrap
+
+
+def _combine_texts(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
+    state, summaries, details, metrics = result
+    return state, '\n'.join((
+        ' | '.join((', '.join(summaries), ' '.join(metrics))),
+        ''.join(f'{line}\n' for line in details),
+    ))
 
 
 def _in_keepalive_mode() -> bool:

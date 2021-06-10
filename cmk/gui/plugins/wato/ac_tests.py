@@ -712,7 +712,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
             "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></li>"
+            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk fetchers</a></li>"
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "

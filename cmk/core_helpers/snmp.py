@@ -147,9 +147,7 @@ class SNMPFileCache(FileCache[SNMPRawData]):
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
     def make_path(self, mode: Mode) -> Path:
-        if mode is Mode.DISCOVERY:
-            return self.base_path / mode.name.lower() / self.hostname
-        return self.base_path / "checking" / self.hostname
+        return self.base_path / mode.name.lower() / self.hostname
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):

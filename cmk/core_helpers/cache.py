@@ -273,18 +273,32 @@ class FileCache(Generic[TRawData], abc.ABC):
     def make_path(self, mode: Mode) -> Path:
         raise NotImplementedError()
 
-    def read(self, mode: Mode) -> Optional[TRawData]:
+    def _do_cache(self, mode: Mode) -> bool:
         if self.disabled:
             self._logger.debug("Not using cache (Cache usage disabled)")
+            return False
+
+        if self.simulation:
+            self._logger.debug("Not using cache (simulation)")
+            return False
+
+        if mode in {
+                Mode.NONE,
+                Mode.FORCE_SECTIONS,
+                Mode.RTC,
+        }:
+            self._logger.debug("Not using cache (Mode %s)", mode)
+            return False
+
+        return True
+
+    def read(self, mode: Mode) -> Optional[TRawData]:
+        if not self._do_cache(mode):
             return None
 
         path = self.make_path(mode)
         if not path.exists():
             self._logger.debug("Not using cache (Does not exist)")
-            return None
-
-        if not (self.simulation or mode is not Mode.FORCE_SECTIONS):
-            self._logger.debug("Not using cache (Mode %s)", mode)
             return None
 
         raw_data = self._read(path)
@@ -317,8 +331,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return self._from_cache_file(cache_file)
 
     def write(self, raw_data: TRawData, mode: Mode) -> None:
-        if self.disabled:
-            self._logger.debug("Not writing data to cache file (Cache usage disabled)")
+        if not self._do_cache(mode):
             return
 
         path = self.make_path(mode)

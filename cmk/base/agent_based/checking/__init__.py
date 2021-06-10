@@ -95,14 +95,58 @@ def do_check(
     *,
     # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
+    # TODO: can we drop them now that we slit up 'commandline_checking'?
     fetcher_messages: Sequence[FetcherMessage] = (),
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
 ) -> ActiveCheckResult:
+    return _execute_checkmk_checks(
+        hostname=hostname,
+        ipaddress=ipaddress,
+        fetcher_messages=fetcher_messages,
+        run_plugin_names=run_plugin_names,
+        selected_sections=selected_sections,
+        dry_run=dry_run,
+        show_perfdata=show_perfdata,
+    )
+
+
+# TODO: see if we can/should drop the decorator. If so, make hostname a kwarg-only
+@cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
+def commandline_checking(
+    host_name: HostName,
+    ipaddress: Optional[HostAddress],
+    *,
+    run_plugin_names: Container[CheckPluginName],
+    selected_sections: SectionNameCollection,
+    dry_run: bool,
+    show_perfdata: bool,
+) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
 
+    return _execute_checkmk_checks(
+        hostname=host_name,
+        ipaddress=ipaddress,
+        fetcher_messages=(),
+        run_plugin_names=run_plugin_names,
+        selected_sections=selected_sections,
+        dry_run=dry_run,
+        show_perfdata=show_perfdata,
+    )
+
+
+def _execute_checkmk_checks(
+    *,
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    fetcher_messages: Sequence[FetcherMessage] = (),
+    run_plugin_names: Container[CheckPluginName],
+    selected_sections: SectionNameCollection,
+    dry_run: bool,
+    show_perfdata: bool,
+) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 

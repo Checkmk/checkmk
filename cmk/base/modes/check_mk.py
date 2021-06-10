@@ -1646,7 +1646,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         ipaddress = args[1]
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    checking.do_check(
+    checking.commandline_checking(
         hostname,
         ipaddress,
         selected_sections=selected_sections,

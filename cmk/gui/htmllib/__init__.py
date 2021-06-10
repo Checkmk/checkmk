@@ -47,7 +47,6 @@ from typing import (
     cast,
     Dict,
     Iterable,
-    Iterator,
     List,
     Optional,
     Set,
@@ -74,6 +73,16 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
+from ._tag_rendering import (
+    HTMLTagValue,
+    HTMLContent,
+    HTMLTagAttributeValue,
+    HTMLTagAttributes,
+    render_start_tag,
+    render_end_tag,
+    render_element,
+)
+
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuRenderer,
@@ -94,11 +103,6 @@ if TYPE_CHECKING:
     from cmk.gui.valuespec import ValueSpec
     from cmk.gui.utils.output_funnel import OutputFunnel
 
-HTMLTagName = str
-HTMLTagValue = Optional[str]
-HTMLContent = Union[None, int, HTML, str]
-HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[str]]
-HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, str]
 DefaultChoice = str
 
@@ -157,106 +161,6 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
             non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'. """
 
     #
-    # Rendering
-    #
-
-    def _render_attributes(self, **attrs: HTMLTagAttributeValue) -> Iterator[str]:
-        css = self._get_normalized_css_classes(attrs)
-        if css:
-            attrs["class"] = css
-
-        # options such as 'selected' and 'checked' dont have a value in html tags
-        options = []
-
-        # Links require href to be first attribute
-        href = attrs.pop('href', None)
-        if href:
-            attributes = list(attrs.items())
-            attributes.insert(0, ("href", href))
-        else:
-            attributes = list(attrs.items())
-
-        # render all attributes
-        for key_unescaped, v in attributes:
-            if v is None:
-                continue
-
-            key = escaping.escape_attribute(key_unescaped.rstrip('_'))
-
-            if key.startswith('data_'):
-                key = key.replace('_', '-', 1)  # HTML data attribute: 'data-name'
-
-            if v == '':
-                options.append(key)
-                continue
-
-            if not isinstance(v, list):
-                v = escaping.escape_attribute(v)
-            else:
-                if key == "class":
-                    sep = ' '
-                elif key == "style" or key.startswith('on'):
-                    sep = '; '
-                else:
-                    sep = '_'
-
-                joined_value = sep.join(
-                    [a for a in (escaping.escape_attribute(vi) for vi in v) if a])
-
-                if sep.startswith(';'):
-                    joined_value = re.sub(';+', ';', joined_value)
-
-                v = joined_value
-
-            yield ' %s=\"%s\"' % (key, v)
-
-        for k in options:
-            yield " %s=\'\'" % k
-
-    def _get_normalized_css_classes(self, attrs: HTMLTagAttributes) -> List[str]:
-        # make class attribute foolproof
-        css: List[str] = []
-        for k in ["class_", "css", "cssclass", "class"]:
-            if k in attrs:
-                cls_spec = cast(CSSSpec, attrs.pop(k))
-                css += self.normalize_css_spec(cls_spec)
-        return css
-
-    def normalize_css_spec(self, css_classes: CSSSpec) -> List[str]:
-        if isinstance(css_classes, list):
-            return [c for c in css_classes if c is not None]
-
-        if css_classes is not None:
-            return [css_classes]
-
-        return []
-
-    # applies attribute encoding to prevent code injections.
-    def _render_start_tag(self,
-                          tag_name: HTMLTagName,
-                          close_tag: bool = False,
-                          **attrs: HTMLTagAttributeValue) -> HTML:
-        """ You have to replace attributes which are also python elements such as
-            'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-        return HTML("<%s%s%s>" %
-                    (tag_name, '' if not attrs else ''.join(self._render_attributes(**attrs)),
-                     '' if not close_tag else ' /'))
-
-    def _render_end_tag(self, tag_name: HTMLTagName) -> HTML:
-        return HTML("</%s>" % (tag_name))
-
-    def _render_element(self, tag_name: HTMLTagName, tag_content: HTMLContent,
-                        **attrs: HTMLTagAttributeValue) -> HTML:
-        open_tag = self._render_start_tag(tag_name, close_tag=False, **attrs)
-
-        if not tag_content:
-            tag_content = ""
-        elif not isinstance(tag_content, HTML):
-            tag_content = escaping.escape_text(tag_content)
-
-        return HTML("%s%s</%s>" % (open_tag, tag_content, tag_name))
-
-    #
     # Showing / rendering
     #
 
@@ -288,32 +192,30 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     def meta(self, httpequiv: Optional[str] = None, **attrs: HTMLTagAttributeValue) -> None:
         if httpequiv:
             attrs['http-equiv'] = httpequiv
-        self.write_html(self._render_start_tag('meta', close_tag=True, **attrs))
+        self.write_html(render_start_tag('meta', close_tag=True, **attrs))
 
     def base(self, target: str) -> None:
-        self.write_html(self._render_start_tag('base', close_tag=True, target=target))
+        self.write_html(render_start_tag('base', close_tag=True, target=target))
 
     def open_a(self, href: Optional[str], **attrs: HTMLTagAttributeValue) -> None:
         if href is not None:
             attrs['href'] = href
-        self.write_html(self._render_start_tag('a', close_tag=False, **attrs))
+        self.write_html(render_start_tag('a', close_tag=False, **attrs))
 
     def render_a(self, content: HTMLContent, href: Union[None, str, str],
                  **attrs: HTMLTagAttributeValue) -> HTML:
         if href is not None:
             attrs['href'] = href
-        return self._render_element('a', content, **attrs)
+        return render_element('a', content, **attrs)
 
     def a(self, content: HTMLContent, href: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_a(content, href, **attrs))
 
     def stylesheet(self, href: str) -> None:
-        self.write_html(
-            self._render_start_tag('link',
-                                   rel="stylesheet",
-                                   type_="text/css",
-                                   href=href,
-                                   close_tag=True))
+        self.link(rel="stylesheet", href=href, type_="text/css")
+
+    def link(self, *, rel: str, href: str, **attrs: HTMLTagAttributeValue) -> None:
+        self.write_html(render_start_tag("link", rel=rel, href=href, close_tag=True, **attrs))
 
     #
     # Scripting
@@ -327,21 +229,21 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
     def javascript_file(self, src: str) -> None:
         """ <script type="text/javascript" src="%(name)"/>\n """
-        self.write_html(self._render_element('script', '', type_="text/javascript", src=src))
+        self.write_html(render_element('script', '', type_="text/javascript", src=src))
 
     def render_img(self, src: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs['src'] = src
-        return self._render_start_tag('img', close_tag=True, **attrs)
+        return render_start_tag('img', close_tag=True, **attrs)
 
     def img(self, src: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_img(src, **attrs))
 
     def open_button(self, type_: str, **attrs: HTMLTagAttributeValue) -> None:
         attrs['type'] = type_
-        self.write_html(self._render_start_tag('button', close_tag=True, **attrs))
+        self.write_html(render_start_tag('button', close_tag=True, **attrs))
 
     def play_sound(self, url: str) -> None:
-        self.write_html(self._render_start_tag('audio autoplay', src_=url))
+        self.write_html(render_start_tag('audio autoplay', src_=url))
 
     #
     # form elements
@@ -349,7 +251,7 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
     def render_label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs['for'] = for_
-        return self._render_element('label', content, **attrs)
+        return render_element('label', content, **attrs)
 
     def label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_label(content, for_, **attrs))
@@ -357,7 +259,7 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         attrs['type_'] = type_
         attrs['name'] = name
-        return self._render_start_tag('input', close_tag=True, **attrs)
+        return render_start_tag('input', close_tag=True, **attrs)
 
     def input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_input(name, type_, **attrs))
@@ -368,14 +270,14 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
 
     def li(self, content: HTMLContent, **attrs: HTMLTagAttributeValue) -> None:
         """ Only for text content. You can't put HTML structure here. """
-        self.write_html(self._render_element('li', content, **attrs))
+        self.write_html(render_element('li', content, **attrs))
 
     #
     # structural text elements
     #
 
     def render_heading(self, content: HTMLContent) -> HTML:
-        return self._render_element('h2', content)
+        return render_element('h2', content)
 
     def heading(self, content: HTMLContent) -> None:
         self.write_html(self.render_heading(content))
@@ -387,7 +289,7 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
         self.write_html(self.render_br())
 
     def render_hr(self, **attrs: HTMLTagAttributeValue) -> HTML:
-        return self._render_start_tag('hr', close_tag=True, **attrs)
+        return render_start_tag('hr', close_tag=True, **attrs)
 
     def hr(self, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_hr(**attrs))
@@ -406,506 +308,506 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     #
 
     def pre(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("pre", content, **kwargs))
+        self.write_html(render_element("pre", content, **kwargs))
 
     def h2(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("h2", content, **kwargs))
+        self.write_html(render_element("h2", content, **kwargs))
 
     def h3(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("h3", content, **kwargs))
+        self.write_html(render_element("h3", content, **kwargs))
 
     def h1(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("h1", content, **kwargs))
+        self.write_html(render_element("h1", content, **kwargs))
 
     def h4(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("h4", content, **kwargs))
+        self.write_html(render_element("h4", content, **kwargs))
 
     def style(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("style", content, **kwargs))
+        self.write_html(render_element("style", content, **kwargs))
 
     def span(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("span", content, **kwargs))
+        self.write_html(render_element("span", content, **kwargs))
 
     def sub(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("sub", content, **kwargs))
+        self.write_html(render_element("sub", content, **kwargs))
 
     def title(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("title", content, **kwargs))
+        self.write_html(render_element("title", content, **kwargs))
 
     def tt(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("tt", content, **kwargs))
+        self.write_html(render_element("tt", content, **kwargs))
 
     def tr(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("tr", content, **kwargs))
+        self.write_html(render_element("tr", content, **kwargs))
 
     def th(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("th", content, **kwargs))
+        self.write_html(render_element("th", content, **kwargs))
 
     def td(self,
            content: HTMLContent,
            colspan: Optional[int] = None,
            **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(
-            self._render_element("td",
-                                 content,
-                                 colspan=str(colspan) if colspan is not None else None,
-                                 **kwargs))
+            render_element("td",
+                           content,
+                           colspan=str(colspan) if colspan is not None else None,
+                           **kwargs))
 
     def option(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("option", content, **kwargs))
+        self.write_html(render_element("option", content, **kwargs))
 
     def canvas(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("canvas", content, **kwargs))
+        self.write_html(render_element("canvas", content, **kwargs))
 
     def strong(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("strong", content, **kwargs))
+        self.write_html(render_element("strong", content, **kwargs))
 
     def b(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("b", content, **kwargs))
+        self.write_html(render_element("b", content, **kwargs))
 
     def center(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("center", content, **kwargs))
+        self.write_html(render_element("center", content, **kwargs))
 
     def i(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("i", content, **kwargs))
+        self.write_html(render_element("i", content, **kwargs))
 
     def p(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("p", content, **kwargs))
+        self.write_html(render_element("p", content, **kwargs))
 
     def u(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("u", content, **kwargs))
+        self.write_html(render_element("u", content, **kwargs))
 
     def iframe(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("iframe", content, **kwargs))
+        self.write_html(render_element("iframe", content, **kwargs))
 
     def x(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("x", content, **kwargs))
+        self.write_html(render_element("x", content, **kwargs))
 
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_element("div", content, **kwargs))
+        self.write_html(render_element("div", content, **kwargs))
 
     def open_pre(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("pre", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("pre", close_tag=False, **kwargs))
 
     def close_pre(self) -> None:
-        self.write_html(self._render_end_tag("pre"))
+        self.write_html(render_end_tag("pre"))
 
     def render_pre(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("pre", content, **kwargs)
+        return render_element("pre", content, **kwargs)
 
     def open_h2(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("h2", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("h2", close_tag=False, **kwargs))
 
     def close_h2(self) -> None:
-        self.write_html(self._render_end_tag("h2"))
+        self.write_html(render_end_tag("h2"))
 
     def render_h2(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("h2", content, **kwargs)
+        return render_element("h2", content, **kwargs)
 
     def open_h3(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("h3", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("h3", close_tag=False, **kwargs))
 
     def close_h3(self) -> None:
-        self.write_html(self._render_end_tag("h3"))
+        self.write_html(render_end_tag("h3"))
 
     def render_h3(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("h3", content, **kwargs)
+        return render_element("h3", content, **kwargs)
 
     def open_h1(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("h1", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("h1", close_tag=False, **kwargs))
 
     def close_h1(self) -> None:
-        self.write_html(self._render_end_tag("h1"))
+        self.write_html(render_end_tag("h1"))
 
     def render_h1(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("h1", content, **kwargs)
+        return render_element("h1", content, **kwargs)
 
     def open_h4(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("h4", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("h4", close_tag=False, **kwargs))
 
     def close_h4(self) -> None:
-        self.write_html(self._render_end_tag("h4"))
+        self.write_html(render_end_tag("h4"))
 
     def render_h4(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("h4", content, **kwargs)
+        return render_element("h4", content, **kwargs)
 
     def open_header(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("header", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("header", close_tag=False, **kwargs))
 
     def close_header(self) -> None:
-        self.write_html(self._render_end_tag("header"))
+        self.write_html(render_end_tag("header"))
 
     def render_header(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("header", content, **kwargs)
+        return render_element("header", content, **kwargs)
 
     def open_tag(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("tag", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("tag", close_tag=False, **kwargs))
 
     def close_tag(self) -> None:
-        self.write_html(self._render_end_tag("tag"))
+        self.write_html(render_end_tag("tag"))
 
     def render_tag(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("tag", content, **kwargs)
+        return render_element("tag", content, **kwargs)
 
     def open_table(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("table", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("table", close_tag=False, **kwargs))
 
     def close_table(self) -> None:
-        self.write_html(self._render_end_tag("table"))
+        self.write_html(render_end_tag("table"))
 
     def render_table(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("table", content, **kwargs)
+        return render_element("table", content, **kwargs)
 
     def open_select(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("select", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("select", close_tag=False, **kwargs))
 
     def close_select(self) -> None:
-        self.write_html(self._render_end_tag("select"))
+        self.write_html(render_end_tag("select"))
 
     def render_select(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("select", content, **kwargs)
+        return render_element("select", content, **kwargs)
 
     def open_row(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("row", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("row", close_tag=False, **kwargs))
 
     def close_row(self) -> None:
-        self.write_html(self._render_end_tag("row"))
+        self.write_html(render_end_tag("row"))
 
     def render_row(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("row", content, **kwargs)
+        return render_element("row", content, **kwargs)
 
     def open_style(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("style", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("style", close_tag=False, **kwargs))
 
     def close_style(self) -> None:
-        self.write_html(self._render_end_tag("style"))
+        self.write_html(render_end_tag("style"))
 
     def render_style(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("style", content, **kwargs)
+        return render_element("style", content, **kwargs)
 
     def open_span(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("span", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("span", close_tag=False, **kwargs))
 
     def close_span(self) -> None:
-        self.write_html(self._render_end_tag("span"))
+        self.write_html(render_end_tag("span"))
 
     def render_span(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("span", content, **kwargs)
+        return render_element("span", content, **kwargs)
 
     def open_sub(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("sub", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("sub", close_tag=False, **kwargs))
 
     def close_sub(self) -> None:
-        self.write_html(self._render_end_tag("sub"))
+        self.write_html(render_end_tag("sub"))
 
     def render_sub(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("sub", content, **kwargs)
+        return render_element("sub", content, **kwargs)
 
     def open_script(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("script", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("script", close_tag=False, **kwargs))
 
     def close_script(self) -> None:
-        self.write_html(self._render_end_tag("script"))
+        self.write_html(render_end_tag("script"))
 
     def render_script(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("script", content, **kwargs)
+        return render_element("script", content, **kwargs)
 
     def open_tt(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("tt", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("tt", close_tag=False, **kwargs))
 
     def close_tt(self) -> None:
-        self.write_html(self._render_end_tag("tt"))
+        self.write_html(render_end_tag("tt"))
 
     def render_tt(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("tt", content, **kwargs)
+        return render_element("tt", content, **kwargs)
 
     def open_tr(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("tr", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("tr", close_tag=False, **kwargs))
 
     def close_tr(self) -> None:
-        self.write_html(self._render_end_tag("tr"))
+        self.write_html(render_end_tag("tr"))
 
     def render_tr(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("tr", content, **kwargs)
+        return render_element("tr", content, **kwargs)
 
     def open_tbody(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("tbody", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("tbody", close_tag=False, **kwargs))
 
     def close_tbody(self) -> None:
-        self.write_html(self._render_end_tag("tbody"))
+        self.write_html(render_end_tag("tbody"))
 
     def render_tbody(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("tbody", content, **kwargs)
+        return render_element("tbody", content, **kwargs)
 
     def open_li(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("li", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("li", close_tag=False, **kwargs))
 
     def close_li(self) -> None:
-        self.write_html(self._render_end_tag("li"))
+        self.write_html(render_end_tag("li"))
 
     def render_li(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("li", content, **kwargs)
+        return render_element("li", content, **kwargs)
 
     def open_html(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("html", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("html", close_tag=False, **kwargs))
 
     def close_html(self) -> None:
-        self.write_html(self._render_end_tag("html"))
+        self.write_html(render_end_tag("html"))
 
     def render_html(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("html", content, **kwargs)
+        return render_element("html", content, **kwargs)
 
     def open_th(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("th", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("th", close_tag=False, **kwargs))
 
     def close_th(self) -> None:
-        self.write_html(self._render_end_tag("th"))
+        self.write_html(render_end_tag("th"))
 
     def render_th(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("th", content, **kwargs)
+        return render_element("th", content, **kwargs)
 
     def open_sup(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("sup", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("sup", close_tag=False, **kwargs))
 
     def close_sup(self) -> None:
-        self.write_html(self._render_end_tag("sup"))
+        self.write_html(render_end_tag("sup"))
 
     def render_sup(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("sup", content, **kwargs)
+        return render_element("sup", content, **kwargs)
 
     def open_input(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("input", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("input", close_tag=False, **kwargs))
 
     def close_input(self) -> None:
-        self.write_html(self._render_end_tag("input"))
+        self.write_html(render_end_tag("input"))
 
     def open_td(self, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(
-            self._render_start_tag("td",
-                                   close_tag=False,
-                                   colspan=str(colspan) if colspan is not None else None,
-                                   **kwargs))
+            render_start_tag("td",
+                             close_tag=False,
+                             colspan=str(colspan) if colspan is not None else None,
+                             **kwargs))
 
     def close_td(self) -> None:
-        self.write_html(self._render_end_tag("td"))
+        self.write_html(render_end_tag("td"))
 
     def render_td(self,
                   content: HTMLContent,
                   colspan: Optional[int] = None,
                   **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("td",
-                                    content,
-                                    colspan=str(colspan) if colspan is not None else None,
-                                    **kwargs)
+        return render_element("td",
+                              content,
+                              colspan=str(colspan) if colspan is not None else None,
+                              **kwargs)
 
     def open_thead(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("thead", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("thead", close_tag=False, **kwargs))
 
     def close_thead(self) -> None:
-        self.write_html(self._render_end_tag("thead"))
+        self.write_html(render_end_tag("thead"))
 
     def render_thead(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("thead", content, **kwargs)
+        return render_element("thead", content, **kwargs)
 
     def open_body(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("body", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("body", close_tag=False, **kwargs))
 
     def close_body(self) -> None:
-        self.write_html(self._render_end_tag("body"))
+        self.write_html(render_end_tag("body"))
 
     def render_body(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("body", content, **kwargs)
+        return render_element("body", content, **kwargs)
 
     def open_head(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("head", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("head", close_tag=False, **kwargs))
 
     def close_head(self) -> None:
-        self.write_html(self._render_end_tag("head"))
+        self.write_html(render_end_tag("head"))
 
     def render_head(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("head", content, **kwargs)
+        return render_element("head", content, **kwargs)
 
     def open_fieldset(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("fieldset", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("fieldset", close_tag=False, **kwargs))
 
     def close_fieldset(self) -> None:
-        self.write_html(self._render_end_tag("fieldset"))
+        self.write_html(render_end_tag("fieldset"))
 
     def render_fieldset(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("fieldset", content, **kwargs)
+        return render_element("fieldset", content, **kwargs)
 
     def open_optgroup(self, **kwargs):
         # type: (**HTMLTagAttributeValue) -> None
-        self.write_html(self._render_start_tag("optgroup", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("optgroup", close_tag=False, **kwargs))
 
     def close_optgroup(self):
         # type: () -> None
-        self.write_html(self._render_end_tag("optgroup"))
+        self.write_html(render_end_tag("optgroup"))
 
     def open_option(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("option", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("option", close_tag=False, **kwargs))
 
     def close_option(self) -> None:
-        self.write_html(self._render_end_tag("option"))
+        self.write_html(render_end_tag("option"))
 
     def render_option(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("option", content, **kwargs)
+        return render_element("option", content, **kwargs)
 
     def open_form(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("form", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("form", close_tag=False, **kwargs))
 
     def close_form(self) -> None:
-        self.write_html(self._render_end_tag("form"))
+        self.write_html(render_end_tag("form"))
 
     def render_form(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("form", content, **kwargs)
+        return render_element("form", content, **kwargs)
 
     def open_tags(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("tags", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("tags", close_tag=False, **kwargs))
 
     def close_tags(self) -> None:
-        self.write_html(self._render_end_tag("tags"))
+        self.write_html(render_end_tag("tags"))
 
     def render_tags(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("tags", content, **kwargs)
+        return render_element("tags", content, **kwargs)
 
     def open_canvas(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("canvas", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("canvas", close_tag=False, **kwargs))
 
     def close_canvas(self) -> None:
-        self.write_html(self._render_end_tag("canvas"))
+        self.write_html(render_end_tag("canvas"))
 
     def render_canvas(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("canvas", content, **kwargs)
+        return render_element("canvas", content, **kwargs)
 
     def open_nobr(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("nobr", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("nobr", close_tag=False, **kwargs))
 
     def close_nobr(self) -> None:
-        self.write_html(self._render_end_tag("nobr"))
+        self.write_html(render_end_tag("nobr"))
 
     def render_nobr(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("nobr", content, **kwargs)
+        return render_element("nobr", content, **kwargs)
 
     def open_br(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("br", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("br", close_tag=False, **kwargs))
 
     def close_br(self) -> None:
-        self.write_html(self._render_end_tag("br"))
+        self.write_html(render_end_tag("br"))
 
     def open_strong(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("strong", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("strong", close_tag=False, **kwargs))
 
     def close_strong(self) -> None:
-        self.write_html(self._render_end_tag("strong"))
+        self.write_html(render_end_tag("strong"))
 
     def render_strong(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("strong", content, **kwargs)
+        return render_element("strong", content, **kwargs)
 
     def close_a(self) -> None:
-        self.write_html(self._render_end_tag("a"))
+        self.write_html(render_end_tag("a"))
 
     def open_b(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("b", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("b", close_tag=False, **kwargs))
 
     def close_b(self) -> None:
-        self.write_html(self._render_end_tag("b"))
+        self.write_html(render_end_tag("b"))
 
     def render_b(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("b", content, **kwargs)
+        return render_element("b", content, **kwargs)
 
     def open_center(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("center", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("center", close_tag=False, **kwargs))
 
     def close_center(self) -> None:
-        self.write_html(self._render_end_tag("center"))
+        self.write_html(render_end_tag("center"))
 
     def render_center(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("center", content, **kwargs)
+        return render_element("center", content, **kwargs)
 
     def open_footer(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("footer", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("footer", close_tag=False, **kwargs))
 
     def close_footer(self) -> None:
-        self.write_html(self._render_end_tag("footer"))
+        self.write_html(render_end_tag("footer"))
 
     def render_footer(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("footer", content, **kwargs)
+        return render_element("footer", content, **kwargs)
 
     def open_i(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("i", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("i", close_tag=False, **kwargs))
 
     def close_i(self) -> None:
-        self.write_html(self._render_end_tag("i"))
+        self.write_html(render_end_tag("i"))
 
     def render_i(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("i", content, **kwargs)
+        return render_element("i", content, **kwargs)
 
     def close_button(self) -> None:
-        self.write_html(self._render_end_tag("button"))
+        self.write_html(render_end_tag("button"))
 
     def open_title(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("title", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("title", close_tag=False, **kwargs))
 
     def close_title(self) -> None:
-        self.write_html(self._render_end_tag("title"))
+        self.write_html(render_end_tag("title"))
 
     def render_title(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("title", content, **kwargs)
+        return render_element("title", content, **kwargs)
 
     def open_p(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("p", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("p", close_tag=False, **kwargs))
 
     def close_p(self) -> None:
-        self.write_html(self._render_end_tag("p"))
+        self.write_html(render_end_tag("p"))
 
     def render_p(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("p", content, **kwargs)
+        return render_element("p", content, **kwargs)
 
     def open_u(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("u", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("u", close_tag=False, **kwargs))
 
     def close_u(self) -> None:
-        self.write_html(self._render_end_tag("u"))
+        self.write_html(render_end_tag("u"))
 
     def render_u(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("u", content, **kwargs)
+        return render_element("u", content, **kwargs)
 
     def open_iframe(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("iframe", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("iframe", close_tag=False, **kwargs))
 
     def close_iframe(self) -> None:
-        self.write_html(self._render_end_tag("iframe"))
+        self.write_html(render_end_tag("iframe"))
 
     def render_iframe(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("iframe", content, **kwargs)
+        return render_element("iframe", content, **kwargs)
 
     def open_x(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("x", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("x", close_tag=False, **kwargs))
 
     def close_x(self) -> None:
-        self.write_html(self._render_end_tag("x"))
+        self.write_html(render_end_tag("x"))
 
     def render_x(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("x", content, **kwargs)
+        return render_element("x", content, **kwargs)
 
     def open_div(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("div", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("div", close_tag=False, **kwargs))
 
     def close_div(self) -> None:
-        self.write_html(self._render_end_tag("div"))
+        self.write_html(render_end_tag("div"))
 
     def render_div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("div", content, **kwargs)
+        return render_element("div", content, **kwargs)
 
     def open_ul(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(self._render_start_tag("ul", close_tag=False, **kwargs))
+        self.write_html(render_start_tag("ul", close_tag=False, **kwargs))
 
     def close_ul(self) -> None:
-        self.write_html(self._render_end_tag("ul"))
+        self.write_html(render_end_tag("ul"))
 
     def render_ul(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return self._render_element("ul", content, **kwargs)
+        return render_element("ul", content, **kwargs)
 
 
 #.
@@ -1140,11 +1042,11 @@ class html(ABCHTMLGenerator):
     def default_html_headers(self) -> None:
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.write_html(
-            self._render_start_tag('link',
-                                   rel="shortcut icon",
-                                   href=theme.url("images/favicon.ico"),
-                                   type_="image/ico",
-                                   close_tag=True))
+            render_start_tag('link',
+                             rel="shortcut icon",
+                             href=theme.url("images/favicon.ico"),
+                             type_="image/ico",
+                             close_tag=True))
 
     def _head(self, title: str, javascripts: Optional[List[str]] = None) -> None:
         javascripts = javascripts if javascripts else []
@@ -1814,7 +1716,7 @@ class html(ABCHTMLGenerator):
 
         if error:
             self.open_x(class_="inputerror")
-        self.write_html(self._render_element("textarea", value, **attrs))
+        self.write_html(render_element("textarea", value, **attrs))
         if error:
             self.close_x()
 
@@ -1932,11 +1834,11 @@ class html(ABCHTMLGenerator):
     def begin_radio_group(self, horizontal: bool = False) -> None:
         if self._mobile:
             attrs = {'data-type': "horizontal" if horizontal else None, 'data-role': "controlgroup"}
-            self.write(self._render_start_tag("fieldset", close_tag=False, **attrs))
+            self.write(render_start_tag("fieldset", close_tag=False, **attrs))
 
     def end_radio_group(self) -> None:
         if self._mobile:
-            self.write(self._render_end_tag("fieldset"))
+            self.write(render_end_tag("fieldset"))
 
     def radiobutton(self, varname: str, value: str, checked: bool, label: Optional[str]) -> None:
         self.form_vars.append(varname)
@@ -2136,7 +2038,7 @@ class html(ABCHTMLGenerator):
         if src.endswith("/icon_missing.svg") and title:
             title += " (%s)" % _("icon not found")
 
-        icon_element = self._render_start_tag(
+        icon_element = render_start_tag(
             'img',
             close_tag=True,
             title=title,
@@ -2162,7 +2064,7 @@ class html(ABCHTMLGenerator):
 
         emblem_path = theme.detect_icon_path(emblem, prefix="emblem")
         if not icon_element:
-            return self._render_start_tag(
+            return render_start_tag(
                 'img',
                 close_tag=True,
                 title=title,

@@ -259,25 +259,20 @@ class SNMPTrapTranslator:
 
         def do_translate(oid, value):
             # Disable mib_var[0] type detection
-
             mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
                                                     value).resolveWithMib(self._mib_resolver)
-
             node = mib_var[0].getMibNode()
             translated_oid = mib_var[0].prettyPrint().replace("\"", "")
             translated_value = mib_var[1].prettyPrint()
-
-            return node, translated_oid, translated_value
+            if units := getattr(node, 'getUnits', ''):
+                translated_value += ' %s' % units
+            if description := getattr(node, 'getDescription', ''):
+                translated_value += "(%s)" % description
+            return translated_oid, translated_value
 
         for oid, value in var_bind_list:
             try:
-                node, translated_oid, translated_value = do_translate(oid, value)
-                units = node.getUnits() if hasattr(node, "getUnits") else ""
-                if units:
-                    translated_value += ' %s' % units
-                description = node.getDescription() if hasattr(node, "getDescription") else ""
-                if description:
-                    translated_value += "(%s)" % description
+                translated_oid, translated_value = do_translate(oid, value)
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
                 self._logger.warning('Failed to translate OID %s (in trap from %s): %s '
                                      '(enable debug logging for details)' %

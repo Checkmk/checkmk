@@ -17,8 +17,10 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
-import cmk.utils.paths as paths
-from cmk.utils.type_defs import CheckPluginName, ConfigSerial
+from cmk.utils.type_defs import CheckPluginName
+
+import cmk.core_helpers.paths as paths
+from cmk.core_helpers.paths import ConfigSerial
 
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios

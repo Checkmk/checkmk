@@ -93,12 +93,13 @@ from cmk.utils.type_defs import (
     TagIDs,
     TagIDToTaggroupID,
     TimeperiodName,
-    OptionalConfigSerial,
-    LATEST_SERIAL,
 )
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
+
+import cmk.core_helpers.paths
+from cmk.core_helpers.paths import LATEST_SERIAL, OptionalConfigSerial
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -743,7 +744,7 @@ class PackedConfigGenerator:
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
     def __init__(self, serial: OptionalConfigSerial) -> None:
-        base_path: Final[Path] = cmk.utils.paths.make_helper_config_path(serial)
+        base_path: Final[Path] = cmk.core_helpers.paths.make_helper_config_path(serial)
         self.path: Final[Path] = base_path / "precompiled_check_config.mk"
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
@@ -759,11 +760,11 @@ class PackedConfigStore:
 
 
 def make_core_autochecks_dir(serial: OptionalConfigSerial) -> Path:
-    return cmk.utils.paths.make_helper_config_path(serial) / "autochecks"
+    return cmk.core_helpers.paths.make_helper_config_path(serial) / "autochecks"
 
 
 def make_core_discovered_host_labels_dir(serial: OptionalConfigSerial) -> Path:
-    return cmk.utils.paths.make_helper_config_path(serial) / "discovered_host_labels"
+    return cmk.core_helpers.paths.make_helper_config_path(serial) / "discovered_host_labels"
 
 
 @contextlib.contextmanager

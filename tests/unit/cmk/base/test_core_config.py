@@ -15,7 +15,10 @@ from testlib.base import Scenario
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName, ConfigSerial, LATEST_SERIAL
+from cmk.utils.type_defs import CheckPluginName
+
+import cmk.core_helpers.paths
+from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -281,18 +284,18 @@ class TestHelperConfig:
         _create_helper_config_dir(prev_prev_serial)
         _create_helper_config_dir(prev_serial)
 
-        assert cmk.utils.paths.make_helper_config_path(prev_prev_serial).exists()
-        assert cmk.utils.paths.make_helper_config_path(prev_serial).exists()
+        assert cmk.core_helpers.paths.make_helper_config_path(prev_prev_serial).exists()
+        assert cmk.core_helpers.paths.make_helper_config_path(prev_serial).exists()
         assert store.latest_path.exists()
 
     @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
     def test_cleanup_with_nagios(self, store, prev_helper_config, prev_serial, prev_prev_serial):
         assert config.monitoring_core == "nagios"
-        prev_path = cmk.utils.paths.make_helper_config_path(prev_serial)
+        prev_path = cmk.core_helpers.paths.make_helper_config_path(prev_serial)
 
         assert not store.serial_path.exists()
         with store.create():
-            assert not cmk.utils.paths.make_helper_config_path(prev_prev_serial).exists()
+            assert not cmk.core_helpers.paths.make_helper_config_path(prev_prev_serial).exists()
             assert prev_path.exists()
             assert store.serial_path.exists()
             assert store.latest_path.resolve() == prev_path
@@ -302,7 +305,7 @@ class TestHelperConfig:
     @pytest.mark.usefixtures("nagios_core", "prev_helper_config")
     def test_cleanup_with_broken_latest_link(self, store, prev_serial, prev_prev_serial):
         assert config.monitoring_core == "nagios"
-        prev_path = cmk.utils.paths.make_helper_config_path(prev_serial)
+        prev_path = cmk.core_helpers.paths.make_helper_config_path(prev_serial)
         shutil.rmtree(prev_path)
 
         assert not prev_path.exists()
@@ -310,7 +313,7 @@ class TestHelperConfig:
 
         assert not store.serial_path.exists()
         with store.create():
-            assert not cmk.utils.paths.make_helper_config_path(prev_prev_serial).exists()
+            assert not cmk.core_helpers.paths.make_helper_config_path(prev_prev_serial).exists()
             assert not prev_path.exists()
             assert store.serial_path.exists()
             assert store.latest_path.resolve() == prev_path
@@ -324,8 +327,8 @@ class TestHelperConfig:
         with store.create():
             pass
 
-        assert cmk.utils.paths.make_helper_config_path(prev_prev_serial).exists()
-        assert cmk.utils.paths.make_helper_config_path(prev_serial).exists()
+        assert cmk.core_helpers.paths.make_helper_config_path(prev_prev_serial).exists()
+        assert cmk.core_helpers.paths.make_helper_config_path(prev_serial).exists()
         assert store.serial_path.exists()
         assert store.latest_path.resolve() == store.serial_path
 

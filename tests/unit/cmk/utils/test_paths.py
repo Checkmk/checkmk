@@ -7,7 +7,7 @@
 import os
 from pathlib import Path
 
-from testlib import repo_path, import_module
+from testlib import import_module, repo_path
 
 pathlib_paths = [
     "core_helper_config_dir",
@@ -47,9 +47,7 @@ pathlib_paths = [
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
         if not var.startswith("_") and not var.startswith("make_") and var not in (
-                'ConfigSerial',
                 'Path',
-                'OptionalConfigSerial',
                 'os',
                 'sys',
                 'Union',

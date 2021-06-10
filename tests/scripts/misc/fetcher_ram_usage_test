@@ -25,6 +25,7 @@ import cmk.utils.log as log
 from cmk.utils.observer import FetcherMemoryObserver
 
 import cmk.core_helpers.controller as controller
+import cmk.core_helpers.paths
 from cmk.core_helpers.protocol import CMCMessage
 
 import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
@@ -94,7 +95,7 @@ def _vm_size() -> int:
 
 from pathlib import Path
 
-a_path = Path(os.path.realpath(cmk.utils.paths.make_helper_config_path("latest")))
+a_path = Path(os.path.realpath(cmk.core_helpers.paths.make_helper_config_path("latest")))
 
 
 def print_memory_snapshot(snapshot: tracemalloc.Snapshot):

@@ -5,17 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK base specific code of the crash reporting"""
 
-from typing import Optional
-
 import os
 import sys
 import traceback
+from typing import Optional
 
-import cmk.utils.debug
-import cmk.utils.paths
-import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
-from cmk.utils.type_defs import ConfigSerial, HostName
+import cmk.utils.debug
+import cmk.utils.encoding
+import cmk.utils.paths
+from cmk.utils.type_defs import HostName
+
+from .paths import ConfigSerial
 
 CrashReportStore = crash_reporting.CrashReportStore
 

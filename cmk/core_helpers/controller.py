@@ -11,19 +11,18 @@ import os
 import signal
 import sys
 import traceback
-from pathlib import Path
 from types import FrameType
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional
 
 import cmk.utils.cleanup
-import cmk.utils.paths as paths
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
-from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.observer import ABCResourceObserver
-from cmk.utils.type_defs import ConfigSerial, HostName, result
+from cmk.utils.type_defs import HostName, result
 
 from . import Fetcher, FetcherType, protocol
+from .crash_reporting import create_fetcher_crash_dump
+from .paths import ConfigSerial, make_global_config_path, make_local_config_path
 from .snmp import SNMPFetcher, SNMPPluginStore
 from .type_defs import Mode
 
@@ -249,14 +248,6 @@ def _run_fetchers_from_file(
                 msg.raw_data.error,
                 msg.raw_data.error.__traceback__,
             )))
-
-
-def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:
-    return paths.make_fetchers_config_path(serial) / "hosts" / f"{host_name}.json"
-
-
-def make_global_config_path(serial: ConfigSerial) -> Path:
-    return paths.make_fetchers_config_path(serial) / "global_config.json"
 
 
 def write_bytes(data: bytes) -> None:

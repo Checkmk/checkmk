@@ -19,14 +19,9 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    ConfigSerial,
-    HostKey,
-    LATEST_SERIAL,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType
+
+from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL
 
 import cmk.base.config as config
 from cmk.base.check_utils import Service

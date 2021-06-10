@@ -29,21 +29,21 @@ from typing import (
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
-    ConfigSerial,
     HostAddress,
     HostName,
     Labels,
     LabelSources,
-    LATEST_SERIAL,
     ServiceName,
 )
+
+import cmk.core_helpers.paths
+from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL, next_helper_config_serial
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -74,8 +74,8 @@ class HelperConfig:
     """
     def __init__(self, serial: ConfigSerial) -> None:
         self.serial: Final = serial
-        self.serial_path: Final = cmk.utils.paths.make_helper_config_path(serial)
-        self.latest_path: Final = cmk.utils.paths.make_helper_config_path(LATEST_SERIAL)
+        self.serial_path: Final = cmk.core_helpers.paths.make_helper_config_path(serial)
+        self.latest_path: Final = cmk.core_helpers.paths.make_helper_config_path(LATEST_SERIAL)
 
     @contextmanager
     def create(self) -> Iterator["HelperConfig"]:
@@ -110,33 +110,6 @@ class HelperConfig:
                 continue
 
             shutil.rmtree(config_path)
-
-
-def current_helper_config_serial() -> ConfigSerial:
-    serial: int = store.load_object_from_file(
-        cmk.utils.paths.core_helper_config_dir / "serial.mk",
-        default=0,
-        lock=True,
-    )
-    return ConfigSerial(str(serial))
-
-
-def next_helper_config_serial() -> ConfigSerial:
-    """Acquire and return the next helper config serial
-
-    This ID is used to identify a core helper configuration generation. It is used to store the
-    helper config on the file system below var/check_mk/core/helper_config/[serial]. It needs to
-    be unique compared to all currently known serials (the ones that exist in the directory
-    mentioned above).
-    """
-    serial = int(current_helper_config_serial())
-    serial += 1
-
-    store.save_object_to_file(
-        cmk.utils.paths.core_helper_config_dir / "serial.mk",
-        serial,
-    )
-    return ConfigSerial(str(serial))
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):

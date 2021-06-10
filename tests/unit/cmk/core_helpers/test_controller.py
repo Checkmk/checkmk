@@ -9,7 +9,6 @@ import logging
 import pytest  # type: ignore[import]
 
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.type_defs import ConfigSerial
 
 from cmk.core_helpers.controller import (
     GlobalConfig,
@@ -17,6 +16,7 @@ from cmk.core_helpers.controller import (
     make_local_config_path,
     write_bytes,
 )
+from cmk.core_helpers.paths import ConfigSerial
 from cmk.core_helpers.protocol import CMCMessage
 from cmk.core_helpers.snmp import SNMPPluginStore
 

@@ -34,8 +34,10 @@ from cmk.utils.type_defs import (
     Item,
     ServicegroupName,
     ServiceName,
-    ConfigSerial,
 )
+
+import cmk.core_helpers.paths
+from cmk.core_helpers.paths import ConfigSerial
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
@@ -941,7 +943,7 @@ class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
     @staticmethod
     def host_check_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
-        return cmk.utils.paths.make_helper_config_path(serial) / "host_checks" / hostname
+        return cmk.core_helpers.paths.make_helper_config_path(serial) / "host_checks" / hostname
 
     @staticmethod
     def host_check_source_file_path(serial: ConfigSerial, hostname: HostName) -> Path:

@@ -28751,6 +28751,10 @@ msgstr "予測データがありません。"
 msgid "Missing render parameter"
 msgstr "レンダリングパラメータがありません"
 
+#, fuzzy
+msgid "Missing required context information"
+msgstr "サービスの連絡先情報"
+
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "必要なキーがありません: %s"

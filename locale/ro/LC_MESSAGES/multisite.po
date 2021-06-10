@@ -28746,6 +28746,10 @@ msgstr ""
 msgid "Missing render parameter"
 msgstr ""
 
+#, fuzzy
+msgid "Missing required context information"
+msgstr "Informații Adiționale"
+
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr ""
@@ -59082,10 +59086,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service description format"
 #~ msgstr "foloseste descrierea"
-
-#, fuzzy
-#~ msgid "Missing prediction information."
-#~ msgstr "Informații Adiționale"
 
 #, fuzzy
 #~ msgid "Hint a hostname"

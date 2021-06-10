@@ -29837,6 +29837,10 @@ msgstr "Ontbrekende voorspellingsgegevens."
 msgid "Missing render parameter"
 msgstr "Ontbrekende render parameter"
 
+#, fuzzy
+msgid "Missing required context information"
+msgstr "Contactinformatie dienst"
+
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "Ontbrekende vereiste sleutel(s): %s"

@@ -29885,6 +29885,10 @@ msgstr "Die Information für die Vorhersage fehlt."
 msgid "Missing render parameter"
 msgstr "Der Parameter render fehlt"
 
+#, fuzzy
+msgid "Missing required context information"
+msgstr "Die Information für die Vorhersage fehlt."
+
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "Fehlender benötigter Schlüssel: %s"
@@ -63215,9 +63219,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Service description format"
 #~ msgstr "Format der Servicebeschreibung"
-
-#~ msgid "Missing prediction information."
-#~ msgstr "Die Information für die Vorhersage fehlt."
 
 #~ msgid "(No services with metrics found)"
 #~ msgstr "(Keine Services mit Metriken gefunden)"

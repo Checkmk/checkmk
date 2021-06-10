@@ -29856,6 +29856,10 @@ msgstr "Dados de previsão em falta."
 msgid "Missing render parameter"
 msgstr "Parâmetro de renderização em falta"
 
+#, fuzzy
+msgid "Missing required context information"
+msgstr "Informações de contato do serviço"
+
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "Chave(s) necessária(s) em falta: %s"

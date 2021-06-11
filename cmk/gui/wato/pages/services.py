@@ -355,14 +355,18 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         else:
             messages.append(_("Found no services yet. To retry please execute a full scan."))
 
+        progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
+        warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
+        messages.extend(warnings)
+
         with html.plugged():
             html.begin_foldable_container(treename="service_discovery",
                                           id_="options",
-                                          isopen=False,
+                                          isopen=bool(warnings),
                                           title=_("Job details"),
                                           indent=False)
             html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-            html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
+            html.pre("\n".join(progress_update_log))
             html.close_div()
             html.end_foldable_container()
             messages.append(html.drain())

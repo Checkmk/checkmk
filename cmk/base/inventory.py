@@ -70,6 +70,7 @@ class InventoryTrees(NamedTuple):
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
     source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
+    parsing_errors: Sequence[str]
     safe_to_write: bool
 
 
@@ -200,6 +201,11 @@ def do_inv_check(
             status = max(_inv_fail_status, status)
             infotexts.append("[%s] %s" % (source.id, source_output))
 
+    for details in inv_result.parsing_errors:
+        status = max(_inv_fail_status, status)
+        infotexts.append(f"{details.split(' - ')[0]} {check_api_utils.state_markers[1]}")
+        long_infotexts.append(details)
+
     return status, infotexts, long_infotexts, []
 
 
@@ -213,6 +219,7 @@ def _do_active_inventory_for(
         return ActiveInventoryResult(
             trees=_do_inv_for_cluster(host_config),
             source_results=[],
+            parsing_errors=(),
             safe_to_write=True,
         )
 
@@ -234,8 +241,10 @@ def _do_active_inventory_for(
             run_only_plugin_names=run_only_plugin_names,
         ),
         source_results=source_results,
-        safe_to_write=_safe_to_write_tree(source_results) and
-        selected_sections is checkers.NO_SELECTION,
+        parsing_errors=multi_host_sections.encountered_parsing_errors(),
+        safe_to_write=(_safe_to_write_tree(source_results) and
+                       selected_sections is checkers.NO_SELECTION and
+                       not multi_host_sections.encountered_parsing_errors()),
     )
 
 

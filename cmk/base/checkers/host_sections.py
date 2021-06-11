@@ -20,6 +20,7 @@ from typing import (
     MutableMapping,
     Optional,
     Set,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
@@ -49,6 +50,7 @@ import cmk.base.caching as caching
 import cmk.base.item_state as item_state
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.check_api_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
+from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.check_api_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
 from cmk.base.exceptions import MKParseFunctionError
 
@@ -200,6 +202,7 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         # to 'agent_based' plugins.
         # This hodls the result of the parsing of individual raw sections
         self._parsing_results = caching.DictCache()
+        self._parsing_errors: List[str] = []
         # This hodls the result of the superseding section along with the
         # cache info of the raw section that was used.
         self._parsed_sections = caching.DictCache()
@@ -230,6 +233,9 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
 
     def items(self) -> ItemsView[HostKey, HostSections]:
         return self._data.items()  # pylint: disable=dict-items-not-iterating
+
+    def encountered_parsing_errors(self) -> Sequence[str]:
+        return self._parsing_errors
 
     def get_section_kwargs(
         self,
@@ -382,7 +388,20 @@ class MultiHostSections(MutableMapping[HostKey, HostSections]):
         except KeyError:
             return self._parsing_results.setdefault(cache_key, None)
 
-        return self._parsing_results.setdefault(cache_key, section.parse_function(data))
+        try:
+            parsed_result = section.parse_function(data)
+        except Exception:
+            if cmk.utils.debug.enabled():
+                raise
+            self._parsing_errors.append(
+                create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section.name,
+                    section_content=data,
+                ))
+            parsed_result = None
+
+        return self._parsing_results.setdefault(cache_key, parsed_result)
 
     # DEPRECATED
     # This function is only kept for the legacy cluster mode from hell

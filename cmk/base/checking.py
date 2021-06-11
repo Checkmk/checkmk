@@ -235,6 +235,11 @@ def do_check(
                     infotexts.append("[%s] %s" % (source.id, source_output))
                     perfdata.extend([_convert_perf_data(p) for p in source_perfdata])
 
+            for details in mhs.encountered_parsing_errors():
+                status = max(status, 1)
+                infotexts.append(f"{details.split(' - ')[0]} {check_api_utils.state_markers[1]}")
+                long_infotexts.append(details)
+
             if plugins_missing_data:
                 missing_data_status, missing_data_infotext = _check_plugins_missing_data(
                     plugins_missing_data,

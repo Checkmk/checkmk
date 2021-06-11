@@ -491,6 +491,9 @@ def _do_discovery_for(
 
     section.section_success(", ".join(messages))
 
+    for details in multi_host_sections.encountered_parsing_errors():
+        console.warning(details)
+
 
 # determine changed services on host.
 # param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
@@ -793,6 +796,11 @@ def check_discovery(
         services,
         params,
     )
+
+    for details in multi_host_sections.encountered_parsing_errors():
+        status = max(1, status)
+        infotexts.append(f"{details.split(' - ')[0]} {check_api_utils.state_markers[1]}")
+        long_infotexts.append(details)
 
     if host_label_discovery_result.new_labels:
         infotexts.append("%d new host labels" % len(host_label_discovery_result.new_labels))
@@ -1898,6 +1906,9 @@ def get_check_preview(
                 service.service_labels.to_dict(),
                 found_on_nodes,
             ))
+
+    for details in multi_host_sections.encountered_parsing_errors():
+        console.warning(details)
 
     return table, host_label_discovery_result
 

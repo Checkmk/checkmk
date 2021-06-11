@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from functools import partial
-from collections import defaultdict
-from dataclasses import (asdict, dataclass)
 import time
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from functools import partial
 from typing import (
     Any,
     Callable,
@@ -38,7 +38,7 @@ from ..agent_based_api.v1 import (
     Result,
     Service,
     ServiceLabel,
-    State as state,
+    State,
     type_defs,
 )
 
@@ -901,11 +901,11 @@ def _get_rate(
     )
 
 
-def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, state]:
+def _get_map_states(defined_mapping: Iterable[Tuple[Iterable[str], int]]) -> Mapping[str, State]:
     map_states = {}
     for states, mon_state in defined_mapping:
         for st in states:
-            map_states[st] = state(mon_state)
+            map_states[st] = State(mon_state)
     return map_states
 
 
@@ -921,11 +921,11 @@ def _render_status_info_group_members(
 def _check_status(
     interface_status: str,
     target_states: Optional[Sequence[str]],
-    states_map: Mapping[str, state],
-) -> state:
-    mon_state = state.OK
+    states_map: Mapping[str, State],
+) -> State:
+    mon_state = State.OK
     if target_states is not None and interface_status not in target_states:
-        mon_state = state.CRIT
+        mon_state = State.CRIT
     mon_state = states_map.get(interface_status, mon_state)
     return mon_state
 
@@ -940,17 +940,17 @@ def _check_speed(interface: Interface, targetspeed: Optional[int]) -> Result:
         speed_expected = ("" if (targetspeed is None or int(interface.speed) == targetspeed) else
                           " (expected: %s)" % render.nicspeed(targetspeed / 8))
         return Result(
-            state=state.WARN if speed_expected else state.OK,
+            state=State.WARN if speed_expected else State.OK,
             summary=f"Speed: {speed_actual}{speed_expected}",
         )
 
     if targetspeed:
         return Result(
-            state=state.OK,
+            state=State.OK,
             summary="Speed: %s (assumed)" % render.nicspeed(targetspeed / 8),
         )
 
-    return Result(state=state.OK, summary="Speed: %s" % (interface.speed_as_text or "unknown"))
+    return Result(state=State.OK, summary="Speed: %s" % (interface.speed_as_text or "unknown"))
 
 
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
@@ -1127,7 +1127,7 @@ def _interface_name(
 ) -> Iterable[Result]:
     if group_name:
         # The detailed group info is added later on
-        yield Result(state=state.OK, summary=group_name)
+        yield Result(state=State.OK, summary=group_name)
         return
 
     if "infotext_format" in params:
@@ -1175,7 +1175,7 @@ def _interface_name(
 
     if info_interface:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary=info_interface,
         )
 
@@ -1183,7 +1183,7 @@ def _interface_name(
 def _interface_mac(*, interface: Interface) -> Iterable[Result]:
     if interface.phys_address:
         yield Result(
-            state=state.OK,
+            state=State.OK,
             summary='MAC: %s' % render_mac_address(interface.phys_address),
         )
 
@@ -1250,7 +1250,7 @@ def _group_members(
         infos_group.append("[%s%s]" % (", ".join(member_info), nodeinfo))
 
     yield Result(
-        state=state.OK,
+        state=State.OK,
         summary='Members: %s' % ' '.join(infos_group),
     )
 

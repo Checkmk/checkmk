@@ -1,0 +1,15 @@
+Title: Error when Rendering report with Availability table
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1623394453
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When Rendering a report for an Availability table the
+process would crash with error:
+"TypeError: not expecting type '<class 'int'>'"
+

@@ -9,7 +9,6 @@ import os
 import functools
 
 from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
-from six import ensure_str
 
 from livestatus import SiteId
 
@@ -1437,7 +1436,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                             elif aggr == "max":
                                 r = render_number(x_max, considered_duration)
                             else:
-                                r = ensure_str(x_cnt)
+                                r = str(x_cnt)
                                 summary_counts.setdefault(ssid, 0)
                                 summary_counts[ssid] += x_cnt
                             statistics.append((r, css))

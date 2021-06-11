@@ -166,9 +166,7 @@ class SNMPFileCache(ABCFileCache[SNMPRawData]):
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
     def make_path(self, mode: Mode) -> Path:
-        if mode is Mode.DISCOVERY:
-            return self.base_path.parent / mode.name.lower() / self.base_path.name
-        return self.base_path.parent / "checking" / self.base_path.name
+        return self.base_path.parent / mode.name.lower() / self.base_path.name
 
 
 class SNMPFetcher(ABCFetcher[SNMPRawData]):

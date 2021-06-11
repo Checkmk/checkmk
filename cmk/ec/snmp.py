@@ -9,23 +9,22 @@ from logging import Logger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
 
-# Needed for receiving traps
+import pyasn1.error  # type: ignore[import]
 import pysnmp.debug  # type: ignore[import]
 import pysnmp.entity.config  # type: ignore[import]
 import pysnmp.entity.engine  # type: ignore[import]
 import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
 import pysnmp.proto.api  # type: ignore[import]
 import pysnmp.proto.errind  # type: ignore[import]
-
-# Needed for trap translation
+import pysnmp.proto.rfc1155  # type: ignore[import]
+import pysnmp.proto.rfc1902  # type: ignore[import]
 import pysnmp.smi.builder  # type: ignore[import]
-import pysnmp.smi.view  # type: ignore[import]
-import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.error  # type: ignore[import]
-import pyasn1.error  # type: ignore[import]
+import pysnmp.smi.rfc1902  # type: ignore[import]
+import pysnmp.smi.view  # type: ignore[import]
 
 from cmk.utils.log import VERBOSE
-import cmk.utils.render
+from cmk.utils.render import Age
 
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
 from .settings import Settings
@@ -229,29 +228,25 @@ class SNMPTrapTranslator:
             logger.exception("Exception: %s" % e)
             return None
 
-    # Convert pysnmp datatypes to simply handable ones
     def _translate_simple(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
         return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
     def _translate_binding_simple(self, oid, value) -> Tuple[str, str]:
-        key = str(oid)
-        if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
-            val = value.prettyPrint()
-        elif value.__class__.__name__ == 'TimeTicks':
-            val = str(cmk.utils.render.Age(float(value._value) / 100))
-        else:
-            val = value._value
-        # Translate some standard SNMPv2 oids
-        if key == '1.3.6.1.2.1.1.3.0':
+        if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0):
             key = 'Uptime'
+        else:
+            key = str(oid)
+        # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
+        if isinstance(value, (pysnmp.proto.rfc1155.TimeTicks, pysnmp.proto.rfc1902.TimeTicks)):
+            val = str(Age(float(value) / 100))
+        else:
+            val = value.prettyPrint()
         return key, val
 
-    # Convert pysnmp datatypes to simply handable ones
     def _translate_via_mibs(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
         if self._mib_resolver is None:
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
-            # TODO: Fall back to _translate_simple?
-            return [(str(oid), str(value)) for oid, value in var_bind_list]
+            return self._translate_simple(ipaddress, var_bind_list)
 
         var_binds: List[Tuple[str, str]] = []
         for oid, value in var_bind_list:

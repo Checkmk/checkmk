@@ -9,7 +9,6 @@ while the inventory is performed for one host.
 In the future all inventory code should be moved to this module."""
 
 import os
-from contextlib import suppress
 from pathlib import Path
 from typing import (
     Container,
@@ -284,7 +283,7 @@ def do_inventory_actions_during_checking_for(
 
     if not host_config.do_status_data_inventory:
         # includes cluster case
-        _cleanup_status_data(host_config.hostname)
+        status_data_store.remove_files(host_config.hostname)
         return  # nothing to do here
 
     trees = _do_inv_for_realhost(
@@ -295,15 +294,6 @@ def do_inventory_actions_during_checking_for(
     )
     if trees.status_data and not trees.status_data.is_empty():
         status_data_store.save(host_config.hostname, trees.status_data)
-
-
-def _cleanup_status_data(hostname: HostName) -> None:
-    """Remove empty status data files"""
-    filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
-    with suppress(OSError):
-        os.remove(filepath)
-    with suppress(OSError):
-        os.remove(filepath + ".gz")
 
 
 def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
@@ -392,10 +382,7 @@ def _save_inventory_tree(
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        if os.path.exists(filepath + ".gz"):
-            os.remove(filepath + ".gz")
+        inventory_store.remove_files(hostname)
         return None
 
     old_tree = inventory_store.load(hostname)

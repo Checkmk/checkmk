@@ -145,6 +145,10 @@ class StructuredDataStore:
     def load(self, host_name: HostName) -> "StructuredDataNode":
         return self.load_file(self._host_file(host_name))
 
+    def remove_files(self, host_name: HostName) -> None:
+        self._host_file(host_name).unlink(missing_ok=True)
+        self._gz_file(host_name).unlink(missing_ok=True)
+
 
 #.
 #   .--filters-------------------------------------------------------------.

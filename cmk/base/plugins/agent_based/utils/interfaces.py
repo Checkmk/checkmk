@@ -1228,19 +1228,37 @@ def _check_oper_and_admin_state(
     target_oper_states: Optional[Container[str]],
     target_admin_states: Optional[Container[str]],
 ) -> Iterable[Result]:
-    if state_mapping_type == "independent_mappings":
-        assert isinstance(state_mappings, Mapping)
-        yield from _check_oper_and_admin_state_independent(
+    if combined_mon_state := _check_oper_and_admin_state_combined(
             interface,
-            target_oper_states=target_oper_states,
-            target_admin_states=target_admin_states,
-            map_oper_states=state_mappings.get("map_operstates", []),
-            map_admin_states=state_mappings.get("map_admin_states", []),
-        )
+            state_mapping_type,
+            state_mappings,
+    ):
+        yield combined_mon_state
         return
 
-    # TODO: implement combined mapping here (next commit)
-    return
+    map_oper_states, map_admin_states = _get_oper_and_admin_states_maps_independent(
+        state_mapping_type,
+        state_mappings,
+    )
+
+    yield from _check_oper_and_admin_state_independent(
+        interface,
+        target_oper_states=target_oper_states,
+        target_admin_states=target_admin_states,
+        map_oper_states=map_oper_states,
+        map_admin_states=map_admin_states,
+    )
+
+
+def _get_oper_and_admin_states_maps_independent(
+    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
+    state_mappings: Union[Iterable[Tuple[str, str, int]],  #
+                          Mapping[str, Iterable[Tuple[Iterable[str], int]]]],
+) -> Tuple[Iterable[Tuple[Iterable[str], int]], Iterable[Tuple[Iterable[str], int]]]:
+    if state_mapping_type == "independent_mappings":
+        assert isinstance(state_mappings, Mapping)
+        return state_mappings.get("map_operstates", []), state_mappings.get("map_admin_states", [])
+    return [], []
 
 
 def _check_oper_and_admin_state_independent(
@@ -1270,6 +1288,37 @@ def _check_oper_and_admin_state_independent(
             _get_map_states(map_admin_states),
         ),
         summary=f"Admin state: {statename(interface.admin_status)}",
+    )
+
+
+def _check_oper_and_admin_state_combined(
+    interface: Interface,
+    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
+    state_mappings: Union[Iterable[Tuple[str, str, int]],  #
+                          Mapping[str, Iterable[Tuple[Iterable[str], int]]]],
+) -> Optional[Result]:
+    if interface.admin_status is None:
+        return None
+    if state_mapping_type == "independent_mappings":
+        return None
+    assert not isinstance(state_mappings, Mapping)
+    if (combined_mon_state := {
+        (
+            oper_state,
+            admin_state,
+        ): State(mon_state)  #
+            for oper_state, admin_state, mon_state in state_mappings
+    }.get((
+            interface.oper_status,
+            interface.admin_status,
+    ))) is None:
+        return None
+    return Result(
+        state=combined_mon_state,
+        summary=
+        f"(op. state: {interface.oper_status_name}, admin state: {statename(interface.admin_status)})",
+        details=
+        f"Operational state: {interface.oper_status_name}, Admin state: {statename(interface.admin_status)}",
     )
 
 

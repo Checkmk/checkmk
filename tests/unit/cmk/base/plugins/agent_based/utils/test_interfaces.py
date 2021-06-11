@@ -924,7 +924,7 @@ def test_check_single_interface_states(value_store, item, params, result):
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
-def test_check_single_interface_map_states(value_store, item, params, result):
+def test_check_single_interface_map_states_independently(value_store, item, params, result):
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
@@ -960,6 +960,153 @@ def test_check_single_interface_map_states(value_store, item, params, result):
         )) == result[:1] + [
             Result(state=State.UNKNOWN, summary='(up)', details='Operational state: up'),
             Result(state=State.UNKNOWN, summary='Admin state: down'),
+        ] + result[2:]
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_map_states_combined_matching(value_store, item, params, result):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                {
+                    **params,
+                    "state": ["4"],
+                    "admin_state": ["1"],
+                    "state_mappings": (
+                        "combined_mappings",
+                        [
+                            ("1", "2", 3),
+                            ("5", "2", 3),
+                            ("2", "2", 2),
+                        ],
+                    ),
+                },
+                _create_interfaces(0, admin_status='2')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": ["4"],
+                "admin_state": ["1"],
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(4000000, admin_status='2')[int(item) - 1],
+            timestamp=5,
+        )) == result[:1] + [
+            Result(
+                state=State.UNKNOWN,
+                summary='(op. state: up, admin state: down)',
+                details='Operational state: up, Admin state: down',
+            )
+        ] + result[2:]
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_map_states_combined_not_matching(
+    value_store,
+    item,
+    params,
+    result,
+):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                {
+                    **params,
+                    "state_mappings": (
+                        "combined_mappings",
+                        [
+                            ("1", "2", 3),
+                            ("5", "2", 3),
+                            ("2", "2", 2),
+                        ],
+                    ),
+                },
+                _create_interfaces(0, admin_status='3')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(4000000, admin_status='3')[int(item) - 1],
+            timestamp=5,
+        )) == result[:1] + [
+            Result(state=State.OK, summary='(up)', details='Operational state: up'),
+            Result(state=State.OK, summary='Admin state: testing'),
+        ] + result[2:]
+
+
+@pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
+def test_check_single_interface_map_states_combined_not_matching_with_target_states(
+    value_store,
+    item,
+    params,
+    result,
+):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            interfaces.check_single_interface(
+                item,
+                {
+                    **params,
+                    "state": ["4"],
+                    "admin_state": ["1"],
+                    "state_mappings": (
+                        "combined_mappings",
+                        [
+                            ("1", "2", 3),
+                            ("5", "2", 3),
+                            ("2", "2", 2),
+                        ],
+                    ),
+                },
+                _create_interfaces(0, admin_status='3')[int(item) - 1],
+                timestamp=0,
+            ))
+    assert list(
+        interfaces.check_single_interface(
+            item,
+            {
+                **params,
+                "state": ["4"],
+                "admin_state": ["1"],
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "2", 3),
+                        ("5", "2", 3),
+                        ("2", "2", 2),
+                    ],
+                ),
+            },
+            _create_interfaces(4000000, admin_status='3')[int(item) - 1],
+            timestamp=5,
+        )) == result[:1] + [
+            Result(state=State.CRIT, summary='(up)', details='Operational state: up'),
+            Result(state=State.CRIT, summary='Admin state: testing'),
         ] + result[2:]
 
 

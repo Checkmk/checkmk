@@ -9,6 +9,9 @@ from typing import Generator, Sequence, Tuple
 from cmk.utils.type_defs import ParsedSectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
+from cmk.base.plugin_contexts import current_host
+
+from testlib.base import Scenario
 
 
 def _section_permutations(
@@ -30,7 +33,7 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
                                  ) if isinstance(section, SNMPSectionPlugin) else None
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register):
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_register):
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -48,6 +51,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register):
     just add an exception below. If maintaining this test becvomes too tedious,
     we can probably just remove it.
     """
+    Scenario().apply(monkeypatch)  # host_extra_conf needs the ruleset_matcher
 
     plugins_expected_to_discover_upon_empty = {
         "printer_alerts",
@@ -72,7 +76,8 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register):
                     plugin.discovery_ruleset_type
                     == "merged") else [plugin.discovery_default_parameters]
 
-            if list(plugin.discovery_function(**kwargs)):
-                plugins_discovering_upon_empty.add(str(plugin.name))
+            with current_host('testhost'):  # host_extra_conf needs a host_name()
+                if list(plugin.discovery_function(**kwargs)):
+                    plugins_discovering_upon_empty.add(str(plugin.name))
 
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty

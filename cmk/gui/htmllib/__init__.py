@@ -1940,7 +1940,7 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
-        src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon")
+        src = icon_name if "/" in icon_name else theme.detect_icon_path(icon_name, prefix="icon_")
         if src.endswith(".png"):
             classes.append("png")
         if src.endswith("/icon_missing.svg") and title:
@@ -1970,7 +1970,7 @@ class html(ABCHTMLGenerator):
         """ Render emblem to corresponding icon (icon_element in function call)
         or render emblem itself as icon image, used e.g. in view options."""
 
-        emblem_path = theme.detect_icon_path(emblem, prefix="emblem")
+        emblem_path = theme.detect_icon_path(emblem, prefix="emblem_")
         if not icon_element:
             return render_start_tag(
                 'img',

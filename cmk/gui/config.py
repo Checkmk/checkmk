@@ -371,6 +371,11 @@ def get_ntop_misconfiguration_reason() -> str:
     return ""
 
 
+def has_custom_logo() -> bool:
+    return cmk_version.is_managed_edition() and customers.get(current_customer, {}).get(
+        "globals", {}).get("logo")
+
+
 #.
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

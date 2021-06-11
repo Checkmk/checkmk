@@ -68,10 +68,10 @@ def test_icon_themes(th: Theme) -> None:
 
 def test_detect_icon_path(th: Theme) -> None:
     assert th.get() == "modern-dark"
-    assert th.detect_icon_path("xyz", prefix="icon") == "themes/facelift/images/icon_missing.svg"
-    assert th.detect_icon_path("ldap", prefix="icon") == "themes/facelift/images/icon_ldap.svg"
-    assert th.detect_icon_path("email", prefix="icon") == "themes/facelift/images/icon_email.png"
-    assert th.detect_icon_path("window_list", prefix="icon") == "images/icons/window_list.png"
+    assert th.detect_icon_path("xyz", prefix="icon_") == "themes/facelift/images/icon_missing.svg"
+    assert th.detect_icon_path("ldap", prefix="icon_") == "themes/facelift/images/icon_ldap.svg"
+    assert th.detect_icon_path("email", prefix="icon_") == "themes/facelift/images/icon_email.png"
+    assert th.detect_icon_path("window_list", prefix="icon_") == "images/icons/window_list.png"
     # TODO: Function is buggy at the moment. Enable later
     # assert th.detect_icon_path("snmpmib", prefix="icon") == "themes/modern-dark/images/icon_snmpmib.png"
 

@@ -531,10 +531,7 @@ class SidebarRenderer:
             target="main",
             title=_("Go to main page"),
         )
-        if config.user.get_attribute("nav_hide_icons_title"):
-            html.img(theme.url('images/tribe29_icon_min.svg'))
-        else:
-            html.img(theme.url('images/tribe29_icon.svg'))
+        _render_header_icon()
         html.close_a()
         html.close_div()
 
@@ -548,6 +545,19 @@ class SidebarRenderer:
         if not config.user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))
         html.close_div()
+
+
+def _render_header_icon() -> None:
+    if config.user.get_attribute("nav_hide_icons_title"):
+        if config.has_custom_logo():
+            html.img(theme.detect_icon_path(icon_name="logo", prefix="mk-"), class_="custom")
+        else:
+            html.img(theme.detect_icon_path(icon_name="icon_min", prefix="tribe29_"))
+    else:
+        if config.has_custom_logo():
+            html.img(theme.detect_icon_path(icon_name="logo", prefix="mk-"))
+        else:
+            html.img(theme.detect_icon_path(icon_name="icon", prefix="tribe29_"))
 
 
 @cmk.gui.pages.register("side")

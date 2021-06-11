@@ -5946,7 +5946,7 @@ class IconSelector(ValueSpec):
                     title=icon,
                 )
 
-                icon_path = (theme.detect_icon_path(icon, prefix="emblem")
+                icon_path = (theme.detect_icon_path(icon, prefix="emblem_")
                              if is_emblem and icon != 'empty' else icon)
                 html.write_html(
                     self._render_icon(icon_path, id_=varprefix + '_i_' + icon, title=icon))

@@ -154,6 +154,10 @@ body.side {
 
   .min & img {
     width: 45px;
+
+    &.custom {
+      width: 35px;
+    }
   }
 }
 

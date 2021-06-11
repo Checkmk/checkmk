@@ -1521,6 +1521,7 @@ msgstr ""
 "kann.</p>"
 
 #, python-format
+#, fuzzy, python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -1537,6 +1538,12 @@ msgid ""
 "problem is that the Checkmk fetchers are initialized in parallel during "
 "startup of the Microcore, which may cause load peaks when having a lot of "
 "Checkmk helper processes configured.</p>"
+"mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk "
+"fetchers</a></li></ul></p><p>But you need to be careful that you don't "
+"configure too many Checkmk fetcher helpers, because they consume resources. "
+"An additional problem is that the Checkmk fetchers are initialized in "
+"parallel during startup of the Microcore, which may cause load peaks when "
+"having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 "<p>Der Checkmk Microcore nutzt Checkmk Fetcher-Prozesse um die Daten der "
 "Checkmk- und Checkmk-Discovery-Checks der überwachten Systeme zu erhalten. "
@@ -72224,3 +72231,4 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "C / range"
 #~ msgstr "% pro Zeitspanne"
+

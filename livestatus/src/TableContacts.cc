@@ -5,10 +5,10 @@
 
 #include "TableContacts.h"
 
-// We keep <algorithm> for std::transform but IWYU wants it gone.
+// We need it for std::transform, but IWYU "oscillates" a bit here... :-/
 #include <algorithm>  // IWYU pragma: keep
+#include <cstddef>
 #include <cstdint>
-#include <iosfwd>
 #include <iterator>
 #include <memory>
 #include <string_view>

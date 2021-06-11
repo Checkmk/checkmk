@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "MonitoringCore.h"

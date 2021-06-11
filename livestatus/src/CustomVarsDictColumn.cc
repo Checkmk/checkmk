@@ -6,6 +6,7 @@
 #include "CustomVarsDictColumn.h"
 
 #include <stdexcept>
+#include <unordered_map>
 
 #include "CustomVarsDictFilter.h"
 #include "Renderer.h"

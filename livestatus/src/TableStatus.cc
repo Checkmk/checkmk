@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <sstream>
 
 #include "Average.h"
 #include "BlobColumn.h"

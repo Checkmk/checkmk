@@ -6,6 +6,7 @@
 #include "test_utilities.h"
 
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 char *cc(const char *str) { return const_cast<char *>(str); }

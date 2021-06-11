@@ -9,6 +9,7 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 
 #include "Renderer.h"
 #include "Row.h"

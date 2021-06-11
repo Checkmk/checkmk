@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "BlobColumn.h"
-#include "Column.h"
 #include "EventConsoleConnection.h"
 #include "Logger.h"
 #include "MonitoringCore.h"

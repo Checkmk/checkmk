@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Tuple as _Tuple, Union, Optional as _Optional
+from typing import Any, Dict, List, Tuple as _Tuple, Union, Optional as _Optional
 import copy
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -647,6 +647,10 @@ def _transform_if_check_parameters(v):
     if mon_state_9:
         v['map_admin_states'] = [(['2'], mon_state_9)]
 
+    # Up to 2.0.0p5, there were only independent mappings of operational and admin states. Then, we
+    # introduced the option to define either independent or combined mappings.
+    _transform_state_mappings(v)
+
     return v
 
 
@@ -666,6 +670,20 @@ def _transform_packet_levels(
 
         if old_name != new_name:
             del vs[old_name]
+
+
+def _transform_state_mappings(v: Dict[str, Any]) -> None:
+    if "state_mappings" in v or ("map_operstates" not in v and "map_admin_states" not in v):
+        return
+    v["state_mappings"] = (
+        "independent_mappings",
+        {
+            independent_mapping_key: v.pop(independent_mapping_key) for independent_mapping_key in (
+                "map_operstates",
+                "map_admin_states",
+            ) if independent_mapping_key in v
+        },
+    )
 
 
 PERC_ERROR_LEVELS = (0.01, 0.001)
@@ -718,6 +736,93 @@ def _vs_alternative_levels(  # pylint: disable=redefined-builtin
                                optional_keys=False,
                            ),
                        ])
+
+
+def _vs_state_mappings() -> CascadingDropdown:
+    return CascadingDropdown(
+        [
+            (
+                "independent_mappings",
+                _("Map operational and admin state independently"),
+                Dictionary([
+                    (
+                        "map_operstates",
+                        ListOf(
+                            Tuple(
+                                orientation="horizontal",
+                                elements=[
+                                    ListChoice(
+                                        choices=defines.interface_oper_states(),
+                                        allow_empty=False,
+                                    ),
+                                    MonitoringState(),
+                                ],
+                            ),
+                            title=_('Map operational states'),
+                            help=
+                            _('Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state.'
+                             ),
+                        ),
+                    ),
+                    (
+                        "map_admin_states",
+                        ListOf(
+                            Tuple(
+                                orientation="horizontal",
+                                elements=[
+                                    ListChoice(
+                                        choices=_admin_states(),
+                                        allow_empty=False,
+                                    ),
+                                    MonitoringState(),
+                                ],
+                            ),
+                            title=_('Map admin states (SNMP with 64-bit counters only)'),
+                            help=
+                            _("Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. "
+                              + _note_for_admin_state_options()),
+                        ),
+                    ),
+                ],),
+            ),
+            (
+                "combined_mappings",
+                _("Map combinations of operational and admin state"),
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                [(
+                                    str(key),
+                                    f"{key} - {value}",
+                                ) for key, value in defines.interface_oper_states().items()],
+                                title=_("Operational state"),
+                            ),
+                            DropdownChoice(
+                                [(
+                                    str(key),
+                                    f"{key} - {value}",
+                                ) for key, value in _admin_states().items()],
+                                title=_("Admin state"),
+                            ),
+                            MonitoringState(title=_("Monitoring state")),
+                        ],
+                    ),
+                    help=_(
+                        "Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+                        "admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+                        "for example configure that an interface which is down <i>and</i> admin "
+                        "down should be considered OK. Such a setting will only apply to "
+                        "interfaces matching the operational <i>and</i> the admin state. For "
+                        "example, an interface which is down but admin up would not be affected. " +
+                        _note_for_admin_state_options()),
+                ),
+            ),
+        ],
+        title=_("Mapping of operational and admin state to monitoring state"),
+        sorted=False,
+    )
 
 
 def _parameter_valuespec_if():
@@ -788,25 +893,6 @@ def _parameter_valuespec_if():
                     ),
                 ),
                 (
-                    "map_operstates",
-                    ListOf(
-                        Tuple(
-                            orientation="horizontal",
-                            elements=[
-                                ListChoice(
-                                    choices=defines.interface_oper_states(),
-                                    allow_empty=False,
-                                ),
-                                MonitoringState(),
-                            ],
-                        ),
-                        title=_('Map operational states'),
-                        help=
-                        _('Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state.'
-                         ),
-                    ),
-                ),
-                (
                     "admin_state",
                     Optional(
                         ListChoice(
@@ -825,23 +911,8 @@ def _parameter_valuespec_if():
                     ),
                 ),
                 (
-                    "map_admin_states",
-                    ListOf(
-                        Tuple(
-                            orientation="horizontal",
-                            elements=[
-                                ListChoice(
-                                    choices=_admin_states(),
-                                    allow_empty=False,
-                                ),
-                                MonitoringState(),
-                            ],
-                        ),
-                        title=_('Map admin states (SNMP with 64-bit counters only)'),
-                        help=_(
-                            "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. " +
-                            _note_for_admin_state_options()),
-                    ),
+                    "state_mappings",
+                    _vs_state_mappings(),
                 ),
                 (
                     "assumed_speed_in",

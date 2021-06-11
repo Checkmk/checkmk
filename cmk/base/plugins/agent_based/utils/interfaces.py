@@ -15,6 +15,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     Optional,
@@ -1203,9 +1204,17 @@ def _interface_status(
         target_oper_states = params.get("state")
         target_admin_states = params.get("admin_state")
 
+    state_mapping_type, state_mappings = params.get(
+        "state_mappings",
+        (
+            "independent_mappings",
+            {},
+        ),
+    )
     yield from _check_oper_and_admin_state(
         interface,
-        state_mappings=params,
+        state_mapping_type=state_mapping_type,
+        state_mappings=state_mappings,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
     )
@@ -1213,17 +1222,25 @@ def _interface_status(
 
 def _check_oper_and_admin_state(
     interface: Interface,
-    state_mappings: Mapping[str, Iterable[Tuple[Iterable[str], int]]],
+    state_mapping_type: Literal["independent_mappings", "combined_mappings"],
+    state_mappings: Union[Iterable[Tuple[str, str, int]],  #
+                          Mapping[str, Iterable[Tuple[Iterable[str], int]]]],
     target_oper_states: Optional[Container[str]],
     target_admin_states: Optional[Container[str]],
 ) -> Iterable[Result]:
-    yield from _check_oper_and_admin_state_independent(
-        interface,
-        target_oper_states=target_oper_states,
-        target_admin_states=target_admin_states,
-        map_oper_states=state_mappings.get("map_operstates", []),
-        map_admin_states=state_mappings.get("map_admin_states", []),
-    )
+    if state_mapping_type == "independent_mappings":
+        assert isinstance(state_mappings, Mapping)
+        yield from _check_oper_and_admin_state_independent(
+            interface,
+            target_oper_states=target_oper_states,
+            target_admin_states=target_admin_states,
+            map_oper_states=state_mappings.get("map_operstates", []),
+            map_admin_states=state_mappings.get("map_admin_states", []),
+        )
+        return
+
+    # TODO: implement combined mapping here (next commit)
+    return
 
 
 def _check_oper_and_admin_state_independent(

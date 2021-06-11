@@ -4,10 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict
+
 import pytest
+
 from cmk.gui.plugins.wato.check_parameters.interfaces import (
     _transform_discovery_if_rules,
     _transform_if_check_parameters,
+    _transform_state_mappings,
 )
 
 
@@ -352,8 +356,13 @@ def test_transform_discovery_if_rules(params, result):
                 'map_operstates': [(['1', '3', '9'], 1)],
             },
             {
-                'map_operstates': [(['1', '3'], 1)],
-                'map_admin_states': [(['2'], 1)],
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        'map_operstates': [(['1', '3'], 1)],
+                        'map_admin_states': [(['2'], 1)],
+                    },
+                ),
             },
         ),
         (
@@ -361,8 +370,13 @@ def test_transform_discovery_if_rules(params, result):
                 'map_operstates': [(['9'], 1), (['5', '6'], 2)],
             },
             {
-                'map_operstates': [(['5', '6'], 2)],
-                'map_admin_states': [(['2'], 1)],
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        'map_operstates': [(['5', '6'], 2)],
+                        'map_admin_states': [(['2'], 1)],
+                    },
+                ),
             },
         ),
         (
@@ -370,7 +384,12 @@ def test_transform_discovery_if_rules(params, result):
                 'map_operstates': [(['9'], 1)],
             },
             {
-                'map_admin_states': [(['2'], 1)],
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        'map_admin_states': [(['2'], 1)],
+                    },
+                ),
             },
         ),
         # transformations for 2.0.0i1/b1 -> 2.0.0b2
@@ -397,3 +416,97 @@ def test_transform_discovery_if_rules(params, result):
     ])
 def test_transform_check_if_rules(params, result):
     assert _transform_if_check_parameters(params) == result
+
+
+@pytest.mark.parametrize(
+    "params, result",
+    [
+        pytest.param(
+            {
+                'errors': {
+                    'in': ('abs', (10, 20)),
+                    'out': ('perc', (0.01, 0.001))
+                },
+                'multicast': {
+                    'both': ('abs', (10, 20))
+                },
+            },
+            {
+                'errors': {
+                    'in': ('abs', (10, 20)),
+                    'out': ('perc', (0.01, 0.001))
+                },
+                'multicast': {
+                    'both': ('abs', (10, 20))
+                },
+            },
+            id="no state mappings",
+        ),
+        pytest.param(
+            {
+                "map_operstates": [(["5", "6"], 2), (["1"], 3)],
+                "map_admin_states": [(["2"], 1), (["1", "3"], 2)],
+            },
+            {
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_operstates": [(["5", "6"], 2), (["1"], 3)],
+                        "map_admin_states": [(["2"], 1), (["1", "3"], 2)],
+                    },
+                ),
+            },
+            id="deprecated independet mappings",
+        ),
+        pytest.param(
+            {
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_operstates": [(["5", "6"], 2), (["1"], 3)],
+                        "map_admin_states": [(["2"], 1), (["1", "3"], 2)],
+                    },
+                ),
+            },
+            {
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_operstates": [(["5", "6"], 2), (["1"], 3)],
+                        "map_admin_states": [(["2"], 1), (["1", "3"], 2)],
+                    },
+                ),
+            },
+            id="up to date independet mappings",
+        ),
+        pytest.param(
+            {
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "1", 1),
+                        ("1", "5", 1),
+                        ("2", "3", 2),
+                    ],
+                ),
+            },
+            {
+                "state_mappings": (
+                    "combined_mappings",
+                    [
+                        ("1", "1", 1),
+                        ("1", "5", 1),
+                        ("2", "3", 2),
+                    ],
+                ),
+            },
+            id="combinded mappings",
+        ),
+    ],
+)
+def test_transform_state_mappings(
+    params: Dict[str, Any],
+    result: Dict[str, Any],
+) -> None:
+    _transform_state_mappings(params)
+    assert params == result

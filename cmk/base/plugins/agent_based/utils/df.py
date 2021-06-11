@@ -35,7 +35,7 @@ class DfBlock(NamedTuple):
     uuid: Optional[str]
 
 
-FSBlock = Tuple[str, float, float, float]
+FSBlock = Tuple[str, Optional[float], Optional[float], float]
 FSBlocks = Sequence[FSBlock]
 
 FILESYSTEM_DEFAULT_LEVELS = {

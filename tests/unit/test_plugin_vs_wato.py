@@ -283,7 +283,6 @@ class ErrorReporter:
         ('discovery', 'inventory_solaris_services_rules'),
         ('discovery', 'oracle_performance_discovery'),
         ('discovery', 'sap_value_groups'),
-        ('discovery', 'filesystem_groups'),  # TODO: Can be removed as soon as SUP-695 is done
         ('inventory', 'active_checks:cmk_inv'),
         ('inventory', 'inv_exports:software_csv'),
         ('inventory', 'inv_parameters:inv_if'),
@@ -562,6 +561,8 @@ class ErrorReporter:
         ('discovery', 'mssql_transactionlogs', 'mssql_transactionlogs_discovery'),
         ('discovery', 'ps', 'inventory_processes_rules'),
         ('discovery', 'vnx_quotas', 'discovery_rules_vnx_quotas'),
+        ('discovery', 'hitachi_hnas_volume', 'filesystem_groups'),
+        ('discovery', 'hitachi_hnas_volume_virtual', 'filesystem_groups'),
     }
 
     @classmethod

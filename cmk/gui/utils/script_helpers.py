@@ -73,6 +73,6 @@ def application_and_request_context(environ: Optional[Mapping[str, Any]] = None)
 
 
 def initialize_gui_environment() -> None:
-    load_all_plugins()
     load_config()
+    load_all_plugins()
     set_super_user()

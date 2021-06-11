@@ -600,10 +600,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             return None
 
         persisted_sections = self.section_store.update(
-            sections={
-                marker.name: [marker.parse_line(line) for line in section
-                             ] for marker, section in sections.items()
-            },
+            sections=host_sections.sections,
             lookup_persist=lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,

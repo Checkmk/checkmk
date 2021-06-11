@@ -10,6 +10,7 @@ In the future all inventory code should be moved to this module."""
 
 import os
 from contextlib import suppress
+from pathlib import Path
 from typing import (
     Container,
     Dict,
@@ -28,7 +29,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, load_tree_from, save_tree_to
+from cmk.utils.structured_data import save_tree_to, StructuredDataStore, StructuredDataNode
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
@@ -383,6 +384,8 @@ def _save_inventory_tree(
 ) -> Optional[StructuredDataNode]:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
 
+    inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
+
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
@@ -392,7 +395,7 @@ def _save_inventory_tree(
             os.remove(filepath + ".gz")
         return None
 
-    old_tree = load_tree_from(filepath)
+    old_tree = inventory_store.load(hostname)
     if old_tree.is_equal(inventory_tree):
         console.verbose("Inventory was unchanged\n")
         return None

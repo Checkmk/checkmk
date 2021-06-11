@@ -11,6 +11,7 @@ structured monitoring data of Check_MK.
 import io
 import gzip
 import re
+from pathlib import Path
 import pprint
 from typing import (
     Dict,
@@ -26,10 +27,12 @@ from typing import (
     Counter as TCounter,
     Sequence,
 )
-from pathlib import Path
 from collections import Counter
 
 from cmk.utils import store
+
+from cmk.utils.type_defs import HostName
+
 from cmk.utils.exceptions import MKGeneralException
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
@@ -125,11 +128,21 @@ def save_tree_to(
     store.save_text_to_file("%s/.last" % path, u"")
 
 
-def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
-    raw_tree = store.load_object_from_file(filepath, default=None)
-    if raw_tree:
-        return StructuredDataNode.deserialize(raw_tree)
-    return StructuredDataNode()
+class StructuredDataStore:
+    @staticmethod
+    def load_file(file_path: Path) -> "StructuredDataNode":
+        if raw_tree := store.load_object_from_file(file_path, default=None):
+            return StructuredDataNode.deserialize(raw_tree)
+        return StructuredDataNode()
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    def _host_file(self, host_name: HostName) -> Path:
+        return self._path / str(host_name)
+
+    def load(self, host_name: HostName) -> "StructuredDataNode":
+        return self.load_file(self._host_file(host_name))
 
 
 #.

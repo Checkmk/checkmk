@@ -30,7 +30,7 @@ import cmk.utils.store as store
 from cmk.utils.log import console
 import cmk.utils.packaging as packaging
 import cmk.utils.site as site
-import cmk.utils.structured_data as structured_data
+from cmk.utils.structured_data import StructuredDataStore
 
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
@@ -418,13 +418,14 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
 
-        filepath = Path(cmk.utils.paths.inventory_output_dir + "/" + checkmk_server_name)
-        if not filepath.exists():
+        inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
+        try:
+            tree = inventory_store.load(checkmk_server_name)
+        except FileNotFoundError:
             raise DiagnosticsElementError("No HW/SW inventory tree of '%s' found" %
                                           checkmk_server_name)
 
         infos = {}
-        tree = structured_data.load_tree_from(filepath)
         attrs = tree.get_attributes(["software", "applications", "check_mk"])
         if attrs:
             infos.update(attrs.serialize())

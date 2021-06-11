@@ -19,12 +19,12 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
+    StructuredDataStore,
     SDRawPath,
     SDPath,
     SDKeys,
     SDTable,
     StructuredDataNode,
-    load_tree_from,
     make_filter,
 )
 from cmk.utils.exceptions import (
@@ -198,8 +198,9 @@ def get_history_deltas(
                 raise LoadStructuredDataError()
             tree_lookup[timestamp] = inventory_tree
         else:
-            inventory_archive_path = "%s/%s" % (inventory_archive_dir, timestamp)
-            tree_lookup[timestamp] = _filter_tree(load_tree_from(inventory_archive_path))
+            inventory_archive_path = Path(inventory_archive_dir, timestamp)
+            tree_lookup[timestamp] = _filter_tree(
+                StructuredDataStore.load_file(inventory_archive_path))
         return tree_lookup[timestamp]
 
     corrupted_history_files = []
@@ -341,10 +342,13 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
         if '/' in hostname:
             # just for security reasons
             return None
-        cache_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir if tree_type == "inventory"
-                                else cmk.utils.paths.status_data_dir, hostname)
+
+        tree_store = StructuredDataStore(
+            Path(cmk.utils.paths.inventory_output_dir) if tree_type ==
+            "inventory" else Path(cmk.utils.paths.status_data_dir))
+
         try:
-            inventory_tree = load_tree_from(cache_path)
+            inventory_tree = tree_store.load(hostname)
         except Exception as e:
             if config.debug:
                 html.show_warning("%s" % e)

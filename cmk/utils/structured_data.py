@@ -109,25 +109,6 @@ class SDFilter(NamedTuple):
 #   '----------------------------------------------------------------------'
 
 
-def save_tree_to(
-    tree: "StructuredDataNode",
-    path: str,
-    filename: str,
-    pretty: bool = False,
-) -> None:
-    filepath = "%s/%s" % (path, filename)
-    output = tree.serialize()
-    store.save_object_to_file(filepath, output, pretty=pretty)
-
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write((repr(output) + "\n").encode("utf-8"))
-    store.save_bytes_to_file(filepath + ".gz", buf.getvalue())
-
-    # Inform Livestatus about the latest inventory update
-    store.save_text_to_file("%s/.last" % path, u"")
-
-
 class StructuredDataStore:
     @staticmethod
     def load_file(file_path: Path) -> "StructuredDataNode":
@@ -140,6 +121,26 @@ class StructuredDataStore:
 
     def _host_file(self, host_name: HostName) -> Path:
         return self._path / str(host_name)
+
+    def _gz_file(self, host_name: HostName) -> Path:
+        return self._path / f"{host_name}.gz"
+
+    def save(self, host_name: HostName, tree: "StructuredDataNode", pretty: bool = False) -> None:
+
+        self._path.mkdir(parents=True, exist_ok=True)
+
+        filepath = self._host_file(host_name)
+
+        output = tree.serialize()
+        store.save_object_to_file(filepath, output, pretty=pretty)
+
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write((repr(output) + "\n").encode("utf-8"))
+        store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
+
+        # Inform Livestatus about the latest inventory update
+        store.save_text_to_file(filepath.with_name(".last"), u"")
 
     def load(self, host_name: HostName) -> "StructuredDataNode":
         return self.load_file(self._host_file(host_name))

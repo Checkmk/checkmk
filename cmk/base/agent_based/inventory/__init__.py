@@ -29,7 +29,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import save_tree_to, StructuredDataStore, StructuredDataNode
+from cmk.utils.structured_data import StructuredDataStore, StructuredDataNode
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
@@ -280,6 +280,8 @@ def do_inventory_actions_during_checking_for(
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
 
+    status_data_store = StructuredDataStore(Path(cmk.utils.paths.status_data_dir))
+
     if not host_config.do_status_data_inventory:
         # includes cluster case
         _cleanup_status_data(host_config.hostname)
@@ -291,7 +293,8 @@ def do_inventory_actions_during_checking_for(
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
     )
-    _save_status_data_tree(host_config.hostname, trees.status_data)
+    if trees.status_data and not trees.status_data.is_empty():
+        status_data_store.save(host_config.hostname, trees.status_data)
 
 
 def _cleanup_status_data(hostname: HostName) -> None:
@@ -408,14 +411,8 @@ def _save_inventory_tree(
         arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
         store.makedirs(arcdir)
         os.rename(filepath, arcdir + ("/%d" % old_time))
-    save_tree_to(inventory_tree, cmk.utils.paths.inventory_output_dir, hostname)
+    inventory_store.save(hostname, inventory_tree)
     return old_tree
-
-
-def _save_status_data_tree(hostname: HostName, status_data_tree: StructuredDataNode) -> None:
-    if status_data_tree and not status_data_tree.is_empty():
-        store.makedirs(cmk.utils.paths.status_data_dir)
-        save_tree_to(status_data_tree, cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(host_config: config.HostConfig,

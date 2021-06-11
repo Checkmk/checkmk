@@ -18,7 +18,6 @@ from cmk.utils.structured_data import (
     Attributes,
     make_filter,
     parse_visible_raw_path,
-    save_tree_to,
     StructuredDataNode,
     StructuredDataStore,
     Table,
@@ -679,8 +678,8 @@ def test_structured_data_StructuredDataTree_load_from(tree_name: HostName):
 
 
 def test_real_save_gzip(tmp_path):
-    filename = "heute"
-    target = Path(tmp_path).joinpath(filename)
+    host_name = HostName("heute")
+    target = tmp_path / str(host_name)
     raw_tree = {
         "node": {
             "foo": 1,
@@ -688,8 +687,8 @@ def test_real_save_gzip(tmp_path):
         },
     }
     tree = StructuredDataNode.deserialize(raw_tree)
-
-    save_tree_to(tree, tmp_path, filename)
+    store = StructuredDataStore(tmp_path)
+    store.save(host_name, tree)
 
     assert target.exists()
 
@@ -767,7 +766,7 @@ def test_real_equal_tables():
 def test_real_is_equal_save_and_load(tree, tmp_path):
     store = StructuredDataStore(tmp_path)
     try:
-        save_tree_to(tree, str(tmp_path), "foo", False)
+        store.save(HostName("foo"), tree)
         loaded_tree = store.load(HostName("foo"))
         assert tree.is_equal(loaded_tree)
     finally:

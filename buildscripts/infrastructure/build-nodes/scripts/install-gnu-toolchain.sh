@@ -103,6 +103,10 @@ set_symlinks() {
     ln -sf ${PREFIX}/bin/* /usr/bin
     ln -sf ${PREFIX}/bin/gcc-${GCC_MAJOR} /usr/bin/gcc
     ln -sf ${PREFIX}/bin/g++-${GCC_MAJOR} /usr/bin/g++
+
+    # not really a symlink, but almost...
+    echo ${PREFIX}/lib64 > /etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf
+    ldconfig
 }
 
 build_package() {

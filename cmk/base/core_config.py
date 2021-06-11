@@ -43,12 +43,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import (
-    ConfigSerial,
-    current_helper_config_serial,
-    LATEST_SERIAL,
-    next_helper_config_serial,
-)
+from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL, VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -77,8 +72,8 @@ class HelperConfig:
     The context manager ensures that the directory for the config serial is created and the "latest"
     link is only created in case the context is left without exception.
     """
-    def __init__(self, serial: ConfigSerial) -> None:
-        self.serial: Final = serial
+    def __init__(self, serial: Union[ConfigSerial, VersionedConfigPath]) -> None:
+        self.serial: Final = ConfigSerial(str(serial))  # for compatibility
         self.serial_path: Final = cmk.core_helpers.paths.make_helper_config_path(serial)
         self.latest_path: Final = cmk.core_helpers.paths.make_helper_config_path(LATEST_SERIAL)
 
@@ -397,8 +392,8 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
-    with HelperConfig(next_helper_config_serial(
-            current_helper_config_serial())).create() as helper_config, _backup_objects_file(core):
+    with HelperConfig(next(
+            VersionedConfigPath.current())).create() as helper_config, _backup_objects_file(core):
         core.create_config(helper_config.serial)
 
     cmk.utils.password_store.save(config.stored_passwords)

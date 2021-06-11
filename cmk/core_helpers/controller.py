@@ -175,7 +175,7 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
 
 
 def _parse_config(serial: ConfigSerial, host_name: HostName) -> Iterator[Fetcher]:
-    with make_local_config_path(serial=serial, host_name=host_name).open() as f:
+    with make_local_config_path(serial, host_name).open() as f:
         data = json.load(f)
 
     if "fetchers" in data:

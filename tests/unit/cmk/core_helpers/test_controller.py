@@ -46,13 +46,13 @@ class TestControllerApi:
 
     def test_make_local_config_path(self):
         assert make_local_config_path(
-            serial=ConfigSerial("_serial_"),
-            host_name="host",
-        ) == core_helper_config_dir / "_serial_" / "fetchers" / "hosts" / "host.json"
+            ConfigSerial("69"),
+            "host",
+        ) == core_helper_config_dir / "69" / "fetchers" / "hosts" / "host.json"
 
     def test_make_global_config_path(self):
-        assert make_global_config_path(serial=ConfigSerial(
-            "_serial_"),) == core_helper_config_dir / "_serial_" / "fetchers" / "global_config.json"
+        assert make_global_config_path(
+            ConfigSerial("69")) == core_helper_config_dir / "69" / "fetchers" / "global_config.json"
 
     def test_write_bytes(self, capfdbinary):
         write_bytes(b"123")

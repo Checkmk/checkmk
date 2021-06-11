@@ -11,6 +11,7 @@ from functools import partial
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
     Iterable,
     List,
@@ -920,7 +921,7 @@ def _render_status_info_group_members(
 
 def _check_status(
     interface_status: str,
-    target_states: Optional[Sequence[str]],
+    target_states: Optional[Container[str]],
     states_map: Mapping[str, State],
 ) -> State:
     mon_state = State.OK
@@ -1202,11 +1203,41 @@ def _interface_status(
         target_oper_states = params.get("state")
         target_admin_states = params.get("admin_state")
 
+    yield from _check_oper_and_admin_state(
+        interface,
+        state_mappings=params,
+        target_oper_states=target_oper_states,
+        target_admin_states=target_admin_states,
+    )
+
+
+def _check_oper_and_admin_state(
+    interface: Interface,
+    state_mappings: Mapping[str, Iterable[Tuple[Iterable[str], int]]],
+    target_oper_states: Optional[Container[str]],
+    target_admin_states: Optional[Container[str]],
+) -> Iterable[Result]:
+    yield from _check_oper_and_admin_state_independent(
+        interface,
+        target_oper_states=target_oper_states,
+        target_admin_states=target_admin_states,
+        map_oper_states=state_mappings.get("map_operstates", []),
+        map_admin_states=state_mappings.get("map_admin_states", []),
+    )
+
+
+def _check_oper_and_admin_state_independent(
+    interface: Interface,
+    target_oper_states: Optional[Container[str]],
+    target_admin_states: Optional[Container[str]],
+    map_oper_states: Iterable[Tuple[Iterable[str], int]],
+    map_admin_states: Iterable[Tuple[Iterable[str], int]],
+) -> Iterable[Result]:
     yield Result(
         state=_check_status(
             interface.oper_status,
             target_oper_states,
-            _get_map_states(params.get("map_operstates", [])),
+            _get_map_states(map_oper_states),
         ),
         summary=f"({interface.oper_status_name})",
         details=f"Operational state: {interface.oper_status_name}",
@@ -1219,7 +1250,7 @@ def _interface_status(
         state=_check_status(
             str(interface.admin_status),
             target_admin_states,
-            _get_map_states(params.get("map_admin_states", [])),
+            _get_map_states(map_admin_states),
         ),
         summary=f"Admin state: {statename(interface.admin_status)}",
     )

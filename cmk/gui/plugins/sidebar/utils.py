@@ -22,6 +22,7 @@ from cmk.gui.globals import html
 from cmk.gui.type_defs import Choices
 from cmk.gui.type_defs import RoleName, PermissionName, Visual
 from cmk.gui.visuals import visual_title
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -409,19 +410,19 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
     if not topic.items:
         return
 
-    html.begin_foldable_container(treename=treename,
-                                  id_=topic.name,
-                                  isopen=False,
-                                  title=topic.title,
-                                  indent=True,
-                                  icon="foldable_sidebar")
+    with foldable_container(treename=treename,
+                            id_=topic.name,
+                            isopen=False,
+                            title=topic.title,
+                            indent=True,
+                            icon="foldable_sidebar"):
 
-    for item in topic.items:
-        if show_item_icons:
-            html.open_li(class_=["sidebar", "show_more_mode" if item.is_show_more else None])
-            iconlink(item.title, item.url, item.icon or "icon_missing")
-            html.close_li()
-        else:
-            bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")
-
-    html.end_foldable_container()
+        for item in topic.items:
+            if show_item_icons:
+                html.open_li(class_=["sidebar", "show_more_mode" if item.is_show_more else None])
+                iconlink(item.title, item.url, item.icon or "icon_missing")
+                html.close_li()
+            else:
+                bulletlink(item.title,
+                           item.url,
+                           onclick="return cmk.sidebar.wato_views_clicked(this)")

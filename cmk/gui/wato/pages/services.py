@@ -17,7 +17,7 @@ import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -362,15 +362,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             messages.append(_("Found no services yet. To retry please execute a full scan."))
 
         with output_funnel.plugged():
-            html.begin_foldable_container(treename="service_discovery",
-                                          id_="options",
-                                          isopen=False,
-                                          title=_("Job details"),
-                                          indent=False)
-            html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-            html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
-            html.close_div()
-            html.end_foldable_container()
+            with foldable_container(treename="service_discovery",
+                                    id_="options",
+                                    isopen=False,
+                                    title=_("Job details"),
+                                    indent=False):
+                html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
+                html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
+                html.close_div()
             messages.append(output_funnel.drain())
 
         if messages:

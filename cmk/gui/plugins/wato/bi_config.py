@@ -43,7 +43,7 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request, transactions, output_funnel
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.breadcrumb import Breadcrumb
@@ -216,14 +216,13 @@ class ABCBIMode(WatoMode):
             html.close_a()
             html.close_li()
         else:
-            html.begin_foldable_container("bi_rule_trees",
-                                          "%s%s" % (tree_prefix, tree_path),
-                                          False,
-                                          title,
-                                          title_url=edit_url)
-            for sub_rule_id in sub_rule_ids:
-                self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
-            html.end_foldable_container()
+            with foldable_container(treename="bi_rule_trees",
+                                    id_="%s%s" % (tree_prefix, tree_path),
+                                    isopen=False,
+                                    title=title,
+                                    title_url=edit_url):
+                for sub_rule_id in sub_rule_ids:
+                    self.render_rule_tree(sub_rule_id, tree_path + "/" + sub_rule_id, tree_prefix)
 
     def aggregation_sub_rule_ids(self, bi_rule):
         sub_rule_ids = []

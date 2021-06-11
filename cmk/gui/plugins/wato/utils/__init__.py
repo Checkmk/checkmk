@@ -12,7 +12,9 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple, Dict, Any
+from contextlib import nullcontext
+from typing import (Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple, Dict,
+                    ContextManager)
 
 from six import ensure_str
 
@@ -29,7 +31,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g, transactions
-from cmk.gui.utils.html import HTML
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
@@ -2042,43 +2044,45 @@ class HostTagCondition(ValueSpec):
         make_foldable = len(all_topics) > 1
 
         for topic_id, topic_title in all_topics:
-            if make_foldable:
-                html.begin_foldable_container("topic", varprefix + topic_title, True,
-                                              _u(topic_title))
-            html.open_table(class_=["hosttags"])
+            container: ContextManager[bool] = foldable_container(
+                treename="topic",
+                id_=varprefix + topic_title,
+                isopen=True,
+                title=_u(topic_title),
+            ) if make_foldable else nullcontext(False)
+            with container:
+                html.open_table(class_=["hosttags"])
 
-            for tag_group in tag_groups_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
+                for tag_group in tag_groups_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
 
-                choices = tag_group.get_tag_choices()
-                default_tag, deflt = self._current_tag_setting(choices, tag_specs)
-                self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
-                if tag_group.is_checkbox_tag_group:
+                    choices = tag_group.get_tag_choices()
+                    default_tag, deflt = self._current_tag_setting(choices, tag_specs)
+                    self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
+                    if tag_group.is_checkbox_tag_group:
+                        html.write_text(" " + _("set"))
+                    else:
+                        html.dropdown(varprefix + "tagvalue_" + tag_group.id,
+                                      [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                                      deflt=default_tag)
+
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
+
+                for aux_tag in aux_tags_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(aux_tag.title), class_="title")
+                    default_tag, deflt = self._current_tag_setting(
+                        [(aux_tag.id, _u(aux_tag.title))], tag_specs)
+                    self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
                     html.write_text(" " + _("set"))
-                else:
-                    html.dropdown(varprefix + "tagvalue_" + tag_group.id,
-                                  [(t[0], _u(t[1])) for t in choices if t[0] is not None],
-                                  deflt=default_tag)
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
 
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            for aux_tag in aux_tags_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.td("%s: &nbsp;" % _u(aux_tag.title), class_="title")
-                default_tag, deflt = self._current_tag_setting([(aux_tag.id, _u(aux_tag.title))],
-                                                               tag_specs)
-                self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
-                html.write_text(" " + _("set"))
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            html.close_table()
-            if make_foldable:
-                html.end_foldable_container()
+                html.close_table()
 
     def _current_tag_setting(self, choices, tag_specs):
         """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""

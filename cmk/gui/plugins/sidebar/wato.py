@@ -17,7 +17,7 @@ import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuTopic, TopicMenuItem
@@ -304,17 +304,16 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(
-            tree_id,
-            "/" + folder[".path"],
-            False,
-            HTML(title),
-            icon="foldable_sidebar",
-            padding=6,
-        )
-        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
-            render_tree_folder(tree_id, subfolder, js_func)
-        html.end_foldable_container()
+        with foldable_container(
+                treename=tree_id,
+                id_="/" + folder[".path"],
+                isopen=False,
+                title=HTML(title),
+                icon="foldable_sidebar",
+                padding=6,
+        ):
+            for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
+                render_tree_folder(tree_id, subfolder, js_func)
     else:
         html.li(title)
 

@@ -14,7 +14,7 @@ from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, Item
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError
@@ -205,12 +205,13 @@ class ModePatternEditor(WatoMode):
                 # If no host/file given match all rules
                 rule_matches = True
 
-            html.begin_foldable_container("rule",
-                                          "%s" % abs_rulenr,
-                                          True,
-                                          HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
-                                          indent=False)
-            with table_element("pattern_editor_rule_%d" % abs_rulenr, sortable=False) as table:
+            with foldable_container(treename="rule",
+                                    id_=str(abs_rulenr),
+                                    isopen=True,
+                                    title=HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
+                                    indent=False), table_element("pattern_editor_rule_%d" %
+                                                                 abs_rulenr,
+                                                                 sortable=False) as table:
                 abs_rulenr += 1
 
                 # TODO: What's this?
@@ -283,8 +284,6 @@ class ModePatternEditor(WatoMode):
                     ("rule_id", rule.id),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
-
-            html.end_foldable_container()
 
     def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
                                  item: Item) -> ServiceName:

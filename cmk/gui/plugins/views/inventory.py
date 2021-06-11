@@ -29,7 +29,7 @@ from cmk.gui.inventory import RawInventoryPath, InventoryPath
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, user_errors, output_funnel
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.valuespec import Dictionary, Checkbox
 from cmk.gui.escaping import escape_text
 from cmk.gui.plugins.visuals import (
@@ -1746,16 +1746,16 @@ class NodeRenderer:
                 "ajax_inv_render_tree.py",
             )
 
-            if html.begin_foldable_container("inv_%s%s" % (self._hostname, self._tree_id),
-                                             invpath,
-                                             False,
-                                             header,
-                                             icon=icon,
-                                             fetch_url=fetch_url):
-                # Render only if it is open. We'll get the stuff via ajax later if it's closed
-                for child in inventory.sort_children(node.get_node_children()):
-                    child.show(self, path=node_abs_path)
-            html.end_foldable_container()
+            with foldable_container(treename="inv_%s%s" % (self._hostname, self._tree_id),
+                                    id_=invpath,
+                                    isopen=False,
+                                    title=header,
+                                    icon=icon,
+                                    fetch_url=fetch_url) as is_open:
+                if is_open:
+                    # Render only if it is open. We'll get the stuff via ajax later if it's closed
+                    for child in inventory.sort_children(node.get_node_children()):
+                        child.show(self, path=node_abs_path)
 
     def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
         hint_id = _find_display_hint_id(invpath)

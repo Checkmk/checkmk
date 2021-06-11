@@ -73,7 +73,7 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.htmllib.foldable_container import begin_foldable_container, end_foldable_container
+from cmk.gui.htmllib.foldable_container import foldable_container
 from ._tag_rendering import (
     HTMLTagValue,
     HTMLContent,
@@ -1908,14 +1908,6 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
         return code
 
-    # Will be removed in next commit
-    def begin_foldable_container(self, *args, **kwargs):
-        begin_foldable_container(*args, **kwargs)
-
-    # Will be removed in next commit
-    def end_foldable_container(self):
-        end_foldable_container()
-
     #
     # Floating Options
     #
@@ -2172,9 +2164,11 @@ class html(ABCHTMLGenerator):
     #
 
     def _dump_get_vars(self) -> None:
-        begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
-        self.debug_vars(hide_with_mouse=False)
-        end_foldable_container()
+        with foldable_container(treename="html",
+                                id_="debug_vars",
+                                isopen=True,
+                                title=_("GET/POST variables of this page")):
+            self.debug_vars(hide_with_mouse=False)
 
     def debug_vars(self,
                    prefix: Optional[str] = None,

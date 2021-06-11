@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.globals import html, request as global_request
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 
 from cmk.gui.plugins.sidebar import (
@@ -128,16 +129,15 @@ class NagVisMaps(SidebarSnapin):
         for map_name, map_cfg in maps.items():
             html.open_li()
             if map_name in children:
-                html.begin_foldable_container(treename="nagvis",
-                                              id_=map_name,
-                                              isopen=False,
-                                              title=map_cfg["alias"],
-                                              title_url=map_cfg["url"],
-                                              title_target="main",
-                                              indent=False,
-                                              icon="foldable_sidebar")
-                self._show_tree_nodes(children[map_name], children)
-                html.end_foldable_container()
+                with foldable_container(treename="nagvis",
+                                        id_=map_name,
+                                        isopen=False,
+                                        title=map_cfg["alias"],
+                                        title_url=map_cfg["url"],
+                                        title_target="main",
+                                        indent=False,
+                                        icon="foldable_sidebar"):
+                    self._show_tree_nodes(children[map_name], children)
             else:
                 html.a(map_cfg["alias"], href=map_cfg["url"], target="main", class_="link")
             html.close_li()

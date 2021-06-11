@@ -18,6 +18,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.permissions as permissions
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
@@ -305,15 +306,14 @@ class ABCNotificationsMode(ABCEventsMode):
                 num_conditions = len([key for key in rule if key.startswith("match_")])
                 if num_conditions:
                     title = _("%d conditions") % num_conditions
-                    html.begin_foldable_container(
-                        treename="rule_%s_%d" % (userid, nr),
-                        id_="%s" % nr,
-                        isopen=False,
-                        title=title,
-                        indent=False,
-                    )
-                    html.write(vs_match_conditions.value_to_text(rule))
-                    html.end_foldable_container()
+                    with foldable_container(
+                            treename="rule_%s_%d" % (userid, nr),
+                            id_=str(nr),
+                            isopen=False,
+                            title=title,
+                            indent=False,
+                    ):
+                        html.write(vs_match_conditions.value_to_text(rule))
                 else:
                     html.i(_("(no conditions)"))
 

@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Tuple
+from contextlib import nullcontext
+from typing import Dict, List, Tuple, ContextManager
 
 import time
 
@@ -15,6 +16,7 @@ from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.utils.urls import makeactionuri_contextless
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.plugins.sidebar import (
     PageHandlers,
     SidebarSnapin,
@@ -53,21 +55,19 @@ class MasterControlSnapin(SidebarSnapin):
             sites.live().set_prepend_site(False)
 
         for site_id, site_alias in config.sorted_sites():
-            if not config.is_single_local_site():
-                html.begin_foldable_container("master_control",
-                                              site_id,
-                                              True,
-                                              site_alias,
-                                              icon="foldable_sidebar")
-
-            try:
-                self._show_master_control_site(site_id, site_status_info, items)
-            except Exception as e:
-                logger.exception("error rendering master control for site %s", site_id)
-                write_snapin_exception(e)
-            finally:
-                if not config.is_single_local_site():
-                    html.end_foldable_container()
+            container: ContextManager[bool] = foldable_container(
+                treename="master_control",
+                id_=site_id,
+                isopen=True,
+                title=site_alias,
+                icon="foldable_sidebar") if not config.is_single_local_site() else nullcontext(
+                    False)
+            with container:
+                try:
+                    self._show_master_control_site(site_id, site_status_info, items)
+                except Exception as e:
+                    logger.exception("error rendering master control for site %s", site_id)
+                    write_snapin_exception(e)
 
     def _core_toggles(self) -> List[Tuple[str, str]]:
         return [

@@ -9,6 +9,7 @@ import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.utils.urls import urlencode
 
 from cmk.gui.plugins.sidebar import (
@@ -82,19 +83,18 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             )
 
             if attrs.get('__children__'):
-                html.begin_foldable_container(
-                    "bi_aggregation_group_trees",
-                    group,
-                    False,
-                    HTML(html.render_a(
-                        group,
-                        href=fetch_url,
-                        target="main",
-                    )),
-                    icon="foldable_sidebar",
-                )
-                self._render_tree(attrs['__children__'])
-                html.end_foldable_container()
+                with foldable_container(
+                        treename="bi_aggregation_group_trees",
+                        id_=group,
+                        isopen=False,
+                        title=HTML(html.render_a(
+                            group,
+                            href=fetch_url,
+                            target="main",
+                        )),
+                        icon="foldable_sidebar",
+                ):
+                    self._render_tree(attrs['__children__'])
             else:
                 html.open_ul()
                 bulletlink(group, fetch_url)

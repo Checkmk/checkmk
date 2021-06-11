@@ -14,6 +14,7 @@ import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import foldable_container
 
 from cmk.gui.valuespec import (
     TextInput,
@@ -251,23 +252,21 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container(
-                treename="bookmarks",
-                id_=topic,
-                isopen=False,
-                title=topic,
-                indent=False,
-                icon="foldable_sidebar",
-            )
+            with foldable_container(
+                    treename="bookmarks",
+                    id_=topic,
+                    isopen=False,
+                    title=topic,
+                    indent=False,
+                    icon="foldable_sidebar",
+            ):
 
-            for bookmark in bookmarks:
-                icon = bookmark["icon"]
-                if not icon:
-                    icon = "bookmark_list"
+                for bookmark in bookmarks:
+                    icon = bookmark["icon"]
+                    if not icon:
+                        icon = "bookmark_list"
 
-                iconlink(bookmark["title"], bookmark["url"], icon)
-
-            html.end_foldable_container()
+                    iconlink(bookmark["title"], bookmark["url"], icon)
 
         begin_footnote_links()
         link(_("Add Bookmark"), "javascript:void(0)", onclick="cmk.sidebar.add_bookmark()")

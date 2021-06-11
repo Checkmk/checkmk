@@ -80,6 +80,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, theme, output_funnel
 from cmk.gui.globals import request as global_request
@@ -2973,16 +2974,14 @@ class CascadingDropdown(ValueSpec):
             return title
 
         if self._render == CascadingDropdown.Render.foldable:
-            with output_funnel.plugged():
-                html.begin_foldable_container(
-                    "foldable_cascading_dropdown",
+            with output_funnel.plugged(), foldable_container(
+                    treename="foldable_cascading_dropdown",
                     id_=hashlib.sha256(ensure_binary(repr(value))).hexdigest(),
                     isopen=False,
                     title=title,
                     indent=False,
-                )
+            ):
                 html.write(rendered_value)
-                html.end_foldable_container()
             return output_funnel.drain()
 
         return title + self._separator + rendered_value
@@ -5161,16 +5160,15 @@ class Foldable(ValueSpec):
         self._title_function = title_function
 
     def render_input(self, varprefix: str, value: Any) -> None:
-        html.begin_foldable_container(
-            treename="valuespec_foldable",
-            id_=varprefix,
-            isopen=False,
-            title=self._get_title(varprefix, value),
-            indent=False,
-        )
-        html.help(self._valuespec.help())
-        self._valuespec.render_input(varprefix, value)
-        html.end_foldable_container()
+        with foldable_container(
+                treename="valuespec_foldable",
+                id_=varprefix,
+                isopen=False,
+                title=self._get_title(varprefix, value),
+                indent=False,
+        ):
+            html.help(self._valuespec.help())
+            self._valuespec.render_input(varprefix, value)
 
     def _get_title(self, varprefix: str, value: Any) -> str:
         if self._title_function:

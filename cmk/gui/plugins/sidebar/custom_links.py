@@ -6,7 +6,7 @@
 
 import cmk.utils.paths
 import cmk.gui.config as config
-from cmk.gui.htmllib import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar import (
@@ -48,13 +48,12 @@ class CustomLinks(SidebarSnapin):
                     if isinstance(entry[1], type(True)):
                         idss = ids + [str(n)]
                         id_ = '/'.join(idss)
-                        html.begin_foldable_container("customlinks",
-                                                      id_,
-                                                      isopen=entry[1],
-                                                      title=entry[0],
-                                                      icon="foldable_sidebar")
-                        render_list(idss, entry[2])
-                        html.end_foldable_container()
+                        with foldable_container(treename="customlinks",
+                                                id_=id_,
+                                                isopen=entry[1],
+                                                title=entry[0],
+                                                icon="foldable_sidebar"):
+                            render_list(idss, entry[2])
                     elif isinstance(entry[1], str):
                         frame = entry[3] if len(entry) > 3 else "main"
 

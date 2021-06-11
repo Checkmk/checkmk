@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import re
 import json
 from typing import (
@@ -19,11 +19,12 @@ from typing import (
     Union,
     TYPE_CHECKING,
     cast,
+    ContextManager,
 )
 
 from six import ensure_str
 
-from cmk.gui.utils.html import HTML
+from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
@@ -277,61 +278,62 @@ class Table:
                 csv_separator=html.request.get_str_input_mandatory("csv_separator", ";"))
             return
 
+        container: ContextManager[bool] = nullcontext(False)
         if self.title:
             if self.options["foldable"]:
                 html.open_div(class_="foldable_wrapper")
-                html.begin_foldable_container(treename="table",
-                                              id_=self.id,
-                                              isopen=True,
-                                              indent=False,
-                                              title=html.render_h3(self.title,
-                                                                   class_=["treeangle", "title"]))
+                container = foldable_container(treename="table",
+                                               id_=self.id,
+                                               isopen=True,
+                                               indent=False,
+                                               title=html.render_h3(self.title,
+                                                                    class_=["treeangle", "title"]))
             else:
                 html.open_h3(class_="table")
                 html.write(self.title)
                 html.close_h3()
 
-        if self.help:
-            html.help(self.help)
+        with container:
+            if self.help:
+                html.help(self.help)
 
-        if not self.rows:
-            html.div(self.empty_text, class_="info")
-            return
+            if not self.rows:
+                html.div(self.empty_text, class_="info")
+                return
 
-        # Controls whether or not actions are available for a table
-        rows, actions_visible, search_term = self._evaluate_user_opts()
+            # Controls whether or not actions are available for a table
+            rows, actions_visible, search_term = self._evaluate_user_opts()
 
-        # Apply limit after search / sorting etc.
-        num_rows_unlimited = len(rows)
-        limit = self.limit
-        if limit:
-            # only use rows up to the limit plus the fixed rows
-            limited_rows = []
-            for index in range(num_rows_unlimited):
-                row = rows[index]
-                if index < limit or isinstance(row, GroupHeader) or row.fixed:
-                    limited_rows.append(row)
-            # Display corrected number of rows
-            num_rows_unlimited -= len(
-                [r for r in limited_rows if isinstance(row, GroupHeader) or r.fixed])
-            rows = limited_rows
+            # Apply limit after search / sorting etc.
+            num_rows_unlimited = len(rows)
+            limit = self.limit
+            if limit:
+                # only use rows up to the limit plus the fixed rows
+                limited_rows = []
+                for index in range(num_rows_unlimited):
+                    row = rows[index]
+                    if index < limit or isinstance(row, GroupHeader) or row.fixed:
+                        limited_rows.append(row)
+                # Display corrected number of rows
+                num_rows_unlimited -= len(
+                    [r for r in limited_rows if isinstance(row, GroupHeader) or r.fixed])
+                rows = limited_rows
 
-        # Render header
-        if self.limit_hint is not None:
-            num_rows_unlimited = self.limit_hint
+            # Render header
+            if self.limit_hint is not None:
+                num_rows_unlimited = self.limit_hint
 
-        if limit and num_rows_unlimited > limit:
+            if limit and num_rows_unlimited > limit:
 
-            html.show_message(
-                _('This table is limited to show only %d of %d rows. '
-                  'Click <a href="%s">here</a> to disable the limitation.') %
-                (limit, num_rows_unlimited, makeuri(request, [('limit', 'none')])))
+                html.show_message(
+                    _('This table is limited to show only %d of %d rows. '
+                      'Click <a href="%s">here</a> to disable the limitation.') %
+                    (limit, num_rows_unlimited, makeuri(request, [('limit', 'none')])))
 
-        self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
-                          search_term)
+            self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
+                              search_term)
 
         if self.title and self.options["foldable"]:
-            html.end_foldable_container()
             html.close_div()
 
         return

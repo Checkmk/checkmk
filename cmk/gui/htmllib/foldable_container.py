@@ -6,7 +6,8 @@
 """Foldable containers for pages"""
 
 import json
-from typing import Union, Optional
+from contextlib import contextmanager
+from typing import Union, Optional, Iterator
 
 from cmk.gui.globals import html, theme
 from cmk.gui import config
@@ -14,18 +15,29 @@ from cmk.gui.utils.html import HTML
 
 from ._tag_rendering import HTMLContent
 
+__all__ = [
+    "foldable_container",
+    "foldable_container_id",
+    "foldable_container_img_id",
+    "foldable_container_onclick",
+]
 
-def begin_foldable_container(treename: str,
-                             id_: str,
-                             isopen: bool,
-                             title: HTMLContent,
-                             indent: Union[str, None, bool] = True,
-                             first: bool = False,
-                             icon: Optional[str] = None,
-                             fetch_url: Optional[str] = None,
-                             title_url: Optional[str] = None,
-                             title_target: Optional[str] = None,
-                             padding: int = 15) -> bool:
+
+@contextmanager
+def foldable_container(
+    *,
+    treename: str,
+    id_: str,
+    isopen: bool,
+    title: HTMLContent,
+    indent: Union[str, None, bool] = True,
+    first: bool = False,
+    icon: Optional[str] = None,
+    fetch_url: Optional[str] = None,
+    title_url: Optional[str] = None,
+    title_target: Optional[str] = None,
+    padding: int = 15,
+) -> Iterator[bool]:
     isopen = config.user.get_tree_state(treename, id_, isopen)
     onclick = foldable_container_onclick(treename, id_, fetch_url)
     img_id = foldable_container_img_id(treename, id_)
@@ -77,10 +89,8 @@ def begin_foldable_container(treename: str,
                  class_=["treeangle", "open" if isopen else "closed"],
                  style=indent_style)
 
-    return isopen
+    yield isopen
 
-
-def end_foldable_container() -> None:
     html.close_ul()
     html.close_div()
 

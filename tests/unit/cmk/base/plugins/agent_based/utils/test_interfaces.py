@@ -931,8 +931,13 @@ def test_check_single_interface_map_states(value_store, item, params, result):
                 item,
                 {
                     **params,
-                    'map_operstates': [(['1'], 3)],
-                    'map_admin_states': [(['2'], 3)],
+                    "state_mappings": (
+                        "independent_mappings",
+                        {
+                            'map_operstates': [(['1'], 3)],
+                            'map_admin_states': [(['2'], 3)],
+                        },
+                    ),
                 },
                 _create_interfaces(0, admin_status='2')[int(item) - 1],
                 timestamp=0,
@@ -942,8 +947,13 @@ def test_check_single_interface_map_states(value_store, item, params, result):
             item,
             {
                 **params,
-                'map_operstates': [(['1'], 3)],
-                'map_admin_states': [(['2'], 3)],
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        'map_operstates': [(['1'], 3)],
+                        'map_admin_states': [(['2'], 3)],
+                    },
+                ),
             },
             _create_interfaces(4000000, admin_status='2')[int(item) - 1],
             timestamp=5,

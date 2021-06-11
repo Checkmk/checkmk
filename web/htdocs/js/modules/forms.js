@@ -135,12 +135,7 @@ function enable_label_input_fields(container) {
             }
             g_previous_timeout_id = setTimeout(function () {
                 kill_previous_autocomplete_call();
-                ajax_call_autocomplete_labels(
-                    post_data,
-                    tagify,
-                    value,
-                    element.closest(".tuple_td").querySelector(".tagify__input")
-                );
+                ajax_call_autocomplete_labels(post_data, tagify, value, element);
             }, 300);
         });
     });
@@ -172,14 +167,20 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
             // render the suggestions dropdown
             handler_data.tagify.loading(false);
             handler_data.tagify.dropdown.show.call(handler_data.tagify, handler_data.value);
-            let max = 0;
-            handler_data.tagify.suggestedListItems.forEach(entry => {
-                max = entry.value.length > max ? entry.value.length : max;
-            });
-            let fontSize = parseInt(
-                window.getComputedStyle(element, null).getPropertyValue("font-size")
-            );
-            element.style.width = (max * (fontSize / 2 + 1)).toString() + "px";
+
+            let tagify__input = element?.parentElement?.querySelector(".tagify__input");
+            if (tagify__input) {
+                let max = 0;
+                handler_data.tagify.suggestedListItems.forEach(entry => {
+                    max = entry.value.length > max ? entry.value.length : max;
+                });
+                let fontSize = parseInt(
+                    window.getComputedStyle(tagify__input, null).getPropertyValue("font-size")
+                );
+                tagify__input.style.width = (max * (fontSize / 2 + 1)).toString() + "px";
+                tagify__input.parentElement.style.width =
+                    (max * (fontSize / 2 + 1) + 10).toString() + "px";
+            }
         },
         handler_data: {
             value: value,

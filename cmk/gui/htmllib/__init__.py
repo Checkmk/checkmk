@@ -73,6 +73,7 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
+from cmk.gui.htmllib.foldable_container import begin_foldable_container, end_foldable_container
 from ._tag_rendering import (
     HTMLTagValue,
     HTMLContent,
@@ -1907,88 +1908,13 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
         return code
 
-    #
-    # Foldable context
-    #
+    # Will be removed in next commit
+    def begin_foldable_container(self, *args, **kwargs):
+        begin_foldable_container(*args, **kwargs)
 
-    def begin_foldable_container(self,
-                                 treename: str,
-                                 id_: str,
-                                 isopen: bool,
-                                 title: HTMLContent,
-                                 indent: Union[str, None, bool] = True,
-                                 first: bool = False,
-                                 icon: Optional[str] = None,
-                                 fetch_url: Optional[str] = None,
-                                 title_url: Optional[str] = None,
-                                 title_target: Optional[str] = None,
-                                 padding: int = 15) -> bool:
-        isopen = config.user.get_tree_state(treename, id_, isopen)
-        onclick = self.foldable_container_onclick(treename, id_, fetch_url)
-        img_id = self.foldable_container_img_id(treename, id_)
-        container_id = self.foldable_container_id(treename, id_)
-
-        self.open_div(class_=["foldable", "open" if isopen else "closed"])
-
-        if isinstance(title, HTML):  # custom HTML code
-            self.write_text(title)
-
-        else:
-            self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-
-            if title_url:
-                self.a(title, href=title_url, target=title_target)
-            else:
-                self.write_text(title)
-            self.close_b()
-
-        if icon:
-            self.img(
-                id_=img_id,
-                class_=[
-                    "treeangle",
-                    "title",
-                    # Although foldable_sidebar is given via the argument icon it should not be
-                    # displayed as big as an icon.
-                    "icon" if icon != "foldable_sidebar" else None,
-                    "open" if isopen else "closed",
-                ],
-                src=theme.url(f"images/icon_{icon}.svg"),
-                onclick=onclick)
-        else:
-            self.img(id_=img_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     src=theme.url("images/tree_closed.svg"),
-                     onclick=onclick)
-
-        if indent != "form" or not isinstance(title, HTML):
-            self.br()
-
-        indent_style = "padding-left: %dpx; " % (padding if indent else 0)
-        if indent == "form":
-            self.close_td()
-            self.close_tr()
-            self.close_table()
-            indent_style += "margin: 0; "
-        self.open_ul(id_=container_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     style=indent_style)
-
-        return isopen
-
-    def end_foldable_container(self) -> None:
-        self.close_ul()
-        self.close_div()
-
-    def foldable_container_onclick(self, treename: str, id_: str, fetch_url: Optional[str]) -> str:
-        return "cmk.foldable_container.toggle(%s, %s, %s)" % (
-            json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
-
-    def foldable_container_img_id(self, treename: str, id_: str) -> str:
-        return "treeimg.%s.%s" % (treename, id_)
-
-    def foldable_container_id(self, treename: str, id_: str) -> str:
-        return "tree.%s.%s" % (treename, id_)
+    # Will be removed in next commit
+    def end_foldable_container(self):
+        end_foldable_container()
 
     #
     # Floating Options
@@ -2246,10 +2172,9 @@ class html(ABCHTMLGenerator):
     #
 
     def _dump_get_vars(self) -> None:
-        self.begin_foldable_container("html", "debug_vars", True,
-                                      _("GET/POST variables of this page"))
+        begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
         self.debug_vars(hide_with_mouse=False)
-        self.end_foldable_container()
+        end_foldable_container()
 
     def debug_vars(self,
                    prefix: Optional[str] = None,

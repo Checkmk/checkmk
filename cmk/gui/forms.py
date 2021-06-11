@@ -13,6 +13,8 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, transactions, user_errors, theme
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import (foldable_container_id, foldable_container_onclick,
+                                                foldable_container_img_id)
 import cmk.gui.config as config
 
 if TYPE_CHECKING:
@@ -119,7 +121,7 @@ def header(
     id_ = ensure_str(base64.b64encode(ensure_binary(title)))
     treename = html.form_name or "nform"
     isopen = config.user.get_tree_state(treename, id_, isopen)
-    container_id = html.foldable_container_id(treename, id_)
+    container_id = foldable_container_id(treename, id_)
 
     html.open_table(id_=table_id if table_id else None,
                     class_=[
@@ -155,8 +157,8 @@ def _table_head(
     show_more_toggle: bool,
     help_text: Union[str, HTML, None] = None,
 ) -> None:
-    onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
-    img_id = html.foldable_container_img_id(treename, id_)
+    onclick = foldable_container_onclick(treename, id_, fetch_url=None)
+    img_id = foldable_container_img_id(treename, id_)
 
     html.open_thead()
     html.open_tr(class_="heading")

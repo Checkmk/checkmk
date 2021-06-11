@@ -2533,7 +2533,7 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
-        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon_")
         if src.endswith(".png"):
             classes.append("png")
         if src.endswith("/icon_missing.svg") and title:
@@ -2563,7 +2563,7 @@ class html(ABCHTMLGenerator):
         """ Render emblem to corresponding icon (icon_element in function call)
         or render emblem itself as icon image, used e.g. in view options."""
 
-        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        emblem_path = self.detect_icon_path(emblem, prefix="emblem_")
         if not icon_element:
             return self._render_start_tag(
                 'img',
@@ -2594,14 +2594,15 @@ class html(ABCHTMLGenerator):
         """
         path = "share/check_mk/web/htdocs"
         for theme in self.icon_themes():
-            theme_path = path + "/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
-            for file_type in ["svg", "png"]:
-                for base_dir in [
-                        cmk.utils.paths.omd_root + "/", cmk.utils.paths.omd_root + "/local/"
-                ]:
+            icon = prefix + icon_name
+            theme_path = path + "/themes/%s/images/%s" % (theme, icon)
+            for base_dir in [
+                    cmk.utils.paths.omd_root + "/local/",
+                    cmk.utils.paths.omd_root + "/",
+            ]:
+                for file_type in ["svg", "png"]:
                     if os.path.exists(base_dir + theme_path + "." + file_type):
-                        return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
-                                                              file_type)
+                        return "themes/%s/images/%s.%s" % (self._theme, icon, file_type)
                     if os.path.exists(base_dir + path + "/images/icons/%s.%s" %
                                       (icon_name, file_type)):
                         return "images/icons/%s.%s" % (icon_name, file_type)

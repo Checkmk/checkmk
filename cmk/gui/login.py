@@ -519,7 +519,9 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.img(src=html.theme_url("images/mk-logo.svg"), id_="logo")
+        html.img(src=html.detect_icon_path(icon_name="logo", prefix="mk-"),
+                 id_="logo",
+                 class_="custom" if config.has_custom_logo() else None)
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')

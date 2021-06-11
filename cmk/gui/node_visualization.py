@@ -373,7 +373,7 @@ class NodeVisualizationBIDataMapper:
 
         actual_result = node_result_bundle.actual_result
         if isinstance(instance, BICompiledRule) and instance.properties.icon:
-            node_data["icon"] = html.detect_icon_path(instance.properties.icon, prefix="icon")
+            node_data["icon"] = html.detect_icon_path(instance.properties.icon, prefix="icon_")
 
         node_data["state"] = actual_result.state
 

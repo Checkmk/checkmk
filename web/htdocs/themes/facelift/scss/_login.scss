@@ -48,6 +48,10 @@ body.login {
     left: 40px;
     width: 120px;
     height: auto;
+
+    &.custom {
+      width: 60px;
+    }
   }
 
   #version {

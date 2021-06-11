@@ -8,7 +8,6 @@ while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
-import os
 from pathlib import Path
 from typing import (
     Container,
@@ -375,11 +374,9 @@ def _save_inventory_tree(
     hostname: HostName,
     inventory_tree: StructuredDataNode,
 ) -> Optional[StructuredDataNode]:
-    store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
 
-    filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
         inventory_store.remove_files(hostname)
@@ -394,10 +391,8 @@ def _save_inventory_tree(
         console.verbose("New inventory tree\n")
     else:
         console.verbose("Inventory tree has changed\n")
-        old_time = os.stat(filepath).st_mtime
-        arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
-        store.makedirs(arcdir)
-        os.rename(filepath, arcdir + ("/%d" % old_time))
+        inventory_store.archive(hostname, Path(cmk.utils.paths.inventory_archive_dir))
+
     inventory_store.save(hostname, inventory_tree)
     return old_tree
 

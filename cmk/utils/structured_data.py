@@ -149,6 +149,13 @@ class StructuredDataStore:
         self._host_file(host_name).unlink(missing_ok=True)
         self._gz_file(host_name).unlink(missing_ok=True)
 
+    def archive(self, host_name: HostName, archive_dir: Path) -> None:
+        target_dir = archive_dir / str(host_name)
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        filepath = self._host_file(host_name)
+        filepath.rename(target_dir / str(filepath.stat().st_mtime))
+
 
 #.
 #   .--filters-------------------------------------------------------------.

@@ -20,6 +20,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
     HostName,
+    SectionName,
     ServiceName,
 )
 
@@ -45,6 +46,28 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
             "argv": sys.argv,
             "env": dict(os.environ),
         })
+
+
+def create_section_crash_dump(
+    *,
+    operation: str,
+    section_name: SectionName,
+    section_content: object,
+) -> str:
+    """Create a crash dump from an exception raised in a parse or host label function"""
+
+    text = f"{operation.title()} of section {section_name} failed"
+    try:
+        crash = SectionCrashReport.from_exception_and_context(
+            section_name=section_name,
+            section_content=section_content,
+        )
+        CrashReportStore().save(crash)
+        return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+        return f"{text} - failed to create a crash report: {traceback.format_exc()}"
 
 
 def create_check_crash_dump(
@@ -77,6 +100,25 @@ def create_check_crash_dump(
         if cmk.utils.debug.enabled():
             raise
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
+
+
+@crash_reporting.crash_report_registry.register
+class SectionCrashReport(crash_reporting.ABCCrashReport):
+    @classmethod
+    def type(cls) -> str:
+        return "section"
+
+    @classmethod
+    def from_exception_and_context(
+        cls,
+        *,
+        section_name: SectionName,
+        section_content: object,
+    ) -> crash_reporting.ABCCrashReport:
+        return cls.from_exception(details={
+            "section_name": str(section_name),
+            "section_content": section_content,
+        },)
 
 
 @crash_reporting.crash_report_registry.register

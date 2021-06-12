@@ -30,12 +30,11 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import worst_service_state, wrap_parameters
+from cmk.utils.check_utils import ActiveCheckResult, worst_service_state, wrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.object_diff import make_object_diff
 from cmk.utils.type_defs import (
-    ActiveCheckResult,
     CheckPluginName,
     CheckPluginNameStr,
     DiscoveryResult,
@@ -86,8 +85,6 @@ CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
                           List[MetricTuple], Dict[str, str], List[HostName]]
 CheckPreviewTable = List[CheckPreviewEntry]
-
-_DiscoverySubresult = Tuple[ActiveCheckResult, bool]
 
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -532,42 +529,29 @@ def active_check_discovery(
         on_error=OnError.RAISE,
     )
 
-    (status, infotexts, long_infotexts, perfdata), need_rediscovery = _aggregate_subresults(
-        _check_service_lists(
-            host_name=host_name,
-            services_by_transition=services,
-            params=params,
-            service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
-            discovery_mode=discovery_mode,
-        ),
-        _check_host_labels(
-            host_labels,
-            int(params.get("severity_new_host_label", 1)),
-            discovery_mode,
-        ),
-        _check_data_sources(source_results, mode=Mode.DISCOVERY),
+    services_result, services_need_rediscovery = _check_service_lists(
+        host_name=host_name,
+        services_by_transition=services,
+        params=params,
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+        discovery_mode=discovery_mode,
     )
 
-    if need_rediscovery:
-        autodiscovery_queue = _AutodiscoveryQueue()
-        if host_config.is_cluster and host_config.nodes:
-            for nodename in host_config.nodes:
-                autodiscovery_queue.add(nodename)
-        else:
-            autodiscovery_queue.add(host_name)
-        infotexts = list(infotexts) + ["rediscovery scheduled"]
+    host_labels_result, host_labels_need_rediscovery = _check_host_labels(
+        host_labels,
+        int(params.get("severity_new_host_label", 1)),
+        discovery_mode,
+    )
 
-    return status, infotexts, long_infotexts, perfdata
-
-
-def _aggregate_subresults(*subresults: _DiscoverySubresult) -> _DiscoverySubresult:
-    stati, texts, long_texts, perfdata_list = zip(*(result for result, _ in subresults))
-    return ((
-        worst_service_state(*stati, default=0),
-        sum((list(t) for t in texts), []),
-        sum((list(l) for l in long_texts), []),
-        sum((list(p) for p in perfdata_list), []),
-    ), any(need_rediscovery_flag for _, need_rediscovery_flag in subresults))
+    return ActiveCheckResult.from_subresults(
+        services_result,
+        host_labels_result,
+        *_check_data_sources(source_results, mode=Mode.DISCOVERY),
+        _schedule_rediscovery(
+            host_config=host_config,
+            need_rediscovery=services_need_rediscovery or host_labels_need_rediscovery,
+        ),
+    )
 
 
 def _check_service_lists(
@@ -577,7 +561,7 @@ def _check_service_lists(
     params: config.DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
-) -> _DiscoverySubresult:
+) -> Tuple[ActiveCheckResult, bool]:
 
     status = 0
     infotexts = []
@@ -631,40 +615,55 @@ def _check_service_lists(
             u"ignored: %s: %s" %
             (discovered_service.check_plugin_name, discovered_service.description))
 
-    return (status, infotexts, long_infotexts, []), need_rediscovery
+    return ActiveCheckResult(status, infotexts, long_infotexts, []), need_rediscovery
 
 
 def _check_host_labels(
     host_labels: QualifiedDiscovery[HostLabel],
     severity_new_host_label: int,
     discovery_mode: DiscoveryMode,
-) -> _DiscoverySubresult:
+) -> Tuple[ActiveCheckResult, bool]:
     return (
-        (severity_new_host_label, [f"{len(host_labels.new)} new host labels"], [], []),
+        ActiveCheckResult(severity_new_host_label, [f"{len(host_labels.new)} new host labels"], [],
+                          []),
         discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
     ) if host_labels.new else (
-        (0, ["no new host labels"], [], []),
+        ActiveCheckResult(0, ["no new host labels"], [], []),
         False,
     )
 
 
-def _check_data_sources(
+def _check_data_sources(  # TODO: deduplicate code (inventory & checking)
     result: Sequence[Tuple[sources.Source, result_type.Result[HostSections, Exception]]],
     *,
     mode: Mode,
-) -> _DiscoverySubresult:
+) -> Iterable[ActiveCheckResult]:
     summaries = [
         (source, source.summarize(host_sections, mode=mode)) for source, host_sections in result
     ]
-    return (
-        (
-            worst_service_state(*(state for _s, (state, _t) in summaries), default=0),
-            # Do not output informational (state = 0) things.  These information
-            # are shown by the "Check_MK" service
-            [f"[{src.id}] {text}" for src, (state, text) in summaries if state != 0],
-            [],
-            []),
-        False)
+    # Do not output informational (state = 0) things.  These information
+    # are shown by the "Check_MK" service
+    yield from (ActiveCheckResult(state, (f"[{src.id}] {text}",), (), ())
+                for src, (state, text) in summaries
+                if state != 0)
+
+
+def _schedule_rediscovery(
+    *,
+    host_config: config.HostConfig,
+    need_rediscovery: bool,
+) -> ActiveCheckResult:
+    if not need_rediscovery:
+        return ActiveCheckResult(0, (), (), ())
+
+    autodiscovery_queue = _AutodiscoveryQueue()
+    if host_config.is_cluster and host_config.nodes:
+        for nodename in host_config.nodes:
+            autodiscovery_queue.add(nodename)
+    else:
+        autodiscovery_queue.add(host_config.hostname)
+
+    return ActiveCheckResult(0, ("rediscovery scheduled",), (), ())
 
 
 class _AutodiscoveryQueue:

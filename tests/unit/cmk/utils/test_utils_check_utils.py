@@ -6,7 +6,12 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.check_utils import unwrap_parameters, worst_service_state, wrap_parameters
+from cmk.utils.check_utils import (
+    ActiveCheckResult,
+    unwrap_parameters,
+    worst_service_state,
+    wrap_parameters,
+)
 
 
 @pytest.mark.parametrize("params", [
@@ -51,3 +56,12 @@ def test_worst_service_state_empty():
     assert worst_service_state(default=1) == 1
     assert worst_service_state(default=2) == 2
     assert worst_service_state(default=3) == 3
+
+
+def test_active_check_result():
+
+    assert ActiveCheckResult.from_subresults(
+        ActiveCheckResult(0, ("Ok",), ("We're good",), ("metric1",)),
+        ActiveCheckResult(2, ("Critical",), ("We're doomed",), ("metric2",)),
+    ) == ActiveCheckResult(2, ["Ok", "Critical"], ["We're good", "We're doomed"],
+                           ["metric1", "metric2"])

@@ -93,8 +93,6 @@ MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optiona
                     Optional[float],]
 
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
-ActiveCheckResult = Tuple[ServiceState, Sequence[ServiceDetails],
-                          Sequence[ServiceAdditionalDetails], Sequence[str]]
 
 LegacyCheckParameters = Union[None, Dict, Tuple, List, str]
 

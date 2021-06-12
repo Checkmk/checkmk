@@ -24,7 +24,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.check_utils import worst_service_state
+from cmk.utils.check_utils import ActiveCheckResult
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -34,13 +34,13 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
-    ActiveCheckResult,
     EVERYTHING,
     HostAddress,
     HostName,
     HostKey,
     InventoryPluginName,
     result,
+    ServiceState,
     SourceType,
     state_markers,
 )
@@ -129,6 +129,7 @@ def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ActiveCheckResult:
+    # TODO: drop '_inv_'
     _inv_hw_changes = options.get("hw-changes", 0)
     _inv_sw_changes = options.get("sw-changes", 0)
     _inv_sw_missing = options.get("sw-missing", 0)
@@ -143,62 +144,69 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
     )
     trees = inv_result.trees
 
-    status = 0
-    infotexts: List[str] = []
-    long_infotexts: List[str] = []
-
     if inv_result.safe_to_write:
         old_tree = _save_inventory_tree(hostname, trees.inventory)
+        update_result = ActiveCheckResult(0, (), (), ())
     else:
         old_tree, sources_state = None, 1
-        status = worst_service_state(status, sources_state, default=3)
-        infotexts.append("Cannot update tree%s" % state_markers[sources_state])
+        update_result = ActiveCheckResult(sources_state,
+                                          (f"Cannot update tree{state_markers[sources_state]}",),
+                                          (), ())
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
+    return ActiveCheckResult.from_subresults(
+        update_result,
+        _check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
+        *_check_sources(inv_result, _inv_fail_status),
+    )
+
+
+def _check_inventory_tree(
+    trees: InventoryTrees,
+    old_tree: Optional[StructuredDataTree],
+    sw_missing: ServiceState,
+    sw_changes: ServiceState,
+    hw_changes: ServiceState,
+) -> ActiveCheckResult:
     if trees.inventory.is_empty() and trees.status_data.is_empty():
-        infotexts.append("Found no data")
+        return ActiveCheckResult(0, ("Found no data",), (), ())
 
-    else:
-        infotexts.append("Found %d inventory entries" % trees.inventory.count_entries())
+    status = 0
+    infotexts = [f"Found {trees.inventory.count_entries()} inventory entries"]
 
-        # Node 'software' is always there because _do_inv_for creates this node for cluster info
-        if not trees.inventory.get_sub_container(['software']).has_edge('packages')\
-           and _inv_sw_missing:
-            infotexts.append("software packages information is missing" +
-                             state_markers[_inv_sw_missing])
-            status = max(status, _inv_sw_missing)
+    # Node 'software' is always there because _do_inv_for creates this node for cluster info
+    if not trees.inventory.get_sub_container(['software']).has_edge('packages') and sw_missing:
+        infotexts.append("software packages information is missing" + state_markers[sw_missing])
+        status = max(status, sw_missing)
 
-        if old_tree is not None:
-            if not old_tree.is_equal(trees.inventory, edges=["software"]):
-                infotext = "software changes"
-                if _inv_sw_changes:
-                    status = max(status, _inv_sw_changes)
-                    infotext += state_markers[_inv_sw_changes]
-                infotexts.append(infotext)
+    if old_tree is not None:
+        if not old_tree.is_equal(trees.inventory, edges=["software"]):
+            infotexts.append("software changes" + state_markers[sw_changes])
+            status = max(status, sw_changes)
 
-            if not old_tree.is_equal(trees.inventory, edges=["hardware"]):
-                infotext = "hardware changes"
-                if _inv_hw_changes:
-                    status = max(status, _inv_hw_changes)
-                    infotext += state_markers[_inv_hw_changes]
+        if not old_tree.is_equal(trees.inventory, edges=["hardware"]):
+            infotexts.append("hardware changes" + state_markers[hw_changes])
+            status = max(status, hw_changes)
 
-                infotexts.append(infotext)
+    if not trees.status_data.is_empty():
+        infotexts.append(f"Found {trees.status_data.count_entries()} status entries")
 
-        if not trees.status_data.is_empty():
-            infotexts.append("Found %s status entries" % trees.status_data.count_entries())
+    return ActiveCheckResult(status, infotexts, (), ())
 
+
+def _check_sources(
+    inv_result: ActiveInventoryResult,
+    fail_status: ServiceState,
+) -> Iterable[ActiveCheckResult]:
+    # Do not output informational things (state == 0). Also do not use source states
+    # which would overwrite "State when inventory fails" in the ruleset
+    # "Do hardware/software Inventory".
+    # These information and source states are handled by the "Check_MK" service
     for source, host_sections in inv_result.source_results:
         source_state, source_output = source.summarize(host_sections, mode=Mode.INVENTORY)
         if source_state != 0:
-            # Do not output informational things (state == 0). Also do not use source states
-            # which would overwrite "State when inventory fails" in the ruleset
-            # "Do hardware/software Inventory".
-            # These information and source states are handled by the "Check_MK" service
-            status = max(_inv_fail_status, status)
-            infotexts.append("[%s] %s" % (source.id, source_output))
-
-    return status, infotexts, long_infotexts, []
+            yield ActiveCheckResult(fail_status, (f"[{source.id}] {source_output}",), (), ())
 
 
 def _inventorize_host(

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, NamedTuple, Sequence
 
 
 def section_name_of(check_plugin_name: str) -> str:
@@ -39,6 +39,23 @@ def worst_service_state(*states: int, default: int) -> int:
     That's why this function is just not quite `max`.
     """
     return 2 if 2 in states else max(states, default=default)
+
+
+class ActiveCheckResult(NamedTuple):
+    state: int
+    summaries: Sequence[str]
+    details: Sequence[str]
+    metrics: Sequence[str]
+
+    @classmethod
+    def from_subresults(cls, *subresults: 'ActiveCheckResult') -> 'ActiveCheckResult':
+        states_iter, summaries_iter, details_iter, metrics_iter = zip(*subresults)
+        return cls(
+            state=worst_service_state(*states_iter, default=0),
+            summaries=sum((list(s) for s in summaries_iter), []),
+            details=sum((list(d) for d in details_iter), []),
+            metrics=sum((list(m) for m in metrics_iter), []),
+        )
 
 
 # (un)wrap_parameters:

@@ -25,13 +25,12 @@ from six import ensure_str
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import worst_service_state
+from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
-    ActiveCheckResult,
     CheckPluginName,
     EVERYTHING,
     ExitSpec,
@@ -257,7 +256,7 @@ def _execute_checkmk_checks(
         else:
             perfdata.append("execution_time=%.3f" % total_times.process.elapsed)
 
-        return status, infotexts, long_infotexts, perfdata
+        return ActiveCheckResult(status, infotexts, long_infotexts, perfdata)
     finally:
         _submit_to_core.finalize()
 

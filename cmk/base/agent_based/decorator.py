@@ -6,6 +6,7 @@
 
 from typing import Any, Callable, Tuple
 
+from cmk.utils.check_utils import ActiveCheckResult
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import (
@@ -18,7 +19,6 @@ from cmk.utils.exceptions import (
 )
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
-    ActiveCheckResult,
     CheckPluginNameStr,
     HostName,
     ServiceName,

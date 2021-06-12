@@ -468,8 +468,7 @@ class ReportRendererGeneric(ABCReportRenderer):
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
                                              site_id: config.SiteId) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
-        return
-        yield  # pylint: disable=unreachable
+        yield from ()
 
     def show_details(self, crash_info, row):
         if not crash_info["details"]:
@@ -480,6 +479,43 @@ class ReportRendererGeneric(ABCReportRenderer):
             _("No detail renderer for crash of type '%s' available. Details structure is:") %
             crash_info["crash_type"])
         html.pre(pprint.pformat(crash_info["details"]))
+
+
+@report_renderer_registry.register
+class ReportRendererSection(ABCReportRenderer):
+    @classmethod
+    def type(cls):
+        return "section"
+
+    def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
+                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+        # We don't want to produce anything here
+        yield from ()
+
+    def show_details(self, crash_info, row):
+        self._show_crashed_section_details(crash_info)
+        self._show_section_content(row)
+
+    def _show_crashed_section_details(self, info):
+        def format_bool(val):
+            return {
+                True: _("Yes"),
+                False: _("No"),
+                None: _("Unknown"),
+            }[val]
+
+        details = info["details"]
+
+        html.h3(_("Details"), class_="table")
+        html.open_table(class_="data")
+
+        _crash_row(_("Section Name"), details["section_name"], odd=True)
+        _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=False, pre=True)
+
+        html.close_table()
+
+    def _show_section_content(self, row):
+        _crash_row(_("Section Content"), repr(row.get("section_content")))
 
 
 @report_renderer_registry.register

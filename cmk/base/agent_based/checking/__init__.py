@@ -13,6 +13,7 @@ from typing import (
     Container,
     DefaultDict,
     Dict,
+    Iterable,
     List,
     MutableMapping,
     Optional,
@@ -25,7 +26,7 @@ from six import ensure_str
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import ActiveCheckResult, worst_service_state
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
@@ -38,11 +39,8 @@ from cmk.utils.type_defs import (
     HostName,
     HostKey,
     MetricTuple,
-    ServiceAdditionalDetails,
     ServiceCheckResult,
-    ServiceDetails,
     ServiceName,
-    ServiceState,
     SourceType,
     state_markers,
 )
@@ -61,7 +59,7 @@ import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import get_section_kwargs, get_section_cluster_kwargs
+from cmk.base.agent_based.utils import check_sources, get_section_kwargs, get_section_cluster_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based import value_store
@@ -155,10 +153,6 @@ def _execute_checkmk_checks(
 
     mode = Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
-    status: ServiceState = 0
-    infotexts: List[ServiceDetails] = []
-    long_infotexts: List[ServiceAdditionalDetails] = []
-    perfdata: List[str] = []
     try:
         license_usage.try_history_update()
 
@@ -209,65 +203,79 @@ def _execute_checkmk_checks(
                     parsed_sections_broker=broker,
                 )
 
-            for source, host_sections in source_results:
-                source_state, source_output = source.summarize(host_sections, mode=mode)
-                if source_output != "":
-                    status = worst_service_state(status, source_state, default=3)
-                    infotexts.append("[%s] %s" % (source.id, source_output))
-
-            if plugins_missing_data:
-                missing_data_status, missing_data_infotext = _check_plugins_missing_data(
+            timed_results = ActiveCheckResult.from_subresults(
+                *check_sources(
+                    source_results=source_results,
+                    mode=mode,
+                    include_ok_results=True,
+                ),
+                *_check_plugins_missing_data(
                     plugins_missing_data,
                     exit_spec,
                     bool(num_success),
-                )
-                status = max(status, missing_data_status)
-                infotexts.append(missing_data_infotext)
+                ),
+            )
 
-        total_times = tracker.duration
-        for msg in fetcher_messages:
-            total_times += msg.stats.duration
+        return ActiveCheckResult.from_subresults(
+            timed_results,
+            _timing_results(tracker, fetcher_messages),
+        )
 
-        infotexts.append("execution time %.1f sec" % total_times.process.elapsed)
-        if config.check_mk_perfdata_with_times:
-            perfdata += [
-                "execution_time=%.3f" % total_times.process.elapsed,
-                "user_time=%.3f" % total_times.process.user,
-                "system_time=%.3f" % total_times.process.system,
-                "children_user_time=%.3f" % total_times.process.children_user,
-                "children_system_time=%.3f" % total_times.process.children_system,
-            ]
-            summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-            for msg in fetcher_messages if fetcher_messages else ():
-                if msg.fetcher_type in (
-                        FetcherType.PIGGYBACK,
-                        FetcherType.PROGRAM,
-                        FetcherType.SNMP,
-                        FetcherType.TCP,
-                ):
-                    summary[{
-                        FetcherType.PIGGYBACK: "agent",
-                        FetcherType.PROGRAM: "ds",
-                        FetcherType.SNMP: "snmp",
-                        FetcherType.TCP: "agent",
-                    }[msg.fetcher_type]] += msg.stats.duration
-            for phase, duration in summary.items():
-                perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
-        else:
-            perfdata.append("execution_time=%.3f" % total_times.process.elapsed)
-
-        return ActiveCheckResult(status, infotexts, long_infotexts, perfdata)
     finally:
         _submit_to_core.finalize()
+
+
+def _timing_results(tracker: CPUTracker,
+                    fetcher_messages: Sequence[FetcherMessage]) -> ActiveCheckResult:
+    total_times = tracker.duration
+    for msg in fetcher_messages:
+        total_times += msg.stats.duration
+
+    infotexts = ("execution time %.1f sec" % total_times.process.elapsed,)
+
+    if not config.check_mk_perfdata_with_times:
+        return ActiveCheckResult(0, infotexts, (),
+                                 ("execution_time=%.3f" % total_times.process.elapsed,))
+
+    perfdata = [
+        "execution_time=%.3f" % total_times.process.elapsed,
+        "user_time=%.3f" % total_times.process.user,
+        "system_time=%.3f" % total_times.process.system,
+        "children_user_time=%.3f" % total_times.process.children_user,
+        "children_system_time=%.3f" % total_times.process.children_system,
+    ]
+    summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
+    for msg in fetcher_messages:
+        if msg.fetcher_type in (
+                FetcherType.PIGGYBACK,
+                FetcherType.PROGRAM,
+                FetcherType.SNMP,
+                FetcherType.TCP,
+        ):
+            summary[{
+                FetcherType.PIGGYBACK: "agent",
+                FetcherType.PROGRAM: "ds",
+                FetcherType.SNMP: "snmp",
+                FetcherType.TCP: "agent",
+            }[msg.fetcher_type]] += msg.stats.duration
+    for phase, duration in summary.items():
+        perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
+
+    return ActiveCheckResult(0, infotexts, (), perfdata)
 
 
 def _check_plugins_missing_data(
     plugins_missing_data: List[CheckPluginName],
     exit_spec: ExitSpec,
     some_success: bool,
-) -> Tuple[ServiceState, ServiceDetails]:
+) -> Iterable[ActiveCheckResult]:
+    if not plugins_missing_data:
+        return
+
     if not some_success:
-        return exit_spec.get("empty_output", 2), "Got no information from host"
+        yield ActiveCheckResult(exit_spec.get("empty_output", 2), ("Got no information from host",),
+                                (), ())
+        return
 
     # key is a legacy name, kept for compatibility.
     specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])
@@ -283,19 +291,17 @@ def _check_plugins_missing_data(
             generic_plugins.add(str(check_plugin_name))
 
     # key is a legacy name, kept for compatibility.
-    generic_plugins_status = exit_spec.get("missing_sections", 1)
-    infotexts = [
-        "Missing monitoring data for check plugins: %s%s" % (
-            ", ".join(sorted(generic_plugins)),
-            state_markers[generic_plugins_status],
-        ),
-    ]
+    missing_status = exit_spec.get("missing_sections", 1)
+    plugin_list = ", ".join(sorted(generic_plugins))
+    yield ActiveCheckResult(
+        missing_status,
+        (f"Missing monitoring data for plugins: {plugin_list}{state_markers[missing_status]}",),
+        (),
+        (),
+    )
 
-    for plugin, status in sorted(specific_plugins):
-        infotexts.append("%s%s" % (plugin, state_markers[status]))
-        generic_plugins_status = max(generic_plugins_status, status)
-
-    return generic_plugins_status, ", ".join(infotexts)
+    yield from (ActiveCheckResult(status, f"{plugin}{state_markers[status]}", (), ())
+                for plugin, status in sorted(specific_plugins))
 
 
 def check_host_services(

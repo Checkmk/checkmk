@@ -50,6 +50,8 @@ CacheInfo = Optional[Tuple[int, int]]
 
 ParsedSectionContent = Any
 
+SourceResults = Sequence[Tuple['Source', result.Result[HostSections, Exception]]]
+
 
 class ParsingResult(NamedTuple):
     data: ParsedSectionContent
@@ -327,7 +329,7 @@ def make_broker(
     fetcher_messages: Sequence['FetcherMessage'],
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
-) -> Tuple[ParsedSectionsBroker, Sequence[Tuple['Source', result.Result[HostSections, Exception]]]]:
+) -> Tuple[ParsedSectionsBroker, SourceResults]:
     nodes = make_nodes(
         config_cache,
         host_config,

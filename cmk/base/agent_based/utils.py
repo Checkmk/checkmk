@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, MutableMapping, Sequence
+from typing import Any, Iterable, MutableMapping, Optional, Sequence
 
-from cmk.utils.type_defs import HostKey, ParsedSectionName
+from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState
 
-from .data_provider import ParsedSectionsBroker
+from cmk.core_helpers.type_defs import Mode
+
+from .data_provider import ParsedSectionsBroker, SourceResults
 
 _ParsedSectionContent = Any
 
@@ -57,3 +60,18 @@ def get_section_cluster_kwargs(
         kwargs.clear()
 
     return kwargs
+
+
+def check_sources(
+    *,
+    source_results: SourceResults,
+    mode: Mode,
+    include_ok_results: bool = False,
+    override_non_ok_state: Optional[ServiceState] = None,
+) -> Iterable[ActiveCheckResult]:
+    for source, host_sections in source_results:
+        state, output = source.summarize(host_sections, mode=mode)
+        if include_ok_results or state != 0:
+            yield ActiveCheckResult(
+                state if override_non_ok_state is None else override_non_ok_state,
+                (f"[{source.id}] {output}",), (), ())

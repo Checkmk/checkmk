@@ -43,13 +43,11 @@ from cmk.utils.type_defs import (
     HostName,
     Item,
     MetricTuple,
-    result as result_type,
     RulesetName,
     state_markers,
 )
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -58,13 +56,13 @@ import cmk.base.agent_based.decorator as decorator
 import cmk.base.autochecks as autochecks
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
-import cmk.base.sources as sources
 import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
+from cmk.base.agent_based.utils import check_sources
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -546,7 +544,7 @@ def active_check_discovery(
     return ActiveCheckResult.from_subresults(
         services_result,
         host_labels_result,
-        *_check_data_sources(source_results, mode=Mode.DISCOVERY),
+        *check_sources(source_results=source_results, mode=Mode.DISCOVERY),
         _schedule_rediscovery(
             host_config=host_config,
             need_rediscovery=services_need_rediscovery or host_labels_need_rediscovery,
@@ -631,21 +629,6 @@ def _check_host_labels(
         ActiveCheckResult(0, ["no new host labels"], [], []),
         False,
     )
-
-
-def _check_data_sources(  # TODO: deduplicate code (inventory & checking)
-    result: Sequence[Tuple[sources.Source, result_type.Result[HostSections, Exception]]],
-    *,
-    mode: Mode,
-) -> Iterable[ActiveCheckResult]:
-    summaries = [
-        (source, source.summarize(host_sections, mode=mode)) for source, host_sections in result
-    ]
-    # Do not output informational (state = 0) things.  These information
-    # are shown by the "Check_MK" service
-    yield from (ActiveCheckResult(state, (f"[{src.id}] {text}",), (), ())
-                for src, (state, text) in summaries
-                if state != 0)
 
 
 def _schedule_rediscovery(

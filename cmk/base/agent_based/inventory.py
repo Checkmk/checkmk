@@ -51,7 +51,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import get_section_kwargs
+from cmk.base.agent_based.utils import get_section_kwargs, check_sources
 import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import (
@@ -158,7 +158,13 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
     return ActiveCheckResult.from_subresults(
         update_result,
         _check_inventory_tree(trees, old_tree, _inv_sw_missing, _inv_sw_changes, _inv_hw_changes),
-        *_check_sources(inv_result, _inv_fail_status),
+        *check_sources(
+            source_results=inv_result.source_results,
+            mode=Mode.INVENTORY,
+            # Do not use source states which would overwrite "State when inventory fails" in the
+            # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
+            override_non_ok_state=_inv_fail_status,
+        ),
     )
 
 
@@ -193,20 +199,6 @@ def _check_inventory_tree(
         infotexts.append(f"Found {trees.status_data.count_entries()} status entries")
 
     return ActiveCheckResult(status, infotexts, (), ())
-
-
-def _check_sources(
-    inv_result: ActiveInventoryResult,
-    fail_status: ServiceState,
-) -> Iterable[ActiveCheckResult]:
-    # Do not output informational things (state == 0). Also do not use source states
-    # which would overwrite "State when inventory fails" in the ruleset
-    # "Do hardware/software Inventory".
-    # These information and source states are handled by the "Check_MK" service
-    for source, host_sections in inv_result.source_results:
-        source_state, source_output = source.summarize(host_sections, mode=Mode.INVENTORY)
-        if source_state != 0:
-            yield ActiveCheckResult(fail_status, (f"[{source.id}] {source_output}",), (), ())
 
 
 def _inventorize_host(

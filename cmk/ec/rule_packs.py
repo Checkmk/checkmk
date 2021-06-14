@@ -258,6 +258,9 @@ def load_config(settings: Settings) -> ConfigFromWATO:
     if isinstance(translation.get('regex'), tuple):
         translation["regex"] = [cast(Tuple[str, str], translation.get('regex'))]
 
+    if config.get("translate_snmptraps") is True:  # type: ignore[comparison-overlap]
+        config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
+
     return config
 
 

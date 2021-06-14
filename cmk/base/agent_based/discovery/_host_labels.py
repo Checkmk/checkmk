@@ -235,14 +235,9 @@ def _discover_host_labels_for_source_type(
     on_error: OnError,
 ) -> Mapping[str, HostLabel]:
 
-    try:
-        resolver = parsed_sections_broker[host_key]
-    except KeyError:
-        return {}
-
     host_labels = {}
     try:
-        parsed_results = sorted(resolver, key=lambda r: r.section.name)
+        parsed_results = parsed_sections_broker.all_parsing_results(host_key)
 
         console.vverbose("Trying host label discovery with: %s\n" %
                          ", ".join(str(r.section.name) for r in parsed_results))

@@ -120,18 +120,15 @@ class ParsedSectionsResolver:
     def __init__(
         self,
         *,
-        sections_parser: SectionsParser,
         section_plugins: Sequence[SectionPlugin],
     ) -> None:
-        self._parser = sections_parser
         self._section_plugins = section_plugins
         self._memoized_results: Dict[ParsedSectionName, Optional[ResolvedResult]] = {}
         self._superseders = self._init_superseders()
         self._producers = self._init_producers()
 
     def __repr__(self) -> str:
-        return (f"{self.__class__.__name__}(sections_parser={self._parser!r},"
-                f" section_plugins={self._section_plugins})")
+        return f"{self.__class__.__name__}(section_plugins={self._section_plugins})"
 
     def _init_superseders(self) -> Mapping[SectionName, Sequence[SectionPlugin]]:
         superseders: Dict[SectionName, List[SectionPlugin]] = {}
@@ -146,11 +143,11 @@ class ParsedSectionsResolver:
             producers.setdefault(section.parsed_section_name, []).append(section)
         return producers
 
-    @property
-    def parser(self) -> SectionsParser:  # needed for legacy mode from hell :-(. Remove ASAP
-        return self._parser
-
-    def resolve(self, parsed_section_name: ParsedSectionName) -> Optional[ResolvedResult]:
+    def resolve(
+        self,
+        parser: SectionsParser,
+        parsed_section_name: ParsedSectionName,
+    ) -> Optional[ResolvedResult]:
         if parsed_section_name in self._memoized_results:
             return self._memoized_results[parsed_section_name]
 
@@ -159,10 +156,10 @@ class ParsedSectionsResolver:
             # Before we can parse the section, we must parse all potential superseders.
             # Registration validates against indirect supersedings, no need to recurse
             for superseder in self._superseders.get(producer.name, ()):
-                if self._parser.parse(superseder) is not None:
-                    self._parser.disable(superseder.supersedes)
+                if parser.parse(superseder) is not None:
+                    parser.disable(superseder.supersedes)
 
-            if (parsing_result := self._parser.parse(producer)) is not None:
+            if (parsing_result := parser.parse(producer)) is not None:
                 return self._memoized_results.setdefault(
                     parsed_section_name, ResolvedResult(
                         parsed=parsing_result,
@@ -171,13 +168,13 @@ class ParsedSectionsResolver:
 
         return self._memoized_results.setdefault(parsed_section_name, None)
 
-    def __iter__(self) -> Iterator[ResolvedResult]:
+    def resolve_all(self, parser: SectionsParser) -> Iterator[ResolvedResult]:
         return iter(
             result for psn in {section.parsed_section_name for section in self._section_plugins}
-            if (result := self.resolve(psn)) is not None)
+            if (result := self.resolve(parser, psn)) is not None)
 
 
-class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
+class ParsedSectionsBroker(Mapping[HostKey, Tuple[ParsedSectionsResolver, SectionsParser]]):
     """Object for aggregating, parsing and disributing the sections
 
     An instance of this class allocates all raw sections of a given host or cluster and
@@ -187,19 +184,20 @@ class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
     """
     def __init__(
         self,
-        resolvers: Mapping[HostKey, ParsedSectionsResolver],
+        providers: Mapping[HostKey, Tuple[ParsedSectionsResolver, SectionsParser]],
     ) -> None:
         super().__init__()
-        self._resolvers: Final = resolvers
+        self._providers: Final = providers
 
+    # TODO: see if we need the mapping interface once .checking._legacy_mode is gone
     def __len__(self) -> int:
-        return len(self._resolvers)
+        return len(self._providers)
 
     def __iter__(self) -> Iterator[HostKey]:
-        return self._resolvers.__iter__()
+        return self._providers.__iter__()
 
-    def __getitem__(self, key: HostKey) -> ParsedSectionsResolver:
-        return self._resolvers.__getitem__(key)
+    def __getitem__(self, key: HostKey) -> Tuple[ParsedSectionsResolver, SectionsParser]:
+        return self._providers.__getitem__(key)
 
     def get_cache_info(
         self,
@@ -215,8 +213,8 @@ class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
         """
         cache_infos = [
             resolved.parsed.cache_info
-            for resolved in (resolver.resolve(parsed_section_name)
-                             for resolver in self._resolvers.values()
+            for resolved in (resolver.resolve(parser, parsed_section_name)
+                             for resolver, parser in self._providers.values()
                              for parsed_section_name in parsed_section_names)
             if resolved is not None and resolved.parsed.cache_info is not None
         ]
@@ -231,12 +229,12 @@ class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
         parsed_section_name: ParsedSectionName,
     ) -> Optional[ParsedSectionContent]:
         try:
-            resolver = self._resolvers[host_key]
+            resolver, parser = self._providers[host_key]
         except KeyError:
             return None
 
         return None if (  #
-            (resolved := resolver.resolve(parsed_section_name)) is None  #
+            (resolved := resolver.resolve(parser, parsed_section_name)) is None  #
         ) else resolved.parsed.data
 
     def filter_available(
@@ -245,11 +243,19 @@ class ParsedSectionsBroker(Mapping[HostKey, ParsedSectionsResolver]):
         source_type: SourceType,
     ) -> Set[ParsedSectionName]:
         return {
-            parsed_section_name for host_key, resolver in self._resolvers.items()
+            parsed_section_name for host_key, (resolver, parser) in self._providers.items()
             for parsed_section_name in parsed_section_names
             if (host_key.source_type is source_type and
-                resolver.resolve(parsed_section_name) is not None)
+                resolver.resolve(parser, parsed_section_name) is not None)
         }
+
+    def all_parsing_results(self, host_key: HostKey) -> Iterable[ResolvedResult]:
+        try:
+            resolver, parser = self._providers[host_key]
+        except KeyError:
+            return ()
+
+        return sorted(resolver.resolve_all(parser), key=lambda r: r.section.name)
 
 
 def _collect_host_sections(
@@ -364,11 +370,11 @@ def make_broker(
         selected_sections=selected_sections,
     )
     return ParsedSectionsBroker({
-        host_key: ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=host_sections),
-            section_plugins=[
+        host_key: (
+            ParsedSectionsResolver(section_plugins=[
                 agent_based_register.get_section_plugin(section_name)
                 for section_name in host_sections.sections
-            ],
+            ],),
+            SectionsParser(host_sections=host_sections),
         ) for host_key, host_sections in collected_host_sections.items()
     }), results

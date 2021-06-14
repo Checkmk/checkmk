@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Iterable, Sequence, Set
+from typing import Iterable, Sequence, Set, Tuple
 
 #import pytest  # type: ignore[import]
 
@@ -40,55 +40,71 @@ class _FakeParser(dict):
 
 class TestPArsedSectionsResolver:
     @staticmethod
-    def make_resolver(section_plugins: Sequence[SectionPlugin]) -> ParsedSectionsResolver:
-        return ParsedSectionsResolver(
-            sections_parser=_FakeParser({  # type: ignore[arg-type]
+    def make_provider(
+        section_plugins: Sequence[SectionPlugin],) -> Tuple[ParsedSectionsResolver, _FakeParser]:
+        return (
+            ParsedSectionsResolver(section_plugins=section_plugins,),
+            _FakeParser({
                 "section_one": ParsingResult(data=1, cache_info=None),
                 "section_two": ParsingResult(data=2, cache_info=None),
                 "section_thr": ParsingResult(data=3, cache_info=None),
             }),
-            section_plugins=section_plugins,
         )
 
     def test_straight_forward_case(self):
-        resolver = self.make_resolver(section_plugins=[
+        resolver, parser = self.make_provider(section_plugins=[
             _section("section_one", "parsed_section_name", set()),
         ])
 
-        resolved = resolver.resolve(ParsedSectionName("parsed_section_name"))
+        resolved = resolver.resolve(
+            parser,  # type: ignore[arg-type]
+            ParsedSectionName("parsed_section_name"),
+        )
         assert resolved
         parsed, section = resolved
         assert parsed and parsed.data == 1
         assert section and section.name == SectionName("section_one")
-        assert resolver.resolve(ParsedSectionName("no_such_section")) is None
+        assert resolver.resolve(
+            parser,  # type: ignore[arg-type]
+            ParsedSectionName("no_such_section"),
+        ) is None
 
     def test_superseder_is_present(self):
-        resolver = self.make_resolver(section_plugins=[
+        resolver, parser = self.make_provider(section_plugins=[
             _section("section_one", "parsed_section_one", set()),
             _section("section_two", "parsed_section_two", {"section_one"}),
         ])
 
-        assert resolver.resolve(ParsedSectionName("parsed_section_one")) is None
+        assert resolver.resolve(
+            parser,  # type: ignore[arg-type]
+            ParsedSectionName("parsed_section_one"),
+        ) is None
 
     def test_superseder_with_same_name(self):
-        resolver = self.make_resolver(section_plugins=[
+        resolver, parser = self.make_provider(section_plugins=[
             _section("section_one", "parsed_section", set()),
             _section("section_two", "parsed_section", {"section_one"}),
         ])
 
-        resolved = resolver.resolve(ParsedSectionName("parsed_section"))
+        resolved = resolver.resolve(
+            parser,  # type: ignore[arg-type]
+            ParsedSectionName("parsed_section"),
+        )
         assert resolved
         parsed, section = resolved
         assert parsed and parsed.data == 2
         assert section and section.name == SectionName("section_two")
 
     def test_superseder_has_no_data(self):
-        resolver = self.make_resolver(section_plugins=[
+        resolver, parser = self.make_provider(section_plugins=[
             _section("section_one", "parsed_section_one", set()),
             _section("section_iix", "parsed_section_iix", {"section_one"}),
         ])
 
-        resolved = resolver.resolve(ParsedSectionName("parsed_section_one"))
+        resolved = resolver.resolve(
+            parser,  # type: ignore[arg-type]
+            ParsedSectionName("parsed_section_one"),
+        )
         assert resolved
         parsed, section = resolved
         assert parsed and parsed.data == 1
@@ -101,15 +117,19 @@ class TestPArsedSectionsResolver:
             _section("section_thr", "parsed_section_thr", {"section_two"}),
             _section("section_fou", "parsed_section_fou", {"section_one"}),
         ]
-        resolver = self.make_resolver(section_plugins=sections)
+        resolver, parser = self.make_provider(section_plugins=sections)
 
-        assert sorted(resolver, key=lambda r: r.section.name) == [
-            ResolvedResult(
-                parsed=ParsingResult(data=1, cache_info=None),
-                section=sections[0],
+        assert sorted(
+            resolver.resolve_all(
+                parser,  # type: ignore[arg-type]
             ),
-            ResolvedResult(
-                parsed=ParsingResult(data=3, cache_info=None),
-                section=sections[2],
-            ),
-        ]
+            key=lambda r: r.section.name) == [
+                ResolvedResult(
+                    parsed=ParsingResult(data=1, cache_info=None),
+                    section=sections[0],
+                ),
+                ResolvedResult(
+                    parsed=ParsingResult(data=3, cache_info=None),
+                    section=sections[2],
+                ),
+            ]

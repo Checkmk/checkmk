@@ -516,19 +516,24 @@ def test__find_candidates():
     broker = ParsedSectionsBroker({
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
-        HostKey("test_node", "1.2.3.4", SourceType.HOST): ParsedSectionsResolver(
-            sections_parser=SectionsParser(
+        HostKey("test_node", "1.2.3.4", SourceType.HOST): (
+            ParsedSectionsResolver(section_plugins=[
+                agent_based_register.get_section_plugin(SectionName("kernel")),
+                agent_based_register.get_section_plugin(SectionName("uptime")),
+            ],),
+            SectionsParser(
                 host_sections=AgentHostSections({
                     SectionName("kernel"): [],  # host only
                     SectionName("uptime"): [['123']],  # host & mgmt
                 }),),
-            section_plugins=[
-                agent_based_register.get_section_plugin(SectionName("kernel")),
-                agent_based_register.get_section_plugin(SectionName("uptime")),
-            ],
         ),
-        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): ParsedSectionsResolver(
-            sections_parser=SectionsParser(
+        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): (
+            ParsedSectionsResolver(section_plugins=[
+                agent_based_register.get_section_plugin(SectionName("uptime")),
+                agent_based_register.get_section_plugin(SectionName("liebert_fans")),
+                agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
+            ],),
+            SectionsParser(
                 host_sections=SNMPHostSections({
                     # host & mgmt:
                     SectionName("uptime"): [['123']],  # type: ignore[dict-item]
@@ -541,11 +546,6 @@ def test__find_candidates():
                         [['a', 'b', 'c', 'd']]
                     ],
                 }),),
-            section_plugins=[
-                agent_based_register.get_section_plugin(SectionName("uptime")),
-                agent_based_register.get_section_plugin(SectionName("liebert_fans")),
-                agent_based_register.get_section_plugin(SectionName("mgmt_snmp_info")),
-            ],
         ),
     })
 
@@ -734,8 +734,12 @@ def _realhost_scenario(monkeypatch):
             hostname=hostname,
             ipaddress=ipaddress,
             source_type=SourceType.HOST,
-        ): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=AgentHostSections(
+        ): (
+            ParsedSectionsResolver(section_plugins=[
+                agent_based_register.get_section_plugin(SectionName("labels")),
+                agent_based_register.get_section_plugin(SectionName("df")),
+            ],),
+            SectionsParser(host_sections=AgentHostSections(
                 sections={
                     SectionName("labels"): [[
                         '{"cmk/check_mk_server":"yes"}',
@@ -761,10 +765,6 @@ def _realhost_scenario(monkeypatch):
                         ],
                     ],
                 })),
-            section_plugins=[
-                agent_based_register.get_section_plugin(SectionName("labels")),
-                agent_based_register.get_section_plugin(SectionName("df")),
-            ],
         ),
     })
 
@@ -832,8 +832,12 @@ def _cluster_scenario(monkeypatch):
             hostname=node1_hostname,
             ipaddress=ipaddress,
             source_type=SourceType.HOST,
-        ): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=AgentHostSections(
+        ): (
+            ParsedSectionsResolver(section_plugins=[
+                agent_based_register.get_section_plugin(SectionName("labels")),
+                agent_based_register.get_section_plugin(SectionName("df")),
+            ],),
+            SectionsParser(host_sections=AgentHostSections(
                 sections={
                     SectionName("labels"): [[
                         '{"cmk/check_mk_server":"yes"}',
@@ -859,17 +863,17 @@ def _cluster_scenario(monkeypatch):
                         ],
                     ],
                 })),
-            section_plugins=[
-                agent_based_register.get_section_plugin(SectionName("labels")),
-                agent_based_register.get_section_plugin(SectionName("df")),
-            ],
         ),
         HostKey(
             hostname=node2_hostname,
             ipaddress=ipaddress,
             source_type=SourceType.HOST,
-        ): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=AgentHostSections(
+        ): (
+            ParsedSectionsResolver(section_plugins=[
+                agent_based_register.get_section_plugin(SectionName("labels")),
+                agent_based_register.get_section_plugin(SectionName("df")),
+            ],),
+            SectionsParser(host_sections=AgentHostSections(
                 sections={
                     SectionName("labels"): [[
                         '{"node2_live_label":"true"}',
@@ -895,10 +899,6 @@ def _cluster_scenario(monkeypatch):
                         ],
                     ],
                 })),
-            section_plugins=[
-                agent_based_register.get_section_plugin(SectionName("labels")),
-                agent_based_register.get_section_plugin(SectionName("df")),
-            ],
         ),
     })
 

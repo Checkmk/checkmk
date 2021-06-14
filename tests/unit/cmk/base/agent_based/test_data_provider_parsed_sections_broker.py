@@ -111,9 +111,10 @@ NODE_2: AgentRawDataSection = [
 def test_get_parsed_section(node_sections, expected_result):
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=node_sections),
-            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        HostKey("node1", "127.0.0.1", SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
+            SectionsParser(host_sections=node_sections),
         ),
     })
 
@@ -135,18 +136,15 @@ def _get_parser():
 
 def test_parse_sections_unsuperseded(monkeypatch):
 
-    assert ParsedSectionsResolver(
-        sections_parser=_get_parser(),
-        section_plugins=(SECTION_ONE, SECTION_THREE),
-    ).resolve(ParsedSectionName("parsed")) is not None
+    assert ParsedSectionsResolver(section_plugins=(SECTION_ONE, SECTION_THREE),).resolve(
+        _get_parser(), ParsedSectionName("parsed")) is not None
 
 
 def test_parse_sections_superseded(monkeypatch):
 
     assert ParsedSectionsResolver(
-        sections_parser=_get_parser(),
-        section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),
-    ).resolve(ParsedSectionName("parsed")) is None
+        section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),).resolve(
+            _get_parser(), ParsedSectionName("parsed")) is None
 
 
 @pytest.mark.parametrize(
@@ -177,12 +175,13 @@ def test_parse_sections_superseded(monkeypatch):
 def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey(nodename, "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=AgentHostSections(
+        HostKey(nodename, "127.0.0.1", SourceType.HOST): (
+            ParsedSectionsResolver(
+                # NOTE: this tests the legacy functionality. The "proper" ParsedSectionsBroker
+                # methods are bypassed, so these will not matter at all:
+                section_plugins=[],),
+            SectionsParser(host_sections=AgentHostSections(
                 sections={SectionName("section_plugin_name"): node_section_content})),
-            # NOTE: this tests the legacy functionality. The "proper" ParsedSectionsBroker
-            # methods are bypassed, so these will not matter at all:
-            section_plugins=[],
         ) for nodename, node_section_content in host_entries
     })
 

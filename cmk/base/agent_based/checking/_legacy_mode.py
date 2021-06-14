@@ -355,8 +355,8 @@ class _MultiHostSections:
         for node_key in cluster_node_keys or [host_key]:
 
             try:
-                resolver = self._parsed_sections_broker[node_key]
-                host_section_content = resolver.parser.raw_data.sections[section_name]
+                _resolver, parser = self._parsed_sections_broker[node_key]
+                host_section_content = parser.raw_data.sections[section_name]
             except KeyError:
                 continue
 
@@ -423,9 +423,9 @@ class _MultiHostSections:
         of the timestamps, of course.
         """
         cache_infos = [
-            resolver.parser.raw_data.cache_info[section_name]
-            for resolver in self._parsed_sections_broker.values()
-            if section_name in resolver.parser.raw_data.cache_info
+            parser.raw_data.cache_info[section_name]
+            for _resolver, parser in self._parsed_sections_broker.values()
+            if section_name in parser.raw_data.cache_info
         ]
 
         return (min(at for at, _ in cache_infos),

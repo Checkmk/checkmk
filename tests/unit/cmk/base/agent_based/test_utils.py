@@ -126,9 +126,11 @@ def test_get_section_kwargs(required_sections, expected_result):
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
     parsed_sections_broker = ParsedSectionsBroker({
-        host_key: ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=node_sections),
-            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]),
+        host_key: (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]),
+            SectionsParser(host_sections=node_sections),
+        ),
     })
 
     kwargs = get_section_kwargs(
@@ -207,13 +209,15 @@ def test_get_section_cluster_kwargs(required_sections, expected_result):
     })
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=node1_sections),
-            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        HostKey("node1", "127.0.0.1", SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
+            SectionsParser(host_sections=node1_sections),
         ),
-        HostKey("node2", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
-            sections_parser=SectionsParser(host_sections=node2_sections),
-            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        HostKey("node2", "127.0.0.1", SourceType.HOST): (
+            ParsedSectionsResolver(
+                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
+            SectionsParser(host_sections=node2_sections),
         ),
     })
 

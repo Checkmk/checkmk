@@ -17,12 +17,6 @@ def inventory_wlc_clients(parsed):
 
 
 def check_wlc_clients(item, params, parsed):
-    if isinstance(params, tuple):
-        params = {
-            "levels_lower": (params[1], params[0]),
-            "levels": (params[2], params[3]),
-        }
-
     if item in parsed:
         num_conns, interface = parsed[item]
         state = 0

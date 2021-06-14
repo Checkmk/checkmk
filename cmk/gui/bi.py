@@ -39,6 +39,7 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
 
 
 @permission_section_registry.register
@@ -897,10 +898,7 @@ def host_table(view, columns, query, only_sites, limit, all_active_filters):
 def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
                      bygroup):
 
-    filter_code = ""
-    for filt in all_active_filters:
-        header = filt.filter("bi_host_aggregations")
-        filter_code += header
+    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
     host_columns = [c for c in columns if c.startswith("host_")]
 
     rows = []
@@ -908,7 +906,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
-    bi_manager.status_fetcher.update_states_filtered(filter_code, only_sites, limit, host_columns,
+    bi_manager.status_fetcher.update_states_filtered(filterheaders, only_sites, limit, host_columns,
                                                      bygroup, required_aggregations)
 
     aggregation_results = bi_manager.computer.compute_results(required_aggregations)

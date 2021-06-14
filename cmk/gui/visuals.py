@@ -101,6 +101,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     filter_registry,
     get_only_sites_from_context,
+    get_livestatus_filter_headers,
 )
 
 from cmk.gui.utils import unique_default_name_suggestion
@@ -1435,7 +1436,7 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context: VisualContext):
-    filter_headers = "".join(collect_filter_headers(context, collect_filters(infos)))
+    filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
 
@@ -1443,15 +1444,6 @@ def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
     for filter_obj in filter_registry.values():
         if filter_obj.info in info_keys and filter_obj.available():
             yield filter_obj
-
-
-def collect_filter_headers(
-    context: VisualContext,
-    filters: Iterable[Filter],
-) -> Iterable[str]:
-    yield from (filt.filter(var if isinstance(var, dict) else {filt.htmlvars[0]: var})
-                for filt in filters
-                for var in [context.get(filt.ident, {})])
 
 
 #.

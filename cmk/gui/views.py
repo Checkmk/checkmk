@@ -93,6 +93,7 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
+    get_livestatus_filter_headers,
     visual_info_registry,
     visual_type_registry,
     VisualInfo,
@@ -129,7 +130,6 @@ if cmk_version.is_managed_edition():
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,
-    FilterHeader,
     HTTPVariables,
     InfoName,
     PainterSpec,
@@ -1949,7 +1949,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
     # later)
     if "aggr" not in view.datasource.infos or request.var("timeline_aggr"):
-        filterheaders = get_livestatus_filter_headers(view, all_active_filters)
+        filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
         show_view_func = lambda: cmk.gui.plugins.views.availability.show_availability_page(
             view, filterheaders)
@@ -2015,7 +2015,7 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter],
     - Add HW/SW inventory data when needed
     - Add SLA data when needed
     """
-    filterheaders = get_livestatus_filter_headers(view, all_active_filters)
+    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
     headers = filterheaders + view.spec.get("add_headers", "")
 
     # Fetch data. Some views show data only after pressing [Search]
@@ -2179,23 +2179,6 @@ def _get_needed_regular_columns(
         columns.add("host_labels")
 
     return list(columns)
-
-
-# TODO: When this is used by the reporting then *all* filters are active.
-# That way the inventory data will always be loaded. When we convert this to the
-# visuals principle the we need to optimize this.
-def get_livestatus_filter_headers(view: View, all_active_filters: 'List[Filter]') -> FilterHeader:
-    """Prepare Filter headers for Livestatus"""
-    filterheaders = ""
-    for filt in all_active_filters:
-        try:
-            value = view.context.get(filt.ident, {})
-            filt.validate_value(value)
-            if header := filt.filter(value):
-                filterheaders += header
-        except MKUserError as e:
-            user_errors.add(e)
-    return filterheaders
 
 
 def _get_needed_join_columns(join_cells: List[JoinCell],

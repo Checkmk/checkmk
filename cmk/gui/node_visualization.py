@@ -39,7 +39,7 @@ from cmk.gui.views import ABCAjaxInitialFilters, View
 import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.plugins.visuals.utils import (Filter, get_livestatus_filter_headers)
 from cmk.gui.type_defs import FilterHeader
 from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
@@ -186,7 +186,7 @@ class ParentChildTopologyPage(Page):
 
     def _get_filter_headers(self) -> FilterHeader:
         view, filters = get_topology_view_and_filters()
-        return cmk.gui.views.get_livestatus_filter_headers(view, filters)
+        return "".join(get_livestatus_filter_headers(view.context, filters))
 
     def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
         _view, show_filters = get_topology_view_and_filters()

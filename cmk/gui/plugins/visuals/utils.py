@@ -520,3 +520,21 @@ def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]
             return [SiteId(value)]
 
     return None
+
+
+# TODO: When this is used by the reporting then *all* filters are active.
+# That way the inventory data will always be loaded. When we convert this to the
+# visuals principle the we need to optimize this.
+def get_livestatus_filter_headers(context: VisualContext,
+                                  filters: Iterable[Filter]) -> Iterable[FilterHeader]:
+    """Prepare Filter headers for Livestatus"""
+    for filt in filters:
+        try:
+            value = context.get(filt.ident, {})
+            if isinstance(value, str):
+                value = {filt.htmlvars[0]: value}
+            filt.validate_value(value)
+            if header := filt.filter(value):
+                yield header
+        except MKUserError as e:
+            user_errors.add(e)

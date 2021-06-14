@@ -57,6 +57,7 @@ from cmk.gui.plugins.visuals import (
     visual_info_registry,
 )
 
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -398,8 +399,8 @@ class ABCRowTable(RowTable):
 
         query = "GET hosts\n"
         query += "Columns: " + (" ".join(host_columns)) + "\n"
-        query += "".join(
-            filt.filter(info_name) for filt in all_active_filters for info_name in self._info_names)
+
+        query += "".join(get_livestatus_filter_headers(view.context, all_active_filters))
 
         if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
                 display_options.W):

@@ -7,9 +7,10 @@
 import traceback
 from logging import Logger
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 
 import pyasn1.error  # type: ignore[import]
+from pyasn1.type.base import SimpleAsn1Type  # type: ignore[import]
 import pysnmp.debug  # type: ignore[import]
 import pysnmp.entity.config  # type: ignore[import]
 import pysnmp.entity.engine  # type: ignore[import]
@@ -29,6 +30,9 @@ from cmk.utils.render import Age
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
 from .settings import Settings
 
+VarBind = Tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
+VarBinds = Iterable[VarBind]
+
 
 class SNMPTrapEngine:
 
@@ -37,7 +41,7 @@ class SNMPTrapEngine:
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings: Settings, config: Config, logger: Logger,
-                 callback: Callable) -> None:
+                 callback: Callable[[Iterable[Tuple[str, str]], str], None]) -> None:
         super().__init__()
         self._logger = logger
         if settings.options.snmptrap_udp is None:
@@ -151,13 +155,15 @@ class SNMPTrapEngine:
                                                      wholeMsg=message)
 
     def _handle_snmptrap(self, snmp_engine, state_reference, context_engine_id, context_name,
-                         var_binds, cb_ctx) -> None:
-        ipaddress = self.snmp_engine.getUserContext("sender_address")[0]
+                         var_binds: VarBinds, cb_ctx) -> None:
+        # sender_address contains a (host: str, port: int) tuple
+        ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
         self._callback(trap, ipaddress)
 
-    def _log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress) -> None:
+    def _log_snmptrap_details(self, context_engine_id, context_name, var_binds: VarBinds,
+                              ipaddress: str) -> None:
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(VERBOSE,
                              'Trap accepted from %s (ContextEngineId "%s", SNMPContextName "%s")',
@@ -228,10 +234,11 @@ class SNMPTrapTranslator:
             logger.exception("Exception: %s" % e)
             return None
 
-    def _translate_simple(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
+    def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> List[Tuple[str, str]]:
         return [self._translate_binding_simple(oid, value) for oid, value in var_bind_list]
 
-    def _translate_binding_simple(self, oid, value) -> Tuple[str, str]:
+    def _translate_binding_simple(self, oid: pysnmp.proto.rfc1902.ObjectName,
+                                  value: SimpleAsn1Type) -> Tuple[str, str]:
         if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0):
             key = 'Uptime'
         else:
@@ -243,7 +250,7 @@ class SNMPTrapTranslator:
             val = value.prettyPrint()
         return key, val
 
-    def _translate_via_mibs(self, ipaddress, var_bind_list) -> List[Tuple[str, str]]:
+    def _translate_via_mibs(self, ipaddress: str, var_bind_list: VarBinds) -> List[Tuple[str, str]]:
         if self._mib_resolver is None:
             self._logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             return self._translate_simple(ipaddress, var_bind_list)
@@ -264,7 +271,8 @@ class SNMPTrapTranslator:
             var_binds.append((translated_oid, translated_value))
         return var_binds
 
-    def _translate_binding_via_mibs(self, oid, value) -> Tuple[str, str]:
+    def _translate_binding_via_mibs(self, oid: pysnmp.proto.rfc1902.ObjectName,
+                                    value: SimpleAsn1Type) -> Tuple[str, str]:
         # Disable mib_var[0] type detection
         mib_var = pysnmp.smi.rfc1902.ObjectType(pysnmp.smi.rfc1902.ObjectIdentity(oid),
                                                 value).resolveWithMib(self._mib_resolver)

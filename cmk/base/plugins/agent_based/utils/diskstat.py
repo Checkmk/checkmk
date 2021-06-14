@@ -423,7 +423,6 @@ def check_diskstat_dict(
     for key, specs in _METRICS:
         metric_val = disk.get(key)
         if metric_val is not None:
-
             levels = params.get(specs.get('levels_key') or key)
             metric_name = "disk_" + key
             render_func = specs.get('render_func')
@@ -452,7 +451,14 @@ def check_diskstat_dict(
     # make sure we have a latency.
     if 'latency' not in disk and 'average_write_wait' in disk and 'average_read_wait' in disk:
         latency = max(disk['average_write_wait'], disk['average_read_wait'])
-        yield Result(state=State.OK, summary="Latency: %s" % render.timespan(latency))
+        levels = params.get('latency')
+        yield from check_levels(
+            latency,
+            levels_upper=_scale_levels(levels, 1e-3),
+            render_func=render.timespan,
+            label='Latency',
+            notice_only=notice_only,
+        )
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.

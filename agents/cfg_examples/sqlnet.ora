@@ -1,3 +1,4 @@
+# mk_oracle example configuration
 LOG_DIRECTORY_CLIENT = /var/log/check_mk/oracle_client
 DIAG_ADR_ENABLED = OFF
 

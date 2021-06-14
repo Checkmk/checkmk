@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -59,6 +60,8 @@ std::string strip(const std::string &str, const std::string &chars);
 inline std::string strip(const std::string &str) {
     return strip(str, whitespace);
 }
+
+std::string escape_nonprintable(std::string_view buffer);
 
 std::pair<std::string, std::string> nextField(const std::string &str,
                                               const std::string &chars);

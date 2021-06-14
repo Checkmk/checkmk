@@ -7,6 +7,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstring>
+#include <iomanip>
 #include <sstream>
 #include <type_traits>
 
@@ -96,6 +98,24 @@ std::string rstrip(const std::string &str, const std::string &chars) {
 
 std::string strip(const std::string &str, const std::string &chars) {
     return rstrip(lstrip(str, chars), chars);
+}
+
+std::string escape_nonprintable(std::string_view buffer) {
+    std::stringstream ss;
+    for (auto ch : buffer) {
+        if (ch >= 32 && ch < 127) {
+            ss << ch;
+        } else {
+            // Unprintable char processing.  We only handle printable
+            // ASCII characters and escape everything else.
+            unsigned int chuint = 0;
+            // Use memcpy for the strict aliasing rule.
+            std::memcpy(&chuint, &ch, sizeof ch);
+            ss << "\\x" << std::hex << std::uppercase << std::setw(2)
+               << std::setfill('0') << chuint;
+        }
+    }
+    return ss.str();
 }
 
 std::pair<std::string, std::string> nextField(const std::string &str,

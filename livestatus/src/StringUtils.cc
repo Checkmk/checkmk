@@ -7,8 +7,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iomanip>
 #include <sstream>
 #include <type_traits>
+
+#include "OStreamStateSaver.h"
 
 #ifdef CMC
 #include <arpa/inet.h>
@@ -96,6 +99,20 @@ std::string rstrip(const std::string &str, const std::string &chars) {
 
 std::string strip(const std::string &str, const std::string &chars) {
     return rstrip(lstrip(str, chars), chars);
+}
+
+std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp) {
+    OStreamStateSaver s{os};
+    os << std::hex << std::uppercase << std::setfill('0');
+    for (auto ch : enp.buffer) {
+        int uch{static_cast<unsigned char>(ch)};
+        if (std::isprint(uch) != 0 && ch != '\\') {
+            os << ch;
+        } else {
+            os << "\\x" << std::setw(2) << uch;
+        }
+    }
+    return os;
 }
 
 std::pair<std::string, std::string> nextField(const std::string &str,

@@ -4,22 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from email.utils import formataddr
-from html import escape as html_escape
 import os
-from quopri import encodestring
 import re
+import requests
 import socket
 import subprocess
 import sys
+
+from email.utils import formataddr
+from html import escape as html_escape
+from http.client import responses as http_responses
+from quopri import encodestring
 from typing import Dict, List, Tuple, NamedTuple
 
-from http.client import responses as http_responses
-import requests
-
-from cmk.utils.notify import find_wato_folder
-import cmk.utils.paths
 import cmk.utils.password_store
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
+from cmk.utils.notify import find_wato_folder
+from cmk.utils.store import load_text_from_file
 
 
 def collect_context() -> Dict[str, str]:
@@ -57,7 +59,11 @@ def format_address(display_name: str, email_address: str) -> str:
 
 
 def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    if cmk_version.is_cma():
+        return load_text_from_file("/etc/nullmailer/default-from", environ_default)
+
+    return environ_default
 
 
 def _base_url(context: Dict[str, str]) -> str:

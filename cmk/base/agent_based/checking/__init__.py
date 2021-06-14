@@ -59,7 +59,12 @@ import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import check_sources, get_section_kwargs, get_section_cluster_kwargs
+from cmk.base.agent_based.utils import (
+    check_sources,
+    get_section_kwargs,
+    get_section_cluster_kwargs,
+    check_parsing_errors,
+)
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based import value_store
@@ -209,6 +214,7 @@ def _execute_checkmk_checks(
                     mode=mode,
                     include_ok_results=True,
                 ),
+                check_parsing_errors(errors=broker.parsing_errors(),),
                 *_check_plugins_missing_data(
                     plugins_missing_data,
                     exit_spec,

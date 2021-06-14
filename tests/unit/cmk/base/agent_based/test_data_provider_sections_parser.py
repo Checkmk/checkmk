@@ -10,6 +10,7 @@ import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import SectionName
 
+from cmk.base import crash_reporting
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import (
@@ -42,6 +43,22 @@ class TestSectionsParser:
 
         assert parsing_result is not None
         assert parsing_result.data == 1
+
+    @staticmethod
+    def test_parsing_errors(monkeypatch, sections_parser: SectionsParser) -> None:
+
+        monkeypatch.setattr(
+            crash_reporting,
+            'create_section_crash_dump',
+            lambda **kw: "crash dump msg",
+        )
+
+        section = _section("one", lambda x: 1 / 0)
+
+        assert sections_parser.parse(section) is None
+        assert len(sections_parser.parsing_errors) == 1
+        assert sections_parser.parsing_errors[0].startswith(
+            "Parsing of section one failed - please submit a crash report! (Crash-ID: ")
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser) -> None:

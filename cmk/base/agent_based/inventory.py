@@ -51,7 +51,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import get_section_kwargs, check_sources
+from cmk.base.agent_based.utils import get_section_kwargs, check_sources, check_parsing_errors
 import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import (
@@ -71,6 +71,7 @@ class InventoryTrees(NamedTuple):
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
     source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
+    parsing_errors: Sequence[str]
     safe_to_write: bool
 
 
@@ -110,6 +111,9 @@ def commandline_inventory(
             # TODO: inv_results.source_results is completely ignored here.
             # We should process the results to make errors visible on the console
             _show_inventory_results_on_console(inv_result.trees)
+
+            for detail in check_parsing_errors(errors=inv_result.parsing_errors).details:
+                console.warning(detail)
 
         except Exception as e:
             if cmk.utils.debug.enabled():
@@ -165,6 +169,10 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=_inv_fail_status,
         ),
+        check_parsing_errors(
+            errors=inv_result.parsing_errors,
+            error_state=_inv_fail_status,
+        ),
     )
 
 
@@ -210,7 +218,8 @@ def _inventorize_host(
     if host_config.is_cluster:
         return ActiveInventoryResult(
             trees=_do_inv_for_cluster(host_config),
-            source_results=[],
+            source_results=(),
+            parsing_errors=(),
             safe_to_write=True,
         )
 
@@ -229,6 +238,7 @@ def _inventorize_host(
         on_scan_error=OnError.RAISE,
     )
 
+    parsing_errors = broker.parsing_errors()
     return ActiveInventoryResult(
         trees=_do_inv_for_realhost(
             host_config,
@@ -237,10 +247,12 @@ def _inventorize_host(
             run_plugin_names=run_plugin_names,
         ),
         source_results=results,
+        parsing_errors=parsing_errors,
         safe_to_write=(
             _safe_to_write_tree(results) and  #
             selected_sections is NO_SELECTION and  #
-            run_plugin_names is EVERYTHING),
+            run_plugin_names is EVERYTHING and  #
+            not parsing_errors),
     )
 
 

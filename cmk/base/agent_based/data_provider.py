@@ -36,6 +36,7 @@ from cmk.utils.type_defs import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import fetch_all, make_nodes, make_sources
 from cmk.base.sources.agent import AgentHostSections
 from cmk.core_helpers.host_sections import HostSections
@@ -72,6 +73,7 @@ class SectionsParser:
     ) -> None:
         super().__init__()
         self._host_sections = host_sections
+        self._parsing_errors: List[str] = []
         self._memoized_results: Dict[SectionName, Optional[ParsingResult]] = {}
 
     def __repr__(self) -> str:
@@ -84,6 +86,10 @@ class SectionsParser:
     @property
     def sections(self) -> Iterable[SectionName]:  # TODO: see if we really need this in the long run
         return self._host_sections.sections.keys()
+
+    @property
+    def parsing_errors(self) -> Sequence[str]:
+        return self._parsing_errors
 
     def parse(self, section: SectionPlugin) -> Optional[ParsingResult]:
         if section.name in self._memoized_results:
@@ -106,7 +112,19 @@ class SectionsParser:
             raw_data = self._host_sections.sections[section.name]
         except KeyError:
             return None
-        return section.parse_function(raw_data)
+
+        try:
+            return section.parse_function(raw_data)
+        except Exception:
+            if cmk.utils.debug.enabled():
+                raise
+            self._parsing_errors.append(
+                create_section_crash_dump(
+                    operation="parsing",
+                    section_name=section.name,
+                    section_content=raw_data,
+                ))
+            return None
 
     def _get_cache_info(self, section_name: SectionName) -> CacheInfo:
         return self._host_sections.cache_info.get(section_name)
@@ -256,6 +274,12 @@ class ParsedSectionsBroker(Mapping[HostKey, Tuple[ParsedSectionsResolver, Sectio
             return ()
 
         return sorted(resolver.resolve_all(parser), key=lambda r: r.section.name)
+
+    def parsing_errors(self) -> Sequence[str]:
+        return sum(
+            (list(parser.parsing_errors) for _, parser in self._providers.values()),
+            start=[],
+        )
 
 
 def _collect_host_sections(

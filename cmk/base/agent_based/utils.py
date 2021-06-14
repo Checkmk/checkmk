@@ -7,7 +7,7 @@
 from typing import Any, Iterable, MutableMapping, Optional, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState
+from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState, state_markers
 
 from cmk.core_helpers.type_defs import Mode
 
@@ -75,3 +75,14 @@ def check_sources(
             yield ActiveCheckResult(
                 state if override_non_ok_state is None else override_non_ok_state,
                 (f"[{source.id}] {output}",), (), ())
+
+
+def check_parsing_errors(
+    errors: Sequence[str],
+    *,
+    error_state: ServiceState = 1,
+) -> ActiveCheckResult:
+    state = error_state if errors else 0
+    return ActiveCheckResult(state,
+                             [f"{msg.split(' - ')[0]}{state_markers[state]}" for msg in errors],
+                             errors, ())

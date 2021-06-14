@@ -10,18 +10,23 @@ from typing import Callable, Iterable
 
 import pytest  # type: ignore[import]
 
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
 
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     SectionsParser,
 )
-from cmk.base.agent_based.utils import get_section_kwargs, get_section_cluster_kwargs
+from cmk.base.agent_based.utils import (
+    check_parsing_errors,
+    get_section_cluster_kwargs,
+    get_section_kwargs,
+)
+from cmk.base.sources.agent import AgentHostSections
 
 
 def _test_section(
@@ -231,3 +236,37 @@ def test_get_section_cluster_kwargs(required_sections, expected_result):
     )
 
     assert expected_result == kwargs
+
+
+def test_check_parsing_errors_no_errors():
+    assert check_parsing_errors(()) == ActiveCheckResult(0, [], (), ())
+
+
+def test_check_parsing_errors_are_ok():
+    assert check_parsing_errors(
+        ("error - message",),
+        error_state=0,
+    ) == ActiveCheckResult(
+        0,
+        ["error"],
+        ("error - message",),
+        (),
+    )
+
+
+def test_check_parsing_errors_with_errors_():
+    assert check_parsing_errors(("error - message",)) == ActiveCheckResult(
+        1,
+        ["error(!)"],
+        ("error - message",),
+        (),
+    )
+    assert check_parsing_errors(
+        ("error - message",),
+        error_state=2,
+    ) == ActiveCheckResult(
+        2,
+        ["error(!!)"],
+        ("error - message",),
+        (),
+    )

@@ -62,7 +62,7 @@ import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import check_sources
+from cmk.base.agent_based.utils import check_sources, check_parsing_errors
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -266,6 +266,9 @@ def _commandline_discovery_on_host(
 
     count = len(service_result.new) if service_result.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} services")
+
+    for detail in check_parsing_errors(parsed_sections_broker.parsing_errors()).details:
+        console.warning(detail)
 
 
 # determine changed services on host.
@@ -541,13 +544,17 @@ def active_check_discovery(
         discovery_mode,
     )
 
+    parsing_errors_result = check_parsing_errors(parsed_sections_broker.parsing_errors())
+
     return ActiveCheckResult.from_subresults(
         services_result,
         host_labels_result,
         *check_sources(source_results=source_results, mode=Mode.DISCOVERY),
+        parsing_errors_result,
         _schedule_rediscovery(
             host_config=host_config,
-            need_rediscovery=services_need_rediscovery or host_labels_need_rediscovery,
+            need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery) and
+            parsing_errors_result.state == 0,
         ),
     )
 
@@ -1132,6 +1139,9 @@ def get_check_preview(
         save_labels=False,
         on_error=on_error,
     )
+
+    for detail in check_parsing_errors(parsed_sections_broker.parsing_errors()).details:
+        console.warning(detail)
 
     grouped_services = _get_host_services(
         host_config,

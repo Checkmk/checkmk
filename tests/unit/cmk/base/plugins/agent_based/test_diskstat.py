@@ -1246,3 +1246,42 @@ def test_cluster_check_diskstat_summary(value_store):
             None,
         ))
     assert results_cluster == results_non_cluster
+
+
+def test_check_latency_calculation(value_store):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            diskstat.check_diskstat(
+                'SUMMARY',
+                {},
+                {
+                    'disk1': {
+                        'timestamp': 5000000,
+                        'average_write_wait': 10000,
+                        'average_read_wait': 20000
+                    },
+                },
+                {},
+            ))
+    results_summary = list(
+        diskstat.check_diskstat(
+            'SUMMARY',
+            {'latency': (3, 5)},
+            {
+                'disk1': {
+                    'timestamp': 10000000,
+                    'average_write_wait': 20000,
+                    'average_read_wait': 40000
+                },
+            },
+            None,
+        ))
+
+    assert results_summary == [
+        Result(state=state.OK, notice='Average read wait: 4 milliseconds'),
+        Metric('disk_average_read_wait', 0.004),
+        Result(state=state.OK, notice='Average write wait: 2 milliseconds'),
+        Metric('disk_average_write_wait', 0.002),
+        Result(state=state.WARN,
+               notice='Latency: 4 milliseconds (warn/crit at 3 milliseconds/5 milliseconds)')
+    ]

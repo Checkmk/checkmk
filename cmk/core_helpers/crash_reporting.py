@@ -22,7 +22,7 @@ CrashReportStore = crash_reporting.CrashReportStore
 
 
 def create_fetcher_crash_dump(
-    serial: ConfigSerial,
+    serial: Optional[ConfigSerial],
     host: Optional[HostName],
 ) -> str:
     """Create a crash dump from an exception occured during fetcher execution
@@ -55,7 +55,7 @@ class CMKFetcherCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def from_exception_and_context(
         cls,
-        serial: ConfigSerial,
+        serial: Optional[ConfigSerial],
         host: Optional[HostName],
     ) -> crash_reporting.ABCCrashReport:
         return super(CMKFetcherCrashReport, cls).from_exception(details={

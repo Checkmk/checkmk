@@ -105,7 +105,7 @@ class Command(NamedTuple):
 
 def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
     with _confirm_command_processed():
-        serial: ConfigSerial = ConfigSerial("")
+        serial: Optional[ConfigSerial] = None
         host_name: Optional[HostName] = None
         try:
             command = Command.from_str(raw_command)
@@ -117,7 +117,7 @@ def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
             run_fetchers(**command._asdict())
             observer.check_resources(raw_command)
         except Exception as e:
-            crash_info = create_fetcher_crash_dump(serial=serial, host=host_name)
+            crash_info = create_fetcher_crash_dump(serial, host_name)
             logger.critical("Exception is '%s' (%s)", e, crash_info)
             sys.exit(15)
 

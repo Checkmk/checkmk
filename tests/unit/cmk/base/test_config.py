@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 from six import ensure_str
@@ -23,12 +23,12 @@ from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceTyp
 
 from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL
 
-import cmk.base.config as config
-from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
+from cmk.base.check_utils import Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -2114,7 +2114,7 @@ def test_save_packed_config(monkeypatch, serial):
 
 
 def test_load_packed_config(serial):
-    config.PackedConfigStore(serial).write({"abc": 1})
+    config.PackedConfigStore.from_serial(serial).write({"abc": 1})
 
     assert "abc" not in config.__dict__
     config.load_packed_config(serial)
@@ -2126,15 +2126,15 @@ def test_load_packed_config(serial):
 class TestPackedConfigStore:
     @pytest.fixture()
     def store(self, serial):
-        return config.PackedConfigStore(serial)
+        return config.PackedConfigStore.from_serial(serial)
 
     def test_latest_serial_path(self):
-        store = config.PackedConfigStore(serial=LATEST_SERIAL)
+        store = config.PackedConfigStore.from_serial(LATEST_SERIAL)
         assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
                                   "precompiled_check_config.mk")
 
     def test_given_serial_path(self):
-        store = config.PackedConfigStore(serial=ConfigSerial("42"))
+        store = config.PackedConfigStore.from_serial(ConfigSerial("42"))
         assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "42",
                                   "precompiled_check_config.mk")
 

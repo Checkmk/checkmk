@@ -272,7 +272,7 @@ def load_packed_config(serial: OptionalConfigSerial) -> None:
     The validations which are performed during load() also don't need to be performed.
     """
     _initialize_config()
-    globals().update(PackedConfigStore(serial).read())
+    globals().update(PackedConfigStore.from_serial(serial).read())
     _perform_post_config_loading_actions()
 
 
@@ -617,7 +617,7 @@ def all_nonfunction_vars() -> Set[str]:
 
 def save_packed_config(serial: OptionalConfigSerial, config_cache: "ConfigCache") -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
-    PackedConfigStore(serial).write(PackedConfigGenerator(config_cache).generate())
+    PackedConfigStore.from_serial(serial).write(PackedConfigGenerator(config_cache).generate())
 
 
 class PackedConfigGenerator:
@@ -743,9 +743,13 @@ class PackedConfigGenerator:
 
 class PackedConfigStore:
     """Caring about persistence of the packed configuration"""
-    def __init__(self, serial: OptionalConfigSerial) -> None:
-        base_path: Final[Path] = cmk.core_helpers.paths.make_helper_config_path(serial)
-        self.path: Final[Path] = base_path / "precompiled_check_config.mk"
+    def __init__(self, path: Path) -> None:
+        self.path: Final = path
+
+    @classmethod
+    def from_serial(cls, serial: OptionalConfigSerial) -> "PackedConfigStore":
+        return cls(
+            cmk.core_helpers.paths.make_helper_config_path(serial) / "precompiled_check_config.mk")
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

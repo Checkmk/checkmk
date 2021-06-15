@@ -331,9 +331,3 @@ class TestHelperConfig:
         assert cmk.core_helpers.paths.make_helper_config_path(prev_serial).exists()
         assert store.serial_path.exists()
         assert store.latest_path.resolve() == store.serial_path
-
-
-def test_next_helper_config_serial():
-    assert core_config.next_helper_config_serial() == ConfigSerial("1")
-    assert core_config.next_helper_config_serial() == ConfigSerial("2")
-    assert core_config.next_helper_config_serial() == ConfigSerial("3")

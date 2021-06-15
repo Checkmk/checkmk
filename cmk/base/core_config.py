@@ -43,7 +43,12 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL, next_helper_config_serial
+from cmk.core_helpers.paths import (
+    ConfigSerial,
+    current_helper_config_serial,
+    LATEST_SERIAL,
+    next_helper_config_serial,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -392,8 +397,8 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
-    with HelperConfig(
-            next_helper_config_serial()).create() as helper_config, _backup_objects_file(core):
+    with HelperConfig(next_helper_config_serial(
+            current_helper_config_serial())).create() as helper_config, _backup_objects_file(core):
         core.create_config(helper_config.serial)
 
     cmk.utils.password_store.save(config.stored_passwords)

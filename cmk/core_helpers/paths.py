@@ -36,7 +36,7 @@ def current_helper_config_serial() -> ConfigSerial:
     return ConfigSerial(str(serial))
 
 
-def next_helper_config_serial() -> ConfigSerial:
+def next_helper_config_serial(serial: ConfigSerial) -> ConfigSerial:
     """Acquire and return the next helper config serial
 
     This ID is used to identify a core helper configuration generation. It is used to store the
@@ -44,14 +44,12 @@ def next_helper_config_serial() -> ConfigSerial:
     be unique compared to all currently known serials (the ones that exist in the directory
     mentioned above).
     """
-    serial = int(current_helper_config_serial())
-    serial += 1
-
+    int_serial: Final = int(serial) + 1
     store.save_object_to_file(
         cmk.utils.paths.core_helper_config_dir / "serial.mk",
-        serial,
+        int_serial,
     )
-    return ConfigSerial(str(serial))
+    return ConfigSerial(str(int_serial))
 
 
 def make_helper_config_path(serial: OptionalConfigSerial) -> Path:

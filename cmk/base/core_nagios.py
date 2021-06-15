@@ -1077,7 +1077,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
-    output.write("from cmk.utils.type_defs import LATEST_SERIAL\n")
+    output.write("from cmk.core_helpers.paths import LATEST_SERIAL\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")

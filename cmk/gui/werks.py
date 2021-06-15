@@ -599,7 +599,7 @@ def _default_werk_table_options():
         name: default_value  #
         for name, _height, _vs, default_value in _werk_table_option_entries()
     }
-    werk_table_options["date_range"] = (1, time.time())
+    werk_table_options["date_range"] = (1, int(time.time()))
     werk_table_options["compatibility"] = ["incomp_unack"]
     return werk_table_options
 

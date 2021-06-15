@@ -4051,7 +4051,7 @@ TimerangeValue = Union[None, int, str, _Tuple[str, Any]]  # TODO: Be more specif
 
 
 class ComputedTimerange(NamedTuple):
-    range: _Tuple[float, float]
+    range: _Tuple[int, int]
     title: str
 
 
@@ -4208,7 +4208,7 @@ class Timerange(CascadingDropdown):
             if day_id == 'l1':
                 from_time = TimeHelper.add(from_time, -1, 'd')
             end_time = TimeHelper.add(from_time, 1, 'd')
-            return ComputedTimerange((from_time, end_time),
+            return ComputedTimerange((int(from_time), int(end_time)),
                                      time.strftime("%d/%m/%Y", time.localtime(from_time)))
 
         def _fixed_dates(rangespec: _Tuple[str, _Tuple[float, float]]) -> ComputedTimerange:
@@ -4219,7 +4219,8 @@ class Timerange(CascadingDropdown):
             if rangespec[0] == 'date':
                 # This includes the end day
                 until_time = TimeHelper.add(until_time, 1, 'd')
-            return ComputedTimerange((from_time, until_time), _date_span(from_time, until_time))
+            return ComputedTimerange((int(from_time), int(until_time)),
+                                     _date_span(from_time, until_time))
 
         if rangespec is None:
             rangespec = "4h"
@@ -4241,14 +4242,14 @@ class Timerange(CascadingDropdown):
         if isinstance(rangespec, tuple):
             if rangespec[0] == 'age':
                 title = _("The last ") + Age().value_to_text(rangespec[1])
-                return ComputedTimerange((now - rangespec[1], now), title)
-            if rangespec[0] == 'next':
+                return ComputedTimerange((int(now - rangespec[1]), int(now)), title)
+            if isinstance(rangespec, tuple) and rangespec[0] == 'next':
                 title = _("The next ") + Age().value_to_text(rangespec[1])
-                return ComputedTimerange((now, now + rangespec[1]), title)
-            if rangespec[0] == 'until':
-                return ComputedTimerange((now, rangespec[1]),
+                return ComputedTimerange((int(now), int(now + rangespec[1])), title)
+            if isinstance(rangespec, tuple) and rangespec[0] == 'until':
+                return ComputedTimerange((int(now), int(rangespec[1])),
                                          AbsoluteDate().value_to_text(rangespec[1]))
-            if rangespec[0] in ['date', 'time']:
+            if isinstance(rangespec, tuple) and rangespec[0] in ['date', 'time']:
                 return _fixed_dates(rangespec)
 
             raise NotImplementedError()
@@ -4260,7 +4261,7 @@ class Timerange(CascadingDropdown):
             from_time = TimeHelper.add(now, count * -1, rangespec[-1])
             unit_name = {'d': "days", 'h': "hours"}[rangespec[-1]]
             title = _("Last %d %s") % (count, unit_name)
-            return ComputedTimerange((from_time, now), title)
+            return ComputedTimerange((int(from_time), int(now)), title)
 
         if rangespec in ['f0', 'f1', 'l1']:
             return _month_edge_days(now, rangespec)
@@ -4277,7 +4278,7 @@ class Timerange(CascadingDropdown):
         }[rangespec[0]]
 
         if rangespec[1] == '0':
-            return ComputedTimerange((from_time, now), titles[0])
+            return ComputedTimerange((int(from_time), int(now)), titles[0])
 
         # last (previous)
         span = int(rangespec[1:])
@@ -4287,7 +4288,7 @@ class Timerange(CascadingDropdown):
             end_time = TimeHelper.add(prev_time, 1, rangespec[0])
             assert isinstance(titles[1], str)
             title = _date_span(prev_time, end_time) if span > 1 else titles[1]
-            return ComputedTimerange((prev_time, end_time), title)
+            return ComputedTimerange((int(prev_time), int(end_time)), title)
 
         # This only works for Months, but those are the only defaults in Forecast Graphs
         # Language localization to system language not CMK GUI language
@@ -4300,7 +4301,7 @@ class Timerange(CascadingDropdown):
         if rangespec[0] == "y":
             prev_time_str = time.strftime("%Y", time.localtime(prev_time))
 
-        return ComputedTimerange((prev_time, from_time), titles[1] or prev_time_str)
+        return ComputedTimerange((int(prev_time), int(from_time)), titles[1] or prev_time_str)
 
 
 # TODO: Cleanup kwargs

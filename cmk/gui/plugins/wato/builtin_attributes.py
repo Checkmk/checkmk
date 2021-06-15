@@ -13,6 +13,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui import fields
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.fields import validators
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -131,7 +132,10 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def openapi_field(self) -> fields.Field:
         return fields.String(
             description="An IPv4 address.",
-            validate=fields.ValidateIPv4(),
+            validate=validators.ValidateAnyOfValidators([
+                fields.ValidateIPv4(),
+                validators.ValidateHostName(),
+            ]),
         )
 
 
@@ -216,7 +220,10 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> fields.Field:
         return fields.List(
-            fields.String(validate=fields.ValidateIPv4()),
+            fields.String(validate=validators.ValidateAnyOfValidators([
+                fields.ValidateIPv4(),
+                validators.ValidateHostName(),
+            ])),
             description="A list of IPv4 addresses.",
         )
 

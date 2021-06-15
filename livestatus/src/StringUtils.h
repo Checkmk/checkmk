@@ -61,7 +61,11 @@ inline std::string strip(const std::string &str) {
     return strip(str, whitespace);
 }
 
-std::string escape_nonprintable(std::string_view buffer);
+struct escape_nonprintable {
+    const std::string_view buffer;
+};
+
+std::ostream &operator<<(std::ostream &os, const escape_nonprintable &enp);
 
 std::pair<std::string, std::string> nextField(const std::string &str,
                                               const std::string &chars);

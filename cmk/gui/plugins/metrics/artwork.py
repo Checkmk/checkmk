@@ -198,6 +198,13 @@ def layout_graph_curves(curves):
         if curve.get("dont_paint"):
             continue
 
+        line_type = curve["line_type"]
+        raw_points = halfstep_interpolation(curve["rrddata"])
+
+        if line_type == "ref":  # Only for forecast graphs
+            stacks[1] = raw_points
+            continue
+
         layouted_curve = {
             "color": curve["color"],
             "title": curve["title"],
@@ -205,8 +212,6 @@ def layout_graph_curves(curves):
         }
         layouted_curves.append(layouted_curve)
 
-        line_type = curve["line_type"]
-        raw_points = halfstep_interpolation(curve["rrddata"])
         if line_type[0] == '-':
             raw_points = list(map(mirror_point, raw_points))
             line_type = line_type[1:]

@@ -9,6 +9,8 @@ import re
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
+HOST_NAME_REGEXP = r'[-0-9a-zA-Z_.]+'
+
 
 class ValidateIPv4(Validator):
     def __call__(self, value):
@@ -139,3 +141,14 @@ class IsValidRegexp(Validator):
             re.compile(value)
         except re.error as exc:
             raise ValidationError(str(exc)) from exc
+
+
+HOST_NAME_RE = re.compile(f"^{HOST_NAME_REGEXP}$")
+
+
+class ValidateHostName:
+    def __call__(self, value, **kwargs):
+        if HOST_NAME_RE.match(value):
+            return True
+
+        raise ValidationError(f"Hostname {value!r} doesn't match pattern '^{HOST_NAME_REGEXP}$'")

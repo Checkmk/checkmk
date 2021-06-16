@@ -12,7 +12,7 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Dict as _Dict, Tuple, Callable, Optional
+from typing import Dict as _Dict, Tuple, Callable, Optional, List, Literal
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
@@ -24,6 +24,8 @@ from cmk.gui.view_utils import get_themed_perfometer_bg_color
 from cmk.gui.type_defs import Perfdata, Row
 
 from cmk.utils.plugin_loader import load_plugins
+
+PerfometerData = List[Tuple[float, str]]
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -54,7 +56,7 @@ perfometers: _Dict[str, Callable[[Row, str, Perfdata], LegacyPerfometerResult]] 
 
 
 #helper function for perfometer tables
-def render_perfometer_td(perc, color) -> HTML:
+def render_perfometer_td(perc: float, color: str) -> HTML:
     # the hex color can have additional information about opacity
     # internet explorer has problems with the format of rgba, e.g.: #aaaaaa4d
     # the solution is to set the background-color value to rgb ('#aaaaaa')
@@ -72,19 +74,19 @@ def render_perfometer_td(perc, color) -> HTML:
 
 # render the perfometer table
 # data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
-def render_perfometer(data) -> HTML:
+def render_perfometer(data: PerfometerData) -> HTML:
     tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
     return html.render_table(html.render_tr(tds))
 
 
 # Paint linear performeter with one value
-def perfometer_linear(perc, color) -> HTML:
+def perfometer_linear(perc: float, color: str) -> HTML:
     return render_perfometer([(perc, color), (100 - perc, get_themed_perfometer_bg_color())])
 
 
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
-def perfometer_logarithmic(value, half_value, base, color) -> HTML:
+def perfometer_logarithmic(value: float, half_value: float, base: float, color: str) -> HTML:
     return render_metricometer([
         metrics.MetricometerRendererLogarithmic.get_stack_from_values(value, half_value, base,
                                                                       color)
@@ -92,7 +94,8 @@ def perfometer_logarithmic(value, half_value, base, color) -> HTML:
 
 
 # prepare the rows for logarithmic perfometers (left or right)
-def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base):
+def calculate_half_row_logarithmic(left_or_right: Literal["left", "right"], value: float,
+                                   color: str, half_value: float, base: float) -> PerfometerData:
     value = float(value)
 
     if value == 0.0:
@@ -108,16 +111,19 @@ def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base
 
 
 # Dual logarithmic Perf-O-Meter
-def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
-    data = []
+def perfometer_logarithmic_dual(value_left: float, color_left: str, value_right: float,
+                                color_right: str, half_value: float, base: float) -> HTML:
+    data: PerfometerData = []
     data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value, base))
     data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value, base))
     return render_perfometer(data)
 
 
-def perfometer_logarithmic_dual_independent(value_left, color_left, half_value_left, base_left,
-                                            value_right, color_right, half_value_right, base_right):
-    data = []
+def perfometer_logarithmic_dual_independent(value_left: float, color_left: str,
+                                            half_value_left: float, base_left: float,
+                                            value_right: float, color_right: str,
+                                            half_value_right: float, base_right: float) -> HTML:
+    data: PerfometerData = []
     data.extend(
         calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
     data.extend(

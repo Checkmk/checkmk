@@ -36,7 +36,19 @@ _A_HREF = re.compile(
 )
 
 
+def escape_html(value: str) -> HTML:
+    """Escape HTML and return as HTML object"""
+    return HTML(html_escape(value))
+
+
+def escape_html_permissive(value: str) -> HTML:
+    """Escape HTML in permissive mode (keep simple markup tags) and return as HTML object"""
+    return HTML(escape_text(value))
+
+
 # TODO: Cleanup the accepted types!
+# TODO: The name of the function is missleading. This does not care about HTML tag attribute
+# escaping.
 def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 

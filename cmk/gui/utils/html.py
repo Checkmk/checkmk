@@ -33,7 +33,7 @@ class HTML:
         return value if isinstance(value, str) else str(value)
 
     def __html__(self) -> str:
-        return "%s" % self
+        return "%s" % self.value
 
     def __str__(self) -> str:
         return self.value

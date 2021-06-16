@@ -12,10 +12,7 @@ from cmk.gui.utils.html import HTML
 
 
 @pytest.mark.parametrize("value", [
-    None,
     "",
-    123,
-    123.4,
     "one",
     "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
 ])

@@ -6,7 +6,7 @@
 
 from typing import Union, Any, Iterable
 
-HTMLInput = Union["HTML", int, float, None, str]
+HTMLInput = Union["HTML", str]
 
 
 # TODO: In case one tries to __add__ or __iadd__ a str to a HTML object, this should fail by default
@@ -23,7 +23,10 @@ class HTML:
     to print out HTML tables in messages or help texts.
     """
     def __init__(self, value: HTMLInput = "") -> None:
-        super(HTML, self).__init__()
+        # Type hints are not used everywhere. So better be sure that we really have
+        # the types we want.
+        assert value is not None
+        assert not isinstance(value, (float, int))
         self.value = self._ensure_str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:

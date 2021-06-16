@@ -30,7 +30,7 @@ import cmk.gui.view_utils
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, g, request, theme, output_funnel
-from cmk.gui.htmllib import HTML, HTMLContent
+from cmk.gui.htmllib import HTML
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -631,12 +631,12 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
             html.close_span()
 
-        output: HTMLContent = cmk.gui.view_utils.format_plugin_output(
+        output: HTML = cmk.gui.view_utils.format_plugin_output(
             effective_state["output"], shall_escape=config.escape_plugin_output)
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
-            output = ""
+            output = HTML()
 
         html.span(output, class_=["content", "output"])
 

@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import html
 from typing import Union, Any, Iterable
 
 HTMLInput = Union["HTML", str]
@@ -27,10 +30,10 @@ class HTML:
         # the types we want.
         assert value is not None
         assert not isinstance(value, (float, int))
-        self.value = self._ensure_str(value)
+        self.value = value if isinstance(value, str) else str(value)
 
     def _ensure_str(self, value: HTMLInput) -> str:
-        return value if isinstance(value, str) else str(value)
+        return html.escape(value) if isinstance(value, str) else str(value)
 
     def __str__(self) -> str:
         return self.value

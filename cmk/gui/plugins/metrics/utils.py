@@ -48,7 +48,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Choices, RenderableRecipe, Row
+from cmk.gui.type_defs import Choices, RenderableRecipe, Row, Perfdata, TranslatedMetrics
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
@@ -57,7 +57,6 @@ from cmk.gui.valuespec import (
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
-TranslatedMetrics = Dict[str, Dict[str, Any]]
 Atom = TypeVar('Atom')
 TransformedAtom = TypeVar('TransformedAtom')
 StackElement = Union[Atom, TransformedAtom]
@@ -190,25 +189,35 @@ def indexed_color(idx, total):
     return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
 
 
-def parse_perf_values(data_str):
+def parse_perf_values(
+    data_str: str
+) -> Tuple[str, str, Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]]:
     "convert perf str into a tuple with values"
     varname, values = data_str.split("=", 1)
     varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
 
     value_parts = values.split(";")
-    while len(value_parts) < 5:
-        value_parts.append(None)
+    value = value_parts.pop(0)
 
-    return varname, value_parts[0], value_parts[1:]
+    # Optional warn, crit, min, max fields
+    num_fields = len(value_parts)
+    other_parts = (
+        value_parts[0] if num_fields > 0 else None,
+        value_parts[1] if num_fields > 1 else None,
+        value_parts[2] if num_fields > 2 else None,
+        value_parts[3] if num_fields > 3 else None,
+    )
+
+    return varname, value, other_parts
 
 
-def split_unit(value_text):
+def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
     "separate value from unit"
 
     if not value_text.strip():
         return None, None
 
-    def digit_unit_split(value_text):
+    def digit_unit_split(value_text: str) -> int:
         for i, char in enumerate(value_text):
             if char not in '0123456789.,-':
                 return i
@@ -223,7 +232,8 @@ def split_unit(value_text):
     return None, unit_name
 
 
-def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) -> Tuple[List, str]:
+def parse_perf_data(perf_data_string: str,
+                    check_command: Optional[str] = None) -> Tuple[Perfdata, str]:
     """ Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
@@ -243,18 +253,25 @@ def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) 
     check_command = check_command.replace(".", "_")  # see function maincheckify
 
     # Parse performance data, at least try
-    perf_data = []
+    perf_data: Perfdata = []
 
     for part in parts:
         try:
             varname, value_text, value_parts = parse_perf_values(part)
 
             value, unit_name = split_unit(value_text)
-            if value is None:
+            if value is None or unit_name is None:
                 continue  # ignore useless empty variable
 
-            perf_data_tuple = (varname, value, unit_name) + tuple(map(_float_or_int, value_parts))
-            perf_data.append(perf_data_tuple)
+            perf_data.append((
+                varname,
+                value,
+                unit_name,
+                _float_or_int(value_parts[0]),
+                _float_or_int(value_parts[1]),
+                _float_or_int(value_parts[2]),
+                _float_or_int(value_parts[3]),
+            ))
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
             if config.debug:
@@ -263,7 +280,7 @@ def parse_perf_data(perf_data_string: str, check_command: Optional[str] = None) 
     return perf_data, check_command
 
 
-def _float_or_int(val):
+def _float_or_int(val: Optional[str]) -> Optional[float]:
     """"45.0" -> 45.0, "45" -> 45"""
     if val is None:
         return None
@@ -347,7 +364,7 @@ def get_metric_info(metric_name, color_index):
     return mi, color_index
 
 
-def translate_metrics(perf_data: List[Tuple], check_command: str) -> TranslatedMetrics:
+def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetrics:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -1157,7 +1174,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         def metrics():
             options = set(find_host_services(params.get("host", ""), params.get("service", "")))
-            for _, check_command, metrics in options:
+            for _unused, check_command, metrics in options:
                 yield from metric_choices(check_command, metrics)
 
         if not params.get("host") and not params.get("service"):

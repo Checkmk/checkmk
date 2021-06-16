@@ -197,6 +197,10 @@ SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
+TranslatedMetrics = Dict[str, Dict[str, Any]]
+PerfdataTuple = Tuple[str, float, str, Optional[float], Optional[float], Optional[float],
+                      Optional[float]]
+Perfdata = List[PerfdataTuple]
 
 
 class RenderableRecipe(NamedTuple):

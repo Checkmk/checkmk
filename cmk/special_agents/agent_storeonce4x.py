@@ -74,7 +74,8 @@ class StoreOnceOauth2Session(Requester):
                 client=self._client,
                 auto_refresh_url="https://%s:%s%s" %
                 (self._host, self._port, self._refresh_endpoint),
-                token_updater=self.store_token_file_and_update_expires_in_abs,
+                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
+                    to_token_dict(x)),
                 token={
                     "access_token": self._json_token["access_token"],
                     "refresh_token": self._json_token["refresh_token"],
@@ -87,7 +88,8 @@ class StoreOnceOauth2Session(Requester):
                 client=self._client,
                 auto_refresh_url="https://%s:%s%s" %
                 (self._host, self._port, self._refresh_endpoint),
-                token_updater=self.store_token_file_and_update_expires_in_abs)
+                token_updater=lambda x: self.store_token_file_and_update_expires_in_abs(
+                    to_token_dict(x)))
             # Fetch token
             token_dict = to_token_dict(
                 self._oauth_session.fetch_token(

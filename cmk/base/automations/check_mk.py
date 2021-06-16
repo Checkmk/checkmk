@@ -872,6 +872,8 @@ class AutomationRestart(Automation):
                 local_checks_dir,
                 local_agent_based_plugins_dir,
         ]:
+            if not checks_path.exists():
+                continue
             this_time = self._last_modification_in_dir(checks_path)
             if this_time > last_time:
                 return True

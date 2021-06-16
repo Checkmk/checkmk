@@ -33,6 +33,7 @@ from cmk.gui.plugins.views import (
     CellSpec,
     Perfdata,
     TranslatedMetrics,
+    PerfometerSpec,
 )
 
 from cmk.gui.plugins.views.graphs import cmk_graph_url
@@ -102,7 +103,7 @@ class Perfometer:
 
         return title, h
 
-    def sort_value(self):
+    def sort_value(self) -> Tuple[Optional[int], Optional[int]]:
         """Calculates a value that is used for sorting perfometers
 
         - First sort by the perfometer group / id
@@ -111,7 +112,7 @@ class Perfometer:
         """
         return self._get_sort_group(), self._get_sort_number()
 
-    def _get_sort_group(self):
+    def _get_sort_group(self) -> Optional[int]:
         """First sort by the optional performeter group or the perfometer id. The perfometer
           group is used to group different perfometers in a single sort domain
         """
@@ -129,7 +130,7 @@ class Perfometer:
         perf_painter_func = perfometers[self._check_command]
         return id(perf_painter_func)
 
-    def _get_metrics_sort_group(self):
+    def _get_metrics_sort_group(self) -> Optional[int]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -139,7 +140,7 @@ class Perfometer:
         # can use the id() of the perfometer_definition here.
         return perfometer_definition.get("sort_group", id(perfometer_definition))
 
-    def _get_sort_number(self):
+    def _get_sort_number(self) -> Optional[int]:
         """Calculate the sort value for this perfometer
         - The second sort criteria is a number that is calculated for each perfometer. The
           calculation of this number depends on the perfometer type:
@@ -161,7 +162,7 @@ class Perfometer:
         # TODO: Fallback to legacy perfometer number calculation
         return None
 
-    def _get_metrics_sort_number(self):
+    def _get_metrics_sort_number(self) -> Optional[int]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -170,7 +171,8 @@ class Perfometer:
                                                           self._translated_metrics)
         return renderer.get_sort_number()
 
-    def _get_perfometer_definition(self, translated_metrics):
+    def _get_perfometer_definition(
+            self, translated_metrics: TranslatedMetrics) -> Optional[PerfometerSpec]:
         """Returns the matching perfometer definition
 
         Uses the metrics of the current row to gather perfometers that can be
@@ -181,11 +183,11 @@ class Perfometer:
         """
         perfometer_definitions = metrics.Perfometers().get_matching_perfometers(translated_metrics)
         if not perfometer_definitions:
-            return
+            return None
 
         return perfometer_definitions[0]
 
-    def _has_legacy_perfometer(self):
+    def _has_legacy_perfometer(self) -> bool:
         return self._check_command in perfometers
 
 

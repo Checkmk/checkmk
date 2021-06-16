@@ -21,7 +21,7 @@ from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
 )
 
 from cmk.gui.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    Perfdata, TranslatedMetrics,
+    Perfdata, TranslatedMetrics, PerfometerSpec,
 )
 
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import

@@ -35,13 +35,14 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.type_defs import PerfometerSpec
 # Needed for legacy (pre 1.6) plugins and for cross-module imports (e.g. in dashboards plugin)
 from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
     check_metrics, darken_color, evaluate, G, GB, generic_graph_template, get_graph_range,
     get_graph_templates, get_palette_color_by_index, graph_info, hsv_to_hexrgb, indexed_color, K,
     KB, LegacyPerfometer, m, M, MAX_CORES, MB, metric_info, P, parse_color, parse_color_into_hexrgb,
-    parse_perf_data, PB, Perfometer, perfometer_info, perfvar_translation, render_color,
-    render_color_icon, replace_expressions, scalar_colors, scale_symbols, T, TB, translate_metrics,
+    parse_perf_data, PB, perfometer_info, perfvar_translation, render_color, render_color_icon,
+    replace_expressions, scalar_colors, scale_symbols, T, TB, translate_metrics,
     translated_metrics_from_row, TranslatedMetrics, unit_info,
 )
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -99,7 +100,7 @@ def fixup_perfometer_info() -> None:
 # All shipped perfometers have been converted to the dict format with 1.5.0i3.
 # TODO: Remove this one day.
 def _convert_legacy_tuple_perfometers(
-        perfometers: List[Union[LegacyPerfometer, Perfometer]]) -> None:
+        perfometers: List[Union[LegacyPerfometer, PerfometerSpec]]) -> None:
     for index, perfometer in reversed(list(enumerate(perfometers))):
         if isinstance(perfometer, dict):
             continue
@@ -136,7 +137,7 @@ def _convert_legacy_tuple_perfometers(
 
 
 def _lookup_required_expressions(
-        perfometer: Union[LegacyPerfometer, Perfometer]) -> List[PerfometerExpression]:
+        perfometer: Union[LegacyPerfometer, PerfometerSpec]) -> List[PerfometerExpression]:
 
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
@@ -151,7 +152,7 @@ def _lookup_required_expressions(
 
 
 def _lookup_required_names(
-        perfometer: Union[LegacyPerfometer, Perfometer]) -> Optional[RequiredMetricNames]:
+        perfometer: Union[LegacyPerfometer, PerfometerSpec]) -> Optional[RequiredMetricNames]:
 
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
@@ -169,7 +170,7 @@ def _lookup_required_names(
     )
 
 
-def _perfometer_expressions(perfometer: Perfometer) -> List[PerfometerExpression]:
+def _perfometer_expressions(perfometer: PerfometerSpec) -> List[PerfometerExpression]:
     """Returns all metric expressions of a perfometer
     This is used for checking which perfometer can be displayed for a given service later.
     """
@@ -279,7 +280,8 @@ def translate_perf_data(perf_data_string: str,
 
 
 class Perfometers:
-    def get_matching_perfometers(self, translated_metrics: TranslatedMetrics) -> List[Perfometer]:
+    def get_matching_perfometers(self,
+                                 translated_metrics: TranslatedMetrics) -> List[PerfometerSpec]:
         perfometers = []
         for perfometer in perfometer_info:
             if not isinstance(perfometer, dict):
@@ -288,7 +290,7 @@ class Perfometers:
                 perfometers.append(perfometer)
         return perfometers
 
-    def _perfometer_possible(self, perfometer: Perfometer,
+    def _perfometer_possible(self, perfometer: PerfometerSpec,
                              translated_metrics: TranslatedMetrics) -> bool:
         if not translated_metrics:
             return False
@@ -363,7 +365,7 @@ class MetricometerRenderer(metaclass=abc.ABCMeta):
     def type_name(cls) -> str:
         raise NotImplementedError()
 
-    def __init__(self, perfometer: Perfometer, translated_metrics: TranslatedMetrics) -> None:
+    def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
         super(MetricometerRenderer, self).__init__()
         self._perfometer = perfometer
         self._translated_metrics = translated_metrics
@@ -413,7 +415,8 @@ class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[Type[Metri
     def plugin_name(self, instance):
         return instance.type_name()
 
-    def get_renderer(self, perfometer, translated_metrics):
+    def get_renderer(self, perfometer: PerfometerSpec,
+                     translated_metrics: TranslatedMetrics) -> MetricometerRenderer:
         subclass = self[perfometer["type"]]
         return subclass(perfometer, translated_metrics)
 
@@ -427,7 +430,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
     def type_name(cls) -> str:
         return "logarithmic"
 
-    def __init__(self, perfometer: Perfometer, translated_metrics: TranslatedMetrics) -> None:
+    def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
         super(MetricometerRendererLogarithmic, self).__init__(perfometer, translated_metrics)
 
         if self._perfometer is not None and "metric" not in self._perfometer:

@@ -198,6 +198,7 @@ SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, Dict[str, Any]]
+PerfometerSpec = Dict[str, Any]
 PerfdataTuple = Tuple[str, float, str, Optional[float], Optional[float], Optional[float],
                       Optional[float]]
 Perfdata = List[PerfdataTuple]

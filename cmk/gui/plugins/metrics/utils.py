@@ -48,7 +48,14 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Choices, RenderableRecipe, Row, Perfdata, TranslatedMetrics
+from cmk.gui.type_defs import (
+    Choices,
+    RenderableRecipe,
+    Row,
+    Perfdata,
+    TranslatedMetrics,
+    PerfometerSpec,
+)
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
@@ -56,7 +63,6 @@ from cmk.gui.valuespec import (
 )
 
 LegacyPerfometer = Tuple[str, Any]
-Perfometer = Dict[str, Any]
 Atom = TypeVar('Atom')
 TransformedAtom = TypeVar('TransformedAtom')
 StackElement = Union[Atom, TransformedAtom]
@@ -81,7 +87,7 @@ class AutomaticDict(OrderedDict):
 unit_info: Dict[str, Any] = {}
 metric_info: Dict[str, Dict[str, Any]] = {}
 check_metrics: Dict[str, Dict[str, Any]] = {}
-perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
+perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")

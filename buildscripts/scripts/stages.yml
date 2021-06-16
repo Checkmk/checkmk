@@ -114,10 +114,10 @@ STAGES:
       COMMAND: "make test-agent-plugin-docker"
       TEXT_ON_SKIP: 'No agent files changed'
 
-    - NAME: 'NEB/CMC Compile'
+    - NAME: 'NEB/CMC Compile (neb-cmc-compile.txt)'
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
 
-    - NAME: 'Cppcheck Livestatus'
+    - NAME: 'Cppcheck Livestatus (cppcheck-neb.xml)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -125,7 +125,7 @@ STAGES:
       COMMAND: "make test-cppcheck-livestatus-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'Cppcheck core'
+    - NAME: 'Cppcheck core (cppcheck-cmc.xml)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -133,7 +133,7 @@ STAGES:
       COMMAND: "make test-cppcheck-core-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'Clang Tidy Livestatus'
+    - NAME: 'Clang Tidy Livestatus (livestatus-tidy.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -142,7 +142,7 @@ STAGES:
       COMMAND: "make test-tidy-livestatus-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'Clang Tidy core'
+    - NAME: 'Clang Tidy core (core-tidy.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -151,7 +151,7 @@ STAGES:
       COMMAND: "make test-tidy-core-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'IWYU Livestatus'
+    - NAME: 'IWYU Livestatus (livestatus-iwyu.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -160,7 +160,7 @@ STAGES:
       COMMAND: "make test-iwyu-livestatus-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'IWYU core'
+    - NAME: 'IWYU core (core-iwyu.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -169,7 +169,7 @@ STAGES:
       COMMAND: "make test-iwyu-core-docker"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'Unit Test Livestatus'
+    - NAME: 'Unit Test Livestatus (livestatus-neb-cmc.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'livestatus/src/test'
       ENV_VARS:
@@ -177,7 +177,7 @@ STAGES:
       COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
       TEXT_ON_SKIP: 'No core files changed'
 
-    - NAME: 'Unit Test core'
+    - NAME: 'Unit Test core (core-neb-cmc.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'enterprise/core/src/test'
       ENV_VARS:

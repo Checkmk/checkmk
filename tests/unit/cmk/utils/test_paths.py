@@ -9,6 +9,10 @@ from pathlib import Path
 
 from testlib import import_module, repo_path
 
+system_paths = [
+    "mkbackup_lock_dir",
+]
+
 pathlib_paths = [
     "core_helper_config_dir",
     "base_discovered_host_labels_dir",
@@ -55,6 +59,9 @@ def _check_paths(root, module):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)
+            elif var in system_paths:
+                assert isinstance(value, Path)
+                assert str(value).startswith("/")
             else:
                 assert isinstance(value, str)
                 # TODO: Differentiate in a more clever way between /omd and /opt paths

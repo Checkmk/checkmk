@@ -578,8 +578,8 @@ def _evaluate_literal(
     if isinstance(expression, float):
         return expression, unit_info[""], None
 
-    if expression[0].isdigit() or expression[0] == '-':
-        return float(expression), unit_info[""], None
+    if val := _float_or_int(expression):
+        return val, unit_info[""], None
 
     varname = drop_metric_consolidation_advice(expression)
 

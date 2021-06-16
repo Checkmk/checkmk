@@ -182,6 +182,15 @@ def test_evaluate():
     assert utils.evaluate("fs_size,fs_used,-#e3fff9",
                           translated_metrics) == (6291456, utils.unit_info['bytes'], '#e3fff9')
 
+    # This is a terrible metric from Nagios plugins. Test is for survival instead of correctness
+    # The unit "percent" is lost on the way. Fixing this would imply also figuring out how to represent
+    # graphs for active-icmp check when host has multiple addresses.
+    assert utils.evaluate(
+        '127.0.0.1pl',
+        utils.translate_metrics(
+            utils.parse_perf_data('127.0.0.1pl=5%;80;100;;')[0],
+            "check_mk_active-icmp")) == (5, utils.unit_info[""], '#cc00ff')
+
 
 @pytest.mark.parametrize("elements, is_operator, apply_operator, apply_element, result", [
     pytest.param(["1", "2", "+"],

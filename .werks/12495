@@ -1,0 +1,13 @@
+Title: Fix Graphs when active check ICMP inspects a host with multiple addresses
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1623851873
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p6
+
+Graphs showed an exception. Now the behavior of version 1.6 is restored where
+each metric is plotted in a single graph. Metrics are not aggregated by IP
+address.

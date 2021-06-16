@@ -31,6 +31,7 @@ def _local_path(global_path: Union[str, Path]) -> Path:
 omd_root = _path(os.environ.get("OMD_ROOT", ""))
 opt_root = _path("/opt" + omd_root)
 
+mkbackup_lock_dir = Path("/run/lock/mkbackup")
 default_config_dir = _omd_path("etc/check_mk")
 main_config_file = _omd_path("etc/check_mk/main.mk")
 final_config_file = _omd_path("etc/check_mk/final.mk")

@@ -92,6 +92,8 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ucs_bladecenter_if"): CheckPluginName("interfaces"),
     CheckPluginName("vms_if"): CheckPluginName("interfaces"),
     CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
+    CheckPluginName("cisco_wlc_clients"): CheckPluginName("wlc_clients"),
+    CheckPluginName("aruba_wlc_clients"): CheckPluginName("wlc_clients"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

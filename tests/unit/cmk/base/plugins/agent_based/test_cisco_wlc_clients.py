@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Dict, Tuple, List
+from typing import Optional, List
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
-import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin, StringTable
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.utils.wlc_clients import VsResult, ClientsPerInterface, WlcClientsSection
+from cmk.base.plugins.agent_based.cisco_wlc_clients import parse_cisco_wlc_clients
+from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 
 # raw data looks like this:
 # TODO: we sould use this as test input
@@ -50,50 +51,46 @@ ITEM_RESULT = [
     [
         "Summary",
         [
-            Result(state=State.OK, summary='186 connections'),
+            Result(state=State.OK, summary='Connections: 186'),
             Metric('connections', 186.0),
         ],
     ],
     [
         "corp_internal_003",
         [
-            Result(state=State.OK, summary='3 connections (corp_intern_003: 3)'),
+            Result(state=State.OK, summary='Connections: 3'),
             Metric('connections', 3.0),
+            Result(state=State.OK, summary='(corp_intern_003: 3)'),
         ],
     ],
     [
         "FreePublicWifi",
         [
-            Result(state=State.OK, summary='182 connections (guest1: 0, guest2: 114, guest3: 68)'),
+            Result(state=State.OK, summary='Connections: 182'),
             Metric('connections', 182.0),
+            Result(state=State.OK, summary='(guest1: 0, guest2: 114, guest3: 68)'),
         ],
     ],
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def _run_parse_and_check(
     item: str,
     info: List[StringTable],
-    params: Optional[Dict[str, Tuple[float, float]]] = None,
+    params: Optional[VsResult] = None,
 ):
     if params is None:
         params = {}
-    section = agent_based_register.get_snmp_section_plugin(SectionName('cisco_wlc_clients'))
-    assert isinstance(section, SNMPSectionPlugin)
-    plugin = agent_based_register.get_check_plugin(CheckPluginName('cisco_wlc_clients'))
-    assert plugin
     result = list(
-        plugin.check_function(
+        check_wlc_clients(
             item=item,
             params=params,
-            section=section.parse_function(info),  # type: ignore[arg-type]
+            section=parse_cisco_wlc_clients(info),
         ))
     return result
 
 
 @pytest.mark.parametrize("item, result", ITEM_RESULT)
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_cisco_wlc_clients(item, result):
     assert _run_parse_and_check(item, INFO) == result
 
@@ -116,7 +113,24 @@ PARAM_STATUS = [
 
 
 @pytest.mark.parametrize("param, status", PARAM_STATUS)
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_cisco_wlc_clients_parameter(param, status):
     result = _run_parse_and_check('Summary', INFO, param)
     assert result[0].state == status
+
+
+def test_parse_cisco_wlc_clients():
+    result = parse_cisco_wlc_clients(INFO)
+
+    assert result == WlcClientsSection(
+        total_clients=186,
+        clients_per_ssid={
+            'FreePublicWifi': ClientsPerInterface(per_interface=dict(
+                guest1=0,
+                guest2=114,
+                guest3=68,
+            )),
+            'AnotherWifiSSID': ClientsPerInterface(per_interface=dict(interface_name=0)),
+            'corp_internal_001': ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
+            'corp_internal_003': ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
+        },
+    )

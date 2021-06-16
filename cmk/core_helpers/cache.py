@@ -279,8 +279,8 @@ class FileCache(Generic[TRawData], abc.ABC):
             return False
 
         if self.simulation:
-            self._logger.debug("Not using cache (simulation)")
-            return False
+            self._logger.debug("Using cache (simulation)")
+            return True
 
         if mode in {
                 Mode.NONE,

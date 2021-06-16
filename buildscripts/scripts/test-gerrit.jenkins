@@ -162,7 +162,7 @@ node (NODE) {
         )
 
          gerrit_stages.run(
-            NAME: 'NEB/CMC Compile',
+            NAME: 'NEB/CMC Compile (neb-cmc-compile.txt)',
             CONDITION: true,
             DIR: '',
             ENV_VARS: [],
@@ -171,7 +171,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Cppcheck Livestatus',
+            NAME: 'Cppcheck Livestatus (cppcheck-neb.xml)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["RESULTS=${RESULTS}"],
@@ -180,7 +180,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Cppcheck core',
+            NAME: 'Cppcheck core (cppcheck-cmc.xml)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["RESULTS=${RESULTS}"],
@@ -189,7 +189,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Clang Tidy Livestatus',
+            NAME: 'Clang Tidy Livestatus (livestatus-tidy.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
@@ -198,7 +198,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Clang Tidy core',
+            NAME: 'Clang Tidy core (core-tidy.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
@@ -207,7 +207,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'IWYU Livestatus',
+            NAME: 'IWYU Livestatus (livestatus-iwyu.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
@@ -216,7 +216,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'IWYU core',
+            NAME: 'IWYU core (core-iwyu.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'tests',
             ENV_VARS: ["GERRIT_PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}", "RESULTS=${RESULTS}"],
@@ -225,7 +225,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Unit Test Livestatus',
+            NAME: 'Unit Test Livestatus (livestatus-neb-cmc.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'livestatus/src/test',
             ENV_VARS: ["RESULTS=${RESULTS}"],
@@ -234,7 +234,7 @@ node (NODE) {
          )
 
          gerrit_stages.run(
-            NAME: 'Unit Test core',
+            NAME: 'Unit Test core (core-neb-cmc.txt)',
             CONDITION: CHANGED_CORE_FILES != "",
             DIR: 'enterprise/core/src/test',
             ENV_VARS: ["RESULTS=${RESULTS}"],

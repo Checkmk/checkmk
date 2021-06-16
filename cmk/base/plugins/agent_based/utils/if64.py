@@ -318,8 +318,12 @@ def generic_parse_if64(string_table: List[type_defs.StringByteTable]) -> interfa
     >>> pprint(generic_parse_if64([[
     ... ['2', 'GigabitEthernet1/1', '6', '1000000000', '1', '615170130480', '468482397', '1439303',
     ...  '3279788', '0', '0', '163344362761', '394389414', '54227', '36274', '0', '0', '0',
-    ...  '** Trunk to main switch **', [0, 12, 206, 149, 55, 128]]]]))
-    [Interface(index='2', descr='GigabitEthernet1/1', alias='** Trunk to main switch **', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=778514493241)]
+    ...  '** Trunk to main switch **', [0, 12, 206, 149, 55, 128]],
+    ... ['3', 'Primary Internet connection\\nVLAN 10\\nContact data ISP:\\n', '6', '1000000000', '1',
+    ...  '44357143434', '57785953', '3644158', '0', '0', '0', '43529803172', '51011741', '0', '0',
+    ...  '0', '0', '0', '', [220, 166, 50, 183, 252, 79]]]]))
+    [Interface(index='2', descr='GigabitEthernet1/1', alias='** Trunk to main switch **', type='6', speed=1000000000, oper_status='1', in_octets=615170130480, in_ucast=468482397, in_mcast=1439303, in_bcast=3279788, in_discards=0, in_errors=0, out_octets=163344362761, out_ucast=394389414, out_mcast=54227, out_bcast=36274, out_discards=0, out_errors=0, out_qlen=0, phys_address=[0, 12, 206, 149, 55, 128], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=778514493241),
+     Interface(index='3', descr='Primary Internet connection VLAN 10 Contact data ISP:', alias='', type='6', speed=1000000000, oper_status='1', in_octets=44357143434, in_ucast=57785953, in_mcast=3644158, in_bcast=0, in_discards=0, in_errors=0, out_octets=43529803172, out_ucast=51011741, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address=[220, 166, 50, 183, 252, 79], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=87886946606)]
     """
     return [
         interfaces.Interface(

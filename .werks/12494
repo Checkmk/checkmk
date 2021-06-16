@@ -1,0 +1,15 @@
+Title: Multiline interface descriptions now supported
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1623840864
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p6
+
+Network interfaces that provide multiline descriptions would crash their
+corresponding service. In case that the rule "Network interface and switch port
+discovery" was configured to "use description" for the "appearance of network
+interface", all interfaces of the device stalled and remained on the PENDING
+state. This is now fixed, yet you might need to rediscover your services.

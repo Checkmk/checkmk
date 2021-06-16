@@ -12,7 +12,7 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Dict as _Dict
+from typing import Dict as _Dict, Tuple, Callable, Optional
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
@@ -21,6 +21,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
+from cmk.gui.type_defs import Perfdata, Row
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -34,8 +35,11 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-# TODO: Is this unused?
-perfometers: _Dict = {}
+LegacyPerfometerResult = Optional[Tuple[str, HTML]]
+
+# "Registry" for old perfometers. There are still some left. See:
+# cmk/gui/plugins/views/perfometers/check_mk.py
+perfometers: _Dict[str, Callable[[Row, str, Perfdata], LegacyPerfometerResult]] = {}
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |
@@ -50,7 +54,7 @@ perfometers: _Dict = {}
 
 
 #helper function for perfometer tables
-def render_perfometer_td(perc, color):
+def render_perfometer_td(perc, color) -> HTML:
     # the hex color can have additional information about opacity
     # internet explorer has problems with the format of rgba, e.g.: #aaaaaa4d
     # the solution is to set the background-color value to rgb ('#aaaaaa')
@@ -68,19 +72,19 @@ def render_perfometer_td(perc, color):
 
 # render the perfometer table
 # data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
-def render_perfometer(data):
+def render_perfometer(data) -> HTML:
     tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
     return html.render_table(html.render_tr(tds))
 
 
 # Paint linear performeter with one value
-def perfometer_linear(perc, color):
+def perfometer_linear(perc, color) -> HTML:
     return render_perfometer([(perc, color), (100 - perc, get_themed_perfometer_bg_color())])
 
 
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
-def perfometer_logarithmic(value, half_value, base, color):
+def perfometer_logarithmic(value, half_value, base, color) -> HTML:
     return render_metricometer([
         metrics.MetricometerRendererLogarithmic.get_stack_from_values(value, half_value, base,
                                                                       color)
@@ -136,7 +140,7 @@ def perfometer_logarithmic_dual_independent(value_left, color_left, half_value_l
 
 
 # Create HTML representation of Perf-O-Meter
-def render_metricometer(stack):
+def render_metricometer(stack) -> HTML:
     if len(stack) not in (1, 2):
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)

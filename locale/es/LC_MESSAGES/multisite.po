@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-06-14 20:34+0000\n"
+"PO-Revision-Date: 2021-06-16 06:00+0000\n"
 "Last-Translator: Pablo Mazzú <pmazzu@gmail.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
@@ -2406,9 +2406,8 @@ msgstr ""
 "Clave API a utilizar. Dependiendo de su suscripción a opsgenie puede "
 "utilizar claves api de integración global o de equipo."
 
-#, fuzzy
 msgid "API host"
-msgstr "Añadir anfitrión"
+msgstr "API anfitrión"
 
 msgid "API integrations if configured, else Checkmk agent"
 msgstr "Integraciones API si están configuradas, si no el agente Checkmk"
@@ -3543,9 +3542,8 @@ msgstr "Añadir etiquetas"
 msgid "Add target"
 msgstr "Añadir objetivo"
 
-#, fuzzy
 msgid "Add text of events"
-msgstr "Propietario del evento"
+msgstr "Agregar texto de eventos"
 
 msgid ""
 "Add text of events to data forwarded to the Event Console. Newline "
@@ -5352,9 +5350,8 @@ msgstr "Aplicación (expresión regular)"
 msgid "Application / Syslog-Tag"
 msgstr "Aplicación / Syslog-Tag"
 
-#, fuzzy
 msgid "Application Key"
-msgstr "Aplicación"
+msgstr "Clave de aplicación"
 
 msgid "Application Load Balancer Listeners"
 msgstr "Receptores del equilibrador de carga de aplicaciones"
@@ -6926,9 +6923,8 @@ msgstr ""
 "Examinar el catálogo de todos los plugins de comprobación, crear "
 "comprobaciones estáticas"
 
-#, fuzzy
 msgid "Bucket"
-msgstr "Cubos"
+msgstr "Cubo"
 
 msgid "Bucket memory"
 msgstr "Memoria del cubo"
@@ -9055,9 +9051,8 @@ msgstr "Ayudante de comprobación"
 msgid "Checker helper usage"
 msgstr "Utilización de la ayuda de comprobación"
 
-#, fuzzy
 msgid "Checking of Datadog monitors"
-msgstr "Sección de archivos a vigilar"
+msgstr "Selección de Datadog a monitorear"
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -9978,7 +9973,7 @@ msgid "Combined graphs"
 msgstr "Gráficos combinados"
 
 msgid "Combined white-/blacklist for new and vanished services"
-msgstr "Lista blanca/blanca combinada para servicios nuevos y desaparecidos"
+msgstr "Lista blanca/negra combinada para servicios nuevos y desaparecidos"
 
 msgid ""
 "Combining \"%s\" and \"%1\" style replacements in the sevice description is "
@@ -10308,9 +10303,8 @@ msgid "Configuration of the Checkmk Hardware and Software Inventory System"
 msgstr ""
 "Configuración del sistema de inventario de hardware y software de Checkmk"
 
-#, fuzzy
 msgid "Configuration of the Datadog special agent."
-msgstr "Configuración del plugin de actualización"
+msgstr "Configuración del agente especial Datadog."
 
 msgid "Configuration of update plugin"
 msgstr "Configuración del plugin de actualización"
@@ -10490,6 +10484,8 @@ msgid ""
 "Configure the language of the user interface. Feel free to contribute to the "
 "translations on %s."
 msgstr ""
+"Configure aquí el idioma de la interfaz de usuario. Siéntase libre de "
+"contribuir con las traducciones en %s."
 
 msgid ""
 "Configure the maximum number of bytes that is sent to the monitoring site. "
@@ -10613,7 +10609,7 @@ msgid "Connect"
 msgstr "Conectar"
 
 msgid "Connect Checkmk with your InfluxDB to send metrics."
-msgstr ""
+msgstr "Conectar Checkmk con su InfluxDB para enviar métricas."
 
 msgid ""
 "Connect Checkmk with your LDAP or Active Directory to create users in "
@@ -12801,21 +12797,17 @@ msgstr ""
 msgid "Datacenter %d"
 msgstr "Centro de datos %d"
 
-#, fuzzy
 msgid "Datadog"
-msgstr "Datos"
+msgstr "Datadog"
 
-#, fuzzy
 msgid "Datadog instance"
-msgstr "Instancias de la BD"
+msgstr "Instancias de Datadog"
 
-#, fuzzy
 msgid "Datadog monitor"
-msgstr "No vigilar"
+msgstr "Monitor Datadog"
 
-#, fuzzy
 msgid "Datadog tags shown in service output"
-msgstr "Escape de códigos HTML en la salida del servicio"
+msgstr "Etiquetas de Datadog se mostrarán en la salida del servicio"
 
 msgid "Datafile"
 msgstr "Archivo de datos"
@@ -12946,7 +12938,7 @@ msgstr "Tráfico descodificado"
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr ""
-"Listas blancas/blancas específicas para servicios nuevos y desaparecidos"
+"Listas blancas/negras específicas para servicios nuevos y desaparecidos"
 
 msgid "Deduplication efficiency savings"
 msgstr "Ahorro de eficiencia en la deduplicación"
@@ -14441,9 +14433,8 @@ msgstr "Configuración de Discovery y Checkmk"
 msgid "Discovery mode"
 msgstr "Modo de descubrimiento"
 
-#, fuzzy
 msgid "Discovery of Datadog monitors"
-msgstr "Descubrimiento de pools DHCP vacíos"
+msgstr "Descubrimiento de monitores Datadog"
 
 msgid "Discovery of empty DHCP pools"
 msgstr "Descubrimiento de pools DHCP vacíos"
@@ -17619,7 +17610,8 @@ msgid "Expand"
 msgstr "Ampliar"
 
 msgid "Expand <tt>\\n</tt>, <tt>\\r</tt> and <tt>\\t</tt> in the sent string"
-msgstr "Expandir <tt>n</tt>, <tt>r</tt> y <tt>t</tt> en la cadena enviada."
+msgstr ""
+"Expandir <tt>\\n</tt>, <tt>\\r</tt> y <tt>\\t</tt> en la cadena enviada"
 
 msgid "Expect <b>all</b> of those strings in the response"
 msgstr "Esperar <b>todas</b> esas cadenas en la respuesta"
@@ -18340,15 +18332,17 @@ msgstr "Obtener todos los sub OID disponibles"
 msgid "Fetch chunked"
 msgstr "Recuperación de los trozos"
 
-#, fuzzy
 msgid "Fetch events"
-msgstr "Recoger cada"
+msgstr "Recoger eventos"
 
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
 "will be forwared to the event console of the site where the special agent is "
 "executed."
 msgstr ""
+"Obtenga eventos del flujo de eventos de su instancia de Datadog. Los eventos "
+"obtenidos se reenviarán a la consola de eventos del sitio donde se ejecuta "
+"el agente especial."
 
 msgid "Fetch every"
 msgstr "Recoger cada"
@@ -18365,14 +18359,15 @@ msgstr "Cabezal de búsqueda"
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalos de búsqueda de secciones SNMP"
 
-#, fuzzy
 msgid "Fetch monitors"
-msgstr "monitor"
+msgstr "Recoger monitoreos"
 
 msgid ""
 "Fetch monitors from your datadog instance. Fetched monitors will be "
 "discovered as services on the host where the special agent is executed."
 msgstr ""
+"Obtenga monitores de su instancia de Datadog. Los monitores recuperados se "
+"descubrirán como servicios en el host donde se ejecuta el agente especial."
 
 msgid "Fetch no body (1xx)"
 msgstr "No se puede obtener ningún cuerpo (1xx)"
@@ -20963,6 +20958,9 @@ msgid ""
 "Here you can select an InfluxDB connection to use. If no choice is available "
 "you have to configure a <a href=\"%s\">%s</a> first."
 msgstr ""
+"Aquí usted puede seleccionar la conexión a InfluxDB a utilizar. Si no hay "
+"opción disponible usted tendrá que configurar la <a href=\"%s\">%s</a> "
+"primero."
 
 msgid ""
 "Here you can select default parameters that are being set for detected "
@@ -21847,11 +21845,9 @@ msgstr "Se reconoce el problema del anfitrión"
 msgid "Host problems"
 msgstr "Problemas con los anfitriones"
 
-#, fuzzy
 msgid "Host problems (all)"
-msgstr "Problemas con los anfitriones"
+msgstr "Problemas con los anfitriones (Todos)"
 
-#, fuzzy
 msgid "Host problems (unhandled)"
 msgstr "Problemas con el anfitrión (no se ha gestionado)"
 
@@ -22365,8 +22361,8 @@ msgstr "IBM SVC / V7000: Uso de la caché en total"
 
 msgid "IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"
 msgstr ""
-"IBM SVC / V7000: Rendimiento de los discos para las unidades/discos/discos "
-"virtuales en total"
+"IBM SVC / V7000: Rendimiento de los discos para las unidades/discos físicos/"
+"discos virtuales en total"
 
 msgid "IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"
 msgstr ""
@@ -22374,7 +22370,8 @@ msgstr ""
 
 msgid "IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"
 msgstr ""
-"IBM SVC / V7000: Latencia de las unidades/discos/discos virtuales en total"
+"IBM SVC / V7000: Latencia de las unidades/discos físicos/discos virtuales en "
+"total"
 
 msgid "IBM SVC / V7000: System Info"
 msgstr "IBM SVC / V7000: Información del sistema"
@@ -24867,21 +24864,17 @@ msgstr "Ineficaz"
 msgid "Infections"
 msgstr "Infecciones"
 
-#, fuzzy
 msgid "InfluxDB Connection"
-msgstr "Conexiones DB"
+msgstr "Conexión InfluxDB"
 
-#, fuzzy
 msgid "InfluxDB Connections"
-msgstr "Conexiones DB"
+msgstr "Conexiones InfluxDB"
 
-#, fuzzy
 msgid "InfluxDB connections"
-msgstr "Conexiones inactivas"
+msgstr "Conexiones InfluxDB"
 
-#, fuzzy
 msgid "InfluxDB service rules"
-msgstr "Excluir grupos de servicios"
+msgstr "Reglas de servicio InfluxDB"
 
 msgid "Info"
 msgstr "Información"
@@ -25847,9 +25840,9 @@ msgstr ""
 msgid "It is still in use by"
 msgstr "Sigue siendo utilizado por"
 
-#, fuzzy
 msgid "It is still in use by at least 1 rule in ruleset:"
-msgstr "Sigue siendo utilizado por"
+msgstr ""
+"Sigue siendo utilizado por al menos una regla en el conjunto de reglas:"
 
 msgid "It's not allowed to use a leading \"!\" here."
 msgstr "No está permitido usar un \"!\" inicial aquí."
@@ -34001,7 +33994,8 @@ msgstr ""
 "automáticamente,\n"
 "pero, como usuario, debe seleccionar la flexibilidad de la tendencia cuando "
 "se\n"
-"se ajusta a los datos.  Estas opciones cambian entre modelos más globales y\n"
+"es ajustado a los datos.  Estas opciones cambian entre modelos más globales "
+"y\n"
 "modelos suaves locales.\n"
 "\n"
 "El modelo se extrapola para hacer la previsión utilizando una extensión de "
@@ -35631,7 +35625,7 @@ msgid ""
 "underscore and dot are allowed."
 msgstr ""
 "Por favor, introduzca un nombre de host o una dirección IPv4 válidos. Sólo "
-"se permiten letras, dígitos, guiones, guiones bajos y puntos."
+"se permiten letras, dígitos, guiones medios, guiones bajos y puntos."
 
 msgid "Please enter a valid integer number"
 msgstr "Por favor, introduzca un número entero válido"
@@ -57401,7 +57395,7 @@ msgid ""
 "underscores, spaces and dots."
 msgstr ""
 "Las descripciones de servicio válidas sólo pueden contener letras, números, "
-"guiones, guiones bajos, espacios y puntos."
+"guiones medios, guiones bajos, espacios y puntos."
 
 msgid "Valid till"
 msgstr "Válido hasta"

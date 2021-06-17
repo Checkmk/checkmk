@@ -449,9 +449,9 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
             # Found normal section header
             # section header format: <<<name:opt1(args):opt2:opt3(args)>>>
-            # *) empty sections <<<>>> are allowed and will be skipped
+            # *) empty sections <<<>>> or '<<<:cached(...)>>>' are allowed and will be skipped
             elif stripped_line[:3] == b'<<<' and stripped_line[-3:] == b'>>>':
-                if stripped_line == b'<<<>>>':
+                if stripped_line.startswith((b'<<<>>>', b'<<<:cached')):
                     # Special case b'<<<>>>' is accepted: no data to process, skip it
                     section_content = None
                     continue

@@ -73,11 +73,11 @@ def escape_attribute(value: EscapableEntity) -> str:
     """
     attr_type = type(value)
     if value is None:
-        return u''
+        return ''
     if attr_type == int:
         return str(value)
     if isinstance(value, HTML):
-        return value.__html__()  # This is HTML code which must not be escaped
+        return str(value)  # This is HTML code which must not be escaped
     if isinstance(attr_type, str):
         return html_escape(value, quote=True)
     if isinstance(attr_type, bytes):  # TODO: Not in the signature!
@@ -120,7 +120,7 @@ def escape_text(text: EscapableEntity) -> str:
 
     """
     if isinstance(text, HTML):
-        return text.__html__()
+        return str(text)
 
     text = escape_attribute(text)
     text = _UNESCAPER_TEXT.sub(r'<\1\2>', text)
@@ -200,10 +200,10 @@ def strip_tags(ht: EscapableEntity) -> str:
 
     """
     if isinstance(ht, HTML):
-        ht = ht.__html__()
+        ht = str(ht)
 
     if not isinstance(ht, str):
-        return u"%s" % ht
+        return str(ht)
 
     ht = ensure_str(ht)
 

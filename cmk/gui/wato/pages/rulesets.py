@@ -121,7 +121,7 @@ SearchOptions = Dict[str, Any]
 
 def render_html(text: Union[HTML, str]) -> str:
     if isinstance(text, HTML):
-        return text.__html__()
+        return str(text)
     return text
 
 

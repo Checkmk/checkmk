@@ -32,9 +32,6 @@ class HTML:
     def _ensure_str(self, value: HTMLInput) -> str:
         return value if isinstance(value, str) else str(value)
 
-    def __html__(self) -> str:
-        return "%s" % self.value
-
     def __str__(self) -> str:
         return self.value
 

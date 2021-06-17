@@ -71,11 +71,12 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     def _render_tree(self, tree):
         for group, attrs in tree.items():
+            aggr_group_tree = "/".join(attrs["__path__"])
             fetch_url = makeuri_contextless(
                 request,
                 [
                     ("view_name", "aggr_all"),
-                    ("aggr_group_tree", "/".join(attrs["__path__"])),
+                    ("aggr_group_tree", aggr_group_tree),
                 ],
                 filename="view.py",
             )
@@ -83,7 +84,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             if attrs.get('__children__'):
                 html.begin_foldable_container(
                     "bi_aggregation_group_trees",
-                    group,
+                    aggr_group_tree,
                     False,
                     HTML(html.render_a(
                         group,

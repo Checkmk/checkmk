@@ -492,6 +492,7 @@ def _collect_parameter_rulesets_from_globals(global_dict: Dict[str, Any]) -> Non
     partially_migrated = {
         "diskstat_inventory",
         "inventory_ipmi_rules",
+        "discovery_cmciii",
     }
 
     for var_name in vars_to_remove - partially_migrated:

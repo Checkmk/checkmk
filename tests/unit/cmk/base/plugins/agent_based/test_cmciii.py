@@ -12,6 +12,7 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 import cmk.base.plugins.agent_based.cmciii as cmciii
+import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
 
 
 @pytest.mark.parametrize("variable, expected", [
@@ -447,7 +448,9 @@ def _status_info(variable, status):
 ])
 def test_cmciii_status_discovery(discovery_params, variable):
     service_description = 'DET-AC_III_Master %s' % variable
-    assert run_discovery('cmciii', 'cmciii_status', _status_info(variable, 'OK')) == [
+    params = {'use_sensor_description': False}
+    section = cmciii.parse_cmciii(_status_info(variable, 'OK'))
+    assert list(cmciii_status.discover_cmciii_status(params, section)) == [
         Service(item=service_description, parameters={'_item_key': service_description})
     ]
 

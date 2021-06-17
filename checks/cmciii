@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils.cmciii import get_item, get_sensor
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -28,20 +29,6 @@ discovery_cmciii = []
 
 def discovery_params():
     return host_extra_conf_merged(host_name(), discovery_cmciii)
-
-
-def get_item(id_, params, sensor):
-    if params.get('use_sensor_description', False) and (description := sensor.get('DescName')):
-        return description
-    return id_
-
-
-def get_sensor(item, params, sensors):
-    # This function is used for compatibility whith discovered services that do
-    # not use _item_key in the params (yet).
-    if params and (params_key := params.get('_item_key')):
-        return sensors.get(params_key)
-    return sensors.get(item)
 
 
 def discover_cmciii_sensors(type_, parsed):
@@ -431,30 +418,5 @@ def check_cmciii_leakage(item, params, parsed):
 check_info['cmciii.leakage'] = {
     "inventory_function": lambda parsed: discover_cmciii_sensors("leakage", parsed),
     "check_function": check_cmciii_leakage,
-    "service_description": "%s",
-}
-
-#   .--status--------------------------------------------------------------.
-#   |                         _        _                                   |
-#   |                     ___| |_ __ _| |_ _   _ ___                       |
-#   |                    / __| __/ _` | __| | | / __|                      |
-#   |                    \__ \ || (_| | |_| |_| \__ \                      |
-#   |                    |___/\__\__,_|\__|\__,_|___/                      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
-def check_cmciii_status(item, params, parsed):
-    entry = get_sensor(item, params, parsed["status"])
-    if not entry:
-        return
-
-    status = entry["Status"]
-    yield 2 if status != "OK" else 0, "Status: %s" % status
-
-
-check_info['cmciii.status'] = {
-    "inventory_function": lambda parsed: discover_cmciii_sensors("status", parsed),
-    "check_function": check_cmciii_status,
     "service_description": "%s",
 }

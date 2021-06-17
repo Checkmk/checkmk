@@ -45,6 +45,7 @@ SERVICE_DESCRIPTION = {
           'cmk/create',
           method='post',
           tag_group='Monitoring',
+          skip_locking=True,
           additional_status_codes=[422],
           status_descriptions={
               422: 'The query yielded no result.',
@@ -130,6 +131,7 @@ def set_acknowledgement_on_hosts(params):
           'cmk/create_service',
           method='post',
           tag_group='Monitoring',
+          skip_locking=True,
           additional_status_codes=[422],
           status_descriptions={
               422: 'Service was not in a problem state.',

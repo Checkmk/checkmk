@@ -54,6 +54,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
+from cmk.utils import store
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 
@@ -230,6 +231,13 @@ class Endpoint:
         header_params:
             All parameters, which are expected via HTTP headers.
 
+        skip_locking:
+            When set to True, the decorator will not try to acquire a wato configuration lock,
+            which can lead to higher performance of this particular endpoint. WARNING: Do not
+            activate this flag when configuration files are changed by the endpoint! This exposes
+            the data to potential race conditions. Use it for endpoints which trigger livestatus
+            commands.
+
         etag:
             One of 'input', 'output', 'both'. When set to 'input' a valid ETag is required in
             the 'If-Match' request header. When set to 'output' a ETag is sent to the client
@@ -249,6 +257,7 @@ class Endpoint:
         output_empty: bool = False,
         response_schema: Optional[RawParameter] = None,
         request_schema: Optional[RawParameter] = None,
+        skip_locking: bool = False,
         path_params: Optional[Sequence[RawParameter]] = None,
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
@@ -270,6 +279,7 @@ class Endpoint:
         self.content_type = content_type
         self.output_empty = output_empty
         self.response_schema = response_schema
+        self.skip_locking = skip_locking
         self.request_schema = request_schema
         self.path_params = path_params
         self.query_params = query_params
@@ -485,7 +495,13 @@ class Endpoint:
             # We need to get the "original data" somewhere and are currently "piggy-backing"
             # it on the response instance. This is somewhat problematic because it's not
             # expected behaviour and not a valid interface of Response. Needs refactoring.
-            response = self.func(param)
+
+            if not self.skip_locking and self.method != 'get':
+                with store.lock_checkmk_configuration():
+                    response = self.func(param)
+            else:
+                response = self.func(param)
+
             response.freeze()
 
             if self.output_empty and response.status_code < 400 and response.data:

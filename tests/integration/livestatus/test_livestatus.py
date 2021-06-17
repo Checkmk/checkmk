@@ -45,7 +45,17 @@ def test_tables(default_cfg, site):
         if default_cfg.core == "nagios" and table == "statehist":
             continue  # the statehist table in nagios can not be fetched without time filter
 
-        result = site.live.query("GET %s\n" % table)
+        if table == "statehist":
+            # Seems the optimized statehist and non optimized are not showing the same
+            # behaviour. "GET statehist" is possible with the optimized one. With the other one,
+            # this results in: 452: Start of timeframe required. e.g. Filter: time > 1234567890
+            # We only enable the not optimized one temporarily...
+            query = "GET %s\nFilter: time > %d" % (table, _time.time())
+
+        else:
+            query = "GET %s\n" % table
+
+        result = site.live.query(query)
         assert isinstance(result, list)
 
 

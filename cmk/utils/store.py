@@ -9,6 +9,8 @@ manager."""
 
 import ast
 import enum
+import functools
+import threading
 from contextlib import contextmanager
 import errno
 import fcntl
@@ -368,35 +370,80 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
 #   | wait forever.                                                        |
 #   '----------------------------------------------------------------------'
 
-_acquired_locks: Dict[str, int] = {}
+LockDict = Dict[str, int]
+
+# This will hold our path to file descriptor dicts.
+_locks = threading.local()
 
 
-def _set_lock(name: str, fd: int) -> None:
-    _acquired_locks[name] = fd
+def with_lock_dict(func):
+    """Decorator to make access to global locking dict thread-safe.
+
+    Only the thread which acquired the lock should see the file descriptor in the locking
+    dictionary. In order to do this, the locking dictionary(*) is now an attribute on a
+    threading.local() object, which has to be created at runtime. This decorator handles
+    the creation of these dicts.
+
+    (*) The dict is a mapping from path-name to file descriptor.
+
+    Additionally, this decorator passes the locking dictionary as the first parameter to the
+    functions, which manipulate the locking dictionary.
+    """
+    @functools.wraps(func)
+    def wrapper(*args):
+        if not hasattr(_locks, 'acquired_locks'):
+            _locks.acquired_locks = {}
+        return func(*args, locks=_locks.acquired_locks)
+
+    return wrapper
 
 
-def _get_lock(name: str) -> Optional[int]:
-    return _acquired_locks.get(name)
+@with_lock_dict
+def _set_lock(
+    name: str,
+    fd: int,
+    locks: LockDict,
+) -> None:
+    locks[name] = fd
 
 
-def _del_lock(name: str) -> None:
-    _acquired_locks.pop(name, None)
+@with_lock_dict
+def _get_lock(
+    name: str,
+    locks: LockDict,
+) -> Optional[int]:
+    return locks.get(name)
 
 
-def _del_all_locks() -> None:
-    _acquired_locks.clear()
+@with_lock_dict
+def _del_lock(
+    name: str,
+    locks: LockDict,
+) -> None:
+    locks.pop(name, None)
 
 
-def _get_lock_keys() -> List[str]:
-    return list(_acquired_locks.keys())
+@with_lock_dict
+def _del_all_locks(locks: LockDict) -> None:
+    locks.clear()
 
 
-def _get_lock_map() -> Dict[str, int]:
-    return _acquired_locks
+@with_lock_dict
+def _get_lock_keys(locks: LockDict) -> List[str]:
+    return list(locks.keys())
 
 
-def _has_lock(name: str) -> bool:
-    return name in _acquired_locks
+@with_lock_dict
+def _get_lock_map(locks: LockDict) -> Dict[str, int]:
+    return locks
+
+
+@with_lock_dict
+def _has_lock(
+    name: str,
+    locks: LockDict,
+) -> bool:
+    return name in locks
 
 
 @contextmanager

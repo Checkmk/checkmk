@@ -9,6 +9,9 @@ import threading
 import queue
 import os
 import stat
+from multiprocessing.pool import ThreadPool
+from typing import List
+
 import errno
 from pathlib import Path
 
@@ -328,7 +331,7 @@ def test_release_lock_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._acquired_locks[str(path)])
+    os.close(store._get_lock(str(path)))
 
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -365,7 +368,7 @@ def test_release_all_locks_already_closed(locked_file, path_type):
     store.aquire_lock(path)
     assert store.have_lock(path) is True
 
-    os.close(store._acquired_locks[str(path)])
+    os.close(store._get_lock(str(path)))
 
     store.release_all_locks()
     assert store.have_lock(path) is False
@@ -481,6 +484,94 @@ def _wait_for_waiting_lock():
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
+def test_blocking_context_manager_from_multiple_threads(locked_file, path_type):
+    path = path_type(locked_file)
+
+    acquired = []
+
+    def acquire(n):
+        with store.locked(path):
+            acquired.append(1)
+            assert len(acquired) == 1
+            acquired.pop()
+
+    pool = ThreadPool(20)
+    pool.map(acquire, range(100))
+    pool.close()
+    pool.join()
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_blocking_lock_from_multiple_threads(locked_file, path_type):
+    path = path_type(locked_file)
+
+    debug = False
+    acquired = []
+    saw_someone_wait: List[int] = []
+
+    def acquire(n):
+        assert not store.have_lock(path)
+        if debug:
+            print(f"{n}: Trying lock\n")
+        store.aquire_lock(path, blocking=True)
+        assert store.have_lock(path)
+
+        # We check to see if the other threads are actually waiting.
+        if not saw_someone_wait:
+            _wait_for_waiting_lock()
+            saw_someone_wait.append(1)
+
+        if debug:
+            print(f"{n}: Got lock\n")
+
+        acquired.append(1)
+        # This part is guarded by the lock, so we should never have more than one entry in here,
+        # even if multiple threads try to append at the same time
+        assert len(acquired) == 1
+
+        acquired.pop()
+        store.release_lock(path)
+        assert not store.have_lock(path)
+        if debug:
+            print(f"{n}: Released lock\n")
+
+    # We try to append 100 ints to `acquired` in 20 threads simultaneously. As it is guarded by
+    # the lock, we only ever can have one entry in the list at the same time.
+    pool = ThreadPool(20)
+    pool.map(acquire, range(100))
+    pool.close()
+    pool.join()
+
+    # After all the threads have finished, the list should be empty again.
+    assert len(acquired) == 0
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
+def test_non_blocking_lock_from_multiple_threads(locked_file, path_type):
+    path = path_type(locked_file)
+
+    acquired = []
+
+    # Only one thread will ever be able to acquire this lock.
+    def acquire(_):
+        try:
+            store.aquire_lock(path, blocking=False)
+            acquired.append(1)
+            assert store.have_lock(path)
+            store.release_lock(path)
+            assert not store.have_lock(path)
+        except IOError:
+            assert not store.have_lock(path)
+
+    pool = ThreadPool(2)
+    pool.map(acquire, range(20))
+    pool.close()
+    pool.join()
+
+    assert len(acquired) > 1, "No thread got any lock."
+
+
+@pytest.mark.parametrize("path_type", [str, Path])
 def test_blocking_lock_while_other_holds_the_lock(locked_file, path_type, t1, t2, monkeypatch):
     assert t1.store != t2.store
 
@@ -493,23 +584,14 @@ def test_blocking_lock_while_other_holds_the_lock(locked_file, path_type, t1, t2
         # Take lock with t1
         t1.lock()
 
-        assert t1.store.have_lock(path) is True
-        assert t2.store.have_lock(path) is False
-
         # Now request the lock in t2, but don't wait for the successful locking. Only wait until we
         # start waiting for the lock.
         t2.lock_nowait()
         _wait_for_waiting_lock()
-
-        assert t1.store.have_lock(path) is True
-        assert t2.store.have_lock(path) is False
     finally:
         t1.unlock()
 
     t2.join_jobs()
-
-    assert t1.store.have_lock(path) is False
-    assert t2.store.have_lock(path) is True
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -531,11 +613,9 @@ def test_non_blocking_locking_while_already_locked(locked_file, path_type, t1):
 
     # Now take lock with t1.store
     t1.lock()
-    assert t1.store.have_lock(path) is True
 
     # And now try to get the lock (which should not be possible)
     assert store.try_aquire_lock(path) is False
-    assert t1.store.have_lock(path) is True
     assert store.have_lock(path) is False
 
 
@@ -557,7 +637,6 @@ def test_non_blocking_decorated_locking_while_already_locked(locked_file, path_t
 
     # Take lock with t1.store
     t1.lock()
-    assert t1.store.have_lock(path) is True
 
     # And now try to get the lock (which should not be possible)
     with store.try_locked(path) as result:

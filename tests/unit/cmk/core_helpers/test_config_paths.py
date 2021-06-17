@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
+from contextlib import suppress
 from pathlib import Path
 
 import pytest  # type: ignore[import]
@@ -59,6 +60,61 @@ class TestVersionedConfigPath:
         assert config_path / "filename" == Path("1/filename")
         assert Path("dir") / config_path == Path("dir/1")
         assert Path("dir") / config_path / "filename" == Path("dir/1/filename")
+
+    @pytest.mark.parametrize("is_cmc", (True, False))
+    def test_create_success(self, config_path, is_cmc):
+        assert not config_path.helper_config_path().exists()
+        assert not paths.LATEST_CONFIG.helper_config_path().exists()
+
+        with config_path.create(is_cmc=is_cmc):
+            assert config_path.helper_config_path().exists()
+            assert not paths.LATEST_CONFIG.helper_config_path().exists()
+
+        assert config_path.helper_config_path().exists()
+        assert paths.LATEST_CONFIG.helper_config_path().exists()
+        assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                config_path.helper_config_path().resolve())
+
+        next_config_path = next(config_path)
+        with next_config_path.create(is_cmc=is_cmc):
+            assert next_config_path.helper_config_path().exists()
+            assert paths.LATEST_CONFIG.helper_config_path().exists()
+            assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                    config_path.helper_config_path().resolve())
+
+        assert next_config_path.helper_config_path().exists()
+        assert paths.LATEST_CONFIG.helper_config_path().exists()
+        assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                next_config_path.helper_config_path())
+
+    @pytest.mark.parametrize("is_cmc", (True, False))
+    def test_create_no_latest_link_update_on_failure(self, config_path, is_cmc):
+        assert not config_path.helper_config_path().exists()
+        assert not paths.LATEST_CONFIG.helper_config_path().exists()
+
+        with config_path.create(is_cmc=is_cmc):
+            assert config_path.helper_config_path().exists()
+            assert not paths.LATEST_CONFIG.helper_config_path().exists()
+
+        assert config_path.helper_config_path().exists()
+        assert paths.LATEST_CONFIG.helper_config_path().exists()
+        assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                config_path.helper_config_path().resolve())
+
+        next_config_path = next(config_path)
+        with suppress(RuntimeError), next_config_path.create(is_cmc=is_cmc):
+            assert next_config_path.helper_config_path().exists()
+            assert paths.LATEST_CONFIG.helper_config_path().exists()
+            assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                    config_path.helper_config_path().resolve())
+            raise RuntimeError("boom")
+
+        assert next_config_path.helper_config_path().exists()
+        assert paths.LATEST_CONFIG.helper_config_path().exists()
+        assert (paths.LATEST_CONFIG.helper_config_path().resolve() !=
+                next_config_path.helper_config_path().resolve())
+        assert (paths.LATEST_CONFIG.helper_config_path().resolve() ==
+                config_path.helper_config_path().resolve())
 
 
 class TestLatestConfigPath:

@@ -10,13 +10,12 @@ import os
 import shutil
 import socket
 import sys
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from pathlib import Path
 from typing import (
     AnyStr,
     Callable,
     Dict,
-    Final,
     Iterable,
     Iterator,
     List,
@@ -43,7 +42,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL, VersionedConfigPath
+from cmk.core_helpers.paths import ConfigSerial, VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -64,52 +63,6 @@ ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
-
-
-class HelperConfig:
-    """Managing the helper core config generations below var/check_mk/core/helper-config/[serial]
-
-    The context manager ensures that the directory for the config serial is created and the "latest"
-    link is only created in case the context is left without exception.
-    """
-    def __init__(self, serial: Union[ConfigSerial, VersionedConfigPath]) -> None:
-        self.serial: Final = ConfigSerial(str(serial))  # for compatibility
-        self.serial_path: Final = cmk.core_helpers.paths.make_helper_config_path(serial)
-        self.latest_path: Final = cmk.core_helpers.paths.make_helper_config_path(LATEST_SERIAL)
-
-    @contextmanager
-    def create(self) -> Iterator["HelperConfig"]:
-        self._cleanup()
-
-        self.serial_path.mkdir(parents=True, exist_ok=True)
-        yield self
-        self._create_latest_link()
-
-    def _create_latest_link(self) -> None:
-        with suppress(FileNotFoundError):
-            self.latest_path.unlink()
-        self.latest_path.symlink_to(self.serial_path.name)
-
-    def _cleanup(self) -> None:
-        """Cleanup old helper configs
-
-        This is only used when using the Nagios core. The Microcore cares about the cleanup on it's
-        own, because the Microcore holds the information which configs are still needed."""
-        if config.monitoring_core == "cmc":
-            return
-
-        if not cmk.utils.paths.core_helper_config_dir.exists():
-            return
-
-        latest_config_path = self.latest_path.resolve()
-        for config_path in cmk.utils.paths.core_helper_config_dir.iterdir():
-            if config_path.is_symlink() or not config_path.is_dir():
-                continue
-
-            if config_path == latest_config_path:
-                continue
-
-            shutil.rmtree(config_path)
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
@@ -392,9 +345,9 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
-    with HelperConfig(next(
-            VersionedConfigPath.current())).create() as helper_config, _backup_objects_file(core):
-        core.create_config(helper_config.serial)
+    config_path = next(VersionedConfigPath.current())
+    with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
+        core.create_config(ConfigSerial(str(config_path.serial)))
 
     cmk.utils.password_store.save(config.stored_passwords)
 

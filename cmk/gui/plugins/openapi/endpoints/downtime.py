@@ -81,6 +81,7 @@ class DowntimeParameter(BaseSchema):
           'cmk/create_host',
           method='post',
           tag_group='Monitoring',
+          skip_locking=True,
           request_schema=request_schemas.CreateHostRelatedDowntime,
           additional_status_codes=[422],
           output_empty=True)
@@ -145,6 +146,7 @@ def create_host_related_downtime(params):
     'cmk/create_service',
     method='post',
     tag_group='Monitoring',
+    skip_locking=True,
     request_schema=request_schemas.CreateServiceRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
@@ -306,6 +308,7 @@ def _serve_downtime(downtime_details):
           '.../delete',
           method='post',
           tag_group='Monitoring',
+          skip_locking=True,
           request_schema=request_schemas.DeleteDowntime,
           output_empty=True)
 def delete_downtime(params):

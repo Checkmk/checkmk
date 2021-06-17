@@ -109,6 +109,10 @@ class VersionedConfigPath(ConfigPath, Iterator):
         serial = self.serial
         while True:
             serial += 1
+            store.save_object_to_file(
+                cmk.utils.paths.core_helper_config_dir / "serial.mk",
+                serial,
+            )
             yield VersionedConfigPath(serial)
 
     def __next__(self) -> VersionedConfigPath:

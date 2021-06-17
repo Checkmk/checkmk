@@ -577,7 +577,7 @@ class Document:
         if text.strip() == "":
             return ""
         char_avg = self._canvas.stringWidth(text) / len(text)
-        return wrap(text, int(width / char_avg), break_long_words=wrap_long_words)
+        return wrap(text, max(1, int(width / char_avg)), break_long_words=wrap_long_words)
 
     def add_table(self,
                   header_texts: Any,

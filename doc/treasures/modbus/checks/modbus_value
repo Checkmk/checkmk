@@ -37,14 +37,10 @@ def inventory_modbus_value(info):
 
 
 def check_modbus_value(item, params, info):
-    for cid, value, ctype, name in info:
+    for cid, value, _ctype, name in info:
         if name == item:
             value = saveint(value)
             message_end = ""
-            if ctype == "gauge":
-                now = time.time()
-                timedif, value = get_counter("modbus.value." + name, now, value)
-                message_end = "in last %.0fsec " % timedif
             warn, crit = params
             state = 0
             if crit and crit >= value:

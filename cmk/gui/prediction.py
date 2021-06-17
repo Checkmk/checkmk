@@ -249,15 +249,25 @@ def compute_vertical_range(swapped):
 
 
 def create_graph(name, size, bounds, v_range, legend):
-    html.write('<table class=prediction><tr><td>')
-    html.write(
-        '<canvas class=prediction id="content_%s" style="width: %dpx; height: %dpx;" width=%d height=%d></canvas>'
-        % (name, int(size[0] / 2.0), int(size[1] / 2.0), size[0], size[1]))
-    html.write('</td></tr><tr><td class=legend>')
+    html.open_table(class_="prediction")
+    html.open_tr()
+    html.open_td()
+    html.canvas("",
+                class_="prediction",
+                id_="content_%s" % name,
+                style="width: %dpx; height: %dpx;" % (int(size[0] / 2.0), int(size[1] / 2.0)),
+                width=size[0],
+                height=size[1])
+    html.close_td()
+    html.close_tr()
+    html.open_tr()
+    html.open_td(class_="legend")
     for color, title in legend:
-        html.write('<div class=color style="background-color: %s"></div><div class=entry>%s</div>' %
-                   (color, title))
-    html.write('</div></td></tr></table>')
+        html.div("", class_="color", style="background-color: %s" % color)
+        html.div(title, class_="entry")
+    html.close_td()
+    html.close_tr()
+    html.close_table()
     html.javascript('cmk.prediction.create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' %
                     (name, bounds[0], bounds[1], v_range[0], v_range[1]))
 

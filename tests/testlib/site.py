@@ -407,6 +407,7 @@ class Site:
             self._enable_mkeventd_debug_logging()
             self._enable_cmc_core_dumps()
             self._enable_cmc_debug_logging()
+            self._disable_cmc_statehist_cache()
             self._enable_gui_debug_logging()
             self._tune_nagios()
 
@@ -513,6 +514,10 @@ class Site:
                 'cmk.rrd': 7,
                 'cmk.smartping': 7,
             })
+
+    def _disable_cmc_statehist_cache(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-statehist.mk", "cmc_statehist_cache = None\n")
 
     def _enable_gui_debug_logging(self):
         self.makedirs("etc/check_mk/multisite.d")

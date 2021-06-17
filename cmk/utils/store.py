@@ -371,6 +371,34 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
 _acquired_locks: Dict[str, int] = {}
 
 
+def _set_lock(name: str, fd: int) -> None:
+    _acquired_locks[name] = fd
+
+
+def _get_lock(name: str) -> Optional[int]:
+    return _acquired_locks.get(name)
+
+
+def _del_lock(name: str) -> None:
+    _acquired_locks.pop(name, None)
+
+
+def _del_all_locks() -> None:
+    _acquired_locks.clear()
+
+
+def _get_lock_keys() -> List[str]:
+    return list(_acquired_locks.keys())
+
+
+def _get_lock_map() -> Dict[str, int]:
+    return _acquired_locks
+
+
+def _has_lock(name: str) -> bool:
+    return name in _acquired_locks
+
+
 @contextmanager
 def locked(path: Union[Path, str], blocking: bool = True) -> Iterator[None]:
     try:
@@ -387,9 +415,9 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
     if have_lock(path):
         return  # No recursive locking
 
-    logger.debug("Try aquire lock on %s", path)
+    logger.debug("Trying to acquire lock on %s", path)
 
-    # Create file (and base dir) for locking if not existant yet
+    # Create file (and base dir) for locking if not existent yet
     makedirs(path.parent, mode=0o770)
 
     fd = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o660)
@@ -413,7 +441,7 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
         os.close(fd)
         fd = fd_new
 
-    _acquired_locks[str(path)] = fd
+    _set_lock(str(path), fd)
     logger.debug("Got lock on %s", path)
 
 
@@ -442,7 +470,8 @@ def release_lock(path: Union[Path, str]) -> None:
     if not have_lock(path):
         return  # no unlocking needed
     logger.debug("Releasing lock on %s", path)
-    fd = _acquired_locks.get(str(path))
+
+    fd = _get_lock(str(path))
     if fd is None:
         return
     try:
@@ -450,23 +479,20 @@ def release_lock(path: Union[Path, str]) -> None:
     except OSError as e:
         if e.errno != errno.EBADF:  # Bad file number
             raise
-    _acquired_locks.pop(str(path), None)
+    _del_lock(str(path))
     logger.debug("Released lock on %s", path)
 
 
 def have_lock(path: Union[str, Path]) -> bool:
-    if isinstance(path, Path):
-        path = str(path)
-
-    return path in _acquired_locks
+    return _has_lock(str(path))
 
 
 def release_all_locks() -> None:
     logger.debug("Releasing all locks")
-    logger.debug("_acquired_locks: %r", _acquired_locks)
-    for path in list(_acquired_locks.keys()):
+    logger.debug("Acquired locks: %r", _get_lock_map())
+    for path in _get_lock_keys():
         release_lock(path)
-    _acquired_locks.clear()
+    _del_all_locks()
 
 
 @contextmanager

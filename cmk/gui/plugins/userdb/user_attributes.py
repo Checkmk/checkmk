@@ -122,7 +122,6 @@ class StartURLUserAttribute(UserAttribute):
                           "URL you like here."),
                         size=80,
                         default_value="dashboard.py",
-                        attrencode=True,
                         allow_empty=False,
                         validate=utils.validate_start_url,
                     ),

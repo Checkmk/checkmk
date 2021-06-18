@@ -918,7 +918,6 @@ def vs_mkeventd_rule(customer=None):
                "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
              size=64,
              allow_empty=False,
-             attrencode=True,
          )),
         ("set_host",
          TextInput(
@@ -934,7 +933,6 @@ def vs_mkeventd_rule(customer=None):
              _("You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
                "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
              allow_empty=False,
-             attrencode=True,
          )),
         ("set_application",
          TextInput(
@@ -948,7 +946,6 @@ def vs_mkeventd_rule(customer=None):
              _("You can also use the placeholders $MATCH_GROUPS_MESSAGE_1$ for message match groups and "
                "$MATCH_GROUPS_SYSLOG_APPLICATION_1$</tt> for the syslog application match groups."),
              allow_empty=False,
-             attrencode=True,
          )),
         ("set_comment",
          TextInput(
@@ -961,7 +958,6 @@ def vs_mkeventd_rule(customer=None):
                "This allows you to add new information in front or at the end."),
              size=64,
              allow_empty=False,
-             attrencode=True,
          )),
         ("set_contact",
          TextInput(
@@ -974,7 +970,6 @@ def vs_mkeventd_rule(customer=None):
                "This allows you to add new information in front or at the end."),
              size=64,
              allow_empty=False,
-             attrencode=True,
          )),
     ]
 
@@ -1178,19 +1173,21 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
             optional_keys=False,
             elements=[
                 ("text",
-                 TextInput(title=_("Message text"),
-                           size=30,
-                           try_max_width=True,
-                           allow_empty=False,
-                           default_value=_("Still nothing happened."),
-                           attrencode=True)),
+                 TextInput(
+                     title=_("Message text"),
+                     size=30,
+                     try_max_width=True,
+                     allow_empty=False,
+                     default_value=_("Still nothing happened."),
+                 )),
                 ("application",
-                 TextInput(title=_("Application name"),
-                           help=_("The syslog tag"),
-                           size=40,
-                           default_value=_("Foobar-Daemon"),
-                           allow_empty=True,
-                           attrencode=True)),
+                 TextInput(
+                     title=_("Application name"),
+                     help=_("The syslog tag"),
+                     size=40,
+                     default_value=_("Foobar-Daemon"),
+                     allow_empty=True,
+                 )),
                 ("host",
                  TextInput(
                      title=_("Host lookup element"),
@@ -1198,7 +1195,6 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                      size=40,
                      default_value=_("myhost089"),
                      allow_empty=True,
-                     attrencode=True,
                      regex="^\\S*$",
                      regex_error=_("The host name may not contain spaces."),
                  )),
@@ -3223,7 +3219,6 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
                              TextInput(
                                  title=_("Hostname/IP address of Master Event Console:"),
                                  allow_empty=False,
-                                 attrencode=True,
                              ),
                              Integer(
                                  title=_("TCP Port number of status socket:"),
@@ -3434,7 +3429,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                              help=_("A descriptive title of this action."),
                              allow_empty=False,
                              size=64,
-                             attrencode=True,
                          )),
                         ("disabled",
                          Checkbox(
@@ -3465,7 +3459,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                         TextInput(
                                                             title=_("Recipient Email address"),
                                                             allow_empty=False,
-                                                            attrencode=True,
                                                         ),
                                                     ),
                                                     (
@@ -3474,7 +3467,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                             title=_("Subject"),
                                                             allow_empty=False,
                                                             size=64,
-                                                            attrencode=True,
                                                         ),
                                                     ),
                                                     (
@@ -3486,7 +3478,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                             + substitute_help(),
                                                             cols=64,
                                                             rows=10,
-                                                            attrencode=True,
                                                         ),
                                                     ),
                                                 ])),
@@ -3505,7 +3496,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
                                                     "<tt>CMK_TEXT</tt> as environment variable."),
                                                   cols=64,
                                                   rows=10,
-                                                  attrencode=True,
                                               )),
                                          ])),
                                 ]),
@@ -4052,10 +4042,7 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
     def valuespec(self):
         return Optional(
-            TextInput(
-                title=_("Host running Event Console"),
-                attrencode=True,
-            ),
+            TextInput(title=_("Host running Event Console"),),
             title=_("Send notifications to remote Event Console"),
             help=_("This will send the notification to a Check_MK Event Console on a remote host "
                    "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
@@ -4207,9 +4194,7 @@ def _valuespec_active_checks_mkevents():
                                                 ('$HOSTADDRESS$', _("IP address")),
                                                 ('$HOSTALIAS$', _("Alias")),
                                             ]),
-                                 TextInput(allow_empty=False,
-                                           attrencode=True,
-                                           title="Specify host explicitly"),
+                                 TextInput(allow_empty=False, title="Specify host explicitly"),
                              ],
                              default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
                  help=_("When querying the event status, you can match events to a particular host "
@@ -4264,7 +4249,6 @@ def _valuespec_active_checks_mkevents():
                              TextInput(
                                  title=_("Hostname/IP address of Event Console:"),
                                  allow_empty=False,
-                                 attrencode=True,
                              ),
                              Integer(
                                  title=_("TCP Port number:"),
@@ -4284,7 +4268,6 @@ def _valuespec_active_checks_mkevents():
                          title=_("Access via UNIX socket"),
                          allow_empty=False,
                          size=64,
-                         attrencode=True,
                      ),
                  ],
                  default_value=None,

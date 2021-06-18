@@ -65,5 +65,4 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
                    "this fails for some reason, the crash reports can be sent by mail to the "
                    "address configured here."),
             size=80,
-            attrencode=True,
         )

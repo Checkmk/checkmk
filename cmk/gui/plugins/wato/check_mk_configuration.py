@@ -913,7 +913,6 @@ class ConfigVariableiAdHocDowntime(ConfigVariable):
                          help=_("The comment which is automatically sent with an adhoc downtime"),
                          size=80,
                          allow_empty=False,
-                         attrencode=True,
                      )),
                 ],
             ),
@@ -945,7 +944,6 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
                 default_value="X-Remote-User",
                 regex=re.compile('^[A-Za-z0-9-]+$'),
                 regex_error=_("Only A-Z, a-z, 0-9 and minus (-) are allowed."),
-                attrencode=True,
             ),
             title=_("Authenticate users by incoming HTTP requests"),
             label=_("Activate HTTP header authentication (Warning: Only activate "
@@ -3091,7 +3089,6 @@ def _host_check_commands_host_check_command_choices() -> List[CascadingDropdownC
          TextInput(
              size=45,
              allow_empty=False,
-             attrencode=True,
              help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                     "with the name of the current host."),
          )),
@@ -3955,7 +3952,6 @@ def _valuespec_extra_host_conf_notes_url():
         title=_("Notes URL for Hosts"),
         help=_("With this setting you can set links to documentations "
                "for Hosts"),
-        attrencode=True,
         size=80,
     )
 
@@ -3989,7 +3985,6 @@ def _valuespec_extra_service_conf_display_name():
                "purpose of this rule set is to define unique names for several well-known "
                "services. It cannot rename services in general."),
         size=64,
-        attrencode=True,
     )
 
 
@@ -4008,7 +4003,6 @@ def _valuespec_extra_service_conf_notes_url():
         title=_("Notes URL for Services"),
         help=_("With this setting you can set links to documentations "
                "for each service"),
-        attrencode=True,
         size=80,
     )
 

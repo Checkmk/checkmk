@@ -1675,7 +1675,6 @@ class LDAPConnectionValuespec(Transform):
                  size=80,
                  default_value=lambda: ldap_filter_of_connection(self._connection_id, 'users', False
                                                                 ),
-                 attrencode=True,
              )),
             ("user_filter_group",
              LDAPDistinguishedName(
@@ -1702,7 +1701,6 @@ class LDAPConnectionValuespec(Transform):
                         "unique values to make an user identifyable by the value of this "
                         "attribute."),
                  default_value=lambda: ldap_attr_of_connection(self._connection_id, 'user_id'),
-                 attrencode=True,
              )),
             ("lower_user_ids",
              FixedValue(
@@ -1771,14 +1769,12 @@ class LDAPConnectionValuespec(Transform):
                  size=80,
                  default_value=lambda: ldap_filter_of_connection(self._connection_id, 'groups',
                                                                  False),
-                 attrencode=True,
              )),
             ("group_member",
              TextInput(
                  title=_("Member attribute"),
                  help=_("The attribute used to identify users group memberships."),
                  default_value=lambda: ldap_attr_of_connection(self._connection_id, 'member'),
-                 attrencode=True,
              )),
         ]
 

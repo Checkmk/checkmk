@@ -333,7 +333,6 @@ def _valuespec_datasource_programs():
         label=_("Command line to execute"),
         empty_text=_("Access Checkmk Agent via TCP"),
         size=80,
-        attrencode=True,
     )
 
 

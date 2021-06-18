@@ -634,10 +634,11 @@ def declare_custom_host_attrs():
             # Hack: The API does not perform validate_datatype and we can currently not enable
             # this as fix in 1.6 (see cmk/gui/plugins/webapi/utils.py::ABCHostAttributeValueSpec.validate_input()).
             # As a local workaround we use a custom validate function here to ensure we only get ascii characters
-            vs = TextInput(title=attr['title'],
-                           help=attr['help'],
-                           validate=_validate_is_ascii,
-                           attrencode=False)
+            vs = TextInput(
+                title=attr['title'],
+                help=attr['help'],
+                validate=_validate_is_ascii,
+            )
         else:
             raise NotImplementedError()
 

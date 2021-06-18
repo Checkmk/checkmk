@@ -225,7 +225,6 @@ class ConfigVariableServiceLevels(ConfigVariable):
                     TextInput(
                         title=_("Name / Description"),
                         allow_empty=False,
-                        attrencode=True,
                     ),
                 ],
                 orientation="horizontal",

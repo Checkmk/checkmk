@@ -568,8 +568,6 @@ class Filesize(Integer):
 
 class TextInput(ValueSpec):
     """Editor for a line of text"""
-
-    # TODO: Cleanup attrencode attribute
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: _Optional[str] = None,
@@ -577,7 +575,6 @@ class TextInput(ValueSpec):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -757,7 +754,6 @@ class RegExp(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -781,7 +777,6 @@ class RegExp(TextInput):
             try_max_width=try_max_width,
             cssclass=self._css_classes(case_sensitive, mode),
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -886,7 +881,6 @@ class EmailAddress(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -909,7 +903,6 @@ class EmailAddress(TextInput):
             try_max_width=try_max_width,
             cssclass=cssclass,
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -1080,7 +1073,6 @@ class HostAddress(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -1104,7 +1096,6 @@ class HostAddress(TextInput):
             try_max_width=try_max_width,
             cssclass=cssclass,
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -1230,7 +1221,6 @@ class Url(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -1254,7 +1244,6 @@ class Url(TextInput):
             try_max_width=try_max_width,
             cssclass=cssclass,
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -1374,7 +1363,6 @@ class TextAreaUnicode(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -1398,7 +1386,6 @@ class TextAreaUnicode(TextInput):
             try_max_width=try_max_width,
             cssclass=cssclass,
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -1476,7 +1463,6 @@ class Filename(TextInput):
         try_max_width: bool = False,
         cssclass: str = "text",
         strip: bool = True,
-        attrencode: bool = True,
         allow_empty: bool = True,
         empty_text: str = "",
         read_only: bool = False,
@@ -1500,7 +1486,6 @@ class Filename(TextInput):
             try_max_width=try_max_width,
             cssclass=cssclass,
             strip=strip,
-            attrencode=attrencode,
             allow_empty=allow_empty,
             empty_text=empty_text,
             read_only=read_only,
@@ -5336,7 +5321,7 @@ class Password(TextInput):
             else:
                 kwargs["help"] = plain_help
 
-        super().__init__(attrencode=True, **kwargs)
+        super().__init__(**kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:

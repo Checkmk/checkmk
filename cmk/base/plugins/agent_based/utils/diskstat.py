@@ -457,7 +457,6 @@ def check_diskstat_dict(
             levels_upper=_scale_levels(levels, 1e-3),
             render_func=render.timespan,
             label='Latency',
-            notice_only=notice_only,
         )
 
     # All the other metrics are currently not output in the plugin output - simply because

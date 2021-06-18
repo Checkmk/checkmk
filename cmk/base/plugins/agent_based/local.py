@@ -40,9 +40,9 @@ from .agent_based_api.v1 import (
     State,
     check_levels,
     register,
-    render,
 )
 from .agent_based_api.v1.clusterize import make_node_notice_results
+from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them
 LocalCheckResult = Iterable[Union[Metric, Result]]
@@ -58,7 +58,7 @@ class Perfdata(NamedTuple):
 
 
 class LocalResult(NamedTuple):
-    cached: Optional[Tuple[float, float, float]]
+    cache_info: Optional[CacheInfo]
     item: str
     state: State
     apply_levels: bool
@@ -93,7 +93,7 @@ def _try_convert_to_float(value: str) -> Optional[float]:
         return None
 
 
-def _parse_cache(cache_raw: Optional[str], now: float) -> Optional[Tuple[float, float, float]]:
+def _parse_cache(cache_raw: Optional[str], now: float) -> Optional[CacheInfo]:
     """Parse and preprocess cache info
     make sure max(..) will give the oldest/most outdated case
     """
@@ -101,7 +101,10 @@ def _parse_cache(cache_raw: Optional[str], now: float) -> Optional[Tuple[float, 
         return None
     creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
     age = now - creation_time
-    return (age, 100.0 * age / interval, interval)
+    return CacheInfo(
+        age=age,
+        cache_interval=interval,
+    )
 
 
 def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
@@ -265,9 +268,9 @@ def parse_local(string_table: StringTable) -> LocalSection:
 def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> LocalSection:
     """
     >>> parse_local_pure([['0 "Service Name" - arbitrary info text']], 1617883538).data
-    {'Service Name': LocalResult(cached=None, item='Service Name', state=<State.OK: 0>, apply_levels=False, text='arbitrary info text', perfdata=[])}
+    {'Service Name': LocalResult(cache_info=None, item='Service Name', state=<State.OK: 0>, apply_levels=False, text='arbitrary info text', perfdata=[])}
     >>> parse_local_pure([['cached(1617883538,1617883538) 0 "Service Name" - arbitrary info text']], 1617883538).data
-    {'Service Name': LocalResult(cached=(0.0, 0.0, 1617883538.0), item='Service Name', state=<State.OK: 0>, apply_levels=False, text='arbitrary info text', perfdata=[])}
+    {'Service Name': LocalResult(cache_info=CacheInfo(age=0.0, cache_interval=1617883538.0, elapsed_lifetime_percent=0.0), item='Service Name', state=<State.OK: 0>, apply_levels=False, text='arbitrary info text', perfdata=[])}
     """
     # NOTE: despite applying a regular expression to each line would allow for exact
     #       matching against all syntactical requirements, a single mistake in the line
@@ -325,7 +328,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
 
         parsed_data[item] = LocalResult(
-            cached=_parse_cache(raw_cached, now),
+            cache_info=_parse_cache(raw_cached, now),
             item=item,
             state=State.OK if state == 'P' else State(state),
             apply_levels=state == 'P',
@@ -416,16 +419,8 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
         )
     yield from _local_make_metrics(local_result)
 
-    if local_result.cached is not None:
-        # We try to mimic the behaviour of cached agent sections.
-        # Problem here: We need this info on a per-service basis, so we cannot use the section header.
-        # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
-        infotext = "Cache generated %s ago, Cache interval: %s, Elapsed cache lifespan: %s" % (
-            render.timespan(local_result.cached[0]),
-            render.timespan(local_result.cached[2]),
-            render.percent(local_result.cached[1]),
-        )
-        yield Result(state=State.OK, summary=infotext)
+    if local_result.cache_info is not None:
+        yield Result(state=State.OK, summary=render_cache_info(local_result.cache_info))
 
 
 def cluster_check_local(

@@ -10,6 +10,7 @@ import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric
+from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
 
 
 @pytest.mark.parametrize("check_line,expected_components", [
@@ -55,7 +56,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "Service_FOO": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="Service_FOO",
                                        state=State.OK,
                                        apply_levels=False,
@@ -77,7 +78,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "Service FOO": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="Service FOO",
                                        state=State.OK,
                                        apply_levels=False,
@@ -99,7 +100,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "Bar_Service": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="Bar_Service",
                                        state=State.WARN,
                                        apply_levels=False,
@@ -113,7 +114,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "NotGood": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="NotGood",
                                        state=State.CRIT,
                                        apply_levels=False,
@@ -138,7 +139,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "Some_other_Service": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="Some_other_Service",
                                        state=State.OK,
                                        apply_levels=True,
@@ -167,7 +168,7 @@ def test_local_format_error(string_table, exception_reason):
             local.LocalSection(errors=[],
                                data={
                                    "No-Text": local.LocalResult(
-                                       cached=None,
+                                       cache_info=None,
                                        item="No-Text",
                                        state=State.OK,
                                        apply_levels=True,
@@ -194,7 +195,7 @@ def test_local_format_error(string_table, exception_reason):
                 ],
                 data={
                     'D’oh!': local.LocalResult(
-                        cached=None,
+                        cache_info=None,
                         item="D’oh!",
                         state=State.UNKNOWN,
                         apply_levels=False,
@@ -224,7 +225,7 @@ def test_parse(string_table_row, expected_parsed_data):
 
 def test_fix_state():
     local_result = local.LocalResult(
-        cached=None,
+        cache_info=None,
         item="NotGood",
         state=State.CRIT,
         apply_levels=False,
@@ -249,9 +250,22 @@ def test_fix_state():
                           ]
 
 
-def test_cached():
+@pytest.mark.parametrize(
+    "age,expected",
+    [
+        (60, "Cache generated 1 minute 0 seconds ago, cache interval: 2 minutes 0 seconds, "
+         "elapsed cache lifespan: 50.00%"),
+        (-60,
+         "Cannot reasonably calculate cache metrics (hosts time is running ahead), cache interval: 2 minutes 0 seconds"
+        ),
+    ],
+)
+def test_cached(age, expected):
     local_result = local.LocalResult(
-        cached=(361, 314, 120),
+        cache_info=CacheInfo(
+            age=age,
+            cache_interval=120,
+        ),
         item="Cached",
         state=State.OK,
         apply_levels=False,
@@ -264,16 +278,14 @@ def test_cached():
                                       Result(state=State.OK, summary="A cached data service"),
                                       Result(
                                           state=State.OK,
-                                          summary=("Cache generated 6 minutes 1 second ago, "
-                                                   "Cache interval: 2 minutes 0 seconds, "
-                                                   "Elapsed cache lifespan: 314.00%"),
+                                          summary=f"{expected}",
                                       ),
                                   ]
 
 
 def test_compute_state():
     local_result = local.LocalResult(
-        cached=None,
+        cache_info=None,
         item="Some_other_Service",
         state=State.OK,
         apply_levels=True,
@@ -313,7 +325,7 @@ def test_cluster():
         "node0": local.LocalSection(errors=[],
                                     data={
                                         "item": local.LocalResult(
-                                            cached=None,
+                                            cache_info=None,
                                             item="Clustered service",
                                             state=State.OK,
                                             apply_levels=False,
@@ -324,7 +336,7 @@ def test_cluster():
         "node1": local.LocalSection(errors=[],
                                     data={
                                         "item": local.LocalResult(
-                                            cached=None,
+                                            cache_info=None,
                                             item="Clustered service",
                                             state=State.WARN,
                                             apply_levels=False,
@@ -335,7 +347,7 @@ def test_cluster():
         "node2": local.LocalSection(errors=[],
                                     data={
                                         "item": local.LocalResult(
-                                            cached=None,
+                                            cache_info=None,
                                             item="Clustered service",
                                             state=State.CRIT,
                                             apply_levels=False,
@@ -365,7 +377,7 @@ def test_cluster_missing_item():
         "node0": local.LocalSection(errors=[],
                                     data={
                                         "item": local.LocalResult(
-                                            cached=None,
+                                            cache_info=None,
                                             item="Clustered service",
                                             state=State.OK,
                                             apply_levels=False,

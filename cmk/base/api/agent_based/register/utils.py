@@ -15,7 +15,9 @@ from typing import (
     List,
     Literal,
     Mapping,
+    NoReturn,
     Optional,
+    Sequence,
     Union,
 )
 
@@ -29,7 +31,11 @@ from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
+TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
+
 ITEM_VARIABLE = "%s"
+
+_NONE_TYPE = type(None)
 
 
 def get_validated_plugin_module_name() -> Optional[str]:
@@ -63,7 +69,7 @@ def create_subscribed_sections(
 
 def validate_function_arguments(
     *,
-    type_label: Literal["check", "cluster_check", "discovery", "host_label", "inventory"],
+    type_label: TypeLabel,
     function: Callable,
     has_item: bool,
     default_params: Optional[Dict],
@@ -87,9 +93,25 @@ def validate_function_arguments(
     present_params = list(parameters)
 
     if expected_params == present_params:
-        return (None if type_label == "cluster_check" else
-                _validate_optional_section_annotation(parameters))
+        return _validate_optional_section_annotation(
+            parameters=parameters,
+            type_label=type_label,
+        )
+    _raise_appropriate_type_error(
+        expected_params=expected_params,
+        present_params=present_params,
+        type_label=type_label,
+        has_item=has_item,
+    )
 
+
+def _raise_appropriate_type_error(
+    *,
+    expected_params: Sequence[str],
+    present_params: Sequence[str],
+    type_label: TypeLabel,
+    has_item: bool,
+) -> NoReturn:
     # We know we must raise. Dispatch for a better error message:
 
     if set(expected_params) == set(present_params):  # not len()!
@@ -112,20 +134,32 @@ def validate_function_arguments(
         f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'")
 
 
-def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter]) -> None:
+def _validate_optional_section_annotation(
+    *,
+    parameters: Mapping[str, inspect.Parameter],
+    type_label: TypeLabel,
+) -> None:
     """Validate that the section annotation is correct, if present.
 
-    The thing is: if we have more than one section, all of them must be `Optional`.
+    We know almost nothing about the type of the section argument(s). Check the few things we know:
+
+        * If we have more than one section, all of them must be `Optional`.
+
     """
-    section_args = [p for n, p in params.items() if n.startswith("section_")]
-    if not section_args:
-        return  # we know nothing in this case
+    section_args = [p for n, p in parameters.items() if n.startswith("section")]
     if all(p.annotation == p.empty for p in section_args):
         return  # no typing used in plugin
-    none_type = type(None)
-    if all(none_type in get_args(p.annotation) for p in section_args):
-        return  # good, all sections are Optional.
-    raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
+
+    if type_label == "cluster_check":
+        return  # TODO
+
+    if len(section_args) <= 1:
+        return  # we know nothing in this case
+
+    if any(_NONE_TYPE not in get_args(p.annotation) for p in section_args):
+        raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
+
+    return
 
 
 class RuleSetType(enum.Enum):

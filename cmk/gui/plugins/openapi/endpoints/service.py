@@ -21,7 +21,8 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 definition on GitHub.
 """
-from cmk.gui import fields, sites
+from cmk.gui import sites
+from cmk.gui.plugins.openapi import fields
 from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services

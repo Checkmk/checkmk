@@ -18,7 +18,7 @@ import http
 import http.client
 
 from cmk.gui.http import Response
-from cmk.gui import fields
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,

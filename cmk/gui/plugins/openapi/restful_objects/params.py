@@ -18,7 +18,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     RawParameter,
     translate_to_openapi_keys,
 )
-from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 

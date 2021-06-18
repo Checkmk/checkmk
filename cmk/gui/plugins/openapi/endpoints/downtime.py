@@ -34,8 +34,10 @@ import json
 import datetime as dt
 from typing import Literal
 
-from cmk.gui import config, fields, sites
+from cmk.gui import config, sites
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.utils.livestatus_helpers.expressions import And, Or
@@ -48,7 +50,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
                        'service_by_query']
@@ -63,10 +65,10 @@ SERVICE_DESCRIPTION_SHOW = {
 }
 
 HOST_NAME_SHOW = {
-    'host_name': fields.HostField(
+    'host_name': fields.String(
         description=
         "The host name. No exception is raised when the specified host name does not exist",
-        should_exist=None,  # we do not care
+        pattern=HOST_NAME_REGEXP,
         example="example.com",
         required=False,
     )

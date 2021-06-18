@@ -40,7 +40,8 @@ To search for hosts with specific tags set on them:
 
 """
 
-from cmk.gui import fields, sites
+from cmk.gui import sites
+from cmk.gui.plugins.openapi import fields
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -48,7 +49,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 
 class HostParameters(BaseSchema):

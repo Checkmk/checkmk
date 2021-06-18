@@ -13,14 +13,21 @@ from typing import Any, Optional, Protocol, Tuple
 from marshmallow import fields as _fields, ValidationError, utils
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, sites, config
+from cmk.gui import watolib, valuespec as valuespec, sites, config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_group_information
-from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, NothingExpression
+from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
+    NothingExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
 from cmk.utils.livestatus_helpers.types import Table, Column
-from cmk.gui.fields.base import BaseSchema
-from cmk.gui.fields.utils import ObjectType, ObjectContext, collect_attributes, attr_openapi_schema
+from cmk.gui.plugins.openapi.utils import (
+    attr_openapi_schema,
+    BaseSchema,
+    collect_attributes,
+    ObjectContext,
+    ObjectType,
+)
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.utils.exceptions import MKException
 import cmk.utils.version as version
@@ -876,7 +883,10 @@ class HostField(String):
     def _validate(self, value):
         super()._validate(value)
 
-        # Regex gets checked through the `pattern` of the String instance
+        try:
+            valuespec.Hostname().validate_value(value, self.name)
+        except MKUserError as e:
+            raise self.make_error("invalid_name", host_name=value, invalid_reason=str(e))
 
         if self._should_exist is not None:
             host = watolib.Host.host(value)
@@ -954,7 +964,6 @@ def attributes_field(object_type: ObjectType,
 
 
 class SiteField(_fields.String):
-    """A field representing a site name."""
     default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
 
     def _validate(self, value):
@@ -1175,22 +1184,40 @@ class PasswordShare(String):
             raise self.make_error("invalid", name=value)
 
 
+Boolean = _fields.Boolean
+Decimal = _fields.Decimal
+DateTime = _fields.DateTime
+Dict = _fields.Dict
+Constant = _fields.Constant
+Time = _fields.Time
+Date = _fields.Date
+Field = _fields.Field
+
+# Shortcuts
+Int = Integer
+Bool = Boolean
+Str = String
+
 __all__ = [
-    'attributes_field',
-    'customer_field',
-    'column_field',
-    'ExprSchema',
-    'FolderField',
-    'FOLDER_PATTERN',
-    'GroupField',
-    'HostField',
+    'Bool',
+    'Boolean',
+    'Constant',
+    'DateTime',
+    'Date',
+    'Decimal',
+    'Dict',
+    'Int',
     'Integer',
     'List',
     'Nested',
-    'PasswordIdent',
-    'PasswordOwner',
-    'PasswordShare',
-    'query_field',
-    'SiteField',
+    'Str',
     'String',
+    'Time',
+    'Field',
+    'ExprSchema',
+    'FolderField',
+    'HostField',
+    'FOLDER_PATTERN',
+    'query_field',
+    'attributes_field',
 ]

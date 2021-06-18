@@ -19,8 +19,9 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.endpoints.utils import update_customer_info, complement_customer
 
-from cmk.gui import fields, userdb
+import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.watolib.users import edit_users, delete_users
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 

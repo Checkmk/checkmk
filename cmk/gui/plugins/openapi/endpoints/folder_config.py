@@ -38,7 +38,7 @@ from typing import List
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
-from cmk.gui import fields
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (

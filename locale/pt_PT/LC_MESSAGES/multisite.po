@@ -39563,6 +39563,14 @@ msgstr "Segundos para esperar entre o envio do fio e a votação para resposta"
 msgid "Section"
 msgstr "Secção"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "Nome da seção"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Nome da seção"
+
 msgid "Section name"
 msgstr "Nome da seção"
 

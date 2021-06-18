@@ -38466,6 +38466,14 @@ msgid "Section"
 msgstr "Acțiune"
 
 #, fuzzy
+msgid "Section Content"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "Section name"
 msgstr "Numele Aplicatiei"
 

@@ -39515,6 +39515,14 @@ msgstr ""
 msgid "Section"
 msgstr "Sectie"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "Naam van de sectie"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Naam van de sectie"
+
 msgid "Section name"
 msgstr "Naam van de sectie"
 

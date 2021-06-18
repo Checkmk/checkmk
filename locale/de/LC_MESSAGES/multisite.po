@@ -39580,6 +39580,14 @@ msgstr "Wartezeit in Sekunden zwischen Senden und Abfragen"
 msgid "Section"
 msgstr "Sektion"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "Sektionsname"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Sektionsname"
+
 msgid "Section name"
 msgstr "Sektionsname"
 

@@ -40039,6 +40039,14 @@ msgstr ""
 msgid "Section"
 msgstr "Section"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "Nom de la section"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Nom de la section"
+
 msgid "Section name"
 msgstr "Nom de la section"
 

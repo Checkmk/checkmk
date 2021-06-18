@@ -39868,6 +39868,14 @@ msgstr ""
 msgid "Section"
 msgstr "Sección"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "Nombre de la sección"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "Nombre de la sección"
+
 msgid "Section name"
 msgstr "Nombre de la sección"
 

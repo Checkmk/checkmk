@@ -38199,6 +38199,14 @@ msgstr "文字列の送信と応答のポーリングの間に待機する秒数
 msgid "Section"
 msgstr "セクション"
 
+#, fuzzy
+msgid "Section Content"
+msgstr "セクション名"
+
+#, fuzzy
+msgid "Section Name"
+msgstr "セクション名"
+
 msgid "Section name"
 msgstr "セクション名"
 

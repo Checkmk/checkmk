@@ -137,8 +137,9 @@ class ModePredefinedConditions(SimpleListMode):
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write("%s: %s" %
-                   (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
+        html.write_text(
+            "%s: %s" %
+            (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
         html.close_li()
         html.close_ul()
         html.write_text(vs_conditions().value_to_text(entry["conditions"]))

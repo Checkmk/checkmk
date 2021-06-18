@@ -384,9 +384,7 @@ class FilterTime(Filter):
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
             html.open_tr()
-            html.open_td()
-            html.write("%s:" % whatname)
-            html.close_td()
+            html.td("%s:" % whatname)
             html.open_td()
             html.text_input(varprefix)
             html.close_td()

@@ -26,9 +26,9 @@ multisite_commands.append({
     "permission"  : "action.sap_openticket",
     "title"       : _("Open support ticket"),
     "render"      : lambda: \
-        html.write(_('Comment') + ": ") == \
+        html.write_text(_('Comment') + ": ") == \
         html.text_input("_sap_ticket_comment", "", size=50, submit="_sap_openticket") == \
-        html.write(" &nbsp; ") == \
+        html.write_text(" &nbsp; ") == \
         html.button("_sap_openticket", _('Open Ticket')),
     "action"      : command_open_ticket,
     "group"       : _("SAP Ticket"),

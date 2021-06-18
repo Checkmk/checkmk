@@ -290,7 +290,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                      _("Context information about this rule"),
                                      "url",
                                      target="_blank")
-                    html.write("&nbsp;")
+                    html.write_text("&nbsp;")
                 html.write_text(rule["description"])
                 table.cell(_("Contacts"))
 
@@ -299,7 +299,7 @@ class ABCNotificationsMode(ABCEventsMode):
                     html.i(_("(no one)"))
                 else:
                     for line in infos:
-                        html.write("&bullet; %s" % line)
+                        html.write_text("&bullet; %s" % line)
                         html.br()
 
                 table.cell(_("Conditions"), css="rule_conditions")

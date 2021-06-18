@@ -1188,7 +1188,7 @@ def compute_availability_groups(what: AVObjectType, av_data: AVData,
     return availability_tables
 
 
-def object_title(what, av_entry):
+def object_title(what: str, av_entry) -> str:
     if what == "host":
         return av_entry["host"]
     # service and BI

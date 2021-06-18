@@ -244,7 +244,7 @@ class ModeAnalyzeConfig(WatoMode):
                         "acknowledge_test",
                     )
             else:
-                html.write("")
+                html.write_text("")
 
         # Add toggleable notitication context
         table.row(class_="ac_test_details hidden", id_="test_result_details_%s" % test_id)

@@ -193,7 +193,7 @@ class ModeLDAPConfig(LDAPMode):
                                      _("Context information about this connection"),
                                      "url",
                                      target="_blank")
-                    html.write("&nbsp;")
+                    html.write_text("&nbsp;")
                 html.write_text(connection["description"])
 
 

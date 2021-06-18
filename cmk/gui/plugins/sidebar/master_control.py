@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple, ContextManager
 
 import time
 
-import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
@@ -182,7 +181,7 @@ class MasterControlSnapin(SidebarSnapin):
 
         command = commands.get((column, state))
         if not command:
-            html.write(_("Command %s/%d not found") % (escaping.escape_attribute(column), state))
+            html.write_text(_("Command %s/%d not found") % (column, state))
             return
 
         sites.live().command("[%d] %s" % (int(time.time()), command), site)

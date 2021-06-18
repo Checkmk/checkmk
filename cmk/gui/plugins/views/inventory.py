@@ -351,7 +351,7 @@ class ABCRowTable(RowTable):
                 display_options.W):
             html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
             html.open_tt()
-            html.write(query.replace('\n', '<br>\n'))
+            html.write_text(query.replace('\n', '<br>\n'))
             html.close_tt()
             html.close_div()
 
@@ -1891,9 +1891,7 @@ class NodeRenderer:
             hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()
-            html.open_th(title=sub_invpath)
-            html.write(self._get_header(title, key, "#DDD"))
-            html.close_th()
+            html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
             html.open_td()
             self.show_attribute(value, hint)
             html.close_td()
@@ -1912,7 +1910,7 @@ class NodeRenderer:
     def _get_header(self, title: str, key: str, hex_color: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += HTML(" <span style='color: %s'>(%s)</span>" % (hex_color, key))
+            header += " " + html.render_span("(%s)" % key, style="color: %s" % hex_color)
         return header
 
     def _show_child_value(self, value: Any, hint: Dict) -> None:
@@ -1922,9 +1920,9 @@ class NodeRenderer:
         elif isinstance(value, str):
             html.write_text(ensure_str(value))
         elif isinstance(value, int):
-            html.write(str(value))
+            html.write_text(str(value))
         elif isinstance(value, float):
-            html.write("%.2f" % value)
+            html.write_text("%.2f" % value)
         elif value is not None:
             html.write(str(value))
 
@@ -1959,7 +1957,7 @@ class DeltaNodeRenderer(NodeRenderer):
             html.open_span(class_="invold")
             self._show_child_value(old, hint)
             html.close_span()
-            html.write(u" → ")
+            html.write_text(" → ")
             html.open_span(class_="invnew")
             self._show_child_value(new, hint)
             html.close_span()

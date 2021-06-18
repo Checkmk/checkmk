@@ -1622,7 +1622,7 @@ class FilterLogClass(Filter):
                 html.open_tr()
             html.open_td()
             html.checkbox("logclass%d" % l, True)
-            html.write(c)
+            html.write_text(c)
             html.close_td()
             if col == num_cols:
                 html.close_tr()
@@ -2595,9 +2595,9 @@ class FilterAggrService(Filter):
         )
 
     def display(self) -> None:
-        html.write(_("Host") + ": ")
+        html.write_text(_("Host") + ": ")
         html.text_input(self.htmlvars[1])
-        html.write(_("Service") + ": ")
+        html.write_text(_("Service") + ": ")
         html.text_input(self.htmlvars[2])
 
     def heading_info(self):

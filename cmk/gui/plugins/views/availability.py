@@ -273,7 +273,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
     # Deletion must take place before computation, since it affects the outcome
     with output_funnel.plugged():
         handle_delete_annotations()
-        confirmation_html_code = output_funnel.drain()
+        confirmation_html_code = HTML(output_funnel.drain())
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     html.request.del_vars("anno_")
@@ -330,7 +330,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
               "missing HTTP request variables to your request") %
             ", ".join(sorted(missing_single_infos)))
 
-    html.write(confirmation_html_code)
+    html.write_html(confirmation_html_code)
 
     if not user_errors:
         # If we abolish the limit we have to fetch the data again
@@ -540,9 +540,7 @@ def render_availability_timelines(what: AVObjectType, av_data: AVData,
 
 def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptions: AVOptions,
                                   timeline_nr: int) -> None:
-    html.open_h3()
-    html.write("%s %s" % (_("Timeline of"), availability.object_title(what, av_entry)))
-    html.close_h3()
+    html.h3(_("Timeline of %s") % availability.object_title(what, av_entry))
 
     timeline_rows = av_entry["timeline"]
 
@@ -934,7 +932,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode += output_funnel.drain()
+                    timewarpcode += HTML(output_funnel.drain())
 
         av_data = availability.compute_availability("bi", av_rawdata, avoptions)
 
@@ -953,7 +951,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
             _output_csv("bi", av_mode, av_data, avoptions)
             return
 
-        html.write(timewarpcode)
+        html.write_html(timewarpcode)
         do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)
 
     html.body_end()

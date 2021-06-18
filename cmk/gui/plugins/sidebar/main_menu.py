@@ -113,11 +113,11 @@ def ajax_message_read():
     response.set_content_type("application/json")
     try:
         notify.delete_gui_message(html.request.var('id'))
-        html.write("OK")
+        html.write_text("OK")
     except Exception:
         if config.debug:
             raise
-        html.write("ERROR")
+        html.write_text("ERROR")
 
 
 @page_registry.register_page("ajax_sidebar_get_messages")

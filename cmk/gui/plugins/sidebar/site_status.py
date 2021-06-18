@@ -63,9 +63,7 @@ class SiteStatus(SidebarSnapin):
                                        "view.py?view_name=sitehosts&site=%s" % sitename)
 
             html.open_tr()
-            html.open_td(class_="left")
-            html.write_html(text)
-            html.close_td()
+            html.td(text, class_="left")
             html.open_td(class_="state")
             if switch == "missing":
                 html.status_label(content=state, status=state, title=_("Site is missing"))

@@ -427,14 +427,14 @@ class FilterInvFloat(Filter):
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(" %s" % self._unit)
+            html.write_text(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(" %s" % self._unit)
+            html.write_text(" %s" % self._unit)
 
     def filter_configs(self):
         "Returns scaled lower and upper bounds"

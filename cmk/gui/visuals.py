@@ -684,7 +684,7 @@ def page_create_visual(what, info_keys, next_url=None):
                                    save_title=_("Continue")))
 
     html.open_p()
-    html.write(
+    html.write_text(
         _('Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. '
           'For example, the <i>services</i> datasource can be used to simply create a list '
           'of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even '
@@ -1170,7 +1170,7 @@ def show_filter(f: Filter) -> None:
     try:
         with output_funnel.plugged():
             f.display()
-            html.write(output_funnel.drain())
+            html.write_html(HTML(output_funnel.drain()))
     except LivestatusTestingError:
         raise
     except Exception as e:
@@ -1987,9 +1987,7 @@ def ajax_popup_add() -> None:
 
     for topic in page_menu_dropdown.topics:
         html.open_li()
-        html.open_span()
-        html.write(topic.title)
-        html.close_span()
+        html.span(topic.title)
         html.close_li()
 
         for entry in topic.entries:
@@ -2003,7 +2001,7 @@ def ajax_popup_add() -> None:
                         onclick=entry.item.link.onclick,
                         target=entry.item.link.target)
             html.icon(entry.icon_name or "trans")
-            html.write(entry.title)
+            html.write_text(entry.title)
             html.close_a()
             html.close_li()
 

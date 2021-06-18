@@ -366,26 +366,3 @@ check_info['cmciii.humidity'] = {
     "has_perfdata": True,
     "group": "humidity",
 }
-
-#.
-#   .--phase---------------------------------------------------------------.
-#   |                           _                                          |
-#   |                     _ __ | |__   __ _ ___  ___                       |
-#   |                    | '_ \| '_ \ / _` / __|/ _ \                      |
-#   |                    | |_) | | | | (_| \__ \  __/                      |
-#   |                    | .__/|_| |_|\__,_|___/\___|                      |
-#   |                    |_|                                               |
-#   '----------------------------------------------------------------------'
-
-
-def check_cmciii_phase(item, params, parsed):
-    return check_elphase(item, params, {item: get_sensor(item, params, parsed["phase"])})
-
-
-check_info['cmciii.phase'] = {
-    "inventory_function": lambda parsed: discover_cmciii_sensors("phase", parsed),
-    "check_function": check_cmciii_phase,
-    "service_description": "Input %s",
-    "has_perfdata": True,
-    "group": "el_inphase",
-}

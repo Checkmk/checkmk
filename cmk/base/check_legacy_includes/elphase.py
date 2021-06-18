@@ -28,6 +28,12 @@ _RENDER_FUNCTION_AND_UNIT = {
 #        "current" : 12.0,                                # without device state
 #     }
 # }
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_elphase(item, params, parsed):
     if item not in parsed:
         return  # Item not found in SNMP data

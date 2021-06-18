@@ -13,6 +13,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 import cmk.base.plugins.agent_based.cmciii as cmciii
 import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
+import cmk.base.plugins.agent_based.cmciii_phase as cmciii_phase
 
 
 @pytest.mark.parametrize("variable, expected", [
@@ -68,12 +69,15 @@ def mock_discovery_params(monkeypatch):
     cmciii.context['discovery_params'] = discovery_params
 
 
-def run_discovery(section, plugin, info):
+def run_discovery(section, plugin, info, params=None):
     section_plugin = agent_based_register.get_section_plugin(SectionName(section))
     assert section_plugin
     plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin))
     assert plugin
-    return sorted(plugin.discovery_function(section_plugin.parse_function(info)))
+    section = section_plugin.parse_function(info)
+    if params is None:
+        return sorted(plugin.discovery_function(section=section))
+    return sorted(plugin.discovery_function(params=params, section=section))
 
 
 def run_check(section, plugin, item, info, params=None):
@@ -388,7 +392,9 @@ def _phase_sensor():
 
 
 def test_phase_sensors(discovery_params):
-    assert run_discovery('cmciii', 'cmciii_phase', _phase_sensor()) == [
+    params = {'use_sensor_description': False}
+    section = cmciii.parse_cmciii(_phase_sensor())
+    assert list(cmciii_phase.discover_cmciii_phase(params, section)) == [
         Service(item='Master_PDU Phase 1', parameters={'_item_key': 'Master_PDU Phase 1'}),
         Service(item='Master_PDU Phase 2', parameters={'_item_key': 'Master_PDU Phase 2'}),
         Service(item='Master_PDU Phase 3', parameters={'_item_key': 'Master_PDU Phase 3'}),
@@ -691,9 +697,10 @@ def _generictest_cmciii():
     ]  # yapf: disable
 
 
-@pytest.mark.parametrize('plugin,expected', [
+@pytest.mark.parametrize('plugin,params,expected', [
     (
         'cmciii',
+        None,
         [
             Service(item='CMC-IOModul'),
             Service(item='CMC-PU'),
@@ -701,10 +708,11 @@ def _generictest_cmciii():
             Service(item='CMC-Temperatur'),
         ],
     ),
-    ('cmciii_psm_current', []),
-    ('cmciii_psm_plugs', []),
+    ('cmciii_psm_current', None, []),
+    ('cmciii_psm_plugs', None, []),
     (
         'cmciii_io',
+        None,
         [
             Service(item='CMC-IOModul Input 1', parameters={'_item_key': 'CMC-IOModul Input 1'}),
             Service(item='CMC-IOModul Input 2', parameters={'_item_key': 'CMC-IOModul Input 2'}),
@@ -723,9 +731,14 @@ def _generictest_cmciii():
             Service(item='CMC-PU Output', parameters={'_item_key': 'CMC-PU Output'}),
         ],
     ),
-    ('cmciii_access', [Service(item='CMC-PU Access', parameters={'_item_key': 'CMC-PU Access'})]),
+    (
+        'cmciii_access',
+        None,
+        [Service(item='CMC-PU Access', parameters={'_item_key': 'CMC-PU Access'})],
+    ),
     (
         'cmciii_temp',
+        None,
         [
             Service(item='Ambient CMC-PU', parameters={'_item_key': 'Ambient CMC-PU'}),
             Service(item='Ambient CMC-Temperatur',
@@ -735,9 +748,10 @@ def _generictest_cmciii():
             Service(item='System CMC-PU', parameters={'_item_key': 'System CMC-PU'}),
         ],
     ),
-    ('cmciii_temp_in_out', []),
+    ('cmciii_temp_in_out', None, []),
     (
         'cmciii_can_current',
+        None,
         [
             Service(item='CMC-PU System.CAN1 Current',
                     parameters={'_item_key': 'CMC-PU System.CAN1 Current'}),
@@ -747,15 +761,16 @@ def _generictest_cmciii():
     ),
     (
         'cmciii_humidity',
+        None,
         [
             Service(item='CMC-Temperatur Humidity',
                     parameters={'_item_key': 'CMC-Temperatur Humidity'})
         ],
     ),
-    ('cmciii_phase', []),
+    ('cmciii_phase', {}, []),
 ])
-def test_genericdataset_cmciii_discovery(discovery_params, plugin, expected):
-    assert run_discovery('cmciii', plugin, _generictest_cmciii()) == expected
+def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expected):
+    assert run_discovery('cmciii', plugin, _generictest_cmciii(), params) == expected
 
 
 @pytest.mark.parametrize('plugin, params, items', [
@@ -929,9 +944,10 @@ def _generictest_cmciii_input_regression():
              [u'4.5', u'Input.Category', u'14', u'', u'0', u'0', u'0']]]  # yapf: disable
 
 
-@pytest.mark.parametrize('plugin,expected', [
+@pytest.mark.parametrize('plugin,params,expected', [
     (
         'cmciii',
+        None,
         [
             Service(item='CMCIII-IO1'),
             Service(item='CMCIII-IO2'),
@@ -942,10 +958,11 @@ def _generictest_cmciii_input_regression():
             Service(item='Doors'),
         ],
     ),
-    ('cmciii_psm_current', []),
-    ('cmciii_psm_plugs', []),
+    ('cmciii_psm_current', None, []),
+    ('cmciii_psm_plugs', None, []),
     (
         'cmciii_io',
+        None,
         [
             Service(item='CMCIII-IO2 Input 2', parameters={'_item_key': u'CMCIII-IO2 Input 2'}),
             Service(item='CMCIII-IO2 Input 3', parameters={'_item_key': u'CMCIII-IO2 Input 3'}),
@@ -957,15 +974,21 @@ def _generictest_cmciii_input_regression():
             Service(item='Doors Input', parameters={'_item_key': 'Doors Input'}),
         ],
     ),
-    ('cmciii_access', []),
-    ('cmciii_temp', []),
-    ('cmciii_temp_in_out', []),
-    ('cmciii_can_current', []),
-    ('cmciii_humidity', []),
-    ('cmciii_phase', []),
+    ('cmciii_access', None, []),
+    ('cmciii_temp', None, []),
+    ('cmciii_temp_in_out', None, []),
+    ('cmciii_can_current', None, []),
+    ('cmciii_humidity', None, []),
+    ('cmciii_phase', {}, []),
 ])
-def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plugin, expected):
-    assert run_discovery('cmciii', plugin, _generictest_cmciii_input_regression()) == expected
+def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plugin, params,
+                                                          expected):
+    assert run_discovery(
+        'cmciii',
+        plugin,
+        _generictest_cmciii_input_regression(),
+        params,
+    ) == expected
 
 
 @pytest.mark.parametrize('plugin, items', [

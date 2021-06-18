@@ -6,7 +6,7 @@
 
 import cmk.utils.paths
 import cmk.gui.config as config
-from cmk.gui.htmllib import HTML, foldable_container
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar import (
@@ -69,7 +69,7 @@ class CustomLinks(SidebarSnapin):
                         else:
                             icon_name = "link"
 
-                        linktext = HTML(html.render_icon(icon_name) + " " + entry[0])
+                        linktext = html.render_icon(icon_name) + " " + entry[0]
 
                         simplelink(linktext, entry[1], frame)
                     else:

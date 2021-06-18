@@ -62,7 +62,7 @@ if cmk_version.is_managed_edition():
 # TODO: Drop once we don't support legacy snapins anymore
 from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
     snapin_registry, snapin_width, snapin_site_choice, render_link, heading, link, simplelink,
-    bulletlink, iconlink, nagioscgilink, footnotelinks, begin_footnote_links, end_footnote_links,
+    bulletlink, iconlink, footnotelinks, begin_footnote_links, end_footnote_links,
     write_snapin_exception,
 )
 

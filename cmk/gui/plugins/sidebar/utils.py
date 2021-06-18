@@ -8,18 +8,18 @@
 import abc
 import traceback
 import json
-from typing import Optional, Any, Dict, List, Tuple, Type
+from typing import Optional, Any, Dict, List, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
 
 from cmk.gui.sites import SiteId, filter_available_site_choices
 import cmk.gui.pages
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.type_defs import Choices
+from cmk.gui.utils.html import HTML
+from cmk.gui.type_defs import Choices, Icon
 from cmk.gui.type_defs import RoleName, PermissionName, Visual
 from cmk.gui.visuals import visual_title
 from cmk.gui.htmllib import foldable_container
@@ -226,7 +226,10 @@ snapin_registry = SnapinRegistry()
 # TODO: Move these to a class
 
 
-def render_link(text, url, target="main", onclick=None):
+def render_link(text: Union[str, HTML],
+                url: str,
+                target: str = "main",
+                onclick: Optional[str] = None) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
     # [1] protocol://hostname/url/link.py
@@ -242,22 +245,25 @@ def render_link(text, url, target="main", onclick=None):
                          onclick=onclick or None)
 
 
-def link(text, url, target="main", onclick=None):
-    return html.write(render_link(text, url, target=target, onclick=onclick))
+def link(text: Union[str, HTML],
+         url: str,
+         target: str = "main",
+         onclick: Optional[str] = None) -> None:
+    html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
-def simplelink(text, url, target="main"):
+def simplelink(text: Union[str, HTML], url: str, target: str = "main") -> None:
     link(text, url, target)
     html.br()
 
 
-def bulletlink(text, url, target="main", onclick=None):
+def bulletlink(text: str, url: str, target: str = "main", onclick: Optional[str] = None) -> None:
     html.open_li(class_="sidebar")
     link(text, url, target, onclick)
     html.close_li()
 
 
-def iconlink(text, url, icon):
+def iconlink(text: str, url: str, icon: Icon) -> None:
     html.open_a(class_=["iconlink", "link"], target="main", href=url)
     html.icon(icon, cssclass="inline")
     html.write_text(text)
@@ -265,41 +271,32 @@ def iconlink(text, url, icon):
     html.br()
 
 
-def write_snapin_exception(e):
+def write_snapin_exception(e: Exception) -> None:
     html.open_div(class_=["snapinexception"])
     html.h2(_('Error'))
-    html.p(e)
+    html.p(str(e))
     html.div(traceback.format_exc().replace('\n', '<br>'), style="display:none;")
     html.close_div()
 
 
-def heading(text):
-    html.write("<h3>%s</h3>\n" % escaping.escape_attribute(text))
+def heading(text: str) -> None:
+    html.h3(text)
 
 
 # TODO: Better change to context manager?
-def begin_footnote_links():
+def begin_footnote_links() -> None:
     html.open_div(class_="footnotelink")
 
 
-def end_footnote_links():
+def end_footnote_links() -> None:
     html.close_div()
 
 
-def footnotelinks(links):
+def footnotelinks(links: List[Tuple[str, str]]) -> None:
     begin_footnote_links()
     for text, target in links:
         link(text, target)
     end_footnote_links()
-
-
-def nagioscgilink(text, target):
-    html.open_li(class_="sidebar")
-    html.a(text,
-           class_="link",
-           target="main",
-           href="%snagios/cgi-bin/%s" % (config.url_prefix(), target))
-    html.close_li()
 
 
 def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:

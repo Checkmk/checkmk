@@ -2029,7 +2029,8 @@ class HostTagCondition(ValueSpec):
             varprefix += "_"
 
         if not config.tags.get_tag_ids():
-            html.write(_("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
+            html.write_text(
+                _("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
             return
 
         tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())

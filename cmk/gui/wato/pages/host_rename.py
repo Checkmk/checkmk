@@ -154,20 +154,22 @@ class ModeBulkRenameHost(WatoMode):
             flash(warning)
             return None
 
-        message = _(
-            "<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>"
-        )
-        message += "<table>"
+        message = html.render_b(
+            _("Do you really want to rename to following hosts?"
+              "This involves a restart of the monitoring core!"))
+
+        rows = []
         for _folder, host_name, target_name in renamings:
-            message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
-        message += "</table>"
+            rows.append(
+                html.render_tr(html.render_td(host_name) + html.render_td(" → %s" % target_name)))
+        message += html.render_table(HTML().join(rows))
 
         nr_rename = len(renamings)
         c = _confirm(
             _("Confirm renaming of %d %s") % (nr_rename, ungettext("host", "hosts", nr_rename)),
-            HTML(message))
+            message)
         if c:
-            title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
+            title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
             host_renaming_job.set_function(rename_hosts_background_job, renamings)
 

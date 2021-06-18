@@ -6260,17 +6260,19 @@ class CAorCAChain(UploadOrPasteTextFile):
 
     def value_to_text(self, value):
         cert_info = self.analyse_cert(value)
-        text = u"<table>"
+
+        rows = []
         for what, title in [
             ("issuer", _("Issuer")),
             ("subject", _("Subject")),
         ]:
-            text += u"<tr><td>%s:</td><td>" % title
-            for title1, val in sorted(cert_info[what].items()):
-                text += u"%s: %s<br>" % (title1, val)
-            text += u"</tr>"
-        text += u"</table>"
-        return text
+            rows.append(
+                html.render_tr(
+                    html.render_td("%s:" % title) + html.render_td(HTML().join(
+                        escaping.escape_html_permissive("%s: %s" % (title1, val))
+                        for title1, val in sorted(cert_info[what].items())))))
+        # TODO: This cast will be removed soon
+        return str(html.render_table(HTML().join(rows)))
 
 
 # TODO: Cleanup kwargs

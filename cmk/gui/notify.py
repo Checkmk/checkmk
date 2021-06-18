@@ -21,6 +21,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
+from cmk.gui.escaping import escape_html_permissive
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
     Permission,
@@ -281,16 +282,21 @@ def _process_notify_message(msg):
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = _('The notification has been sent via<br>')
-    message += "<table>"
-    for method in msg['methods']:
-        message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-            (_notify_methods()[method]["title"], num_success[method], num_recipients)
-    message += "</table>"
+    message = escape_html_permissive(_('The notification has been sent via'))
+    message += html.render_br()
 
-    message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (makeuri(request, []), _('Back to previous page'))
-    html.show_message(HTML(message))
+    parts = []
+    for method in msg['methods']:
+        parts.append(
+            html.render_tr(
+                html.render_td(_notify_methods()[method]["title"]) +
+                html.render_td(_("to %d of %d recipients") %
+                               (num_success[method], num_recipients))))
+    message += html.render_table(HTML().join(parts))
+
+    message += html.render_p(_('Sent notification to: %s') % ', '.join(recipients))
+    message += html.render_a(_('Back to previous page'), href=makeuri(request, []))
+    html.show_message(message)
 
     if errors:
         error_message = HTML()

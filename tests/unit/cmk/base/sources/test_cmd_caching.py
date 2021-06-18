@@ -259,7 +259,7 @@ def test_mode_check_discovery_cached(mocker):
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_all_hosts(mocker):
-    _patch_data_source(mocker, maybe=True, max_age=120)
+    _patch_data_source(mocker, maybe=True, max_age=120, use_outdated=True)
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, [])
     active_real_hosts = config.get_config_cache().all_active_realhosts()
     assert Source.parse.call_count == (  # type: ignore[attr-defined]
@@ -269,7 +269,7 @@ def test_mode_discover_all_hosts(mocker):
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts(mocker):
     # TODO: Is it correct that no cache is used here?
-    _patch_data_source(mocker, max_age=0)
+    _patch_data_source(mocker, max_age=120)
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
@@ -289,7 +289,7 @@ def test_mode_discover_explicit_hosts_cache(mocker):
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_discover_explicit_hosts_no_cache(mocker):
-    _patch_data_source(mocker, disabled=True, max_age=0)
+    _patch_data_source(mocker, disabled=True, max_age=120)
     cmk.base.modes.check_mk.option_no_cache()  # --no-cache
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]

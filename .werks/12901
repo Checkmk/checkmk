@@ -1,0 +1,12 @@
+Title: ps: Fix crash if only some node of a cluster provide memory info
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624287379
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p6
+
+The ps check plugin crashed if services where clustered, but only some
+nodes provided a memory information and others did not.

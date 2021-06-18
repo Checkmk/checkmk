@@ -86,12 +86,15 @@ def check_domino_tasks(
 def cluster_check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
-    section_domino_tasks: Dict[str, ps.Section],
-    section_mem: Dict[str, memory.SectionMem],
+    section_domino_tasks: Dict[str, Optional[ps.Section]],
+    section_mem: Dict[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
 
+    iter_non_trivial_sections = ((node_name, node_section)
+                                 for node_name, node_section in section_domino_tasks.items()
+                                 if node_section is not None)
     process_lines: ProcessLines = [(node_name, psi, cmd_line)
-                                   for node_name, node_section in section_domino_tasks.items()
+                                   for node_name, node_section in iter_non_trivial_sections
                                    for (psi, cmd_line) in node_section[1]]
 
     yield from ps.check_ps_common(
@@ -102,7 +105,7 @@ def cluster_check_domino_tasks(
         total_ram_map={
             node: section["MemTotal"]
             for node, section in section_mem.items()
-            if "MemTotal" in section
+            if section and "MemTotal" in section
         },
         cpu_cores=1,
     )

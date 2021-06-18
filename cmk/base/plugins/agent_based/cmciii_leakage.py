@@ -8,24 +8,30 @@ from .agent_based_api.v1 import register, Result, State
 from .utils.cmciii import discover_cmciii_sensors, get_sensor, discovery_default_parameters
 
 
-def discover_cmciii_status(params, section):
-    yield from discover_cmciii_sensors("status", params, section)
+def discover_cmciii_leakage(params, section):
+    yield from discover_cmciii_sensors("leakage", params, section)
 
 
 def check_cmciii_status(item, params, section):
-    entry = get_sensor(item, params, section["status"])
+    entry = get_sensor(item, params, section["leakage"])
     if not entry:
         return
 
+    # We do not take entry["Position"] into account. It detects leaks but does
+    # not account for the delay. The delay is the time after which the status
+    # message changes.
+    # The leakage status is a readable text for notAvail(1), ok(4), alarm(5),
+    # probeOpen(24). All numeric values are defined in cmcIIIMsgStatus.
     status = entry["Status"]
     yield Result(state=State.CRIT if status != "OK" else State.OK, summary="Status: %s" % status)
+    yield Result(state=State.OK, summary="Delay: %s" % entry["Delay"])
 
 
 register.check_plugin(
-    name="cmciii_status",
+    name="cmciii_leakage",
     sections=['cmciii'],
     service_name="%s",
-    discovery_function=discover_cmciii_status,
+    discovery_function=discover_cmciii_leakage,
     check_function=check_cmciii_status,
     discovery_ruleset_name="discovery_cmciii",
     discovery_default_parameters=discovery_default_parameters(),

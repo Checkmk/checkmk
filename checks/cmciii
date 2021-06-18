@@ -389,34 +389,3 @@ check_info['cmciii.phase'] = {
     "has_perfdata": True,
     "group": "el_inphase",
 }
-
-#   .--leakage-------------------------------------------------------------.
-#   |                  _            _                                      |
-#   |                 | | ___  __ _| | ____ _  __ _  ___                   |
-#   |                 | |/ _ \/ _` | |/ / _` |/ _` |/ _ \                  |
-#   |                 | |  __/ (_| |   < (_| | (_| |  __/                  |
-#   |                 |_|\___|\__,_|_|\_\__,_|\__, |\___|                  |
-#   |                                         |___/                        |
-#   +----------------------------------------------------------------------+
-
-
-def check_cmciii_leakage(item, params, parsed):
-    entry = get_sensor(item, params, parsed["leakage"])
-    if not entry:
-        return
-
-    # We do not take entry["Position"] into account. It detects leaks but does
-    # not account for the delay. The delay is the time after which the status
-    # message changes.
-    # The leakage status is a readable text for notAvail(1), ok(4), alarm(5),
-    # probeOpen(24). All numeric values are defined in cmcIIIMsgStatus.
-    status = entry["Status"]
-    yield 2 if status != "OK" else 0, "Status: %s" % status
-    yield 0, "Delay: %s" % entry["Delay"]
-
-
-check_info['cmciii.leakage'] = {
-    "inventory_function": lambda parsed: discover_cmciii_sensors("leakage", parsed),
-    "check_function": check_cmciii_leakage,
-    "service_description": "%s",
-}

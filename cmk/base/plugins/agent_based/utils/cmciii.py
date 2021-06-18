@@ -7,6 +7,10 @@
 from ..agent_based_api.v1 import Service
 
 
+def discovery_default_parameters():
+    return {'use_sensor_description': False}
+
+
 def discover_cmciii_sensors(type_, params, parsed):
     for id_, entry in parsed[type_].items():
         yield Service(item=get_item(id_, params, entry), parameters={'_item_key': id_})

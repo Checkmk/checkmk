@@ -1520,12 +1520,11 @@ _DiscoveryOptions = TypedDict(
 
 def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
+    checkers.FileCacheFactory.maybe = True
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        # This will make Checkmk only contact hosts in case the cache is not
-        # new enough.
-        checkers.FileCacheFactory.reset_maybe()
+        checkers.FileCacheFactory.use_outdated = True
 
     selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.do_discovery(

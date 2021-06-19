@@ -17,7 +17,7 @@ def test_aggregator_raises_collision():
         TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
     ]
 
-    result = inventory._TreeAggregator().aggregate_results(inventory_items)
+    result = inventory.TreeAggregator().aggregate_results(inventory_items)
 
     assert isinstance(result, TypeError)
     assert str(result) == (

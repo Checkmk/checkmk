@@ -13,15 +13,11 @@ from contextlib import suppress
 from typing import (
     Container,
     Dict,
-    Hashable,
-    Iterable,
     List,
-    Literal,
     NamedTuple,
     Optional,
     Sequence,
     Tuple,
-    Union,
 )
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -54,18 +50,10 @@ from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs, check_sources, check_parsing_errors
 import cmk.base.config as config
 import cmk.base.section as section
-from cmk.base.api.agent_based.inventory_classes import (
-    AttrDict,
-    Attributes,
-    InventoryResult,
-    TableRow,
-)
 from cmk.base.sources import Source
 
-
-class InventoryTrees(NamedTuple):
-    inventory: StructuredDataTree
-    status_data: StructuredDataTree
+from .utils import InventoryTrees
+from ._tree_aggregator import TreeAggregator
 
 
 class ActiveInventoryResult(NamedTuple):
@@ -75,16 +63,13 @@ class ActiveInventoryResult(NamedTuple):
     safe_to_write: bool
 
 
-#.
-#   .--Inventory-----------------------------------------------------------.
-#   |            ___                      _                                |
-#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
-#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
-#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
-#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
-#   |                                                   |___/              |
-#   +----------------------------------------------------------------------+
-#   | Code for doing the actual inventory                                  |
+#   .--cmk -i--------------------------------------------------------------.
+#   |                                   _            _                     |
+#   |                     ___ _ __ ___ | | __       (_)                    |
+#   |                    / __| '_ ` _ \| |/ /  _____| |                    |
+#   |                   | (__| | | | | |   <  |_____| |                    |
+#   |                    \___|_| |_| |_|_|\_\       |_|                    |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
@@ -129,6 +114,23 @@ def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
                             (tty.bold, tty.yellow, trees.inventory.count_entries(), tty.normal))
     section.section_success("Found %s%s%d%s status entries" %
                             (tty.bold, tty.yellow, trees.status_data.count_entries(), tty.normal))
+
+
+#.
+#   .--Inventory Check-----------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   |                      ____ _               _                          |
+#   |                     / ___| |__   ___  ___| | __                      |
+#   |                    | |   | '_ \ / _ \/ __| |/ /                      |
+#   |                    | |___| | | |  __/ (__|   <                       |
+#   |                     \____|_| |_|\___|\___|_|\_\                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 @decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
@@ -323,7 +325,7 @@ def _do_inv_for_realhost(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> InventoryTrees:
-    tree_aggregator = _TreeAggregator()
+    tree_aggregator = TreeAggregator()
     _set_cluster_property(tree_aggregator.trees.inventory, host_config)
 
     section.section_step("Executing inventory plugins")
@@ -369,127 +371,6 @@ def _set_cluster_property(
 ) -> None:
     inventory_tree.get_dict(
         "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
-
-
-class _TreeAggregator:
-    def __init__(self):
-        self.trees = InventoryTrees(
-            inventory=StructuredDataTree(),
-            status_data=StructuredDataTree(),
-        )
-        self._index_cache = {}
-        self._class_mutex = {}
-
-    def aggregate_results(
-        self,
-        inventory_generator: InventoryResult,
-    ) -> Optional[Exception]:
-
-        try:
-            table_rows, attributes = self._dispatch(inventory_generator)
-        except Exception as exc:
-            if cmk.utils.debug.enabled():
-                raise
-            return exc
-
-        for tabr in table_rows:
-            self._integrate_table_row(tabr)
-        for attr in attributes:
-            self._integrate_attributes(attr)
-
-        return None
-
-    def _dispatch(
-        self,
-        intentory_items: Iterable[Union[TableRow, Attributes]],
-    ) -> Tuple[Sequence[TableRow], Sequence[Attributes]]:
-        attributes = []
-        table_rows = []
-        for item in intentory_items:
-            expected_class_name = self._class_mutex.setdefault(tuple(item.path),
-                                                               item.__class__.__name__)
-            if item.__class__.__name__ != expected_class_name:
-                raise TypeError(f"Cannot create {item.__class__.__name__} at path {item.path}:"
-                                f" this is a {expected_class_name} node.")
-            if isinstance(item, Attributes):
-                attributes.append(item)
-            elif isinstance(item, TableRow):
-                table_rows.append(item)
-            else:
-                raise NotImplementedError()  # can't happen, inventory results are filtered
-
-        return table_rows, attributes
-
-    def _integrate_attributes(
-        self,
-        attributes: Attributes,
-    ) -> None:
-
-        leg_path = ".".join(attributes.path) + "."
-        if attributes.inventory_attributes:
-            self.trees.inventory.get_dict(leg_path).update(attributes.inventory_attributes)
-        if attributes.status_attributes:
-            self.trees.status_data.get_dict(leg_path).update(attributes.status_attributes)
-
-    @staticmethod
-    def _make_row_key(key_columns: AttrDict) -> Hashable:
-        return tuple(sorted(key_columns.items()))
-
-    def _get_row(
-        self,
-        path: str,
-        tree_name: Literal["inventory", "status_data"],
-        row_key: Hashable,
-        key_columns: AttrDict,
-    ) -> Dict[str, Union[None, int, float, str]]:
-        """Find matching table row or create one"""
-        table = getattr(self.trees, tree_name).get_list(path)
-
-        new_row_index = len(table)  # index should we need to create a new row
-        use_index = self._index_cache.setdefault((path, tree_name, row_key), new_row_index)
-
-        if use_index == new_row_index:
-            row = {**key_columns}
-            table.append(row)
-
-        return table[use_index]
-
-    def _integrate_table_row(
-        self,
-        table_row: TableRow,
-    ) -> None:
-        leg_path = ".".join(table_row.path) + ":"
-        row_key = self._make_row_key(table_row.key_columns)
-
-        # do this always, it sets key_columns!
-        self._get_row(
-            leg_path,
-            "inventory",
-            row_key,
-            table_row.key_columns,
-        ).update(table_row.inventory_columns)
-
-        # do this only if not empty:
-        if table_row.status_columns:
-            self._get_row(
-                leg_path,
-                "status_data",
-                row_key,
-                table_row.key_columns,
-            ).update(table_row.status_columns)
-
-
-#.
-#   .--Inventory Tree------------------------------------------------------.
-#   |  ___                      _                     _____                |
-#   | |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _  |_   _| __ ___  ___   |
-#   |  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |   | || '__/ _ \/ _ \  |
-#   |  | || | | \ V /  __/ | | | || (_) | |  | |_| |   | || | |  __/  __/  |
-#   | |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |   |_||_|  \___|\___|  |
-#   |                                         |___/                        |
-#   +----------------------------------------------------------------------+
-#   | Managing the inventory tree of a host                                |
-#   '----------------------------------------------------------------------'
 
 
 def _save_inventory_tree(

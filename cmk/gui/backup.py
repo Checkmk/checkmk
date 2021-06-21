@@ -483,14 +483,15 @@ class Jobs(BackupEntityCollection):
                     css = ""
 
                 table.cell(_("State"), css=css)
-                html.write(html.render_span(state_txt))
+                html.write_html(html.render_span(state_txt))
 
                 table.cell(_("Runtime"))
                 if state["started"]:
-                    html.write(_("Started at %s") % render.date_and_time(state["started"]))
+                    html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
                     duration = time.time() - state["started"]
                     if state["state"] == "finished":
-                        html.write(", Finished at %s" % render.date_and_time(state["finished"]))
+                        html.write_text(", Finished at %s" %
+                                        render.date_and_time(state["finished"]))
                         duration = state["finished"] - state["started"]
 
                     if "size" in state:
@@ -498,7 +499,7 @@ class Jobs(BackupEntityCollection):
                     else:
                         size_txt = ""
 
-                    html.write(
+                    html.write_text(
                         _(" (Duration: %s, %sIO: %s/s)") % (
                             render.timespan(duration),
                             size_txt,
@@ -508,10 +509,10 @@ class Jobs(BackupEntityCollection):
                 table.cell(_("Next run"))
                 schedule = job.schedule()
                 if not schedule:
-                    html.write(_("Only execute manually"))
+                    html.write_text(_("Only execute manually"))
 
                 elif schedule["disabled"]:
-                    html.write(_("Disabled"))
+                    html.write_text(_("Disabled"))
 
                 elif schedule["timeofday"]:
                     # find the next time of all configured times
@@ -519,7 +520,7 @@ class Jobs(BackupEntityCollection):
                     for timespec in schedule["timeofday"]:
                         times.append(next_scheduled_time(schedule["period"], timespec))
 
-                    html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
+                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
     def jobs_using_target(self, target):
         jobs = []
@@ -920,22 +921,20 @@ class PageAbstractBackupJobState:
 
         html.open_tr(class_=["data", "even0"])
         html.td(_("State"), class_=["left", "legend"])
-        html.open_td(class_=["state", css])
-        html.write(state_txt)
-        html.close_td()
+        html.td(state_txt, class_=["state", css])
         html.close_tr()
 
         html.open_tr(class_=["data", "odd0"])
         html.td(_("Runtime"), class_="left")
         html.open_td()
         if state["started"]:
-            html.write(_("Started at %s") % render.date_and_time(state["started"]))
+            html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
             duration = time.time() - state["started"]
             if state["state"] == "finished":
-                html.write(", Finished at %s" % render.date_and_time(state["started"]))
+                html.write_text(", Finished at %s" % render.date_and_time(state["started"]))
                 duration = state["finished"] - state["started"]
 
-            html.write(_(" (Duration: %s)") % render.timespan(duration))
+            html.write_text(_(" (Duration: %s)") % render.timespan(duration))
         html.close_td()
         html.close_tr()
 
@@ -1041,20 +1040,20 @@ class Target(BackupEntity):
                 table.cell(_("Size"), render.fmt_bytes(info["size"]))
                 table.cell(_("Encrypted"))
                 if info["config"]["encrypt"] is not None:
-                    html.write(info["config"]["encrypt"])
+                    html.write_text(info["config"]["encrypt"])
                 else:
                     html.write_text(_("No"))
 
                 if info["type"] == "Appliance":
                     table.cell(_("Clustered"))
                     if "cma_cluster" not in info:
-                        html.write(_("Standalone"))
+                        html.write_text(_("Standalone"))
                     else:
-                        html.write(_("Clustered"))
+                        html.write_text(_("Clustered"))
                         if not info["cma_cluster"]["is_inactive"]:
-                            html.write(" (%s)" % _("Active node"))
+                            html.write_text(" (%s)" % _("Active node"))
                         else:
-                            html.write(" (%s)" % _("Standby node"))
+                            html.write_text(" (%s)" % _("Standby node"))
 
     def backups(self):
         return self.type().backups()
@@ -1072,12 +1071,11 @@ class Targets(BackupEntityCollection):
 
     def show_list(self, title=None, editable=True):
         title = title if title else _("Targets")
-        html.open_h2()
-        html.write(title)
-        html.close_h2()
+        html.h2(title)
         if not editable and is_site():
-            html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
-                                       "open the device backup management."))
+            html.p(
+                _("These backup targets can not be edited here. You need to "
+                  "open the device backup management."))
 
         with table_element(sortable=False, searchable=False) as table:
 

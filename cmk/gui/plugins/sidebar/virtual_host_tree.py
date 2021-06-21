@@ -131,7 +131,7 @@ class VirtualHostTree(SidebarSnapin):
                     treename="tag-tree",
                     id_=".".join(map(str, path)),
                     isopen=False,
-                    title=HTML(bullet + title),
+                    title=bullet + title,
                     icon="foldable_sidebar",
                 )
 
@@ -147,7 +147,8 @@ class VirtualHostTree(SidebarSnapin):
 
                 if "_children" not in subtree:
                     if self._is_tag_subdir(path, cwd):
-                        html.write(self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
+                        html.write_html(
+                            self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
                         if subtree.get("_svc_problems"):
                             url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
                             html.icon_button(
@@ -155,7 +156,7 @@ class VirtualHostTree(SidebarSnapin):
                                 _("Show the service problems contained in this branch"),
                                 "svc_problems",
                                 target="main")
-                        html.write(node_title)
+                        html.write_html(node_title)
                         html.br()
                 else:
                     self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
@@ -169,12 +170,15 @@ class VirtualHostTree(SidebarSnapin):
             return False
         return self._is_tag_subdir(path[1:], cwd[1:])
 
-    def _tag_tree_bullet(self, state, path, leaf):
-        code = (u'<div class="tagtree %sstatebullet state%d">&nbsp;</div>' %
-                ((leaf and "leaf " or ""), state))
+    def _tag_tree_bullet(self, state, path, leaf) -> HTML:
+        code = html.render_div(
+            "&nbsp;",
+            class_=["tagtree", "leafstatebullet" if leaf else "statebullet",
+                    "state%d" % state])
         if not leaf:
-            code = ('<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' %
-                    (_("Display the tree only below this node"), "|".join(path), code))
+            code += html.render_a(code,
+                                  href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
+                                  title=_("Display the tree only below this node"))
         return code + " "
 
     def _tag_tree_url(self, tree_spec, node_values, viewname):
@@ -467,7 +471,7 @@ function virtual_host_tree_enter(path)
 
         self._current_tree_id = new_tree
         self._save_user_settings()
-        html.write("OK")
+        response.set_data("OK")
 
     # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self):
@@ -477,7 +481,7 @@ function virtual_host_tree_enter(path)
                 if html.request.var("path") else [])
         self._cwds[self._current_tree_id] = path
         self._save_user_settings()
-        html.write("OK")
+        response.set_data("OK")
 
     @classmethod
     def refresh_regularly(cls):

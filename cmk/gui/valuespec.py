@@ -366,7 +366,7 @@ class Age(ValueSpec):
                                 default_value=str(val),
                                 size=4,
                                 cssclass="number")
-                html.write(" %s " % title)
+                html.write_text(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
         html.close_div()
@@ -1612,7 +1612,7 @@ class ListOfStrings(ValueSpec):
             self._valuespec.render_input(varprefix + "_%d" % nr, s)
             if not self._vertical and self._separator:
                 html.nbsp()
-                html.write(self._separator)
+                html.write_text(self._separator)
                 html.nbsp()
             html.close_div()
         html.close_div()
@@ -2411,11 +2411,11 @@ class DropdownChoice(ValueSpec):
                                                                   value)))
 
         if value is None and not options:
-            html.write(self._empty_text)
+            html.write_text(self._empty_text)
             return
 
         if len(options) == 0:
-            html.write(self._empty_text)
+            html.write_text(self._empty_text)
             return
 
         html.dropdown(varprefix,
@@ -2549,7 +2549,7 @@ class AjaxDropdownChoice(DropdownChoice):
 
     def render_input(self, varprefix: str, value) -> None:
         if self._label:
-            html.write("%s " % self._label)
+            html.write_text(self._label)
 
         clean_choices = [(value, value)] if value else self.choices()
 
@@ -2839,7 +2839,7 @@ class CascadingDropdown(ValueSpec):
         options: Choices = []
         choices = self.choices()
         if not choices:
-            html.write(self._no_elements_text)
+            html.write_text(self._no_elements_text)
             return
 
         for nr, (val, title, vs) in enumerate(choices):
@@ -3156,7 +3156,7 @@ class ListChoice(ValueSpec):
     def render_input(self, varprefix, value):
         self.load_elements()
         if not self._elements:
-            html.write(self._no_elements_text)
+            html.write_text(self._no_elements_text)
             return
 
         self._draw_listchoice(varprefix, value, self._elements, self._columns, self._toggle_all)
@@ -4378,7 +4378,7 @@ class Optional(ValueSpec):
             value = self._valuespec.default_value()
         if self._valuespec.title():
             the_title = self._valuespec.title()
-            html.write(("???" if the_title is None else the_title) + " ")
+            html.write_text(("???" if the_title is None else the_title) + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.close_span()
 
@@ -4605,7 +4605,7 @@ class Tuple(ValueSpec):
             if self._orientation == "vertical":
                 html.open_tr()
             elif self._orientation == "float":
-                html.write(self._separator)
+                html.write_text(self._separator)
 
             if self._show_titles:
                 elem_title = element.title()
@@ -4819,7 +4819,8 @@ class Dictionary(ValueSpec):
             else:
                 visible = True
                 if vs.title():
-                    html.write(" %s" % vs.title())
+                    html.write_text(" ")
+                    html.write_text(vs.title())
                 # two_columns are used for space efficiency in very few places like e.g. filters
                 # where it is clear from the context if values are required or not. Therefore, we
                 # dont add a required label in this case.
@@ -5088,7 +5089,7 @@ class ElementSelection(ValueSpec):
     def render_input(self, varprefix, value):
         self.load_elements()
         if len(self._elements) == 0:
-            html.write(self._empty_text)
+            html.write_text(self._empty_text)
         else:
             if self._label:
                 html.span(self._label, class_="vs_floating_text")
@@ -6133,10 +6134,10 @@ SSHKeyPairValue = _Tuple[str, str]
 class SSHKeyPair(ValueSpec):
     def render_input(self, varprefix: str, value: _Optional[SSHKeyPairValue]):
         if value:
-            html.write(_("Fingerprint: %s") % self.value_to_text(value))
+            html.write_text(_("Fingerprint: %s") % self.value_to_text(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)
         else:
-            html.write(_("Key pair will be generated when you save."))
+            html.write_text(_("Key pair will be generated when you save."))
 
     def value_to_text(self, value: SSHKeyPairValue) -> str:
         return self._get_key_fingerprint(value)

@@ -100,7 +100,7 @@ def _page_not_found() -> Response:
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     if request.has_var("_plain_error"):
-        html.write(_("Page not found"))
+        html.write_text(_("Page not found"))
     else:
         title = _("Page not found")
         html.header(

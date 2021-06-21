@@ -780,9 +780,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
         rendered_cells = [cell.render(row) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
-            html.open_p(class_=["ui-li-aside", "ui-li-desc", rendered_class])
-            html.write(rendered_content)
-            html.close_p()
+            html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
                 content = HTML(" &middot; ").join(
@@ -795,9 +793,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
                     html.write_text(': ')
-                    html.open_span(class_=rendered_class)
-                    html.write(rendered_content)
-                    html.close_span()
+                    html.span(rendered_content, class_=rendered_class)
                     html.close_p()
 
         html.close_li()
@@ -840,9 +836,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
                 continue  # Omit empty cells
 
             html.open_tr(class_="header")
-            html.open_th()
-            html.write(cell.title())
-            html.close_th()
+            html.th(cell.title())
             html.close_tr()
 
             html.open_tr(class_="data")

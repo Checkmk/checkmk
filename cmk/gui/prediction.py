@@ -74,7 +74,7 @@ def page_graph():
     )
 
     html.begin_form("prediction")
-    html.write(_("Show prediction for "))
+    html.write_text(_("Show prediction for "))
     html.dropdown("timegroup",
                   choices,
                   deflt=timegroup.name,

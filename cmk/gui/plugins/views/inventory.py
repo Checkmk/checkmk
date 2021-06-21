@@ -1916,15 +1916,17 @@ class NodeRenderer:
     def _show_child_value(self, value: Any, hint: Dict) -> None:
         if "paint_function" in hint:
             _tdclass, code = hint["paint_function"](value)
-            html.write(code)
+            html.write_text(code)
         elif isinstance(value, str):
             html.write_text(ensure_str(value))
         elif isinstance(value, int):
             html.write_text(str(value))
         elif isinstance(value, float):
             html.write_text("%.2f" % value)
+        elif isinstance(value, HTML):
+            html.write_html(value)
         elif value is not None:
-            html.write(str(value))
+            html.write_text(str(value))
 
 
 class AttributeRenderer(NodeRenderer):

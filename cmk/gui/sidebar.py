@@ -515,13 +515,13 @@ class SidebarRenderer:
         styles = snapin_instance.styles()
         if styles:
             html.open_style()
-            html.write(styles)
+            html.write_text(styles)
             html.close_style()
 
     def _show_page_content(self, content: Optional['HTML']):
         html.open_div(id_="content_area")
         if content is not None:
-            html.write(content)
+            html.write_html(content)
         html.close_div()
 
     def _show_sidebar_head(self):
@@ -602,7 +602,7 @@ def ajax_snapin():
             finally:
                 snapin_code.append(output_funnel.drain())
 
-    html.write(json.dumps(snapin_code))
+    response.set_data(json.dumps(snapin_code))
 
 
 @cmk.gui.pages.register("sidebar_fold")

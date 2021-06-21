@@ -30,7 +30,7 @@ import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, output_funnel
+from cmk.gui.globals import html, request, transactions, output_funnel, response
 from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
 
 if TYPE_CHECKING:
@@ -289,9 +289,7 @@ class Table:
                                                title=html.render_h3(self.title,
                                                                     class_=["treeangle", "title"]))
             else:
-                html.open_h3(class_="table")
-                html.write(self.title)
-                html.close_h3()
+                html.h3(self.title, class_="table")
 
         with container:
             if self.help:
@@ -442,9 +440,7 @@ class Table:
                 if nr < len(rows) - 1 and not isinstance(rows[nr + 1], GroupHeader):
                     html.open_tr(class_="groupheader")
                     html.open_td(colspan=num_cols)
-                    html.open_h3()
-                    html.write(row.title)
-                    html.close_h3()
+                    html.h3(row.title)
                     html.close_td()
                     html.close_tr()
 
@@ -469,9 +465,7 @@ class Table:
                 if self.options["omit_empty_columns"] and empty_columns[col_index]:
                     continue
 
-                html.open_td(class_=cell.css, colspan=cell.colspan)
-                html.write(cell.content)
-                html.close_td()
+                html.td(cell.content, class_=cell.css, colspan=cell.colspan)
             html.close_tr()
 
         if not rows and search_term:
@@ -510,9 +504,11 @@ class Table:
         if limit is not None:
             rows = rows[:limit]
 
+        resp = []
+
         # If we have no group headers then paint the headers now
         if not omit_headers and self.rows and not isinstance(self.rows[0], GroupHeader):
-            html.write(
+            resp.append(
                 csv_separator.join(
                     [escaping.strip_tags(header.title) or "" for header in self.headers]) + "\n")
 
@@ -520,9 +516,11 @@ class Table:
             if isinstance(row, GroupHeader):
                 continue
 
-            html.write(csv_separator.join([escaping.strip_tags(cell.content) for cell in row.cells
-                                          ]))
-            html.write("\n")
+            resp.append(
+                csv_separator.join([escaping.strip_tags(cell.content) for cell in row.cells]))
+            resp.append("\n")
+
+        response.set_data("".join(resp))
 
     def _render_headers(self, actions_enabled: bool, actions_visible: bool,
                         empty_columns: List[bool]) -> None:
@@ -588,14 +586,12 @@ class Table:
                                      help_txt,
                                      img,
                                      cssclass='toggle_actions')
-                    html.open_span()
-                    html.write(header_title)
-                    html.close_span()
+                    html.span(header_title)
                     html.close_div()
                 else:
-                    html.write(header_title)
+                    html.write_text(header_title)
             else:
-                html.write(header_title)
+                html.write_text(header_title)
 
             html.close_th()
         html.close_tr()

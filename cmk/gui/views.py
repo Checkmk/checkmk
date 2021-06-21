@@ -45,7 +45,7 @@ from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import display_options, g, html, transactions, user_errors, output_funnel
-from cmk.gui.globals import request as global_request
+from cmk.gui.globals import request as global_request, response
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.i18n import _, _u
@@ -3283,7 +3283,7 @@ def ajax_export() -> None:
     for view in get_permitted_views().values():
         view["owner"] = ''
         view["public"] = True
-    html.write(pprint.pformat(get_permitted_views()))
+    response.set_data(pprint.pformat(get_permitted_views()))
 
 
 def get_view_by_name(view_name: ViewName) -> ViewSpec:
@@ -3360,7 +3360,7 @@ def ajax_popup_action_menu() -> None:
     for icon in icons:
         if len(icon) != 4:
             html.open_li()
-            html.write(icon[1])
+            html.write_text(icon[1])
             html.close_li()
         else:
             html.open_li()
@@ -3377,7 +3377,7 @@ def ajax_popup_action_menu() -> None:
 
             html.icon(icon_name)
             if title:
-                html.write(title)
+                html.write_text(title)
             else:
                 html.write_text(_("No title"))
             if url_spec:

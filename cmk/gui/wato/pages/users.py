@@ -470,15 +470,17 @@ class ModeUsers(WatoMode):
                         html.write_text(_("all events disabled"))
                     else:
                         tp = user.get("notification_period", "24X7")
+                        tp_code = HTML()
                         if tp not in timeperiods:
-                            tp = tp + _(" (invalid)")
+                            tp_code = html.render_text(tp + _(" (invalid)"))
                         elif tp not in watolib.timeperiods.builtin_timeperiods():
                             url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
                                                                   ("edit", tp)])
-                            tp = html.render_a(timeperiod_spec_alias(timeperiods[tp], tp), href=url)
+                            tp_code = html.render_a(timeperiod_spec_alias(timeperiods[tp], tp),
+                                                    href=url)
                         else:
-                            tp = timeperiod_spec_alias(timeperiods[tp], tp)
-                        html.write(tp)
+                            tp_code = html.render_text(timeperiod_spec_alias(timeperiods[tp], tp))
+                        html.write_html(tp_code)
 
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
@@ -492,14 +494,14 @@ class ModeUsers(WatoMode):
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
             html.open_div(class_="info")
-            html.write(
+            html.write_text(
                 _("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
                   "create some contact groups</a> you can assign users to them und thus "
                   "make them monitoring contacts. Only monitoring contacts can receive "
                   "notifications.") % url)
-            html.write(" you can assign users to them und thus "
-                       "make them monitoring contacts. Only monitoring contacts can receive "
-                       "notifications.")
+            html.write_text(" you can assign users to them und thus "
+                            "make them monitoring contacts. Only monitoring contacts can receive "
+                            "notifications.")
             html.close_div()
 
 
@@ -906,7 +908,7 @@ class ModeEditUser(WatoMode):
                         id_="automation_secret")
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])
-        html.write(" &nbsp;")
+        html.write_text(" &nbsp;")
         html.icon_button("javascript:cmk.wato.randomize_secret('automation_secret', 20);",
                          _("Create random secret"), "random")
         html.close_b()
@@ -982,7 +984,7 @@ class ModeEditUser(WatoMode):
         ])
 
         if not self._contact_groups:
-            html.write(
+            html.write_text(
                 _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url)
         else:
             entries = sorted([(group['alias'] or c, c) for c, group in self._contact_groups.items()

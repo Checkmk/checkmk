@@ -1061,7 +1061,7 @@ class ModeEditRuleset(WatoMode):
         url = rule_options.get("docu_url")
         if url:
             html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-            html.write("&nbsp;")
+            html.write_text("&nbsp;")
 
         desc = rule_options.get("description") or rule_options.get("comment", "")
         html.write_text(desc)
@@ -1081,7 +1081,8 @@ class ModeEditRuleset(WatoMode):
             ("mode", "edit_predefined_condition"),
             ("ident", condition_id),
         ])
-        html.write(_("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
+        html.write_text(
+            _("Predefined condition: <a href=\"%s\">%s</a>") % (url, condition["title"]))
 
     def _create_form(self):
         html.begin_form("new_rule", add_transid=False)
@@ -1716,7 +1717,7 @@ class ABCEditRuleMode(WatoMode):
         pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
         content = html.render_text(pretty_rule_config)
 
-        html.write(_("This rule representation can be used for Web API calls."))
+        html.write_text(_("This rule representation can be used for Web API calls."))
         html.br()
         html.br()
 

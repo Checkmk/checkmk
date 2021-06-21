@@ -514,7 +514,9 @@ class ModeAuditLog(WatoMode):
         if self._show_details:
             titles.append(_('Details'))
 
-        html.write(','.join(titles) + '\n')
+        resp = []
+
+        resp.append(','.join(titles) + '\n')
         for entry in audit:
             columns = [
                 render.date(int(entry.time)),
@@ -529,7 +531,10 @@ class ModeAuditLog(WatoMode):
             if self._show_details:
                 columns.append('"' + escaping.strip_tags(entry.diff_text).replace('"', "'") + '"')
 
-            html.write(','.join(columns) + '\n')
+            resp.append(','.join(columns) + '\n')
+
+        response.set_data("".join(resp))
+
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> List[AuditLogStore.Entry]:

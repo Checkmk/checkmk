@@ -83,9 +83,7 @@ class LayoutSingleDataset(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 if view.get("column_headers") != "off":
-                    html.open_td(class_="left")
-                    html.write(cell.title(use_short=False))
-                    html.close_td()
+                    html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
                     cell.paint(row)
@@ -482,32 +480,32 @@ class LayoutTiled(Layout):
             html.open_td(class_=["tl", rendered[1][0]])
             if show_checkboxes:
                 render_checkbox(view, row, len(cells) - 1)
-            html.write("%s" % rendered[1][1])
+            html.write_text(rendered[1][1])
             html.close_td()
             html.open_td(class_=["tr", rendered[2][0]])
-            html.write("%s" % rendered[2][1])
+            html.write_text(rendered[2][1])
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.open_td(colspan=2, class_=["center", rendered[0][0]])
-            html.write("%s" % rendered[0][1])
+            html.write_text(rendered[0][1])
             html.close_td()
             html.close_tr()
 
             for css, cont in rendered[5:]:
                 html.open_tr()
                 html.open_td(colspan=2, class_=["cont", css])
-                html.write("%s" % cont)
+                html.write_text(cont)
                 html.close_td()
                 html.close_tr()
 
             html.open_tr()
             html.open_td(class_=["bl", rendered[3][0]])
-            html.write("%s" % rendered[3][1])
+            html.write_text(rendered[3][1])
             html.close_td()
             html.open_td(class_=["br", rendered[4][0]])
-            html.write("%s" % rendered[4][1])
+            html.write_text(rendered[4][1])
             html.close_td()
             html.close_tr()
 
@@ -772,7 +770,7 @@ class LayoutMatrix(Layout):
                             _tdclass, content = cell.render(cell_row)
                             if cell_nr:
                                 html.write_text(",")
-                            html.write(content)
+                            html.write_text(content)
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
@@ -789,7 +787,7 @@ class LayoutMatrix(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 html.open_td(class_="matrixhead")
-                html.write(cell.title(use_short=False))
+                html.write_text(cell.title(use_short=False))
                 html.close_td()
                 for _group, group_row in groups:
                     tdclass, content = cell.render(group_row)
@@ -799,7 +797,7 @@ class LayoutMatrix(Layout):
                         if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
                     html.open_td(class_=["left", tdclass])
-                    html.write(content)
+                    html.write_text(content)
                     html.close_td()
                 html.close_tr()
 
@@ -819,7 +817,7 @@ class LayoutMatrix(Layout):
                 html.open_tr(class_="data %s0" % odd)
                 tdclass, content = cells[0].render(list(matrix_cells[rid].values())[0])
                 html.open_td(class_=["left", tdclass])
-                html.write(content)
+                html.write_text(content)
                 html.close_td()
 
                 # Now go through the groups and paint the rest of the
@@ -843,9 +841,7 @@ class LayoutMatrix(Layout):
 
                             if len(cells) > 2:
                                 html.open_tr()
-                            html.open_td(class_=tdclass)
-                            html.write(content)
-                            html.close_td()
+                            html.td(content, class_=tdclass)
                             if len(cells) > 2:
                                 html.close_tr()
 

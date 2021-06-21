@@ -48,6 +48,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import (
     Choices,
     RenderableRecipe,
@@ -1068,7 +1069,7 @@ def _mix_colors(a, b):
     return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
 
 
-def render_color_icon(color):
+def render_color_icon(color) -> HTML:
     return html.render_div(
         '',
         class_="color",

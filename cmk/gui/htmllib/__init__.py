@@ -373,6 +373,9 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     def div(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("div", content, **kwargs))
 
+    def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
+        self.write_html(render_element("legend", content, **kwargs))
+
     def open_pre(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("pre", close_tag=False, **kwargs))
 

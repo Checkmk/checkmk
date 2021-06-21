@@ -31,7 +31,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request as global_request
+from cmk.gui.globals import g, html, request as global_request, response
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
@@ -446,22 +446,22 @@ def page_host_inv_api():
             if not result and not has_inventory(host_name):
                 raise MKGeneralException(_("Found no inventory data for this host."))
 
-        response = {"result_code": 0, "result": result}
+        resp = {"result_code": 0, "result": result}
 
     except MKException as e:
-        response = {"result_code": 1, "result": "%s" % e}
+        resp = {"result_code": 1, "result": "%s" % e}
 
     except Exception as e:
         if config.debug:
             raise
-        response = {"result_code": 1, "result": "%s" % e}
+        resp = {"result_code": 1, "result": "%s" % e}
 
     if html.output_format == "json":
-        _write_json(response)
+        _write_json(resp)
     elif html.output_format == "xml":
-        _write_xml(response)
+        _write_xml(resp)
     else:
-        _write_python(response)
+        _write_python(resp)
 
 
 def has_inventory(hostname):
@@ -515,18 +515,18 @@ def verify_permission(host_name, site):
         raise MKAuthException(_("You are not allowed to access the host %s.") % host_name)
 
 
-def _write_xml(response):
-    unformated_xml = dicttoxml.dicttoxml(response)
+def _write_xml(resp):
+    unformated_xml = dicttoxml.dicttoxml(resp)
     dom = xml.dom.minidom.parseString(unformated_xml)
-    html.write(dom.toprettyxml())
+    response.set_data(dom.toprettyxml())
 
 
-def _write_json(response):
-    html.write(json.dumps(response, sort_keys=True, indent=4, separators=(',', ': ')))
+def _write_json(resp):
+    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
-def _write_python(response):
-    html.write(repr(response))
+def _write_python(resp):
+    response.set_data(repr(resp))
 
 
 class InventoryHousekeeping:

@@ -336,7 +336,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 table.cell("", css="buttons")
                 rendered = render_object_ref_as_icon(change["object"])
                 if rendered:
-                    html.write(rendered)
+                    html.write_html(rendered)
 
                 table.cell(_("Time"), render.date_and_time(change["time"]), css="narrow nobr")
                 table.cell(_("User"), css="narrow nobr")

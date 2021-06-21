@@ -11,7 +11,7 @@ import pytest  # type: ignore[import]
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
-from cmk.gui.globals import html, output_funnel
+from cmk.gui.globals import html, output_funnel, response
 from cmk.gui.utils.html import HTML
 from testlib import compare_html
 
@@ -97,14 +97,14 @@ def test_plug(register_builtin_html):
         with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
-            html.write("a")
+            html.write_text("a")
             table.cell("B", "2")
-            html.write("b")
+            html.write_text("b")
             table.row()
             table.cell("A", "1")
-            html.write("a")
+            html.write_text("a")
             table.cell("C", "4")
-            html.write("c")
+            html.write_text("c")
 
         written_text = "".join(output_funnel.drain())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
@@ -218,8 +218,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     html.request.set_var('_%s_sort' % table_id, "1,0")
     html.request.set_var('_%s_actions' % table_id, '1')
 
-    # Table construction
-    with output_funnel.plugged():
+    def _render_table():
         with table_element(table_id="%d" % table_id,
                            title=title,
                            sortable=sortable,
@@ -231,16 +230,18 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
                 for h, r in zip(header, row):
                     table.cell(_(h), r)
 
-        # Get generated html
-        written_text = "".join(output_funnel.drain())
-
     # Data assertions
     assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'
     if output_format == 'html':
+        with output_funnel.plugged():
+            _render_table()
+            written_text = "".join(output_funnel.drain())
+
         data = read_out_simple_table(written_text)
         assert data.pop(0) == header, 'Wrong header'
     elif output_format == 'csv':
-        data = read_out_csv(written_text, separator)
+        _render_table()
+        data = read_out_csv(response.get_data(as_text=True), separator)
         limit = len(data)
         assert data.pop(0) == header, 'Wrong header'
     else:

@@ -25,7 +25,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, response
 from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.graph_pdf import (
@@ -102,7 +102,7 @@ def ajax_graph_images_for_notifications():
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
 
-        html.write(json.dumps(graphs))
+        response.set_data(json.dumps(graphs))
 
     except Exception as e:
         logger.error("Call to ajax_graph_images.py failed: %s\n%s", e, traceback.format_exc())

@@ -255,7 +255,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         if self._new:
             html.dropdown('type', custom_attr_types(), deflt=self._attr.get('type', ''))
         else:
-            html.write(dict(custom_attr_types())[self._attr.get('type')])
+            html.write_text(dict(custom_attr_types())[self._attr.get('type')])
 
         self._add_extra_form_sections()
         self._show_in_table_option()

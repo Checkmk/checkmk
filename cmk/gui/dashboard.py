@@ -48,7 +48,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, transactions, output_funnel
+from cmk.gui.globals import html, request, transactions, output_funnel, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -234,7 +234,7 @@ class VisualTypeDashboards(VisualType):
 
         # Directly go to the dashboard in edit mode. We send the URL as an answer
         # to the AJAX request
-        html.write('OK dashboard.py?name=' + target_visual_name + '&edit=1')
+        response.set_data('OK dashboard.py?name=' + target_visual_name + '&edit=1')
 
     def load_handler(self):
         pass
@@ -2016,7 +2016,7 @@ def ajax_dashlet_pos() -> None:
     dashlet_spec['size'] = (html.request.get_integer_input_mandatory("w"),
                             html.request.get_integer_input_mandatory("h"))
     save_all_dashboards()
-    html.write('OK %d' % board['mtime'])
+    response.set_data('OK %d' % board['mtime'])
 
 
 #.

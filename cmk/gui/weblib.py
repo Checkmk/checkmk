@@ -10,7 +10,7 @@ import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.pages
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, response
 
 from cmk.gui.exceptions import MKUserError
 
@@ -22,7 +22,7 @@ def ajax_tree_openclose() -> None:
 
     config.user.set_tree_state(tree, name, html.request.get_str_input("state"))
     config.user.save_tree_states()
-    html.write('OK')  # Write out something to make debugging easier
+    response.set_data('OK')  # Write out something to make debugging easier
 
 
 #   .--Row Selector--------------------------------------------------------.

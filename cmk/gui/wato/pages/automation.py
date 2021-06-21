@@ -8,8 +8,6 @@ automation functions on slaves,"""
 
 import traceback
 
-from six import ensure_str
-
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -123,17 +121,16 @@ class ModeAutomation(AjaxPage):
         timeout = watolib.mk_eval(html.request.get_str_input_mandatory("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
-        html.write(repr(result))
+        response.set_data(repr(result))
 
     def _execute_push_profile(self):
         try:
-            # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(ensure_str(watolib.mk_repr(self._automation_push_profile())))
+            response.set_data(str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if config.debug:
                 raise
-            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+            response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
     def _automation_push_profile(self):
         site_id = html.request.var("siteid")
@@ -165,12 +162,12 @@ class ModeAutomation(AjaxPage):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
             automation = automation_command()
-            html.write(repr(automation.execute(automation.get_request())))
+            response.set_data(repr(automation.execute(automation.get_request())))
         except Exception as e:
             logger.exception("error executing automation command")
             if config.debug:
                 raise
-            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+            response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
 
 def _get_login_secret(create_on_demand=False):

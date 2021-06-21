@@ -30,7 +30,7 @@ class DummyDashlet(dashboard.Dashlet):
         return 123
 
     def show(self):
-        html.write("dummy")
+        html.write_text("dummy")
 
 
 def test_dashlet_registry_plugins():

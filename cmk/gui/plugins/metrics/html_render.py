@@ -85,7 +85,7 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
         "service_description": service_description,
     })
 
-    html.write(
+    html.write_html(
         render_graphs_from_specification_html(graph_identification,
                                               graph_data_range,
                                               graph_render_options,
@@ -270,7 +270,7 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
     if model_params_repr and model_params_display:
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
-        html.write(model_params_repr)
+        html.write_html(model_params_repr)
         html.close_div()
 
     html.close_div()
@@ -472,12 +472,12 @@ def ajax_graph():
         context_var = html.request.get_str_input_mandatory("context")
         context = json.loads(context_var)
         response_data = render_ajax_graph(context)
-        html.write(json.dumps(response_data))
+        response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
         if config.debug:
             raise
-        html.write("ERROR: %s" % e)
+        response.set_data("ERROR: %s" % e)
 
 
 def render_ajax_graph(context):
@@ -679,7 +679,7 @@ def ajax_render_graph_content():
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    html.write(json.dumps(resp))
+    response.set_data(json.dumps(resp))
 
 
 def render_graph_content_html(graph_recipe, graph_data_range, graph_render_options) -> HTML:
@@ -778,12 +778,12 @@ def ajax_graph_hover():
         context = json.loads(context_var)
         hover_time = html.request.get_integer_input_mandatory("hover_time")
         response_data = render_ajax_graph_hover(context, hover_time)
-        html.write(json.dumps(response_data))
+        response.set_data(json.dumps(response_data))
     except Exception as e:
         logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
         if config.debug:
             raise
-        html.write("ERROR: %s" % e)
+        response.set_data("ERROR: %s" % e)
 
 
 def render_ajax_graph_hover(context, hover_time):
@@ -927,4 +927,4 @@ def host_service_graph_dashlet_cmk(
                                                graph_data_range,
                                                graph_render_options,
                                                render_async=False)
-    html.write(html_code)
+    html.write_html(html_code)

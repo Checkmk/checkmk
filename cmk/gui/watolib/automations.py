@@ -111,7 +111,7 @@ def check_mk_local_automation(command: str,
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
         # if config.debug:
-        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
+        #     html.write_text("<div class=message>Running <tt>%s</tt></div>\n" % subprocess.list2cmdline(cmd))
         auto_logger.info("RUN: %s" % subprocess.list2cmdline(cmd))
         p = subprocess.Popen(cmd,
                              stdin=subprocess.PIPE,

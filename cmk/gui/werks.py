@@ -285,9 +285,7 @@ def page_werk():
     def werk_table_row(caption, content, css=None):
         html.open_tr()
         html.th(caption)
-        html.open_td(class_=css)
-        html.write(content)
-        html.close_td()
+        html.td(content, class_=css)
         html.close_tr()
 
     translator = cmk.utils.werks.WerkTranslator()

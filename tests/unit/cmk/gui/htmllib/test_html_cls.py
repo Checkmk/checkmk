@@ -102,7 +102,7 @@ def test_ABCHTMLGenerator(register_builtin_html):
         with output_funnel.plugged():
             #html.open_div().write("test").close_div()
             html.open_div()
-            html.write("test")
+            html.write_text("test")
             html.close_div()
             assert compare_html(output_funnel.drain(), "<div>test</div>")
 

@@ -267,7 +267,7 @@ def ajax_render_tree():
                             expansion_level=config.user.bi_expansion_level,
                             only_problems=only_problems,
                             lazy=False)
-    html.write(renderer.render())
+    html.write_html(renderer.render())
 
 
 def render_tree_json(row):
@@ -545,15 +545,15 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
             if tree[2].get('icon'):
-                html.write(html.render_icon(tree[2]['icon']))
-                html.write("&nbsp;")
+                html.write_html(html.render_icon(tree[2]['icon']))
+                html.write_text("&nbsp;")
 
             if tree[2].get("docu_url"):
                 html.icon_button(tree[2]["docu_url"],
                                  _("Context information about this rule"),
                                  "url",
                                  target="_blank")
-                html.write("&nbsp;")
+                html.write_text("&nbsp;")
 
             html.write_text(tree[2]["title"])
 

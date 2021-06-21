@@ -790,7 +790,7 @@ class PageMenuPopupsRenderer:
                 "Add a div container with the class \"side_popup_content\" to the popup content")
 
         html.open_div(class_="content")
-        html.write(HTML(entry.item.content))
+        html.write_html(HTML(entry.item.content))
         html.close_div()
         html.close_div()
 

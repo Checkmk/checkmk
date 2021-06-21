@@ -656,7 +656,8 @@ def format_params(params):
 def _show_output_box(title, content):
     html.h3(title, class_="table")
     html.open_div(class_="log_output")
-    html.write(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
+    html.write_html(
+        HTML(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;')))
     html.close_div()
 
 

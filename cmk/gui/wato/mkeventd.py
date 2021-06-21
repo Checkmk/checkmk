@@ -1957,7 +1957,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 table.cell(_("Facility"))
                 if "match_facility" in rule:
                     facnr = rule["match_facility"]
-                    html.write("%s" % facilities[facnr])
+                    html.write_text(facilities[facnr])
 
                 table.cell(
                     _("Service Level"),
@@ -2370,10 +2370,10 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.open_li()
         html.write_text("%s: " % _("Current replication mode"))
         html.open_b()
-        html.write("%s" % ({
+        html.write_text({
             "sync": _("synchronize"),
             "takeover": _("Takeover!"),
-        }.get(repl_mode, _("master / standalone"))))
+        }.get(repl_mode, _("master / standalone")))
         html.close_b()
         html.close_li()
         if repl_mode in ["sync", "takeover"]:

@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request, local, session
+from cmk.gui.globals import g, html, request, local, session, response
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
@@ -1291,12 +1291,12 @@ def ajax_sync() -> None:
             job.start()
         except background_job.BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
-        html.write('OK Started synchronization\n')
+        response.set_data('OK Started synchronization\n')
     except Exception as e:
         logger.exception("error synchronizing user DB")
         if config.debug:
             raise
-        html.write('ERROR %s\n' % e)
+        response.set_data('ERROR %s\n' % e)
 
 
 @gui_background_job.job_registry.register

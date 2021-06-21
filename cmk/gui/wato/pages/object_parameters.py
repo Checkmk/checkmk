@@ -324,7 +324,7 @@ class ModeObjectParameters(WatoMode):
         html.i(_("Explicit, ruleset, discovered"))
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
-        html.write(
+        html.write_html(
             cmk.gui.view_utils.render_labels(labels,
                                              object_type,
                                              with_links=False,

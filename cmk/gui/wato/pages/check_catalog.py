@@ -534,12 +534,11 @@ class ModeCheckManPage(WatoMode):
 
         rulespec = rulespec_registry[varname]
         url = makeuri_contextless(request, [("mode", "edit_ruleset"), ("varname", varname)])
-        param_ruleset = html.render_a(rulespec.title, url)
         html.open_tr()
         html.th(_("Parameter rule set"))
         html.open_td()
         html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
-        html.write(param_ruleset)
+        html.a(rulespec.title, url)
         html.close_td()
         html.close_tr()
         html.open_tr()

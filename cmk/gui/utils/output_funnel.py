@@ -18,11 +18,11 @@ class OutputFunnel:
     like this:
 
         # Write "xyz" to response which is sent to the client
-        html.write("xyz")
+        html.write_text("xyz")
 
         # Write "something" to a "plugged" response and print it to stdout
         with output_funnel.plugged() as plug:
-           html.write("something")
+           html.write_text("something")
            html_code = html.drain()
         print(html_code)
     """

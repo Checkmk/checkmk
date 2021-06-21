@@ -1650,7 +1650,7 @@ class OverridableContainer(Overridable, Container):
         if target_page:
             if not isinstance(target_page, str):
                 target_page = target_page.page_url()
-            html.write(target_page)
+            html.write_text(target_page)
         html.write_text("\n%s" % ("true" if need_sidebar_reload else "false"))
 
     # Default implementation for generic containers - used e.g. by GraphCollection

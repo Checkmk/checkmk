@@ -212,13 +212,13 @@ def section(title: Union[None, HTML, str] = None,
         if title:
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
                           title=escaping.strip_tags(title))
-            html.write(escaping.escape_text(title))
+            html.write_text(title)
             html.span('.' * 200, class_=["dots", "required" if is_required else None])
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
             if isinstance(checkbox, (str, HTML)):
-                html.write(checkbox)
+                html.write_text(checkbox)
             else:
                 name, active, attrname = checkbox
                 html.checkbox(name,

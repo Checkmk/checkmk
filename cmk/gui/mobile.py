@@ -38,9 +38,10 @@ NavigationBar = List[Tuple[str, str, str, str]]
 
 
 def mobile_html_head(title: str) -> None:
-    html.write(
-        """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
-    )
+    html.write_html(
+        HTML(
+            """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
+        ))
     html.open_html()
     html.open_head()
     html.default_html_headers()
@@ -114,15 +115,14 @@ def jqm_page_navfooter(items: NavigationBar, current: str, page_id: str) -> None
             custom_css += ' ui-state-persist ui-btn-active'
         else:
             html.open_li()
-            html.open_a(href=href,
-                        class_=custom_css,
-                        **{
-                            "data-transition": "slide",
-                            "data-icon": icon,
-                            "data-iconpos": "bottom",
-                        })
-            html.write(title)
-            html.close_a()
+            html.a(title,
+                   href=href,
+                   class_=custom_css,
+                   **{
+                       "data-transition": "slide",
+                       "data-icon": icon,
+                       "data-iconpos": "bottom",
+                   })
             html.close_li()
     html.close_ul()
     html.close_div()
@@ -148,16 +148,12 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     if not has_items_for_topic:
         return
 
-    html.open_p()
-    html.write(topic)
-    html.close_p()
+    html.p(topic)
     html.open_ul(**{"data-role": "listview", "data-inset": "true"})
     for top, href, title in items:
         if top == topic:
             html.open_li()
-            html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-            html.write(title)
-            html.close_a()
+            html.a(title, href=href, **{"data-ajax": "false", "data-transition": "flip"})
             html.close_li()
     html.close_ul()
 
@@ -292,7 +288,7 @@ def page_view() -> None:
         logger.exception("error showing mobile view")
         if config.debug:
             raise
-        html.write("ERROR showing view: %s" % escaping.escape_attribute(str(e)))
+        html.write_text("ERROR showing view: %s" % e)
 
     mobile_html_foot()
 
@@ -359,7 +355,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
                             id_="data")
             html.open_div(id_="view_results")
             if len(rows) == 0:
-                html.write(_("No hosts/services found."))
+                html.write_text(_("No hosts/services found."))
             else:
                 try:
                     if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
@@ -377,7 +373,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")
-                    html.write(_("Error showing view: %s") % e)
+                    html.write_text(_("Error showing view: %s") % e)
             html.close_div()
             jqm_page_navfooter(navbar, 'data', page_id)
 
@@ -396,7 +392,7 @@ def _show_filter_form(show_filters: List[Filter]) -> None:
     html.open_ul(**{"data-role": "listview", "data-inset": "false"})
     for _sort_index, title, f in s:
         html.open_li(**{"data-role": "fieldcontain"})
-        html.write("<legend>%s</legend>" % title)
+        html.legend(title)
         f.display()
         html.close_li()
     html.close_ul()
@@ -442,7 +438,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             one_shown = True
     html.close_div()
     if not one_shown:
-        html.write(_('No commands are possible in this view'))
+        html.write_text(_('No commands are possible in this view'))
 
 
 # FIXME: Reduce duplicate code with views.py

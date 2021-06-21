@@ -16,7 +16,7 @@ import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.globals import response
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
@@ -85,8 +85,8 @@ def page_run_cron() -> None:
                 cron_job()
                 logger.debug("Finished [%s]", job_name)
             except Exception:
-                html.write("An exception occured. Take a look at the web.log.\n")
+                response.set_data("An exception occured. Take a look at the web.log.\n")
                 logger.exception("Exception in cron job [%s]", job_name)
 
         logger.debug("Finished all cron jobs")
-        html.write("OK\n")
+        response.set_data("OK\n")

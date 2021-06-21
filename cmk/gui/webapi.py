@@ -26,7 +26,7 @@ import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request as global_request, response as global_response
+from cmk.gui.globals import request as global_request, response as global_response
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
@@ -136,7 +136,7 @@ def page_api():
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    html.write(_FORMATTERS[output_format][1 if pretty_print else 0](response))
+    global_response.set_data(_FORMATTERS[output_format][1 if pretty_print else 0](response))
 
 
 # TODO: If the registered API calls were instance of a real class, all the code

@@ -949,7 +949,7 @@ class CommandScheduleDowntimes(Command):
             html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
             html.nbsp()
             html.write_text(_('with comment') + ": ")
-            html.write(adhoc_comment)
+            html.write_text(adhoc_comment)
             html.close_div()
 
         html.open_div(class_="group")

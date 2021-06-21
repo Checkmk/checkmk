@@ -615,7 +615,7 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.open_div(class_=["floatfolder", "unlocked", "newfolder"],
                           onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]))
-            html.write("+")
+            html.write_text("+")
             html.close_div()
             html.div('', class_="folder_foot")
 
@@ -874,19 +874,20 @@ class ModeFolder(WatoMode):
         if not config.wato_hide_hosttags and config.user.wato_folders_show_tags:
             table.cell(_("Tags"), css="tag-ellipsis")
             tag_groups, show_all_code = self._limit_labels(host.tag_groups())
-            html.write(cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False))
-            html.write(show_all_code)
+            html.write_html(
+                cmk.gui.view_utils.render_tag_groups(tag_groups, "host", with_links=False))
+            html.write_html(show_all_code)
 
         if config.user.wato_folders_show_labels:
             table.cell(_("Explicit labels"), css="tag-ellipsis")
             labels, show_all_code = self._limit_labels(host.labels())
-            html.write(
+            html.write_html(
                 cmk.gui.view_utils.render_labels(
                     labels,
                     "host",
                     with_links=False,
                     label_sources={k: "explicit" for k in labels.keys()}))
-            html.write(show_all_code)
+            html.write_html(show_all_code)
 
         # Located in folder
         if self._folder.is_search_folder():

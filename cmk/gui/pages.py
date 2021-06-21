@@ -80,7 +80,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
             method()
         except MKException as e:
             response.status_code = http_client.BAD_REQUEST
-            html.write(str(e))
+            html.write_text(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
             if config.debug:
@@ -90,7 +90,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
                 plain_error=True,
                 show_crash_link=getattr(g, "may_see_crash_reports", False),
             )
-            html.write(str(e))
+            html.write_text(str(e))
 
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
@@ -115,7 +115,7 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
             )
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
-        html.write(json.dumps(resp))
+        response.set_data(json.dumps(resp))
 
 
 class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):

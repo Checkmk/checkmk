@@ -73,6 +73,6 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
     def _iconlink(self, text, url, icon):
         html.open_a(class_=["iconlink", "link"], target="main", href=url)
         html.icon("/webconf/images/icon_%s.png" % icon, cssclass="inline")
-        html.write(text)
+        html.write_text(text)
         html.close_a()
         html.br()

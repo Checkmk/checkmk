@@ -9,6 +9,7 @@ import sys
 import pathlib
 
 from typing import (
+    Any,
     Callable,
     Dict,
     get_args,
@@ -72,7 +73,7 @@ def validate_function_arguments(
     type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: Optional[Dict],
+    default_params: Optional[Mapping[str, Any]],
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -181,7 +182,7 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: Optional[str],
-    default_parameters: Optional[Dict],
+    default_parameters: Optional[Mapping[str, Any]],
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:

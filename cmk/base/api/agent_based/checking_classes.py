@@ -9,9 +9,9 @@ import enum
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     overload,
@@ -42,7 +42,7 @@ class ServiceLabel(PluginSuppliedLabel):
 class Service(
         NamedTuple("_ServiceTuple", [
             ("item", Optional[str]),
-            ("parameters", Dict[str, Any]),
+            ("parameters", Mapping[str, Any]),
             ("labels", List[ServiceLabel]),
         ])):
     """Class representing services that the discover function yields
@@ -64,7 +64,7 @@ class Service(
         cls,
         *,
         item: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: Optional[Mapping[str, Any]] = None,
         labels: Optional[List[ServiceLabel]] = None,
     ) -> 'Service':
         return super().__new__(
@@ -83,7 +83,7 @@ class Service(
         raise TypeError("'item' must be a non empty string or ommited entirely, got %r" % (item,))
 
     @staticmethod
-    def _parse_parameters(parameters: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _parse_parameters(parameters: Optional[Mapping[str, Any]]) -> Mapping[str, Any]:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
@@ -460,11 +460,11 @@ class CheckPlugin(NamedTuple):
     sections: List[ParsedSectionName]
     service_name: str
     discovery_function: DiscoveryFunction
-    discovery_default_parameters: Optional[Dict[str, Any]]
+    discovery_default_parameters: Optional[Mapping[str, Any]]
     discovery_ruleset_name: Optional[RuleSetName]
     discovery_ruleset_type: RuleSetTypeName
     check_function: CheckFunction
-    check_default_parameters: Optional[Dict[str, Any]]
+    check_default_parameters: Optional[Mapping[str, Any]]
     check_ruleset_name: Optional[RuleSetName]
     cluster_check_function: CheckFunction
     module: Optional[str]  # not available for auto migrated plugins.

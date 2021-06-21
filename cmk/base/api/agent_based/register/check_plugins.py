@@ -6,7 +6,7 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, List, Optional
+from typing import Any, Callable, Mapping, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
@@ -101,11 +101,11 @@ def _validate_kwargs(
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict],
+    discovery_default_parameters: Optional[Mapping[str, Any]],
     discovery_ruleset_name: Optional[str],
     discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: Optional[Dict],
+    check_default_parameters: Optional[Mapping[str, Any]],
     check_ruleset_name: Optional[str],
     cluster_check_function: Optional[Callable],
 ) -> None:
@@ -171,11 +171,11 @@ def create_check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict] = None,
+    discovery_default_parameters: Optional[Mapping[str, Any]] = None,
     discovery_ruleset_name: Optional[str] = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: Optional[Dict] = None,
+    check_default_parameters: Optional[Mapping[str, Any]] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     module: Optional[str] = None,

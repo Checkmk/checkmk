@@ -7,14 +7,13 @@
 
 Some of these are exposed in the API, some are not.
 """
-from collections.abc import Mapping
 from typing import (
     Any,
     Callable,
-    Dict,
     Generator,
     List,
     Literal,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -122,7 +121,7 @@ class AgentSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: AgentParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_default_parameters: Optional[Mapping[str, Any]]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     supersedes: Set[SectionName]
@@ -134,7 +133,7 @@ class SNMPSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: SNMPParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_default_parameters: Optional[Mapping[str, Any]]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType

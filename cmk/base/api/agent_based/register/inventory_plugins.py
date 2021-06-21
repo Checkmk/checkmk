@@ -6,7 +6,7 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List, Mapping, Optional
 
 from cmk.utils.type_defs import InventoryPluginName, RuleSetName
 
@@ -43,7 +43,7 @@ def create_inventory_plugin(
     name: str,
     sections: Optional[List[str]] = None,
     inventory_function: Callable,
-    inventory_default_parameters: Optional[Dict] = None,
+    inventory_default_parameters: Optional[Mapping[str, Any]] = None,
     inventory_ruleset_name: Optional[str] = None,
     module: Optional[str] = None,
 ) -> InventoryPlugin:

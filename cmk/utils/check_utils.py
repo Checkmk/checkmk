@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, NamedTuple, Sequence
+from typing import Any, Mapping, NamedTuple, Sequence
 
 
 def section_name_of(check_plugin_name: str) -> str:
@@ -73,14 +73,14 @@ class ActiveCheckResult(NamedTuple):
 _PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 
-def wrap_parameters(parameters: Any) -> Dict[str, Any]:
+def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
     """wrap the passed data structure in a dictionary, if it isn't one itself"""
     if isinstance(parameters, dict):
         return parameters
     return {_PARAMS_WRAPPER_KEY: parameters}
 
 
-def unwrap_parameters(parameters: Dict[str, Any]) -> Any:
+def unwrap_parameters(parameters: Mapping[str, Any]) -> Any:
     try:
         return parameters[_PARAMS_WRAPPER_KEY]
     except KeyError:

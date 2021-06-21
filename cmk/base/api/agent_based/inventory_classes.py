@@ -8,7 +8,6 @@
 import string
 from typing import (
     Any,
-    Dict,
     get_args,
     List,
     Mapping,
@@ -171,7 +170,7 @@ InventoryPlugin = NamedTuple(
         ("name", InventoryPluginName),
         ("sections", List[ParsedSectionName]),
         ("inventory_function", InventoryFunction),
-        ("inventory_default_parameters", Dict[str, Any]),
+        ("inventory_default_parameters", Mapping[str, Any]),
         ("inventory_ruleset_name", Optional[RuleSetName]),
         ("module", Optional[str]),  # not available for auto migrated plugins.
     ],

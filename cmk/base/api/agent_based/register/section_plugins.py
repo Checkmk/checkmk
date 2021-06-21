@@ -8,7 +8,7 @@
 import functools
 import inspect
 import itertools
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Generator, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
@@ -80,7 +80,7 @@ def _validate_parse_function(
 def _validate_host_label_kwargs(
     *,
     host_label_function: HostLabelFunction,
-    host_label_default_parameters: Optional[Dict[str, Any]],
+    host_label_default_parameters: Optional[Mapping[str, Any]],
     host_label_ruleset_name: Optional[str],
     host_label_ruleset_type: RuleSetType,
 ) -> None:
@@ -218,7 +218,7 @@ def create_agent_section_plugin(
     parsed_section_name: Optional[str] = None,
     parse_function: Optional[AgentParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict] = None,
+    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -271,7 +271,7 @@ def create_snmp_section_plugin(
     parsed_section_name: Optional[str] = None,
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Dict] = None,
+    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,

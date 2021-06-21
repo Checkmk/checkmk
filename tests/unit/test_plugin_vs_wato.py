@@ -24,7 +24,7 @@ import abc
 from cmk.base.check_legacy_includes import hwg
 from cmk.base.check_legacy_includes import df
 
-Parameters = t.Optional[t.Dict[str, t.Any]]
+Parameters = t.Optional[t.Mapping[str, t.Any]]
 T = t.TypeVar('T')
 TF = t.TypeVar('TF', bound=Rulespec)
 TC = t.TypeVar('TC', bound=t.Union[CheckPlugin, InventoryPlugin])

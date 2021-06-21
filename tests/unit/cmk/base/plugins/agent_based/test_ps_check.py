@@ -188,7 +188,6 @@ PS_DISCOVERY_WATO_RULES = [
     {},
 ]
 
-
 PS_DISCOVERED_ITEMS = [
     Service(item="emacs on", parameters={
         "cpu_average": 15,
@@ -564,15 +563,15 @@ def test_check_ps_common_cpu(data):
                 total_ram_map={},
             ))
 
+    rescale_params = {"cpu_rescale_max": data.cpu_rescale_max} if data.cpu_rescale_max is not None else {}
     service = Service(
         item="test",
         parameters={
             "process": "~test",
             "user": None,
-            "levels": (1, 1, 99999, 99999)  # from factory defaults
+            "levels": (1, 1, 99999, 99999),  # from factory defaults
+            **rescale_params,
         })
-    if data.cpu_rescale_max is not None:
-        service.parameters.update({"cpu_rescale_max": data.cpu_rescale_max})
 
     # Initialize counters
     time_info(service, data.agent_info, 0, 0, data.cpu_cores)

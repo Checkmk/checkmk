@@ -2078,7 +2078,7 @@ def _extract_check_plugins(
 def _get_plugin_parameters(
     *,
     host_name: HostName,
-    default_parameters: Optional[Dict[str, Any]],
+    default_parameters: Optional[Mapping[str, Any]],
     ruleset_name: Optional[RuleSetName],
     ruleset_type: Literal["all", "merged"],
     rules_getter_function: Callable[[RuleSetName], List[Dict[str, Any]]],
@@ -2100,9 +2100,10 @@ def _get_plugin_parameters(
         return [Parameters(d) for d in host_rules]
 
     if ruleset_type == "merged":
-        params = default_parameters.copy()
-        params.update(config_cache.host_extra_conf_merged(host_name, rules))
-        return Parameters(params)
+        return Parameters({
+            **default_parameters,
+            **config_cache.host_extra_conf_merged(host_name, rules),
+        })
 
     # validation should have prevented this
     raise NotImplementedError(f"unknown discovery rule set type {ruleset_type!r}")
@@ -2158,7 +2159,7 @@ def compute_check_parameters(
 
 
 def _update_with_default_check_parameters(
-    check_default_parameters: Dict[str, Any],
+    check_default_parameters: Mapping[str, Any],
     params: LegacyCheckParameters,
 ) -> LegacyCheckParameters:
 

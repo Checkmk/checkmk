@@ -126,7 +126,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return Folder.current().url()
 
     def do_execute(self, mode, do_scan, error_handling, tasks, job_interface=None):
-        self._initialize_statistics()
+        self._initialize_statistics(num_hosts_total=sum(len(task.host_names) for task in tasks),)
         job_interface.send_progress_update(_("Bulk discovery started..."))
 
         for task in tasks:
@@ -148,8 +148,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-    def _initialize_statistics(self):
-        self._num_hosts_total = 0
+    def _initialize_statistics(self, *, num_hosts_total: int):
+        self._num_hosts_total = num_hosts_total
+        self._num_hosts_processed = 0
         self._num_hosts_succeeded = 0
         self._num_hosts_skipped = 0
         self._num_hosts_failed = 0
@@ -161,7 +162,6 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_added = 0
 
     def _bulk_discover_item(self, task, mode, do_scan, error_handling, job_interface):
-        self._num_hosts_total += len(task.host_names)
 
         try:
             response = self._execute_discovery(task, mode, do_scan, error_handling)
@@ -174,6 +174,8 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             else:
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
             self._logger.exception(msg)
+
+        self._num_hosts_processed += len(task.host_names)
 
     def _execute_discovery(self, task, mode, do_scan,
                            error_handling) -> AutomationDiscoveryResponse:
@@ -198,11 +200,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         with store.lock_checkmk_configuration():
             Folder.invalidate_caches()
             folder = Folder.folder(task.folder_path)
-            for hostname in task.host_names:
+            for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.results[hostname])
                 msg = self._process_discovery_result_for_host(folder.host(hostname),
                                                               response.results[hostname])
-                job_interface.send_progress_update("%s: %s" % (hostname, msg))
+                job_interface.send_progress_update(
+                    f"[{count}/{self._num_hosts_total}] {hostname}: {msg}")
 
     def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
         self._num_services_added += result.self_new

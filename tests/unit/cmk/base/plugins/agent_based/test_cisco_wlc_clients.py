@@ -10,8 +10,8 @@ import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.wlc_clients import VsResult, ClientsPerInterface, WlcClientsSection
-from cmk.base.plugins.agent_based.cisco_wlc_clients import parse_cisco_wlc_clients
+from cmk.base.plugins.agent_based.utils.wlc_clients import VsResult, ClientsPerInterface, WlcClientsSection, ClientsTotal
+from cmk.base.plugins.agent_based.cisco_wlc_clients import parse_cisco_wlc_clients, parse_cisco_wlc_9800_clients
 from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 
 # raw data looks like this:
@@ -37,6 +37,18 @@ from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 # .1.3.6.1.4.1.14179.2.1.1.1.38.31 0
 # .1.3.6.1.4.1.14179.2.1.1.1.38.32 114
 # .1.3.6.1.4.1.14179.2.1.1.1.38.33 68
+
+# or for 9800 like this:
+# ## CISCO-LWAPP-WLAN-MIB::cLWlanSsid
+# .1.3.6.1.4.1.9.9.512.1.1.1.1.4.1 guest
+# .1.3.6.1.4.1.9.9.512.1.1.1.1.4.2 free
+# .1.3.6.1.4.1.9.9.512.1.1.1.1.4.4 mobile
+# .1.3.6.1.4.1.9.9.512.1.1.1.1.4.5 internal
+# ## AIRESPACE-WIRELESS-MIB::bsnDot11EssNumberOfMobileStations
+# .1.3.6.1.4.1.14179.2.1.1.1.38.1 9
+# .1.3.6.1.4.1.14179.2.1.1.1.38.2 8
+# .1.3.6.1.4.1.14179.2.1.1.1.38.4 6
+# .1.3.6.1.4.1.14179.2.1.1.1.38.5 5
 
 INFO = [[
     ["corp_internal_001", "corp_intern_001", "1"],
@@ -132,5 +144,31 @@ def test_parse_cisco_wlc_clients():
             'AnotherWifiSSID': ClientsPerInterface(per_interface=dict(interface_name=0)),
             'corp_internal_001': ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
             'corp_internal_003': ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
+        },
+    )
+
+
+INFO_9800 = [[
+    ["guest"],
+    ["guest"],
+    ["mobile"],
+    ["internal"],
+], [
+    ["9"],
+    ["8"],
+    ["6"],
+    ["5"],
+]]
+
+
+def test_parse_cisco_wlc_9800_clients():
+    result = parse_cisco_wlc_9800_clients(INFO_9800)
+
+    assert result == WlcClientsSection(
+        total_clients=9 + 8 + 6 + 5,
+        clients_per_ssid={
+            'guest': ClientsTotal(total=9 + 8),
+            'mobile': ClientsTotal(total=6),
+            'internal': ClientsTotal(total=5),
         },
     )

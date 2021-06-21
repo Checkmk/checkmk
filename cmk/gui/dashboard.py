@@ -458,13 +458,10 @@ def _transform_old_dict_based_dashlets() -> None:
 # of the dashboard to render is given in the HTML variable 'name'.
 @cmk.gui.pages.register("dashboard")
 def page_dashboard() -> None:
-    name = html.request.var("name")
+    name = html.request.get_ascii_input_mandatory("name", "")
     if not name:
         name = _get_default_dashboard_name()
         html.request.set_var("name", name)  # make sure that URL context is always complete
-    if name not in get_permitted_dashboards():
-        raise MKUserError("name", _('The requested dashboard does not exist.'))
-
     draw_dashboard(name)
 
 
@@ -492,17 +489,19 @@ def _get_default_dashboard_name() -> str:
 def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, DashboardConfig],
                                  name: DashboardName,
                                  edit: bool = True) -> DashboardConfig:
-    board = permitted_dashboards[name]
-    if edit and board['owner'] != config.user.id:
-        # This dashboard which does not belong to the current user is about to
-        # be edited. In order to make this possible, the dashboard is being
-        # cloned now!
+
+    all_dashboards = get_all_dashboards()
+    board = visuals.get_permissioned_visual(name, html.request.get_str_input("owner"), "dashboard",
+                                            permitted_dashboards, all_dashboards)
+    if edit and board['owner'] == "":
+        # Trying to edit a builtin dashboard results in doing a copy
+        active_user = config.user.id
+        assert active_user is not None
         board = copy.deepcopy(board)
-        board['owner'] = config.user.id
+        board['owner'] = active_user
         board['public'] = False
 
-        all_dashboards = get_all_dashboards()
-        all_dashboards[(config.user.id, name)] = board
+        all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
         save_all_dashboards()
 
@@ -518,8 +517,7 @@ def draw_dashboard(name: DashboardName) -> None:
     if mode == 'edit' and not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    permitted_dashboards = get_permitted_dashboards()
-    board = _load_dashboard_with_cloning(permitted_dashboards, name, edit=mode == 'edit')
+    board = _load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == 'edit')
     board = _add_context_to_dashboard(board)
 
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
@@ -904,7 +902,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
     if not config.user.may("general.edit_dashboards"):
         return
 
-    if board['owner'] != config.user.id:
+    if board['owner'] == "":
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
@@ -913,6 +911,9 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
             icon_name="edit",
             item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
+        return
+
+    if board['owner'] != config.user.id:
         return
 
     edit_text = _("Leave layout mode")

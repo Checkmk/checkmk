@@ -744,7 +744,7 @@ def save_all_dashboards() -> None:
     visuals.save('dashboards', get_all_dashboards())
 
 
-def get_all_dashboards() -> Dict[Tuple[Optional[UserId], DashboardName], DashboardConfig]:
+def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
 
 

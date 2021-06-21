@@ -34,12 +34,14 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+import cmk.core_helpers.cache as cache
+from cmk.core_helpers.host_sections import HostSections
+
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import fetch_all, make_nodes, make_sources
 from cmk.base.sources.agent import AgentHostSections
-from cmk.core_helpers.host_sections import HostSections
 
 if TYPE_CHECKING:
     from cmk.base.sources import Source
@@ -285,7 +287,7 @@ class ParsedSectionsBroker(Mapping[HostKey, Tuple[ParsedSectionsResolver, Sectio
 def _collect_host_sections(
     *,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence['Source']]],
-    file_cache_max_age: int,
+    file_cache_max_age: cache.MaxAge,
     fetcher_messages: Sequence['FetcherMessage'],
     selected_sections: 'SectionNameCollection',
 ) -> Tuple[  #
@@ -355,7 +357,7 @@ def make_broker(
     ip_address: Optional[HostAddress],
     mode: 'Mode',
     selected_sections: 'SectionNameCollection',
-    file_cache_max_age: int,
+    file_cache_max_age: cache.MaxAge,
     fetcher_messages: Sequence['FetcherMessage'],
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,

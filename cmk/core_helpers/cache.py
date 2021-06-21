@@ -62,6 +62,7 @@ from typing import (
     Iterator,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Tuple,
     Type,
@@ -203,13 +204,25 @@ class SectionStore(Generic[TRawDataSection]):
 TFileCache = TypeVar("TFileCache", bound="FileCache")
 
 
+class MaxAge(NamedTuple):
+    checking: int
+    discovery: int
+
+    @classmethod
+    def none(cls):
+        return cls(0, 0)
+
+    def get(self, mode: Mode, *, default: int = 0) -> int:
+        return self._asdict().get(mode.name.lower(), default)
+
+
 class FileCache(Generic[TRawData], abc.ABC):
     def __init__(
         self,
         hostname: HostName,
         *,
         base_path: Union[str, Path],
-        max_age: int,
+        max_age: MaxAge,
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
@@ -257,7 +270,8 @@ class FileCache(Generic[TRawData], abc.ABC):
 
     @classmethod
     def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
-        return cls(**serialized)
+        max_age = MaxAge(*serialized.pop("max_age"))
+        return cls(max_age=max_age, **serialized)
 
     @staticmethod
     @abc.abstractmethod
@@ -301,6 +315,16 @@ class FileCache(Generic[TRawData], abc.ABC):
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
+        may_use_outdated = self.simulation or self.use_outdated
+        cachefile_age = cmk.utils.cachefile_age(path)
+        if not may_use_outdated and cachefile_age > self.max_age.get(mode):
+            self._logger.debug(
+                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
+                cachefile_age,
+                self.max_age.get(mode),
+            )
+            return None
+
         raw_data = self._read(path)
         if raw_data is None and self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -310,16 +334,6 @@ class FileCache(Generic[TRawData], abc.ABC):
         return raw_data
 
     def _read(self, path: Path) -> Optional[TRawData]:
-        may_use_outdated = self.simulation or self.use_outdated
-        cachefile_age = cmk.utils.cachefile_age(path)
-        if not may_use_outdated and cachefile_age > self.max_age:
-            self._logger.debug(
-                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
-                cachefile_age,
-                self.max_age,
-            )
-            return None
-
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         cache_file = path.read_bytes()
@@ -373,13 +387,13 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         hostname: HostName,
         base_path: Union[Path, str],
         *,
-        max_age: int,
+        max_age: MaxAge,
         simulation: bool = False,
     ):
         super().__init__()
         self.hostname: Final = hostname
         self.base_path: Final[Path] = Path(base_path)
-        self.max_age: Final[int] = max_age
+        self.max_age: Final = max_age
         self.simulation: Final[bool] = simulation
 
     @abc.abstractmethod

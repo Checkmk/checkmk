@@ -12,6 +12,7 @@ import pytest  # type: ignore[import]
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
+from cmk.core_helpers.cache import MaxAge
 from cmk.core_helpers.agent import AgentSummarizerDefault
 
 from cmk.base.sources.tcp import TCPSource
@@ -116,7 +117,7 @@ def test_attribute_defaults(monkeypatch):
         "file_cache": {
             "hostname": "testhost",
             "disabled": False,
-            "max_age": 0,
+            "max_age": MaxAge.none(),
             "base_path": "/my/path",
             "simulation": False,
             "use_outdated": False,

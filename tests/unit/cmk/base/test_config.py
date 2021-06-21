@@ -22,6 +22,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType
 
 from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL
+from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -1690,8 +1691,8 @@ def test_host_config_max_cachefile_age_no_cluster(monkeypatch):
 
     host_config = config.HostConfig.make_host_config("xyz")
     assert not host_config.is_cluster
-    assert host_config.max_cachefile_age == config.check_max_cachefile_age
-    assert host_config.max_cachefile_age != config.cluster_max_cachefile_age
+    assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.check_max_cachefile_age
+    assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.cluster_max_cachefile_age
 
 
 def test_host_config_max_cachefile_age_cluster(monkeypatch):
@@ -1701,8 +1702,8 @@ def test_host_config_max_cachefile_age_cluster(monkeypatch):
 
     host_config = config.HostConfig.make_host_config("clu")
     assert host_config.is_cluster
-    assert host_config.max_cachefile_age != config.check_max_cachefile_age
-    assert host_config.max_cachefile_age == config.cluster_max_cachefile_age
+    assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.check_max_cachefile_age
+    assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.cluster_max_cachefile_age
 
 
 @pytest.mark.parametrize("use_new_descr,result", [

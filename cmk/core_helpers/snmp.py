@@ -40,7 +40,7 @@ from cmk.snmplib.type_defs import (
 
 from . import factory
 from ._base import Fetcher, Parser, Summarizer, verify_ipaddress
-from .cache import FileCache, FileCacheFactory, PersistedSections, SectionStore
+from .cache import FileCache, FileCacheFactory, MaxAge, PersistedSections, SectionStore
 from .host_sections import HostSections
 from .type_defs import Mode, SectionNameCollection
 
@@ -155,7 +155,7 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
         return SNMPFileCache(
             self.hostname,
             base_path=self.base_path,
-            max_age=0 if force_cache_refresh else self.max_age,
+            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
             disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.disabled,
             simulation=self.simulation,

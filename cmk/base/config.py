@@ -98,6 +98,7 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
 
+import cmk.core_helpers.cache as cache_file
 import cmk.core_helpers.paths
 from cmk.core_helpers.paths import LATEST_SERIAL, OptionalConfigSerial
 
@@ -1402,6 +1403,17 @@ service_rule_groups = {"temperature"}
 
 def discovery_max_cachefile_age() -> int:
     return inventory_max_cachefile_age
+
+
+def max_cachefile_age(
+    *,
+    checking: Optional[int] = None,
+    discovery: Optional[int] = None,
+) -> cache_file.MaxAge:
+    return cache_file.MaxAge(
+        checking=check_max_cachefile_age if checking is None else checking,
+        discovery=discovery_max_cachefile_age() if discovery is None else discovery,
+    )
 
 
 #.
@@ -3142,8 +3154,9 @@ class HostConfig:
             ) for hostname in hostnames)
 
     @property
-    def max_cachefile_age(self) -> int:
-        return check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age
+    def max_cachefile_age(self) -> cache_file.MaxAge:
+        return max_cachefile_age(
+            checking=None if self.nodes is None else cluster_max_cachefile_age,)
 
     @property
     def is_dyndns_host(self) -> bool:

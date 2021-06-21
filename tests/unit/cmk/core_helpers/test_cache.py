@@ -5,12 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import json
 import logging
+
+import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.core_helpers.cache import PersistedSections, SectionStore
-from cmk.core_helpers.type_defs import AgentRawDataSection
+from cmk.core_helpers.cache import MaxAge, PersistedSections, SectionStore
+from cmk.core_helpers.type_defs import AgentRawDataSection, Mode
 
 
 class MockStore:
@@ -52,3 +55,19 @@ class TestSectionStore:
             "/dev/null",
             logger=logging.getLogger("test"),
         )), str)
+
+
+class TestMaxAge:
+    def test_repr(self):
+        max_age = MaxAge(checking=42, discovery=69)
+        assert isinstance(repr(max_age), str)
+
+    def test_serialize(self):
+        max_age = MaxAge(checking=42, discovery=69)
+        assert MaxAge(*json.loads(json.dumps(max_age))) == max_age
+
+    def test_get(self):
+        max_age = MaxAge(checking=42, discovery=69)
+        assert max_age.get(Mode.CHECKING) == 42
+        assert max_age.get(Mode.DISCOVERY) == 69
+        assert max_age.get(Mode.NONE) == 0

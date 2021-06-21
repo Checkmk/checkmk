@@ -27,15 +27,18 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import TRawData
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import Fetcher, Parser, Summarizer
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import THostSections
 from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
-from cmk.base.config import HostConfig
+import cmk.base.config as config
 
 __all__ = ["Source"]
+
+HostConfig = config.HostConfig
 
 
 class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
@@ -75,7 +78,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
         self.file_cache_base_path: Final[Path] = cache_dir
-        self.file_cache_max_age: int = 0
+        self.file_cache_max_age: file_cache.MaxAge = file_cache.MaxAge.none()
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)

@@ -16,6 +16,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import AgentRawData, HostKey, result, SectionName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
     FetcherType,
     IPMIFetcher,
@@ -116,7 +117,7 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 sources=(),
             ),
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=(),
             selected_sections=NO_SELECTION,
         )[0]
@@ -148,7 +149,7 @@ class TestMakeHostSectionsHosts:
                     ),
                 ],
             ),
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK({}),
@@ -191,7 +192,7 @@ class TestMakeHostSectionsHosts:
                 ipaddress,
                 sources=[source],
             ),
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
@@ -225,7 +226,7 @@ class TestMakeHostSectionsHosts:
 
         host_sections = _collect_host_sections(
             nodes=make_nodes(config_cache, host_config, ipaddress, sources=sources),
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
@@ -259,7 +260,7 @@ class TestMakeHostSectionsHosts:
 
         host_sections = _collect_host_sections(
             nodes=nodes,
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
                     result.OK(source.default_raw_data),
@@ -351,7 +352,7 @@ class TestMakeHostSectionsClusters:
 
         host_sections = _collect_host_sections(
             nodes=made_nodes,
-            file_cache_max_age=0,
+            file_cache_max_age=file_cache.MaxAge.none(),
             fetcher_messages=[
                 # We do not pass sources explicitly but still append Piggyback.
                 FetcherMessage.from_raw_data(

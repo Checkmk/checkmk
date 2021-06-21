@@ -45,7 +45,7 @@ from cmk.utils.werks import parse_check_mk_version
 
 from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache, FileCacheFactory, SectionStore
+from .cache import FileCache, FileCacheFactory, MaxAge, SectionStore
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
@@ -75,7 +75,7 @@ class NoCache(AgentFileCache):
         hostname: HostName,
         *,
         base_path: Union[str, Path],
-        max_age: int,
+        max_age: MaxAge,
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
@@ -110,7 +110,7 @@ class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
         return DefaultAgentFileCache(
             self.hostname,
             base_path=self.base_path,
-            max_age=0 if force_cache_refresh else self.max_age,
+            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
@@ -124,7 +124,7 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
         return NoCache(
             self.hostname,
             base_path=self.base_path,
-            max_age=0 if force_cache_refresh else self.max_age,
+            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,

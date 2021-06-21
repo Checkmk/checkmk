@@ -16,11 +16,13 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
+import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
-from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 from ._abstract import Mode, Source
 from .ipmi import IPMISource
@@ -219,7 +221,7 @@ def make_nodes(
 def fetch_all(
     *,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
-    file_cache_max_age: int,
+    file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())

@@ -422,7 +422,7 @@ def mode_dump_agent(hostname: HostName) -> None:
         # Show errors of problematic data sources
         has_errors = False
         for source in sources.make_sources(host_config, ipaddress):
-            source.file_cache_max_age = config.check_max_cachefile_age
+            source.file_cache_max_age = config.max_cachefile_age()
             if not isinstance(source, sources.agent.AgentSource):
                 continue
 

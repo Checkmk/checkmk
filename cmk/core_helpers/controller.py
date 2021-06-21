@@ -21,6 +21,7 @@ from cmk.utils.observer import ABCResourceObserver
 from cmk.utils.type_defs import HostName, result
 
 from . import Fetcher, FetcherType, protocol
+from .cache import MaxAge
 from .crash_reporting import create_fetcher_crash_dump
 from .paths import ConfigSerial, make_global_config_path, make_local_config_path
 from .snmp import SNMPFetcher, SNMPPluginStore
@@ -197,7 +198,10 @@ def _parse_cluster_config(data: Dict[str, Any], serial: ConfigSerial) -> Iterato
     global_config = load_global_config(serial)
     for host_name in data["clusters"]["nodes"]:
         for fetcher in _parse_config(serial, host_name):
-            fetcher.file_cache.max_age = global_config.cluster_max_cachefile_age
+            fetcher.file_cache.max_age = MaxAge(
+                checking=global_config.cluster_max_cachefile_age,
+                discovery=global_config.cluster_max_cachefile_age,
+            )
             yield fetcher
 
 

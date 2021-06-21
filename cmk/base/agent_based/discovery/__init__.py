@@ -161,7 +161,7 @@ def commandline_discovery(
                 ip_address=ipaddress,
                 mode=mode,
                 selected_sections=selected_sections,
-                file_cache_max_age=config.discovery_max_cachefile_age() if use_caches else 0,
+                file_cache_max_age=config.max_cachefile_age(discovery=None if use_caches else 0),
                 fetcher_messages=(),
                 force_snmp_cache_refresh=False,
                 on_scan_error=on_error,
@@ -317,7 +317,7 @@ def automation_discovery(
             ip_address=ipaddress,
             mode=Mode.DISCOVERY,
             selected_sections=NO_SELECTION,
-            file_cache_max_age=max_cachefile_age,
+            file_cache_max_age=config.max_cachefile_age(discovery=max_cachefile_age),
             fetcher_messages=(),
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
@@ -498,8 +498,8 @@ def active_check_discovery(
         mode=Mode.DISCOVERY,
         fetcher_messages=fetcher_messages,
         selected_sections=NO_SELECTION,
-        file_cache_max_age=(config.discovery_max_cachefile_age()
-                            if cmk.core_helpers.cache.FileCacheFactory.maybe else 0),
+        file_cache_max_age=config.max_cachefile_age(
+            discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0),
         force_snmp_cache_refresh=False,
         on_scan_error=OnError.RAISE,
     )
@@ -1114,7 +1114,7 @@ def get_check_preview(
         host_config=host_config,
         ip_address=ip_address,
         mode=Mode.DISCOVERY,
-        file_cache_max_age=max_cachefile_age,
+        file_cache_max_age=config.max_cachefile_age(discovery=max_cachefile_age),
         selected_sections=NO_SELECTION,
         fetcher_messages=(),
         force_snmp_cache_refresh=not use_cached_snmp_data,

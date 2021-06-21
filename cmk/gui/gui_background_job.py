@@ -418,7 +418,7 @@ class JobRenderer:
                 ensure_str(cmk.utils.render.timespan(job_status["estimated_duration"])))
         for left, right in [
             (_("Runtime"), runtime_info),
-            (_("PID"), job_status["pid"] or ""),
+            (_("PID"), str(job_status["pid"]) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:

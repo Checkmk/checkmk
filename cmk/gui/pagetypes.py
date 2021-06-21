@@ -19,6 +19,7 @@
 
 import os
 import json
+import copy
 from typing import Dict, Any, List, Tuple, Optional as _Optional, Iterator
 
 from six import ensure_str
@@ -1200,49 +1201,30 @@ class Overridable(Base):
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
         mode = html.request.get_ascii_input_mandatory('mode', 'edit')
+        owner_id = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
+        title = cls.phrase(mode)
         if mode == "create":
             page_name = ""
-            title = cls.phrase("create")
             page_dict = {
                 "name": cls.default_name(),
                 "topic": cls.default_topic(),
             }
         else:
             page_name = html.request.get_str_input_mandatory("load_name")
+            page = cls.find_foreign_page(owner_id, page_name)
+            page_dict = page.internal_representation()
+            if page is None:
+                raise MKUserError(None, _("The requested %s does not exist") % cls.phrase("title"))
             if mode == "edit":
-                title = cls.phrase("edit")
-
-                owner_user_id = UserId(
-                    html.request.get_unicode_input_mandatory("owner", config.user.id))
-                if owner_user_id == config.user.id:
-                    page = cls.find_my_page(page_name)
-                else:
-                    page = cls.find_foreign_page(owner_user_id, page_name)
-
-                if page is None:
-                    raise MKUserError(None,
-                                      _("The requested %s does not exist") % cls.phrase("title"))
-
                 if not page.may_edit():
                     raise MKAuthException(
                         _("You do not have the permissions to edit this %s") % cls.phrase("title"))
-
-                # TODO FIXME: Looks like a hack
-                cls.remove_instance((owner_user_id, page_name))  # will be added later again
-
-                page_dict = page.internal_representation()
             else:  # clone
-                title = cls.phrase("clone")
-                owner_id = html.request.get_unicode_input_mandatory("owner")
-
-                try:
-                    page = cls.instance((owner_id, page_name))
-                except KeyError:
-                    raise MKUserError(None,
-                                      _("The requested %s does not exist") % cls.phrase("title"))
-
-                page_dict = page.internal_representation().copy()
+                page_dict = copy.deepcopy(page_dict)
                 page_dict["name"] += "_clone"
+                assert config.user.id is not None
+                page_dict["owner"] = str(config.user.id)
+                owner_id = config.user.id
 
         breadcrumb = cls.breadcrumb(title, mode)
         page_menu = make_edit_form_page_menu(
@@ -1262,14 +1244,8 @@ class Overridable(Base):
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
         def _validate_clone(page_dict, varprefix):
-            owner_user_id = UserId(html.request.get_unicode_input_mandatory(
-                "owner", config.user.id))
             page_name = page_dict["name"]
-            if owner_user_id == config.user.id:
-                page = cls.find_my_page(page_name)
-            else:
-                page = cls.find_foreign_page(owner_user_id, page_name)
-            if page:
+            if cls.find_foreign_page(owner_id, page_name) and mode == "clone":
                 raise MKUserError(
                     varprefix + "_p_name",
                     _("You already have an element with the ID <b>%s</b>") % page_dict["name"])
@@ -1297,14 +1273,13 @@ class Overridable(Base):
                 page_dict.update(new_page_dict)
             else:
                 page_dict = new_page_dict
+                page_dict['owner'] = str(config.user.id)  # because is not in vs elements
 
-            owner = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
-            page_dict["owner"] = owner
             new_page = cls(page_dict)
 
             if not html.has_user_errors():
                 cls.add_page(new_page)
-                cls.save_user_instances(owner)
+                cls.save_user_instances(owner_id)
                 if mode == "create":
                     redirect_url = new_page.after_create_url() or back_url
                 else:

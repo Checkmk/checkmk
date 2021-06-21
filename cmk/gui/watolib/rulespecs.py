@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     Tuple,
     DropdownChoice,
     OptionalDropdownChoice,
+    ValueSpecText,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.automations import check_mk_local_automation
@@ -1097,8 +1098,8 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_text(self, value):
-        return "<tt>%s</tt>" % value
+    def value_to_text(self, value) -> HTML:
+        return html.render_tt(value)
 
 
 class TimeperiodValuespec(ValueSpec):
@@ -1157,8 +1158,7 @@ class TimeperiodValuespec(ValueSpec):
                             class_=["toggle_timespecific_parameter"])
             return r
 
-    def value_to_text(self, value):
-        # TODO/Phantasm: highlight currently active timewindow
+    def value_to_text(self, value) -> ValueSpecText:
         return self._get_used_valuespec(value).value_to_text(value)
 
     def from_html_vars(self, varprefix):

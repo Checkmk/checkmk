@@ -37,6 +37,7 @@ from cmk.gui.valuespec import (
     ID,
     Transform,
     Labels,
+    ValueSpecText,
 )
 from cmk.gui.exceptions import MKUserError
 
@@ -840,8 +841,8 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
 
 
 class LockedByValuespec(Tuple):
-    def __init__(self):
-        super(LockedByValuespec, self).__init__(
+    def __init__(self) -> None:
+        super().__init__(
             orientation="horizontal",
             title_br=False,
             elements=[
@@ -854,10 +855,10 @@ class LockedByValuespec(Tuple):
                    "Dynamic Configuration."),
         )
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
-        return super(LockedByValuespec, self).value_to_text(value)
+        return super().value_to_text(value)
 
 
 @host_attribute_registry.register

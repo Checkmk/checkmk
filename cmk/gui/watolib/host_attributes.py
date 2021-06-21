@@ -9,9 +9,10 @@ hosts. Examples are the IP address and the host tags."""
 import abc
 import functools
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.config as config
 from cmk.gui.htmllib import HTML
@@ -23,8 +24,6 @@ from cmk.gui.valuespec import (
     Transform,
     Checkbox,
     DropdownChoice,
-    Dictionary,
-    ListOf,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
 from cmk.gui.type_defs import Choices
@@ -238,9 +237,9 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         """Return the default value for new hosts"""
         return None
 
-    def paint(self, value, hostname):
+    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
         """Render HTML code displaying a value"""
-        return "", value
+        return "", str(value)
 
     def may_edit(self) -> bool:
         """Whether or not the user is able to edit this attribute. If
@@ -754,7 +753,7 @@ class ABCHostAttributeText(ABCHostAttribute, metaclass=abc.ABCMeta):
     def _size(self):
         return 25
 
-    def paint(self, value, hostname):
+    def paint(self, value: str, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
         if not value:
             return "", ""
         return "", value
@@ -804,19 +803,8 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def default_value(self):
         return self.valuespec().default_value()
 
-    def paint(self, value, hostname):
-        vs = self.valuespec()
-        content = vs.value_to_text(value)
-
-        # This should be the job of the valuespec: value_to_text should either
-        # return a str (which is then escaped during rendering or a HTML object
-        # which is not escaped). For Dictionary we know that it cares about
-        # escaping it's values. For this reason it is OK to wrap it into HTML
-        # to prevent escaping during rendering.
-        if isinstance(vs, (ListOf, Dictionary)):
-            content = HTML(content)
-
-        return "", content
+    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
+        return "", self.valuespec().value_to_text(value)
 
     def render_input(self, varprefix, value):
         self.valuespec().render_input(varprefix + self.name(), value)
@@ -849,7 +837,7 @@ class ABCHostAttributeNagiosText(ABCHostAttributeText):
     def nagios_name(self):
         raise NotImplementedError()
 
-    def to_nagios(self, value):
+    def to_nagios(self, value: str) -> Optional[str]:
         if value:
             return value
         return None
@@ -865,7 +853,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
     def _enumlist(self):
         raise NotImplementedError()
 
-    def paint(self, value, hostname):
+    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
         return "", dict(self._enumlist).get(value, self.default_value())
 
     def render_input(self, varprefix, value):
@@ -965,10 +953,10 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
     def nagios_name(self):
         raise NotImplementedError()
 
-    def to_nagios(self, value):
-        value = self.valuespec().value_to_text(value)
-        if value:
-            return value
+    def to_nagios(self, value: str) -> Optional[str]:
+        rendered = self.valuespec().value_to_text(value)
+        if rendered:
+            return str(rendered)
         return None
 
     def is_explicit(self) -> bool:

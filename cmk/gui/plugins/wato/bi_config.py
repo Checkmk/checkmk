@@ -1375,7 +1375,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
             "let example = new cmk.node_visualization_layout_styles.LayoutStyleExampleGenerator(%s);"
             "example.create_example(%s)" % (json.dumps(varprefix), json.dumps(value)))
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return ""
 
     def from_html_vars(self, varprefix):

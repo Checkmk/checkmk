@@ -141,7 +141,7 @@ class ModePredefinedConditions(SimpleListMode):
                    (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
         html.close_li()
         html.close_ul()
-        html.write(vs_conditions().value_to_text(entry["conditions"]))
+        html.write_text(vs_conditions().value_to_text(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:

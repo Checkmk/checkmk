@@ -2013,7 +2013,7 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self):
         return []
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):

@@ -14,7 +14,6 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    Union,
 )
 
 import cmk.utils.version as cmk_version
@@ -183,7 +182,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     value = default_value
 
                 try:
-                    to_text: Union[str, HTML] = valuespec.value_to_text(value)
+                    to_text = html.render_text(valuespec.value_to_text(value))
                 except Exception:
                     logger.exception("error converting %r to text", value)
                     to_text = html.render_error(_("Failed to render value: %r") % value)
@@ -218,7 +217,7 @@ class ABCGlobalSettingsMode(WatoMode):
                     html.close_div()
 
                 else:
-                    html.a(HTML(to_text), href=edit_url, class_=modified_cls, title=value_title)
+                    html.a(to_text, href=edit_url, class_=modified_cls, title=value_title)
 
             if header_is_painted:
                 forms.end()
@@ -285,16 +284,15 @@ class ABCEditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg: Union[
-                HTML, str] = _("Resetted configuration variable %s to its default.") % self._varname
+            msg = html.render_text(
+                _("Resetted configuration variable %s to its default.") % self._varname)
         else:
             new_value = self._valuespec.from_html_vars("ve")
             self._valuespec.validate_value(new_value, "ve")
             self._current_settings[self._varname] = new_value
-            msg = _("Changed global configuration variable %s to %s.") \
-                  % (self._varname, self._valuespec.value_to_text(new_value))
-            # FIXME: THIS HTML(...) is needed because we do not know what we get from value_to_text!!
-            msg = HTML(msg)
+            msg = HTML(
+                _("Changed global configuration variable %s to %s.") % (escaping.escape_attribute(
+                    self._varname), self._valuespec.value_to_text(new_value)))
 
         self._save()
         watolib.add_change("edit-configvar",
@@ -319,7 +317,7 @@ class ABCEditGlobalSettingMode(WatoMode):
     def _is_configured(self) -> bool:
         return self._varname in self._current_settings
 
-    def page(self):
+    def page(self) -> None:
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
 
@@ -350,7 +348,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             self._show_global_setting()
 
         forms.section(_("Factory setting"))
-        html.write_html(HTML(self._valuespec.value_to_text(defvalue)))
+        html.write_text(self._valuespec.value_to_text(defvalue))
 
         forms.section(_("Current state"))
         if is_configured_globally:
@@ -366,7 +364,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             elif curvalue == defvalue:
                 html.write_text(_("Your setting and factory settings are identical."))
             else:
-                html.write(self._valuespec.value_to_text(curvalue))
+                html.write_text(self._valuespec.value_to_text(curvalue))
 
         forms.end()
         html.hidden_fields()

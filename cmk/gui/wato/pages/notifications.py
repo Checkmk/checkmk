@@ -313,7 +313,7 @@ class ABCNotificationsMode(ABCEventsMode):
                             title=title,
                             indent=False,
                     ):
-                        html.write(vs_match_conditions.value_to_text(rule))
+                        html.write_text(vs_match_conditions.value_to_text(rule))
                 else:
                     html.i(_("(no conditions)"))
 
@@ -779,11 +779,12 @@ class ModeNotifications(ABCNotificationsMode):
                     table.cell(_("Plugin parameters"), ", ".join(parameters))
                     table.cell(_("Bulking"))
                     if bulk:
-                        html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                        html.write_text(_("Time horizon") + ": ")
+                        html.write_text(Age().value_to_text(bulk["interval"]))
                         html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                        html.write(", %s %s" %
-                                   (_("group by"), self._vs_notification_bulkby().value_to_text(
-                                       bulk["groupby"])))
+                        html.write_text(", %s " % (_("group by")))
+                        html.write_text(self._vs_notification_bulkby().value_to_text(
+                            bulk["groupby"]))
 
     def _vs_notification_scripts(self):
         return DropdownChoice(title=_("Notification Script"),

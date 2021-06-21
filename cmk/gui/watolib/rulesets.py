@@ -997,7 +997,7 @@ class Rule:
 
         value_text = None
         try:
-            value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
+            value_text = str(self.ruleset.valuespec().value_to_text(self.value))
         except Exception as e:
             logger.exception("error searching ruleset %s", self.ruleset.title())
             html.show_warning(

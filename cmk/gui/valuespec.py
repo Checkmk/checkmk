@@ -106,6 +106,7 @@ DEF_VALUE = object()
 
 ValueSpecValidateFunc = Callable[[Any, str], None]
 ValueSpecHelp = Union[str, HTML, Callable[[], Union[str, HTML]]]
+ValueSpecText = Union[str, HTML]
 
 C = TypeVar('C', bound='Comparable')
 
@@ -210,7 +211,7 @@ class ValueSpec:
             return self.canonical_value()
 
     # TODO: Rename to value_to_html?
-    def value_to_text(self, value: Any) -> str:
+    def value_to_text(self, value: Any) -> ValueSpecText:
         """Creates a text-representation of the value that can be
         used in tables and other contextes
 
@@ -303,7 +304,7 @@ class FixedValue(ValueSpec):
             return self._totext
         if isinstance(value, str):
             return value
-        return ensure_str(value)
+        return str(value)
 
     def value_to_json(self, value):
         return value
@@ -601,7 +602,6 @@ class TextInput(ValueSpec):
         self._try_max_width = try_max_width  # If set, uses calc(100%-10px)
         self._cssclass = cssclass
         self._strip = strip
-        self._attrencode = attrencode
         self._allow_empty = allow_empty
         self._empty_text = empty_text
         self._read_only = read_only
@@ -642,12 +642,10 @@ class TextInput(ValueSpec):
             placeholder=self._placeholder,
         )
 
-    def value_to_text(self, value: str) -> str:
+    def value_to_text(self, value: str) -> ValueSpecText:
         if not value:
             return self._empty_text
-        if self._attrencode:
-            return escaping.escape_attribute(value)
-        return ensure_str(value)
+        return str(value)
 
     def from_html_vars(self, varprefix: str) -> str:
         value = html.request.get_str_input_mandatory(varprefix, "")
@@ -958,12 +956,11 @@ class EmailAddress(TextInput):
         )
         self._make_clickable = make_clickable
 
-    def value_to_text(self, value: str) -> str:
+    def value_to_text(self, value: str) -> ValueSpecText:
         if not value:
             return super().value_to_text(value)
         if self._make_clickable:
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            return "%s" % html.render_a(HTML(value), href="mailto:%s" % value)
+            return html.render_a(value, href="mailto:%s" % value)
         return value
 
 
@@ -1301,7 +1298,7 @@ class Url(TextInput):
             value = self._default_scheme + "://" + value
         return value
 
-    def value_to_text(self, value: str) -> str:
+    def value_to_text(self, value: str) -> ValueSpecText:
         if not any(value.startswith(scheme + "://") for scheme in self._allowed_schemes):
             value = self._default_scheme + "://" + value
 
@@ -1316,8 +1313,9 @@ class Url(TextInput):
 
         # Remove trailing / if the url does not contain any path component
         if self._show_as_link:
-            return u"%s" % html.render_a(
-                text, href=value, target=self._link_target if self._link_target else None)
+            return html.render_a(text,
+                                 href=value,
+                                 target=self._link_target if self._link_target else None)
 
         return value
 
@@ -1423,11 +1421,10 @@ class TextAreaUnicode(TextInput):
         self._minrows = minrows  # Minimum number of initial rows when "auto"
         self._monospaced = monospaced  # select TT font
 
-    def value_to_text(self, value: str) -> str:
+    def value_to_text(self, value: str) -> ValueSpecText:
         if self._monospaced:
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            return "%s" % html.render_pre(HTML(value), class_="ve_textarea")
-        return escaping.escape_attribute(value).replace("\n", "<br>")
+            return html.render_pre(HTML(value), class_="ve_textarea")
+        return value.replace("\n", "<br>")
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if value is None:
@@ -1642,18 +1639,17 @@ class ListOfStrings(ValueSpec):
     def canonical_value(self) -> List[str]:
         return []
 
-    def value_to_text(self, value: List[str]) -> str:
+    def value_to_text(self, value: List[str]) -> ValueSpecText:
         if not value:
             return self._empty_text
 
         if self._vertical:
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             s = [
                 html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v))))
                 for v in value
             ]
-            return "%s" % html.render_table(HTML().join(s))
-        return u", ".join([self._valuespec.value_to_text(v) for v in value])
+            return html.render_table(HTML().join(s))
+        return HTML(", ").join(self._valuespec.value_to_text(v) for v in value)
 
     def from_html_vars(self, varprefix: str) -> List[str]:
         list_prefix = varprefix + "_"
@@ -1924,7 +1920,7 @@ class ListOf(ValueSpec):
     def canonical_value(self) -> List[Any]:
         return []
 
-    def value_to_text(self, value: List[Any]) -> str:
+    def value_to_text(self, value: List[Any]) -> ValueSpecText:
         if self._totext:
             if "%d" in self._totext:
                 return self._totext % len(value)
@@ -1932,9 +1928,8 @@ class ListOf(ValueSpec):
         if not value:
             return self._text_if_empty
 
-        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        s = [html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))) for v in value]
-        return "%s" % html.render_table(HTML().join(s))
+        return html.render_table(HTML().join(
+            html.render_tr(html.render_td(self._valuespec.value_to_text(v))) for v in value))
 
     def get_indexes(self, varprefix: str) -> Dict[int, int]:
         count = html.request.get_integer_input_mandatory(varprefix + "_count", 0)
@@ -2113,14 +2108,13 @@ class ListOfMultiple(ValueSpec):
     def canonical_value(self) -> Dict[str, Any]:
         return {}
 
-    def value_to_text(self, value: Dict[str, Any]) -> str:
+    def value_to_text(self, value: Dict[str, Any]) -> HTML:
         table_content = HTML()
         for ident, val in value.items():
             vs = self._choice_dict[ident]
-            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             table_content += html.render_tr(
-                html.render_td(vs.title()) + html.render_td(HTML(vs.value_to_text(val))))
-        return "%s" % html.render_table(table_content)
+                html.render_td(vs.title()) + html.render_td(vs.value_to_text(val)))
+        return html.render_table(table_content)
 
     def from_html_vars(self, varprefix: str) -> Dict[str, Any]:
         value: Dict[str, Any] = {}
@@ -2460,15 +2454,13 @@ class DropdownChoice(ValueSpec):
             return tmpl % (value,)
         return tmpl
 
-    def value_to_text(self, value: DropdownChoiceValue) -> str:
+    def value_to_text(self, value: DropdownChoiceValue) -> ValueSpecText:
         for val, title in self.choices():
             if value == val:
                 if self._help_separator:
-                    return escaping.escape_attribute(
-                        title.split(self._help_separator, 1)[0].strip())
-                return escaping.escape_attribute(title)
-        return escaping.escape_attribute(
-            self._get_invalid_choice_text(self._invalid_choice_title, value))
+                    return title.split(self._help_separator, 1)[0].strip()
+                return title
+        return self._get_invalid_choice_text(self._invalid_choice_title, value)
 
     def value_to_json(self, value):
         return value
@@ -2956,13 +2948,13 @@ class CascadingDropdown(ValueSpec):
                              "request_vars": request_vars,
                          })))
 
-    def value_to_text(self, value: CascadingDropdownChoiceValue) -> str:
+    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
 
         try:
             ident, title, vs = next(elem for elem in self.choices() if elem[0] == value_ident)
         except StopIteration:
-            return "Could not render: %r" % (value,)
+            return _("Could not render: %r") % (value,)
 
         if vs is None and ident == value:
             return title
@@ -2981,10 +2973,11 @@ class CascadingDropdown(ValueSpec):
                     title=title,
                     indent=False,
             ):
-                html.write(rendered_value)
-            return output_funnel.drain()
+                html.write_text(rendered_value)
+            return HTML(output_funnel.drain())
 
-        return title + self._separator + rendered_value
+        return (HTML(escaping.escape_text(title)) + HTML(escaping.escape_text(self._separator)) +
+                rendered_value)
 
     def value_to_json(self, value: CascadingDropdownChoiceValue):
         value_ident: CascadingDropdownChoiceIdent = value[0] if isinstance(value, tuple) else value
@@ -3186,7 +3179,7 @@ class ListChoice(ValueSpec):
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         if not value:
             return self._empty_text
 
@@ -3196,10 +3189,7 @@ class ListChoice(ValueSpec):
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
 
-        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        return "%s" % html.render_table(
-            html.render_tr(html.render_td(html.render_br().join(HTML(x) for x in texts))))
-        #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
+        return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -3521,7 +3511,7 @@ class OptionalDropdownChoice(DropdownChoice):
         self._explicit.render_input(varprefix + "_ex", input_value)
         html.close_span()
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         for val, title in self.choices():
             if val == value:
                 return title
@@ -3602,7 +3592,7 @@ class RelativeDate(OptionalDropdownChoice):
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         reldays = int((round_date(value) - today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -3737,7 +3727,7 @@ class AbsoluteDate(ValueSpec):
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return time.strftime(self._format, time.localtime(value))
 
     def value_to_json(self, value):
@@ -3960,10 +3950,10 @@ class TimeofdayRange(ValueSpec):
 
     def value_to_text(self, value: _Optional[TimeofdayRangeValue]) -> str:
         if value is None:
-            return u""
+            return ""
 
-        return ensure_str(self._bounds[0].value_to_text(value[0]) + "-" +
-                          self._bounds[1].value_to_text(value[1]))
+        return (self._bounds[0].value_to_text(value[0]) + "-" +
+                self._bounds[1].value_to_text(value[1]))
 
     def from_html_vars(self, varprefix: str) -> _Optional[TimeofdayRangeValue]:
         from_value = self._bounds[0].from_html_vars(varprefix + "_from")
@@ -4168,7 +4158,7 @@ class Timerange(CascadingDropdown):
                 ("400d", _("The last 400 days")),
             ])
 
-    def value_to_text(self, value: CascadingDropdownChoiceValue):
+    def value_to_text(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         for ident, title, _vs in self._get_graph_timeranges():
             if value == ident:
                 return title
@@ -4417,7 +4407,7 @@ class Optional(ValueSpec):
             return _(" Ignore this option")
         return _(" Activate this option")
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         if value == self._none_value:
             return self._none_label
         return self._valuespec.value_to_text(value)
@@ -4546,14 +4536,14 @@ class Alternative(ValueSpec):
         except Exception:
             return self._elements[0].default_value()
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         vs, value = self.matching_alternative(value)
         if vs:
-            output = ""
+            output = HTML()
             if self._show_alternative_title and vs.title():
-                output = "%s<br>" % vs.title()
+                output = html.render_text(vs.title()) + html.render_br()
             return output + vs.value_to_text(value)
-        return _("invalid:") + " " + escaping.escape_attribute(str(value))
+        return _("invalid:") + " " + str(value)
 
     def value_to_json(self, value):
         return value
@@ -4677,9 +4667,9 @@ class Tuple(ValueSpec):
     def set_focus(self, varprefix):
         self._elements[0].set_focus(varprefix + "_0")
 
-    def value_to_text(self, value):
-        return "" + ", ".join(
-            [element.value_to_text(val) for (element, val) in zip(self._elements, value)]) + ""
+    def value_to_text(self, value) -> ValueSpecText:
+        return HTML(", ").join(
+            element.value_to_text(val) for (element, val) in zip(self._elements, value))
 
     def value_to_json(self, value):
         json_value = []
@@ -4968,7 +4958,7 @@ class Dictionary(ValueSpec):
             if name in self._required_keys or not self._optional_keys or name in self._default_keys
         }
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         value = self.migrate(value)
         if not value:
             return self._empty_text
@@ -4979,18 +4969,14 @@ class Dictionary(ValueSpec):
         elem = self._get_elements()
         return self._value_to_text_multiline(elem, value)
 
-    def _value_to_text_multiline(self, elem, value):
+    def _value_to_text_multiline(self, elem, value) -> HTML:
         s = HTML()
         for param, vs in elem:
             if param in value:
                 s += html.render_tr(
                     html.render_td("%s:&nbsp;" % vs.title(), class_="title") +
-                    html.render_td(self._funny_workaround(vs, value[param])))
-        return str(html.render_table(s))
-
-    def _funny_workaround(self, vs, value):
-        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        return HTML(vs.value_to_text(value))
+                    html.render_td(vs.value_to_text(value[param])))
+        return html.render_table(s)
 
     def value_to_json(self, value):
         json_value = {}
@@ -5123,9 +5109,9 @@ class ElementSelection(ValueSpec):
                 html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         self.load_elements()
-        return escaping.escape_attribute(self._elements.get(value, value))
+        return self._elements.get(value, value)
 
     def from_html_vars(self, varprefix):
         return html.request.var(varprefix)
@@ -5212,7 +5198,7 @@ class Foldable(ValueSpec):
     def default_value(self) -> Any:
         return self._valuespec.default_value()
 
-    def value_to_text(self, value: Any) -> str:
+    def value_to_text(self, value: Any) -> ValueSpecText:
         return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix: str) -> Any:
@@ -5295,7 +5281,7 @@ class Transform(ValueSpec):
     def default_value(self) -> Any:
         return self.back(self._valuespec.default_value())
 
-    def value_to_text(self, value: Any) -> str:
+    def value_to_text(self, value: Any) -> ValueSpecText:
         return self._valuespec.value_to_text(self.forth(value))
 
     def from_html_vars(self, varprefix: str) -> Any:
@@ -5384,7 +5370,7 @@ class Password(TextInput):
     def value_to_text(self, value: _Optional[str]) -> str:
         if value is None:
             return _("none")
-        return u'******'
+        return '******'
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
@@ -5709,7 +5695,7 @@ class Labels(ValueSpec):
                     varprefix,
                     _("The label value %r is of type %s, but should be %s") % (k, type(v), str))
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> HTML:
         label_sources = {k: self._label_source.value for k in value.keys()
                         } if self._label_source else {}
         return render_labels(value, "host", with_links=False, label_sources=label_sources)
@@ -6016,9 +6002,8 @@ class IconSelector(ValueSpec):
             return None
         return icon
 
-    def value_to_text(self, value):
-        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-        return "%s" % self._render_icon(value["icon"] if isinstance(value, dict) else value)
+    def value_to_text(self, value) -> HTML:
+        return self._render_icon(value["icon"] if isinstance(value, dict) else value)
 
     def validate_datatype(self, value, varprefix):
         if self._with_emblem and not isinstance(value, (str, dict)):
@@ -6104,7 +6089,7 @@ class Color(ValueSpec):
             return None
         return color
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return value
 
     def validate_datatype(self, value, varprefix):
@@ -6258,7 +6243,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     cert_info[what][titles[key]] = raw_val.decode("utf-8")
         return cert_info
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         cert_info = self.analyse_cert(value)
 
         rows = []

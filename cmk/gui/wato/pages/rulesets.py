@@ -1043,18 +1043,18 @@ class ModeEditRuleset(WatoMode):
         # Value
         table.cell(_("Value"))
         try:
-            value_html = HTML(self._valuespec.value_to_text(value))
+            value_html = self._valuespec.value_to_text(value)
         except Exception as e:
             try:
-                reason = "%s" % e
+                reason = str(e)
                 self._valuespec.validate_datatype(value, "")
             except Exception as e:
-                reason = "%s" % e
+                reason = str(e)
 
             value_html = html.render_icon("alert") \
                 + _("The value of this rule is not valid. ") \
                 + reason
-        html.write_html(value_html)
+        html.write_text(value_html)
 
         # Comment
         table.cell(_("Description"))
@@ -1068,7 +1068,7 @@ class ModeEditRuleset(WatoMode):
 
     def _rule_conditions(self, rule):
         self._predefined_condition_info(rule)
-        html.write(
+        html.write_text(
             VSExplicitConditions(rulespec=self._rulespec).value_to_text(rule.get_rule_conditions()))
 
     def _predefined_condition_info(self, rule):
@@ -1989,14 +1989,14 @@ class VSExplicitConditions(Transform):
         if value.startswith("!"):
             raise MKUserError(varprefix, _("It's not allowed to use a leading \"!\" here."))
 
-    def value_to_text(self, value: RuleConditions) -> str:
+    def value_to_text(self, value: RuleConditions) -> HTML:
         with output_funnel.plugged():
             html.open_ul(class_="conditions")
             renderer = RuleConditionRenderer()
             for condition in renderer.render(self._rulespec, value):
                 html.li(condition, class_="condition")
             html.close_ul()
-            return output_funnel.drain()
+            return HTML(output_funnel.drain())
 
 
 class RuleConditionRenderer:

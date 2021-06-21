@@ -1679,10 +1679,6 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter)
 
-    def value_to_text(self, value):
-        # FIXME: optimize. Needed?
-        return repr(value)
-
     def from_html_vars(self, varprefix):
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()

@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple as _Tuple, Optional, Type, Iterator
+from typing import List, Tuple as _Tuple, Optional, Type, Iterator, Union
 
 from six import ensure_str
 
@@ -15,6 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
+from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
@@ -241,7 +242,8 @@ class ModeObjectParameters(WatoMode):
                                               svc_desc=self._service,
                                               known_settings=self._PARAMETERS_OMIT)
                 assert isinstance(rulespec.valuespec, Tuple)
-                html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
+                html.write_text(rulespec.valuespec._elements[2].value_to_text(
+                    serviceinfo["parameters"]))
                 html.close_td()
                 html.close_tr()
                 html.close_table()
@@ -332,7 +334,8 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _render_rule_reason(self, title, title_url, reason, reason_url, is_default, setting):
+    def _render_rule_reason(self, title, title_url, reason, reason_url, is_default,
+                            setting: Union[str, HTML]) -> None:
         if title_url:
             title = html.render_a(title, href=title_url)
         forms.section(title)
@@ -428,7 +431,7 @@ class ModeObjectParameters(WatoMode):
 
         elif known_settings is not self._PARAMETERS_UNKNOWN:
             try:
-                html.write(valuespec.value_to_text(known_settings))
+                html.write_text(valuespec.value_to_text(known_settings))
             except Exception as e:
                 if config.debug:
                     raise
@@ -453,7 +456,7 @@ class ModeObjectParameters(WatoMode):
                 elif rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT:
                     # If there is a factory default then show that one
                     setting = rulespec.factory_default
-                    html.write(valuespec.value_to_text(setting))
+                    html.write_text(valuespec.value_to_text(setting))
 
                 elif ruleset.match_type() in ("all", "list"):
                     # Rulesets that build lists are empty if no rule matches
@@ -461,14 +464,15 @@ class ModeObjectParameters(WatoMode):
 
                 else:
                     # Else we use the default value of the valuespec
-                    html.write(valuespec.value_to_text(valuespec.default_value()))
+                    html.write_text(valuespec.value_to_text(valuespec.default_value()))
 
             # We have a setting
             elif valuespec:
                 if ruleset.match_type() == "all":
-                    html.write(", ".join(valuespec.value_to_text(s) for s in setting))
+                    for s in setting:
+                        html.write_text(valuespec.value_to_text(s))
                 else:
-                    html.write(valuespec.value_to_text(setting))
+                    html.write_text(valuespec.value_to_text(setting))
 
             # Binary rule, no valuespec, outcome is True or False
             else:

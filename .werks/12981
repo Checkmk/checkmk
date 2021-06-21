@@ -1,0 +1,13 @@
+Title: <tt>oracle_jobs</tt>: Fix ValueError for setups with CDB and nonCDB on same host
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p25
+Date: 1624258397
+
+On hosts with CDB and nonCDB databases, the check <tt>oracle_jobs</tt> crashed.
+This has been fixed.

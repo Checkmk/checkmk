@@ -382,10 +382,6 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         self.max_age: Final[int] = max_age
         self.simulation: Final[bool] = simulation
 
-    @classmethod
-    def reset_maybe(cls):
-        cls.maybe = not cls.disabled
-
     @abc.abstractmethod
     def make(self, *, force_cache_refresh: bool = False) -> FileCache[TRawData]:
         raise NotImplementedError

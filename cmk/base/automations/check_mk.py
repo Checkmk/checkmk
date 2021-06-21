@@ -1476,7 +1476,8 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
-                cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
+                cmk.core_helpers.cache.FileCacheFactory.maybe = (
+                    not cmk.core_helpers.cache.FileCacheFactory.disabled)
                 for source in sources.make_sources(host_config, ipaddress):
                     source.file_cache_max_age = config.check_max_cachefile_age
                     if not isinstance(source, sources.agent.AgentSource):

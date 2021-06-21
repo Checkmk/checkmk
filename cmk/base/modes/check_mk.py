@@ -1543,7 +1543,8 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
-        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
+        cmk.core_helpers.cache.FileCacheFactory.maybe = (
+            not cmk.core_helpers.cache.FileCacheFactory.disabled)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1733,7 +1734,8 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
+        cmk.core_helpers.cache.FileCacheFactory.maybe = (
+            not cmk.core_helpers.cache.FileCacheFactory.disabled)
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:

@@ -519,6 +519,12 @@ class ModeCheckManPage(WatoMode):
             if check_ruleset_name is not None:
                 self._show_ruleset("checkgroup_parameters:%s" % check_ruleset_name)
 
+            cluster = self._manpage["header"].get("cluster")
+            if cluster:
+                html.open_tr()
+                html.th(_("Cluster behaviour"))
+                html.td(self._manpage_text(cluster))
+                html.close_tr()
         else:
             self._show_ruleset("active_checks:%s" % self._check_type[6:])
 

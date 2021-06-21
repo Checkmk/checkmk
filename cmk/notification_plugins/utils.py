@@ -61,7 +61,8 @@ def format_address(display_name: str, email_address: str) -> str:
 def default_from_address():
     environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
     if cmk_version.is_cma():
-        return load_text_from_file("/etc/nullmailer/default-from", environ_default)
+        return load_text_from_file("/etc/nullmailer/default-from",
+                                   environ_default).replace('\n', '')
 
     return environ_default
 

@@ -368,13 +368,6 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated = False
 
-    @staticmethod
-    def enable_cache():
-        # TODO check these settings vs.
-        # cmk/base/automations/check_mk.py:_set_cache_opts_of_checkers
-        FileCacheFactory.maybe = True
-        FileCacheFactory.use_outdated = True
-
     def __init__(
         self,
         hostname: HostName,

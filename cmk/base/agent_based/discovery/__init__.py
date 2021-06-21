@@ -296,7 +296,8 @@ def automation_discovery(
         result.error_text = ""
         return result
 
-    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
+    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -377,18 +378,6 @@ def automation_discovery(
 
     result.self_total = result.self_new + result.self_kept
     return result
-
-
-def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
-    """Set caching options appropriate for discovery"""
-    # TCP data sources should use the cache: Fetching live data may steal log
-    # messages and the like from the checks.
-    # However: Discovering new hosts might have no cache, so don't enforce it.
-    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
-    # As this is a change quite close to a release, I am leaving the following
-    # line in. As far as I can tell, this property is never being read after the
-    # callsites of this function.
-    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
 
 def _get_post_discovery_services(
@@ -1117,7 +1106,8 @@ def get_check_preview(
 
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
-    _set_cache_opts_of_checkers(use_cached_snmp_data=use_cached_snmp_data)
+    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
 
     parsed_sections_broker, _source_results = make_broker(
         config_cache=config_cache,

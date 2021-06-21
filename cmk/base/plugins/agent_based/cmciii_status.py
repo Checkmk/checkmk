@@ -4,15 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import register, Result, State
-from .utils.cmciii import discover_cmciii_sensors, get_sensor, discovery_default_parameters
+from .agent_based_api.v1 import register, Result, State, type_defs
+from .utils.cmciii import (
+    CheckParams,
+    DiscoveryParams,
+    discovery_default_parameters,
+    discover_cmciii_sensors,
+    get_sensor,
+    Section,
+)
 
 
-def discover_cmciii_status(params, section):
+def discover_cmciii_status(params: DiscoveryParams, section: Section) -> type_defs.DiscoveryResult:
     yield from discover_cmciii_sensors("status", params, section)
 
 
-def check_cmciii_status(item, params, section):
+def check_cmciii_status(item: str, params: CheckParams, section: Section) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["status"])
     if not entry:
         return

@@ -4,19 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Dict, List, Optional, Tuple, Union
 
-from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree
+from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, type_defs
+from .utils.cmciii import Devices, SensorType, Sensors, Variable
 
 
-def sanitize_variable(variable):
+def sanitize_variable(variable: str) -> Variable:
     variable_splitted = variable.split(".")
     start, end = variable_splitted[:-1], variable_splitted[-1]
     start += max(0, 2 - len(start)) * ['']  # ensures that the sensor type can always be parsed
     return start + [end]
 
 
-def sensor_type(variable):
+def sensor_type(variable: Variable) -> Optional[SensorType]:
     if variable[0].startswith("PSM_") and "Unit" in variable:
         return "psm_current"
     if variable[0].startswith("PSM_") and variable[1].startswith("Plug"):
@@ -47,7 +48,7 @@ def sensor_type(variable):
     return None
 
 
-def sensor_id(type_, variable, device):
+def sensor_id(type_: SensorType, variable: Variable, device: str) -> str:
     if type_ in ["temp", "temp_in_out"]:
         item = variable[0].replace("Temperature", "")
         if item == "":
@@ -74,7 +75,7 @@ def sensor_id(type_, variable, device):
     return "%s %s" % (device, variable[0])
 
 
-def sensor_key(type_, var_type, variable):
+def sensor_key(type_: SensorType, var_type: str, variable: Variable):
     if type_ != "phase":
         return variable[-1]
 
@@ -91,7 +92,8 @@ def sensor_key(type_, var_type, variable):
     return key
 
 
-def sensor_value(value_str, value_int, scale, var_type, var_unit):
+def sensor_value(value_str: str, value_int: str, scale: str, var_type: str,
+                 var_unit: str) -> Union[str, float]:
     if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
         return value_str
 
@@ -110,7 +112,7 @@ def sensor_value(value_str, value_int, scale, var_type, var_unit):
     return value
 
 
-def parse_devices_and_states(device_table):
+def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devices, Sensors]:
     devices: Dict[str, str] = {}
     states: Dict[str, Dict[str, str]] = {}
     for num, (endoid, name, alias, status) in enumerate(device_table, start=1):
@@ -132,7 +134,7 @@ def parse_devices_and_states(device_table):
     return devices, states
 
 
-def split_temp_in_out_sensors(sensors):
+def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     # the manual page of cmciii_temp_in_out explains why the sensors are split
     in_out_sensors = {}
     in_out_values = {'In-Bot', 'In-Mid', 'In-Top', 'Out-Bot', 'Out-Mid', 'Out-Top'}
@@ -148,11 +150,11 @@ def split_temp_in_out_sensors(sensors):
     return in_out_sensors
 
 
-def parse_cmciii(string_table):
+def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
     device_table, var_table = string_table
     devices, states = parse_devices_and_states(device_table)
 
-    parsed = {
+    parsed: Sensors = {
         "state": states,
         "psm_current": {},
         "psm_plugs": {},
@@ -175,7 +177,7 @@ def parse_cmciii(string_table):
         if type_ is None:
             continue
 
-        device = devices.get(location)
+        device = devices.get(location) or "none"
         id_ = sensor_id(type_, sanitized_variable[:-1], device)
         if id_ in parsed[type_] and parsed[type_][id_]["_location_"] != location:
             id_ += " %s" % location

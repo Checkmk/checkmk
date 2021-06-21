@@ -1792,7 +1792,9 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
 def page_view():
     """Central entry point for the initial HTML page rendering of a view"""
     with CPUTracker() as page_view_tracker:
-        view_spec, view_name = request.get_item_input("view_name", get_permitted_views())
+        view_name = html.request.get_ascii_input_mandatory("view_name", "")
+        view_spec = visuals.get_permissioned_visual(view_name, html.request.get_str_input("owner"),
+                                                    "view", get_permitted_views(), get_all_views())
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()

@@ -12,4 +12,3 @@ Version: 2.1.0i1
 Users with permission "Edit foreign views" could view unpublished views.
 The same problem occured for all visuals like bookmarks, topics, dashboards and
 so on.
-

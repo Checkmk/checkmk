@@ -23,6 +23,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -118,6 +119,7 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.visuals  # pylint: disable=no-name-in-module
 
+T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -403,7 +405,6 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
         if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
             user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
             return bool(user_groups.intersection(visual["public"][1]))
-
         return False
 
     def restricted_visual(visualname: VisualName):
@@ -439,6 +440,31 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
                 visuals[n] = visual
 
     return visuals
+
+
+def get_permissioned_visual(
+    item: str,
+    owner: Optional[str],
+    what: str,
+    permitted_visuals: Dict[str, T],
+    all_visuals: Dict[Tuple[UserId, str], T],
+) -> T:
+    if (owner is not None and  # Var is set from edit page and can be empty string for builtin
+            owner != config.user.id and  # user has top priority, thus only change if other user
+            config.user.may("general.edit_foreign_%ss" % what)):
+        if visual := all_visuals.get((UserId(owner), item)):
+            return visual
+        # We don't raise on not found immediately and let it trickle down to default permitted
+        # as a failsafe for report inheritance. In general it is OK for other cases, because the
+        # priority should be inverse, first pick from permitted, then if edit_foreign permissions
+        # are available get from other user. In reports it still happens that the inheritance view
+        # is of the active user not of the "owner". Resolution of those piorities would need to be
+        # fixed in visuals.available to support foreign users.
+
+    if visual := permitted_visuals.get(item):
+        return visual
+
+    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
 
 
 #.
@@ -592,9 +618,11 @@ def page_list(what,
                 table.cell(_('Title'))
                 title2 = _u(visual['title'])
                 if _visual_can_be_linked(what, visual_name, available_visuals, visual, owner):
-                    html.a(title2,
-                           href="%s.py?%s=%s" %
-                           (what_s, visual_type_registry[what]().ident_attr, visual_name))
+                    show_url = makeuri_contextless(
+                        request, [(visual_type_registry[what]().ident_attr, visual_name),
+                                  ("owner", owner)],
+                        filename="%s.py" % what_s)
+                    html.a(title2, href=show_url)
                 else:
                     html.write_text(title2)
                 html.help(_u(visual['description']))
@@ -619,14 +647,14 @@ def page_list(what,
 
 
 def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
-    if owner == config.user.id:
+    if owner == config.user.id or config.user.may("general.edit_foreign_%s" % what):
         return True
 
     # Is this the highest priority visual that the user has available?
     if user_visuals.get(visual_name) != visual:
         return False
 
-    return visual["public"] or config.user.may("general.edit_foreign_%s" % what)
+    return visual["public"]
 
 
 def _partition_visuals(visuals: Dict[Tuple[UserId, str], Dict],

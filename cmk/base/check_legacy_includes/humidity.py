@@ -9,6 +9,12 @@ from cmk.base.check_api import get_percent_human_readable
 from cmk.base.check_api import check_levels
 
 
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_humidity(humidity, params):
     if isinstance(params, dict):
         levels = ((params.get("levels") or (None, None)) + (params.get("levels_lower") or

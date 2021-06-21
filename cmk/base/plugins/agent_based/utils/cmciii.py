@@ -10,7 +10,7 @@ from ..agent_based_api.v1 import Service, type_defs
 
 Variable = List[str]
 DiscoveryParams = Mapping[str, bool]
-CheckParams = Mapping[str, str]
+CheckParams = Mapping[str, Any]
 
 Devices = Dict[str, str]
 SensorType = str

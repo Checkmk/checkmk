@@ -761,7 +761,7 @@ def _generictest_cmciii():
     ),
     (
         'cmciii_humidity',
-        None,
+        {},
         [
             Service(item='CMC-Temperatur Humidity',
                     parameters={'_item_key': 'CMC-Temperatur Humidity'})
@@ -873,7 +873,7 @@ def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expec
             'CMC-Temperatur Humidity',
             [
                 Result(state=State.CRIT, summary='Status: Low Warn'),
-                Result(state=State.OK, summary='9.5%'),
+                Result(state=State.OK, summary='9.50%'),
                 Metric('humidity', 9.5, levels=(10, 12), boundaries=(0, 100)),
             ],
         )],
@@ -978,7 +978,7 @@ def _generictest_cmciii_input_regression():
     ('cmciii_temp', None, []),
     ('cmciii_temp_in_out', None, []),
     ('cmciii_can_current', None, []),
-    ('cmciii_humidity', None, []),
+    ('cmciii_humidity', {}, []),
     ('cmciii_phase', {}, []),
 ])
 def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plugin, params,

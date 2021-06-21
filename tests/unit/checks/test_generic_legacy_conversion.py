@@ -1358,7 +1358,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'cmciii.temp',
         'cmciii.temp_in_out',
         'cmciii.can_current',
-        'cmciii.humidity',
         'cmciii_lcp_airin',
         'cmciii_lcp_airout',
         'cmciii_lcp_fans',

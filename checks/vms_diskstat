@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 # Example output from agent:
 # <<<vms_diskstat>>>
 # $1$DGA1122: TEST_WORK 1171743836 1102431184 0.00
@@ -28,7 +29,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 
 
 def inventory_vms_diskstat_fs(info):
-    return df_inventory([line[1] for line in info])
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [line[1] for line in info])
 
 
 def check_vms_diskstat_fs(item, params, info):

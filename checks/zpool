@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 # NAME    SIZE  ALLOC   FREE  CAP  HEALTH  ALTROOT
 # app02  39.8G  14.1G  25.6G  35%  ONLINE  -
 # rpool  39.8G  32.9G  6.81G  82%  ONLINE  -
@@ -42,7 +43,7 @@ def parse_zpool(info):
 
 
 def inventory_zpool(parsed):
-    return df_inventory(list(parsed))
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), list(parsed))
 
 
 def check_zpool(item, params, parsed):

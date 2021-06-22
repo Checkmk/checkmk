@@ -6,12 +6,10 @@
 
 # pylint: disable=chained-comparison
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 from cmk.base.config import factory_settings, Ruleset
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import host_extra_conf
-from cmk.base.check_api import host_name
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.plugins.agent_based.utils.df import (
@@ -19,7 +17,6 @@ from cmk.base.plugins.agent_based.utils.df import (
     get_filesystem_levels as _get_filesystem_levels,
     mountpoints_in_group,
     FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
-    ungrouped_mountpoints_and_groups,
 )
 
 from .size_trend import size_trend  # type: ignore[attr-defined]
@@ -45,50 +42,6 @@ inventory_df_exclude_mountpoints = ['/dev']
 filesystem_groups: Ruleset = []
 
 factory_settings["filesystem_default_levels"] = _FILESYSTEM_DEFAULT_LEVELS
-
-
-def transform_filesystem_groups(groups):
-    """
-    Old format:
-    [(group_name, include_pattern), (group_name, include_pattern), ...]
-    New format:
-    [{group_name: name,
-      patterns_include: [include_pattern, include_pattern, ...],
-      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-     {group_name: name,
-      patterns_include: [include_pattern, include_pattern, ...],
-      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-     ...]
-    """
-    if not groups or isinstance(groups[0], dict):
-        yield from groups
-        return
-    for group_name, include_pattern in groups:
-        yield {
-            'group_name': group_name,
-            'patterns_include': [include_pattern],
-            'patterns_exclude': [],
-        }
-
-
-def df_inventory(mplist):
-    group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
-    for groups in host_extra_conf(host_name(), filesystem_groups):
-        for group in transform_filesystem_groups(groups):
-            grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))
-            grouping_entry[0].extend(group['patterns_include'])
-            grouping_entry[1].extend(group['patterns_exclude'])
-
-    ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
-
-    ungrouped: List[Tuple[str, Dict[str,
-                                    Tuple[List[str],
-                                          List[str]]]]] = [(mp, {}) for mp in ungrouped_mountpoints]
-    grouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [(group, {
-        "patterns": group_patterns[group]
-    }) for group in groups]
-    return ungrouped + grouped
-
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
 

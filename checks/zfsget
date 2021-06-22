@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 # Example output from agent (sizes are in bytes). Note: the part
 # [df] in this check is duplicated. We need this information because
 # zfsget does not show pass-through filesystems like '/'. :-(
@@ -203,7 +204,7 @@ def inventory_zfsget(parsed):
     for mountpoint in parsed:
         if mountpoint not in inventory_df_exclude_mountpoints:
             mplist.append(mountpoint)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_zfsget(item, params, parsed):

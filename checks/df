@@ -18,7 +18,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-from cmk.base.plugins.agent_based.utils.df import DfBlock
+from cmk.base.plugins.agent_based.utils.df import DfBlock, df_discovery
 
 inventory_df_rules = []
 inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
@@ -165,7 +165,7 @@ def inventory_df(parsed):
     #      df_inventory should also return a list of DfBlocks or similar.
     mp_to_df_block = {df_block.mountpoint: df_block for df_block in df_blocks}
 
-    for mountpoint, params in df_inventory(mplist):
+    for mountpoint, params in df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist):
         df_block = mp_to_df_block.get(mountpoint)
         if "patterns" in params:
             # Add the grouping_behaviour info to the discovered parameters of this service. With this information

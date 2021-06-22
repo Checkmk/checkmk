@@ -23,6 +23,7 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 #     5: "special",
 #     6: "max"
 # }
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 
 
 def inventory_emc_isilon_quota(info):
@@ -32,7 +33,7 @@ def inventory_emc_isilon_quota(info):
         _advisory_threshold_defined, _advisory_threshold, _usage in info:
         mount_points.append(path)
 
-    return df_inventory(mount_points)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mount_points)
 
 
 def check_emc_isilon_quota(item, params, info):

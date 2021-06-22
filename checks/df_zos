@@ -14,6 +14,7 @@ from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-impo
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 # <<<df_zos>>>
 # SYS5.OMVS.ALF0.HFS         720          92        504       16% /ALF0
 # HFS, Read/Write, Device:2, ACLS=Y
@@ -90,7 +91,7 @@ def inventory_df_zos(parsed):
 
         if fs_rw and not fs_ex:
             mplist.append(item)
-    return df_inventory(mplist)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
 
 def check_df_zos(item, params, parsed):

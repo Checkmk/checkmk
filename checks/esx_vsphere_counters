@@ -20,6 +20,7 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
+from cmk.base.plugins.agent_based.utils.df import df_discovery
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -189,7 +190,7 @@ def inventory_esx_vsphere_counters_ramdisk(parsed):
         if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             ramdisks.append(instance.split('/')[-1])
 
-    return df_inventory(ramdisks)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), ramdisks)
 
 
 def check_esx_vsphere_counters_ramdisk(item, params, parsed):

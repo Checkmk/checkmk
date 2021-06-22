@@ -133,7 +133,7 @@ class AutomationDiscoveryResponse:
         }
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "AutomationDiscoveryResponse":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "AutomationDiscoveryResponse":
         return cls(results={k: DiscoveryResult(**v) for k, v in serialized["results"].items()})
 
 

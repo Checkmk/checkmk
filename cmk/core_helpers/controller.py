@@ -12,7 +12,7 @@ import signal
 import sys
 import traceback
 from types import FrameType
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional
+from typing import Any, Iterator, List, Mapping, NamedTuple, Optional
 
 import cmk.utils.cleanup
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
@@ -55,7 +55,7 @@ class GlobalConfig(NamedTuple):
         }[self.cmc_log_level]
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "GlobalConfig":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "GlobalConfig":
         fetcher_config = serialized["fetcher_config"]
         return cls(
             cmc_log_level=fetcher_config["cmc_log_level"],
@@ -63,7 +63,7 @@ class GlobalConfig(NamedTuple):
             snmp_plugin_store=SNMPPluginStore.deserialize(fetcher_config["snmp_plugin_store"]),
         )
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return {
             "fetcher_config": {
                 "cmc_log_level": self.cmc_log_level,
@@ -187,14 +187,14 @@ def _parse_config(serial: ConfigSerial, host_name: HostName) -> Iterator[Fetcher
         raise LookupError("invalid config")
 
 
-def _parse_fetcher_config(data: Dict[str, Any]) -> Iterator[Fetcher]:
+def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Fetcher]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
     yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
                 for entry in data["fetchers"])
 
 
-def _parse_cluster_config(data: Dict[str, Any], serial: ConfigSerial) -> Iterator[Fetcher]:
+def _parse_cluster_config(data: Mapping[str, Any], serial: ConfigSerial) -> Iterator[Fetcher]:
     global_config = load_global_config(serial)
     for host_name in data["clusters"]["nodes"]:
         for fetcher in _parse_config(serial, host_name):

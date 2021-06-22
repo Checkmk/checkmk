@@ -7,7 +7,7 @@
 import abc
 import logging
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Literal, Optional, Tuple, Type, TypeVar
+from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Tuple, Type, TypeVar
 
 import cmk.utils
 from cmk.utils.exceptions import (
@@ -52,17 +52,17 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
 
     @final
     @classmethod
-    def from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
+    def from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
         return cls._from_json(serialized)
 
     @classmethod
     @abc.abstractmethod
-    def _from_json(cls: Type[TFetcher], serialized: Dict[str, Any]) -> TFetcher:
+    def _from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         """Serialize to JSON."""
         raise NotImplementedError()
 

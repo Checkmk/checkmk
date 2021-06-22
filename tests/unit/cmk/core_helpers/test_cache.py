@@ -8,8 +8,6 @@ import copy
 import json
 import logging
 
-import pytest  # type: ignore[import]
-
 from cmk.utils.type_defs import SectionName
 
 from cmk.core_helpers.cache import MaxAge, PersistedSections, SectionStore

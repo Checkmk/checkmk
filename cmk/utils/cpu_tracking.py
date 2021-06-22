@@ -7,7 +7,7 @@
 import os
 import posix
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable
+from typing import Any, Iterable, Mapping
 
 from cmk.utils.log import console
 
@@ -36,13 +36,13 @@ class Snapshot:
         return cls(os.times())
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "Snapshot":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "Snapshot":
         try:
             return cls(times_result(serialized["process"]))
         except LookupError as exc:
             raise ValueError(serialized) from exc
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return {"process": tuple(self.process)}
 
     def __add__(self, other: "Snapshot") -> "Snapshot":

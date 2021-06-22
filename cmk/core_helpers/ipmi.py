@@ -6,8 +6,9 @@
 
 from __future__ import annotations
 
+import copy
 import logging
-from typing import Any, Dict, Final, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -66,13 +67,14 @@ class IPMIFetcher(AgentFetcher):
         )) + ")"
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> IPMIFetcher:
+    def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
+        serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "address": self.address,

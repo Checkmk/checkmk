@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import copy
 import dataclasses
 import logging
 import time
 from pathlib import Path
 from typing import (
     Any,
-    Dict,
     Final,
     Iterable,
     Iterator,
@@ -62,14 +62,14 @@ class SNMPPluginStoreItem(NamedTuple):
     inventory: bool
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStoreItem":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStoreItem":
         return cls(
             [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
             SNMPDetectSpec.from_json(serialized["detect_spec"]),
             serialized["inventory"],
         )
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return {
             "trees": [tree.to_json() for tree in self.trees],
             "detect_spec": self.detect_spec.to_json(),
@@ -97,13 +97,13 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
         return self._store.__len__()
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPPluginStore":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStore":
         return cls({
             SectionName(k): SNMPPluginStoreItem.deserialize(v)
             for k, v in serialized["plugin_store"].items()
         })
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}
 
 
@@ -129,11 +129,11 @@ class SectionMeta:
         self.redetect = redetect
         self.fetch_interval = fetch_interval
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> Mapping[str, Any]:
         return dataclasses.asdict(self)
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "SectionMeta":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "SectionMeta":
         return cls(**serialized)
 
 
@@ -173,7 +173,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self,
         file_cache: SNMPFileCache,
         *,
-        sections: Dict[SectionName, SectionMeta],
+        sections: Mapping[SectionName, SectionMeta],
         on_error: OnError,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
@@ -220,29 +220,30 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )) + ")"
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> 'SNMPFetcher':
+    def _from_json(cls, serialized: Mapping[str, Any]) -> 'SNMPFetcher':
         # The SNMPv3 configuration is represented by a tuple of different lengths (see
         # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
         # list used by JSON back to a tuple.
         # SNMPv1/v2 communities are represented by a string: Leave it untouched.
-        if isinstance(serialized["snmp_config"]["credentials"], list):
-            serialized["snmp_config"]["credentials"] = tuple(
-                serialized["snmp_config"]["credentials"])
+        serialized_ = copy.deepcopy(dict(serialized))
+        if isinstance(serialized_["snmp_config"]["credentials"], list):
+            serialized_["snmp_config"]["credentials"] = tuple(
+                serialized_["snmp_config"]["credentials"])
 
         return cls(
-            file_cache=SNMPFileCache.from_json(serialized.pop("file_cache")),
+            file_cache=SNMPFileCache.from_json(serialized_.pop("file_cache")),
             sections={
                 SectionName(s): SectionMeta.deserialize(m)
-                for s, m in serialized["sections"].items()
+                for s, m in serialized_["sections"].items()
             },
-            on_error=OnError(serialized["on_error"]),
-            missing_sys_description=serialized["missing_sys_description"],
-            do_status_data_inventory=serialized["do_status_data_inventory"],
-            section_store_path=serialized["section_store_path"],
-            snmp_config=SNMPHostConfig.deserialize(serialized["snmp_config"]),
+            on_error=OnError(serialized_["on_error"]),
+            missing_sys_description=serialized_["missing_sys_description"],
+            do_status_data_inventory=serialized_["do_status_data_inventory"],
+            section_store_path=serialized_["section_store_path"],
+            snmp_config=SNMPHostConfig.deserialize(serialized_["snmp_config"]),
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "sections": {str(s): m.serialize() for s, m in self.sections.items()},

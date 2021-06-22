@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Any, Dict, Final, Optional, Union
+from typing import Any, Final, Mapping, Optional, Union
 
 from six import ensure_binary, ensure_str
 
@@ -47,13 +48,14 @@ class ProgramFetcher(AgentFetcher):
         )) + ")"
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "cmdline": self.cmdline,

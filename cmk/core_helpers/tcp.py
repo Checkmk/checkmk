@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import socket
 from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
 
 import cmk.utils.debug
 from cmk.utils.encryption import (
@@ -56,15 +57,16 @@ class TCPFetcher(AgentFetcher):
         )) + ")"
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "TCPFetcher":
-        address: Tuple[Optional[HostAddress], int] = serialized.pop("address")
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
         return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
             address=address,
-            **serialized,
+            **serialized_,
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "family": self.family,

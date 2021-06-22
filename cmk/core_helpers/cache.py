@@ -51,12 +51,12 @@ Cache hierarchy
 """
 
 import abc
+import copy
 import logging
 from pathlib import Path
 from typing import (
     Any,
     Callable,
-    Dict,
     Final,
     Generic,
     Iterator,
@@ -258,7 +258,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             self.simulation == other.simulation,
         ))
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "hostname": str(self.hostname),
             "base_path": str(self.base_path),
@@ -269,9 +269,10 @@ class FileCache(Generic[TRawData], abc.ABC):
         }
 
     @classmethod
-    def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
-        max_age = MaxAge(*serialized.pop("max_age"))
-        return cls(max_age=max_age, **serialized)
+    def from_json(cls: Type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
+        serialized_ = copy.deepcopy(dict(serialized))
+        max_age = MaxAge(*serialized_.pop("max_age"))
+        return cls(max_age=max_age, **serialized_)
 
     @staticmethod
     @abc.abstractmethod

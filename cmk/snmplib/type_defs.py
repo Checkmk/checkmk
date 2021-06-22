@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import copy
 import enum
 import logging
 from typing import (
@@ -99,7 +100,7 @@ class SNMPBackendEnum(enum.Enum):
 class SNMPDetectSpec(_SNMPDetectBaseType):
     """A specification for SNMP device detection"""
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "SNMPDetectSpec":
+    def from_json(cls, serialized: Mapping[str, Any]) -> "SNMPDetectSpec":
         try:
             # The cast is necessary as mypy does not infer types in a list comprehension.
             # See https://github.com/python/mypy/issues/5068
@@ -109,7 +110,7 @@ class SNMPDetectSpec(_SNMPDetectBaseType):
         except (LookupError, TypeError, ValueError) as exc:
             raise ValueError(serialized) from exc
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {"snmp_detect_spec": self}
 
 
@@ -148,7 +149,7 @@ class SNMPHostConfig(
         return [None]
 
     # TODO: Why not directly use SNMPHostConfig._replace(...)?
-    def update(self, **kwargs: Dict[str, Any]) -> "SNMPHostConfig":
+    def update(self, **kwargs: Mapping[str, Any]) -> "SNMPHostConfig":
         """Return a new SNMPHostConfig with updated attributes."""
         cfg = self._asdict()
         cfg.update(**kwargs)
@@ -168,9 +169,10 @@ class SNMPHostConfig(
         return serialized
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "SNMPHostConfig":
-        serialized["snmp_backend"] = SNMPBackendEnum.deserialize(serialized["snmp_backend"])
-        return cls(**serialized)
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPHostConfig":
+        serialized_ = copy.deepcopy(dict(serialized))
+        serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
+        return cls(**serialized_)
 
 
 class SNMPBackend(metaclass=abc.ABCMeta):
@@ -257,14 +259,14 @@ class BackendSNMPTree(NamedTuple):
             oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "base": self.base,
             "oids": [oid._serialize() for oid in self.oids],
         }
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "BackendSNMPTree":
+    def from_json(cls, serialized: Mapping[str, Any]) -> "BackendSNMPTree":
         return cls(
             base=serialized["base"],
             oids=[BackendOIDSpec.deserialize(*oid) for oid in serialized["oids"]],

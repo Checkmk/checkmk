@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import itertools
 import json
 import logging
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple
+from typing import Any, Final, List, Mapping, Optional, Sequence, Tuple
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import (
@@ -50,13 +51,14 @@ class PiggybackFetcher(AgentFetcher):
         )) + ")"
 
     @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "PiggybackFetcher":
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
         return cls(
-            NoCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+            NoCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "hostname": self.hostname,

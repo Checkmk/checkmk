@@ -461,7 +461,7 @@ class Nested(_fields.Nested, UniqueFields):
 
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
-FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9]+)+)|[0-9a-fA-F]{32})"
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+)|[0-9a-fA-F]{32})"
 
 
 class FolderField(String):

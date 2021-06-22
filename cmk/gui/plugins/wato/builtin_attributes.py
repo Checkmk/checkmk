@@ -352,7 +352,9 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
         return fields.Nested(
             fields.SNMPCredentials,
             description=("The SNMP access configuration. A configured SNMP v1/v2 community here "
-                         "will have precedence over any configured SNMP community rule."),
+                         "will have precedence over any configured SNMP community rule. For this "
+                         "attribute to take effect, the attribute `tag_snmp_ds` needs to be set "
+                         "first."),
         )
 
 

@@ -1249,7 +1249,7 @@ class CreateUser(BaseSchema):
     )
     authorized_sites = fields.List(
         fields.SiteField(),
-        description="The sites the user is authorized to handle",
+        description="The names of the sites the user is authorized to handle",
         example=['heute'],
         required=False,
     )
@@ -1342,7 +1342,7 @@ class UpdateUser(BaseSchema):
     )
     authorized_sites = fields.List(
         fields.SiteField(),
-        description="The sites the user is authorized to handle",
+        description="The names of the sites the user is authorized to handle",
         example=['heute'],
         required=False,
     )
@@ -1836,8 +1836,8 @@ class ActivateChanges(BaseSchema):
     )
     sites = fields.List(
         fields.SiteField(),
-        description=("On which sites the configuration shall be activated. An empty list "
-                     "means all sites which have pending changes."),
+        description=("The names of the sites on which the configuration shall be activated."
+                     " An empty list means all sites which have pending changes."),
         required=False,
         missing=list,
         example=['production'],

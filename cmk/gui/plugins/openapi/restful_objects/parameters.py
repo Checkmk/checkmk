@@ -53,8 +53,8 @@ ETAG_IF_MATCH_HEADER = {
         description=(
             "The value of the, to be modified, object's ETag header. You can get this value "
             "by displaying the object it individually. To update this object the currently "
-            "stored ETag needs to be the same as the one sent."),
-        pattern='[0-9a-fA-F]{32}',
+            "stored ETag needs to be the same as the one sent. The content of the ETag can "
+            "potentially be anything and should be treated as semantically opaque."),
         example='a20ceacf346041dc',
     ),
 }
@@ -64,7 +64,6 @@ ETAG_HEADER_PARAM = {
         description=('The HTTP ETag header for this resource. It identifies the '
                      'current state of the object and needs to be sent along in '
                      'the "If-Match" request-header for subsequent modifications.'),
-        pattern='[0-9a-fA-F]{32}',
         example='a20ceacf346041dc',
     )
 }

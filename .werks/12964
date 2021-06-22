@@ -1,0 +1,14 @@
+Title: Fix editing of labels
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624363536
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p7
+
+If labels were edited, an error message "Only one value per KEY can be used at
+a time. label_key:label_value is already used." was shown.
+
+A workaround was, to add the regarding label again.

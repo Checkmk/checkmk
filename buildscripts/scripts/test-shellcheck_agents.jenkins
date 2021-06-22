@@ -34,7 +34,7 @@ node (NODE) {
             def GCC = scanForIssues(tool: gcc())
             publishIssues(
                 issues:[GCC],
-                trendChartType: 'TOOLS_ONLY'
+                trendChartType: 'TOOLS_ONLY',
                 qualityGates: [
                     [
                         threshold: 196,

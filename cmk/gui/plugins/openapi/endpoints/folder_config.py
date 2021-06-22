@@ -68,7 +68,7 @@ PATH_FOLDER_FIELD = {
           'cmk/create',
           method='post',
           etag='output',
-          response_schema=response_schemas.ConcreteFolder,
+          response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.CreateFolder)
 def create(params):
     """Create a folder"""
@@ -107,7 +107,7 @@ def hosts_of_folder(params):
           method='put',
           path_params=[PATH_FOLDER_FIELD],
           etag='both',
-          response_schema=response_schemas.ConcreteFolder,
+          response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.UpdateFolder)
 def update(params):
     """Update a folder
@@ -225,7 +225,7 @@ def delete(params):
           'cmk/move',
           method='post',
           path_params=[PATH_FOLDER_FIELD],
-          response_schema=response_schemas.ConcreteFolder,
+          response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.MoveFolder,
           etag='both')
 def move(params):
@@ -259,6 +259,11 @@ def move(params):
             example='/servers',
             missing=watolib.Folder.root_folder,  # because we can't load it too early.
         ),
+        'recursive': fields.Boolean(
+            description="List the folder (default: root) and all its sub-folders recursively.",
+            example=False,
+            missing=False,
+        ),
         'show_hosts': fields.Boolean(
             description=("When set, all hosts that are stored in each folder will also be shown. "
                          "On large setups this may come at a performance cost, so by default this "
@@ -267,10 +272,14 @@ def move(params):
             missing=False,
         )
     }],
+    convert_response=True,
     response_schema=response_schemas.FolderCollection)
 def list_folders(params):
     """Show all folders"""
-    folders = params['parent'].subfolders()
+    if params['recursive']:
+        folders = params['parent'].all_folders_recursively()
+    else:
+        folders = params['parent'].subfolders()
     return constructors.serve_json(_folders_collection(folders, params['show_hosts']))
 
 
@@ -280,36 +289,29 @@ def _folders_collection(
 ):
     folders_ = []
     for folder in folders:
+        members = {}
         if show_hosts:
-            folders_.append(
-                constructors.domain_object(
-                    domain_type='folder_config',
-                    identifier=folder.id(),
-                    title=folder.title(),
-                    extensions={
-                        'attributes': folder.attributes().copy(),
-                    },
-                    members={
-                        'hosts': constructors.object_collection(
-                            name='hosts',
-                            domain_type='folder_config',
-                            entries=[
-                                constructors.collection_item("host_config", {
-                                    "title": host,
-                                    "id": host
-                                }) for host in folder.hosts()
-                            ],
-                            base="",
-                        )
-                    },
-                ))
-        folders_.append(
-            constructors.collection_item(
+            members['hosts'] = constructors.object_collection(
+                name='hosts',
                 domain_type='folder_config',
-                obj={
-                    'title': folder.title(),
-                    'id': folder.id()
+                entries=[
+                    constructors.collection_item("host_config", {
+                        "title": host,
+                        "id": host
+                    }) for host in folder.hosts()
+                ],
+                base="",
+            )
+        folders_.append(
+            constructors.domain_object(
+                domain_type='folder_config',
+                identifier=folder_slug(folder),
+                title=folder.title(),
+                extensions={
+                    'path': '/' + folder.path(),
+                    'attributes': folder.attributes().copy(),
                 },
+                members=members,
             ))
     return constructors.collection_object(
         domain_type='folder_config',
@@ -321,7 +323,7 @@ def _folders_collection(
     constructors.object_href('folder_config', '{folder}'),
     'cmk/show',
     method='get',
-    response_schema=response_schemas.ConcreteFolder,
+    response_schema=response_schemas.FolderSchema,
     etag='output',
     query_params=[{
         'show_hosts': fields.Boolean(
@@ -373,6 +375,7 @@ def _serialize_folder(folder: CREFolder, show_hosts):
         identifier=folder_slug(folder),
         title=folder.title(),
         extensions={
+            'path': '/' + folder.path(),
             'attributes': folder.attributes().copy(),
         },
         links=links,

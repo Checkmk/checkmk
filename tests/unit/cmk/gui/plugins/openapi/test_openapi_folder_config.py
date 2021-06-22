@@ -79,6 +79,18 @@ def test_openapi_folder_validation(wsgi_app, with_automation_user):
     )
 
 
+def test_openapi_folders_recursively(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    resp = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all?recursive=1",
+        status=200,
+    )
+    assert len(resp.json['value']) == 1
+
+
 def test_openapi_folders(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -186,7 +198,8 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                         status=200)
     for entry in coll.json['value']:
         # Fetch the new E-Tag.
-        resp = wsgi_app.get(entry['href'], status=200)
+        self_link = [link['href'] for link in entry['links'] if link['rel'] == 'self']
+        resp = wsgi_app.get(self_link[0], status=200)
         # With the right ETag, the operation shall succeed
         wsgi_app.follow_link(resp,
                              '.../delete',
@@ -284,7 +297,7 @@ def test_openapi_hosts_in_folder_collection(wsgi_app, with_automation_user):
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params={'show_hosts': False},
     )
-    assert 'members' not in resp.json['value'][0]
+    assert 'hosts' not in resp.json['value'][0]['members']
 
 
 def test_openapi_show_hosts_on_folder(wsgi_app, with_automation_user):

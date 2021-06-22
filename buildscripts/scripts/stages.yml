@@ -109,9 +109,7 @@ STAGES:
     - NAME: 'Agent Plugin Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS
       DIR: 'tests'
-      ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/agent-plugin-unit-junit.xml"
-      COMMAND: "make test-agent-plugin-docker"
+      COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: 'No agent files changed'
 
     - NAME: 'NEB/CMC Compile (neb-cmc-compile.txt)'

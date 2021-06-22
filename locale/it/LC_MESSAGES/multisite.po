@@ -1110,13 +1110,6 @@ msgstr "<b>%s fino alla fine dell'anno</b>"
 msgid "<b>%s until sunday night</b>"
 msgstr "<b>%s fino a domenica sera</b>"
 
-msgid ""
-"<b>Do you really want to rename to following hosts? This involves a restart "
-"of the monitoring core!</b>"
-msgstr ""
-"<b>Vuoi davvero rinominare i seguenti host? Questo comporta un riavvio del "
-"nucleo di monitoraggio!"
-
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
 "<b>Negare:</b> fare applicare la regola per <b>tutti ma</b> le voci di cui "
@@ -1488,10 +1481,6 @@ msgstr ""
 "100% per un tempo prolungato. Considerare di aumentare il numero di "
 "connessioni parallele di livestatus o rintracciare i client per verificare "
 "se è possibile ridurre l'utilizzo in qualche modo.</p>"
-
-#, python-format
-msgid "<p>Sent notification to: %s</p>"
-msgstr "<p>Inviato notifica a: %s</p>"
 
 #, python-format
 msgid ""
@@ -15324,6 +15313,14 @@ msgstr "Vuoi davvero spostare le regole selezionate?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Vuoi davvero rimuovere il pacchetto <tt>%s</tt> dal tuo sistema?"
 
+#, fuzzy
+msgid ""
+"Do you really want to rename to following hosts?This involves a restart of "
+"the monitoring core!"
+msgstr ""
+"<b>Vuoi davvero rinominare i seguenti host? Questo comporta un riavvio del "
+"nucleo di monitoraggio!"
+
 msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
 "to zero?"
@@ -19109,6 +19106,10 @@ msgstr "Grafico delle previsioni"
 
 msgid "Forecast Model Configuration"
 msgstr "Configurazione del modello di previsione"
+
+#, fuzzy
+msgid "Forecast Parametrization"
+msgstr "Parametrizzazione del modello di previsione"
 
 msgid "Forecast Trend (Slow)"
 msgstr "Tendenza previsionale (lento)"
@@ -40001,6 +40002,10 @@ msgstr "Sensori"
 msgid "Sent"
 msgstr "Inviato"
 
+#, fuzzy, python-format
+msgid "Sent notification to: %s"
+msgstr "<p>Inviato notifica a: %s</p>"
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Ripartizione del traffico inviato rispetto a quello ricevuto"
 
@@ -47680,7 +47685,8 @@ msgstr ""
 "I dettagli del nodo possono essere visualizzati sia sull'host interrogato "
 "che sul nodo Graylog."
 
-msgid "The notification has been sent via<br>"
+#, fuzzy
+msgid "The notification has been sent via"
 msgstr "La notifica è stata inviata via<br>"
 
 msgid "The notification is being processed"
@@ -63087,6 +63093,10 @@ msgstr "volte la deviazione standard al di sotto del valore previsto"
 
 msgid "to"
 msgstr "a"
+
+#, python-format
+msgid "to %d of %d recipients"
+msgstr ""
 
 msgid "to port:"
 msgstr "al porto:"

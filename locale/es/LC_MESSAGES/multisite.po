@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-06-21 12:07+0000\n"
 "Last-Translator: Pablo Mazzú <pmazzu@gmail.com>\n"
@@ -1107,13 +1107,6 @@ msgstr "<b>%s hasta fin de año</b>"
 msgid "<b>%s until sunday night</b>"
 msgstr "<b>%s hasta domingo a la noche</b>"
 
-msgid ""
-"<b>Do you really want to rename to following hosts? This involves a restart "
-"of the monitoring core!</b>"
-msgstr ""
-"<b>Usted realmente quiere renombrar los siguientes hosts? Esto generará un "
-"reinicio del núcleo de monitoreo!</b>"
-
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
 "<b>Negar:</b> hacer que la regla se aplique a <b>todas menos</b> las "
@@ -1491,10 +1484,6 @@ msgstr ""
 "mucho tiempo. Considere aumentar el número de conexiones de estado en vivo "
 "paralelas o rastrear a los clientes para verificar si puede o no reducir el "
 "uso de alguna manera.</p>"
-
-#, python-format
-msgid "<p>Sent notification to: %s</p>"
-msgstr "<p>Enviar notificación a: %s</p>"
 
 #, python-format
 msgid ""
@@ -15417,6 +15406,14 @@ msgstr "¿Realmente quieres mover las reglas seleccionadas?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "¿Realmente quiere eliminar el paquete <tt>%s</tt> de su sistema?"
 
+#, fuzzy
+msgid ""
+"Do you really want to rename to following hosts?This involves a restart of "
+"the monitoring core!"
+msgstr ""
+"<b>Usted realmente quiere renombrar los siguientes hosts? Esto generará un "
+"reinicio del núcleo de monitoreo!</b>"
+
 msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
 "to zero?"
@@ -19215,6 +19212,10 @@ msgstr "Gráfico de previsión"
 
 msgid "Forecast Model Configuration"
 msgstr "Configuración del modelo de previsión"
+
+#, fuzzy
+msgid "Forecast Parametrization"
+msgstr "Parametrización del modelo de previsión"
 
 msgid "Forecast Trend (Slow)"
 msgstr "Tendencia de la previsión (lenta)"
@@ -40231,6 +40232,10 @@ msgstr "Sensores"
 msgid "Sent"
 msgstr "Enviado"
 
+#, fuzzy, python-format
+msgid "Sent notification to: %s"
+msgstr "<p>Enviar notificación a: %s</p>"
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Desglose del tráfico enviado frente al recibido"
 
@@ -47977,7 +47982,8 @@ msgstr ""
 "Los detalles del nodo pueden mostrarse en el host consultado o en el nodo "
 "Graylog."
 
-msgid "The notification has been sent via<br>"
+#, fuzzy
+msgid "The notification has been sent via"
 msgstr "La notificación se ha enviado a través de<br>"
 
 msgid "The notification is being processed"
@@ -63482,6 +63488,10 @@ msgstr "veces la desviación estándar por debajo del valor previsto"
 
 msgid "to"
 msgstr "a"
+
+#, python-format
+msgid "to %d of %d recipients"
+msgstr ""
 
 msgid "to port:"
 msgstr "al puerto:"

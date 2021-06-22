@@ -1121,11 +1121,6 @@ msgstr ""
 msgid "<b>%s until sunday night</b>"
 msgstr ""
 
-msgid ""
-"<b>Do you really want to rename to following hosts? This involves a restart "
-"of the monitoring core!</b>"
-msgstr ""
-
 #, fuzzy
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1385,10 +1380,6 @@ msgid ""
 "number of parallel livestatus connections or track down the clients to check "
 "whether or not you can reduce the usage somehow.</p>"
 msgstr ""
-
-#, python-format
-msgid "<p>Sent notification to: %s</p>"
-msgstr "<p>Trimis notificare câtre: %s</p>"
 
 #, python-format
 msgid ""
@@ -14804,6 +14795,11 @@ msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr ""
 
 msgid ""
+"Do you really want to rename to following hosts?This involves a restart of "
+"the monitoring core!"
+msgstr ""
+
+msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
 "to zero?"
 msgstr ""
@@ -18531,6 +18527,10 @@ msgstr "Grup nou"
 
 #, fuzzy
 msgid "Forecast Model Configuration"
+msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "Forecast Parametrization"
 msgstr "Activare Configurare"
 
 msgid "Forecast Trend (Slow)"
@@ -38799,6 +38799,10 @@ msgstr ""
 msgid "Sent"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Sent notification to: %s"
+msgstr "<p>Trimis notificare câtre: %s</p>"
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr ""
 
@@ -45678,8 +45682,9 @@ msgid ""
 "node."
 msgstr ""
 
-msgid "The notification has been sent via<br>"
-msgstr ""
+#, fuzzy
+msgid "The notification has been sent via"
+msgstr "Adaugă notificare"
 
 msgid "The notification is being processed"
 msgstr ""
@@ -58616,6 +58621,10 @@ msgstr ""
 
 msgid "to"
 msgstr "catre"
+
+#, python-format
+msgid "to %d of %d recipients"
+msgstr ""
 
 msgid "to port:"
 msgstr "catre port:"

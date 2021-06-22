@@ -1092,13 +1092,6 @@ msgstr "<b>年末までの%s </b>"
 msgid "<b>%s until sunday night</b>"
 msgstr "<b>日曜日の夜まで%s </b>"
 
-msgid ""
-"<b>Do you really want to rename to following hosts? This involves a restart "
-"of the monitoring core!</b>"
-msgstr ""
-"<b>本当に次のホストに名前を変更しますか？これには、監視コアの再起動が含まれま"
-"す！</b>"
-
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr "<b>否定:</b>上記のエントリを除くすべてのエントリにルールを適用する</b>"
 
@@ -1438,10 +1431,6 @@ msgstr ""
 "タスの使用率が100%に達することはありません。並列ライブステータス接続の数を増"
 "やすか、クライアントを追跡して、何らかの方法で使用量を減らすことができるかど"
 "うかを確認することを検討してください。</p>"
-
-#, python-format
-msgid "<p>Sent notification to: %s</p>"
-msgstr "<p>通知の送信先:%s </p>"
 
 #, python-format
 msgid ""
@@ -14742,6 +14731,14 @@ msgstr "選択したルールを本当に移動しますか?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "本当にシステムからパッケージ<tt>%s</tt>を削除しますか？"
 
+#, fuzzy
+msgid ""
+"Do you really want to rename to following hosts?This involves a restart of "
+"the monitoring core!"
+msgstr ""
+"<b>本当に次のホストに名前を変更しますか？これには、監視コアの再起動が含まれま"
+"す！</b>"
+
 msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
 "to zero?"
@@ -18432,6 +18429,10 @@ msgstr "予測グラフ"
 
 msgid "Forecast Model Configuration"
 msgstr "予測モデルの設定"
+
+#, fuzzy
+msgid "Forecast Parametrization"
+msgstr "予測モデルのパラメータ化"
 
 msgid "Forecast Trend (Slow)"
 msgstr "予測トレンド(遅い)"
@@ -38535,6 +38536,10 @@ msgstr "センサー"
 msgid "Sent"
 msgstr "送信済み"
 
+#, fuzzy, python-format
+msgid "Sent notification to: %s"
+msgstr "<p>通知の送信先:%s </p>"
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "送信済みトラフィックと受信済みトラフィックの内訳"
 
@@ -45750,7 +45755,8 @@ msgid ""
 msgstr ""
 "ノードの詳細は、照会されたホストまたはGraylogノードのいずれかに表示できます。"
 
-msgid "The notification has been sent via<br>"
+#, fuzzy
+msgid "The notification has been sent via"
 msgstr "通知はで送信されました経由<br>"
 
 msgid "The notification is being processed"
@@ -60003,6 +60009,10 @@ msgstr "予測値を下回る標準偏差の倍"
 
 msgid "to"
 msgstr "に"
+
+#, python-format
+msgid "to %d of %d recipients"
+msgstr ""
 
 msgid "to port:"
 msgstr "ポートへ:"

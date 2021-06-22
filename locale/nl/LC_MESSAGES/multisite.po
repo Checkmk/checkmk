@@ -1109,13 +1109,6 @@ msgstr "<b>%s tot einde van het jaar</b>"
 msgid "<b>%s until sunday night</b>"
 msgstr "<b>%s tot zondag nacht</b>"
 
-msgid ""
-"<b>Do you really want to rename to following hosts? This involves a restart "
-"of the monitoring core!</b>"
-msgstr ""
-"<b>Wilt U echt deze hosts hernoemen? Hiervoor wordt automatisch de "
-"monitoring core herstart!</b>"
-
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
 "<b>Sluit uit:</b> pas de regel toe voor <b>alles behalve</b> de bovenstaande "
@@ -1489,10 +1482,6 @@ msgstr ""
 "livestatus-gebruik van 100% bereiken. Overweeg het aantal parallelle "
 "livestatus-verbindingen te verhogen of spoor de clients op om na te gaan of "
 "u het gebruik op de een of andere manier kunt verminderen.</p>"
-
-#, python-format
-msgid "<p>Sent notification to: %s</p>"
-msgstr "<p>Verzonden bericht naar: %s</p>"
 
 #, python-format
 msgid ""
@@ -15279,6 +15268,14 @@ msgstr "Wilt u echt de geselecteerde regels verplaatsen?"
 msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
 msgstr "Wilt u echt het pakket <tt>%s</tt> van uw systeem verwijderen?"
 
+#, fuzzy
+msgid ""
+"Do you really want to rename to following hosts?This involves a restart of "
+"the monitoring core!"
+msgstr ""
+"<b>Wilt U echt deze hosts hernoemen? Hiervoor wordt automatisch de "
+"monitoring core herstart!</b>"
+
 msgid ""
 "Do you really want to reset all rule hit counters in <b>all rule packs</b> "
 "to zero?"
@@ -19051,6 +19048,10 @@ msgstr "Voorspellingsgrafiek"
 
 msgid "Forecast Model Configuration"
 msgstr "Configuratie prognosemodel"
+
+#, fuzzy
+msgid "Forecast Parametrization"
+msgstr "Voorspellingsmodel parametrisering"
 
 msgid "Forecast Trend (Slow)"
 msgstr "Verwachte trend (traag)"
@@ -39876,6 +39877,10 @@ msgstr "Sensoren"
 msgid "Sent"
 msgstr "Verzonden"
 
+#, fuzzy, python-format
+msgid "Sent notification to: %s"
+msgstr "<p>Verzonden bericht naar: %s</p>"
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Verzonden vs ontvangen verkeer Breakdown"
 
@@ -47558,7 +47563,8 @@ msgstr ""
 "De details van het knooppunt kunnen zowel op de opgevraagde host als op het "
 "Graylog knooppunt worden weergegeven."
 
-msgid "The notification has been sent via<br>"
+#, fuzzy
+msgid "The notification has been sent via"
 msgstr "De kennisgeving is verstuurd via<br>"
 
 msgid "The notification is being processed"
@@ -62949,6 +62955,10 @@ msgstr "maal de standaardafwijking onder de voorspelde waarde"
 
 msgid "to"
 msgstr "naar"
+
+#, python-format
+msgid "to %d of %d recipients"
+msgstr ""
 
 msgid "to port:"
 msgstr "naar de haven:"

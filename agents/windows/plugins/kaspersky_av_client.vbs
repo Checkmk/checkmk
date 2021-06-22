@@ -6,7 +6,7 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
-Const CMK_VERSION = "2.0.0p6"
+Const CMK_VERSION = "2.0.0p7"
 dim strStatisticsLoc, strProtection_BasesDate, strProtection_LastFscan, strProtection_LastConnected
 dim strBIASLoc, strBIAS
 dim objShell

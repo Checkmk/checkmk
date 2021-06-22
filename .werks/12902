@@ -1,0 +1,12 @@
+Title: Checking used cached data after autodiscovery activated changes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624344785
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p6
+
+If the auto discovery was configured and activated some changes,
+the CMC used cached data for checking until restarted.

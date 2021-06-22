@@ -986,6 +986,10 @@ def discover_marked_hosts(core: MonitoringCore) -> None:
                 _config_cache.clear_all()
                 config.get_config_cache().initialize()
 
+                # reset these to their original value to create a correct config
+                checkers.FileCacheFactory.use_outdated = False
+                checkers.FileCacheFactory.maybe = True
+                checkers.FileCacheFactory.force_snmp_cache_refresh = False
                 if config.monitoring_core == "cmc":
                     cmk.base.core.do_reload(core)
                 else:

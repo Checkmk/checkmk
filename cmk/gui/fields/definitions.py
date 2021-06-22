@@ -1236,6 +1236,8 @@ class Timestamp(_fields.DateTime):
     default_error_messages = {'invalid': 'Not a valid timestamp: {input!r}'}
 
     def _serialize(self, value, attr, obj, **kwargs):
+        if value is None:
+            return None
         dt_obj = from_timestamp(float(value))
         return super()._serialize(dt_obj, attr, obj, **kwargs)
 

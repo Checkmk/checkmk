@@ -334,21 +334,28 @@ class FolderMembers(BaseSchema):
     )
 
 
+class FolderExtensions(BaseSchema):
+    path = fields.String(description="The full path of this folder, slash delimited.",)
+    attributes = fields.attributes_field(
+        "folder",
+        "update",
+        description=("The folder's attributes. Hosts placed in this folder will inherit "
+                     "these attributes."),
+    )
+
+
 class FolderSchema(Linkable):
-    domainType = fields.Constant("folder_config")
-    id = fields.String()
-    title = fields.String()
-    members = fields.Nested(FolderMembers())
-    extensions = fields.Dict()
-
-
-class ConcreteFolder(OneOfSchema):
-    type_schemas = {
-        'folder_config': FolderSchema,
-        'link': LinkSchema,
-    }
-    type_field_remove = False
-    type_field = 'domainType'
+    domainType = fields.Constant("folder_config", description="The domain type of the object.")
+    id = fields.String(description="The full path of the folder, tilde-separated.")
+    title = fields.String(description="The human readable title for this folder.")
+    members = fields.Nested(
+        FolderMembers(),
+        description="Specific collections or actions applicable to this object.",
+    )
+    extensions = fields.Nested(
+        FolderExtensions(),
+        description="Data and Meta-Data of this object.",
+    )
 
 
 class MoveFolder(BaseSchema):
@@ -394,7 +401,7 @@ class SiteState(Linkable):
 
 class HostMembers(BaseSchema):
     folder_config = fields.Nested(
-        ConcreteFolder,
+        FolderSchema(),
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
         "`self`-link provided in the links array.")
@@ -457,7 +464,7 @@ class FolderCollection(DomainObjectCollection):
         description="The domain type of the objects in the collection.",
     )
     value = fields.List(
-        fields.Nested(ConcreteFolder),
+        fields.Nested(FolderSchema()),
         description="A list of folder objects.",
     )
 

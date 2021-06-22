@@ -1108,6 +1108,16 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
+    def all_folders_recursively(self, only_visible: bool = False) -> List['CREFolder']:
+        def _add_folders(folder: CREFolder, collection: List[CREFolder]) -> None:
+            collection.append(folder)
+            for sub_folder in folder.subfolders(only_visible=only_visible):
+                _add_folders(sub_folder, collection)
+
+        folders: List[CREFolder] = []
+        _add_folders(self.root_folder(), folders)
+        return folders
+
     def subfolders(self, only_visible: bool = False) -> 'List[CREFolder]':
         """Filter subfolder collection by various means.
 
@@ -1170,7 +1180,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         title_prefix = (u"\u00a0" * 6 * current_depth) + u"\u2514\u2500 " if current_depth else ""
         return HTML(title_prefix + escaping.escape_attribute(self.title()))
 
-    def _walk_tree(self, results, current_depth, pretty):
+    def _walk_tree(self, results: List[Tuple[str, HTML]], current_depth, pretty):
         visible_subfolders = False
         for subfolder in sorted(self._subfolders.values(),
                                 key=operator.methodcaller('title'),

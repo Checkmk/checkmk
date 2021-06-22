@@ -796,7 +796,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     assert level1_nested_list_att is None
 
     assert isinstance(level1_nested_list_con, Container)
-    assert list(level1_nested_list_con._edges) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(level1_nested_list_con._nodes) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))

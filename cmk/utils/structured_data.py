@@ -18,7 +18,12 @@ from pathlib import Path
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
-# TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
+# TODO
+# - Cleanup path in utils, base, gui, find ONE place (type defs or similar)
+# - remove intermediate class Node
+# - rename Numeration -> Table
+# - rename Container -> Node
+# - merge Container (resp. Node) and StructuredDataTree
 
 SDRawPath = str
 SDRawTree = Dict
@@ -126,7 +131,7 @@ class StructuredDataTree:
         # TODO parse instead of validate
         assert isinstance(tree_path, str)
         path = self._parse_tree_path(tree_path)
-        parent = self._create_hierarchy(path[:-1])
+        parent = self._root._create_hierarchy(path[:-1])
         return parent.add_child(path[-1], child, tuple(path)).get_child_data()
 
     def _validate_tree_path(self, tree_path: Optional[SDRawPath]) -> None:
@@ -155,17 +160,6 @@ class StructuredDataTree:
             except ValueError:
                 parsed_path.append(part)
         return parsed_path
-
-    def _create_hierarchy(self, path: SDPath) -> "Container":
-        if not path:
-            return self._root
-        abs_path = []
-        node = self._root
-        while path:
-            edge = path.pop(0)
-            abs_path.append(edge)
-            node = node.add_child(edge, Container(), tuple(abs_path))
-        return node
 
     #   ---loading and saving tree----------------------------------------------
 
@@ -348,7 +342,7 @@ class StructuredDataTree:
 
 class Container:
     def __init__(self) -> None:
-        self._edges: SDNodes = {}
+        self._nodes: SDNodes = {}
 
     def is_empty(self) -> bool:
         for _, __, child in self.get_children():
@@ -372,7 +366,7 @@ class Container:
         if not isinstance(other, Container):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._edges, self._edges)
+        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._nodes, self._nodes)
 
         delta_node = Container()
         num_new, num_changed, num_removed = 0, 0, 0
@@ -432,7 +426,7 @@ class Container:
 
     def _is_nested_numeration_tree(self, child: Any) -> bool:
         if isinstance(child, Container):
-            for key in child._edges:
+            for key in child._nodes:
                 if isinstance(key, int):
                     return True
         return False
@@ -454,7 +448,7 @@ class Container:
                 self._set_nested_numeration_node(edge, child.get_child_data(), abs_path)
 
             if child.is_empty():
-                self._edges[edge].remove_node_child(child)
+                self._nodes[edge].remove_node_child(child)
                 continue
 
             if isinstance(child, Container):
@@ -473,7 +467,7 @@ class Container:
         child_data: SDTable,
         abs_path: SDNodePath,
     ) -> None:
-        del self._edges[edge]
+        del self._nodes[edge]
         parent = self.add_child(edge, Container(), abs_path)
         for nr, entry in enumerate(child_data):
             attrs: Dict = {}
@@ -505,17 +499,22 @@ class Container:
 
     #   ---container methods----------------------------------------------------
 
+    def _create_hierarchy(self, path: SDPath) -> "Container":
+        if not path:
+            return self
+        return self.add_child(path[0], Container())._create_hierarchy(path[1:])
+
     def add_child(
         self,
         edge: SDNodeName,
         child: Union["Container", "Numeration", "Attributes"],
         abs_path: Optional[SDNodePath] = None,
     ):
-        node = self._edges.setdefault(edge, Node(abs_path))
+        node = self._nodes.setdefault(edge, Node(abs_path))
         return node.add_node_child(child)
 
     def has_edge(self, edge: SDNodeName) -> bool:
-        return bool(self._edges.get(edge))
+        return bool(self._nodes.get(edge))
 
     def get_filtered_branch(
         self,
@@ -559,23 +558,18 @@ class Container:
     #   ---getting [sub] nodes/node attributes----------------------------------
 
     def get_edge_nodes(self) -> List[Tuple[SDNodeName, "Node"]]:
-        return list(self._edges.items())
+        return list(self._nodes.items())
 
     def get_children(self, edges: Optional[SDPath] = None) -> SDChildren:
         """Returns a flatten list of tuples (edge, absolute path, child)"""
         children = set()
-        if edges is None:
-            for edge, node in self._edges.items():
-                node_abs_path = node.get_absolute_path()
-                for child in node.get_node_children():
-                    children.add((edge, node_abs_path, child))
-        else:
-            for edge, node in self._edges.items():
-                if edge not in edges:
-                    continue
-                node_abs_path = node.get_absolute_path()
-                for child in node.get_node_children():
-                    children.add((edge, node_abs_path, child))
+        for edge, node in self._nodes.items():
+            if edges is not None and edge not in edges:
+                continue
+
+            node_abs_path = node.get_absolute_path()
+            for child in node.get_node_children():
+                children.add((edge, node_abs_path, child))
         return children
 
     def _get_comparable_children(
@@ -585,14 +579,14 @@ class Container:
     ) -> SDCompChildren:
         """Returns a flatten list of tuples (edge, absolute path, my child, other child)"""
         if edges is None:
-            the_edges = set(self._edges).union(other._edges)
+            the_edges = set(self._nodes).union(other._nodes)
         else:
             the_edges = set(edges)
 
         comparable_children = set()
         for edge in the_edges:
-            my_node = self._edges.get(edge, Node())
-            other_node = other._edges.get(edge, Node())
+            my_node = self._nodes.get(edge, Node())
+            other_node = other._nodes.get(edge, Node())
             for abs_path, my_child, other_child in \
                 my_node.get_comparable_node_children(other_node):
                 comparable_children.add((edge, abs_path, my_child, other_child))
@@ -628,7 +622,7 @@ class Container:
 
         edge, path = path[0], path[1:]
 
-        sub_node = self._edges.get(edge)
+        sub_node = self._nodes.get(edge)
         if sub_node is None:
             return None
 

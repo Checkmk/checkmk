@@ -31,8 +31,18 @@ node (NODE) {
             }
         }
         stage("Analyse Issues") {
-            def GCC = scanForIssues tool: gcc()
-            publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 177, type: 'TOTAL', unstable: false]]
+            def GCC = scanForIssues(tool: gcc())
+            publishIssues(
+                issues:[GCC],
+                trendChartType: 'TOOLS_ONLY'
+                qualityGates: [
+                    [
+                        threshold: 196,
+                        type: 'TOTAL',
+                        unstable: false
+                    ]
+                ]
+            )
         }
     }catch(Exception e) {
         notify.notify_error(e)

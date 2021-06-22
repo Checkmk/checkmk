@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Any, Callable, Mapping, List, Optional, overload, Union
+from typing import Callable, List, Optional, overload, Union
 
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.checking_classes import (
@@ -33,6 +33,7 @@ from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SN
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
+    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
@@ -52,7 +53,7 @@ def agent_section(
     parse_function: Optional[AgentParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -126,7 +127,7 @@ def snmp_section(
     parse_function: Optional[SimpleSNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -143,7 +144,7 @@ def snmp_section(
     parse_function: Optional[SNMPParseFunction] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -159,7 +160,7 @@ def snmp_section(
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     parsed_section_name: Optional[str] = None,
     host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[Mapping[str, Any]] = None,
+    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
     host_label_ruleset_name: Optional[str] = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
@@ -245,11 +246,11 @@ def check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: DiscoveryFunction,
-    discovery_default_parameters: Optional[Mapping[str, Any]] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
-    check_default_parameters: Optional[Mapping[str, Any]] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
 ) -> None:
@@ -334,7 +335,7 @@ def inventory_plugin(
     name: str,
     sections: Optional[List[str]] = None,
     inventory_function: InventoryFunction,
-    inventory_default_parameters: Optional[Mapping[str, Any]] = None,
+    inventory_default_parameters: Optional[ParametersTypeAlias] = None,
     inventory_ruleset_name: Optional[str] = None,
 ) -> None:
     """Register an inventory plugin to checkmk.

@@ -7,6 +7,7 @@
 import typing as t
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 from cmk.gui.watolib.rulespecs import (
     Rulespec,
     CheckParameterRulespecWithItem,
@@ -24,7 +25,6 @@ import abc
 from cmk.base.check_legacy_includes import hwg
 from cmk.base.check_legacy_includes import df
 
-Parameters = t.Optional[t.Mapping[str, t.Any]]
 T = t.TypeVar('T')
 TF = t.TypeVar('TF', bound=Rulespec)
 TC = t.TypeVar('TC', bound=t.Union[CheckPlugin, InventoryPlugin])
@@ -107,12 +107,13 @@ class BaseProtocol(t.Protocol):
 
 
 class WatoProtocol(BaseProtocol, t.Protocol):
-    def validate_parameter(self, parameters: Parameters) -> t.Optional[Exception]:
+    def validate_parameter(self,
+                           parameters: t.Optional[ParametersTypeAlias]) -> t.Optional[Exception]:
         ...
 
 
 class PluginProtocol(BaseProtocol, t.Protocol):
-    def get_default_parameters(self) -> Parameters:
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
         ...
 
 
@@ -124,7 +125,7 @@ class Plugin(Base[TC], metaclass=abc.ABCMeta):
         return str(self._element.name)
 
     @abc.abstractmethod
-    def get_default_parameters(self) -> Parameters:
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
         ...
 
 
@@ -135,7 +136,7 @@ class PluginDiscovery(Plugin[CheckPlugin]):
         assert self._element.discovery_ruleset_name
         return str(self._element.discovery_ruleset_name)
 
-    def get_default_parameters(self) -> Parameters:
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
         return self._element.discovery_default_parameters
 
 
@@ -146,7 +147,7 @@ class PluginInventory(Plugin[InventoryPlugin]):
         assert self._element.inventory_ruleset_name
         return str(self._element.inventory_ruleset_name)
 
-    def get_default_parameters(self) -> Parameters:
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
         return self._element.inventory_default_parameters
 
 
@@ -157,7 +158,7 @@ class PluginCheck(Plugin[CheckPlugin]):
         assert self._element.check_ruleset_name
         return str(self._element.check_ruleset_name)
 
-    def get_default_parameters(self) -> Parameters:
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
         return self._element.check_default_parameters
 
     def has_item(self) -> bool:
@@ -168,7 +169,8 @@ class Wato(Base[TF]):
     def get_description(self) -> str:
         return f"wato {self.type}-rule '{self.get_name()}'"
 
-    def validate_parameter(self, parameters: Parameters) -> t.Optional[Exception]:
+    def validate_parameter(self,
+                           parameters: t.Optional[ParametersTypeAlias]) -> t.Optional[Exception]:
         try:
             self._element.valuespec.validate_datatype(parameters, "")
             self._element.valuespec.validate_value(parameters, "")

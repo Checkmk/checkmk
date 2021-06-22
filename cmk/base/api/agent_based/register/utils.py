@@ -9,7 +9,6 @@ import sys
 import pathlib
 
 from typing import (
-    Any,
     Callable,
     Dict,
     get_args,
@@ -31,6 +30,7 @@ from cmk.utils.type_defs import (
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
@@ -73,7 +73,7 @@ def validate_function_arguments(
     type_label: TypeLabel,
     function: Callable,
     has_item: bool,
-    default_params: Optional[Mapping[str, Any]],
+    default_params: Optional[ParametersTypeAlias],
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
@@ -182,7 +182,7 @@ def validate_ruleset_type(ruleset_type: RuleSetType) -> None:
 def validate_default_parameters(
     params_type: Literal["check", "discovery", "host_label", "inventory"],
     ruleset_name: Optional[str],
-    default_parameters: Optional[Mapping[str, Any]],
+    default_parameters: Optional[ParametersTypeAlias],
 ) -> None:
     if default_parameters is None:
         if ruleset_name is None:

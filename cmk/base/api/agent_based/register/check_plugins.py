@@ -6,10 +6,11 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Mapping, Generator, List, Optional
+from typing import Any, Callable, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -101,11 +102,11 @@ def _validate_kwargs(
     service_name: str,
     requires_item: bool,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Mapping[str, Any]],
+    discovery_default_parameters: Optional[ParametersTypeAlias],
     discovery_ruleset_name: Optional[str],
     discovery_ruleset_type: RuleSetType,
     check_function: Callable,
-    check_default_parameters: Optional[Mapping[str, Any]],
+    check_default_parameters: Optional[ParametersTypeAlias],
     check_ruleset_name: Optional[str],
     cluster_check_function: Optional[Callable],
 ) -> None:
@@ -171,11 +172,11 @@ def create_check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Mapping[str, Any]] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: Optional[Mapping[str, Any]] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     module: Optional[str] = None,

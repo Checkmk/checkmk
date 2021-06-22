@@ -73,6 +73,7 @@ class ActiveCheckResult(NamedTuple):
 _PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 
+# keep return type in sync with ParametersTypeAlias
 def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
     """wrap the passed data structure in a dictionary, if it isn't one itself"""
     if isinstance(parameters, dict):
@@ -80,6 +81,7 @@ def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
     return {_PARAMS_WRAPPER_KEY: parameters}
 
 
+# keep argument parameters in sync with ParametersTypeAlias
 def unwrap_parameters(parameters: Mapping[str, Any]) -> Any:
     try:
         return parameters[_PARAMS_WRAPPER_KEY]

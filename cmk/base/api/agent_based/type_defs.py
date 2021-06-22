@@ -58,7 +58,10 @@ class HostLabel(PluginSuppliedLabel):
     """
 
 
-class Parameters(Mapping):
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
+
+
+class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
     def __init__(self, data):
         if not isinstance(data, dict):
@@ -121,7 +124,7 @@ class AgentSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: AgentParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Mapping[str, Any]]
+    host_label_default_parameters: Optional[ParametersTypeAlias]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     supersedes: Set[SectionName]
@@ -133,7 +136,7 @@ class SNMPSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: SNMPParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Mapping[str, Any]]
+    host_label_default_parameters: Optional[ParametersTypeAlias]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType

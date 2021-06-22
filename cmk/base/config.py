@@ -115,6 +115,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.api.agent_based.type_defs import (
     Parameters,
+    ParametersTypeAlias,
     SectionPlugin,
     SNMPSectionPlugin,
 )
@@ -2088,7 +2089,7 @@ def _extract_check_plugins(
 def _get_plugin_parameters(
     *,
     host_name: HostName,
-    default_parameters: Optional[Mapping[str, Any]],
+    default_parameters: Optional[ParametersTypeAlias],
     ruleset_name: Optional[RuleSetName],
     ruleset_type: Literal["all", "merged"],
     rules_getter_function: Callable[[RuleSetName], List[Dict[str, Any]]],
@@ -2169,7 +2170,7 @@ def compute_check_parameters(
 
 
 def _update_with_default_check_parameters(
-    check_default_parameters: Mapping[str, Any],
+    check_default_parameters: ParametersTypeAlias,
     params: LegacyCheckParameters,
 ) -> LegacyCheckParameters:
 

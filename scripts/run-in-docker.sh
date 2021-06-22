@@ -20,7 +20,7 @@ echo "Running in Docker Container $TEST_CONTAINER (workdir $PWD)"
 docker pull $TEST_CONTAINER
 docker run -t -a stdout -a stderr \
     --init \
-    -u "$UID:$UID" \
+    -u "$UID:$(id -g)" \
     -v "$REPO_DIR:$REPO_DIR" \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add=$(getent group docker | cut -d: -f3) \

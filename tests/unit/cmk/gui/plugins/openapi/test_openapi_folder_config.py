@@ -40,6 +40,7 @@ from cmk.gui.fields.utils import BaseSchema
         ('0123456789ABCDEF0123456789ABCDEFG', False),
         ('0123456789abcdef0123456789abcdef', True),
         ('0123456789abcdef0123456789abcdefg', False),
+        ('~DCN~DE.KAE.BS', True)
     ])
 def test_folder_regexp(given, expected):
     regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")

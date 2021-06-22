@@ -380,7 +380,7 @@ class NetAppResponse(object):
             except ET.ParseError, exc:
                 self.status = "parse-exception"
                 self.reason = str(exc)
-            return
+                return
 
         self.status = self.content.child_get("results").node.attrib["status"]
         if self.status != "passed":

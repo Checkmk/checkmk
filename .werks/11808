@@ -1,0 +1,11 @@
+Title: Netapp: Handle cleaned up data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1624366792
+Class: fix
+
+In case the netapp API sends invalid XML the special agent tries to clean up the response.
+The mechanism however was not fully functional. This is fixed now.

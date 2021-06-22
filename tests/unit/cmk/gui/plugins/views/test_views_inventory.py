@@ -8,6 +8,7 @@
 import pytest  # type: ignore[import]
 
 import cmk.gui.inventory
+from cmk.gui.views import View
 import cmk.gui.plugins.views.inventory as inventory
 
 RAW_ROWS = [('this_site', 'this_hostname')]
@@ -98,54 +99,60 @@ EXPECTED_INV_MULTI_KEYS = [
 
 def test_query_row_table_inventory(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, len_rows = row_table.query(None, [], None, None, None, [])
+    rows, _len_rows = row_table.query(view, [], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
 def test_query_row_table_inventory_unknown_columns(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, len_rows = row_table.query(None, ['foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
 def test_query_row_table_inventory_add_columns(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, len_rows = row_table.query(None, ['host_foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ['host_foo'])
 
 
 def test_query_row_table_inventory_history(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, len_rows = row_table.query(None, [], None, None, None, [])
+    rows, _len_rows = row_table.query(view, [], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
 def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, len_rows = row_table.query(None, ['foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
 def test_query_row_table_inventory_history_add_columns(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, len_rows = row_table.query(None, ['host_foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ['host_foo'])
 
@@ -153,9 +160,10 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
 def test_query_row_multi_table_inventory(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, len_rows = row_table.query(None, [], None, None, None, [])
+    rows, _len_rows = row_table.query(view, [], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
@@ -163,9 +171,10 @@ def test_query_row_multi_table_inventory(monkeypatch):
 def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, len_rows = row_table.query(None, ['foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
@@ -173,9 +182,10 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
 def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
+    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, len_rows = row_table.query(None, ['host_foo'], None, None, None, [])
+    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ['host_foo'])
 

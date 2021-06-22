@@ -99,6 +99,7 @@ CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
 CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
 CommandActionResult = Optional[Tuple[Union[CommandSpecWithoutSite, Sequence[CommandSpec]], str]]
 CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
+InventoryHintSpec = Dict[str, Any]
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -1111,7 +1112,7 @@ def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
 # TODO: Refactor to plugin_registries
 multisite_builtin_views: Dict = {}
 view_hooks: Dict = {}
-inventory_displayhints: Dict = {}
+inventory_displayhints: Dict[str, InventoryHintSpec] = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
 view_is_enabled: Dict = {}

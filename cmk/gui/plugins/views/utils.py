@@ -2117,7 +2117,7 @@ class Cell:
         if isinstance(rendered_txt, dict):
             return rendered_txt
 
-        txt: str = rendered_txt.strip()
+        txt: str = str(rendered_txt).strip()
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.

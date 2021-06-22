@@ -1,0 +1,1 @@
+FROM artifacts.lan.tribe29.com:4000/busybox@sha256:dca71257cd2e72840a21f0323234bb2e33fea6d949fa0f21c5102146f583486b

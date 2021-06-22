@@ -1,4 +1,6 @@
-FROM debian:buster-slim
+ARG IMAGE_CMK_BASE
+# hadolint ignore=DL3006
+FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)

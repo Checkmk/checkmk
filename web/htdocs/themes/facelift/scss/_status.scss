@@ -55,7 +55,7 @@ div.tile {
     height: 100%;
     padding: 0 1px;
 
-    span {
+    span.state {
       display: flex;
       align-items: center;
       height: calc(100% - 3px);
@@ -64,12 +64,17 @@ div.tile {
   }
 }
 
-td.state span {
+td.state span.state {
   justify-content: center;
 }
 
-td.hstate span {
+td.hstate span.state {
   padding: 0 5px;
+
+  &.host {
+    /* align with host names without state background-color */
+    padding: 0 8px;
+  }
 }
 
 /* OK/UP */

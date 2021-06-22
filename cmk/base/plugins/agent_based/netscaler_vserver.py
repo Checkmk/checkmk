@@ -131,23 +131,23 @@ def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Sectio
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[
     ... ['lb_eas', '0.0.0.0', '0', '14', '7', '100', '1', '0', '0', '0', 'lb_eas'],
-    ... ['citrix.ehg.directory', '10.101.6.11', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.ehg.directory'],
-    ... ['cag.erwinhymergroup.com', '10.101.6.12', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.erwinhymergroup.com'],
+    ... ['citrix.comp.directory', '1.2.3.4', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.comp.directory'],
+    ... ['cag.company.com', '1.2.3.5', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.company.com'],
     ... ]]))
-    {'cag.erwinhymergroup.com': {'entity_service_type': 'ssl vpn',
-                                 'protocol': 'ssl',
-                                 'request_rate': 0,
-                                 'rx_bytes': 0,
-                                 'service_state': (0, 'up'),
-                                 'socket': '10.101.6.12:443',
-                                 'tx_bytes': 0},
-     'citrix.ehg.directory': {'entity_service_type': 'ssl vpn',
-                              'protocol': 'ssl',
-                              'request_rate': 0,
-                              'rx_bytes': 0,
-                              'service_state': (0, 'up'),
-                              'socket': '10.101.6.11:443',
-                              'tx_bytes': 0},
+    {'cag.company.com': {'entity_service_type': 'ssl vpn',
+                         'protocol': 'ssl',
+                         'request_rate': 0,
+                         'rx_bytes': 0,
+                         'service_state': (0, 'up'),
+                         'socket': '1.2.3.5:443',
+                         'tx_bytes': 0},
+     'citrix.comp.directory': {'entity_service_type': 'ssl vpn',
+                               'protocol': 'ssl',
+                               'request_rate': 0,
+                               'rx_bytes': 0,
+                               'service_state': (0, 'up'),
+                               'socket': '1.2.3.4:443',
+                               'tx_bytes': 0},
      'lb_eas': {'entity_service_type': 'loadbalancing',
                 'health': 100.0,
                 'protocol': 'ssl',
@@ -189,10 +189,10 @@ def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> import pprint
     >>> pprint.pprint(list(discover_netscaler_vserver({
-    ... 'cag.erwinhymergroup.com': {},
-    ... 'citrix.ehg.directory': {},
+    ... 'cag.company.com': {},
+    ... 'citrix.comp.directory': {},
     ... })))
-    [Service(item='cag.erwinhymergroup.com'), Service(item='citrix.ehg.directory')]
+    [Service(item='cag.company.com'), Service(item='citrix.comp.directory')]
     """
     for srv_name in section:
         yield Service(item=srv_name)

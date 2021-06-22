@@ -177,7 +177,7 @@ class TestAgentParser:
     @pytest.mark.usefixtures("scenario")
     def test_piggyback_populates_piggyback_raw_data(self, parser, store, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-        monkeypatch.setattr(parser, "check_interval", 10)
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
 
         raw_data = AgentRawData(b"\n".join((
             b"<<<<piggyback header>>>>",  # <- space is OK
@@ -233,7 +233,7 @@ class TestAgentParser:
     @pytest.mark.usefixtures("scenario")
     def test_merge_split_piggyback_sections(self, parser, store, monkeypatch):
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-        monkeypatch.setattr(parser, "check_interval", 10)
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
 
         raw_data = AgentRawData(b"\n".join((
             b"<<<<piggy>>>>",

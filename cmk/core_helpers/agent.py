@@ -510,7 +510,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
-        self.check_interval: Final = check_interval
+        # Transform to seconds and give the piggybacked host a little bit more time
+        self.cache_piggybacked_data_for: Final = int(1.5 * 60 * check_interval)
         self.section_store: Final = section_store
         self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation
@@ -528,8 +529,6 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             raw_data = agent_simulator.process(raw_data)
 
         now = int(time.time())
-        # Transform to seconds and give the piggybacked host a little bit more time
-        cache_age = int(1.5 * 60 * self.check_interval)
 
         sections, piggyback_sections = self._parse_host_section(raw_data)
         section_info = {
@@ -549,7 +548,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             sections: ImmutableSection,
             *,
             cached_at: int,
-            cache_age: int,
+            cache_for: int,
             selection: SectionNameCollection,
         ) -> Iterator[bytes]:
             for header, content in sections.items():
@@ -563,7 +562,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     yield str(
                         SectionMarker(
                             header.name,
-                            (cached_at, cache_age),
+                            (cached_at, cache_for),
                             header.encoding,
                             header.nostrip,
                             header.persist,
@@ -582,7 +581,7 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     flatten_piggyback_section(
                         content,
                         cached_at=now,
-                        cache_age=cache_age,
+                        cache_for=self.cache_piggybacked_data_for,
                         selection=selection,
                     )) for header, content in piggyback_sections.items()
             },

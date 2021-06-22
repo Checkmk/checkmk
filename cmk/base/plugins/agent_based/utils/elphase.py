@@ -32,7 +32,7 @@ def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs
 
     if "device_state" in section[item]:
         device_state, device_state_readable = section[item]["device_state"]
-        if params.get("map_device_states", []):
+        if "map_device_states" in params:
             device_state_params = dict(params["map_device_states"])
             if device_state in device_state_params:
                 state = device_state_params[device_state]
@@ -45,7 +45,7 @@ def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs
         yield Result(state=State(state),
                      summary="Device status: %s(%s)" % (device_state_readable, device_state))
 
-    for what, title, render_func, bound, factor in [
+    for quantity, title, render_func, bound, factor in [
         ("voltage", "Voltage", lambda x: f"{x:.1f} V", Bounds.Lower, 1),
         ("current", "Current", lambda x: f"{x:.1f} A", Bounds.Upper, 1),
         ("output_load", "Load", render.percent, Bounds.Upper, 1),
@@ -58,40 +58,42 @@ def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs
         ("differential_current_dc", "Differential current DC", lambda x: f"{(x * 1000):.1f} mA",
          Bounds.Upper, 0.001),
     ]:
-        if what in section[item]:
-            entry = section[item][what]
-            if isinstance(entry, tuple):
-                value, state_info = entry  # (220.17, (1, "Voltage is too low"))
-            else:
-                value = entry  # 12.0
-                state_info = None
+        if quantity not in section[item]:
+            continue
 
-            levels_upper: Optional[Tuple[float, float]] = None
-            levels_lower: Optional[Tuple[float, float]] = None
-            if what in params:
-                if bound == Bounds.Both:
-                    levels = params[what]
-                    if levels[0] is not None and levels[1] is not None:
-                        levels_upper = (factor * levels[0], factor * levels[1])
-                    if levels[2] is not None and levels[3] is not None:
-                        levels_lower = (factor * levels[2], factor * levels[3])
-                elif bound == Bounds.Upper:
-                    levels = params[what]
-                    if levels[0] is not None and levels[1] is not None:
-                        levels_upper = (factor * levels[0], factor * levels[1])
-                else:  # Bounds.Lower
-                    levels = params[what]
-                    if levels[0] is not None and levels[1] is not None:
-                        levels_lower = (factor * levels[0], factor * levels[1])
+        entry = section[item][quantity]
+        if isinstance(entry, tuple):
+            value, state_info = entry  # (220.17, (1, "Voltage is too low"))
+        else:
+            value = entry  # 12.0
+            state_info = None
 
-            yield from check_levels(
-                value * factor,
-                levels_upper=levels_upper,
-                levels_lower=levels_lower,
-                metric_name=what,
-                render_func=render_func,
-                label=title,
-            )
+        levels_upper: Optional[Tuple[float, float]] = None
+        levels_lower: Optional[Tuple[float, float]] = None
+        if quantity in params:
+            if bound == Bounds.Both:
+                levels = params[quantity]
+                if levels[0] is not None and levels[1] is not None:
+                    levels_upper = (factor * levels[0], factor * levels[1])
+                if levels[2] is not None and levels[3] is not None:
+                    levels_lower = (factor * levels[2], factor * levels[3])
+            elif bound == Bounds.Upper:
+                levels = params[quantity]
+                if levels[0] is not None and levels[1] is not None:
+                    levels_upper = (factor * levels[0], factor * levels[1])
+            else:  # Bounds.Lower
+                levels = params[quantity]
+                if levels[0] is not None and levels[1] is not None:
+                    levels_lower = (factor * levels[0], factor * levels[1])
 
-            if state_info:
-                yield Result(state=State(state_info[0]), summary=state_info[1])
+        yield from check_levels(
+            value * factor,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            metric_name=quantity,
+            render_func=render_func,
+            label=title,
+        )
+
+        if state_info:
+            yield Result(state=State(state_info[0]), summary=state_info[1])

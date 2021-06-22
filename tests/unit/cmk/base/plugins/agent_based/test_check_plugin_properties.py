@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Generator, Sequence, Tuple
+from collections import defaultdict
+from itertools import chain
+from typing import Dict, Generator, Sequence, Set, Tuple
 
 from cmk.utils.type_defs import ParsedSectionName
 import cmk.base.api.agent_based.register as agent_based_register
@@ -81,3 +83,84 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
                     plugins_discovering_upon_empty.add(str(plugin.name))
 
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
+
+
+def test_no_plugins_with_trivial_sections(fix_register):
+    """
+    This is a sanity test for registered inventory and check plugins. It ensures that plugins
+    have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
+    is introduced in the section or plugin name during the migration to the new API. If a
+    trivial section without a parse_function is sufficient for your plugin you have to add it
+    to the known exceptions below.
+    """
+    known_exceptions = {
+        ParsedSectionName(s) for s in [
+            "aix_baselevel",
+            "aix_lparstat_inventory",
+            "aix_packages",
+            "aix_service_packs",
+            "couchbase_nodes_ports",
+            "docker_container_network",
+            "docker_container_node_name",
+            "docker_node_images",
+            "k8s_assigned_pods",
+            "k8s_daemon_pod_containers",
+            "k8s_job_container",
+            "k8s_pod_info",
+            "k8s_selector",
+            "k8s_service_info",
+            "lnx_block_devices",
+            "lnx_cpuinfo",
+            "lnx_distro",
+            "lnx_ip_r",
+            "lnx_packages",
+            "lnx_sysctl",
+            "lnx_uname",
+            "lnx_video",
+            "mssql_clusters",
+            "oracle_systemparameter",
+            "prtconf",
+            "solaris_addresses",
+            "solaris_pkginfo",
+            "solaris_prtdiag",
+            "solaris_prtpicl",
+            "solaris_psrinfo",
+            "solaris_routes",
+            "solaris_uname",
+            "statgrab_net",
+            "win_bios",
+            "win_computersystem",
+            "win_cpuinfo",
+            "win_disks",
+            "win_exefiles",
+            "win_ip_r",
+            "win_networkadapter",
+            "win_os",
+            "win_reg_uninstall",
+            "win_system",
+            "win_video",
+            "win_wmi_software",
+            "win_wmi_updates",
+        ]
+    }
+
+    # fix_register does not include trivial sections created by the trivial_section_factory
+    registered_sections = {
+        s.parsed_section_name
+        for s in chain(fix_register.agent_sections.values(), fix_register.snmp_sections.values())
+    }
+
+    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
+    for plugin in chain(fix_register.check_plugins.values(),
+                        fix_register.inventory_plugins.values()):
+        for section in plugin.sections:
+            if section not in registered_sections and section not in known_exceptions:
+                plugins_with_trivial_sections[plugin.name].add(str(section))
+
+    if plugins_with_trivial_sections:
+        msg = "\n".join(f"{plugin}: {', '.join(sections)}"
+                        for plugin, sections in sorted(plugins_with_trivial_sections.items()))
+        assert 0, f"""Found new plugins with trivial sections:
+PLUGIN - TRIVIAL SECTIONS'
+----------------
+{msg}"""

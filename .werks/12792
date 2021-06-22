@@ -1,0 +1,12 @@
+Title: cisco_wlc: Add support for Cisco WLC 9800
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1624360100
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p6
+
+Add support for Cisco wlc 9800 devices:
+One check is created for each Access Point.

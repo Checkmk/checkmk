@@ -324,7 +324,7 @@ def test_pre_16_format_cookie_handling(monkeypatch):
     assert request.has_cookie("abc")
 
 
-def test_del_vars():
+def test_del_vars_from_env():
     environ = dict(create_environ(),
                    REQUEST_URI='',
                    QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
@@ -352,6 +352,22 @@ def test_del_vars():
         assert '_username' not in global_request.args
 
         assert html.request.var("foo") == "123"
+
+
+def test_del_vars():
+    environ = dict(create_environ(), REQUEST_URI='', QUERY_STRING='opt_x=x&foo=foo')
+    with application_and_request_context(environ):
+        assert html.request.var("opt_x") == "x"
+        assert html.request.var("foo") == "foo"
+
+        html.request.del_vars(prefix="opt_")
+
+        assert html.request.var("opt_x") is None
+        assert html.request.var("foo") == "foo"
+
+        # Check the request local proxied version too
+        assert global_request.var("opt_x") is None
+        assert global_request.var("foo") == "foo"
 
 
 @pytest.mark.parametrize("invalid_url", [

@@ -60,7 +60,7 @@ class LegacyVarsMixin:
         self.legacy_vars[varname] = self.DELETED
 
     def del_vars(self, prefix: str = "") -> None:
-        for varname, _value in list(self.legacy_vars.items()):
+        for varname, _value in self.itervars(prefix):
             if varname.startswith(prefix):
                 self.del_var(varname)
 

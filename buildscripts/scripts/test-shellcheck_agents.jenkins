@@ -37,7 +37,7 @@ node (NODE) {
                 trendChartType: 'TOOLS_ONLY',
                 qualityGates: [
                     [
-                        threshold: 196,
+                        threshold: 197,
                         type: 'TOTAL',
                         unstable: false
                     ]

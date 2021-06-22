@@ -404,11 +404,11 @@ def test_structured_data_StructuredDataTree_get_dict():
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict(0)
+        StructuredDataTree().get_dict(0)  # type: ignore[arg-type]
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict(100)
+        StructuredDataTree().get_dict(100)  # type: ignore[arg-type]
     assert 'Wrong tree path format' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
@@ -428,11 +428,11 @@ def test_structured_data_StructuredDataTree_get_list():
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list(0)
+        StructuredDataTree().get_list(0)  # type: ignore[arg-type]
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list(100)
+        StructuredDataTree().get_list(100)  # type: ignore[arg-type]
     assert 'Wrong tree path format' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
@@ -784,13 +784,18 @@ def test_structured_data_StructuredDataTree_building_tree():
     level1_nested_list_num = struct_tree.get_sub_numeration(["level0_2", "level1_nested_list"])
     level1_nested_list_att = struct_tree.get_sub_attributes(["level0_2", "level1_nested_list"])
 
+    assert isinstance(level1_dict, Attributes)
     assert 'd1' in level1_dict.get_child_data()
     assert 'd2' in level1_dict.get_child_data()
+
+    assert isinstance(level1_list, Numeration)
     known_keys = [key for row in level1_list.get_child_data() for key in row]
     assert 'l1' in known_keys
     assert 'l2' in known_keys
     assert level1_nested_list_num is None
     assert level1_nested_list_att is None
+
+    assert isinstance(level1_nested_list_con, Container)
     assert list(level1_nested_list_con._edges) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 

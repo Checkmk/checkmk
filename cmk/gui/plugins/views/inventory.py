@@ -18,7 +18,7 @@ from livestatus import SiteId, LivestatusResponse, OnlySites
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes, Node
+from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -131,6 +131,7 @@ def _paint_host_inventory_tree_children(
     parsed_path: InventoryPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
+    children: Optional[Iterable[Union[Container, Numeration, Attributes]]]
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:
@@ -151,6 +152,7 @@ def _paint_host_inventory_tree_value(
     invpath: RawInventoryPath,
     attribute_keys: inventory.AttributesKeys,
 ) -> CellSpec:
+    child: Optional[Union[Numeration, Attributes]]
     if attribute_keys == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
@@ -162,11 +164,17 @@ def _paint_host_inventory_tree_value(
     with output_funnel.plugged():
         if invpath.endswith(".") or invpath.endswith(":"):
             invpath = invpath[:-1]
+
         if attribute_keys == []:
+            # TODO parse instead of validate
+            assert isinstance(child, Numeration)
             tree_renderer.show_numeration(child, path=parsed_path)
+
         elif attribute_keys:
             # In paint_host_inventory_tree we parse invpath and get
             # a path and attribute_keys which may be either None, [], or ["KEY"].
+            # TODO parse instead of validate
+            assert isinstance(child, Attributes)
             tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
         code = HTML(output_funnel.drain())
@@ -737,13 +745,16 @@ def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
     return hint
 
 
-def _inv_titleinfo(invpath: RawInventoryPath, node: Optional[Node]) -> Tuple[Optional[str], str]:
+def _inv_titleinfo(
+    invpath: RawInventoryPath,
+    key: Optional[str] = None,
+) -> Tuple[Optional[str], str]:
     hint = _inv_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
         if hasattr(title, '__call__'):
-            title = title(node)
+            title = title(key)
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",
                                                                                       " ").title()
@@ -752,10 +763,10 @@ def _inv_titleinfo(invpath: RawInventoryPath, node: Optional[Node]) -> Tuple[Opt
 
 def _inv_titleinfo_long(invpath: RawInventoryPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
-    _icon, last_title = _inv_titleinfo(invpath, None)
+    _icon, last_title = _inv_titleinfo(invpath)
     parent = inventory.parent_path(invpath)
     if parent:
-        _icon, parent_title = _inv_titleinfo(parent, None)
+        _icon, parent_title = _inv_titleinfo(parent)
         return parent_title + u" ➤ " + last_title
     return last_title
 
@@ -847,7 +858,7 @@ def _declare_invtable_column(infoname: str, invpath: RawInventoryPath, topic: st
         paint_name = "str"
         paint_function = inv_paint_generic
 
-    title = _inv_titleinfo(sub_invpath, None)[1]
+    title = _inv_titleinfo(sub_invpath)[1]
 
     # Sync this with _declare_inv_column()
     filter_class = hint.get("filter")
@@ -1768,11 +1779,11 @@ class NodeRenderer:
         container: Container,
         path: Optional[InventoryPath] = None,
     ) -> None:
-        for _x, node in container.get_edge_nodes():
+        for edge, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
-            invpath = ".%s." % self._get_raw_path(node_abs_path)
+            invpath = ".%s." % self._get_raw_path(list(node_abs_path))
 
-            icon, title = _inv_titleinfo(invpath, node)
+            icon, title = _inv_titleinfo(invpath, key=str(edge))
 
             # Replace placeholders in title with the real values for this path
             if "%d" in title or "%s" in title:
@@ -1840,7 +1851,7 @@ class NodeRenderer:
         titles = []
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath, None)
+            _icon, title = _inv_titleinfo(sub_invpath)
             sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key))
@@ -1852,7 +1863,7 @@ class NodeRenderer:
         extratitles = []
         for key in keys:
             if key not in keyorder:
-                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key), None)
+                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key))
                 extratitles.append((title, key))
         titles += sorted(extratitles)
 
@@ -1871,7 +1882,7 @@ class NodeRenderer:
 
         self._show_numeration_table(titles, invpath, data)
 
-    def _get_numeration_keys(self, data: Dict) -> Set[str]:
+    def _get_numeration_keys(self, data: Iterable) -> Set[str]:
         keys = set([])
         for entry in data:
             keys.update(entry.keys())
@@ -1935,7 +1946,7 @@ class NodeRenderer:
         html.open_table()
         for key, value in sorted(attributes.get_child_data().items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
-            _icon, title = _inv_titleinfo(sub_invpath, key)
+            _icon, title = _inv_titleinfo(sub_invpath)
             hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()
@@ -2068,7 +2079,7 @@ def ajax_inv_render_tree() -> None:
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:
-        children = [struct_tree.get_root_container()]
+        children = {struct_tree.get_root_container()}
 
     if children is None:
         html.show_error(

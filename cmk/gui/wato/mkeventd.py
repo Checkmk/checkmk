@@ -152,6 +152,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
+from cmk.gui.escaping import escape_html
 from cmk.gui.utils.urls import (
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
@@ -216,7 +217,7 @@ def substitute_help():
         html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list
     ]
 
-    return _("The following macros will be substituted by value from the actual event:")\
+    return escape_html(_("The following macros will be substituted by value from the actual event:")) \
         + html.render_br()\
         + html.render_br()\
         + html.render_table(HTML().join(_help_rows), class_="help")
@@ -1150,7 +1151,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
-            _("Test event generated and sent to Event Console.") + html.render_br() +
+            escape_html(_("Test event generated and sent to Event Console.")) + html.render_br() +
             html.render_pre(rfc))
         return True
 

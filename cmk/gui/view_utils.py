@@ -124,8 +124,8 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: 'LoggedInUser')
                               target="_self",
                               href=makeuri(request, [("limit", "none")]))
 
-    text += " " + _(
-        "<b>Note:</b> the shown results are incomplete and do not reflect the sort order.")
+    text += escaping.escape_html_permissive(
+        " " + _("<b>Note:</b> the shown results are incomplete and do not reflect the sort order."))
     html.show_warning(text)
 
 

@@ -13,6 +13,7 @@ from typing import (
 from cmk.gui.globals import html
 from cmk.gui.i18n import _u
 from cmk.gui.utils.html import HTML
+from cmk.gui.escaping import escape_html_permissive
 
 
 def text_with_links_to_user_translated_html(
@@ -20,7 +21,8 @@ def text_with_links_to_user_translated_html(
     separator: str = "",
 ) -> HTML:
     return HTML(separator).join(
-        html.render_a(user_translation, href=url) if url else user_translation
+        html.render_a(user_translation, href=url
+                     ) if url else escape_html_permissive(user_translation)
         for txt, url in elements
         for user_translation in [_u(txt)]
         if txt)

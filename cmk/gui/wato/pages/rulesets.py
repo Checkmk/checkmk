@@ -43,7 +43,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.gui.type_defs import HTTPVariables
-import cmk.gui.escaping as escaping
+from cmk.gui.escaping import strip_tags, escape_html_permissive
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.view_utils
@@ -117,12 +117,6 @@ else:
     agent_bakery = None  # type: ignore[assignment]
 
 SearchOptions = Dict[str, Any]
-
-
-def render_html(text: Union[HTML, str]) -> str:
-    if isinstance(text, HTML):
-        return str(text)
-    return text
 
 
 class PageType(Enum):
@@ -240,7 +234,7 @@ class ABCRulesetMode(WatoMode):
                     if not config.wato_hide_help_in_lists:
                         float_cls = "nofloat" if config.user.show_help else "float"
                     html.open_div(class_=["ruleset", float_cls],
-                                  title=escaping.strip_tags(ruleset.help() or ''))
+                                  title=strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
 
                     url_vars = [
@@ -1052,8 +1046,8 @@ class ModeEditRuleset(WatoMode):
                 reason = str(e)
 
             value_html = html.render_icon("alert") \
-                + _("The value of this rule is not valid. ") \
-                + reason
+                + escape_html_permissive(_("The value of this rule is not valid. ")) \
+                + escape_html_permissive(reason)
         html.write_text(value_html)
 
         # Comment
@@ -2005,7 +1999,7 @@ class RuleConditionRenderer:
         self,
         rulespec: Rulespec,
         conditions: RuleConditions,
-    ) -> Iterable[Union[str, HTML]]:
+    ) -> Iterable[HTML]:
         yield from self._tag_conditions(conditions.host_tags)
         yield from self._host_label_conditions(conditions)
         yield from self._host_conditions(conditions)
@@ -2110,7 +2104,7 @@ class RuleConditionRenderer:
 
         return HTML("%s%s" % (html.render_i(_("not"), class_="label_operator"), labels_html))
 
-    def _host_conditions(self, conditions: RuleConditions) -> Iterable[Union[str, HTML]]:
+    def _host_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         if conditions.host_name is None:
             return
 
@@ -2120,12 +2114,14 @@ class RuleConditionRenderer:
         if condition_txt:
             yield condition_txt
 
-    def _render_host_condition_text(self, conditions) -> Union[str, HTML]:
+    def _render_host_condition_text(self, conditions) -> HTML:
         if conditions.host_name == []:
-            return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
+            return escape_html_permissive(
+                _("This rule does <b>never</b> apply due "
+                  "to an empty list of explicit hosts!"))
 
-        condition: List[Union[HTML, str]] = []
-        text_list: List[Union[HTML, str]] = []
+        condition: List[HTML] = []
+        text_list: List[HTML] = []
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.host_name)
@@ -2133,7 +2129,7 @@ class RuleConditionRenderer:
         regex_count = len(
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x])
 
-        condition.append(_("Host name"))
+        condition.append(escape_html_permissive(_("Host name")))
 
         folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
         if regex_count == len(host_name_conditions) or regex_count == 0:
@@ -2141,9 +2137,11 @@ class RuleConditionRenderer:
             is_regex = regex_count > 0
             if is_regex:
                 condition.append(
-                    _("is not one of regex") if is_negate else _("matches one of regex"))
+                    escape_html_permissive(
+                        _("is not one of regex") if is_negate else _("matches one of regex")))
             else:
-                condition.append(_("is not one of") if is_negate else _("is"))
+                condition.append(
+                    escape_html_permissive(_("is not one of") if is_negate else _("is")))
 
             for host_spec in host_name_conditions:
                 if isinstance(host_spec, dict) and "$regex" in host_spec:
@@ -2178,46 +2176,49 @@ class RuleConditionRenderer:
                     expression = "%s" % (is_regex and _("does not match regex") or _("is not"))
                 else:
                     expression = "%s" % (is_regex and _("matches regex") or _("is "))
-                text_list.append("%s %s" % (expression, html.render_b(host_spec)))
+                text_list.append(
+                    escape_html_permissive(expression + " ") + html.render_b(host_spec))
 
         if len(text_list) == 1:
             condition.append(text_list[0])
         else:
-            condition.append(", ".join(["%s" % s for s in text_list[:-1]]))
-            condition.append(_(" or ") + text_list[-1])
+            condition.append(HTML(", ").join(text_list[:-1]))
+            condition.append(escape_html_permissive(_(" or ")) + text_list[-1])
 
         return HTML(" ").join(condition)
 
-    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Iterable[str]:
+    def _service_conditions(self, rulespec: Rulespec, conditions: RuleConditions) -> Iterable[HTML]:
         if not rulespec.item_type or conditions.service_description is None:
             return
 
-        condition = str()
+        condition = HTML()
         if rulespec.item_type == "service":
-            condition = _("Service name")
+            condition = escape_html_permissive(_("Service name"))
         elif rulespec.item_type == "item":
             if rulespec.item_name is not None:
-                condition = rulespec.item_name
+                condition = escape_html_permissive(rulespec.item_name)
             else:
-                condition = _("Item")
-        condition += " "
+                condition = escape_html_permissive(_("Item"))
+        condition += HTML(" ")
 
         is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.service_description)
 
         if not service_conditions:
-            yield _("Does not match any service")
+            yield escape_html_permissive(_("Does not match any service"))
             return
 
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 
-        text_list: List[Union[HTML, str]] = []
+        text_list: List[HTML] = []
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
-                condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
+                condition += escape_html_permissive(
+                    exact_match_count == 0 and _("does not begin with ") or ("is not "))
             else:
-                condition += exact_match_count == 0 and _("begins with ") or ("is ")
+                condition += escape_html_permissive(exact_match_count == 0 and _("begins with ") or
+                                                    ("is "))
 
             for item_spec in service_conditions:
                 is_regex = isinstance(item_spec, dict) and "$regex" in item_spec
@@ -2235,13 +2236,14 @@ class RuleConditionRenderer:
                     expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
                 else:
                     expression = "%s" % (is_exact and _("is ") or _("begins with "))
-                text_list.append("%s%s" % (expression, html.render_b(item_spec.rstrip("$"))))
+                text_list.append(
+                    escape_html_permissive(expression) + html.render_b(item_spec.rstrip("$")))
 
         if len(text_list) == 1:
-            condition += ensure_str(render_html(text_list[0]))
+            condition += text_list[0]
         else:
-            condition += ", ".join(["%s" % s for s in text_list[:-1]])
-            condition += ensure_str(render_html(_(" or ") + text_list[-1]))
+            condition += HTML(", ").join(text_list[:-1])
+            condition += escape_html_permissive(_(" or ")) + text_list[-1]
 
         if condition:
             yield condition

@@ -1439,7 +1439,7 @@ class PainterCheckManpage(Painter):
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
     text = HTML(", ").join(
-        [html.render_i(a) + ": %s" % escaping.escape_attribute(c) for _id, a, c in comments])
+        [html.render_i(a) + escaping.escape_html_permissive(": %s" % c) for _id, a, c in comments])
     return "", text
 
 
@@ -3225,13 +3225,16 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
         discovery_url = "wato.py?mode=inventory&host=%s&mode=inventory" % row["host_name"]
 
         return None, {
-            "ignored": html.render_icon_button(ruleset_url, 'Disabled (configured away by admin)',
-                                               'rulesets') + "Disabled (configured away by admin)",
+            "ignored": html.render_icon_button(
+                ruleset_url, _('Disabled (configured away by admin)'), 'rulesets') +
+                       escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
             "vanished": html.render_icon_button(
-                discovery_url, 'Vanished (checked, but no longer exist)', 'services') +
-                        "Vanished (checked, but no longer exist)",
-            "unmonitored": html.render_icon_button(discovery_url, 'Available (missing)', 'services')
-                           + "Available (missing)"
+                discovery_url, _('Vanished (checked, but no longer exist)'), 'services') +
+                        escaping.escape_html_permissive(
+                            _("Vanished (checked, but no longer exist)")),
+            "unmonitored": html.render_icon_button(discovery_url, _('Available (missing)'),
+                                                   'services') +
+                           escaping.escape_html_permissive(_("Available (missing)"))
         }.get(value, value)
     if field == "discovery_service" and row["discovery_state"] == "vanished":
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (urlencode(
@@ -4872,7 +4875,8 @@ class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
-        return "", html.render_br().join(["%s: %s" % e for e in sorted(entries)])
+        return "", html.render_br().join(
+            [escaping.escape_html_permissive("%s: %s" % e) for e in sorted(entries)])
 
     def _get_entries(self, row):
         entries = []

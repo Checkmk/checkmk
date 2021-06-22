@@ -54,6 +54,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 from cmk.gui.page_state import PageState
+from cmk.gui.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
@@ -90,7 +91,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
                     page_state=_release_switch(major=True))
 
         html.open_div(id_="release_title")
-        html.h1(_("Everything") + html.render_br() + _("monitored"))
+        html.h1(escape_html(_("Everything")) + html.render_br() + escape_html(_("monitored")))
         html.img(theme.url("images/tribe29.svg"))
         html.close_div()
 
@@ -635,14 +636,14 @@ def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
-def render_werk_title(werk) -> Union[HTML, str]:
+def render_werk_title(werk) -> HTML:
     title = werk["title"]
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
-        title = insert_manpage_links(parts[0]) + ":" + parts[1]
-    return title
+        return insert_manpage_links(parts[0]) + escape_html_permissive(":" + parts[1])
+    return escape_html_permissive(title)
 
 
 def render_werk_description(werk) -> HTML:
@@ -695,7 +696,7 @@ def render_werk_description(werk) -> HTML:
 
 def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
-    new_parts: List[Union[str, HTML]] = []
+    new_parts: List[HTML] = []
     check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
         if (check_regex.match(part) and
@@ -710,5 +711,5 @@ def insert_manpage_links(text: str) -> HTML:
             )
             new_parts.append(html.render_a(content=part, href=url))
         else:
-            new_parts.append(part)
+            new_parts.append(escape_html(part))
     return HTML(" ").join(new_parts)

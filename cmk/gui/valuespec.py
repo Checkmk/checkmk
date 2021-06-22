@@ -804,7 +804,9 @@ class RegExp(TextInput):
 
         default_help_text = super().help()
         if default_help_text is not None:
-            help_text.append(default_help_text + "<br><br>")
+            help_text.append(
+                escaping.escape_html_permissive(str(default_help_text)) + html.render_br() +
+                html.render_br())
 
         help_text.append(_("The text entered here is handled as a regular expression pattern."))
 
@@ -5646,7 +5648,7 @@ class Labels(ValueSpec):
 
     def help(self) -> Union[str, HTML, None]:
         h = super().help()
-        return (u"" if h is None else h) + label_help_text()
+        return escaping.escape_html_permissive(("" if h is None else str(h)) + label_help_text())
 
     def canonical_value(self):
         return {}

@@ -17,6 +17,7 @@ import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 
+from cmk.gui.escaping import escape_html
 from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -596,7 +597,7 @@ class DiscoveryPageRenderer:
 
             manpage_url = watolib.folder_preserving_link([("mode", "check_manpage"),
                                                           ("check_type", ctype)])
-            plugin_names += html.render_a(content=ctype, href=manpage_url) + "<br>"
+            plugin_names += html.render_a(content=ctype, href=manpage_url) + html.render_br()
             labels_html += render_labels(
                 label_data,
                 "host",
@@ -671,8 +672,9 @@ class DiscoveryPageRenderer:
 
         group_header = HTML("")
         if entry.table_group in map_icons:
-            group_header += html.render_icon("%s_service" % map_icons[entry.table_group]) + " "
-        group_header += entry.title
+            group_header += html.render_icon("%s_service" % map_icons[entry.table_group])
+            group_header += HTML(" ")
+        group_header += escape_html(entry.title)
 
         return group_header + html.render_help(entry.help_text)
 

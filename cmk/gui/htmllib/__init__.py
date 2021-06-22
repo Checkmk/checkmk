@@ -971,9 +971,10 @@ class html(ABCHTMLGenerator):
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
         self.show_message(
-            self.render_sup("*") + _("These texts may be localized depending on the users' "
-                                     "language. You can configure the localizations %s.") %
-            self.render_a("in the global settings", href=url))
+            self.render_sup("*") + escaping.escape_html_permissive(
+                _("These texts may be localized depending on the users' "
+                  "language. You can configure the localizations %s.") %
+                self.render_a("in the global settings", href=url)))
 
     def help(self, text: Union[None, HTML, str]) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.
@@ -2118,7 +2119,8 @@ class html(ABCHTMLGenerator):
         elif cssclass:
             classes.append(cssclass)
 
-        return self.render_div(atag + method.content,
+        # TODO: Make method.content return HTML
+        return self.render_div(atag + HTML(method.content),
                                class_=classes,
                                id_="popup_trigger_%s" % ident,
                                style=style)

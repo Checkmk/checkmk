@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Tuple, Union, Literal
+from typing import Any, Dict, List, Tuple, Literal
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -427,7 +427,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts: List[str] = []
+        texts: List[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -435,9 +435,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
         for name, cgroup in sorted(items, key=lambda x: x[1]['alias']):
             if name in value["groups"]:
                 display_name = cgroup.get("alias", name)
-                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
-                             (name, display_name))
-        result: Union[str, HTML] = ", ".join(texts)
+                texts.append(
+                    html.render_a(display_name,
+                                  href=makeuri_contextless(
+                                      request,
+                                      [("mode", "edit_contact_group"), ("edit", name)],
+                                      filename="wato.py",
+                                  )))
+        result: HTML = HTML(", ").join(texts)
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),

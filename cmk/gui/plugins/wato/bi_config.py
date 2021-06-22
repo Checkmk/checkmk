@@ -871,9 +871,10 @@ class ModeBIRules(ABCBIMode):
 
                     if bi_rule.properties.icon:
                         title = html.render_icon(
-                            bi_rule.properties.icon) + "&nbsp;" + bi_rule.properties.title
+                            bi_rule.properties.icon) + HTML("&nbsp;") + escaping.escape_html(
+                                bi_rule.properties.title)
                     else:
-                        title = bi_rule.properties.title
+                        title = escaping.escape_html(bi_rule.properties.title)
                     table.cell(_("Title"), title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(

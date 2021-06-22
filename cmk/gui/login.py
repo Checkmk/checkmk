@@ -39,6 +39,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, M
 from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.language_cookie import del_language_cookie
+from cmk.gui.escaping import escape_html
 
 auth_logger = logger.getChild("auth")
 
@@ -554,15 +555,16 @@ class LoginPage(Page):
             html.show_message(config.login_screen["login_message"])
             html.close_div()
 
-        footer: List[Union[HTML, str]] = []
+        footer: List[HTML] = []
         for title, url, target in config.login_screen.get("footer_links", []):
             footer.append(html.render_a(title, href=url, target=target))
 
         if "hide_version" not in config.login_screen:
-            footer.append("Version: %s" % cmk_version.__version__)
+            footer.append(escape_html("Version: %s" % cmk_version.__version__))
 
-        footer.append("&copy; %s" %
-                      html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank"))
+        footer.append(
+            HTML("&copy; %s" %
+                 html.render_a("tribe29 GmbH", href="https://checkmk.com", target="_blank")))
 
         html.write_html(HTML(" - ").join(footer))
 

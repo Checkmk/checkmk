@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import os
 import re
 import pprint
-from typing import Any, Dict, cast, Container, List, Optional, Tuple
+from typing import Any, Dict, cast, Container, List, Optional, Tuple, Union
 
 from cmk.utils.type_defs import (
     Labels,
@@ -17,6 +19,7 @@ from cmk.utils.type_defs import (
     TagConditionNE,
     TaggroupIDToTagCondition,
     TagID,
+    TagIDToTaggroupID,
 )
 import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -26,9 +29,11 @@ import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui import utils
 
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.utils import has_agent_bakery
 from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.rulespecs import (
@@ -36,6 +41,8 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
 )
 from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
     Folder,
     Host,
 )
@@ -50,6 +57,10 @@ from cmk.gui.watolib.utils import (
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 # Make the GUI config module reset the base config to always get the latest state of the config
 config.register_post_config_load_hook(cmk.base.export.reset_config)
+
+RulesetName = str
+FolderPath = str
+SearchOptions = Dict[str, Any]
 
 # This macro is needed to make the to_config() methods be able to use native
 # pprint/repr for the ruleset data structures. Have a look at
@@ -190,22 +201,24 @@ class RulesetCollection:
     """Abstract class for holding a collection of rulesets. The most basic
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
-    def __init__(self):
+    def __init__(self) -> None:
         super(RulesetCollection, self).__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
         self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
-        self._rulesets = {}
+        self._rulesets: Dict[RulesetName, Ruleset] = {}
 
     # Has to be implemented by the subclasses to load the right rulesets
     def load(self):
         raise NotImplementedError()
 
-    def _initialize_rulesets(self, only_varname=None):
+    def _initialize_rulesets(self, only_varname: Optional[RulesetName] = None) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         self._rulesets = {varname: Ruleset(varname, self._tag_to_group_map) for varname in varnames}
 
-    def _load_folder_rulesets(self, folder, only_varname=None):
+    def _load_folder_rulesets(self,
+                              folder: CREFolder,
+                              only_varname: Optional[RulesetName] = None) -> None:
         path = folder.rules_file_path()
 
         if not os.path.exists(path):
@@ -230,7 +243,10 @@ class RulesetCollection:
 
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
-    def from_config(self, folder, rulesets_config, only_varname=None):
+    def from_config(self,
+                    folder: CREFolder,
+                    rulesets_config,
+                    only_varname: Optional[RulesetName] = None) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         for varname in varnames:
             if ':' in varname:
@@ -284,7 +300,7 @@ class RulesetCollection:
 
         store.save_mk_file(rules_file_path, content, add_header=not config.wato_use_git)
 
-    def exists(self, name):
+    def exists(self, name) -> bool:
         return name in self._rulesets
 
     def get(self, name, deflt=None):
@@ -315,7 +331,8 @@ class RulesetCollection:
             sub_group_list = []
 
             for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
-                sub_group_list.append((group_name, sorted(group_rulesets, key=lambda x: x.title())))
+                sub_group_list.append(
+                    (group_name, sorted(group_rulesets, key=lambda x: str(x.title()))))
 
             grouped.append((main_group_name, sub_group_list))
 
@@ -323,13 +340,15 @@ class RulesetCollection:
 
 
 class AllRulesets(RulesetCollection):
-    def _load_rulesets_recursively(self, folder, only_varname=None):
+    def _load_rulesets_recursively(self,
+                                   folder: CREFolder,
+                                   only_varname: Optional[RulesetName] = None) -> None:
         for subfolder in folder.subfolders():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)
 
-    def load(self):
+    def load(self) -> None:
         """Load all rules of all folders"""
         self._initialize_rulesets()
         self._load_rulesets_recursively(Folder.root_folder())
@@ -337,11 +356,11 @@ class AllRulesets(RulesetCollection):
     def save_folder(self, folder):
         self._save_folder(folder)
 
-    def save(self):
+    def save(self) -> None:
         """Save all rulesets of all folders recursively"""
         self._save_rulesets_recursively(Folder.root_folder())
 
-    def _save_rulesets_recursively(self, folder):
+    def _save_rulesets_recursively(self, folder: CREFolder) -> None:
         for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
@@ -349,56 +368,56 @@ class AllRulesets(RulesetCollection):
 
 
 class SingleRulesetRecursively(AllRulesets):
-    def __init__(self, name):
+    def __init__(self, name: RulesetName) -> None:
         super(SingleRulesetRecursively, self).__init__()
         self._name = name
 
     # Load single ruleset from all folders
-    def load(self):
+    def load(self) -> None:
         self._initialize_rulesets(only_varname=self._name)
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
 
-    def save_folder(self, folder):
+    def save_folder(self, folder: CREFolder) -> None:
         raise NotImplementedError()
 
 
 class FolderRulesets(RulesetCollection):
-    def __init__(self, folder):
+    def __init__(self, folder: CREFolder) -> None:
         super(FolderRulesets, self).__init__()
         self._folder = folder
 
-    def load(self):
+    def load(self) -> None:
         self._initialize_rulesets()
         self._load_folder_rulesets(self._folder)
 
-    def save(self):
+    def save(self) -> None:
         self._save_folder(self._folder)
 
 
 class FilteredRulesetCollection(AllRulesets):
-    def save(self):
+    def save(self) -> None:
         raise NotImplementedError("Filtered ruleset collections can not be saved.")
 
 
 class StaticChecksRulesets(FilteredRulesetCollection):
-    def load(self):
+    def load(self) -> None:
         super(StaticChecksRulesets, self).load()
         self._remove_non_static_checks_rulesets()
 
-    def _remove_non_static_checks_rulesets(self):
+    def _remove_non_static_checks_rulesets(self) -> None:
         for name, ruleset in list(self._rulesets.items()):
             if ruleset.rulespec.main_group_name != "static":
                 del self._rulesets[name]
 
 
 class SearchedRulesets(FilteredRulesetCollection):
-    def __init__(self, origin_rulesets, search_options):
+    def __init__(self, origin_rulesets: RulesetCollection, search_options: SearchOptions) -> None:
         super(SearchedRulesets, self).__init__()
         self._origin_rulesets = origin_rulesets
         self._search_options = search_options
         self._load_filtered()
 
-    def _load_filtered(self):
+    def _load_filtered(self) -> None:
         """Iterates the rulesets from the original collection,
         applies the search option and takes over the rulesets
         that have at least one matching rule or match itself,
@@ -410,18 +429,18 @@ class SearchedRulesets(FilteredRulesetCollection):
 
 
 class Ruleset:
-    def __init__(self, name, tag_to_group_map):
+    def __init__(self, name: RulesetName, tag_to_group_map: TagIDToTaggroupID) -> None:
         super(Ruleset, self).__init__()
         self.name = name
         self.tag_to_group_map = tag_to_group_map
         self.rulespec = rulespec_registry[name]
 
         # Holds list of the rules. Using the folder paths as keys.
-        self._rules = {}
-        self._rules_by_id = {}
+        self._rules: Dict[FolderPath, List[Rule]] = {}
+        self._rules_by_id: Dict[str, Rule] = {}
 
         # Temporary needed during search result processing
-        self.search_matching_rules = []
+        self.search_matching_rules: List[Rule] = []
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
@@ -434,25 +453,25 @@ class Ruleset:
             cloned.append_rule(folder, rule)
         return cloned
 
-    def set_name(self, name):
+    def set_name(self, name: RulesetName) -> None:
         self.name = name
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Ruleset, self.name)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return self.num_rules() == 0
 
-    def is_empty_in_folder(self, folder):
+    def is_empty_in_folder(self, folder: CREFolder) -> bool:
         return not bool(self.get_folder_rules(folder))
 
-    def num_rules(self):
+    def num_rules(self) -> int:
         return len(self._rules_by_id)
 
-    def num_rules_in_folder(self, folder):
+    def num_rules_in_folder(self, folder: CREFolder) -> int:
         return len(self.get_folder_rules(folder))
 
-    def get_rules(self):
+    def get_rules(self) -> List[Tuple[CREFolder, int, Rule]]:
         rules = []
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
@@ -461,19 +480,19 @@ class Ruleset:
                       key=lambda x: (x[0].path().split("/"), len(rules) - x[1]),
                       reverse=True)
 
-    def get_folder_rules(self, folder):
+    def get_folder_rules(self, folder: CREFolder) -> List[Rule]:
         try:
             return self._rules[folder.path()]
         except KeyError:
             return []
 
-    def prepend_rule(self, folder, rule):
+    def prepend_rule(self, folder: CREFolder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
         rules.insert(0, rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def clone_rule(self, orig_rule, rule):
+    def clone_rule(self, orig_rule: Rule, rule: Rule) -> None:
         if rule.folder == orig_rule.folder:
             self.insert_rule_after(rule, orig_rule)
         else:
@@ -486,7 +505,7 @@ class Ruleset:
                    diff_text=make_diff_text({}, rule.to_web_api()),
                    object_ref=rule.object_ref())
 
-    def append_rule(self, folder, rule) -> int:
+    def append_rule(self, folder: CREFolder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
         index = len(rules)
         rules.append(rule)
@@ -494,13 +513,13 @@ class Ruleset:
         self._on_change()
         return index
 
-    def insert_rule_after(self, rule, after):
+    def insert_rule_after(self, rule: Rule, after: Rule) -> None:
         index = self._rules[rule.folder.path()].index(after) + 1
         self._rules[rule.folder.path()].insert(index, rule)
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def from_config(self, folder, rules_config):
+    def from_config(self, folder: CREFolder, rules_config) -> None:
         if not rules_config:
             return
 
@@ -522,7 +541,7 @@ class Ruleset:
             self._rules[folder.path()].append(rule)
             self._rules_by_id[rule.id] = rule
 
-    def to_config(self, folder):
+    def to_config(self, folder: CREFolder) -> str:
         content = ""
 
         if ":" in self.name:
@@ -553,7 +572,7 @@ class Ruleset:
         return content
 
     # Whether or not either the ruleset itself matches the search or the rules match
-    def matches_search_with_rules(self, search_options):
+    def matches_search_with_rules(self, search_options: SearchOptions) -> bool:
         if not self.matches_ruleset_search_options(search_options):
             return False
 
@@ -579,15 +598,15 @@ class Ruleset:
 
         return self.matches_fulltext_search(search_options)
 
-    def has_rule_search_options(self, search_options):
+    def has_rule_search_options(self, search_options: SearchOptions) -> bool:
         return bool([k for k in search_options.keys() if k == "fulltext" or k.startswith("rule_")])
 
-    def matches_fulltext_search(self, search_options):
+    def matches_fulltext_search(self, search_options: SearchOptions) -> bool:
         return _match_one_of_search_expression(
             search_options, "fulltext",
-            [self.name, self.title(), self.help()])
+            [self.name, str(self.title()), str(self.help())])
 
-    def matches_ruleset_search_options(self, search_options):
+    def matches_ruleset_search_options(self, search_options: SearchOptions) -> bool:
         if "ruleset_deprecated" in search_options and search_options[
                 "ruleset_deprecated"] != self.is_deprecated():
             return False
@@ -601,15 +620,15 @@ class Ruleset:
         if not _match_search_expression(search_options, "ruleset_name", self.name):
             return False
 
-        if not _match_search_expression(search_options, "ruleset_title", self.title()):
+        if not _match_search_expression(search_options, "ruleset_title", str(self.title())):
             return False
 
-        if not _match_search_expression(search_options, "ruleset_help", self.help()):
+        if not _match_search_expression(search_options, "ruleset_help", str(self.help())):
             return False
 
         return True
 
-    def _matches_group_search(self, search_options):
+    def _matches_group_search(self, search_options: SearchOptions) -> bool:
         # All rulesets are in a single group. Only the two rulesets "agent_ports" and
         # "agent_encryption" are in the RulespecGroupAgentCMKAgent but are also used
         # by the agent bakery. Users often try to find the ruleset in the wrong group.
@@ -625,13 +644,13 @@ class Ruleset:
         return self.rulespec.group_name in rulespec_group_registry.get_matching_group_names(
             search_options["ruleset_group"])
 
-    def get_rule(self, folder, rule_index):
+    def get_rule(self, folder: CREFolder, rule_index: int) -> Rule:
         return self._rules[folder.path()][rule_index]
 
-    def get_rule_by_id(self, rule_id: str) -> "Rule":
+    def get_rule_by_id(self, rule_id: str) -> Rule:
         return self._rules_by_id[rule_id]
 
-    def edit_rule(self, orig_rule, rule):
+    def edit_rule(self, orig_rule: Rule, rule: Rule) -> None:
         folder_rules = self._rules[orig_rule.folder.path()]
         index = folder_rules.index(orig_rule)
 
@@ -645,7 +664,7 @@ class Ruleset:
                    object_ref=rule.object_ref())
         self._on_change()
 
-    def delete_rule(self, rule, create_change=True):
+    def delete_rule(self, rule: Rule, create_change: bool = True) -> None:
         folder_rules = self._rules[rule.folder.path()]
         index = folder_rules.index(rule)
 
@@ -660,7 +679,7 @@ class Ruleset:
                        object_ref=rule.object_ref())
         self._on_change()
 
-    def move_rule_to(self, rule, index):
+    def move_rule_to(self, rule: Rule, index: int) -> None:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
         rules.remove(rule)
@@ -672,37 +691,37 @@ class Ruleset:
                    object_ref=self.object_ref())
 
     # TODO: Remove these getters
-    def valuespec(self):
+    def valuespec(self) -> ValueSpec:
         return self.rulespec.valuespec
 
-    def help(self):
+    def help(self) -> Union[None, str, HTML]:
         return self.rulespec.help
 
-    def title(self):
+    def title(self) -> Optional[str]:
         return self.rulespec.title
 
-    def item_type(self):
+    def item_type(self) -> Optional[str]:
         return self.rulespec.item_type
 
-    def item_name(self):
+    def item_name(self) -> Optional[str]:
         return self.rulespec.item_name
 
-    def item_help(self):
+    def item_help(self) -> Union[None, str, HTML]:
         return self.rulespec.item_help
 
-    def item_enum(self):
+    def item_enum(self) -> Optional[List[Tuple[str, str]]]:
         return self.rulespec.item_enum
 
-    def match_type(self):
+    def match_type(self) -> str:
         return self.rulespec.match_type
 
-    def is_deprecated(self):
+    def is_deprecated(self) -> bool:
         return self.rulespec.is_deprecated
 
-    def is_optional(self):
+    def is_optional(self) -> bool:
         return self.rulespec.is_optional
 
-    def _on_change(self):
+    def _on_change(self) -> None:
         if has_agent_bakery():
             import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
             agent_bakery.ruleset_changed(self.name)
@@ -726,6 +745,7 @@ class Ruleset:
                 effectiverules.append((folder, rule_index, rule))
 
             elif self.match_type() == "list":
+                assert isinstance(rule.value, list)
                 resultlist += rule.value
                 effectiverules.append((folder, rule_index, rule))
 
@@ -772,13 +792,13 @@ class Ruleset:
 
 class Rule:
     @classmethod
-    def create(cls, folder, ruleset):
+    def create(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
         rule = Rule(folder, ruleset)
         rule.id = utils.gen_id()
         rule.value = rule.ruleset.valuespec().default_value()
         return rule
 
-    def __init__(self, folder, ruleset):
+    def __init__(self, folder: CREFolder, ruleset: Ruleset) -> None:
         super(Rule, self).__init__()
         self.ruleset = ruleset
         self.folder = folder
@@ -793,9 +813,9 @@ class Rule:
             cloned.id = utils.gen_id()
         return cloned
 
-    def _initialize(self):
+    def _initialize(self) -> None:
         self.conditions = RuleConditions(self.folder.path())
-        self.rule_options = {}
+        self.rule_options: Dict[str, Any] = {}
         self.value = True if self.ruleset.rulespec.is_binary_ruleset else None
         self.id = ""  # Will be populated later
 
@@ -972,7 +992,7 @@ class Rule:
 
         yield _("The rule does not match")
 
-    def matches_search(self, search_options):
+    def matches_search(self, search_options: SearchOptions) -> bool:
         if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
                 search_options):
             return False
@@ -1036,7 +1056,7 @@ class Rule:
 
         return True
 
-    def _get_search_folders(self, search_options):
+    def _get_search_folders(self, search_options: SearchOptions) -> List[str]:
         current_folder, do_recursion = search_options["rule_folder"]
         current_folder = Folder.folder(current_folder)
         search_in_folders = [current_folder.name()]
@@ -1046,16 +1066,16 @@ class Rule:
             ]
         return search_in_folders
 
-    def index(self):
+    def index(self) -> int:
         return self.ruleset.get_folder_rules(self.folder).index(self)
 
-    def is_disabled(self):
+    def is_disabled(self) -> bool:
         return self.rule_options.get("disabled", False)
 
-    def description(self):
+    def description(self) -> str:
         return self.rule_options.get("description", "")
 
-    def comment(self):
+    def comment(self) -> str:
         return self.rule_options.get("comment", "")
 
     def predefined_condition_id(self) -> Optional[str]:
@@ -1074,18 +1094,18 @@ class Rule:
     def get_rule_conditions(self) -> RuleConditions:
         return self.conditions
 
-    def is_discovery_rule_of(self, host):
+    def is_discovery_rule_of(self, host: CREHost) -> bool:
         return self.conditions.host_name == [
             host.name()
         ] and self.conditions.host_tags == {} and self.conditions.has_only_explicit_service_conditions(
         ) and self.folder.is_transitive_parent_of(host.folder())
 
-    def is_discovery_rule(self):
-        return (self.conditions.host_name and len(self.conditions.host_name) == 1 and
-                self.conditions.host_tags == {} and
-                self.conditions.has_only_explicit_service_conditions())
+    def is_discovery_rule(self) -> bool:
+        return bool(self.conditions.host_name and len(self.conditions.host_name) == 1 and
+                    self.conditions.host_tags == {} and
+                    self.conditions.has_only_explicit_service_conditions())
 
-    def replace_explicit_host_condition(self, old_name, new_name):
+    def replace_explicit_host_condition(self, old_name: str, new_name: str) -> bool:
         """Does an in-place(!) replacement of explicit (non regex) hostnames in rules"""
         if self.conditions.host_name is None:
             return False
@@ -1102,14 +1122,15 @@ class Rule:
         return did_rename
 
 
-def _match_search_expression(search_options, attr_name, search_in):
+def _match_search_expression(search_options: SearchOptions, attr_name: str, search_in: str) -> bool:
     if attr_name not in search_options:
         return True  # not searched for this. Matching!
 
-    return search_in and re.search(search_options[attr_name], search_in, re.I) is not None
+    return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
 
 
-def _match_one_of_search_expression(search_options, attr_name, search_in_list):
+def _match_one_of_search_expression(search_options: SearchOptions, attr_name: str,
+                                    search_in_list: List[str]) -> bool:
     for search_in in search_in_list:
         if _match_search_expression(search_options, attr_name, search_in):
             return True

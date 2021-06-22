@@ -12,7 +12,6 @@ import re
 import json
 from enum import Enum, auto
 from typing import (
-    Any,
     cast,
     Dict,
     Iterable,
@@ -77,7 +76,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import RuleConditions
+from cmk.gui.watolib.rulesets import RuleConditions, SearchOptions
 from cmk.gui.watolib.rulespecs import (
     main_module_from_rulespec_group_name,
     rulespec_group_registry,
@@ -115,8 +114,6 @@ if watolib.has_agent_bakery():
     import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
 else:
     agent_bakery = None  # type: ignore[assignment]
-
-SearchOptions = Dict[str, Any]
 
 
 class PageType(Enum):

@@ -764,10 +764,10 @@ class RulesetToDictTransformer:
     """Transforms all rules in the given ruleset from the pre 1.6 tuple format to the dict format
     This is done in place to keep the references to the ruleset working.
     """
-    def __init__(self, tag_to_group_map):
+    def __init__(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         super(RulesetToDictTransformer, self).__init__()
         self._tag_groups = tag_to_group_map
-        self._transformed_ids = set()
+        self._transformed_ids: Set[int] = set()
 
     def transform_in_place(self, ruleset, is_service, is_binary, use_ruleset_id_cache=True):
         if use_ruleset_id_cache:

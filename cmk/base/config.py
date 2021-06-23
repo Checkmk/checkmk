@@ -1407,11 +1407,14 @@ def max_cachefile_age(
     *,
     checking: Optional[int] = None,
     discovery: Optional[int] = None,
+    inventory: Optional[int] = None,
 ) -> cache_file.MaxAge:
     return cache_file.MaxAge(
         checking=check_max_cachefile_age if checking is None else checking,
-        # inventory_max_cachefile_age next line: *not a typo*
+        # next line: inventory_max_cachefile_age is *not a typo*, old name for discovery!
         discovery=inventory_max_cachefile_age if discovery is None else discovery,
+        # next line: hard coded default, not configurable.
+        inventory=120 if inventory is None else inventory,
     )
 
 

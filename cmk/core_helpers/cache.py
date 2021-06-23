@@ -205,12 +205,19 @@ TFileCache = TypeVar("TFileCache", bound="FileCache")
 
 
 class MaxAge(NamedTuple):
+    """Maximum age allowed for the cached data, in seconds.
+
+    See Also:
+        cmk.base.config.max_cachefile_age() for the default values configured.
+
+    """
     checking: int
     discovery: int
+    inventory: int
 
     @classmethod
     def none(cls):
-        return cls(0, 0)
+        return cls(0, 0, 0)
 
     def get(self, mode: Mode, *, default: int = 0) -> int:
         return self._asdict().get(mode.name.lower(), default)

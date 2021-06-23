@@ -201,6 +201,7 @@ def _parse_cluster_config(data: Mapping[str, Any], serial: ConfigSerial) -> Iter
             fetcher.file_cache.max_age = MaxAge(
                 checking=global_config.cluster_max_cachefile_age,
                 discovery=global_config.cluster_max_cachefile_age,
+                inventory=2 * global_config.cluster_max_cachefile_age,
             )
             yield fetcher
 

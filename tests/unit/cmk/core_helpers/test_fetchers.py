@@ -94,7 +94,7 @@ class TestNoCache:
         return NoCache(
             "hostname",
             base_path=path,
-            max_age=MaxAge(checking=0, discovery=999),
+            max_age=MaxAge(checking=0, discovery=999, inventory=0),
             disabled=False,
             use_outdated=False,
             simulation=False,
@@ -138,7 +138,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
         return request.param(
             "hostname",
             base_path=path,
-            max_age=MaxAge(checking=0, discovery=999),
+            max_age=MaxAge(checking=0, discovery=999, inventory=0),
             disabled=False,
             use_outdated=False,
             simulation=False,

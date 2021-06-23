@@ -57,15 +57,16 @@ class TestSectionStore:
 
 class TestMaxAge:
     def test_repr(self):
-        max_age = MaxAge(checking=42, discovery=69)
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
         assert isinstance(repr(max_age), str)
 
     def test_serialize(self):
-        max_age = MaxAge(checking=42, discovery=69)
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
         assert MaxAge(*json.loads(json.dumps(max_age))) == max_age
 
     def test_get(self):
-        max_age = MaxAge(checking=42, discovery=69)
+        max_age = MaxAge(checking=42, discovery=69, inventory=1337)
         assert max_age.get(Mode.CHECKING) == 42
         assert max_age.get(Mode.DISCOVERY) == 69
+        assert max_age.get(Mode.INVENTORY) == 1337
         assert max_age.get(Mode.NONE) == 0

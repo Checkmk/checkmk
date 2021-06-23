@@ -27,7 +27,6 @@ def create_stage(Map args) {
         } else {
             println("CMD: ${args.COMMAND}")
             dir(args.DIR) {
-                args.ENV_VAR_LIST.add("TEST_CONTAINER=${TEST_CONTAINER}")
                 withEnv(args.ENV_VAR_LIST) {
                     def cmd_status = sh(script: args.COMMAND, returnStatus: true)
                     desc_add_status_row(args.NAME, cmd_status)

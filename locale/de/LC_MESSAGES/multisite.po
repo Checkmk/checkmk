@@ -3729,6 +3729,10 @@ msgstr "Adhoc für %d Minuten"
 msgid "Admin"
 msgstr "Admin"
 
+#, fuzzy
+msgid "Admin state"
+msgstr "Administrator"
+
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr "Admin Status (nur SNMP mit 64 bit Zählern)"
 
@@ -6027,6 +6031,10 @@ msgstr "Verfügbarkeitstabelle"
 
 msgid "Available"
 msgstr "Verfügbar"
+
+#, fuzzy
+msgid "Available (missing)"
+msgstr "Verfügbare (fehlende) Services"
 
 msgid "Available Spare"
 msgstr "Verfügbare Reserven"
@@ -11113,6 +11121,10 @@ msgstr ""
 "Der Livestatus-Proxy konnte nicht neu geladen werden: %s. Weitere "
 "Informationen finden Sie unter web.log und liveproxyd.log."
 
+#, fuzzy, python-format
+msgid "Could not render: %r"
+msgstr "Kann Änderungen nicht speichern: %s"
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Kann Änderungen nicht speichern: %s"
@@ -14191,6 +14203,10 @@ msgid "Disabled %s are kept in the configuration but are not active."
 msgstr ""
 "Deaktivierte %s werden in der Konfiguration beibehalten, sind aber nicht "
 "aktiv."
+
+#, fuzzy
+msgid "Disabled (configured away by admin)"
+msgstr "Deaktivierte Services (vom Admin wegkonfiguriert)"
 
 msgid "Disabled active checks"
 msgstr "Abgeschaltete aktive Checks"
@@ -24679,6 +24695,10 @@ msgid "InfluxDB connections"
 msgstr "Inaktive Verbindungen"
 
 #, fuzzy
+msgid "InfluxDB instance"
+msgstr "DB-Instanzen"
+
+#, fuzzy
 msgid "InfluxDB service rules"
 msgstr "Servicegruppen ausschließen"
 
@@ -28600,6 +28620,19 @@ msgstr "Bilde Auto-Shrink-Status ab"
 msgid "Map channel state to service state"
 msgstr "Kanalzustand auf Servicezustand abbilden"
 
+#, fuzzy
+msgid "Map combinations of operational and admin state"
+msgstr "Betriebszustände abbilden"
+
+msgid ""
+"Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+"admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+"for example configure that an interface which is down <i>and</i> admin down "
+"should be considered OK. Such a setting will only apply to interfaces "
+"matching the operational <i>and</i> the admin state. For example, an "
+"interface which is down but admin up would not be affected. "
+msgstr ""
+
 msgid "Map data relating to VMs"
 msgstr "Daten von VMs zuordnen"
 
@@ -28633,6 +28666,10 @@ msgstr "Systemd Zustände auf Überwachungszustände abbilden"
 
 msgid "Map mount point names"
 msgstr "Einhängepunktnamen zuordnen"
+
+#, fuzzy
+msgid "Map operational and admin state independently"
+msgstr "Betriebszustände abbilden"
 
 msgid "Map operational states"
 msgstr "Betriebszustände abbilden"
@@ -28679,6 +28716,10 @@ msgid "Mapping of LED color to monitoring state"
 msgstr "Zuordnung der LED-Farbe zum Monitoringzustand"
 
 msgid "Mapping of MTree state to monitoring state"
+msgstr "Zuordnung MTree-Status -- Monitoring-Status"
+
+#, fuzzy
+msgid "Mapping of operational and admin state to monitoring state"
 msgstr "Zuordnung MTree-Status -- Monitoring-Status"
 
 msgid "March"
@@ -35247,6 +35288,9 @@ msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 msgid "Please add at least one column to your view."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
 
+msgid "Please add the hostname here, eg. my_influxdb.com."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr ""
 "Bitte kreuzen Sie eine Metrik an, die Sie für eine Transformation verwenden "
@@ -35868,10 +35912,6 @@ msgstr "Portindex oder 'Total'"
 
 msgid "Port number"
 msgstr "Portnummer"
-
-#, fuzzy
-msgid "Port number for HTTPS connection to InfluxDB."
-msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
 
 msgid "Port number for HTTPS connection to vSphere"
 msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
@@ -53360,6 +53400,10 @@ msgstr "Farben der Zeitleiste:"
 msgid "Timeline of"
 msgstr "Zeitleiste von"
 
+#, fuzzy, python-format
+msgid "Timeline of %s"
+msgstr "Zeitleiste von"
+
 msgid "Timemachine backup age"
 msgstr "Alter der Timemachine-Sicherung"
 
@@ -54450,10 +54494,6 @@ msgid "URL prefix for links to Checkmk"
 msgstr "URL-Präfix für Links zu Checkmk"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
-
-#, fuzzy
-msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
 
 msgid ""
@@ -56965,6 +57005,10 @@ msgstr "Von diesem Gerät zu sammelnde Werte"
 
 msgid "Vanished"
 msgstr "Verschwunden"
+
+#, fuzzy
+msgid "Vanished (checked, but no longer exist)"
+msgstr "Verschwundene Services (überwacht aber nicht mehr vorhanden)"
 
 msgid "Vanished clustered services (located on cluster host)"
 msgstr "Verschwundene geclusterte Dienste (auf dem Cluster-Host)"
@@ -60453,6 +60497,11 @@ msgstr ""
 "einem Service passen, wird der Service zur ersten passenden Gruppe "
 "hinzugefügt."
 
+msgid ""
+"You can use this ruleset to exclude or include the metrics of specific "
+"services."
+msgstr ""
+
 #, python-format
 msgid ""
 "You can use, modify and distribute Check_MK under the terms of the <a href="
@@ -63156,6 +63205,14 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~ msgid "Port number for HTTPS connection to InfluxDB."
+#~ msgstr "Portnummer für HTTPS-Verbindung zu vSphere"
+
+#, fuzzy
+#~ msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
+#~ msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
 
 #, fuzzy
 #~ msgid ""
@@ -70028,14 +70085,8 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Automatic Agent Updates"
 #~ msgstr "Automatische Agentupdates"
 
-#~ msgid "Available (missing) services"
-#~ msgstr "Verfügbare (fehlende) Services"
-
 #~ msgid "Create rule to permanently disable this service"
 #~ msgstr "Regel anlegen, um diesen Service permanent zu deaktivieren"
-
-#~ msgid "Disabled services (configured away by admin)"
-#~ msgstr "Deaktivierte Services (vom Admin wegkonfiguriert)"
 
 #~ msgid "Manual services (defined in main.mk)"
 #~ msgstr "Manuelle Services (aus main.mk)"
@@ -70145,9 +70196,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Move this rule to the top"
 #~ msgstr "Regel ganz nach oben verschieben"
-
-#~ msgid "Timeline of "
-#~ msgstr "Zeitleiste von"
 
 #~ msgid "Changed order of rules in ruleset %s"
 #~ msgstr "Reihenfolge von Regeln in Regelsatz %s geändert"

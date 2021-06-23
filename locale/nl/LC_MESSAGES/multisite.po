@@ -3750,6 +3750,10 @@ msgstr "Adhoc voor %d minuten"
 msgid "Admin"
 msgstr "Admin"
 
+#, fuzzy
+msgid "Admin state"
+msgstr "Beheerder"
+
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr "Admin status (alleen SNMP met 64-bit tellers)"
 
@@ -6060,6 +6064,10 @@ msgstr "Beschikbaarheidstabel"
 
 msgid "Available"
 msgstr "Beschikbaar"
+
+#, fuzzy
+msgid "Available (missing)"
+msgstr "Needed variable missing"
 
 msgid "Available Spare"
 msgstr "Beschikbare reserve"
@@ -11118,6 +11126,10 @@ msgstr ""
 "Kon Livestatus Proxy niet herladen: %s. Zie web.log en liveproxyd.log voor "
 "meer informatie."
 
+#, fuzzy, python-format
+msgid "Could not render: %r"
+msgstr "Kon wijzigingen niet opslaan: %s"
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Kon wijzigingen niet opslaan: %s"
@@ -14182,6 +14194,10 @@ msgstr "Uitgeschakeld "
 #, python-format
 msgid "Disabled %s are kept in the configuration but are not active."
 msgstr ""
+
+#, fuzzy
+msgid "Disabled (configured away by admin)"
+msgstr "Externe configuratie uitschakelen"
 
 msgid "Disabled active checks"
 msgstr "Uitgeschakelde actieve controles"
@@ -24665,6 +24681,10 @@ msgid "InfluxDB connections"
 msgstr "Onbelaste verbindingen"
 
 #, fuzzy
+msgid "InfluxDB instance"
+msgstr "DB-instanties"
+
+#, fuzzy
 msgid "InfluxDB service rules"
 msgstr "Dienstengroepen uitsluiten"
 
@@ -28583,6 +28603,19 @@ msgstr "Kaart automatisch krimpen status"
 msgid "Map channel state to service state"
 msgstr "Map kanaal toestand naar dienst toestand"
 
+#, fuzzy
+msgid "Map combinations of operational and admin state"
+msgstr "Kaart operationele staten"
+
+msgid ""
+"Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+"admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+"for example configure that an interface which is down <i>and</i> admin down "
+"should be considered OK. Such a setting will only apply to interfaces "
+"matching the operational <i>and</i> the admin state. For example, an "
+"interface which is down but admin up would not be affected. "
+msgstr ""
+
 msgid "Map data relating to VMs"
 msgstr "Kaartgegevens met betrekking tot VM's"
 
@@ -28616,6 +28649,10 @@ msgstr "Map systemd states naar monitoring states"
 
 msgid "Map mount point names"
 msgstr "Map mount punt namen"
+
+#, fuzzy
+msgid "Map operational and admin state independently"
+msgstr "Kaart operationele staten"
 
 msgid "Map operational states"
 msgstr "Kaart operationele staten"
@@ -28661,6 +28698,10 @@ msgid "Mapping of LED color to monitoring state"
 msgstr "In kaart brengen van LED-kleur naar bewakingstoestand"
 
 msgid "Mapping of MTree state to monitoring state"
+msgstr "Mapping van MTree-status naar bewakingstoestand"
+
+#, fuzzy
+msgid "Mapping of operational and admin state to monitoring state"
 msgstr "Mapping van MTree-status naar bewakingstoestand"
 
 msgid "March"
@@ -35215,6 +35256,9 @@ msgstr "Voeg ten minste één kindknooppunt toe."
 msgid "Please add at least one column to your view."
 msgstr "Voeg ten minste één kolom toe aan je uitzicht."
 
+msgid "Please add the hostname here, eg. my_influxdb.com."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr "Gelieve een metriek aan te vinken die u wilt omvormen"
 
@@ -35817,10 +35861,6 @@ msgstr "Havenindex of \"Totaal"
 
 msgid "Port number"
 msgstr "Poortnummer"
-
-#, fuzzy
-msgid "Port number for HTTPS connection to InfluxDB."
-msgstr "Poortnummer voor HTTPS-verbinding met vSphere"
 
 msgid "Port number for HTTPS connection to vSphere"
 msgstr "Poortnummer voor HTTPS-verbinding met vSphere"
@@ -53367,6 +53407,10 @@ msgstr "Tijdlijn kleuren:"
 msgid "Timeline of"
 msgstr "Tijdlijn van"
 
+#, fuzzy, python-format
+msgid "Timeline of %s"
+msgstr "Tijdlijn van"
+
 msgid "Timemachine backup age"
 msgstr "Timemachine back-up leeftijd"
 
@@ -54458,10 +54502,6 @@ msgid "URL prefix for links to Checkmk"
 msgstr "URL prefix voor links naar Checkmk"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL naar HiveManagerNG, b.v. https://cloud.aerohive.com"
-
-#, fuzzy
-msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr "URL naar HiveManagerNG, b.v. https://cloud.aerohive.com"
 
 msgid ""
@@ -56956,6 +56996,10 @@ msgstr "Waarden af te halen van dit apparaat"
 
 msgid "Vanished"
 msgstr "Verdwenen"
+
+#, fuzzy
+msgid "Vanished (checked, but no longer exist)"
+msgstr "Verdwenen diensten (gecontroleerd, maar bestaan niet meer)"
 
 msgid "Vanished clustered services (located on cluster host)"
 msgstr "Verdwenen geclusterde diensten (gelokaliseerd op cluster host)"
@@ -60475,6 +60519,11 @@ msgstr ""
 "overeenkomen met een dienst, zal de dienst worden toegevoegd aan de eerste "
 "overeenkomende groep."
 
+msgid ""
+"You can use this ruleset to exclude or include the metrics of specific "
+"services."
+msgstr ""
+
 #, python-format
 msgid ""
 "You can use, modify and distribute Check_MK under the terms of the <a href="
@@ -63163,6 +63212,14 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~ msgid "Port number for HTTPS connection to InfluxDB."
+#~ msgstr "Poortnummer voor HTTPS-verbinding met vSphere"
+
+#, fuzzy
+#~ msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
+#~ msgstr "URL naar HiveManagerNG, b.v. https://cloud.aerohive.com"
 
 #~ msgid "Unsupported context type '%s'"
 #~ msgstr "Niet-ondersteund context type '%s'"

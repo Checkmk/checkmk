@@ -3748,6 +3748,10 @@ msgstr "Adhoc por %d minutos"
 msgid "Admin"
 msgstr "Admin"
 
+#, fuzzy
+msgid "Admin state"
+msgstr "Administrador"
+
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr "Estado de administração (SNMP com contadores de 64 bits apenas)"
 
@@ -6062,6 +6066,10 @@ msgstr "Tabela de disponibilidade"
 
 msgid "Available"
 msgstr "Disponível em"
+
+#, fuzzy
+msgid "Available (missing)"
+msgstr "Variável necessária em falta"
 
 msgid "Available Spare"
 msgstr "Sobressalentes disponíveis"
@@ -11130,6 +11138,10 @@ msgstr ""
 "Não foi possível recarregar o Livestatus Proxy: %s. Veja web.log e "
 "liveproxyd.log para mais informações."
 
+#, fuzzy, python-format
+msgid "Could not render: %r"
+msgstr "Não foi possível salvar as mudanças: %s"
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "Não foi possível salvar as mudanças: %s"
@@ -14202,6 +14214,10 @@ msgstr "Deficiente "
 msgid "Disabled %s are kept in the configuration but are not active."
 msgstr ""
 "Os %s desabilitados são mantidos na configuração, mas não estão ativos."
+
+#, fuzzy
+msgid "Disabled (configured away by admin)"
+msgstr "Desactivar a configuração remota"
 
 msgid "Disabled active checks"
 msgstr "Verificações ativas para deficientes"
@@ -24672,6 +24688,10 @@ msgid "InfluxDB connections"
 msgstr "Conexões ociosas"
 
 #, fuzzy
+msgid "InfluxDB instance"
+msgstr "instâncias do BD"
+
+#, fuzzy
 msgid "InfluxDB service rules"
 msgstr "Excluir grupos de serviços"
 
@@ -28599,6 +28619,19 @@ msgstr "Mapa auto encolhimento status"
 msgid "Map channel state to service state"
 msgstr "Mapa de canal estado a estado de serviço"
 
+#, fuzzy
+msgid "Map combinations of operational and admin state"
+msgstr "Mapa estados operacionais"
+
+msgid ""
+"Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+"admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+"for example configure that an interface which is down <i>and</i> admin down "
+"should be considered OK. Such a setting will only apply to interfaces "
+"matching the operational <i>and</i> the admin state. For example, an "
+"interface which is down but admin up would not be affected. "
+msgstr ""
+
 msgid "Map data relating to VMs"
 msgstr "Dados do mapa relativos aos VMs"
 
@@ -28632,6 +28665,10 @@ msgstr "Mapear os estados do sistema para monitorar os estados"
 
 msgid "Map mount point names"
 msgstr "Nomes dos pontos de montagem no mapa"
+
+#, fuzzy
+msgid "Map operational and admin state independently"
+msgstr "Mapa estados operacionais"
 
 msgid "Map operational states"
 msgstr "Mapa estados operacionais"
@@ -28678,6 +28715,10 @@ msgid "Mapping of LED color to monitoring state"
 msgstr "Mapeamento da cor do LED para o estado de monitoramento"
 
 msgid "Mapping of MTree state to monitoring state"
+msgstr "Mapeamento do estado de MTree para o estado de monitoramento"
+
+#, fuzzy
+msgid "Mapping of operational and admin state to monitoring state"
 msgstr "Mapeamento do estado de MTree para o estado de monitoramento"
 
 msgid "March"
@@ -35240,6 +35281,9 @@ msgstr "Por favor, acrescente pelo menos um nó de criança."
 msgid "Please add at least one column to your view."
 msgstr "Por favor, adicione pelo menos uma coluna à sua vista."
 
+msgid "Please add the hostname here, eg. my_influxdb.com."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr ""
 "Por favor, verifique uma métrica que você deseja aplicar uma transformação"
@@ -35855,10 +35899,6 @@ msgstr "Índice de portos ou 'Total'."
 
 msgid "Port number"
 msgstr "Número da porta"
-
-#, fuzzy
-msgid "Port number for HTTPS connection to InfluxDB."
-msgstr "Número de porta para conexão HTTPS à vSphere"
 
 msgid "Port number for HTTPS connection to vSphere"
 msgstr "Número de porta para conexão HTTPS à vSphere"
@@ -53346,6 +53386,10 @@ msgstr "Cores da linha do tempo:"
 msgid "Timeline of"
 msgstr "Linha do tempo de"
 
+#, fuzzy, python-format
+msgid "Timeline of %s"
+msgstr "Linha do tempo de"
+
 msgid "Timemachine backup age"
 msgstr "Era de backup da Timemachine"
 
@@ -54431,10 +54475,6 @@ msgid "URL prefix for links to Checkmk"
 msgstr "Prefixo URL para links para Checkmk"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
-
-#, fuzzy
-msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
 
 msgid ""
@@ -56924,6 +56964,10 @@ msgstr "Valores a serem buscados neste dispositivo"
 
 msgid "Vanished"
 msgstr "Desapareceu"
+
+#, fuzzy
+msgid "Vanished (checked, but no longer exist)"
+msgstr "Serviços desaparecidos (monitorados, mas que já não existem)"
 
 msgid "Vanished clustered services (located on cluster host)"
 msgstr "Serviços em cluster desaparecidos (localizados em cluster host)"
@@ -60430,6 +60474,11 @@ msgstr ""
 "um serviço não serão prestados. Se vários padrões corresponderem a um "
 "serviço, o serviço será adicionado ao primeiro grupo correspondente."
 
+msgid ""
+"You can use this ruleset to exclude or include the metrics of specific "
+"services."
+msgstr ""
+
 #, python-format
 msgid ""
 "You can use, modify and distribute Check_MK under the terms of the <a href="
@@ -63118,6 +63167,14 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~ msgid "Port number for HTTPS connection to InfluxDB."
+#~ msgstr "Número de porta para conexão HTTPS à vSphere"
+
+#, fuzzy
+#~ msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
+#~ msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
 
 #~ msgid "Unsupported context type '%s'"
 #~ msgstr "Contexto não suportado tipo '%s"

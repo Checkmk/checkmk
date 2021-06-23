@@ -3594,6 +3594,10 @@ msgstr "アドホック %d 分間"
 msgid "Admin"
 msgstr "管理者"
 
+#, fuzzy
+msgid "Admin state"
+msgstr "管理者"
+
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr ""
 
@@ -5813,6 +5817,10 @@ msgstr "可用性テーブル"
 
 msgid "Available"
 msgstr "利用可能"
+
+#, fuzzy
+msgid "Available (missing)"
+msgstr "必要な変数がありません"
 
 msgid "Available Spare"
 msgstr "利用可能なスペア"
@@ -10666,6 +10674,10 @@ msgstr ""
 "Livestatusプロキシをリロードできませんでした:%s。詳細については、web.logおよ"
 "びliveproxyd.logを参照してください。"
 
+#, fuzzy, python-format
+msgid "Could not render: %r"
+msgstr "変更を保存できませんでした: %s"
+
 #, python-format
 msgid "Could not save changes: %s"
 msgstr "変更を保存できませんでした: %s"
@@ -13670,6 +13682,10 @@ msgstr "無効 "
 #, python-format
 msgid "Disabled %s are kept in the configuration but are not active."
 msgstr "無効にされた %sは構成に保持されますが、アクティブではありません。"
+
+#, fuzzy
+msgid "Disabled (configured away by admin)"
+msgstr "リモート構成を無効にする"
 
 msgid "Disabled active checks"
 msgstr "アクティブチェックを無効にしました"
@@ -23705,6 +23721,10 @@ msgstr ""
 msgid "InfluxDB connections"
 msgstr ""
 
+#, fuzzy
+msgid "InfluxDB instance"
+msgstr "DBインスタンス"
+
 msgid "InfluxDB service rules"
 msgstr ""
 
@@ -27515,6 +27535,19 @@ msgstr "自動縮小ステータスをマップします"
 msgid "Map channel state to service state"
 msgstr "チャネル状態をサービス状態にマップします"
 
+#, fuzzy
+msgid "Map combinations of operational and admin state"
+msgstr "運用状態のマップ"
+
+msgid ""
+"Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+"admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+"for example configure that an interface which is down <i>and</i> admin down "
+"should be considered OK. Such a setting will only apply to interfaces "
+"matching the operational <i>and</i> the admin state. For example, an "
+"interface which is down but admin up would not be affected. "
+msgstr ""
+
 msgid "Map data relating to VMs"
 msgstr "VMsに関連するマップデータ"
 
@@ -27548,6 +27581,10 @@ msgstr "systemdの状態を監視状態にマップする"
 
 msgid "Map mount point names"
 msgstr "マウントポイント名をマップします"
+
+#, fuzzy
+msgid "Map operational and admin state independently"
+msgstr "運用状態のマップ"
 
 msgid "Map operational states"
 msgstr "運用状態のマップ"
@@ -27590,6 +27627,10 @@ msgid "Mapping of LED color to monitoring state"
 msgstr "LEDカラーのモニタリング状態へのマッピング"
 
 msgid "Mapping of MTree state to monitoring state"
+msgstr "MTree状態の監視状態へのマッピング"
+
+#, fuzzy
+msgid "Mapping of operational and admin state to monitoring state"
 msgstr "MTree状態の監視状態へのマッピング"
 
 msgid "March"
@@ -34000,6 +34041,9 @@ msgstr "少なくとも1つの子ノードを追加してください。"
 msgid "Please add at least one column to your view."
 msgstr "ビューに少なくとも1つの列を追加してください。"
 
+msgid "Please add the hostname here, eg. my_influxdb.com."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr "変換を適用する1つの指標を確認してください"
 
@@ -34564,9 +34608,6 @@ msgstr "ポートインデックスまたは\"合計\""
 
 msgid "Port number"
 msgstr "ポート番号"
-
-msgid "Port number for HTTPS connection to InfluxDB."
-msgstr ""
 
 msgid "Port number for HTTPS connection to vSphere"
 msgstr "vSphereへのHTTPS接続のポート番号"
@@ -50944,6 +50985,10 @@ msgstr "タイムラインの色:"
 msgid "Timeline of"
 msgstr "のタイムライン"
 
+#, fuzzy, python-format
+msgid "Timeline of %s"
+msgstr "のタイムライン"
+
 msgid "Timemachine backup age"
 msgstr "タイムマシンのバックアップ経過日数"
 
@@ -52015,9 +52060,6 @@ msgstr "CheckmkへのリンクのURLプレフィックス"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
-
-msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
-msgstr ""
 
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
@@ -54409,6 +54451,10 @@ msgstr "このデバイスからフェッチする値"
 
 msgid "Vanished"
 msgstr "消えた"
+
+#, fuzzy
+msgid "Vanished (checked, but no longer exist)"
+msgstr "消滅したサービス(監視されていますが、存在しません)"
 
 msgid "Vanished clustered services (located on cluster host)"
 msgstr "消失したクラスター化サービス(クラスターホスト上にあります)"
@@ -57612,6 +57658,11 @@ msgid ""
 "will be folded together. Groups of only one service will not be rendered. If "
 "multiple patterns match a service, the service will be added to the first "
 "matching group."
+msgstr ""
+
+msgid ""
+"You can use this ruleset to exclude or include the metrics of specific "
+"services."
 msgstr ""
 
 #, python-format

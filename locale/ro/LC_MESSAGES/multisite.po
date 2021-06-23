@@ -3565,6 +3565,10 @@ msgstr "Adhoc pentru %d minute"
 msgid "Admin"
 msgstr ""
 
+#, fuzzy
+msgid "Admin state"
+msgstr "Nume Administrator:"
+
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr ""
 
@@ -5726,6 +5730,10 @@ msgstr ""
 
 msgid "Available"
 msgstr ""
+
+#, fuzzy
+msgid "Available (missing)"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Available Spare"
@@ -10537,6 +10545,10 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "Could not render: %r"
+msgstr ""
+
+#, python-format
 msgid "Could not save changes: %s"
 msgstr ""
 
@@ -13686,6 +13698,10 @@ msgstr "(dezactivat)"
 #, python-format
 msgid "Disabled %s are kept in the configuration but are not active."
 msgstr ""
+
+#, fuzzy
+msgid "Disabled (configured away by admin)"
+msgstr "foloseste configuratia locala"
 
 #, fuzzy
 msgid "Disabled active checks"
@@ -23258,6 +23274,10 @@ msgstr "Conexiuni Active"
 msgid "InfluxDB connections"
 msgstr "Conexiune Noua"
 
+#, fuzzy
+msgid "InfluxDB instance"
+msgstr "Adaugă instanță NGINX"
+
 # georgem ##############
 #, fuzzy
 msgid "InfluxDB service rules"
@@ -27290,6 +27310,19 @@ msgstr ""
 msgid "Map channel state to service state"
 msgstr " pe siteul de monitorizare: "
 
+#, fuzzy
+msgid "Map combinations of operational and admin state"
+msgstr "Optiuni tabel"
+
+msgid ""
+"Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
+"admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
+"for example configure that an interface which is down <i>and</i> admin down "
+"should be considered OK. Such a setting will only apply to interfaces "
+"matching the operational <i>and</i> the admin state. For example, an "
+"interface which is down but admin up would not be affected. "
+msgstr ""
+
 msgid "Map data relating to VMs"
 msgstr ""
 
@@ -27327,6 +27360,10 @@ msgstr " pe siteul de monitorizare: "
 #, fuzzy
 msgid "Map mount point names"
 msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Map operational and admin state independently"
+msgstr "Optiuni tabel"
 
 #, fuzzy
 msgid "Map operational states"
@@ -27377,6 +27414,10 @@ msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Mapping of MTree state to monitoring state"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Mapping of operational and admin state to monitoring state"
 msgstr " pe siteul de monitorizare: "
 
 msgid "March"
@@ -34113,6 +34154,9 @@ msgstr ""
 msgid "Please add at least one column to your view."
 msgstr ""
 
+msgid "Please add the hostname here, eg. my_influxdb.com."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr ""
 
@@ -34620,10 +34664,6 @@ msgstr ""
 #, fuzzy
 msgid "Port number"
 msgstr "Portul TCO"
-
-#, fuzzy
-msgid "Port number for HTTPS connection to InfluxDB."
-msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 #, fuzzy
 msgid "Port number for HTTPS connection to vSphere"
@@ -49916,6 +49956,10 @@ msgstr ""
 msgid "Timeline of"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Timeline of %s"
+msgstr "Portul TCP pentru conexiune"
+
 #, fuzzy
 msgid "Timemachine backup age"
 msgstr "Adaugă element"
@@ -51063,9 +51107,6 @@ msgid "URL prefix for links to Checkmk"
 msgstr ""
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
-msgstr ""
-
-msgid "URL to InfluxDB, e.g. https://my_influxdb.com"
 msgstr ""
 
 msgid ""
@@ -53480,6 +53521,9 @@ msgid "Values to fetch from this device"
 msgstr ""
 
 msgid "Vanished"
+msgstr ""
+
+msgid "Vanished (checked, but no longer exist)"
 msgstr ""
 
 msgid "Vanished clustered services (located on cluster host)"
@@ -56218,6 +56262,11 @@ msgid ""
 "matching group."
 msgstr ""
 
+msgid ""
+"You can use this ruleset to exclude or include the metrics of specific "
+"services."
+msgstr ""
+
 #, python-format
 msgid ""
 "You can use, modify and distribute Check_MK under the terms of the <a href="
@@ -58844,6 +58893,10 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Port number for HTTPS connection to InfluxDB."
+#~ msgstr "TCP port pentru conexiunile la agentul Check_MK"
+
+#, fuzzy
 #~ msgid "Full service scan"
 #~ msgstr "servicii"
 
@@ -61053,10 +61106,6 @@ msgstr ""
 #~ msgstr "Vizibilitatea Elementelor/Serviciilor"
 
 #, fuzzy
-#~ msgid "Available (missing) services"
-#~ msgstr "spatiu utilizat"
-
-#, fuzzy
 #~ msgid "Averate requests per connection"
 #~ msgstr "cereri/sec"
 
@@ -61200,10 +61249,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Deleted notification rule %d"
 #~ msgstr "%d reguli de notificări globale"
-
-#, fuzzy
-#~ msgid "Disabled services (configured away by admin)"
-#~ msgstr "foloseste configuratia locala"
 
 #, fuzzy
 #~ msgid "Disk I/O Operations"
@@ -61847,10 +61892,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "This snapshot is broken"
 #~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Timeline of "
-#~ msgstr "Portul TCP pentru conexiune"
 
 #, fuzzy
 #~ msgid "Timeout between retries"

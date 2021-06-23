@@ -491,14 +491,16 @@ def _access_info():
 
 
 def test_cmciii_access_discovery(discovery_params):
-    assert run_discovery('cmciii', 'cmciii_access', _access_info()) == [
+    assert run_discovery('cmciii', 'cmciii_access', _access_info(), {}) == [
         Service(item='Tuer_GN-31-F Access', parameters={'_item_key': 'Tuer_GN-31-F Access'})
     ]
 
 
 def test_cmciii_access_check():
     assert run_check('cmciii', 'cmciii_access', "Tuer_GN-31-F Access", _access_info()) == [
-        Result(state=State.OK, summary='Access: Closed, Delay: 5 s, Sensitivity: 2.0')
+        Result(state=State.OK, summary='Access: Closed'),
+        Result(state=State.OK, summary='Delay: 5 s'),
+        Result(state=State.OK, summary='Sensitivity: 2.0'),
     ]
 
 
@@ -764,7 +766,7 @@ def _generictest_cmciii():
     ),
     (
         'cmciii_access',
-        None,
+        {},
         [Service(item='CMC-PU Access', parameters={'_item_key': 'CMC-PU Access'})],
     ),
     (
@@ -854,8 +856,11 @@ def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expec
     (
         'cmciii_access',
         {},
-        [('CMC-PU Access',
-          [Result(state=State.CRIT, summary='Door: Inactive, Delay: 10 s, Sensitivity: 0.0')])],
+        [('CMC-PU Access', [
+            Result(state=State.CRIT, summary='Door: Inactive'),
+            Result(state=State.OK, summary='Delay: 10 s'),
+            Result(state=State.OK, summary='Sensitivity: 0.0'),
+        ])],
     ),
     (
         'cmciii_temp',
@@ -1020,7 +1025,7 @@ def _generictest_cmciii_input_regression():
             Service(item='Doors Input', parameters={'_item_key': 'Doors Input'}),
         ],
     ),
-    ('cmciii_access', None, []),
+    ('cmciii_access', {}, []),
     ('cmciii_temp', {}, []),
     ('cmciii_temp_in_out', {}, []),
     ('cmciii_can_current', {}, []),

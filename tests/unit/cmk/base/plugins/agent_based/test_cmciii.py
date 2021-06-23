@@ -477,6 +477,31 @@ def test_cmciii_status_sensors(discovery_params, variable, status, expected):
                      _status_info(variable, status)) == expected
 
 
+def _access_info():
+    return [
+        [['3', 'CMCIII-GRF', 'Tuer GN-31-F', '2']],
+        [['3.1', 'Access.DescName', '1', '', '0', 'Access', '0'],
+         ['3.2', 'Access.Command', '81', '', '0', 'Open', '6'],
+         ['3.3', 'Access.Value', '2', '', '1', '0', '0'],
+         ['3.4', 'Access.Sensitivity', '30', '', '1', '2', '2'],
+         ['3.5', 'Access.Delay', '21', 's', '1', '5 s', '5'],
+         ['3.6', 'Access.Status', '7', '', '0', 'Closed', '13'],
+         ['3.7', 'Access.Category', '14', '', '0', '0', '0']],
+    ]  # yapf: disable
+
+
+def test_cmciii_access_discovery(discovery_params):
+    assert run_discovery('cmciii', 'cmciii_access', _access_info()) == [
+        Service(item='Tuer_GN-31-F Access', parameters={'_item_key': 'Tuer_GN-31-F Access'})
+    ]
+
+
+def test_cmciii_access_check():
+    assert run_check('cmciii', 'cmciii_access', "Tuer_GN-31-F Access", _access_info()) == [
+        Result(state=State.OK, summary='Access: Closed, Delay: 5 s, Sensitivity: 2.0')
+    ]
+
+
 def _generictest_cmciii():
     return [
         [

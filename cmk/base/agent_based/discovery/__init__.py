@@ -284,7 +284,7 @@ def automation_discovery(
     service_filters: Optional[_ServiceFilters],
     on_error: OnError,
     use_cached_snmp_data: bool,
-    max_cachefile_age: int,
+    max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -317,7 +317,7 @@ def automation_discovery(
             ip_address=ipaddress,
             mode=Mode.DISCOVERY,
             selected_sections=NO_SELECTION,
-            file_cache_max_age=config.max_cachefile_age(discovery=max_cachefile_age),
+            file_cache_max_age=max_cachefile_age,
             fetcher_messages=(),
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
@@ -786,7 +786,7 @@ def _discover_marked_host(
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
         # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=600,
+        max_cachefile_age=config.max_cachefile_age(discovery=600),
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain
@@ -1098,7 +1098,7 @@ def _cluster_service_entry(
 def get_check_preview(
     *,
     host_name: HostName,
-    max_cachefile_age: int,
+    max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
 ) -> Tuple[CheckPreviewTable, QualifiedDiscovery[HostLabel]]:
@@ -1117,7 +1117,7 @@ def get_check_preview(
         host_config=host_config,
         ip_address=ip_address,
         mode=Mode.DISCOVERY,
-        file_cache_max_age=config.max_cachefile_age(discovery=max_cachefile_age),
+        file_cache_max_age=max_cachefile_age,
         selected_sections=NO_SELECTION,
         fetcher_messages=(),
         force_snmp_cache_refresh=not use_cached_snmp_data,

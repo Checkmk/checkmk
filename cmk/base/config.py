@@ -1402,10 +1402,6 @@ _all_checks_loaded = False
 service_rule_groups = {"temperature"}
 
 
-def discovery_max_cachefile_age() -> int:
-    return inventory_max_cachefile_age
-
-
 def max_cachefile_age(
     *,
     checking: Optional[int] = None,
@@ -1413,7 +1409,8 @@ def max_cachefile_age(
 ) -> cache_file.MaxAge:
     return cache_file.MaxAge(
         checking=check_max_cachefile_age if checking is None else checking,
-        discovery=discovery_max_cachefile_age() if discovery is None else discovery,
+        # inventory_max_cachefile_age next line: *not a typo*
+        discovery=inventory_max_cachefile_age if discovery is None else discovery,
     )
 
 

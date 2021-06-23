@@ -161,7 +161,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters=None,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
-                max_cachefile_age=config.discovery_max_cachefile_age(),
+                max_cachefile_age=config.max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
@@ -228,7 +228,7 @@ class AutomationTryDiscovery(Automation):
 
         return discovery.get_check_preview(
             host_name=args[0],
-            max_cachefile_age=config.discovery_max_cachefile_age(),
+            max_cachefile_age=config.max_cachefile_age(),
             use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )

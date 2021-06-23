@@ -313,34 +313,10 @@ def _check_inodes(
         yield Result(state=inode_result.state, notice=inodes_info)
 
 
-def transform_filesystem_groups(groups):
-    """
-    Old format:
-    [(group_name, include_pattern), (group_name, include_pattern), ...]
-    New format:
-    [{group_name: name,
-      patterns_include: [include_pattern, include_pattern, ...],
-      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-     {group_name: name,
-      patterns_include: [include_pattern, include_pattern, ...],
-      patterns_exclude: [exclude_pattern, exclude_pattern, ...]},
-     ...]
-    """
-    if not groups or isinstance(groups[0], dict):
-        yield from groups
-        return
-    for group_name, include_pattern in groups:
-        yield {
-            'group_name': group_name,
-            'patterns_include': [include_pattern],
-            'patterns_exclude': [],
-        }
-
-
 def df_discovery(params, mplist):
     group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
     for groups in params:
-        for group in transform_filesystem_groups(groups):
+        for group in groups:
             grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))
             grouping_entry[0].extend(group['patterns_include'])
             grouping_entry[1].extend(group['patterns_exclude'])

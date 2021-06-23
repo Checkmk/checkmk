@@ -34,10 +34,6 @@ def AGENT_LIST = get_agent_list(EDITION)
 def AGENT_BUILDS= [:]
 def DISTRO_LIST = DISTROS.split(' ');
 
-// We don't have the "versioning" library here. For this reason we can not use versioning.select_docker_tag.
-// Always use the default docker tag we got from the environment.
-def BUILD_IMAGE_NAME = 'ubuntu-20.04:' + DOCKER_TAG_DEFAULT
-
 println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS + '\nUse package cache: ' + USE_OMD_PACKAGE_CACHE
 
@@ -74,21 +70,33 @@ def SOURCE_DIR = ''
 // MAIN
 //
 node(NODE) {
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS) {
-            stage('Cleanup work directories') {
-                clean_workpace()
-            }
+    // this is a temporary™ workaround for a henne-ei-problem regarding file permissions
+    // the `catch` block will chmod all of `$WORKSPACE` to give write permissions in order
+    // make the cleanup step work.
+    // A clean™ solution would not require any build step to be done as root and thus not
+    // leaving files behind owned by root.
+    try { // intentionally no extra indentation
 
-            stage('Checkout sources') {
-                dir("${WORKSPACE}/git") {
-                    checkout_git(scm, VERSION)
-                    // Load libraries
-                    versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-                    windows = load 'buildscripts/scripts/lib/windows.groovy'
-                    str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-                    notify = load 'buildscripts/scripts/lib/notify.groovy'
-                    upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
+    stage('Cleanup work directories') {
+        /// takes place as regular Jenkins user - can't deal with root's files
+        sh('rm -rf ${WORKSPACE}/*')
+    }
+
+    stage('Checkout sources') {
+        /// takes place as regular Jenkins user
+        dir("${WORKSPACE}/git") {
+            checkout_git(scm, VERSION)
+            // Load libraries
+            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+            windows = load 'buildscripts/scripts/lib/windows.groovy'
+            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
+            notify = load 'buildscripts/scripts/lib/notify.groovy'
+            upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
+
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_BASE_ARGS) {
+
                     withFolderProperties{
                         DOCKER_TAG = versioning.select_docker_tag(BRANCH, DOCKER_TAG_BUILD, DOCKER_TAG_DEFAULT)
                     }
@@ -131,7 +139,8 @@ node(NODE) {
                     }
                     else if (EDITION != 'raw') {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
+                            def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                            BUILD_IMAGE.inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
                                 build_linux_agent_updater(AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
                             }
                         }
@@ -140,11 +149,13 @@ node(NODE) {
             }
             parallel AGENT_BUILDS
         }
-    }catch(Exception e) {
+    } catch(Exception e) {
         notify.notify_error(e)
     }
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+
+        BUILD_IMAGE.inside(DOCKER_ARGS) {
             prepare_archive_dir(ARCHIVE_DIR, CMK_VERS)
             create_source_package(WORKSPACE, CMK_VERS)
 
@@ -194,7 +205,8 @@ node(NODE) {
                             }
                         }
 
-                        docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+                        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                        BUILD_IMAGE.inside(DOCKER_ARGS) {
                             def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                             def FINAL_PACKAGE_PATH = ARCHIVE_DIR + "/" + PACKAGE_NAME
@@ -219,26 +231,33 @@ node(NODE) {
             }
         }
         parallel PACKAGE_BUILDS
-    }catch(Exception e) {
+    } catch(Exception e) {
         notify.notify_error(e)
-    }finally {
+    } finally {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+            def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+            BUILD_IMAGE.inside(DOCKER_ARGS) {
                 upload_artifacts.create_and_upload_hashes(ARCHIVE_DIR, scm, shall_publish_package(scm, JOB_BASE_NAME), UPLOAD_DEST, CMK_VERS)
             }
-        }
-        if (shall_publish_package(scm, JOB_BASE_NAME)) {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_ARGS) {
+            if (shall_publish_package(scm, JOB_BASE_NAME)) {
+                //def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.deploy_to_website(UPLOAD_URL, CMK_VERS)
                 }
-            }
-        } else {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker.image(BUILD_IMAGE_NAME).inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
+            } else {
+                // def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                BUILD_IMAGE.inside(DOCKER_BASE_ARGS + " -v /tmp:/tmp") {
                     sh("rm -rf ${ARCHIVE_DIR}")
                 }
             }
+        }
+    }
+    } finally {
+        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+        BUILD_IMAGE.inside(DOCKER_ARGS) {
+            println(">>>>>>> clean WORKSPACE=${WORKSPACE}")
+            sh('chmod -R a+r+w "${WORKSPACE}"')
+            println("<<<<<<< clean WORKSPACE")
         }
     }
 }
@@ -453,10 +472,6 @@ def test_package(PACKAGE_PATH, NAME, WORKSPACE, CMK_VERS) {
             step([$class: 'JUnitResultArchiver', testResults: 'junit-' + NAME + '.xml'])
         }
     }
-}
-
-def clean_workpace() {
-    sh('rm -rf ${WORKSPACE}/*')
 }
 
 def clean_venv() {

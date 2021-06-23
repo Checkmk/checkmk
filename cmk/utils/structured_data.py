@@ -49,10 +49,10 @@ SDNodes = Dict[SDNodeName, "Node"]
 SDChild = Union["Container", "Numeration", "Attributes"]
 
 SDNodeChildren = Set[SDChild]
-SDCompNodeChildren = Set[Tuple[SDNodePath, SDChild, SDChild]]
+SDCompNodeChildren = Set[Tuple[SDChild, SDChild]]
 
-SDChildren = Set[Tuple[SDNodeName, SDNodePath, SDChild]]
-SDCompChildren = Set[Tuple[SDNodeName, SDNodePath, SDChild, SDChild]]
+SDChildren = Set[Tuple[SDNodeName, SDChild]]
+SDCompChildren = Set[Tuple[SDNodeName, SDChild, SDChild]]
 
 SDEncodeAs = Callable
 
@@ -132,7 +132,7 @@ class StructuredDataTree:
         assert isinstance(tree_path, str)
         path = self._parse_tree_path(tree_path)
         parent = self._root._create_hierarchy(path[:-1])
-        return parent.add_child(path[-1], child, tuple(path)).get_child_data()
+        return parent.add_child(path[-1], child).get_child_data()
 
     def _validate_tree_path(self, tree_path: Optional[SDRawPath]) -> None:
         if not tree_path:
@@ -182,36 +182,31 @@ class StructuredDataTree:
 
     def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataTree":
         if raw_tree:
-            self._create_hierarchy_from_data(raw_tree, self._root, tuple())
+            self._create_hierarchy_from_data(raw_tree, self._root)
         return self
 
     def _create_hierarchy_from_data(
         self,
         raw_tree: SDRawTree,
         parent: "Container",
-        parent_path: SDNodePath,
     ) -> None:
         for edge, attrs in raw_tree.items():
             if not attrs:
                 continue
-            if parent_path:
-                abs_path = parent_path
-            else:
-                abs_path = tuple()
-            abs_path += (edge,)
+
             if isinstance(attrs, list):
                 numeration = Numeration()
                 numeration.set_child_data(attrs)
-                parent.add_child(edge, numeration, abs_path)
+                parent.add_child(edge, numeration)
             else:
                 sub_raw_tree, leaf_data = self._get_child_data(attrs)
                 if leaf_data:
                     attributes = Attributes()
                     attributes.set_child_data(leaf_data)
-                    parent.add_child(edge, attributes, abs_path)
+                    parent.add_child(edge, attributes)
                 if sub_raw_tree:
-                    container = parent.add_child(edge, Container(), abs_path)
-                    self._create_hierarchy_from_data(sub_raw_tree, container, abs_path)
+                    container = parent.add_child(edge, Container())
+                    self._create_hierarchy_from_data(sub_raw_tree, container)
 
     def _get_child_data(self, raw_entries: Dict) -> Tuple[Dict, Dict]:
         leaf_data: Dict = {}
@@ -324,9 +319,9 @@ class StructuredDataTree:
 
     #   ---web------------------------------------------------------------------
 
-    def show(self, renderer, path=None) -> None:
+    def show(self, renderer) -> None:
         # TODO
-        self._root.show(renderer, path=path)
+        self._root.show(renderer)
 
 
 #.
@@ -342,10 +337,18 @@ class StructuredDataTree:
 
 class Container:
     def __init__(self) -> None:
+        self._path: SDNodePath = tuple()
         self._nodes: SDNodes = {}
 
+    def set_path(self, path: SDNodePath) -> None:
+        self._path = path
+
+    @property
+    def path(self) -> SDNodePath:
+        return self._path
+
     def is_empty(self) -> bool:
-        for _, __, child in self.get_children():
+        for _, child in self.get_children():
             if not child.is_empty():
                 return False
         return True
@@ -354,13 +357,13 @@ class Container:
         if not isinstance(other, Container):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        for _, __, my_child, other_child in self._get_comparable_children(other, edges=edges):
+        for _, my_child, other_child in self._get_comparable_children(other, edges=edges):
             if not my_child.is_equal(other_child):
                 return False
         return True
 
     def count_entries(self) -> int:
-        return sum([child.count_entries() for _, __, child in self.get_children()])
+        return sum([child.count_entries() for _, child in self.get_children()])
 
     def compare_with(self, other: object, keep_identical: bool = False) -> CDeltaResult:
         if not isinstance(other, Container):
@@ -370,21 +373,23 @@ class Container:
 
         delta_node = Container()
         num_new, num_changed, num_removed = 0, 0, 0
-        for edge, abs_path, my_child in self.get_children(edges=list(new_keys)):
+        for edge, my_child in self.get_children(edges=list(new_keys)):
             new_entries = my_child.count_entries()
             if new_entries:
                 num_new += new_entries
-                delta_node.add_child(edge,
-                                     my_child.encode_for_delta_tree(encode_as=_new_delta_tree_node),
-                                     abs_path)
+                delta_node.add_child(
+                    edge,
+                    my_child.encode_for_delta_tree(encode_as=_new_delta_tree_node),
+                )
 
-        for edge, abs_path, my_child, other_child in \
-            self._get_comparable_children(other, edges=list(kept_keys)):
+        for edge, my_child, other_child in self._get_comparable_children(other,
+                                                                         edges=list(kept_keys)):
             if my_child.is_equal(other_child):
                 if keep_identical:
                     delta_node.add_child(
-                        edge, my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
-                        abs_path)
+                        edge,
+                        my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
+                    )
                 continue
             new_entries, changed_entries, removed_entries, delta_child = \
                 my_child.compare_with(other_child, keep_identical=keep_identical)
@@ -392,27 +397,28 @@ class Container:
                 num_new += new_entries
                 num_changed += changed_entries
                 num_removed += removed_entries
-                delta_node.add_child(edge, delta_child, abs_path)
+                delta_node.add_child(edge, delta_child)
 
-        for edge, abs_path, other_child in other.get_children(edges=list(removed_keys)):
+        for edge, other_child in other.get_children(edges=list(removed_keys)):
             removed_entries = other_child.count_entries()
             if removed_entries:
                 num_removed += removed_entries
                 delta_node.add_child(
-                    edge, other_child.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
-                    abs_path)
+                    edge,
+                    other_child.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
+                )
 
         return num_new, num_changed, num_removed, delta_node
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Container":
         delta_node = Container()
-        for edge, abs_path, child in self.get_children():
-            delta_node.add_child(edge, child.encode_for_delta_tree(encode_as), abs_path)
+        for edge, child in self.get_children():
+            delta_node.add_child(edge, child.encode_for_delta_tree(encode_as))
         return delta_node
 
     def get_raw_tree(self) -> Dict:
         tree: Dict = {}
-        for edge, _, child in self.get_children():
+        for edge, child in self.get_children():
             child_tree = child.get_raw_tree()
             if self._is_nested_numeration_tree(child) and isinstance(child_tree, dict):
                 # Sort by index but forget index afterwards => nested sub nodes as before
@@ -442,10 +448,10 @@ class Container:
         'list-composed-of-dicts-containing-lists' structure into
         numerated nodes ('arrays') containing real numerations ('devices').
         """
-        for edge, abs_path, child in self.get_children():
+        for edge, child in self.get_children():
             if isinstance(child, Numeration) and \
                self._has_nested_numeration_node(child.get_child_data()):
-                self._set_nested_numeration_node(edge, child.get_child_data(), abs_path)
+                self._set_nested_numeration_node(edge, child.get_child_data())
 
             if child.is_empty():
                 self._nodes[edge].remove_node_child(child)
@@ -465,36 +471,33 @@ class Container:
         self,
         edge: SDNodeName,
         child_data: SDTable,
-        abs_path: SDNodePath,
     ) -> None:
         del self._nodes[edge]
-        parent = self.add_child(edge, Container(), abs_path)
+        parent = self.add_child(edge, Container())
         for nr, entry in enumerate(child_data):
             attrs: Dict = {}
             for k, v in entry.items():
                 if isinstance(v, list):
-                    numeration = parent.add_child(nr, Container(), abs_path+(nr,))\
-                                       .add_child(k, Numeration(), abs_path+(nr,k))
+                    numeration = parent.add_child(nr, Container()).add_child(k, Numeration())
                     numeration.set_child_data(v)
                 else:
                     attrs.setdefault(k, v)
             if attrs:
-                attributes = parent.add_child(nr, Attributes(), abs_path + (nr,))
+                attributes = parent.add_child(nr, Attributes())
                 attributes.set_child_data(attrs)
 
     def merge_with(self, other: object) -> None:
         if not isinstance(other, Container):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        for edge, abs_path, my_child, other_child in \
-            self._get_comparable_children(other):
-            my_child = self.add_child(edge, my_child, abs_path)
+        for edge, my_child, other_child in self._get_comparable_children(other):
+            my_child = self.add_child(edge, my_child)
             my_child.merge_with(other_child)
 
     def copy(self) -> "Container":
         new_node = Container()
-        for edge, abs_path, child in self.get_children():
-            new_node.add_child(edge, child.copy(), abs_path)
+        for edge, child in self.get_children():
+            new_node.add_child(edge, child.copy())
         return new_node
 
     #   ---container methods----------------------------------------------------
@@ -508,9 +511,8 @@ class Container:
         self,
         edge: SDNodeName,
         child: Union["Container", "Numeration", "Attributes"],
-        abs_path: Optional[SDNodePath] = None,
     ):
-        node = self._nodes.setdefault(edge, Node(abs_path))
+        node = self._nodes.setdefault(edge, Node(self._path + (edge,)))
         return node.add_node_child(child)
 
     def has_edge(self, edge: SDNodeName) -> bool:
@@ -527,31 +529,30 @@ class Container:
             return None
 
         edge = path.pop(0)
-        sub_node_abs_path = sub_node.get_absolute_path()
         if path:
             container = sub_node.get_node_container()
             if container is not None:
                 filtered = container.get_filtered_branch(path, keys, Container())
                 if filtered is not None:
-                    parent.add_child(edge, filtered, sub_node_abs_path)
+                    parent.add_child(edge, filtered)
             return parent
 
         if keys is None:
             for child in sub_node.get_node_children():
-                parent.add_child(edge, child, sub_node_abs_path)
+                parent.add_child(edge, child)
             return parent
 
         numeration = sub_node.get_node_numeration()
         if numeration is not None:
             if keys:
                 numeration = numeration.get_filtered_data(keys)
-            parent.add_child(edge, numeration, sub_node_abs_path)
+            parent.add_child(edge, numeration)
 
         attributes = sub_node.get_node_attributes()
         if attributes is not None:
             if keys:
                 attributes = attributes.get_filtered_data(keys)
-            parent.add_child(edge, attributes, sub_node_abs_path)
+            parent.add_child(edge, attributes)
 
         return parent
 
@@ -567,9 +568,8 @@ class Container:
             if edges is not None and edge not in edges:
                 continue
 
-            node_abs_path = node.get_absolute_path()
             for child in node.get_node_children():
-                children.add((edge, node_abs_path, child))
+                children.add((edge, child))
         return children
 
     def _get_comparable_children(
@@ -587,9 +587,8 @@ class Container:
         for edge in the_edges:
             my_node = self._nodes.get(edge, Node())
             other_node = other._nodes.get(edge, Node())
-            for abs_path, my_child, other_child in \
-                my_node.get_comparable_node_children(other_node):
-                comparable_children.add((edge, abs_path, my_child, other_child))
+            for my_child, other_child in my_node.get_comparable_node_children(other_node):
+                comparable_children.add((edge, my_child, other_child))
         return comparable_children
 
     def get_sub_container(self, path: SDPath) -> Optional["Container"]:
@@ -636,9 +635,9 @@ class Container:
 
     #   ---web------------------------------------------------------------------
 
-    def show(self, renderer, path=None):
+    def show(self, renderer):
         # TODO
-        renderer.show_container(self, path=path)
+        renderer.show_container(self)
 
 
 #.
@@ -654,7 +653,15 @@ class Container:
 
 class Numeration:
     def __init__(self) -> None:
+        self._path: SDNodePath = tuple()
         self._numeration: SDTable = []
+
+    def set_path(self, path: SDNodePath) -> None:
+        self._path = path
+
+    @property
+    def path(self) -> SDNodePath:
+        return self._path
 
     def is_empty(self) -> bool:
         return self._numeration == []
@@ -833,9 +840,9 @@ class Numeration:
 
     #   ---web------------------------------------------------------------------
 
-    def show(self, renderer, path=None):
+    def show(self, renderer):
         # TODO
-        renderer.show_numeration(self, path=path)
+        renderer.show_numeration(self)
 
 
 #.
@@ -851,7 +858,15 @@ class Numeration:
 
 class Attributes:
     def __init__(self) -> None:
+        self._path: SDNodePath = tuple()
         self._attributes: SDAttributes = {}
+
+    def set_path(self, path: SDNodePath) -> None:
+        self._path = path
+
+    @property
+    def path(self) -> SDNodePath:
+        return self._path
 
     def is_empty(self) -> bool:
         return self._attributes == {}
@@ -917,9 +932,9 @@ class Attributes:
 
     #   ---web------------------------------------------------------------------
 
-    def show(self, renderer, path=None):
+    def show(self, renderer):
         # TODO
-        renderer.show_attributes(self, path=path)
+        renderer.show_attributes(self)
 
 
 #.
@@ -945,9 +960,11 @@ class Node:
         self._abs_path = abs_path
 
     def get_absolute_path(self) -> SDNodePath:
+        # Only needed in GUI::NodeRenderer, can be removed as soon as NodeRenderer is refactored.
         return self._abs_path
 
     def add_node_child(self, child: SDChild) -> SDChild:
+        child.set_path(self._abs_path)
         return self._children.setdefault(type(child), child)
 
     def remove_node_child(self, child: SDChild) -> None:
@@ -971,27 +988,19 @@ class Node:
         if not isinstance(other, Node):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        # If we merge empty tree with existing one
-        # abs_path is empty, thus we try other's one.
-        # Eg. in get_filtered_tree
-        if self._abs_path:
-            abs_path = self._abs_path
-        else:
-            abs_path = other._abs_path
         comparable_children = set()
         for child_name in self.CHILDREN_NAMES:
             child = child_name()
             child_type = type(child)
-            if self._children.get(child_type) is None \
-               and other._children.get(child_type) is None:
+            if self._children.get(child_type) is None and other._children.get(child_type) is None:
                 continue
+
             comparable_children.add(
-                (abs_path, self._children.get(child_type,
-                                              child), other._children.get(child_type, child)))
+                (self._children.get(child_type, child), other._children.get(child_type, child)))
         return comparable_children
 
     def copy(self) -> "Node":
-        new_node = Node(self.get_absolute_path())
+        new_node = Node(self._abs_path)
         for child in self._children.values():
             new_node.add_node_child(child.copy())
         return new_node

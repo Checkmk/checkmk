@@ -57,29 +57,29 @@ def mk_root():
     container_0 = Container()
     numeration_0 = Numeration()
     attributes_0 = Attributes()
-    root.add_child("0_cna", container_0, ("0_cna",))
-    root.add_child("0_cna", numeration_0, ("0_cna",))
-    root.add_child("0_cna", attributes_0, ("0_cna",))
+    root.add_child("0_cna", container_0)
+    root.add_child("0_cna", numeration_0)
+    root.add_child("0_cna", attributes_0)
 
     numeration_1 = Numeration()
     container_1 = Container()
-    container_0.add_child("1_cn", numeration_1, ("0_cna", "1_cn"))
-    container_0.add_child("1_cn", container_1, ("0_cna", "1_cn"))
+    container_0.add_child("1_cn", numeration_1)
+    container_0.add_child("1_cn", container_1)
 
     attributes_1 = Attributes()
     container_2 = Container()
-    container_0.add_child("1_ca", attributes_1, ("0_cna", "1_ca"))
-    container_0.add_child("1_ca", container_2, ("0_cna", "1_ca"))
+    container_0.add_child("1_ca", attributes_1)
+    container_0.add_child("1_ca", container_2)
 
     numeration_2 = Numeration()
     attributes_2 = Attributes()
-    container_0.add_child("1_na", numeration_2, ("0_cna", "1_na"))
-    container_0.add_child("1_na", attributes_2, ("0_cna", "1_na"))
+    container_0.add_child("1_na", numeration_2)
+    container_0.add_child("1_na", attributes_2)
 
     numeration_3 = Numeration()
     attributes_3 = Attributes()
-    container_1.add_child("2_n", numeration_3, ("0_cna", "1_ca", "2_n"))
-    container_2.add_child("2_a", attributes_3, ("0_cna", "1_ca", "2_a"))
+    container_1.add_child("2_n", numeration_3)
+    container_2.add_child("2_a", attributes_3)
     return root
 
 
@@ -88,35 +88,35 @@ def mk_filled_root():
     container_0 = Container()
     numeration_0 = Numeration()
     attributes_0 = Attributes()
-    root.add_child("0_cna", container_0, ("0_cna",))
-    root.add_child("0_cna", numeration_0, ("0_cna",))
-    root.add_child("0_cna", attributes_0, ("0_cna",))
+    root.add_child("0_cna", container_0)
+    root.add_child("0_cna", numeration_0)
+    root.add_child("0_cna", attributes_0)
 
     numeration_1 = Numeration()
     numeration_1.set_child_data([{"n10": "N-1-0"}])
     container_1 = Container()
-    container_0.add_child("1_cn", numeration_1, ("0_cna", "1_cn"))
-    container_0.add_child("1_cn", container_1, ("0_cna", "1_cn"))
+    container_0.add_child("1_cn", numeration_1)
+    container_0.add_child("1_cn", container_1)
 
     attributes_1 = Attributes()
     attributes_1.set_child_data({"a10": "A-1-0"})
     container_2 = Container()
-    container_0.add_child("1_ca", attributes_1, ("0_cna", "1_ca"))
-    container_0.add_child("1_ca", container_2, ("0_cna", "1_ca"))
+    container_0.add_child("1_ca", attributes_1)
+    container_0.add_child("1_ca", container_2)
 
     numeration_2 = Numeration()
     numeration_2.set_child_data([{"n20": "N-2-0"}, {"n21": "N-2-1"}])
     attributes_2 = Attributes()
     attributes_2.set_child_data({"a20": "A-2-0", "a21": "A-1-1"})
-    container_0.add_child("1_na", numeration_2, ("0_cna", "1_na"))
-    container_0.add_child("1_na", attributes_2, ("0_cna", "1_na"))
+    container_0.add_child("1_na", numeration_2)
+    container_0.add_child("1_na", attributes_2)
 
     numeration_3 = Numeration()
     numeration_3.set_child_data([{"n30": "N-3-0"}, {"n31": "N-3-1"}, {"n32": "N-3-2"}])
     attributes_3 = Attributes()
     attributes_3.set_child_data({"a30": "A-3-0", "a31": "A-3-1", "a32": "A-3-2"})
-    container_1.add_child("2_n", numeration_3, ("0_cna", "1_ca", "2_n"))
-    container_2.add_child("2_a", attributes_3, ("0_cna", "1_ca", "2_a"))
+    container_1.add_child("2_n", numeration_3)
+    container_2.add_child("2_a", attributes_3)
     return root
 
 
@@ -625,7 +625,7 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
 def test_structured_data_StructuredDataTree_get_children(tree, len_children):
     tree_children = tree.get_children()
     for entry in tree_children:
-        assert len(entry) == 3
+        assert len(entry) == 2
     assert len(tree_children) == len_children
 
 

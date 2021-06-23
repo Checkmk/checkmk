@@ -168,7 +168,7 @@ def _paint_host_inventory_tree_value(
         if attribute_keys == []:
             # TODO parse instead of validate
             assert isinstance(child, Numeration)
-            tree_renderer.show_numeration(child, path=parsed_path)
+            tree_renderer.show_numeration(child)
 
         elif attribute_keys:
             # In paint_host_inventory_tree we parse invpath and get
@@ -1774,11 +1774,7 @@ class NodeRenderer:
 
     #   ---container------------------------------------------------------------
 
-    def show_container(
-        self,
-        container: Container,
-        path: Optional[InventoryPath] = None,
-    ) -> None:
+    def show_container(self, container: Container) -> None:
         for edge, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
             invpath = ".%s." % self._get_raw_path(list(node_abs_path))
@@ -1811,7 +1807,7 @@ class NodeRenderer:
                 if is_open:
                     # Render only if it is open. We'll get the stuff via ajax later if it's closed
                     for child in inventory.sort_children(node.get_node_children()):
-                        child.show(self, path=node_abs_path)
+                        child.show(self)
 
     def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
         hint_id = _find_display_hint_id(invpath)
@@ -1835,14 +1831,10 @@ class NodeRenderer:
 
     #   ---numeration-----------------------------------------------------------
 
-    def show_numeration(
-        self,
-        numeration: Numeration,
-        path: Optional[InventoryPath] = None,
-    ) -> None:
+    def show_numeration(self, numeration: Numeration) -> None:
         #FIXME these kind of paths are required for hints.
         # Clean this up one day.
-        invpath = ".%s:" % self._get_raw_path(path)
+        invpath = ".%s:" % self._get_raw_path(list(numeration.path))
         hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
         data = numeration.get_child_data()
@@ -1926,12 +1918,8 @@ class NodeRenderer:
 
     #   ---attributes-----------------------------------------------------------
 
-    def show_attributes(
-        self,
-        attributes: Attributes,
-        path: Optional[InventoryPath] = None,
-    ) -> None:
-        invpath = ".%s" % self._get_raw_path(path)
+    def show_attributes(self, attributes: Attributes) -> None:
+        invpath = ".%s" % self._get_raw_path(list(attributes.path))
         hint = _inv_display_hint(invpath)
 
         keyorder = hint.get("keyorder")
@@ -2086,4 +2074,4 @@ def ajax_inv_render_tree() -> None:
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
     else:
         for child in inventory.sort_children(children):
-            child.show(tree_renderer, path=invpath)
+            child.show(tree_renderer)

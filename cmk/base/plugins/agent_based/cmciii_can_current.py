@@ -35,7 +35,7 @@ def check_cmciii_can_current(item: str, params: CheckParams,
     yield Result(state=state,
                  summary="Status: %s, Current: %s mA (warn/crit at %s/%s mA)" %
                  (state_readable, value, warn, crit))
-    yield Metric("current", value / 1000.0, levels=(warn, crit))
+    yield Metric("current", value / 1000.0, levels=(warn / 1000.0, crit / 1000.0))
 
 
 register.check_plugin(

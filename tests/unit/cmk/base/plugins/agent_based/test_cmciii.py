@@ -854,12 +854,12 @@ def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expec
             ('CMC-PU System.CAN1 Current', [
                 Result(state=State.OK,
                        summary='Status: OK, Current: 0.0 mA (warn/crit at 700.0/900.0 mA)'),
-                Metric('current', 0.0, levels=(700.0, 900.0)),
+                Metric('current', 0.0, levels=(0.7, 0.9)),
             ]),
             ('CMC-PU System.CAN2 Current', [
                 Result(state=State.OK,
                        summary='Status: OK, Current: 0.0 mA (warn/crit at 700.0/900.0 mA)'),
-                Metric('current', 0.0, levels=(700.0, 900.0)),
+                Metric('current', 0.0, levels=(0.7, 0.9)),
             ]),
         ],
     ),

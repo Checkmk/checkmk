@@ -194,10 +194,9 @@ def _lcp_sensor():
     ]
 
 
-@pytest.mark.parametrize('plugin,params,expected', [
+@pytest.mark.parametrize('plugin,expected', [
     (
         'cmciii_temp_in_out',
-        {},
         [
             Service(item='Air LCP In Bottom', parameters={'_item_key': 'Air LCP In Bottom'}),
             Service(item='Air LCP In Middle', parameters={'_item_key': 'Air LCP In Middle'}),
@@ -209,12 +208,11 @@ def _lcp_sensor():
     ),
     (
         'cmciii_temp',
-        None,
         [],
     ),
 ])
-def test_cmciii_lcp_discovery(discovery_params, plugin, params, expected):
-    assert run_discovery('cmciii', plugin, _lcp_sensor(), params) == expected
+def test_cmciii_lcp_discovery(discovery_params, plugin, expected):
+    assert run_discovery('cmciii', plugin, _lcp_sensor(), params={}) == expected
 
 
 @pytest.mark.parametrize('item, expected', [
@@ -746,7 +744,7 @@ def _generictest_cmciii():
     ),
     (
         'cmciii_temp',
-        None,
+        {},
         [
             Service(item='Ambient CMC-PU', parameters={'_item_key': 'Ambient CMC-PU'}),
             Service(item='Ambient CMC-Temperatur',
@@ -839,19 +837,34 @@ def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expec
         {},
         [
             ('Ambient CMC-PU', [
-                Result(state=State.OK, summary='30.5 °C'),
                 Metric('temp', 30.5, levels=(40.0, 45.0)),
+                Result(state=State.OK, summary='Temperature: 30.5°C'),
+                Result(state=State.OK,
+                       notice=
+                       'Configuration: prefer user levels over device levels (used device levels)'),
             ]),
             ('Ambient CMC-Temperatur', [
-                Result(state=State.OK, summary='27.0 °C'),
                 Metric('temp', 27.0, levels=(35.0, 40.0)),
+                Result(state=State.OK, summary='Temperature: 27.0°C'),
+                Result(state=State.OK,
+                       notice=
+                       'Configuration: prefer user levels over device levels (used device levels)'),
             ]),
-            ('Dew Point CMC-Temperatur',
-             [Result(state=State.OK, summary='-7.8 °C'),
-              Metric('temp', -7.8)]),
+            ('Dew Point CMC-Temperatur', [
+                Metric('temp', -7.8),
+                Result(state=State.OK, summary='Temperature: -7.8°C'),
+                Result(
+                    state=State.OK,
+                    notice='Configuration: prefer user levels over device levels (no levels found)'
+                ),
+            ]),
             ('System CMC-PU', [
-                Result(state=State.OK, summary='[Sys Temp] 32.3 °C'),
-                Metric('temp', 32.3, levels=(70.0, 80.0))
+                Result(state=State.OK, summary='[Sys Temp]'),
+                Metric('temp', 32.3, levels=(70.0, 80.0)),
+                Result(state=State.OK, summary='Temperature: 32.3°C'),
+                Result(state=State.OK,
+                       notice=
+                       'Configuration: prefer user levels over device levels (used device levels)'),
             ]),
         ],
     ),
@@ -983,7 +996,7 @@ def _generictest_cmciii_input_regression():
         ],
     ),
     ('cmciii_access', None, []),
-    ('cmciii_temp', None, []),
+    ('cmciii_temp', {}, []),
     ('cmciii_temp_in_out', {}, []),
     ('cmciii_can_current', {}, []),
     ('cmciii_humidity', {}, []),

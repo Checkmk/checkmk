@@ -3148,7 +3148,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         # check if sites are missing
         if not unique_sites_from_services.issuperset(connected_sites):
             manual_ref = html.resolve_help_text_macros(
-                _("Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for more details."
+                _("Please refer to the [dashboards#host_problems|Checkmk user guide] for more details."
                  ))
             if len(connected_sites) == 1:
                 raise MKMissingDataError(

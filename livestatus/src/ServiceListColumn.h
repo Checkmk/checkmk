@@ -58,10 +58,12 @@ struct Entry {
 };
 
 }  // namespace service_list
+}  // namespace detail
 
 class ServiceListRenderer {
     using function_type =
-        std::function<std::vector<service_list::Entry>(Row, const contact *)>;
+        std::function<std::vector<detail::service_list::Entry>(
+            Row, const contact *)>;
 
 public:
     enum class verbosity { none, low, medium, full };
@@ -73,16 +75,14 @@ private:
     function_type f_;
     verbosity verbosity_;
 };
-}  // namespace detail
 
 class ServiceListColumn : public deprecated::ListColumn {
     using Entry = detail::service_list::Entry;
 
 public:
-    using verbosity = detail::ServiceListRenderer::verbosity;
     ServiceListColumn(const std::string &name, const std::string &description,
                       const ColumnOffsets &offsets, MonitoringCore *mc,
-                      verbosity v)
+                      ServiceListRenderer::verbosity v)
         : deprecated::ListColumn(name, description, offsets)
         , mc_(mc)
         , renderer_{[this](Row row, const contact *auth_user) {
@@ -99,8 +99,8 @@ public:
 
 private:
     MonitoringCore *mc_;
-    friend detail::ServiceListRenderer;
-    detail::ServiceListRenderer renderer_;
+    friend ServiceListRenderer;
+    ServiceListRenderer renderer_;
     std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };
 

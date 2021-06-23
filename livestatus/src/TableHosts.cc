@@ -520,7 +520,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         std::make_unique<DowntimeColumn::Callback<host, DowntimeData>>(
             prefix + "downtimes",
             "A list of the ids of all scheduled downtimes of this host",
-            offsets, DowntimeColumn::verbosity::none, [mc](const host &hst) {
+            offsets, DowntimeRenderer::verbosity::none, [mc](const host &hst) {
                 return mc->downtimes(
                     reinterpret_cast<const MonitoringCore::Host *>(&hst));
             }));
@@ -528,7 +528,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                      DowntimeColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, DowntimeColumn::verbosity::medium, [mc](const host &hst) {
+        offsets, DowntimeRenderer::verbosity::medium, [mc](const host &hst) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
@@ -536,7 +536,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                      DowntimeColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, DowntimeColumn::verbosity::full, [mc](const host &hst) {
+        offsets, DowntimeRenderer::verbosity::full, [mc](const host &hst) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
@@ -544,7 +544,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         std::make_unique<CommentColumn::Callback<host, CommentData>>(
             prefix + "comments",
             "A list of the ids of all comments of this host", offsets,
-            CommentColumn::verbosity::none, [mc](const host &hst) {
+            CommentRenderer::verbosity::none, [mc](const host &hst) {
                 return mc->comments(
                     reinterpret_cast<const MonitoringCore::Host *>(&hst));
             }));
@@ -552,7 +552,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         std::make_unique<CommentColumn::Callback<host, CommentData>>(
             prefix + "comments_with_info",
             "A list of all comments of the host with id, author and comment",
-            offsets, CommentColumn::verbosity::medium, [mc](const host &hst) {
+            offsets, CommentRenderer::verbosity::medium, [mc](const host &hst) {
                 return mc->comments(
                     reinterpret_cast<const MonitoringCore::Host *>(&hst));
             }));
@@ -560,7 +560,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                      CommentColumn::Callback<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, CommentColumn::verbosity::full, [mc](const host &hst) {
+        offsets, CommentRenderer::verbosity::full, [mc](const host &hst) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
@@ -793,19 +793,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        offsets_services, mc, ServiceListColumn::verbosity::none));
+        offsets_services, mc, ServiceListRenderer::verbosity::none));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        offsets_services, mc, ServiceListColumn::verbosity::low));
+        offsets_services, mc, ServiceListRenderer::verbosity::low));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        offsets_services, mc, ServiceListColumn::verbosity::medium));
+        offsets_services, mc, ServiceListRenderer::verbosity::medium));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        offsets_services, mc, ServiceListColumn::verbosity::full));
+        offsets_services, mc, ServiceListRenderer::verbosity::full));
 
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "metrics",

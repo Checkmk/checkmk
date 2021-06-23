@@ -9,7 +9,7 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void detail::DowntimeRenderer::operator()(Row row, RowRenderer &r) const {
+void DowntimeRenderer::operator()(Row row, RowRenderer &r) const {
     ListRenderer l(r);
     for (const auto &downtime : f_(row)) {
         switch (verbosity_) {

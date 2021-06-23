@@ -7,7 +7,7 @@
 
 #include "Renderer.h"
 
-void detail::CommentRenderer::operator()(Row row, RowRenderer &r) const {
+void CommentRenderer::operator()(Row row, RowRenderer &r) const {
     ListRenderer l(r);
     for (const auto &comment : f_(row)) {
         switch (verbosity_) {

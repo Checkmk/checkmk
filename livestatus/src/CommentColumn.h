@@ -27,7 +27,6 @@
 class RowRenderer;
 class ColumnOffsets;
 
-namespace detail {
 class CommentRenderer {
     using function_type = std::function<std::vector<CommentData>(Row)>;
 
@@ -41,11 +40,9 @@ private:
     function_type f_;
     verbosity verbosity_;
 };
-}  // namespace detail
 
 class CommentColumn : public ListColumn {
 public:
-    using verbosity = detail::CommentRenderer::verbosity;
     using ListColumn::ListColumn;
     template <class T, class U>
     class Callback;
@@ -57,7 +54,7 @@ class CommentColumn::Callback : public CommentColumn {
 
 public:
     Callback(const std::string &name, const std::string &description,
-             const ColumnOffsets &offsets, CommentColumn::verbosity v,
+             const ColumnOffsets &offsets, CommentRenderer::verbosity v,
              const function_type &f)
         : CommentColumn{name, description, offsets}
         , renderer_{[this](Row row) { return this->getEntries(row); }, v}
@@ -73,8 +70,8 @@ public:
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    friend class detail::CommentRenderer;
-    detail::CommentRenderer renderer_;
+    friend class CommentRenderer;
+    CommentRenderer renderer_;
     const function_type f_;
 
     [[nodiscard]] std::vector<U> getEntries(Row row) const {

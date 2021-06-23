@@ -31,7 +31,6 @@ class RowRenderer;
 class Object;
 #endif
 
-namespace detail {
 class DowntimeRenderer {
     using function_type = std::function<std::vector<DowntimeData>(Row)>;
 
@@ -45,10 +44,8 @@ private:
     function_type f_;
     verbosity verbosity_;
 };
-}  // namespace detail
 
 struct DowntimeColumn : ListColumn {
-    using verbosity = detail::DowntimeRenderer::verbosity;
     using ListColumn::ListColumn;
     template <class T, class U>
     class Callback;
@@ -60,7 +57,7 @@ class DowntimeColumn::Callback : public DowntimeColumn {
 
 public:
     Callback(const std::string &name, const std::string &description,
-             const ColumnOffsets &offsets, DowntimeColumn::verbosity v,
+             const ColumnOffsets &offsets, DowntimeRenderer::verbosity v,
              const function_type &f)
         : DowntimeColumn{name, description, offsets}
         , renderer_{[this](Row row) { return this->getEntries(row); }, v}
@@ -76,8 +73,8 @@ public:
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    friend class detail::DowntimeRenderer;
-    detail::DowntimeRenderer renderer_;
+    friend class DowntimeRenderer;
+    DowntimeRenderer renderer_;
     const function_type f_;
 
     [[nodiscard]] std::vector<DowntimeData> getEntries(Row row) const;

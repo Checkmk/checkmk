@@ -62,11 +62,11 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        offsets_members, mc, ServiceGroupMembersColumn::verbosity::none));
+        offsets_members, mc, ServiceGroupMembersRenderer::verbosity::none));
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        offsets_members, mc, ServiceGroupMembersColumn::verbosity::full));
+        offsets_members, mc, ServiceGroupMembersRenderer::verbosity::full));
 
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
     table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(

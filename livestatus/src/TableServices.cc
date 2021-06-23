@@ -524,7 +524,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(
         std::make_unique<DowntimeColumn::Callback<service, DowntimeData>>(
             prefix + "downtimes", "A list of all downtime ids of the service",
-            offsets, DowntimeColumn::verbosity::none, [mc](const service &svc) {
+            offsets, DowntimeRenderer::verbosity::none,
+            [mc](const service &svc) {
                 return mc->downtimes(
                     reinterpret_cast<const MonitoringCore::Service *>(&svc));
             }));
@@ -532,7 +533,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                      DowntimeColumn::Callback<service, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        offsets, DowntimeColumn::verbosity::medium, [mc](const service &svc) {
+        offsets, DowntimeRenderer::verbosity::medium, [mc](const service &svc) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
         }));
@@ -540,14 +541,15 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                      DowntimeColumn::Callback<service, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, DowntimeColumn::verbosity::full, [mc](const service &svc) {
+        offsets, DowntimeRenderer::verbosity::full, [mc](const service &svc) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
         }));
     table->addColumn(
         std::make_unique<CommentColumn::Callback<service, CommentData>>(
             prefix + "comments", "A list of all comment ids of the service",
-            offsets, CommentColumn::verbosity::none, [mc](const service &svc) {
+            offsets, CommentRenderer::verbosity::none,
+            [mc](const service &svc) {
                 return mc->comments(
                     reinterpret_cast<const MonitoringCore::Service *>(&svc));
             }));
@@ -555,7 +557,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         std::make_unique<CommentColumn::Callback<service, CommentData>>(
             prefix + "comments_with_info",
             "A list of all comments of the service with id, author and comment",
-            offsets, CommentColumn::verbosity::medium,
+            offsets, CommentRenderer::verbosity::medium,
             [mc](const service &svc) {
                 return mc->comments(
                     reinterpret_cast<const MonitoringCore::Service *>(&svc));
@@ -564,7 +566,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
                      CommentColumn::Callback<service, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        offsets, CommentColumn::verbosity::full, [mc](const service &svc) {
+        offsets, CommentRenderer::verbosity::full, [mc](const service &svc) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
         }));

@@ -28,8 +28,8 @@
 #include "TimeperiodsCache.h"
 #endif
 
-void detail::ServiceListRenderer::operator()(Row row, RowRenderer &r,
-                                             const contact *auth_user) const {
+void ServiceListRenderer::operator()(Row row, RowRenderer &r,
+                                     const contact *auth_user) const {
     ListRenderer l(r);
     for (const auto &entry : f_(row, auth_user)) {
         switch (verbosity_) {

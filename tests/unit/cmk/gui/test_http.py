@@ -14,6 +14,7 @@ from werkzeug.test import create_environ
 import cmk.gui.http as http
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.script_helpers import application_context, request_context
 
 
 def test_http_request_allowed_vars():
@@ -321,3 +322,15 @@ def test_pre_16_format_cookie_handling(monkeypatch):
 
     assert request.has_cookie("xyz")
     assert request.has_cookie("abc")
+
+
+def test_del_vars():
+    environ = dict(create_environ(), REQUEST_URI='', QUERY_STRING='opt_x=x&foo=foo')
+    with application_context(environ), request_context(environ):
+        assert html.request.var("opt_x") == "x"
+        assert html.request.var("foo") == "foo"
+
+        html.request.del_vars(prefix="opt_")
+
+        assert html.request.var("opt_x") is None
+        assert html.request.var("foo") == "foo"

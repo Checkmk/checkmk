@@ -47,42 +47,41 @@ private:
 };
 }  // namespace detail
 
-class DowntimeColumn : public ListColumn {
-public:
+struct DowntimeColumn : ListColumn {
     using verbosity = detail::DowntimeRenderer::verbosity;
-    template <class T>
+    using ListColumn::ListColumn;
+    template <class T, class U>
     class Callback;
-    DowntimeColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, verbosity v)
-        : ListColumn{name, description, offsets}
-        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
-
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-
-private:
-    friend class detail::DowntimeRenderer;
-    detail::DowntimeRenderer renderer_;
-    [[nodiscard]] virtual std::vector<DowntimeData> getEntries(
-        Row row) const = 0;
 };
 
-template <class T>
+template <class T, class U>
 class DowntimeColumn::Callback : public DowntimeColumn {
+    using function_type = std::function<std::vector<U>(const T &)>;
+
 public:
     Callback(const std::string &name, const std::string &description,
              const ColumnOffsets &offsets, DowntimeColumn::verbosity v,
-             MonitoringCore *mc)
-        : DowntimeColumn{name, description, offsets, v}, _mc{mc} {}
+             const function_type &f)
+        : DowntimeColumn{name, description, offsets}
+        , renderer_{[this](Row row) { return this->getEntries(row); }, v}
+        , f_{f} {}
+
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        renderer_(row, r);
+    }
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    MonitoringCore *_mc;
-    [[nodiscard]] std::vector<DowntimeData> getEntries(Row row) const override;
-    [[nodiscard]] std::vector<DowntimeData> downtimes(const void *data) const;
+    friend class detail::DowntimeRenderer;
+    detail::DowntimeRenderer renderer_;
+    const function_type f_;
+
+    [[nodiscard]] std::vector<DowntimeData> getEntries(Row row) const;
+    //[[nodiscard]] std::vector<DowntimeData> downtimes(const void *data) const;
 };
 
 /// \sa Apart from the lambda, the code is the same in
@@ -90,44 +89,26 @@ private:
 ///    * DowntimeColumn::getValue()
 ///    * ServiceGroupMembersColumn::getValue()
 ///    * ServiceListColumn::getValue()
-template <class T>
-std::vector<std::string> DowntimeColumn::Callback<T>::getValue(
+template <class T, class U>
+std::vector<std::string> DowntimeColumn::Callback<T, U>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
     auto entries = getEntries(row);
     std::vector<std::string> values;
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
-                   [](const auto &entry) { return std::to_string(entry._id); });
+                   detail::column::serialize<U>);
     return values;
 }
 
-template <class T>
-std::vector<DowntimeData> DowntimeColumn::Callback<T>::getEntries(
+template <class T, class U>
+std::vector<DowntimeData> DowntimeColumn::Callback<T, U>::getEntries(
     Row row) const {
-    if (const auto *data = columnData<void>(row)) {
-        return downtimes(data);
-    }
-    return {};
-}
-
-#ifdef CMC
-template <>
-inline std::vector<DowntimeData> DowntimeColumn::Callback<Object>::downtimes(
-    const void *const data) const {
-    return _mc->downtimes(reinterpret_cast<const MonitoringCore::Host *>(data));
-}
-#else
-template <>
-inline std::vector<DowntimeData> DowntimeColumn::Callback<host>::downtimes(
-    const void *const data) const {
-    return _mc->downtimes(reinterpret_cast<const MonitoringCore::Host *>(data));
+    const T *data = columnData<T>(row);
+    return data == nullptr ? std::vector<U>{} : f_(*data);
 }
 
 template <>
-inline std::vector<DowntimeData> DowntimeColumn::Callback<service>::downtimes(
-    const void *const data) const {
-    return _mc->downtimes(
-        reinterpret_cast<const MonitoringCore::Service *>(data));
+inline std::string detail::column::serialize(const DowntimeData &data) {
+    return std::to_string(data._id);
 }
-#endif
 #endif  // DowntimeColumn_h

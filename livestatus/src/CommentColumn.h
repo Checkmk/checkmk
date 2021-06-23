@@ -49,10 +49,6 @@ public:
     using ListColumn::ListColumn;
     template <class T, class U>
     class Callback;
-
-protected:
-    template <class U>
-    static std::string serialize(const U &);
 };
 
 template <class T, class U>
@@ -67,8 +63,10 @@ public:
         , renderer_{[this](Row row) { return this->getEntries(row); }, v}
         , f_{f} {}
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        renderer_(row, r);
+    }
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
@@ -85,13 +83,6 @@ private:
     }
 };
 
-template <class T, class U>
-void CommentColumn::Callback<T, U>::output(
-    Row row, RowRenderer &r, const contact * /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
-    renderer_(row, r);
-}
-
 /// \sa Apart from the lambda, the code is the same in
 ///    * CommentColumn::getValue()
 ///    * DowntimeColumn::getValue()
@@ -104,13 +95,13 @@ std::vector<std::string> CommentColumn::Callback<T, U>::getValue(
     auto entries = getEntries(row);
     std::vector<std::string> values;
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
-                   serialize<U>);
+                   detail::column::serialize<U>);
     return values;
 }
 
 template <>
-inline std::string CommentColumn::serialize(const CommentData &entry) {
-    return std::to_string(entry._id);
+inline std::string detail::column::serialize(const CommentData &data) {
+    return std::to_string(data._id);
 }
 
 #endif

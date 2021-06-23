@@ -516,18 +516,30 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             }
             return std::vector<std::string>(names.begin(), names.end());
         }));
-    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
-        prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host", offsets,
-        DowntimeColumn::verbosity::none, mc));
-    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
+    table->addColumn(
+        std::make_unique<DowntimeColumn::Callback<host, DowntimeData>>(
+            prefix + "downtimes",
+            "A list of the ids of all scheduled downtimes of this host",
+            offsets, DowntimeColumn::verbosity::none, [mc](const host &hst) {
+                return mc->downtimes(
+                    reinterpret_cast<const MonitoringCore::Host *>(&hst));
+            }));
+    table->addColumn(std::make_unique<
+                     DowntimeColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, DowntimeColumn::verbosity::medium, mc));
-    table->addColumn(std::make_unique<DowntimeColumn::Callback<host>>(
+        offsets, DowntimeColumn::verbosity::medium, [mc](const host &hst) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
+    table->addColumn(std::make_unique<
+                     DowntimeColumn::Callback<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, DowntimeColumn::verbosity::full, mc));
+        offsets, DowntimeColumn::verbosity::full, [mc](const host &hst) {
+            return mc->downtimes(
+                reinterpret_cast<const MonitoringCore::Host *>(&hst));
+        }));
     table->addColumn(
         std::make_unique<CommentColumn::Callback<host, CommentData>>(
             prefix + "comments",

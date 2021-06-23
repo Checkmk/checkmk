@@ -23,6 +23,12 @@
 class Aggregator;
 class RowRenderer;
 
+namespace detail::column {
+// Specialize this function in the classes deriving ListColumn.
+template <class U>
+std::string serialize(const U&);
+}  // namespace detail::column
+
 struct ListColumn : Column {
     using value_type = std::vector<std::string>;
     class Constant;

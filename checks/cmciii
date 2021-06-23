@@ -266,29 +266,3 @@ check_info['cmciii.temp'] = {
     "has_perfdata": True,
     "group": "temperature",
 }
-
-#.
-#   .--temp. in/out--------------------------------------------------------.
-#   |        _                          _          __          _           |
-#   |       | |_ ___ _ __ ___  _ __    (_)_ __    / /__  _   _| |_         |
-#   |       | __/ _ \ '_ ` _ \| '_ \   | | '_ \  / / _ \| | | | __|        |
-#   |       | ||  __/ | | | | | |_) |  | | | | |/ / (_) | |_| | |_         |
-#   |        \__\___|_| |_| |_| .__(_) |_|_| |_/_/ \___/ \__,_|\__|        |
-#   |                         |_|                                          |
-#   '----------------------------------------------------------------------'
-
-
-def check_cmciii_temp_in_out(item, params, parsed):
-    entry = get_sensor(item, params, parsed["temp_in_out"])
-    if not entry:
-        return
-    return check_temperature(entry["Value"], params, "cmciii.temp_in_out.%s" % item)
-
-
-check_info['cmciii.temp_in_out'] = {
-    "inventory_function": lambda parsed: discover_cmciii_sensors("temp_in_out", parsed),
-    "check_function": check_cmciii_temp_in_out,
-    "service_description": "Temperature %s",
-    "has_perfdata": True,
-    "group": "temperature",
-}

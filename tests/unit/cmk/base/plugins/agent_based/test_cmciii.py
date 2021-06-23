@@ -194,9 +194,10 @@ def _lcp_sensor():
     ]
 
 
-@pytest.mark.parametrize('plugin, expected', [
+@pytest.mark.parametrize('plugin,params,expected', [
     (
         'cmciii_temp_in_out',
+        {},
         [
             Service(item='Air LCP In Bottom', parameters={'_item_key': 'Air LCP In Bottom'}),
             Service(item='Air LCP In Middle', parameters={'_item_key': 'Air LCP In Middle'}),
@@ -208,33 +209,40 @@ def _lcp_sensor():
     ),
     (
         'cmciii_temp',
+        None,
         [],
     ),
 ])
-def test_cmciii_lcp_discovery(discovery_params, plugin, expected):
-    assert run_discovery('cmciii', plugin, _lcp_sensor()) == expected
+def test_cmciii_lcp_discovery(discovery_params, plugin, params, expected):
+    assert run_discovery('cmciii', plugin, _lcp_sensor(), params) == expected
 
 
 @pytest.mark.parametrize('item, expected', [
     (
         'Air LCP In Bottom',
         [
-            Result(state=State.OK, summary='18.2 °C'),
             Metric('temp', 18.2),
+            Result(state=State.OK, summary='Temperature: 18.2°C'),
+            Result(state=State.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
         ],
     ),
     (
         'Air LCP In Middle',
         [
-            Result(state=State.OK, summary='19.0 °C'),
             Metric('temp', 19.0),
+            Result(state=State.OK, summary='Temperature: 19.0°C'),
+            Result(state=State.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
         ],
     ),
     (
         'Air LCP In Top',
         [
-            Result(state=State.OK, summary='19.8 °C'),
             Metric('temp', 19.8),
+            Result(state=State.OK, summary='Temperature: 19.8°C'),
+            Result(state=State.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
         ],
     ),
 ])
@@ -748,7 +756,7 @@ def _generictest_cmciii():
             Service(item='System CMC-PU', parameters={'_item_key': 'System CMC-PU'}),
         ],
     ),
-    ('cmciii_temp_in_out', None, []),
+    ('cmciii_temp_in_out', {}, []),
     (
         'cmciii_can_current',
         {},
@@ -976,7 +984,7 @@ def _generictest_cmciii_input_regression():
     ),
     ('cmciii_access', None, []),
     ('cmciii_temp', None, []),
-    ('cmciii_temp_in_out', None, []),
+    ('cmciii_temp_in_out', {}, []),
     ('cmciii_can_current', {}, []),
     ('cmciii_humidity', {}, []),
     ('cmciii_phase', {}, []),

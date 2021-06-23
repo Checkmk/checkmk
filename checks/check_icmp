@@ -16,9 +16,9 @@ def check_icmp_arguments(params):
     loss = 80, 100
     for key, value in params.items():
         if key == "timeout":
-            args += ["-t", value]
+            args += ["-t", str(value)]
         elif key == "packets":
-            args += ["-n", value]
+            args += ["-n", str(value)]
         elif key == "rta":
             rta = value
         elif key == "loss":
@@ -57,7 +57,7 @@ def check_icmp_arguments(params):
         args.append("$HOST_ADDRESS_6_%s$" % target[1])
 
     else:  # custom
-        args.append(target[1])
+        args.append(str(target[1]))
 
     # Unfortunately, we must return a single string here.
     # Otherwise shell quoting will be applied to every element

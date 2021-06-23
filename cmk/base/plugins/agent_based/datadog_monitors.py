@@ -105,7 +105,7 @@ def check_datadog_monitors(
             if any(re.match(tag_regex, tag) for tag_regex in params["tags_to_show"])):
         yield Result(
             state=State.OK,
-            notice=f"Datadog tags: {datadog_tags}",
+            summary=f"Datadog tags: {datadog_tags}",
         )
 
 

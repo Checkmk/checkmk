@@ -178,7 +178,7 @@ def test_discover_datadog_monitors(params, expected_result):
                 ),
                 Result(
                     state=State.OK,
-                    notice='Datadog tags: slo, nemo',
+                    summary='Datadog tags: slo, nemo',
                 ),
             ],
             id="with tags and custom states",

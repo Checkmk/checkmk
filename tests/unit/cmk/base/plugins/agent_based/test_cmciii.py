@@ -751,7 +751,7 @@ def _generictest_cmciii():
     ('cmciii_temp_in_out', None, []),
     (
         'cmciii_can_current',
-        None,
+        {},
         [
             Service(item='CMC-PU System.CAN1 Current',
                     parameters={'_item_key': 'CMC-PU System.CAN1 Current'}),
@@ -977,7 +977,7 @@ def _generictest_cmciii_input_regression():
     ('cmciii_access', None, []),
     ('cmciii_temp', None, []),
     ('cmciii_temp_in_out', None, []),
-    ('cmciii_can_current', None, []),
+    ('cmciii_can_current', {}, []),
     ('cmciii_humidity', {}, []),
     ('cmciii_phase', {}, []),
 ])

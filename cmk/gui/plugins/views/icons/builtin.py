@@ -57,7 +57,7 @@ from cmk.gui.type_defs import VisualLinkSpec
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.utils.mobile import is_mobile
 
 #   .--Action Menu---------------------------------------------------------.
@@ -458,15 +458,17 @@ class PredictionIcon(Icon):
                 if p.startswith("predict_"):
                     varname, _value = p.split("=")
                     dsname = varname[8:]
-                    sitename = row["site"]
-                    url_prefix = config.site(sitename)["url_prefix"]
-                    url = url_prefix + "check_mk/prediction_graph.py?" + urlencode_vars([
+                    urlvars = [
+                        ("site", row["site"]),
                         ("host", row["host_name"]),
                         ("service", row["service_description"]),
                         ("dsname", dsname),
-                    ])
-                    title = _("Analyse predictive monitoring for this service")
-                    return 'prediction', title, url
+                    ]
+                    return (
+                        'prediction',
+                        _("Analyse predictive monitoring for this service"),
+                        makeuri_contextless(request, urlvars, "prediction_graph.py"),
+                    )
 
 
 #.

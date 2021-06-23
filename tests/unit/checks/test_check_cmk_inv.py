@@ -9,7 +9,7 @@ from testlib import ActiveCheck  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 
-STATIC_ARGS = ["--cache", "--inventory-as-check", "$HOSTNAME$"]
+STATIC_ARGS = ["--inventory-as-check", "$HOSTNAME$"]
 
 
 @pytest.mark.parametrize("params,expected_args", [

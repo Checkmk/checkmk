@@ -528,7 +528,7 @@ checks = {
                 (
                     0,
                     'Status: OK, Current: 0.0 mA (warn/crit at 700.0/900.0 mA)',
-                    [('current', 0.0, 700.0, 900.0, None, None)]
+                    [('current', 0.0, 0.7, 0.9, None, None)]
                 )
             ]
         ),
@@ -537,7 +537,7 @@ checks = {
                 (
                     0,
                     'Status: OK, Current: 0.0 mA (warn/crit at 700.0/900.0 mA)',
-                    [('current', 0.0, 700.0, 900.0, None, None)]
+                    [('current', 0.0, 0.7, 0.9, None, None)]
                 )
             ]
         )

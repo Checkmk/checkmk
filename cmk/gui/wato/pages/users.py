@@ -204,8 +204,9 @@ class ModeUsers(WatoMode):
 
         if html.request.var('_delete'):
             delete_users([html.request.get_unicode_input("_delete")])
+            return redirect(self.mode_url())
 
-        elif html.request.var('_sync'):
+        if html.request.var('_sync'):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
@@ -225,17 +226,20 @@ class ModeUsers(WatoMode):
             except Exception:
                 logger.exception("error syncing users")
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
+            return redirect(self.mode_url())
 
-        elif html.request.var("_bulk_delete_users"):
+        if html.request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm()
+            return redirect(self.mode_url())
 
-        else:
-            action_handler = gui_background_job.ActionHandler(self.breadcrumb())
-            action_handler.handle_actions()
-            if action_handler.did_acknowledge_job():
-                self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
-                flash(_("Synchronization job acknowledged"))
-        return redirect(self.mode_url())
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
+        action_handler.handle_actions()
+        if action_handler.did_acknowledge_job():
+            self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
+            flash(_("Synchronization job acknowledged"))
+            return redirect(self.mode_url())
+
+        return None
 
     def _bulk_delete_users_after_confirm(self):
         selected_users = []

@@ -23,22 +23,23 @@ from cmk.utils.type_defs import AgentRawData
 
 logger = logging.getLogger("cmk.base")
 
-PiggybackFileInfo = NamedTuple('PiggybackFileInfo', [
-    ('source_hostname', str),
-    ('file_path', Path),
-    ('successfully_processed', bool),
-    ('reason', str),
-    ('reason_status', int),
-])
 
-PiggybackRawDataInfo = NamedTuple('PiggybackRawDataInfo', [
-    ('source_hostname', str),
-    ('file_path', str),
-    ('successfully_processed', bool),
-    ('reason', str),
-    ('reason_status', int),
-    ('raw_data', AgentRawData),
-])
+class PiggybackFileInfo(NamedTuple):
+    source_hostname: str
+    file_path: Path
+    successfully_processed: bool
+    reason: str
+    reason_status: int
+
+
+class PiggybackRawDataInfo(NamedTuple):
+    source_hostname: str
+    file_path: str
+    successfully_processed: bool
+    reason: str
+    reason_status: int
+    raw_data: AgentRawData
+
 
 PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
 

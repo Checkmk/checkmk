@@ -19,13 +19,13 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
-from cmk.utils.type_defs import AgentRawData
+from cmk.utils.type_defs import AgentRawData, HostName
 
 logger = logging.getLogger("cmk.base")
 
 
 class PiggybackFileInfo(NamedTuple):
-    source_hostname: str
+    source_hostname: HostName
     file_path: Path
     successfully_processed: bool
     reason: str
@@ -33,7 +33,7 @@ class PiggybackFileInfo(NamedTuple):
 
 
 class PiggybackRawDataInfo(NamedTuple):
-    source_hostname: str
+    source_hostname: HostName
     file_path: str
     successfully_processed: bool
     reason: str
@@ -62,7 +62,7 @@ PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: Optional[str],
+    piggybacked_hostname: Optional[HostName],
     time_settings: PiggybackTimeSettings,
 ) -> List[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
@@ -137,22 +137,22 @@ def get_piggyback_raw_data(
 
 
 def get_source_and_piggyback_hosts(
-    time_settings: PiggybackTimeSettings,) -> Iterator[Tuple[str, str]]:
+        time_settings: PiggybackTimeSettings) -> Iterator[Tuple[HostName, HostName]]:
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         for file_info in _get_piggyback_processed_file_infos(
-                piggybacked_host_folder.name,
+                HostName(piggybacked_host_folder.name),
                 time_settings,
         ):
             if not file_info.successfully_processed:
                 continue
-            yield file_info.source_hostname, piggybacked_host_folder.name
+            yield HostName(file_info.source_hostname), HostName(piggybacked_host_folder.name)
 
 
 def has_piggyback_raw_data(
-    piggybacked_hostname: str,
+    piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
 ) -> bool:
     for file_info in _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings):
@@ -162,7 +162,7 @@ def has_piggyback_raw_data(
 
 
 def _get_piggyback_processed_file_infos(
-    piggybacked_hostname: str,
+    piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
 ) -> List[PiggybackFileInfo]:
     """Gather a list of piggyback files to read for further processing.
@@ -193,8 +193,8 @@ def _get_piggyback_processed_file_infos(
 
 
 def _get_matching_time_settings(
-    source_hostnames: List[str],
-    piggybacked_hostname: str,
+    source_hostnames: List[HostName],
+    piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
 ) -> Dict[Tuple[Optional[str], str], int]:
     matching_time_settings: Dict[Tuple[Optional[str], str], int] = {}
@@ -213,8 +213,8 @@ def _get_matching_time_settings(
 
 
 def _get_piggyback_processed_file_info(
-    source_hostname: str,
-    piggybacked_hostname: str,
+    source_hostname: HostName,
+    piggybacked_hostname: HostName,
     piggyback_file_path: Path,
     time_settings: Dict[Tuple[Optional[str], str], int],
 ) -> Tuple[bool, str, int]:
@@ -244,8 +244,8 @@ def _get_piggyback_processed_file_info(
 
 
 def _get_max_cache_age(
-    source_hostname: str,
-    piggybacked_hostname: str,
+    source_hostname: HostName,
+    piggybacked_hostname: HostName,
     time_settings: Dict[Tuple[Optional[str], str], int],
 ) -> int:
     key = 'max_cache_age'
@@ -255,8 +255,8 @@ def _get_max_cache_age(
 
 
 def _get_validity_period(
-    source_hostname: str,
-    piggybacked_hostname: str,
+    source_hostname: HostName,
+    piggybacked_hostname: HostName,
     time_settings: Dict[Tuple[Optional[str], str], int],
 ) -> Optional[int]:
     key = 'validity_period'
@@ -266,8 +266,8 @@ def _get_validity_period(
 
 
 def _get_validity_state(
-    source_hostname: str,
-    piggybacked_hostname: str,
+    source_hostname: HostName,
+    piggybacked_hostname: HostName,
     time_settings: Dict[Tuple[Optional[str], str], int],
 ) -> int:
     key = 'validity_state'
@@ -314,7 +314,7 @@ def _remove_piggyback_file(piggyback_file_path: Path) -> bool:
         raise
 
 
-def remove_source_status_file(source_hostname: str) -> bool:
+def remove_source_status_file(source_hostname: HostName) -> bool:
     """Remove the source_status_file of this piggyback host which will
     mark the piggyback data from this source as outdated."""
     source_status_path = _get_source_status_file_path(source_hostname)
@@ -322,8 +322,8 @@ def remove_source_status_file(source_hostname: str) -> bool:
 
 
 def store_piggyback_raw_data(
-    source_hostname: str,
-    piggybacked_raw_data: Dict[str, List[bytes]],
+    source_hostname: HostName,
+    piggybacked_raw_data: Dict[HostName, List[bytes]],
 ) -> None:
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
@@ -400,17 +400,18 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def get_source_hostnames(piggybacked_hostname: Optional[str] = None) -> List[str]:
+def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> List[HostName]:
     if piggybacked_hostname is None:
         return [
-            source_host.name
+            HostName(source_host.name)
             for piggybacked_host_folder in _get_piggybacked_host_folders()
             for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
         ]
 
     piggybacked_host_folder = cmk.utils.paths.piggyback_dir / Path(piggybacked_hostname)
     return [
-        source_host.name for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
+        HostName(source_host.name)
+        for source_host in _get_piggybacked_host_sources(piggybacked_host_folder)
     ]
 
 
@@ -453,13 +454,13 @@ def _get_source_state_files() -> List[Path]:
         raise
 
 
-def _get_source_status_file_path(source_hostname: str) -> Path:
-    return cmk.utils.paths.piggyback_source_dir / source_hostname
+def _get_source_status_file_path(source_hostname: HostName) -> Path:
+    return cmk.utils.paths.piggyback_source_dir / str(source_hostname)
 
 
 def _get_piggybacked_file_path(
-    source_hostname: str,
-    piggybacked_hostname: str,
+    source_hostname: HostName,
+    piggybacked_hostname: HostName,
 ) -> Path:
     return cmk.utils.paths.piggyback_dir / piggybacked_hostname / source_hostname
 
@@ -502,8 +503,8 @@ def _get_piggybacked_hosts_settings(
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         source_hosts = _get_piggybacked_host_sources(piggybacked_host_folder)
         matching_time_settings = _get_matching_time_settings(
-            [source_host.name for source_host in source_hosts],
-            piggybacked_host_folder.name,
+            [HostName(source_host.name) for source_host in source_hosts],
+            HostName(piggybacked_host_folder.name),
             time_settings,
         )
         piggybacked_hosts_settings.append(
@@ -521,8 +522,11 @@ def _cleanup_old_source_status_files(
     max_cache_age_by_sources: Dict[str, int] = {}
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for source_host in source_hosts:
-            max_cache_age = _get_max_cache_age(source_host.name, piggybacked_host_folder.name,
-                                               time_settings)
+            max_cache_age = _get_max_cache_age(
+                HostName(source_host.name),
+                HostName(piggybacked_host_folder.name),
+                time_settings,
+            )
 
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
             if max_cache_age_of_source is None:
@@ -565,8 +569,8 @@ def _cleanup_old_piggybacked_files(
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
             successfully_processed, reason, _reason_status = _get_piggyback_processed_file_info(
-                piggybacked_host_source.name,
-                piggybacked_host_folder.name,
+                HostName(piggybacked_host_source.name),
+                HostName(piggybacked_host_folder.name),
                 piggybacked_host_source,
                 time_settings=time_settings,
             )

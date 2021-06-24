@@ -62,6 +62,7 @@ from cmk.gui.page_menu import (
     make_confirmed_form_submit_link,
 )
 from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless, makeactionuri
+from cmk.gui.escaping import escape_html_permissive
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -548,7 +549,8 @@ class ModeFolder(WatoMode):
             reason = self._folder.reason_why_may_not("read")
             if reason:
                 html.show_message(
-                    html.render_icon("autherr", cssclass="authicon") + html.render_text(reason))
+                    html.render_icon("autherr", cssclass="authicon") +
+                    escape_html_permissive(reason))
 
         self._folder.show_locking_information()
         self._show_subfolders_of()

@@ -1640,7 +1640,7 @@ def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
                 json.dumps(filter_list_id),
                 class_="add")
     html.icon("add")
-    html.div(html.render_text("Add filter"), class_="description")
+    html.div(_("Add filter"), class_="description")
     html.close_a()
 
     html.open_div(class_="update_buttons")

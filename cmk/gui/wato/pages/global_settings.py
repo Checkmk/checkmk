@@ -53,6 +53,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
+from cmk.gui.escaping import escape_html_permissive
 
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -182,7 +183,9 @@ class ABCGlobalSettingsMode(WatoMode):
                     value = default_value
 
                 try:
-                    to_text = html.render_text(valuespec.value_to_text(value))
+                    to_text = valuespec.value_to_text(value)
+                    if isinstance(to_text, str):
+                        to_text = escape_html_permissive(to_text)
                 except Exception:
                     logger.exception("error converting %r to text", value)
                     to_text = html.render_error(_("Failed to render value: %r") % value)
@@ -284,7 +287,7 @@ class ABCEditGlobalSettingMode(WatoMode):
             except KeyError:
                 pass
 
-            msg = html.render_text(
+            msg = escape_html_permissive(
                 _("Resetted configuration variable %s to its default.") % self._varname)
         else:
             new_value = self._valuespec.from_html_vars("ve")
@@ -390,7 +393,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return _("Global settings matching '%s'") % html.render_text(self._search)
+            return _("Global settings matching '%s'") % escape_html_permissive(self._search)
         return _("Global settings")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

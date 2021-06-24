@@ -48,6 +48,7 @@ from cmk.gui.plugins.wato import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.escaping import escape_html_permissive
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -239,7 +240,8 @@ class ModeEditLDAPConnection(LDAPMode):
     def title(self):
         if self._new:
             return _("Add LDAP connection")
-        return _("Edit LDAP connection: %s") % html.render_text(self._connection_id)
+        assert self._connection_id is not None
+        return _("Edit LDAP connection: %s") % escape_html_permissive(self._connection_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Connection"),
@@ -335,7 +337,7 @@ class ModeEditLDAPConnection(LDAPMode):
                             state, msg = test_func(connection, address)
                         except Exception as e:
                             state = False
-                            msg = _('Exception: %s') % html.render_text("%s" % e)
+                            msg = _('Exception: %s') % e
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:

@@ -32,6 +32,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, output_funnel, response
 from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
+from cmk.gui.escaping import escape_html_permissive
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
@@ -240,7 +241,7 @@ class Table:
         if isinstance(text, HTML):
             content = text
         else:
-            content = html.render_text(str(text) if not isinstance(text, str) else text)
+            content = escape_html_permissive(str(text) if not isinstance(text, str) else text)
 
         htmlcode: HTML = content + HTML(output_funnel.drain())
 
@@ -249,7 +250,8 @@ class Table:
         else:
             if title is None:
                 title = ""
-            header_title = html.render_text(str(title) if not isinstance(title, str) else title)
+            header_title = escape_html_permissive(
+                str(title) if not isinstance(title, str) else title)
 
         if self.options["collect_headers"] is True:
             # small helper to make sorting introducion easier. Cells which contain

@@ -40,6 +40,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, user_errors, response, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
+from cmk.gui.escaping import escape_html_permissive
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -1080,7 +1081,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                     _("This period has been reclassified in service state to state: %s" %
                       service_state_name(recl_svc_state)))
 
-            table.cell(_("Annotation"), html.render_text(annotation["text"]))
+            table.cell(_("Annotation"), escape_html_permissive(annotation["text"]))
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
             if not cmk_version.is_raw_edition():

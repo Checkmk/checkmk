@@ -97,6 +97,7 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.urls import makeuri, urlencode
+from cmk.gui.escaping import escape_html_permissive
 from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400
@@ -4528,7 +4529,7 @@ class Alternative(ValueSpec):
         if vs:
             output = HTML()
             if self._show_alternative_title and vs.title():
-                output = html.render_text(vs.title()) + html.render_br()
+                output = escape_html_permissive(vs.title()) + html.render_br()
             return output + vs.value_to_text(value)
         return _("invalid:") + " " + str(value)
 

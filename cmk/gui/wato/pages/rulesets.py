@@ -1706,7 +1706,7 @@ class ABCEditRuleMode(WatoMode):
 
     def _show_rule_representation(self):
         pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
-        content = html.render_text(pretty_rule_config)
+        content = escape_html_permissive(pretty_rule_config)
 
         html.write_text(_("This rule representation can be used for Web API calls."))
         html.br()

@@ -38,6 +38,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.escaping import escape_html_permissive
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -402,7 +403,7 @@ class ModeBulkImport(WatoMode):
             table.row()
             for col_num in range(num_columns):
                 header = headers[col_num] if len(headers) > col_num else None
-                table.cell(html.render_text(header))
+                table.cell(escape_html_permissive(header))
                 attribute_varname = "attribute_%d" % col_num
                 if html.request.var(attribute_varname):
                     attribute_method = html.request.get_ascii_input_mandatory(attribute_varname)

@@ -39,6 +39,7 @@ from cmk.gui.watolib.search import (
     match_item_generator_registry,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.escaping import escape_html_permissive
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -234,9 +235,9 @@ class ModePatternEditor(WatoMode):
                             # Prepare highlighted search txt
                             match_start = matched.start()
                             match_end = matched.end()
-                            disp_match_txt = html.render_text(self._match_txt[:match_start]) \
+                            disp_match_txt = escape_html_permissive(self._match_txt[:match_start]) \
                                              + html.render_span(self._match_txt[match_start:match_end], class_="match")\
-                                             + html.render_text(self._match_txt[match_end:])
+                                             + escape_html_permissive(self._match_txt[match_end:])
 
                             if not already_matched:
                                 # First match

@@ -11,6 +11,7 @@ from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
 import cmk.gui.config as config
+from cmk.gui.escaping import escape_html_permissive
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
@@ -51,12 +52,12 @@ class SiteStatus(SidebarSnapin):
             if state is None:
                 state = "missing"
                 switch = "missing"
-                text = html.render_text(sitename)
+                text = escape_html_permissive(sitename)
 
             else:
                 if state == "disabled":
                     switch = "on"
-                    text = html.render_text(site["alias"])
+                    text = escape_html_permissive(site["alias"])
                 else:
                     switch = "off"
                     text = render_link(site["alias"],

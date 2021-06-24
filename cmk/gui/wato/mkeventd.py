@@ -152,7 +152,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-from cmk.gui.escaping import escape_html
+from cmk.gui.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import (
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
@@ -2433,7 +2433,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     def title(self):
         if self._search:
-            return html.render_text(_("Event Console configuration matching '%s'") % self._search)
+            return escape_html_permissive(
+                _("Event Console configuration matching '%s'") % self._search)
         return _('Event Console configuration')
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2851,7 +2852,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                 messages.append(self._process_uploaded_mib_file(mib_file_name, mib_obj.read()))
                 success += 1
             except Exception as e:
-                messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
+                messages.append(_("Skipped %s: %s") % (escape_html_permissive(mib_file_name), e))
                 fail += 1
 
         return "<br>\n".join(messages) + \

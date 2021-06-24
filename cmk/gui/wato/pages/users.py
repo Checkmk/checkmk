@@ -71,6 +71,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
+from cmk.gui.escaping import escape_html_permissive
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -472,14 +473,15 @@ class ModeUsers(WatoMode):
                         tp = user.get("notification_period", "24X7")
                         tp_code = HTML()
                         if tp not in timeperiods:
-                            tp_code = html.render_text(tp + _(" (invalid)"))
+                            tp_code = escape_html_permissive(tp + _(" (invalid)"))
                         elif tp not in watolib.timeperiods.builtin_timeperiods():
                             url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
                                                                   ("edit", tp)])
                             tp_code = html.render_a(timeperiod_spec_alias(timeperiods[tp], tp),
                                                     href=url)
                         else:
-                            tp_code = html.render_text(timeperiod_spec_alias(timeperiods[tp], tp))
+                            tp_code = escape_html_permissive(
+                                timeperiod_spec_alias(timeperiods[tp], tp))
                         html.write_html(tp_code)
 
                 # the visible custom attributes

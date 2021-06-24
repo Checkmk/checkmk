@@ -151,12 +151,9 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
     # Showing / rendering
     #
 
-    def render_text(self, text: HTMLContent) -> HTML:
-        return HTML(escaping.escape_text(text))
-
     def write_text(self, text: HTMLContent) -> None:
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
-        self.write(self.render_text(text))
+        self.write_html(HTML(escaping.escape_text(text)))
 
     def write_html(self, content: HTML) -> None:
         """ Write HTML code directly, without escaping. """
@@ -962,11 +959,11 @@ class html(ABCHTMLGenerator):
             prefix = _('ERROR')
 
         if self.output_format == "html":
-            code = self.render_div(self.render_text(msg), class_=cls)
+            code = self.render_div(msg, class_=cls)
             if self._mobile:
                 return self.render_center(code)
             return code
-        return self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
+        return escaping.escape_html_permissive('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -1515,7 +1512,7 @@ class html(ABCHTMLGenerator):
         """Show all previously created user errors"""
         if user_errors:
             self.show_error(self.render_br().join(
-                self.render_text(s) for s in user_errors.values()))
+                escaping.escape_html_permissive(s) for s in user_errors.values()))
 
     def text_input(self,
                    varname: str,

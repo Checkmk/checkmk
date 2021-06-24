@@ -33,6 +33,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
+from cmk.gui.escaping import escape_html_permissive
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -635,7 +636,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
         if config.debug:
             raise
         raise MKGeneralException(
-            html.render_text(_("Cannot parse log file %s: %s") % (file_name, e)))
+            escape_html_permissive(_("Cannot parse log file %s: %s") % (file_name, e)))
 
     return log_chunks
 

@@ -2348,7 +2348,18 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
             ),
         ))
 
-    # 2. level: host home page
+    # 2. Level: hostname (url to status of host)
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=host_name,
+            url=makeuri_contextless(
+                request,
+                [("view_name", "hoststatus"), ("host", host_name)],
+                filename="view.py",
+            ),
+        ))
+
+    # 3. level: host home page
     host_view_spec = permitted_views["host"]
     breadcrumb.append(
         BreadcrumbItem(

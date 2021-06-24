@@ -58,8 +58,8 @@ SDEncodeAs = Callable
 
 SDDeltaResult = Tuple[int, int, int, "StructuredDataTree"]
 CDeltaResult = Tuple[int, int, int, "Container"]
-NDeltaResult = Tuple[int, int, int, Optional["Numeration"]]
-ADeltaResult = Tuple[int, int, int, Optional["Attributes"]]
+NDeltaResult = Tuple[int, int, int, "Numeration"]
+ADeltaResult = Tuple[int, int, int, "Attributes"]
 
 #     ____            ____
 #    /    \          /    \     max. 1 per type
@@ -127,26 +127,26 @@ class StructuredDataTree:
         tree_path: Optional[SDRawPath],
         child: Union["Attributes", "Numeration"],
     ) -> Union[SDAttributes, SDTable]:
-        self._validate_tree_path(tree_path)
-        # TODO parse instead of validate
-        assert isinstance(tree_path, str)
         path = self._parse_tree_path(tree_path)
         parent = self._root._create_hierarchy(path[:-1])
         return parent.add_child(path[-1], child).get_child_data()
 
-    def _validate_tree_path(self, tree_path: Optional[SDRawPath]) -> None:
+    def _parse_tree_path(self, tree_path: Optional[SDRawPath]) -> SDPath:
         if not tree_path:
             raise MKGeneralException("Empty tree path or zero.")
+
         if not isinstance(tree_path, str):
             raise MKGeneralException("Wrong tree path format. Must be of type string.")
+
         if not tree_path.endswith((":", ".")):
             raise MKGeneralException("No valid tree path.")
+
         if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
             raise MKGeneralException("Specified tree path contains unexpected characters.")
 
-    def _parse_tree_path(self, tree_path: SDRawPath) -> SDPath:
         if tree_path.startswith("."):
             tree_path = tree_path[1:]
+
         if tree_path.endswith(":") or tree_path.endswith("."):
             tree_path = tree_path[:-1]
 
@@ -266,9 +266,6 @@ class StructuredDataTree:
     def has_edge(self, edge: SDNodeName) -> bool:
         return self._root.has_edge(edge)
 
-    def get_children(self, edges: Optional[SDPath] = None) -> SDChildren:
-        return self._root.get_children(edges=edges)
-
     def get_sub_container(self, path: SDPath) -> Optional["Container"]:
         return self._root.get_sub_container(path)
 
@@ -348,7 +345,7 @@ class Container:
         return self._path
 
     def is_empty(self) -> bool:
-        for _, child in self.get_children():
+        for _, child in self._get_children():
             if not child.is_empty():
                 return False
         return True
@@ -363,17 +360,18 @@ class Container:
         return True
 
     def count_entries(self) -> int:
-        return sum([child.count_entries() for _, child in self.get_children()])
+        return sum([child.count_entries() for _, child in self._get_children()])
 
     def compare_with(self, other: object, keep_identical: bool = False) -> CDeltaResult:
         if not isinstance(other, Container):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._nodes, self._nodes)
-
         delta_node = Container()
         num_new, num_changed, num_removed = 0, 0, 0
-        for edge, my_child in self.get_children(edges=list(new_keys)):
+
+        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._nodes, self._nodes)
+
+        for edge, my_child in self._get_children(edges=list(new_keys)):
             new_entries = my_child.count_entries()
             if new_entries:
                 num_new += new_entries
@@ -399,7 +397,7 @@ class Container:
                 num_removed += removed_entries
                 delta_node.add_child(edge, delta_child)
 
-        for edge, other_child in other.get_children(edges=list(removed_keys)):
+        for edge, other_child in other._get_children(edges=list(removed_keys)):
             removed_entries = other_child.count_entries()
             if removed_entries:
                 num_removed += removed_entries
@@ -412,13 +410,13 @@ class Container:
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Container":
         delta_node = Container()
-        for edge, child in self.get_children():
+        for edge, child in self._get_children():
             delta_node.add_child(edge, child.encode_for_delta_tree(encode_as))
         return delta_node
 
     def get_raw_tree(self) -> Dict:
         tree: Dict = {}
-        for edge, child in self.get_children():
+        for edge, child in self._get_children():
             child_tree = child.get_raw_tree()
             if self._is_nested_numeration_tree(child) and isinstance(child_tree, dict):
                 # Sort by index but forget index afterwards => nested sub nodes as before
@@ -448,7 +446,7 @@ class Container:
         'list-composed-of-dicts-containing-lists' structure into
         numerated nodes ('arrays') containing real numerations ('devices').
         """
-        for edge, child in self.get_children():
+        for edge, child in self._get_children():
             if isinstance(child, Numeration) and \
                self._has_nested_numeration_node(child.get_child_data()):
                 self._set_nested_numeration_node(edge, child.get_child_data())
@@ -496,7 +494,7 @@ class Container:
 
     def copy(self) -> "Container":
         new_node = Container()
-        for edge, child in self.get_children():
+        for edge, child in self._get_children():
             new_node.add_child(edge, child.copy())
         return new_node
 
@@ -561,16 +559,12 @@ class Container:
     def get_edge_nodes(self) -> List[Tuple[SDNodeName, "Node"]]:
         return list(self._nodes.items())
 
-    def get_children(self, edges: Optional[SDPath] = None) -> SDChildren:
+    def _get_children(self, edges: Optional[SDPath] = None) -> SDChildren:
         """Returns a flatten list of tuples (edge, absolute path, child)"""
-        children = set()
-        for edge, node in self._nodes.items():
-            if edges is not None and edge not in edges:
-                continue
-
-            for child in node.get_node_children():
-                children.add((edge, child))
-        return children
+        return {(edge, child)
+                for edge, node in self._nodes.items()
+                for child in node.get_node_children()
+                if edges is None or edge in edges}
 
     def _get_comparable_children(
         self,
@@ -578,18 +572,10 @@ class Container:
         edges: Optional[SDPath] = None,
     ) -> SDCompChildren:
         """Returns a flatten list of tuples (edge, absolute path, my child, other child)"""
-        if edges is None:
-            the_edges = set(self._nodes).union(other._nodes)
-        else:
-            the_edges = set(edges)
-
-        comparable_children = set()
-        for edge in the_edges:
-            my_node = self._nodes.get(edge, Node())
-            other_node = other._nodes.get(edge, Node())
-            for my_child, other_child in my_node.get_comparable_node_children(other_node):
-                comparable_children.add((edge, my_child, other_child))
-        return comparable_children
+        return {(edge, child, other_child)
+                for edge in (set(edges) if edges else set(self._nodes).union(other._nodes))
+                for child, other_child in self._nodes.get(
+                    edge, Node()).get_comparable_node_children(other._nodes.get(edge, Node()))}
 
     def get_sub_container(self, path: SDPath) -> Optional["Container"]:
         sub_node = self._get_sub_node(path)
@@ -619,19 +605,15 @@ class Container:
         if not path:
             return None
 
-        edge, path = path[0], path[1:]
+        sub_node = self._nodes.get(path[0])
+        if len(path) == 1 or sub_node is None:
+            return sub_node
 
-        sub_node = self._nodes.get(edge)
-        if sub_node is None:
+        container = sub_node.get_node_container()
+        if container is None:
             return None
 
-        if path:
-            container = sub_node.get_node_container()
-            if container is None:
-                return None
-            return container._get_sub_node(path)
-
-        return sub_node
+        return container._get_sub_node(path[1:])
 
     #   ---web------------------------------------------------------------------
 
@@ -685,13 +667,14 @@ class Numeration:
         if not isinstance(other, Numeration):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        remaining_own_rows, remaining_other_rows, identical_rows =\
-            self._get_categorized_rows(other)
+        delta_node = Numeration()
+        num_new, num_changed, num_removed = 0, 0, 0
 
+        remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
         removed_rows: List = []
         compared_rows: List = []
-        num_new, num_changed, num_removed = 0, 0, 0
+
         if not remaining_other_rows and remaining_own_rows:
             new_rows.extend(remaining_own_rows)
 
@@ -716,16 +699,15 @@ class Numeration:
                           + [{k: _removed_delta_tree_node(v)
                              for k,v in row.items()}
                              for row in removed_rows]
+
         if keep_identical:
             delta_node_rows += [
                 {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
             ]
-        delta_node: Optional[Numeration] = None
-        if delta_node_rows:
-            delta_node = Numeration()
-            delta_node.set_child_data(delta_node_rows)
-        return len(new_rows) + num_new, num_changed,\
-               len(removed_rows) + num_removed, delta_node
+
+        delta_node.set_child_data(delta_node_rows)
+
+        return len(new_rows) + num_new, num_changed, len(removed_rows) + num_removed, delta_node
 
     def _get_categorized_rows(self, other: "Numeration") -> Tuple[SDTable, SDTable, SDTable]:
         identical_rows = []
@@ -884,16 +866,16 @@ class Attributes:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        new, changed, removed, identical = \
-            _compare_dicts(other._attributes, self._attributes)
-        delta_node: Optional[Attributes] = None
+        delta_node = Attributes()
+        new, changed, removed, identical = _compare_dicts(other._attributes, self._attributes)
+
         if new or changed or removed:
-            delta_node = Attributes()
             delta_node.set_child_data(new)
             delta_node.set_child_data(changed)
             delta_node.set_child_data(removed)
             if keep_identical:
                 delta_node.set_child_data(identical)
+
         return len(new), len(changed), len(removed), delta_node
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Attributes":

@@ -623,7 +623,7 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
     [2, 1, 1, 4, 1, 4],
 )))
 def test_structured_data_StructuredDataTree_get_children(tree, len_children):
-    tree_children = tree.get_children()
+    tree_children = tree._root._get_children()
     for entry in tree_children:
         assert len(entry) == 2
     assert len(tree_children) == len_children

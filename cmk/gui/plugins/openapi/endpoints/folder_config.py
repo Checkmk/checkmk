@@ -35,6 +35,8 @@ A folder_config object can have the following relations present in `links`:
 """
 from typing import List
 
+from werkzeug.datastructures import ETags
+
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
@@ -113,7 +115,7 @@ def update(params):
     """Update a folder
     """
     folder = params['folder']
-    constructors.require_etag(constructors.etag_of_obj(folder))
+    constructors.require_etag(etag_of_folder(folder))
 
     post_body = params['body']
     title = post_body['title']
@@ -233,7 +235,7 @@ def move(params):
     folder: watolib.CREFolder = params['folder']
     folder_id = folder.id()
 
-    constructors.require_etag(constructors.etag_of_obj(folder))
+    constructors.require_etag(etag_of_folder(folder))
 
     dest_folder: watolib.CREFolder = params['body']['destination']
 
@@ -350,7 +352,7 @@ def _serve_folder(
     folder_json = _serialize_folder(folder, show_hosts)
     response = constructors.serve_json(folder_json, profile=profile)
     if not folder.is_root():
-        response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
+        response.headers.add("ETag", etag_of_folder(folder).to_header())
     return response
 
 
@@ -395,3 +397,11 @@ def _serialize_folder(folder: CREFolder, show_hosts):
             ],
         )
     return rv
+
+
+def etag_of_folder(folder: CREFolder) -> ETags:
+    return constructors.etag_of_dict({
+        'path': folder.path(),
+        'attributes': folder.attributes(),
+        'hosts': folder.host_names(),
+    })

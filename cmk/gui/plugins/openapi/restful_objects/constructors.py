@@ -883,6 +883,9 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': 'd'})
         <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
 
+        >>> etag_of_dict({'c': 'd', 'a': 'b'})
+        <ETags '"88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"'>
+
         >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
         <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
 
@@ -896,21 +899,10 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         str: The hex-digest of the built hash.
 
     """
-    def _first(sequence):
-        try:
-            return sequence[0]
-        except IndexError:
-            pass
-
     def _update(_hash_obj, _d):
         if isinstance(_d, (list, tuple)):
-            first = _first(_d)
-            if isinstance(first, dict):
-                for entry in _d:
-                    _update(_hash_obj, entry)
-            else:
-                for value in sorted(_d):
-                    _update(_hash_obj, value)
+            for value in _d:
+                _update(_hash_obj, value)
         else:
             if isinstance(_d, dict):
                 for key, value in sorted(_d.items()):
@@ -927,22 +919,3 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
     _hash = hashlib.sha256()
     _update(_hash, dict_)
     return ETags(strong_etags=[_hash.hexdigest()])
-
-
-def etag_of_obj(obj):
-    """Build an ETag from an objects last updated time.
-
-    Args:
-        obj: An object with a `updated_at` method.
-
-    Returns:
-        The value which the method returns, else raises a `ProblemException`.
-
-    """
-    updated_at = obj.updated_at()
-    assert updated_at is not None
-    if updated_at is None:
-        raise ProblemException(500, "Object %r has no meta_data." % (obj.name(),),
-                               "Can't create ETag.")
-
-    return ETags(strong_etags=[str(updated_at)])

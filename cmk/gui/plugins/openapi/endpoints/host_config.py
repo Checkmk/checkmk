@@ -41,7 +41,9 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import json
 import operator
-from typing import Iterable
+from typing import Any, Dict, Iterable, List
+
+from werkzeug.datastructures import ETags
 
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import fields, watolib
@@ -185,7 +187,7 @@ def update_nodes(params):
     body = params['body']
     nodes = body['nodes']
     host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(constructors.etag_of_obj(host))
+    constructors.require_etag(etag_of_host(host))
     host.edit(host.attributes(), nodes)
 
     return constructors.serve_json(
@@ -214,7 +216,7 @@ def update_host(params):
     remove_attributes = body['remove_attributes']
     check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(constructors.etag_of_obj(host))
+    constructors.require_etag(etag_of_host(host))
 
     if new_attributes:
         host.edit(new_attributes, None)
@@ -430,7 +432,8 @@ def _serve_host(host, effective_attributes=False):
     response = Response()
     response.set_data(json.dumps(serialize_host(host, effective_attributes)))
     response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_obj(host).to_header())
+    etag = etag_of_host(host)
+    response.headers.add('ETag', etag.to_header())
     return response
 
 
@@ -465,3 +468,27 @@ def _missing_host_problem(host_name):
         f'Host "{host_name}" is not known.',
         'The host you asked for is not known. Please check for eventual misspellings.',
     )
+
+
+def _except_keys(dict_: Dict[str, Any], exclude_keys: List[str]) -> Dict[str, Any]:
+    """Removes some keys from a dict.
+
+    Examples:
+        >>> _except_keys({'a': 'b', 'remove_me': 'hurry up'}, ['remove_me'])
+        {'a': 'b'}
+
+    """
+    if not exclude_keys:
+        return dict_
+    return {key: value for key, value in dict_.items() if key not in exclude_keys}
+
+
+def etag_of_host(host: watolib.CREHost) -> ETags:
+    # FIXME: Through some not yet fully explored effect, we do not get the actual persisted
+    #        timestamp in the meta_data section but rather some other timestamp. This makes the
+    #        reported ETag a different one than the one which is accepted by the endpoint.
+    return constructors.etag_of_dict({
+        'name': host.name(),
+        'attributes': _except_keys(host.attributes(), ['meta_data']),
+        'cluster_nodes': host.cluster_nodes(),
+    })

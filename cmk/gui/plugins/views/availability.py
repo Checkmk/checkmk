@@ -431,10 +431,10 @@ def _page_menu_availability(breadcrumb: Breadcrumb, view, what: AVObjectType, av
 
 
 def _render_avoptions_form(option_type: str, what: AVObjectType, avoptions: AVOptions,
-                           valuespecs: AVOptionValueSpecs) -> str:
+                           valuespecs: AVOptionValueSpecs) -> HTML:
     with output_funnel.plugged():
         _show_availability_options(option_type, what, avoptions, valuespecs)
-        return output_funnel.drain()
+        return HTML(output_funnel.drain())
 
 
 def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec,

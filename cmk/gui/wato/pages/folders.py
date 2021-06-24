@@ -944,11 +944,11 @@ class ModeFolder(WatoMode):
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
 
-    def _render_bulk_move_form(self) -> str:
+    def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
             choices = self._folder.choices_for_moving_host()
             if not choices:
-                return ""
+                return HTML()
 
             choices.insert(0, ("@", _("(select target folder)")))
 
@@ -961,7 +961,7 @@ class ModeFolder(WatoMode):
                           form="form_hosts")
             html.button("_bulk_move", _("Move"), form="form_hosts")
 
-            return output_funnel.drain()
+            return HTML(output_funnel.drain())
 
     def _move_to_imported_folders(self, host_names_to_move) -> None:
         # Create groups of hosts with the same target folder

@@ -108,14 +108,14 @@ def make_confirmed_form_submit_link(*, form_name: str, button_name: str,
 @dataclass
 class PageMenuPopup(ABCPageMenuItem):
     """A link opening a pre-rendered hidden area (not necessarily a popup window)"""
-    content: str
+    content: HTML
     css_classes: List[Optional[str]] = field(default_factory=list)
 
 
 @dataclass
 class PageMenuSidePopup(PageMenuPopup):
     """A link opening a pre-rendered popup on the right of the page"""
-    content: str
+    content: HTML
     css_classes: List[Optional[str]] = field(default_factory=list)
 
 
@@ -790,7 +790,7 @@ class PageMenuPopupsRenderer:
                 "Add a div container with the class \"side_popup_content\" to the popup content")
 
         html.open_div(class_="content")
-        html.write_html(HTML(entry.item.content))
+        html.write_html(entry.item.content)
         html.close_div()
         html.close_div()
 

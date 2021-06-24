@@ -238,7 +238,7 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
         ))
 
 
-def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
+def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> HTML:
     with output_funnel.plugged():
         html.begin_form("werks")
         html.hidden_field("wo_set", "set")
@@ -253,7 +253,7 @@ def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
         html.hidden_fields()
         html.end_form()
 
-        return output_funnel.drain()
+        return HTML(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:

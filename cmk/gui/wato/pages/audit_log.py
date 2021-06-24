@@ -203,10 +203,10 @@ class ModeAuditLog(WatoMode):
                 ],
             ))
 
-    def _render_filter_form(self) -> str:
+    def _render_filter_form(self) -> HTML:
         with output_funnel.plugged():
             self._display_audit_log_options()
-            return output_funnel.drain()
+            return HTML(output_funnel.drain())
 
     def _log_exists(self):
         return self._store.exists()

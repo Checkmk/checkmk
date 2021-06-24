@@ -1575,10 +1575,10 @@ class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
 
 
 def render_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
-                       context: VisualContext, page_name: str, reset_ajax_page: str) -> str:
+                       context: VisualContext, page_name: str, reset_ajax_page: str) -> HTML:
     with output_funnel.plugged():
         show_filter_form(info_list, mandatory_filters, context, page_name, reset_ajax_page)
-        return output_funnel.drain()
+        return HTML(output_funnel.drain())
 
 
 def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],

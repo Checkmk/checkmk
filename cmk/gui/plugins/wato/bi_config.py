@@ -768,11 +768,11 @@ class ModeBIRules(ABCBIMode):
         html.end_form()
         init_rowselect(self.name())
 
-    def _render_bulk_move_form(self) -> str:
+    def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return ""
+                return HTML()
 
             if html.request.has_var('bulk_moveto'):
                 html.javascript('cmk.selection.update_bulk_moveto("%s")' %
@@ -794,7 +794,7 @@ class ModeBIRules(ABCBIMode):
                         "submit",
                         form="form_bulk_action_form")
 
-            return output_funnel.drain()
+            return HTML(output_funnel.drain())
 
     def _show_bulk_move_choices(self):
         return [(pack_id, bi_pack.title)
@@ -1862,11 +1862,11 @@ class BIModeAggregations(ABCBIMode):
         html.end_form()
         init_rowselect(self.name())
 
-    def _render_bulk_move_form(self) -> str:
+    def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
             move_choices = self._show_bulk_move_choices()
             if not move_choices:
-                return ""
+                return HTML()
 
             if html.request.has_var('bulk_moveto'):
                 html.javascript('cmk.selection.update_bulk_moveto("%s")' %
@@ -1889,7 +1889,7 @@ class BIModeAggregations(ABCBIMode):
                         _("Bulk move"),
                         "submit",
                         form="form_bulk_action_form")
-            return output_funnel.drain()
+            return HTML(output_funnel.drain())
 
     def _show_bulk_move_choices(self) -> Choices:
         return [(pack_id, bi_pack.title)

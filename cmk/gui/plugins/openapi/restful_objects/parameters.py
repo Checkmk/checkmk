@@ -63,7 +63,9 @@ ETAG_HEADER_PARAM = {
     'ETag': String(
         description=('The HTTP ETag header for this resource. It identifies the '
                      'current state of the object and needs to be sent along in '
-                     'the "If-Match" request-header for subsequent modifications.'),
+                     'the "If-Match" request-header for subsequent modifications. '
+                     'Please note that the actual ETag returned by some endpoints '
+                     'may look different than the one shown in this example.'),
         example='a20ceacf346041dc',
     )
 }

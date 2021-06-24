@@ -18,6 +18,7 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
+from cmk.fetchers import MaxAge
 from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.config as config
@@ -227,7 +228,7 @@ def make_nodes(
 def fetch_all(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
-    max_cachefile_age: int,
+    max_cachefile_age: MaxAge,
     host_config: HostConfig,
 ) -> Iterator[FetcherMessage]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
@@ -255,7 +256,7 @@ def update_host_sections(
     multi_host_sections: MultiHostSections,
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
-    max_cachefile_age: int,
+    max_cachefile_age: MaxAge,
     host_config: HostConfig,
     fetcher_messages: Sequence[FetcherMessage],
     selected_sections: SectionNameCollection,

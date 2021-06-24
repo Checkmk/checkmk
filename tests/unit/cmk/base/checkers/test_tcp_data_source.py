@@ -14,6 +14,8 @@ from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.type_defs import result
 
+from cmk.fetchers import MaxAge
+
 from cmk.base.checkers import Mode
 from cmk.base.checkers.agent import AgentHostSections, AgentSummarizerDefault
 from cmk.base.checkers.tcp import TCPSource
@@ -103,7 +105,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.fetcher_configuration == {
         "file_cache": {
             "disabled": False,
-            "max_age": 0,
+            "max_age": MaxAge.none(),
             "base_path": "/my/path",
             "simulation": False,
             "use_outdated": False,

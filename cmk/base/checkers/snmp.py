@@ -13,7 +13,7 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName, ServiceCheck
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPSectionContent
 
-from cmk.fetchers import FetcherType, SNMPFetcher
+from cmk.fetchers import FetcherType, MaxAge, SNMPFetcher
 from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.fetchers.snmp import SectionMeta, SNMPFileCache, SNMPPluginStore, SNMPPluginStoreItem
 
@@ -54,7 +54,7 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
     def make(self) -> SNMPFileCache:
         return SNMPFileCache(
             base_path=self.base_path,
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=self.disabled,
             use_outdated=False,
             simulation=self.simulation,

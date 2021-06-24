@@ -97,6 +97,8 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackend)
 
+from cmk.fetchers import MaxAge
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_api_utils as check_api_utils
@@ -152,6 +154,21 @@ RecurringDowntime = Dict[str, Union[int, str]]
 CheckInfo = Dict  # TODO: improve this type
 IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
+
+
+def max_cachefile_age(
+    *,
+    checking: Optional[int] = None,
+    discovery: Optional[int] = None,
+    inventory: Optional[int] = None,
+) -> MaxAge:
+    return MaxAge(
+        checking=check_max_cachefile_age if checking is None else checking,
+        # next line: inventory_max_cachefile_age is *not a typo*, old name for discovery!
+        discovery=inventory_max_cachefile_age if discovery is None else discovery,
+        # next line: hard coded default, not configurable.
+        inventory=120 if inventory is None else inventory,
+    )
 
 
 class ExitSpec(TypedDict, total=False):
@@ -1378,11 +1395,6 @@ _all_checks_loaded = False
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
 service_rule_groups = {"temperature"}
-
-
-def discovery_max_cachefile_age() -> int:
-    return inventory_max_cachefile_age
-
 
 #.
 #   .--Loading-------------------------------------------------------------.
@@ -3155,8 +3167,9 @@ class HostConfig:
             ) for hostname in hostnames)
 
     @property
-    def max_cachefile_age(self) -> int:
-        return check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age
+    def max_cachefile_age(self) -> MaxAge:
+        return max_cachefile_age(
+            checking=check_max_cachefile_age if self.nodes is None else cluster_max_cachefile_age)
 
     @property
     def is_dyndns_host(self) -> bool:

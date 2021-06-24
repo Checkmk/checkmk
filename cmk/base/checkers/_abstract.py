@@ -21,7 +21,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, ServiceCheckResul
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import ABCFetcher, ABCFileCache, MKFetcherError
+from cmk.fetchers import ABCFetcher, ABCFileCache, MKFetcherError, MaxAge
 from cmk.fetchers.controller import FetcherType
 from cmk.fetchers.type_defs import Mode
 
@@ -78,13 +78,13 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         self,
         base_path: Union[Path, str],
         *,
-        max_age: int,
+        max_age: MaxAge,
         simulation: bool = False,
     ):
         super().__init__()
-        self.base_path: Final[Path] = Path(base_path)
-        self.max_age: Final[int] = max_age
-        self.simulation: Final[bool] = simulation
+        self.base_path: Final = Path(base_path)
+        self.max_age: Final = max_age
+        self.simulation: Final = simulation
 
     @classmethod
     def reset_maybe(cls):
@@ -134,7 +134,7 @@ class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
         self.file_cache_base_path: Final[Path] = cache_dir / self.hostname
-        self.file_cache_max_age: int = 0
+        self.file_cache_max_age: MaxAge = MaxAge.none()
         self.persisted_sections_file_path: Final[Path] = persisted_section_dir / self.hostname
 
         self.host_config: Final[HostConfig] = HostConfig.make_host_config(hostname)

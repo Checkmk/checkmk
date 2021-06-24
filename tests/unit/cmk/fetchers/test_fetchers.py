@@ -29,7 +29,7 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.fetchers import FetcherType, MKFetcherError, snmp
+from cmk.fetchers import FetcherType, MaxAge, MKFetcherError, snmp
 from cmk.fetchers.agent import DefaultAgentFileCache, NoCache
 from cmk.fetchers.ipmi import IPMIFetcher
 from cmk.fetchers.piggyback import PiggybackFetcher
@@ -68,7 +68,7 @@ class TestFileCache:
     def file_cache(self, request):
         return request.param(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=False,
             simulation=True,
@@ -87,7 +87,7 @@ class TestNoCache:
     def file_cache(self, path):
         return NoCache(
             base_path=path,
-            max_age=999,
+            max_age=MaxAge(discovery=999, checking=0, inventory=0),
             disabled=False,
             use_outdated=False,
             simulation=False,
@@ -130,7 +130,7 @@ class TestDefaultFileCache_and_SNMPFileCache:
     def file_cache(self, path, request):
         return request.param(
             base_path=path,
-            max_age=999,
+            max_age=MaxAge(discovery=999, checking=0, inventory=0),
             disabled=False,
             use_outdated=False,
             simulation=False,
@@ -190,7 +190,7 @@ class TestIPMIFetcher:
     def file_cache(self):
         return DefaultAgentFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=True,
@@ -247,7 +247,7 @@ class TestPiggybackFetcher:
     def file_cache(self):
         return NoCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=True,
@@ -275,7 +275,7 @@ class TestProgramFetcher:
     def file_cache(self):
         return DefaultAgentFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=True,
@@ -475,7 +475,7 @@ class TestSNMPFetcherDeserialization(ABCTestSNMPFetcher):
     def file_cache(self):
         return SNMPFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=True,
@@ -513,7 +513,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
     def file_cache(self):
         return SNMPFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=False,
@@ -636,7 +636,7 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     def file_cache(self):
         return StubFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=False,
@@ -670,7 +670,7 @@ class TestTCPFetcher:
     def file_cache(self):
         return DefaultAgentFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=True,
@@ -764,7 +764,7 @@ class TestFetcherCaching:
     def file_cache(self):
         return DefaultAgentFileCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=True,
             simulation=False,

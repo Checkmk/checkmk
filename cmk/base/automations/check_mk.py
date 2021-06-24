@@ -159,7 +159,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters=service_filters,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
-                max_cachefile_age=config.discovery_max_cachefile_age(),
+                max_cachefile_age=config.max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
@@ -213,7 +213,7 @@ class AutomationTryDiscovery(Automation):
 
         return discovery.get_check_preview(
             host_name=args[0],
-            max_cachefile_age=config.discovery_max_cachefile_age(),
+            max_cachefile_age=config.max_cachefile_age(),
             use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )
@@ -1208,7 +1208,7 @@ class AutomationDiagHost(Automation):
                 ipaddress,
                 mode=checkers.Mode.CHECKING,
         ):
-            source.file_cache_max_age = config.check_max_cachefile_age
+            source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, checkers.programs.DSProgramSource) and cmd:
                 source = source.ds(
                     source.hostname,
@@ -1505,7 +1505,7 @@ class AutomationGetAgentOutput(Automation):
                         ipaddress,
                         mode=checkers.Mode.CHECKING,
                 ):
-                    source.file_cache_max_age = config.check_max_cachefile_age
+                    source.file_cache_max_age = config.max_cachefile_age()
                     if not isinstance(source, checkers.agent.AgentSource):
                         continue
 

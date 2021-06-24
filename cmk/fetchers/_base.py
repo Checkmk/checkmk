@@ -8,7 +8,7 @@ import abc
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, final, Final, Generic, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, final, Final, NamedTuple, Generic, Literal, Optional, Type, TypeVar, Union
 
 import cmk.utils
 import cmk.utils.store as store
@@ -20,11 +20,24 @@ from cmk.snmplib.type_defs import TRawData
 
 from .type_defs import Mode
 
-__all__ = ["ABCFetcher", "ABCFileCache", "MKFetcherError", "verify_ipaddress"]
+__all__ = ["ABCFetcher", "ABCFileCache", "MaxAge", "MKFetcherError", "verify_ipaddress"]
 
 
 class MKFetcherError(MKException):
     """An exception common to the fetchers."""
+
+
+class MaxAge(NamedTuple):
+    checking: int
+    discovery: int
+    inventory: int
+
+    @classmethod
+    def none(cls):
+        return cls(0, 0, 0)
+
+    def get(self, mode: Mode, *, default: int = 0) -> int:
+        return self._asdict().get(mode.name.lower(), default)
 
 
 TFileCache = TypeVar("TFileCache", bound="ABCFileCache")
@@ -35,7 +48,7 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         self,
         *,
         base_path: Union[str, Path],
-        max_age: int,
+        max_age: MaxAge,
         disabled: bool,
         use_outdated: bool,
         simulation: bool,
@@ -80,7 +93,8 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
 
     @classmethod
     def from_json(cls: Type[TFileCache], serialized: Dict[str, Any]) -> TFileCache:
-        return cls(**serialized)
+        max_age = MaxAge(*serialized.pop("max_age"))
+        return cls(max_age=max_age, **serialized)
 
     @staticmethod
     @abc.abstractmethod
@@ -134,6 +148,16 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
             self._logger.debug("Not using cache (Does not exist)")
             return None
 
+        may_use_outdated = self.simulation or self.use_outdated
+        cachefile_age = cmk.utils.cachefile_age(path)
+        if not may_use_outdated and cachefile_age > self.max_age.get(mode):
+            self._logger.debug(
+                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
+                cachefile_age,
+                self.max_age.get(mode),
+            )
+            return None
+
         raw_data = self._read(path)
         if raw_data is None and self.simulation:
             raise MKFetcherError("Got no data (Simulation mode enabled and no cachefile present)")
@@ -144,16 +168,6 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         return raw_data
 
     def _read(self, path: Path) -> Optional[TRawData]:
-        may_use_outdated = self.simulation or self.use_outdated
-        cachefile_age = cmk.utils.cachefile_age(path)
-        if not may_use_outdated and cachefile_age > self.max_age:
-            self._logger.debug(
-                "Not using cache (Too old. Age is %d sec, allowed is %s sec)",
-                cachefile_age,
-                self.max_age,
-            )
-            return None
-
         # TODO: Use some generic store file read function to generalize error handling,
         # but there is currently no function that simply reads data from the file
         cache_file = path.read_bytes()

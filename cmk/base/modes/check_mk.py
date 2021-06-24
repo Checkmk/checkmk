@@ -410,7 +410,7 @@ def mode_dump_agent(hostname: HostName) -> None:
                 ipaddress,
                 mode=mode,
         ):
-            source.file_cache_max_age = config.check_max_cachefile_age
+            source.file_cache_max_age = config.max_cachefile_age()
             if not isinstance(source, checkers.agent.AgentSource):
                 continue
 

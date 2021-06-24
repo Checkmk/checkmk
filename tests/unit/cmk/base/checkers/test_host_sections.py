@@ -22,6 +22,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import (
     FetcherType,
     IPMIFetcher,
+    MaxAge,
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
@@ -520,7 +521,7 @@ class TestMakeHostSectionsHosts:
                 mode=mode,
                 sources=(),
             ),
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=(),
             selected_sections=NO_SELECTION,
@@ -557,7 +558,7 @@ class TestMakeHostSectionsHosts:
                     ),
                 ],
             ),
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -613,7 +614,7 @@ class TestMakeHostSectionsHosts:
                 mode=mode,
                 sources=[source],
             ),
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -666,7 +667,7 @@ class TestMakeHostSectionsHosts:
                 mode=mode,
                 sources=sources,
             ),
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -709,7 +710,7 @@ class TestMakeHostSectionsHosts:
         update_host_sections(
             mhs,
             nodes,
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=[
                 FetcherMessage.from_raw_data(
@@ -810,7 +811,7 @@ class TestMakeHostSectionsClusters:
         update_host_sections(
             mhs,
             made_nodes,
-            max_cachefile_age=0,
+            max_cachefile_age=MaxAge.none(),
             host_config=host_config,
             fetcher_messages=[
                 # We do not pass sources explicitly but still append Piggyback.

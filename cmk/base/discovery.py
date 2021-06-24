@@ -58,6 +58,7 @@ from cmk.utils.type_defs import (
     DiscoveryResult,
 )
 
+from cmk.fetchers import MaxAge
 from cmk.fetchers.protocol import FetcherMessage
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -359,7 +360,7 @@ def do_discovery(
                 mode,
                 sources,
             )
-            max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+            max_cachefile_age = config.max_cachefile_age(discovery=None if use_caches else 0)
 
             multi_host_sections = MultiHostSections()
             checkers.update_host_sections(
@@ -508,7 +509,7 @@ def discover_on_host(
     service_filters: ServiceFilters,
     on_error: str,
     use_cached_snmp_data: bool,
-    max_cachefile_age: int,
+    max_cachefile_age: MaxAge,
 ) -> DiscoveryResult:
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -763,7 +764,7 @@ def check_discovery(
         sources,
     )
     use_caches = checkers.FileCacheFactory.maybe
-    max_cachefile_age = config.discovery_max_cachefile_age() if use_caches else 0
+    max_cachefile_age = config.max_cachefile_age(discovery=None if use_caches else 0)
     if not fetcher_messages:
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         #       Also See: `cmk.base.checking.do_check()`
@@ -1057,7 +1058,7 @@ def _discover_marked_host(config_cache: config.ConfigCache, host_config: config.
             # autodiscovery is run every 5 minutes (see
             # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
             # make sure we may use the file the active discovery check left behind:
-            max_cachefile_age=600,
+            max_cachefile_age=config.max_cachefile_age(discovery=600),
         )
         if result.error_text is not None:
             if result.error_text:
@@ -1809,7 +1810,7 @@ def _get_cluster_services(
 def get_check_preview(
     *,
     host_name: HostName,
-    max_cachefile_age: int,
+    max_cachefile_age: MaxAge,
     use_cached_snmp_data: bool,
     on_error: str,
 ) -> Tuple[CheckPreviewTable, HostLabelDiscoveryResult]:

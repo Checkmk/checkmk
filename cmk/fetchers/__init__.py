@@ -9,7 +9,7 @@ import enum
 from typing import Any, Dict, Literal, Optional, Type, Union
 
 from . import cache
-from ._base import ABCFetcher, ABCFileCache, MKFetcherError, verify_ipaddress
+from ._base import ABCFetcher, ABCFileCache, MaxAge, MKFetcherError, verify_ipaddress
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher

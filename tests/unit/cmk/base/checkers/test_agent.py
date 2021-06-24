@@ -18,7 +18,7 @@ from testlib.base import Scenario
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, MaxAge
 from cmk.fetchers.agent import NoCache
 from cmk.fetchers.cache import SectionStore
 
@@ -277,7 +277,7 @@ class StubSource(AgentSource):
     def _make_file_cache(self):
         return NoCache(
             base_path=Path(os.devnull),
-            max_age=0,
+            max_age=MaxAge.none(),
             disabled=True,
             use_outdated=False,
             simulation=True,

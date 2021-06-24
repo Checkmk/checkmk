@@ -450,9 +450,9 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         return CheckmkAutomationRequest(
             *ast.literal_eval(html.request.get_ascii_input_mandatory("request")))
 
-    def execute(self, request: CheckmkAutomationRequest) -> Tuple:
-        job = CheckmkAutomationBackgroundJob(request=request)
-        job.set_function(job.execute_automation, request=request)
+    def execute(self, api_request: CheckmkAutomationRequest) -> Tuple:
+        job = CheckmkAutomationBackgroundJob(api_request=api_request)
+        job.set_function(job.execute_automation, api_request=api_request)
         job.start()
         return job.get_job_id()
 
@@ -467,8 +467,8 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     def get_request(self) -> str:
         return ast.literal_eval(html.request.get_ascii_input_mandatory("request"))
 
-    def execute(self, request: str) -> Tuple:
-        job_id = request
+    def execute(self, api_request: str) -> Tuple:
+        job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
         job_status = job.get_status_snapshot().get_status_as_dict()[job.get_job_id()]
 
@@ -489,28 +489,29 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
 
     def __init__(self,
                  job_id: Optional[str] = None,
-                 request: Optional[CheckmkAutomationRequest] = None) -> None:
+                 api_request: Optional[CheckmkAutomationRequest] = None) -> None:
         if job_id is not None:
             # Loading an existing job
             super(CheckmkAutomationBackgroundJob, self).__init__(job_id=job_id)
             return
 
-        assert request is not None
+        assert api_request is not None
 
         # A new job is started
         automation_id = str(uuid.uuid4())
         super(CheckmkAutomationBackgroundJob, self).__init__(
-            job_id="%s%s-%s" % (self.job_prefix, request.command, automation_id),
-            title=_("Checkmk automation %s %s") % (request.command, automation_id),
+            job_id="%s%s-%s" % (self.job_prefix, api_request.command, automation_id),
+            title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
         )
 
     def execute_automation(self, job_interface: BackgroundProcessInterface,
-                           request: CheckmkAutomationRequest) -> None:
-        self._logger.info("Starting automation: %s", request.command)
-        self._logger.debug(request)
+                           api_request: CheckmkAutomationRequest) -> None:
+        self._logger.info("Starting automation: %s", api_request.command)
+        self._logger.debug(api_request)
 
-        result = check_mk_local_automation(request.command, request.args, request.indata,
-                                           request.stdin_data, request.timeout)
+        result = check_mk_local_automation(api_request.command, api_request.args,
+                                           api_request.indata, api_request.stdin_data,
+                                           api_request.timeout)
 
         # This file will be read by the get-status request
         result_file_path = os.path.join(job_interface.get_work_dir(), "result.mk")

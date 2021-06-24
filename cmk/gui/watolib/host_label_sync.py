@@ -182,7 +182,7 @@ class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
 
 
 def _execute_site_sync(site_id: SiteId, site_spec: SiteConfiguration,
-                       request: SiteRequest) -> SiteResult:
+                       site_request: SiteRequest) -> SiteResult:
     """Executes the sync with a site. Is executed in a dedicated subprocess (One per site)"""
     try:
         logger.debug(_("[%s] Starting sync for site"), site_id)
@@ -191,7 +191,7 @@ def _execute_site_sync(site_id: SiteId, site_spec: SiteConfiguration,
         result = DiscoveredHostLabelSyncResponse(
             **do_remote_automation(site_spec,
                                    "discovered-host-label-sync", [
-                                       ("request", repr(request.serialize())),
+                                       ("request", repr(site_request.serialize())),
                                    ],
                                    timeout=100))
 
@@ -224,15 +224,15 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand):
             raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
         return SiteRequest.deserialize(ast.literal_eval(ascii_input))
 
-    def execute(self, request: SiteRequest) -> Dict[str, Any]:
-        if request.enforce_host:
+    def execute(self, api_request: SiteRequest) -> Dict[str, Any]:
+        if api_request.enforce_host:
             try:
                 response = DiscoveredHostLabelSyncResponse(
-                    [get_host_labels_entry_of_host(request.enforce_host.host_name)])
+                    [get_host_labels_entry_of_host(api_request.enforce_host.host_name)])
             except FileNotFoundError:
                 response = DiscoveredHostLabelSyncResponse([])
         else:
             response = DiscoveredHostLabelSyncResponse(
-                get_updated_host_label_files(newer_than=request.newest_host_labels))
+                get_updated_host_label_files(newer_than=api_request.newest_host_labels))
 
         return asdict(response)

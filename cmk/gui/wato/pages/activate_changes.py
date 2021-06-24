@@ -30,7 +30,7 @@ import cmk.gui.watolib.activate_changes
 from cmk.gui.watolib.search import build_index_background
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request, display_options, transactions
+from cmk.gui.globals import html, request, display_options, transactions
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
@@ -105,7 +105,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 title=_("Sites"),
                 icon_name="sites",
                 item=make_simple_link(makeuri_contextless(
-                    global_request,
+                    request,
                     [("mode", "sites")],
                 )),
             )
@@ -124,8 +124,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         yield PageMenuEntry(
             title=_("Discard all pending changes"),
             icon_name="delete",
-            item=make_simple_link(
-                makeactionuri(global_request, transactions, [("_action", "discard")])),
+            item=make_simple_link(makeactionuri(request, transactions, [("_action", "discard")])),
             name="discard_changes",
             is_enabled=self.has_changes() and self._get_last_wato_snapshot_file(),
         )
@@ -514,7 +513,7 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:
-        url = makeuri_contextless(global_request, [
+        url = makeuri_contextless(request, [
             ("mode", "edit_user"),
             ("edit", object_ref.ident),
         ],
@@ -522,7 +521,7 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         return url, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Rule:
-        url = makeuri_contextless(global_request, [
+        url = makeuri_contextless(request, [
             ("mode", "edit_rule"),
             ("varname", object_ref.labels["ruleset"]),
             ("rule_id", object_ref.ident),
@@ -531,7 +530,7 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
         return url, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Ruleset:
-        url = makeuri_contextless(global_request, [
+        url = makeuri_contextless(request, [
             ("mode", "edit_ruleset"),
             ("varname", object_ref.ident),
         ],
@@ -584,24 +583,24 @@ class ModeAjaxStartActivation(AjaxPage):
 
         config.user.need_permission("wato.activate")
 
-        request = self.webapi_request()
+        api_request = self.webapi_request()
 
-        activate_until = request.get("activate_until")
+        activate_until = api_request.get("activate_until")
         if not activate_until:
             raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
 
         manager = watolib.ActivateChangesManager()
         manager.load()
 
-        affected_sites_request = ensure_str(request.get("sites", "").strip())
+        affected_sites_request = ensure_str(api_request.get("sites", "").strip())
         if not affected_sites_request:
             affected_sites = manager.dirty_and_active_activation_sites()
         else:
             affected_sites = affected_sites_request.split(",")
 
-        comment: Optional[str] = request.get("comment", "").strip()
+        comment: Optional[str] = api_request.get("comment", "").strip()
 
-        activate_foreign = request.get("activate_foreign", "0") == "1"
+        activate_foreign = api_request.get("activate_foreign", "0") == "1"
 
         valuespec = _vs_activation("", manager.has_foreign_changes())
         if valuespec:
@@ -632,9 +631,9 @@ class ModeAjaxActivationState(AjaxPage):
 
         config.user.need_permission("wato.activate")
 
-        request = self.webapi_request()
+        api_request = self.webapi_request()
 
-        activation_id = request.get("activation_id")
+        activation_id = api_request.get("activation_id")
         if not activation_id:
             raise MKUserError("activation_id", _("Missing parameter \"%s\".") % "activation_id")
 
@@ -666,5 +665,5 @@ class AutomationActivateChanges(watolib.AutomationCommand):
 
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 
-    def execute(self, request):
-        return cmk.gui.watolib.activate_changes.execute_activate_changes(request.domains)
+    def execute(self, api_request):
+        return cmk.gui.watolib.activate_changes.execute_activate_changes(api_request.domains)

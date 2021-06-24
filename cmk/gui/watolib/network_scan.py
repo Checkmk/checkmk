@@ -171,8 +171,8 @@ class AutomationNetworkScan(AutomationCommand):
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)
 
-    def execute(self, request):
-        folder = Folder.folder(request.folder_path)
+    def execute(self, api_request):
+        folder = Folder.folder(api_request.folder_path)
         return _do_network_scan(folder)
 
 

@@ -222,8 +222,8 @@ class PushUserProfilesToSite(AutomationCommand):
         return PushUserProfilesRequest(
             ast.literal_eval(html.request.get_ascii_input_mandatory("profiles")))
 
-    def execute(self, request):
-        user_profiles = request.user_profiles
+    def execute(self, api_request):
+        user_profiles = api_request.user_profiles
 
         if not user_profiles:
             raise MKGeneralException(_('Invalid call: No profiles set.'))

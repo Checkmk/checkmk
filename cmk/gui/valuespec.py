@@ -82,8 +82,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, theme, output_funnel
-from cmk.gui.globals import request as global_request
+from cmk.gui.globals import html, theme, output_funnel, request
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.pages import AjaxPage, page_registry
@@ -2130,14 +2129,15 @@ class ListOfMultiple(ValueSpec):
 
 class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def _get_choices(self, request: Dict[str, str]) -> List[_Tuple[str, ValueSpec]]:
+    def _get_choices(self, api_request: Dict[str, str]) -> List[_Tuple[str, ValueSpec]]:
         raise NotImplementedError()
 
     def page(self) -> Dict:
-        request = global_request.get_request()
-        vs = ListOfMultiple(self._get_choices(request), "unused_dummy_page")
+        api_request = request.get_request()
+        vs = ListOfMultiple(self._get_choices(api_request), "unused_dummy_page")
         with output_funnel.plugged():
-            vs.show_choice_row(ensure_str(request["varprefix"]), ensure_str(request["ident"]), {})
+            vs.show_choice_row(ensure_str(api_request["varprefix"]),
+                               ensure_str(api_request["ident"]), {})
             return {"html_code": output_funnel.drain()}
 
 
@@ -2653,8 +2653,8 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
 @page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
     def page(self):
-        request = self.webapi_request()
-        ident = request["ident"]
+        api_request = self.webapi_request()
+        ident = api_request["ident"]
         if not ident:
             raise MKUserError("ident", _("You need to set the \"%s\" parameter.") % "ident")
 
@@ -2662,11 +2662,11 @@ class PageVsAutocomplete(AjaxPage):
         if completer is None:
             raise MKUserError("ident", _("Invalid ident: %s") % ident)
 
-        params = request.get("params")
+        params = api_request.get("params")
         if params is None:
             raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "params")
 
-        value = request.get("value")
+        value = api_request.get("value")
         if value is None:
             raise MKUserError("params", _("You need to set the \"%s\" parameter.") % "value")
 
@@ -5708,9 +5708,9 @@ def SingleLabel(world, label_source=None, **kwargs):
 class PageAutocompleteLabels(AjaxPage):
     """Return all known labels to support tagify label input dropdown completion"""
     def page(self):
-        request = global_request.get_request()
+        api_request = request.get_request()
         return encode_labels_for_tagify(
-            self._get_labels(Labels.World(request["world"]), request["search_label"]))
+            self._get_labels(Labels.World(api_request["world"]), api_request["search_label"]))
 
     def _get_labels(self, world, search_label: str) -> ItemsView[str, str]:
         if world is Labels.World.CONFIG:
@@ -5906,7 +5906,7 @@ class IconSelector(ValueSpec):
                            ('varprefix', varprefix),
                            ('allow_empty', '1' if self._allow_empty else '0'),
                            ('show_builtin_icons', '1' if self._show_builtin_icons else '0'),
-                           ('back', makeuri(global_request, [])),
+                           ('back', makeuri(request, [])),
                        ]),
             resizable=True,
         )
@@ -5967,7 +5967,7 @@ class IconSelector(ValueSpec):
 
         if config.user.may('wato.icons'):
             back_param = '&back=' + urlencode(
-                global_request.get_url_input('back')) if html.request.has_var('back') else ''
+                request.get_url_input('back')) if html.request.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
         html.close_div()

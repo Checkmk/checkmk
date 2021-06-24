@@ -2158,9 +2158,9 @@ class AutomationGetConfigSyncState(AutomationCommand):
             for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
         ]
 
-    def execute(self, request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
+    def execute(self, api_request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
         with store.lock_checkmk_configuration():
-            file_infos = _get_config_sync_file_infos(request,
+            file_infos = _get_config_sync_file_infos(api_request,
                                                      base_dir=Path(cmk.utils.paths.omd_root))
             transport_file_infos = {
                 k: (v.st_mode, v.st_size, v.link_target, v.file_hash)
@@ -2271,17 +2271,17 @@ class AutomationReceiveConfigSync(AutomationCommand):
             _request.get_integer_input_mandatory("config_generation"),
         )
 
-    def execute(self, request: ReceiveConfigSyncRequest) -> bool:
+    def execute(self, api_request: ReceiveConfigSyncRequest) -> bool:
         with store.lock_checkmk_configuration():
-            if request.config_generation != _get_current_config_generation():
+            if api_request.config_generation != _get_current_config_generation():
                 raise MKGeneralException(
                     _("The configuration was changed during activation. "
                       "Terminating this activation to ensure configuration integrity. "
                       "Please try again."))
 
-            self._update_config_on_remote_site(request.sync_archive, request.to_delete)
+            self._update_config_on_remote_site(api_request.sync_archive, api_request.to_delete)
 
-            _execute_post_config_sync_actions(request.site_id)
+            _execute_post_config_sync_actions(api_request.site_id)
             return True
 
     def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:

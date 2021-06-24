@@ -27,7 +27,7 @@ class AutomationCommand(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, request: Any) -> Any:
+    def execute(self, api_request: Any) -> Any:
         raise NotImplementedError()
 
 

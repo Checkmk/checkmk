@@ -32,7 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request as global_request, response
+from cmk.gui.globals import g, html, request as request, response
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
@@ -436,21 +436,21 @@ def page_host_inv_api() -> None:
     # b) result      - In case of an error this is the error message, a UTF-8 encoded string.
     #                  In case of success this is a dictionary containing the host inventory.
     try:
-        request = global_request.get_request()
+        api_request = request.get_request()
         # The user can either specify a single host or provide a list of host names. In case
         # multiple hosts are handled, there is a top level dict added with "host > invdict" pairs
-        hosts = request.get("hosts")
+        hosts = api_request.get("hosts")
         if hosts:
             result = {}
             for a_host_name in hosts:
-                result[a_host_name] = inventory_of_host(a_host_name, request)
+                result[a_host_name] = inventory_of_host(a_host_name, api_request)
 
         else:
-            host_name = request.get("host")
+            host_name = api_request.get("host")
             if host_name is None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
 
-            result = inventory_of_host(host_name, request)
+            result = inventory_of_host(host_name, api_request)
 
             if not result and not has_inventory(host_name):
                 raise MKGeneralException(_("Found no inventory data for this host."))
@@ -480,8 +480,8 @@ def has_inventory(hostname):
     return os.path.exists(inventory_path)
 
 
-def inventory_of_host(host_name: HostName, request):
-    raw_site = request.get("site")
+def inventory_of_host(host_name: HostName, api_request):
+    raw_site = api_request.get("site")
     site = livestatus.SiteId(raw_site) if raw_site is not None else None
     verify_permission(host_name, site)
 
@@ -490,9 +490,9 @@ def inventory_of_host(host_name: HostName, request):
     if not merged_tree:
         return {}
 
-    if "paths" in request:
+    if "paths" in api_request:
         parsed_paths = []
-        for path in request["paths"]:
+        for path in api_request["paths"]:
             parsed_paths.append(parse_tree_path(path))
         merged_tree = merged_tree.get_filtered_tree(parsed_paths)
 

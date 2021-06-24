@@ -119,14 +119,14 @@ StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
 
 
 class Discovery:
-    def __init__(self, host, discovery_options, request):
+    def __init__(self, host, discovery_options, api_request):
         self._host = host
         self._options = discovery_options
         self._discovery_info = {
-            "update_source": request.get("update_source"),
-            "update_target": request["update_target"],
+            "update_source": api_request.get("update_source"),
+            "update_target": api_request["update_target"],
             "update_services":
-                request.get("update_services", [])  # list of service hash
+                api_request.get("update_services", [])  # list of service hash
         }
 
     def execute_discovery(self, discovery_result=None):
@@ -465,21 +465,21 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     return discovery_result
 
 
-def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
+def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult:
     """Either execute the discovery job to scan the host or return the discovery result
     based on the currently cached data"""
-    job = ServiceDiscoveryBackgroundJob(request.host.name())
+    job = ServiceDiscoveryBackgroundJob(api_request.host.name())
 
-    if not job.is_active() and request.options.action in [
+    if not job.is_active() and api_request.options.action in [
             DiscoveryAction.REFRESH, DiscoveryAction.TABULA_RASA
     ]:
-        job.set_function(job.discover, request)
+        job.set_function(job.discover, api_request)
         job.start()
 
-    if job.is_active() and request.options.action == DiscoveryAction.STOP:
+    if job.is_active() and api_request.options.action == DiscoveryAction.STOP:
         job.stop()
 
-    r = job.get_result(request)
+    r = job.get_result(api_request)
     return r
 
 
@@ -516,20 +516,20 @@ def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
     return DiscoveryResult(**remote_result)
 
 
-def _get_check_table_from_remote(request):
+def _get_check_table_from_remote(api_request):
     """Gathers the check table from a remote site
 
     Cares about pre 1.6 sites that does not support the new service-discovery-job API call.
     Falling back to the previously existing try-inventry and inventory automation calls.
     """
     try:
-        sync_changes_before_remote_automation(request.host.site_id())
+        sync_changes_before_remote_automation(api_request.host.site_id())
 
         return _deserialize_remote_result(
-            watolib.do_remote_automation(config.site(request.host.site_id()),
+            watolib.do_remote_automation(config.site(api_request.host.site_id()),
                                          "service-discovery-job", [
-                                             ("host_name", request.host.name()),
-                                             ("options", json.dumps(request.options._asdict())),
+                                             ("host_name", api_request.host.name()),
+                                             ("options", json.dumps(api_request.options._asdict())),
                                          ]))
     except watolib.MKAutomationException as e:
         if "Invalid automation command: service-discovery-job" not in "%s" % e:
@@ -537,22 +537,22 @@ def _get_check_table_from_remote(request):
 
         # Compatibility for pre 1.6 remote sites.
         # TODO: Replace with helpful exception in 1.7.
-        if request.options.action == DiscoveryAction.TABULA_RASA:
+        if api_request.options.action == DiscoveryAction.TABULA_RASA:
             _counts, _failed_hosts = check_mk_automation(
-                request.host.site_id(), "inventory",
-                ["@scan", "refresh", request.host.name()])
+                api_request.host.site_id(), "inventory",
+                ["@scan", "refresh", api_request.host.name()])
 
-        if request.options.action == DiscoveryAction.REFRESH:
+        if api_request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
         else:
             options = ["@noscan"]
 
-        if not request.options.ignore_errors:
+        if not api_request.options.ignore_errors:
             options.append("@raiseerrors")
 
-        options.append(request.host.name())
+        options.append(api_request.host.name())
 
-        check_table = check_mk_automation(request.host.site_id(), "try-inventory", options)
+        check_table = check_mk_automation(api_request.host.site_id(), "try-inventory", options)
 
         return DiscoveryResult(
             job_status={
@@ -592,56 +592,56 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         )
         self._pre_try_discovery: Tuple[int, Dict] = (0, {})
 
-    def discover(self, request: StartDiscoveryRequest,
+    def discover(self, api_request: StartDiscoveryRequest,
                  job_interface: BackgroundProcessInterface) -> None:
         """Target function of the background job"""
         print("Starting job...")
-        self._pre_try_discovery = self._get_try_discovery(request)
+        self._pre_try_discovery = self._get_try_discovery(api_request)
 
-        if request.options.action == DiscoveryAction.REFRESH:
+        if api_request.options.action == DiscoveryAction.REFRESH:
             self._jobstatus.update_status({"title": _("Refresh")})
-            self._perform_service_scan(request)
+            self._perform_service_scan(api_request)
 
-        elif request.options.action == DiscoveryAction.TABULA_RASA:
+        elif api_request.options.action == DiscoveryAction.TABULA_RASA:
             self._jobstatus.update_status({"title": _("Tabula rasa")})
-            self._perform_automatic_refresh(request)
+            self._perform_automatic_refresh(api_request)
 
         else:
             raise NotImplementedError()
         print("Completed.")
 
-    def _perform_service_scan(self, request):
+    def _perform_service_scan(self, api_request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        result = check_mk_automation(request.host.site_id(), "try-inventory",
-                                     self._get_automation_options(request))
+        result = check_mk_automation(api_request.host.site_id(), "try-inventory",
+                                     self._get_automation_options(api_request))
         sys.stdout.write(result["output"])
 
-    def _perform_automatic_refresh(self, request):
+    def _perform_automatic_refresh(self, api_request):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        execute_automation_discovery(site_id=request.host.site_id(),
+        execute_automation_discovery(site_id=api_request.host.site_id(),
                                      args=["@scan", "refresh",
-                                           request.host.name()])
-        #count_added, _count_removed, _count_kept, _count_new = counts[request.host.name()]
+                                           api_request.host.name()])
+        #count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
         #message = _("Refreshed check configuration of host '%s' with %d services") % \
-        #            (request.host.name(), count_added)
-        #watolib.add_service_change(request.host, "refresh-autochecks", message)
+        #            (api_request.host.name(), count_added)
+        #watolib.add_service_change(api_request.host, "refresh-autochecks", message)
 
-    def _get_automation_options(self, request: StartDiscoveryRequest) -> List[str]:
-        if request.options.action == DiscoveryAction.REFRESH:
+    def _get_automation_options(self, api_request: StartDiscoveryRequest) -> List[str]:
+        if api_request.options.action == DiscoveryAction.REFRESH:
             options = ["@scan"]
         else:
             options = ["@noscan"]
 
-        if not request.options.ignore_errors:
+        if not api_request.options.ignore_errors:
             options.append("@raiseerrors")
 
-        options.append(request.host.name())
+        options.append(api_request.host.name())
 
         return options
 
-    def get_result(self, request: StartDiscoveryRequest) -> DiscoveryResult:
+    def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
@@ -649,7 +649,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         if job_status['is_active']:
             check_table_created, result = self._pre_try_discovery
         else:
-            check_table_created, result = self._get_try_discovery(request)
+            check_table_created, result = self._get_try_discovery(api_request)
             if job_status['state'] == JobStatusStates.EXCEPTION:
                 job_status.update(self._cleaned_up_status(job_status))
 
@@ -664,16 +664,16 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         )
 
     @staticmethod
-    def _get_try_discovery(request: StartDiscoveryRequest) -> Tuple[int, Dict]:
+    def _get_try_discovery(api_request: StartDiscoveryRequest) -> Tuple[int, Dict]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         return (
             int(time.time()),
             check_mk_automation(
-                request.host.site_id(),
+                api_request.host.site_id(),
                 "try-inventory",
-                ["@noscan", request.host.name()],
+                ["@noscan", api_request.host.name()],
             ),
         )
 

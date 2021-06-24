@@ -44,8 +44,8 @@ import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import display_options, g, html, transactions, user_errors, output_funnel
-from cmk.gui.globals import request as global_request, response
+from cmk.gui.globals import (display_options, g, html, transactions, user_errors, output_funnel,
+                             request, response)
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.i18n import _, _u
@@ -498,7 +498,7 @@ class View:
             breadcrumb.append(
                 BreadcrumbItem(
                     title=view_title(self.spec, self.context),
-                    url=makeuri_contextless(global_request, request_vars),
+                    url=makeuri_contextless(request, request_vars),
                 ))
             return breadcrumb
 
@@ -532,7 +532,7 @@ class View:
                 BreadcrumbItem(
                     title=view_title(self.spec, self.context),
                     url=makeuri_contextless(
-                        global_request,
+                        request,
                         [("view_name", self.name), ("host", host_name)],
                     ),
                 ))
@@ -549,7 +549,7 @@ class View:
             BreadcrumbItem(
                 title=view_title(self.spec, self.context),
                 url=makeuri_contextless(
-                    global_request,
+                    request,
                     [
                         ("view_name", self.name),
                         ("host", host_name),
@@ -678,7 +678,7 @@ class GUIViewRenderer(ABCViewRenderer):
             ):  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
-                    backurl = makeuri(global_request, [], delvars=['filled_in', 'actions'])
+                    backurl = makeuri(request, [], delvars=['filled_in', 'actions'])
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
@@ -898,13 +898,13 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(makeuri(global_request, [("output_format", "csv_export")])),
+            item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(makeuri(global_request, [("output_format", "json_export")])),
+            item=make_simple_link(makeuri(request, [("output_format", "json_export")])),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -917,7 +917,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(makeuri(global_request, [], filename="report_instant.py")),
+            item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
         )
 
         # Link related reports
@@ -977,7 +977,7 @@ class GUIViewRenderer(ABCViewRenderer):
             icon_name="checked_checkbox" if self.view.checkboxes_displayed else "checkbox",
             item=make_simple_link(
                 makeuri(
-                    global_request,
+                    request,
                     [
                         ("show_checkboxes", "0" if self.view.checkboxes_displayed else "1"),
                     ],
@@ -996,7 +996,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if self.view.spec["owner"] != config.user.id:
                 url_vars.append(("owner", self.view.spec["owner"]))
 
-            url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
+            url = makeuri_contextless(request, url_vars, filename="edit_view.py")
 
             yield PageMenuEntry(
                 title=_("Customize view"),
@@ -1284,7 +1284,7 @@ def show_create_view_dialog(next_url=None):
 
             if not next_url:
                 next_url = makeuri(
-                    global_request,
+                    request,
                     [('datasource', ds)],
                     filename="create_view_infos.py",
                 )
@@ -1310,7 +1310,7 @@ def show_create_view_dialog(next_url=None):
 
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
-    ds_class, ds_name = global_request.get_item_input("datasource", data_source_registry)
+    ds_class, ds_name = request.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual('views',
                                ds_class().infos,
                                next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' %
@@ -1609,21 +1609,21 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
 @page_registry.register_page("ajax_cascading_render_painer_parameters")
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
     def page(self):
-        request = global_request.get_request()
+        api_request = request.get_request()
 
-        if request["painter_type"] == "painter":
-            painters = painters_of_datasource(request["ds_name"])
-        elif request["painter_type"] == "join_painter":
-            painters = join_painters_of_datasource(request["ds_name"])
+        if api_request["painter_type"] == "painter":
+            painters = painters_of_datasource(api_request["ds_name"])
+        elif api_request["painter_type"] == "join_painter":
+            painters = join_painters_of_datasource(api_request["ds_name"])
         else:
             raise NotImplementedError()
 
         vs = CascadingDropdown(choices=painter_choices_with_params(painters))
-        sub_vs = self._get_sub_vs(vs, ast.literal_eval(request["choice_id"]))
-        value = ast.literal_eval(request["encoded_value"])
+        sub_vs = self._get_sub_vs(vs, ast.literal_eval(api_request["choice_id"]))
+        value = ast.literal_eval(api_request["encoded_value"])
 
         with output_funnel.plugged():
-            vs.show_sub_valuespec(request["varprefix"], sub_vs, value)
+            vs.show_sub_valuespec(api_request["varprefix"], sub_vs, value)
             return {"html_code": output_funnel.drain()}
 
     def _get_sub_vs(self, vs: CascadingDropdown, choice_id: object) -> ValueSpec:
@@ -1758,11 +1758,11 @@ class ABCAjaxInitialFilters(AjaxPage):
         raise NotImplementedError()
 
     def page(self) -> Dict[str, str]:
-        request = self.webapi_request()
-        varprefix = request.get("varprefix", "")
-        page_name = request.get("page_name", "")
+        api_request = self.webapi_request()
+        varprefix = api_request.get("varprefix", "")
+        page_name = api_request.get("page_name", "")
         context = self._get_context(page_name)
-        page_request_vars = request.get("page_request_vars")
+        page_request_vars = api_request.get("page_request_vars")
         assert isinstance(page_request_vars, dict)
         vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"],
                                                           ignore=page_request_vars["ignore"])
@@ -1800,7 +1800,7 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
 def page_view():
     """Central entry point for the initial HTML page rendering of a view"""
     with CPUTracker() as page_view_tracker:
-        view_spec, view_name = global_request.get_item_input("view_name", get_permitted_views())
+        view_spec, view_name = request.get_item_input("view_name", get_permitted_views())
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
@@ -1983,7 +1983,7 @@ def get_row_count(view: View) -> int:
     # This must not modify the request variables of the view currently being processed. It would be
     # ideal to not deal with the global request variables data structure at all, but that would
     # first need a rewrite of the visual filter processing.
-    with global_request.stashed_vars():
+    with request.stashed_vars():
         all_active_filters = _get_view_filters(view)
 
         # Check that all needed information for configured single contexts are available
@@ -2433,7 +2433,7 @@ def get_limit() -> Optional[int]:
 def _link_to_folder_by_path(path: str) -> str:
     """Return an URL to a certain WATO folder when we just know its path"""
     return makeuri_contextless(
-        global_request,
+        request,
         [("mode", "folder"), ("folder", path)],
         filename="wato.py",
     )
@@ -2442,7 +2442,7 @@ def _link_to_folder_by_path(path: str) -> str:
 def _link_to_host_by_name(host_name: str) -> str:
     """Return an URL to the edit-properties of a host when we just know its name"""
     return makeuri_contextless(
-        global_request,
+        request,
         [("mode", "edit_host"), ("host", host_name)],
         filename="wato.py",
     )
@@ -2604,7 +2604,7 @@ def _get_ntop_page_menu_topics(view, host_address):
 def _get_ntop_entry_item_link(host_name: str, host_address: str, tab: str):
     return make_simple_link(
         makeuri(
-            global_request,
+            request,
             [
                 ("host", host_name),
                 ("host_address", host_address),
@@ -2776,7 +2776,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(makeuri(global_request, [("mode", "availability")])),
+        item=make_simple_link(makeuri(request, [("mode", "availability")])),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=_("Missing required context information")
         if view.missing_single_infos else None,
@@ -2807,7 +2807,7 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
         return None
 
     url = makeuri(
-        global_request,
+        request,
         [
             ("single_infos", ",".join(view.spec["single_infos"])),
             ("datasource", view.datasource.ident),
@@ -2903,7 +2903,7 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
         },
         item=make_simple_link(
             makeuri_contextless(
-                global_request,
+                request,
                 [("mode", "inventory"), ("host", host_name)],
                 filename="wato.py",
             )),
@@ -2916,7 +2916,7 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
             icon_name="diagnose",
             item=make_simple_link(
                 makeuri_contextless(
-                    global_request,
+                    request,
                     [("mode", "diag_host"), ("host", host_name)],
                     filename="wato.py",
                 )),
@@ -2928,7 +2928,7 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
             icon_name="rulesets",
             item=make_simple_link(
                 makeuri_contextless(
-                    global_request,
+                    request,
                     [("mode", "object_parameters"), ("host", host_name)],
                     filename="wato.py",
                 )),
@@ -2938,7 +2938,7 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
             title=_("Rules"),
             icon_name="rulesets",
             item=make_simple_link(
-                makeuri_contextless(global_request, [
+                makeuri_contextless(request, [
                     ("mode", "rule_search"),
                     ("filled_in", "search"),
                     ("search_p_ruleset_deprecated", "OFF"),
@@ -3403,20 +3403,20 @@ def ajax_popup_action_menu() -> None:
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
     def page(self) -> AjaxPageResult:
-        request = global_request.get_request()
-        return self._do_reschedule(request)
+        api_request = request.get_request()
+        return self._do_reschedule(api_request)
 
-    def _do_reschedule(self, request: Dict[str, Any]) -> AjaxPageResult:
+    def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
         if not config.user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
-        site = request.get("site")
-        host = request.get("host")
+        site = api_request.get("site")
+        host = api_request.get("host")
         if not host or not site:
             raise MKGeneralException("Action reschedule: missing host name")
 
-        service = request.get("service", "")
-        wait_svc = request.get("wait_svc", "")
+        service = api_request.get("service", "")
+        wait_svc = api_request.get("wait_svc", "")
 
         if service:
             cmd = "SVC"

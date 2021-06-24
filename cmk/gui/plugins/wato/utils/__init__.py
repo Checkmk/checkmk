@@ -2182,7 +2182,7 @@ class LabelCondition(Transform):
 
 @page_registry.register_page("ajax_dict_host_tag_condition_get_choice")
 class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, request):
+    def _get_choices(self, api_request):
         condition = DictHostTagCondition("Dummy title", "Dummy help")
         return condition._get_tag_group_choices()
 

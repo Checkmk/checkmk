@@ -81,7 +81,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request as global_request, transactions, g, output_funnel
+from cmk.gui.globals import html, request, transactions, g, output_funnel
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -540,9 +540,9 @@ def page_list(what,
 
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
-                backurl = urlencode(makeuri(global_request, []))
+                backurl = urlencode(makeuri(request, []))
                 clone_url = makeuri_contextless(
-                    global_request,
+                    request,
                     [
                         ("mode", "clone"),
                         ("owner", owner),
@@ -561,7 +561,7 @@ def page_list(what,
                         add_vars.append(('_user_id', owner))
                     html.icon_button(
                         make_confirm_link(
-                            url=makeactionuri(global_request, transactions, add_vars),
+                            url=makeactionuri(request, transactions, add_vars),
                             message=_("Please confirm the deletion of \"%s\".") % visual['title'],
                         ), _("Delete!"), "delete")
 
@@ -575,7 +575,7 @@ def page_list(what,
                     if owner != config.user.id:
                         edit_vars.append(("owner", owner))
                     edit_url = makeuri_contextless(
-                        global_request,
+                        request,
                         edit_vars,
                         filename="edit_%s.py" % what_s,
                     )
@@ -976,7 +976,7 @@ def page_edit_visual(
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
         visual['single_infos'] = single_infos
 
-    back_url = global_request.get_url_input("back", "edit_%s.py" % what)
+    back_url = request.get_url_input("back", "edit_%s.py" % what)
 
     breadcrumb = visual_page_breadcrumb(what, title, mode)
     page_menu = pagetypes.make_edit_form_page_menu(
@@ -1075,14 +1075,14 @@ def page_edit_visual(
             if html.request.var("save") or html.request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
-                        global_request,
+                        request,
                         [(visual_type.ident_attr, visual['name'])],
                         filename=save_and_go + '.py',
                     )
 
                 if html.request.var("save_and_view"):
                     back_url = makeuri_contextless(
-                        global_request,
+                        request,
                         [(visual_type.ident_attr, visual['name'])],
                         filename=visual_type.show_url,
                     )
@@ -1340,7 +1340,7 @@ def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> H
 @contextmanager
 def context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> Iterator[None]:
     """Updates the current HTTP variable context"""
-    with global_request.stashed_vars():
+    with request.stashed_vars():
         add_context_to_uri_vars(context, single_infos)
         yield
 
@@ -1401,14 +1401,14 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
 # TODO: Untangle only_sites and filter headers
 # TODO: Reduce redundancies with filters_of_visual()
 def get_filter_headers(table, infos, context):
-    with global_request.stashed_vars():
+    with request.stashed_vars():
         for filter_name, filter_vars in context.items():
             # first set the HTML variables. Sorry - the filters need this
             if isinstance(filter_vars, dict):  # this is a multi-context filter
                 for uri_varname, value in filter_vars.items():
-                    global_request.set_var(uri_varname, value)
+                    request.set_var(uri_varname, value)
             else:
-                global_request.set_var(filter_name, filter_vars)
+                request.set_var(filter_name, filter_vars)
 
         filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
@@ -1565,8 +1565,8 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, request):
-        infos, ignore = request["infos"], request["ignore"]
+    def _get_choices(self, api_request):
+        infos, ignore = api_request["infos"], api_request["ignore"]
         return [
             ListOfMultipleChoiceGroup(title=visual_info_registry[info]().title,
                                       choices=VisualFilterList.get_choices(info, ignore))
@@ -1825,7 +1825,7 @@ def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(global_request, [])))
+    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, [])))
     return breadcrumb
 
 

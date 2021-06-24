@@ -29,7 +29,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request as global_request, transactions, response
+from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKUserError,
@@ -373,7 +373,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return makeuri(global_request, [])
+        return makeuri(request, [])
 
     def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
                    job_interface: BackgroundProcessInterface) -> None:
@@ -392,7 +392,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         if result["tarfile_created"]:
             tarfile_path = result['tarfile_path']
             download_url = makeuri_contextless(
-                global_request,
+                request,
                 [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
                 filename="download_diagnostics_dump.py",
             )
@@ -434,8 +434,8 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 
-    def execute(self, request: str) -> bytes:
-        return _get_diagnostics_dump_file(request)
+    def execute(self, api_request: str) -> bytes:
+        return _get_diagnostics_dump_file(api_request)
 
     def get_request(self) -> str:
         return html.request.get_ascii_input_mandatory("tarfile_name")

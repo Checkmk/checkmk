@@ -35,7 +35,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request, transactions, output_funnel
+from cmk.gui.globals import html, request, transactions, output_funnel
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -452,10 +452,9 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Show %s" % title),
                 icon_name="checked_checkbox" if setting else "checkbox",
-                item=make_simple_link(
-                    makeuri(global_request, [
-                        (toggle_id, "" if setting else "1"),
-                    ])),
+                item=make_simple_link(makeuri(request, [
+                    (toggle_id, "" if setting else "1"),
+                ])),
             )
 
     def action(self) -> ActionResult:
@@ -569,9 +568,8 @@ class ModeFolder(WatoMode):
         if not self._folder.locked_hosts():
             menu_items.extend([
                 MenuItem(
-                    mode_or_url=makeuri_contextless(global_request,
-                                                    [("mode", "newhost"),
-                                                     ("folder", self._folder.path())]),
+                    mode_or_url=makeuri_contextless(request, [("mode", "newhost"),
+                                                              ("folder", self._folder.path())]),
                     title=_("Add host to the monitoring"),
                     icon="new",
                     permission="hosts",
@@ -580,9 +578,8 @@ class ModeFolder(WatoMode):
                      ),
                 ),
                 MenuItem(
-                    mode_or_url=makeuri_contextless(global_request,
-                                                    [("mode", "newcluster"),
-                                                     ("folder", self._folder.path())]),
+                    mode_or_url=makeuri_contextless(request, [("mode", "newcluster"),
+                                                              ("folder", self._folder.path())]),
                     title=_("Create cluster"),
                     icon="new_cluster",
                     permission="hosts",
@@ -594,9 +591,8 @@ class ModeFolder(WatoMode):
         if not self._folder.locked_subfolders():
             menu_items.extend([
                 MenuItem(
-                    mode_or_url=makeuri_contextless(global_request,
-                                                    [("mode", "newfolder"),
-                                                     ("folder", self._folder.path())]),
+                    mode_or_url=makeuri_contextless(request, [("mode", "newfolder"),
+                                                              ("folder", self._folder.path())]),
                     title=_("Add folder"),
                     icon="newfolder",
                     permission="hosts",
@@ -740,7 +736,7 @@ class ModeFolder(WatoMode):
                               url_vars=[
                                   ("what", what),
                                   ("ident", ident),
-                                  ("back_url", makeactionuri(global_request, transactions, [])),
+                                  ("back_url", makeactionuri(request, transactions, [])),
                               ]),
             style=style,
         )
@@ -900,7 +896,7 @@ class ModeFolder(WatoMode):
         show_all, limit = HTML(""), 3
         if len(labels) > limit and html.request.var("_show_all") != "1":
             show_all = HTML(" ") + html.render_a("... (%s)" % _("show all"),
-                                                 href=makeuri(global_request, [("_show_all", "1")]))
+                                                 href=makeuri(request, [("_show_all", "1")]))
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
@@ -1022,7 +1018,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
 
         self._ident = html.request.var("ident")
 
-        self._back_url = global_request.get_url_input("back_url")
+        self._back_url = request.get_url_input("back_url")
         if not self._back_url or not self._back_url.startswith("wato.py"):
             raise MKUserError("back_url", _("Invalid back URL provided."))
 
@@ -1261,5 +1257,5 @@ def _convert_title_to_filename(title):
 @page_registry.register_page("ajax_set_foldertree")
 class ModeAjaxSetFoldertree(AjaxPage):
     def page(self):
-        request = self.webapi_request()
-        config.user.save_file("foldertree", (request.get('topic'), request.get('target')))
+        api_request = self.webapi_request()
+        config.user.save_file("foldertree", (api_request.get('topic'), api_request.get('target')))

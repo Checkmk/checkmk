@@ -22,7 +22,7 @@ from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, request as global_request, transactions
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -317,7 +317,7 @@ class SiteManagement:
 
         # Make sure that site is not being used by hosts and folders
         if site_id in Folder.root_folder().all_site_ids():
-            search_url = makeactionuri(global_request, transactions, [
+            search_url = makeactionuri(request, transactions, [
                 ("host_search_change_site", "on"),
                 ("host_search_site", site_id),
                 ("host_search", "1"),
@@ -717,10 +717,10 @@ class AutomationPushSnapshot(AutomationCommand):
 
         return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request: PushSnapshotRequest) -> bool:
+    def execute(self, api_request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
-                request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
+                api_request.site_id, api_request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())
 
 

@@ -29,8 +29,7 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import (html, local, request as global_request, response, transactions,
-                             user_errors, theme)
+from cmk.gui.globals import (html, local, request, response, transactions, user_errors, theme)
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
@@ -45,7 +44,7 @@ auth_logger = logger.getChild("auth")
 
 
 @contextlib.contextmanager
-def authenticate(request: Request) -> Iterator[bool]:
+def authenticate(req: Request) -> Iterator[bool]:
     """Perform the user authentication
 
     This is called by index.py to ensure user
@@ -58,7 +57,7 @@ def authenticate(request: Request) -> Iterator[bool]:
     Otherwise we check / ask for the cookie authentication or eventually the
     automation secret authentication."""
 
-    user_id = _check_auth(request)
+    user_id = _check_auth(req)
     if not user_id:
         yield False
         return
@@ -221,7 +220,7 @@ def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    requested_file = requested_file_name(global_request)
+    requested_file = requested_file_name(request)
     if (requested_file != 'logout' and not html.request.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
         auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" %
@@ -242,11 +241,11 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
     # Once reached this the cookie is a good one. Renew it!
     _renew_cookie(cookie_name, username, session_id)
 
-    if requested_file_name(global_request) != 'user_change_pw':
+    if requested_file_name(request) != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
             raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                               (urlencode(makeuri(global_request, [])), result))
+                               (urlencode(makeuri(request, [])), result))
 
     # Return the authenticated username
     return username
@@ -284,8 +283,8 @@ def auth_cookie_is_valid(cookie_text: str) -> bool:
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
-def _check_auth(request: Request) -> Optional[UserId]:
-    user_id = _check_auth_web_server(request)
+def _check_auth(req: Request) -> Optional[UserId]:
+    user_id = _check_auth_web_server(req)
 
     if html.request.var("_secret"):
         user_id = _check_auth_automation()
@@ -332,8 +331,8 @@ def _check_auth_automation() -> UserId:
     user_id = html.request.get_unicode_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
-    global_request.del_var_from_env('_username')
-    global_request.del_var_from_env('_secret')
+    request.del_var_from_env('_username')
+    request.del_var_from_env('_secret')
 
     if verify_automation_secret(user_id, secret):
         # Auth with automation secret succeeded - mark transid as unneeded in this case
@@ -356,13 +355,13 @@ def _check_auth_http_header() -> Optional[UserId]:
     return user_id
 
 
-def _check_auth_web_server(request: Request) -> Optional[UserId]:
+def _check_auth_web_server(req: Request) -> Optional[UserId]:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user.
     """
-    user = request.remote_user
+    user = req.remote_user
     if user is not None:
         set_auth_type("web_server")
         return UserId(ensure_str(user))
@@ -438,7 +437,7 @@ class LoginPage(Page):
         if self._no_html_output:
             raise MKAuthException(_("Invalid login credentials."))
 
-        if is_mobile(global_request, response):
+        if is_mobile(request, response):
             cmk.gui.mobile.page_login()
             return
 
@@ -464,7 +463,7 @@ class LoginPage(Page):
                 raise MKUserError('_password', _('No password given.'))
 
             default_origtarget = config.url_prefix() + "check_mk/"
-            origtarget = global_request.get_url_input("_origtarget", default_origtarget)
+            origtarget = request.get_url_input("_origtarget", default_origtarget)
 
             # Disallow redirections to:
             #  - logout.py: Happens after login
@@ -508,9 +507,9 @@ class LoginPage(Page):
         html.add_body_css_class("login")
         html.header(config.get_page_heading(), Breadcrumb(), javascripts=[])
 
-        default_origtarget = ("index.py" if requested_file_name(global_request)
-                              in ["login", "logout"] else makeuri(global_request, []))
-        origtarget = global_request.get_url_input("_origtarget", default_origtarget)
+        default_origtarget = ("index.py" if requested_file_name(request) in ["login", "logout"] else
+                              makeuri(request, []))
+        origtarget = request.get_url_input("_origtarget", default_origtarget)
 
         # Never allow the login page to be opened in the iframe. Redirect top page to login page.
         # This will result in a full screen login page.
@@ -519,7 +518,7 @@ class LoginPage(Page):
 }''')
 
         # When someone calls the login page directly and is already authed redirect to main page
-        if requested_file_name(global_request) == 'login' and _check_auth(html.request):
+        if requested_file_name(request) == 'login' and _check_auth(html.request):
             raise HTTPRedirect(origtarget)
 
         html.open_div(id_="login")

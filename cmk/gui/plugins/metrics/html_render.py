@@ -17,7 +17,7 @@ import cmk.utils.render
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import html, theme, output_funnel
-from cmk.gui.globals import request as global_request, response
+from cmk.gui.globals import request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
@@ -181,7 +181,7 @@ def _render_graph_title_elements(graph_artwork, graph_render_options):
 def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
     if "add_host_name" in title_format:
         host_url = makeuri_contextless(
-            global_request,
+            request,
             [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
             filename="view.py",
         )
@@ -190,7 +190,7 @@ def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
     if "add_host_alias" in title_format:
         host_alias = get_alias_of_host(spec_info["site"], spec_info["host_name"])
         host_url = makeuri_contextless(
-            global_request,
+            request,
             [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
             filename="view.py",
         )
@@ -200,7 +200,7 @@ def title_info_elements(spec_info, title_format) -> Iterable[Tuple[str, str]]:
         service_description = spec_info["service_description"]
         if service_description != "_HOST_":
             service_url = makeuri_contextless(
-                global_request,
+                request,
                 [
                     ("view_name", "service"),
                     ("host", spec_info["host_name"]),
@@ -665,12 +665,12 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
 def ajax_render_graph_content():
     response.set_content_type("application/json")
     try:
-        request = global_request.get_request()
+        api_request = request.get_request()
         resp = {
             "result_code": 0,
-            "result": render_graph_content_html(request["graph_recipe"],
-                                                request["graph_data_range"],
-                                                request["graph_render_options"]),
+            "result": render_graph_content_html(api_request["graph_recipe"],
+                                                api_request["graph_data_range"],
+                                                api_request["graph_render_options"]),
         }
     except Exception:
         logger.exception("could not render graph")

@@ -27,7 +27,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, RequestContext, AppContext, request, response as global_response
+from cmk.gui.globals import html, RequestContext, AppContext, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -69,7 +69,7 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
             if config.debug:
                 html.write_text(traceback.format_exc())
 
-        return global_response
+        return response
 
     return _call_noauth
 
@@ -118,7 +118,7 @@ def _page_not_found() -> Response:
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
-    return global_response
+    return response
 
 
 def _render_exception(e: Exception, title: str) -> Response:
@@ -135,7 +135,7 @@ def _render_exception(e: Exception, title: str) -> Response:
         html.show_error(str(e))
         html.footer()
 
-    return global_response
+    return response
 
 
 def default_response_headers(req: http.Request) -> Dict[str, str]:
@@ -225,52 +225,52 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         load_all_plugins()
 
         page_handler = get_and_wrap_page(requested_file_name(request))
-        response = page_handler()
+        resp = page_handler()
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.
         # TODO: Remove all HTTPRedirect exceptions from all pages. Making the Exception a subclass
         #       of Response may also work as it can then be directly returned from here.
-        response = global_response
-        response.status_code = e.status
-        response.headers["Location"] = e.url
+        resp = response
+        resp.status_code = e.status
+        resp.headers["Location"] = e.url
 
     except FinalizeRequest as e:
         # TODO: Remove all FinalizeRequest exceptions from all pages and replace it with a `return`.
         #       It may be necessary to rewire the control-flow a bit as this exception could have
         #       been used to short-circuit some code and jump directly to the response. This
         #       needs to be changed as well.
-        response = global_response
-        response.status_code = e.status
+        resp = response
+        resp.status_code = e.status
 
     except livestatus.MKLivestatusNotFoundError as e:
-        response = _render_exception(e, title=_("Data not found"))
+        resp = _render_exception(e, title=_("Data not found"))
 
     except MKUserError as e:
-        response = _render_exception(e, title=_("Invalid user input"))
+        resp = _render_exception(e, title=_("Invalid user input"))
 
     except MKAuthException as e:
-        response = _render_exception(e, title=_("Permission denied"))
+        resp = _render_exception(e, title=_("Permission denied"))
 
     except livestatus.MKLivestatusException as e:
-        response = _render_exception(e, title=_("Livestatus problem"))
-        response.status_code = http_client.BAD_GATEWAY
+        resp = _render_exception(e, title=_("Livestatus problem"))
+        resp.status_code = http_client.BAD_GATEWAY
 
     except MKUnauthenticatedException as e:
-        response = _render_exception(e, title=_("Not authenticated"))
-        response.status_code = http_client.UNAUTHORIZED
+        resp = _render_exception(e, title=_("Not authenticated"))
+        resp.status_code = http_client.UNAUTHORIZED
 
     except MKConfigError as e:
-        response = _render_exception(e, title=_("Configuration error"))
+        resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
     except (MKGeneralException, cmk.utils.store.MKConfigLockTimeout) as e:
-        response = _render_exception(e, title=_("General error"))
+        resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 
     except Exception:
-        response = handle_unhandled_exception()
+        resp = handle_unhandled_exception()
         if debug:
             raise
 
-    return response(environ, start_response)
+    return resp(environ, start_response)

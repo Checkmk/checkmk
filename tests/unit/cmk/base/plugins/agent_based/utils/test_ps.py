@@ -252,5 +252,5 @@ def test_memory_perc_check_cluster():
 
     mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
     assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
-        Result(state=State.OK, notice='Percentage of total RAM: 21.00%')
+        Result(state=State.OK, summary='Percentage of total RAM: 21.00%')
     ]

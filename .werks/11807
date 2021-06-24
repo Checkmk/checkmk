@@ -1,0 +1,13 @@
+Title: local check: Do not crash on negative timespans
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1624019574
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p7
+
+In case a host's time is running ahead of checkmk's server time, a cached local section will crash in the plugin.
+This is fixed now and a message will be generated.

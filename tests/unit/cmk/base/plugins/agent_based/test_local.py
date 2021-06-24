@@ -9,6 +9,7 @@ from typing import Dict
 import pytest  # type: ignore[import]
 
 import cmk.base.plugins.agent_based.local as local
+from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric
 
 
@@ -267,7 +268,7 @@ def test_fix_state():
 
 def test_cached():
     local_result = local.LocalResult(
-        cached=(361, 314, 120),
+        cached=CacheInfo(age=361, cache_interval=120),
         item="Cached",
         state=0,
         text="A cached data service",
@@ -280,8 +281,8 @@ def test_cached():
                                       Result(
                                           state=state.OK,
                                           summary=("Cache generated 6 minutes 1 second ago, "
-                                                   "Cache interval: 2 minutes 0 seconds, "
-                                                   "Elapsed cache lifespan: 314.00%"),
+                                                   "cache interval: 2 minutes 0 seconds, "
+                                                   "elapsed cache lifespan: 300.83%"),
                                       ),
                                   ]
 

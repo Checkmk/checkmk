@@ -21,12 +21,12 @@ from .agent_based_api.v1 import (
     check_levels,
     Metric,
     register,
-    render,
     Result,
     Service,
     State,
 )
 from .agent_based_api.v1.clusterize import make_node_notice_results
+from .utils.cache_helper import CacheInfo, render_cache_info
 
 Perfdata = NamedTuple("Perfdata", [
     ("name", str),
@@ -37,7 +37,7 @@ Perfdata = NamedTuple("Perfdata", [
 ])
 
 LocalResult = NamedTuple("LocalResult", [
-    ("cached", Optional[Tuple[float, float, float]]),
+    ("cached", Optional[CacheInfo]),
     ("item", str),
     ("state", Union[int, str]),
     ("text", str),
@@ -82,7 +82,7 @@ def _parse_cache(line, now):
     age = now - creation_time
 
     # make sure max(..) will give the oldest/most outdated case
-    return (age, 100.0 * age / interval, interval), stripped_line
+    return CacheInfo(age=age, cache_interval=interval), stripped_line
 
 
 def _is_valid_line(line):
@@ -300,15 +300,7 @@ def check_local(item, params, section):
         yield from local_compute_state(local_result.perfdata)
 
     if local_result.cached is not None:
-        # We try to mimic the behaviour of cached agent sections.
-        # Problem here: We need this info on a per-service basis, so we cannot use the section header.
-        # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
-        infotext = "Cache generated %s ago, Cache interval: %s, Elapsed cache lifespan: %s" % (
-            render.timespan(local_result.cached[0]),
-            render.timespan(local_result.cached[2]),
-            render.percent(local_result.cached[1]),
-        )
-        yield Result(state=State.OK, summary=infotext)
+        yield Result(state=State.OK, summary=render_cache_info(local_result.cached))
 
 
 def cluster_check_local(

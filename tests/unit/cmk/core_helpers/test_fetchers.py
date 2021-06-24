@@ -828,14 +828,21 @@ class TestFetcherCaching:
         assert fetcher.file_cache.cache == b"cached_section"
 
 
+_FACTORIES_CLASSES = (
+    (FetcherType.IPMI, IPMIFetcher),
+    (FetcherType.PIGGYBACK, PiggybackFetcher),
+    (FetcherType.PROGRAM, ProgramFetcher),
+    (FetcherType.SNMP, SNMPFetcher),
+    (FetcherType.TCP, TCPFetcher),
+)
+
+
 class TestFetcherType:
-    @pytest.mark.parametrize("factory, cls", (
-        (FetcherType.IPMI, IPMIFetcher),
-        (FetcherType.PIGGYBACK, PiggybackFetcher),
-        (FetcherType.PROGRAM, ProgramFetcher),
-        (FetcherType.SNMP, SNMPFetcher),
-        (FetcherType.TCP, TCPFetcher),
-    ))
+    def test_all_fetchers_tested(self):
+        tested_fetcher_types = {factory for factory, cls in _FACTORIES_CLASSES}
+        assert set(FetcherType) - tested_fetcher_types == {FetcherType.NONE}
+
+    @pytest.mark.parametrize("factory, cls", _FACTORIES_CLASSES)
     def test_factory(self, factory, cls):
         assert factory.make() is cls
         assert factory.from_fetcher(cls) is factory

@@ -85,7 +85,7 @@ def simple_expect(
             A livestatus query.
 
         match_type:
-            Either 'strict' or 'ellipsis'. Default is 'ellipsis'.
+            Either 'strict', 'loose' or 'ellipsis'. Default is 'loose'.
 
         expect_status_query:
             If the query of the status table (which Checkmk does when calling sites.live()) should

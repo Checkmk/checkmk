@@ -8621,6 +8621,10 @@ msgstr "Modification de la connexion LDAP %s"
 msgid "Changed alert handler rule %d"
 msgstr "Modification de la règle de traitement des alertes %d"
 
+#, fuzzy
+msgid "Changed entries"
+msgstr "entrées modifiées"
+
 #, python-format
 msgid "Changed global configuration variable %s to %s."
 msgstr "La variable de configuration globale %s a été modifiée en %s."
@@ -31510,6 +31514,10 @@ msgstr "Nouveau graphique personnalisé..."
 msgid "New element"
 msgstr "Nouvel élément"
 
+#, fuzzy
+msgid "New entries"
+msgstr "nouvelles entrées"
+
 msgid "New event created"
 msgstr "Nouvel événement créé"
 
@@ -35947,9 +35955,10 @@ msgstr ""
 msgid "Please provide a valid name"
 msgstr "Veuillez fournir un nom valide"
 
+#, fuzzy
 msgid ""
-"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
-"more details."
+"Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
+"details."
 msgstr ""
 "Veuillez vous référer au [cms_dashboards#host_problems|Checkmk user guide] "
 "pour plus de détails."
@@ -62393,12 +62402,6 @@ msgstr "spécification de la cartouche"
 msgid "change the state"
 msgstr "changer l'état"
 
-msgid "changed"
-msgstr "modifié"
-
-msgid "changed entries"
-msgstr "entrées modifiées"
-
 msgid "check plugins"
 msgstr "vérifier les plugins"
 
@@ -63244,12 +63247,6 @@ msgstr "s/o"
 msgid "negate"
 msgstr "annuler"
 
-msgid "new"
-msgstr "nouveau"
-
-msgid "new entries"
-msgstr "nouvelles entrées"
-
 msgid "new host name"
 msgstr "nouveau nom d'hôte"
 
@@ -64067,6 +64064,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "changed"
+#~ msgstr "modifié"
+
+#~ msgid "new"
+#~ msgstr "nouveau"
 
 #~ msgid "Port number for HTTPS connection to InfluxDB."
 #~ msgstr "Numéro de port pour la connexion HTTPS à InfluxDB."

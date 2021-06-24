@@ -8169,6 +8169,10 @@ msgstr "LDAP接続 %s を変更しました"
 msgid "Changed alert handler rule %d"
 msgstr "アラートハンドラルール%dを変更しました"
 
+#, fuzzy
+msgid "Changed entries"
+msgstr "変更されたエントリ"
+
 #, python-format
 msgid "Changed global configuration variable %s to %s."
 msgstr "グローバル構成変数 %s を %s に変更しました。"
@@ -30024,6 +30028,10 @@ msgstr "新しいカスタムグラフ..."
 msgid "New element"
 msgstr "新しい要素"
 
+#, fuzzy
+msgid "New entries"
+msgstr "新しいエントリ"
+
 msgid "New event created"
 msgstr "新しいイベントが作成されました"
 
@@ -34259,8 +34267,8 @@ msgid "Please provide a valid name"
 msgstr "有効な名前を入力してください"
 
 msgid ""
-"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
-"more details."
+"Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
+"details."
 msgstr ""
 
 msgid ""
@@ -58604,12 +58612,6 @@ msgstr "カートリッジ仕様"
 msgid "change the state"
 msgstr "状態を変更します"
 
-msgid "changed"
-msgstr "変更された"
-
-msgid "changed entries"
-msgstr "変更されたエントリ"
-
 msgid "check plugins"
 msgstr "プラグインを確認してください"
 
@@ -59451,12 +59453,6 @@ msgstr "該当なし"
 msgid "negate"
 msgstr "否定する"
 
-msgid "new"
-msgstr "新着"
-
-msgid "new entries"
-msgstr "新しいエントリ"
-
 msgid "new host name"
 msgstr "新しいホスト名"
 
@@ -60268,6 +60264,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "changed"
+#~ msgstr "変更された"
+
+#~ msgid "new"
+#~ msgstr "新着"
 
 #~ msgid "Unsupported context type '%s'"
 #~ msgstr "サポートされていないコンテキストタイプ '%s'"

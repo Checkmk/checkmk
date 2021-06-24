@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-06-21 12:07+0000\n"
+"PO-Revision-Date: 2021-06-23 20:34+0000\n"
 "Last-Translator: Timo Klecker (DECOIT) <klecker@decoit.de>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -2351,9 +2351,8 @@ msgstr ""
 "Zu verwendender API-Key. Abhängig von Ihrem opsgenie-Abonnement, können Sie "
 "globale oder Team Keys verwenden."
 
-#, fuzzy
 msgid "API host"
-msgstr "Host hinzufügen"
+msgstr "API Host"
 
 msgid "API integrations if configured, else Checkmk agent"
 msgstr ""
@@ -8502,6 +8501,10 @@ msgstr "LDAP-Verbindung %s geändert"
 #, python-format
 msgid "Changed alert handler rule %d"
 msgstr "Alerthandlerregel %d geändert"
+
+#, fuzzy
+msgid "Changed entries"
+msgstr "veränderte Einträge"
 
 #, python-format
 msgid "Changed global configuration variable %s to %s."
@@ -31151,6 +31154,9 @@ msgstr "Neuer Benutzergraph..."
 msgid "New element"
 msgstr "Neues Element"
 
+msgid "New entries"
+msgstr "Neue Einträge"
+
 msgid "New event created"
 msgstr "Neues Ereignis angelegt"
 
@@ -35533,8 +35539,8 @@ msgid "Please provide a valid name"
 msgstr "Bitte geben Sie einen gültigen Namen an"
 
 msgid ""
-"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
-"more details."
+"Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
+"details."
 msgstr ""
 
 msgid ""
@@ -61529,12 +61535,6 @@ msgstr "Spezifikation der Patrone"
 msgid "change the state"
 msgstr "Status ändern"
 
-msgid "changed"
-msgstr "geändert"
-
-msgid "changed entries"
-msgstr "veränderte Einträge"
-
 msgid "check plugins"
 msgstr "Checkplugins"
 
@@ -62383,12 +62383,6 @@ msgstr "n.v."
 msgid "negate"
 msgstr "invers"
 
-msgid "new"
-msgstr "neu"
-
-msgid "new entries"
-msgstr "neue Einträge"
-
 msgid "new host name"
 msgstr "Neuer Hostname"
 
@@ -63205,6 +63199,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "changed"
+#~ msgstr "geändert"
+
+#~ msgid "new"
+#~ msgstr "neu"
+
+#~ msgid "new entries"
+#~ msgstr "neue Einträge"
 
 #, fuzzy
 #~ msgid "Port number for HTTPS connection to InfluxDB."
@@ -69595,9 +69598,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Invalid inventory path. Must start with dot."
 #~ msgstr "Ungültiger Inventarpfad. Muss mit einem Punkt beginnen."
-
-#~ msgid "New entries"
-#~ msgstr "Neue Einträge"
 
 #~ msgid "Bookmark Lists"
 #~ msgstr "Lesezeichenlisten"

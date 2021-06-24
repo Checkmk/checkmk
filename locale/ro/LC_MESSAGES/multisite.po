@@ -8032,6 +8032,10 @@ msgstr ""
 msgid "Changed alert handler rule %d"
 msgstr ""
 
+#, fuzzy
+msgid "Changed entries"
+msgstr "% întrări libere"
+
 #, python-format
 msgid "Changed global configuration variable %s to %s."
 msgstr ""
@@ -30002,6 +30006,10 @@ msgstr "Grup nou"
 msgid "New element"
 msgstr "Adaungă un nou element"
 
+#, fuzzy
+msgid "New entries"
+msgstr "% întrări libere"
+
 msgid "New event created"
 msgstr ""
 
@@ -34337,8 +34345,8 @@ msgid "Please provide a valid name"
 msgstr ""
 
 msgid ""
-"Please refer to the [cms_dashboards#host_problems|Checkmk user guide] for "
-"more details."
+"Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
+"details."
 msgstr ""
 
 msgid ""
@@ -57134,12 +57142,6 @@ msgstr ""
 msgid "change the state"
 msgstr ""
 
-msgid "changed"
-msgstr ""
-
-msgid "changed entries"
-msgstr ""
-
 msgid "check plugins"
 msgstr ""
 
@@ -58035,13 +58037,6 @@ msgstr ""
 
 msgid "negate"
 msgstr ""
-
-msgid "new"
-msgstr ""
-
-#, fuzzy
-msgid "new entries"
-msgstr "% întrări libere"
 
 #, fuzzy
 msgid "new host name"
@@ -61609,10 +61604,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New User"
 #~ msgstr "Utilizator nou"
-
-#, fuzzy
-#~ msgid "New entries"
-#~ msgstr "% întrări libere"
 
 #, fuzzy
 #~ msgid "No Changes"

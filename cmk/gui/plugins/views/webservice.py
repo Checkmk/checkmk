@@ -6,17 +6,17 @@
 
 import json
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Dict, Union
 
 from six import ensure_str
 
 import cmk.gui.escaping as escaping
 from cmk.gui.globals import html, response
-from cmk.gui.htmllib import HTML
 from cmk.gui.type_defs import Rows
 from cmk.gui.plugins.views import (
     exporter_registry,
     Exporter,
+    ExportCellContent,
     join_row,
     output_csv_headers,
 )
@@ -49,7 +49,7 @@ def _export_python(view: "View", rows: Rows) -> None:
             # The aggr_treestate painters are returning a dictionary data structure (see
             # paint_aggregated_tree_state()) in case the output_format is not HTML. Only
             # remove the HTML tags from the top level strings produced by painters.
-            if isinstance(content, (HTML, str)):
+            if isinstance(content, str):
                 content = escaping.strip_tags(content)
 
             resp.append(repr(content))
@@ -66,7 +66,7 @@ exporter_registry.register(Exporter(
 
 
 def _get_json_body(view: "View", rows: Rows) -> str:
-    painted_rows = []
+    painted_rows: List[List] = []
 
     header_row = []
     for cell in view.row_cells:
@@ -74,17 +74,17 @@ def _get_json_body(view: "View", rows: Rows) -> str:
     painted_rows.append(header_row)
 
     for row in rows:
-        painted_row = []
+        painted_row: List[Union[str, Dict]] = []
         for cell in view.row_cells:
             joined_row = join_row(row, cell)
             content = cell.render_for_export(joined_row)
-            if isinstance(content, (list, dict)):
+            if isinstance(content, dict):
                 # Allow painters to return lists and dicts, then json encode them
                 # as such data structures without wrapping them into strings
                 pass
 
             else:
-                content = escaping.strip_tags(str(content).replace("<br>", "\n"))
+                content = escaping.strip_tags(content.replace("<br>", "\n"))
 
             painted_row.append(content)
 
@@ -138,8 +138,8 @@ class CSVRenderer:
                 first = False
             else:
                 resp.append(csv_separator)
-            content = cell.export_title()
-            resp.append('"%s"' % self._format_for_csv(content))
+            title = cell.export_title()
+            resp.append('"%s"' % self._format_for_csv(title))
 
         for row in rows:
             resp.append("\n")
@@ -155,12 +155,12 @@ class CSVRenderer:
 
         response.set_data("".join(resp))
 
-    def _format_for_csv(self, raw_data) -> str:
+    def _format_for_csv(self, raw_data: ExportCellContent) -> str:
         # raw_data can also be int, float, dict (labels)
         if isinstance(raw_data, dict):
             return ', '.join(["%s: %s" % (key, value) for key, value in raw_data.items()])
 
-        return escaping.strip_tags(str(raw_data)).replace('\n', '').replace('"', '""')
+        return escaping.strip_tags(raw_data).replace('\n', '').replace('"', '""')
 
 
 def _export_csv_export(view: "View", rows: Rows) -> None:

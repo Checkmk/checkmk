@@ -92,6 +92,7 @@ if TYPE_CHECKING:
     from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
 
+ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
 CommandSpecWithoutSite = str
@@ -2084,7 +2085,8 @@ class Cell:
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
             assert not isinstance(txt, tuple)
-            if txt.lower().startswith("<img"):
+            if ((isinstance(txt, str) and txt.lower().startswith("<img")) or
+                (isinstance(txt, HTML) and txt.lower().startswith(HTML("<img")))):
                 img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)
                 if img_path:
@@ -2093,7 +2095,7 @@ class Cell:
                     txt = img_filename
 
             if isinstance(txt, HTML):
-                txt = escaping.strip_tags("%s" % txt)
+                txt = escaping.strip_tags(str(txt))
 
             elif not isinstance(txt, tuple):
                 txt = escaping.unescape_attributes(txt)
@@ -2106,7 +2108,7 @@ class Cell:
 
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
-    def render_for_export(self, row):
+    def render_for_export(self, row: Row) -> ExportCellContent:
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""
@@ -2123,7 +2125,6 @@ class Cell:
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
         # Current limitation: *one* image
-        assert not isinstance(txt, tuple)
         if txt.lower().startswith("<img"):
             txt = re.sub('.*title=["\']([^\'"]*)["\'].*', "\\1", str(txt))
         return txt

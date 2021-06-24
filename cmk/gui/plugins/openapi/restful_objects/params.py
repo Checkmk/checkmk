@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-import warnings
 from collections import abc
 from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
 
@@ -195,9 +194,8 @@ def to_schema(
     def _validate_fields(name, dict_):
         for key, field in dict_.items():
             if 'description' not in field.metadata:
-                if name.startswith("BI"):
-                    warnings.warn(f"{name}: field {key} has no description.")
-                else:
+                # FIXME: Add descriptions to all BI fields and schemas
+                if not name.startswith("BI"):
                     raise ValueError(f"{name}: field {key} has no description."
                                      f"\n\n{field.metadata!r}"
                                      f"\n\n{dict_!r}")

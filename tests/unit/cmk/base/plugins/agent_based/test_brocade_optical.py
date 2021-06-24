@@ -96,6 +96,85 @@ def test_discover_brocade_optical(params, expect_service):
     )) == (expect_service and services or [])
 
 
+@pytest.mark.parametrize('item,params,section,expected', [
+    (
+        '001410',
+        {},
+        {
+            '1410': {
+                'description': '10GigabitEthernet23/2',
+                'operational_status': '2',
+                'part': '57-0000076-01',
+                'port_type': '6',
+                'rx_light': (-36.9897, 'Low-Alarm'),
+                'serial': 'ADF2094300014UN',
+                'temp': (31.4882, 'Normal'),
+                'tx_light': (-1.4508, 'Normal'),
+                'type': '10GE LR 10km SFP+'
+            }
+        },
+        [
+            Result(state=state.OK,
+                   summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down'),
+            Metric('temp', 31.4882),
+            Result(state=state.OK, summary='Temperature: 31.5°C'),
+            Result(state=state.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
+            Result(state=state.OK, summary='TX Light -1.5 dBm (Normal)'),
+            Metric('tx_light', -1.4508),
+            Result(state=state.OK, summary='RX Light -37.0 dBm (Low-Alarm)'),
+            Metric('rx_light', -36.9897),
+        ],
+    ),
+    (
+        '1409',
+        {
+            'rx_light': True,
+            'tx_light': True,
+            'lanes': True
+        },
+        {
+            '1409': {
+                'description': '10GigabitEthernet23/1',
+                'lanes': {
+                    1: {
+                        'rx_light': (-2.2504, 'Normal'),
+                        'temp': (31.4531, 'Normal'),
+                        'tx_light': (-1.6045, 'Normal')
+                    }
+                },
+                'operational_status': '1',
+                'part': '57-0000076-01',
+                'port_type': '6',
+                'rx_light': (-2.2504, 'Normal'),
+                'serial': 'ADF2094300014TL',
+                'temp': (None, None),
+                'tx_light': (-1.6045, 'Normal'),
+                'type': '10GE LR 10km SFP+'
+            }
+        },
+        [
+            Result(state=state.OK,
+                   summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up'),
+            Result(state=state.OK, summary='TX Light -1.6 dBm (Normal)'),
+            Metric('tx_light', -1.6045),
+            Result(state=state.OK, summary='RX Light -2.3 dBm (Normal)'),
+            Metric('rx_light', -2.2504),
+            Result(state=state.OK, notice='Temperature (Lane 1) Temperature: 31.5°C'),
+            Metric('port_temp_1', 31.4531),
+            Result(state=state.OK, notice='TX Light (Lane 1) -1.6 dBm (Normal)'),
+            Metric('tx_light_1', -1.6045),
+            Result(state=state.OK, notice='RX Light (Lane 1) -2.3 dBm (Normal)'),
+            Metric('rx_light_1', -2.2504),
+        ],
+    ),
+])
+def test_check_brocade_optical(item, params, section, expected):
+    assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
+
+
+# Disable yapf here as it takes ages
+# yapf: disable
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [
@@ -653,6 +732,7 @@ def test_discover_brocade_optical(params, expect_service):
         ],
     )
 ])
+# yapf: enable
 def test_regression(
     string_table,
     discovery_results,

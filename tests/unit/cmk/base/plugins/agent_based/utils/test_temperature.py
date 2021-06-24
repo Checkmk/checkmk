@@ -4,16 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import freezegun
 import pytest
+from typing import Any, MutableMapping
 
 from cmk.base.plugins.agent_based.utils import temperature
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    GetRateError,
     Result,
     Metric,
     State as state,
     IgnoreResultsError,
 )
+
+UNIQUE_NAME = "unique_name"
+
+
+def mock_value_store() -> MutableMapping[str, Any]:
+    return {}
 
 
 def test_check_trend_raises():
@@ -330,10 +339,13 @@ def test_check_trend_time_period_zero_lower_bound():
 
 
 def test_check_temperature_simple():
-    results = list(temperature.check_temperature(
-        23.0,
-        None,
-    ))
+    results = list(
+        temperature.check_temperature(
+            23.0,
+            None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -353,12 +365,15 @@ def test_check_temperature_simple():
 
 
 def test_check_temperature_user_levels_ok():
-    results = list(temperature.check_temperature(
-        23.0,
-        {
-            'levels': (26.0, 30.0),
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            23.0,
+            {
+                'levels': (26.0, 30.0),
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -378,12 +393,15 @@ def test_check_temperature_user_levels_ok():
 
 
 def test_check_temperature_user_levels_warn_upper():
-    results = list(temperature.check_temperature(
-        23.0,
-        {
-            'levels': (23.0, 30.0),
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            23.0,
+            {
+                'levels': (23.0, 30.0),
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -403,12 +421,15 @@ def test_check_temperature_user_levels_warn_upper():
 
 
 def test_check_temperature_user_levels_crit_upper():
-    results = list(temperature.check_temperature(
-        30.0,
-        {
-            'levels': (23.0, 30.0),
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            30.0,
+            {
+                'levels': (23.0, 30.0),
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -428,12 +449,15 @@ def test_check_temperature_user_levels_crit_upper():
 
 
 def test_check_temperature_user_levels_warn_lower():
-    results = list(temperature.check_temperature(
-        -1.0,
-        {
-            'levels_lower': (0.0, -15.0),
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            -1.0,
+            {
+                'levels_lower': (0.0, -15.0),
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -453,12 +477,15 @@ def test_check_temperature_user_levels_warn_lower():
 
 
 def test_check_temperature_user_levels_crit_lower():
-    results = list(temperature.check_temperature(
-        -16.0,
-        {
-            'levels_lower': (0.0, -15.0),
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            -16.0,
+            {
+                'levels_lower': (0.0, -15.0),
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -478,12 +505,15 @@ def test_check_temperature_user_levels_crit_lower():
 
 
 def test_check_temperature_output_unit():
-    results = list(temperature.check_temperature(
-        10.0,
-        {
-            'output_unit': 'f',
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            10.0,
+            {
+                'output_unit': 'f',
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -503,60 +533,15 @@ def test_check_temperature_output_unit():
 
 
 def test_check_temperature_input_unit():
-    results = list(temperature.check_temperature(
-        50.0,
-        {
-            'input_unit': 'f',
-        },
-    ))
-
-    assert isinstance(results[0], Metric)
-    assert results[0].name == 'temp'
-    assert results[0].value == 10.0
-    assert results[0].levels == (None, None)
-    assert results[0].boundaries == (None, None)
-
-    assert isinstance(results[1], Result)
-    assert results[1].state == state.OK
-    assert results[1].summary == 'Temperature: 10.0°C'
-
-    assert isinstance(results[2], Result)
-    assert results[2].state == state.OK
-    assert results[2].summary == ''
-    assert results[
-        2].details == 'Configuration: prefer user levels over device levels (no levels found)'
-
-
-def test_check_temperature_unique_name():
-    results = list(temperature.check_temperature(
-        10.0,
-        None,
-        unique_name='my_test',
-    ))
-
-    assert isinstance(results[0], Metric)
-    assert results[0].name == 'temp'
-    assert results[0].value == 10.0
-    assert results[0].levels == (None, None)
-    assert results[0].boundaries == (None, None)
-
-    assert isinstance(results[1], Result)
-    assert results[1].state == state.OK
-    assert results[1].summary == 'Temperature: 10.0°C'
-
-    assert isinstance(results[2], Result)
-    assert results[2].state == state.OK
-    assert results[2].summary == ''
-    assert results[
-        2].details == 'Configuration: prefer user levels over device levels (no levels found)'
-
-
-def test_check_temperature_value_store():
-    results = list(temperature.check_temperature(
-        10.0,
-        None,
-        value_store={},
-    ))
+    results = list(
+        temperature.check_temperature(
+            50.0,
+            {
+                'input_unit': 'f',
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -576,11 +561,14 @@ def test_check_temperature_value_store():
 
 
 def test_check_temperature_device_levels_ok():
-    results = list(temperature.check_temperature(
-        10.0,
-        None,
-        dev_levels=(54.0, 70.0),
-    ))
+    results = list(
+        temperature.check_temperature(
+            10.0,
+            None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+            dev_levels=(54.0, 70.0),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -600,11 +588,14 @@ def test_check_temperature_device_levels_ok():
 
 
 def test_check_temperature_device_levels_warn_upper():
-    results = list(temperature.check_temperature(
-        10.0,
-        None,
-        dev_levels=(10.0, 15.0),
-    ))
+    results = list(
+        temperature.check_temperature(
+            10.0,
+            None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+            dev_levels=(10.0, 15.0),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -624,11 +615,14 @@ def test_check_temperature_device_levels_warn_upper():
 
 
 def test_check_temperature_device_levels_crit_upper():
-    results = list(temperature.check_temperature(
-        18.0,
-        None,
-        dev_levels=(10.0, 15.0),
-    ))
+    results = list(
+        temperature.check_temperature(
+            18.0,
+            None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+            dev_levels=(10.0, 15.0),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -652,6 +646,8 @@ def test_check_temperature_device_levels_warn_lower():
         temperature.check_temperature(
             0.0,
             None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -678,6 +674,8 @@ def test_check_temperature_device_levels_crit_lower():
         temperature.check_temperature(
             -20.0,
             None,
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -708,6 +706,8 @@ def test_check_temperature_use_user_levels():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'usr',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -737,6 +737,8 @@ def test_check_temperature_use_device_levels():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'dev',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -766,6 +768,8 @@ def test_check_temperature_default_device_levels():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'devdefault',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -795,6 +799,8 @@ def test_check_temperature_default_user_levels():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'usrdefault',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
         ))
 
     assert isinstance(results[0], Metric)
@@ -815,12 +821,15 @@ def test_check_temperature_default_user_levels():
 
 
 def test_check_temperature_use_device_default_no_levels():
-    results = list(temperature.check_temperature(
-        -20.0,
-        {
-            'device_levels_handling': 'devdefault',
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            -20.0,
+            {
+                'device_levels_handling': 'devdefault',
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -846,6 +855,8 @@ def test_check_temperature_use_user_default_device_levels():
             {
                 'device_levels_handling': 'usrdefault',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels_lower=(1.0, -15.0),
         ))
 
@@ -874,6 +885,8 @@ def test_check_temperature_use_user_default_user_levels():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'usrdefault',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -896,12 +909,15 @@ def test_check_temperature_use_user_default_user_levels():
 
 
 def test_check_temperature_use_user_default_no_levels():
-    results = list(temperature.check_temperature(
-        -20.0,
-        {
-            'device_levels_handling': 'usrdefault',
-        },
-    ))
+    results = list(
+        temperature.check_temperature(
+            -20.0,
+            {
+                'device_levels_handling': 'usrdefault',
+            },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
+        ))
 
     assert isinstance(results[0], Metric)
     assert results[0].name == 'temp'
@@ -929,6 +945,8 @@ def test_check_temperature_show_worst():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'worst',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -958,6 +976,8 @@ def test_check_temperature_show_best():
                 'levels_lower': (-25.0, -30.0),
                 'device_levels_handling': 'best',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
         ))
@@ -987,6 +1007,8 @@ def test_check_temperature_device_status_override_best():
                 'levels_lower': (0.0, -10.0),
                 'device_levels_handling': 'best',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(-25.0, -30.0),
             dev_status=1,
@@ -1022,6 +1044,8 @@ def test_check_temperature_device_status_override_worst():
                 'levels_lower': (0.0, -10.0),
                 'device_levels_handling': 'worst',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(10.0, 15.0),
             dev_levels_lower=(1.0, -15.0),
             dev_status=2,
@@ -1057,6 +1081,8 @@ def test_check_temperature_device_status_override_ok():
                 'levels_lower': (0.0, -10.0),
                 'device_levels_handling': 'best',
             },
+            unique_name=UNIQUE_NAME,
+            value_store=mock_value_store(),
             dev_levels=(20.0, 25.0),
             dev_levels_lower=(1.0, -15.0),
             dev_status=0,
@@ -1084,6 +1110,55 @@ def test_check_temperature_device_status_override_ok():
     assert results[3].details == 'Configuration: show least critical state'
 
 
-def test_check_temperature_fails_without_value_store() -> None:
-    with pytest.raises(ValueError):
-        list(temperature.check_temperature(0.2, {'trend_compute': {}}, unique_name='unique_name'))
+def test_check_temperature_ignores_trend_computation():
+    trend_params: temperature.TempParamDict = {'trend_compute': {'period': 30}}
+    value_store = mock_value_store()
+
+    # NOTE: We have to suppress the user AND device counter initializations. Although both
+    # trends might be off during initialization we ignore this issue for now since the
+    # temperatures between two check intervals should not deviate much and the trends should
+    # be correct in the long run.
+    with contextlib.suppress(GetRateError), freezegun.freeze_time('1970-01-01 00:00:00'):
+        list(
+            temperature.check_temperature(
+                0.0,
+                trend_params,
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
+            ))
+    with contextlib.suppress(GetRateError), freezegun.freeze_time('1970-01-01 00:15:00'):
+        list(
+            temperature.check_temperature(
+                10.0,
+                trend_params,
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
+            ))
+    with freezegun.freeze_time('1970-01-01 00:30:00'):
+        results = list(
+            temperature.check_temperature(
+                20.0,
+                trend_params,
+                unique_name=UNIQUE_NAME,
+                value_store=value_store,
+            ))
+
+    assert isinstance(results[0], Metric)
+    assert results[0].name == 'temp'
+    assert results[0].value == 20.0
+    assert results[0].levels == (None, None)
+    assert results[0].boundaries == (None, None)
+
+    assert isinstance(results[1], Result)
+    assert results[1].state == state.OK
+    assert results[1].summary == 'Temperature: 20.0°C'
+
+    assert isinstance(results[2], Result)
+    assert results[2].state == state.OK
+    assert results[2].summary == 'Temperature trend: +20.0°C per 30 min'
+
+    assert isinstance(results[3], Result)
+    assert results[3].state == state.OK
+    assert results[3].summary == ''
+    assert results[
+        3].details == 'Configuration: prefer user levels over device levels (no levels found)'

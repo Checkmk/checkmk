@@ -255,8 +255,8 @@ def check_temperature(
     reading: float,
     params: TempParamType,
     *,
-    unique_name: Optional[str] = None,
-    value_store: Optional[MutableMapping[str, Any]] = None,
+    unique_name: str,
+    value_store: MutableMapping[str, Any],
     dev_unit: Optional[str] = "c",
     dev_levels: Optional[Tuple[float, float]] = None,
     dev_levels_lower: Optional[Tuple[float, float]] = None,
@@ -271,8 +271,8 @@ def check_temperature(
     Args:
         reading (Number): The numeric temperature value itself.
         params (dict): A dictionary giving the user's configuration. See below.
-        unique_name (str): The name under which to track performance data.
-        value_store: The Value Store to use for trend computation
+        unique_name (str): The name under which to track performance data for trend computation.
+        value_store: The Value Store to used for trend computation
         dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
         dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
         dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
@@ -341,10 +341,7 @@ def check_temperature(
 
     usr_results = [usr_result]
     dev_results = [dev_result]
-    if unique_name is not None and params.get('trend_compute') is not None:
-        if value_store is None:
-            raise ValueError("Can not track performance data without value_store")
-
+    if params.get('trend_compute') is not None:
         usr_results.extend(result for result in _check_trend(
             value_store=value_store,
             temp=temp,

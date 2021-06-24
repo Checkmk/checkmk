@@ -16,6 +16,7 @@ from typing import (
     Union,
 )
 from .agent_based_api.v1 import (
+    get_value_store,
     Metric,
     OIDEnd,
     register,
@@ -381,59 +382,6 @@ def check_brocade_optical(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
-    """
-    >>> from pprint import pprint
-    >>> for output in check_brocade_optical(
-    ...     '001410',
-    ...     {},
-    ...     {'1410': {'description': '10GigabitEthernet23/2',
-    ...               'operational_status': '2',
-    ...               'part': '57-0000076-01',
-    ...               'port_type': '6',
-    ...               'rx_light': (-36.9897, 'Low-Alarm'),
-    ...               'serial': 'ADF2094300014UN',
-    ...               'temp': (31.4882, 'Normal'),
-    ...               'tx_light': (-1.4508, 'Normal'),
-    ...               'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
-    Metric('temp', 31.4882)
-    Result(state=<State.OK: 0>, summary='Temperature: 31.5°C')
-    Result(state=<State.OK: 0>, notice='Configuration: prefer user levels over device levels (no levels found)')
-    Result(state=<State.OK: 0>, summary='TX Light -1.5 dBm (Normal)')
-    Metric('tx_light', -1.4508)
-    Result(state=<State.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)')
-    Metric('rx_light', -36.9897)
-    >>> for output in check_brocade_optical(
-    ...     '1409',
-    ...     {'rx_light': True, 'tx_light': True, 'lanes': True},
-    ...     {'1409': {'description': '10GigabitEthernet23/1',
-    ...               'lanes': {1: {'rx_light': (-2.2504, 'Normal'),
-    ...                             'temp': (31.4531, 'Normal'),
-    ...                             'tx_light': (-1.6045, 'Normal')}},
-    ...               'operational_status': '1',
-    ...               'part': '57-0000076-01',
-    ...               'port_type': '6',
-    ...               'rx_light': (-2.2504, 'Normal'),
-    ...               'serial': 'ADF2094300014TL',
-    ...               'temp': (None, None),
-    ...               'tx_light': (-1.6045, 'Normal'),
-    ...               'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<State.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')
-    Result(state=<State.OK: 0>, summary='TX Light -1.6 dBm (Normal)')
-    Metric('tx_light', -1.6045)
-    Result(state=<State.OK: 0>, summary='RX Light -2.3 dBm (Normal)')
-    Metric('rx_light', -2.2504)
-    Result(state=<State.OK: 0>, notice='Temperature (Lane 1) Temperature: 31.5°C')
-    Metric('port_temp_1', 31.4531)
-    Result(state=<State.OK: 0>, notice='TX Light (Lane 1) -1.6 dBm (Normal)')
-    Metric('tx_light_1', -1.6045)
-    Result(state=<State.OK: 0>, notice='RX Light (Lane 1) -2.3 dBm (Normal)')
-    Metric('rx_light_1', -2.2504)
-    """
     item = item.lstrip('0')
     if item not in section:
         return
@@ -467,6 +415,7 @@ def check_brocade_optical(
             temp,
             None,
             unique_name="brocade_optical_%s" % item,
+            value_store=get_value_store(),
             dev_status=_monitoring_state(iface['temp'], params.get('temp', False)),
         )
     yield from _check_light(
@@ -489,6 +438,7 @@ def check_brocade_optical(
                     temp,
                     None,
                     unique_name="brocade_optical_lane%d_%s" % (num, item),
+                    value_store=get_value_store(),
                     dev_status=_monitoring_state(lane['temp'], params.get('temp', False)),
                 ))
             lane_temp_result = [res for res in lane_temp_output if isinstance(res, Result)][0]

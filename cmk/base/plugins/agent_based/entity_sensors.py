@@ -32,6 +32,7 @@ from typing import Any, List, Mapping
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
     check_levels,
+    get_value_store,
     OIDEnd,
     register,
     Result,
@@ -100,6 +101,7 @@ def check_entity_sensors_temp(
         sensor_reading.reading,
         params,
         unique_name="temp",
+        value_store=get_value_store(),
         dev_unit=sensor_reading.unit,
         dev_status=int(sensor_reading.state),
         dev_status_name=sensor_reading.status_descr,

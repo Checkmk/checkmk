@@ -332,6 +332,7 @@ program_start num_hosts num_services core_pid'
         query: Union[str, List[str]],
         match_type: MatchType = 'strict',
         force_pos: Optional[int] = None,
+        site_id: Optional[str] = None,
     ):
         """Add a LiveStatus query to be expected by this class.
 
@@ -351,6 +352,9 @@ program_start num_hosts num_services core_pid'
              force_pos:
                  Only used internally. Ignore.
 
+             site_id:
+                 The id of the site where the query is expected
+
          Returns:
              The object itself, so you can chain.
 
@@ -361,12 +365,17 @@ program_start num_hosts num_services core_pid'
             query = '\n'.join(query)
         query = query.rstrip()
 
-        if query.startswith("COMMAND"):
-            first_conn = list(self.connections.values())[0]
-            first_conn.expect_query(query, match_type, force_pos)
+        if site_id:
+            connections = [conn for conn in self.connections.values() if conn.site_name == site_id]
         else:
-            for single_conn in self.connections.values():
-                single_conn.expect_query(query, match_type, force_pos)
+            connections = list(self.connections.values())
+
+        if not connections:
+            raise LivestatusTestingError("Query should be at least expected at one site")
+
+        for conn in connections:
+            conn.expect_query(query, match_type, force_pos)
+
         return self
 
 
@@ -468,7 +477,7 @@ def remove_headers(query: str, headers: List[str]) -> str:
 
 class MockSingleSiteConnection:
     def __init__(self, site_name, multisite_connection) -> None:
-        self._site_name = site_name
+        self.site_name = site_name
         self._multisite = multisite_connection
         self._last_response: Optional[io.StringIO] = None
         self._expected_queries: List[Tuple[str, MatchType]] = []
@@ -476,7 +485,7 @@ class MockSingleSiteConnection:
         self.socket = FakeSocket(self)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} id={id(self)} site={self._site_name}>"
+        return f"<{self.__class__.__name__} id={id(self)} site={self.site_name}>"
 
     def expect_query(
         self,
@@ -498,7 +507,7 @@ class MockSingleSiteConnection:
 
     def result_of_next_query(self, query: str) -> Response:
         if not self._expected_queries:
-            raise LivestatusTestingError(f"Got unexpected query on site {self._site_name!r}:"
+            raise LivestatusTestingError(f"Got unexpected query on site {self.site_name!r}:"
                                          "\n"
                                          f" * {repr(query)}")
 
@@ -515,7 +524,7 @@ class MockSingleSiteConnection:
 
         if not _compare(expected_query, query, match_type):
             raise LivestatusTestingError(
-                f"Expected query ({match_type}) on site {self._site_name!r}:\n"
+                f"Expected query ({match_type}) on site {self.site_name!r}:\n"
                 f" * {repr(expected_query)}\n"
                 f"Got query:\n"
                 f" * {repr(query)}")
@@ -523,7 +532,7 @@ class MockSingleSiteConnection:
         def _generate_output():
             if query.startswith("COMMAND"):
                 return
-            _response, _columns = execute_query(self._multisite.tables, query, self._site_name)
+            _response, _columns = execute_query(self._multisite.tables, query, self.site_name)
 
             if _show_columns(query):
                 yield _columns
@@ -552,8 +561,7 @@ class MockSingleSiteConnection:
             for query in self._expected_queries:
                 remaining_queries += f"\n * {repr(query[0])}"
             raise LivestatusTestingError(
-                f"Expected queries were not queried on site {self._site_name!r}:{remaining_queries}"
-            )
+                f"Expected queries were not queried on site {self.site_name!r}:{remaining_queries}")
 
 
 def _show_columns(query: str) -> bool:

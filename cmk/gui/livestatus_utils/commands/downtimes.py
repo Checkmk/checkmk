@@ -57,7 +57,7 @@ def del_host_downtime(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis") as live:
+        >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis", site_id="NO_SITE") as live:
         ...     del_host_downtime(live, 1, "")
 
     """
@@ -84,7 +84,7 @@ def del_service_downtime(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis") as live:
+        >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis", site_id="NO_SITE") as live:
         ...     del_service_downtime(live, 1, "")
 
     """
@@ -234,7 +234,7 @@ def schedule_service_downtime(
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
         >>> with simple_expect() as live:
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
+        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id='NO_SITE')
         ...     schedule_service_downtime(live,
         ...             'NO_SITE',
         ...             'example.com',
@@ -565,7 +565,7 @@ def schedule_host_downtime(
         >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
         >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
+        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id="NO_SITE")
         ...     schedule_host_downtime(live,
         ...             'example.com',
         ...             _start_time,

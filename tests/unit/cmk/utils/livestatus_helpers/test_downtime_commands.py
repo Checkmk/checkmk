@@ -26,6 +26,7 @@ def test_host_downtime(mock_livestatus, with_request_context, dates):
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         downtimes.schedule_host_downtime(
             sites.live(),
@@ -46,16 +47,19 @@ def test_host_downtime_with_services(mock_livestatus, with_request_context, date
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'GET services\nColumns: host_name description\nFilter: host_name = example.com',)
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         downtimes.schedule_host_downtime(
             sites.live(),
@@ -83,10 +87,12 @@ def test_hostgroup_host_downtime(mock_livestatus, with_request_context, dates):
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
 
         downtimes.schedule_hostgroup_host_downtime(
@@ -114,26 +120,28 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, with_request_con
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
-        live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
-            match_type='ellipsis',
-        )
+        live.expect_query('COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
+                          match_type='ellipsis',
+                          site_id="NO_SITE")
         live.expect_query(
             'GET services\nColumns: host_name description\nFilter: host_name = heute\nFilter: host_name = example.com\nOr: 2'
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
-        )
+            site_id="NO_SITE")
 
         downtimes.schedule_hostgroup_host_downtime(
             sites.live(),
@@ -159,14 +167,17 @@ def test_servicegroup_service_downtime(mock_livestatus, with_request_context, da
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         downtimes.schedule_servicegroup_service_downtime(
             sites.live(),
@@ -191,14 +202,17 @@ def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_c
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
 
         live.expect_query(
@@ -206,10 +220,12 @@ def test_servicegroup_service_downtime_and_hosts(mock_livestatus, with_request_c
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         live.expect_query(
             'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
+            site_id="NO_SITE",
         )
         downtimes.schedule_servicegroup_service_downtime(
             sites.live(),

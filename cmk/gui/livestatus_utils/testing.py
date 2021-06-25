@@ -1,6 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import contextlib
 import os
-from typing import ContextManager, Generator
+from typing import ContextManager, Generator, Optional
 from unittest import mock
 
 from werkzeug.test import EnvironBuilder
@@ -59,6 +65,7 @@ def simple_expect(
     query='',
     match_type: MatchType = "loose",
     expect_status_query: bool = True,
+    site_id: Optional[str] = None,
 ) -> Generator[MultiSiteConnection, None, None]:
     """A simplified testing context manager.
 
@@ -73,6 +80,9 @@ def simple_expect(
             If the query of the status table (which Checkmk does when calling sites.live()) should
             be expected. Defaults to False.
 
+        site_id:
+            The site where the livestatus query should be expected
+
     Returns:
         A context manager.
 
@@ -84,6 +94,6 @@ def simple_expect(
     """
     with mock_livestatus(with_context=True) as mock_live:
         if query:
-            mock_live.expect_query(query, match_type=match_type)
+            mock_live.expect_query(query, match_type=match_type, site_id=site_id)
         with mock_live(expect_status_query=expect_status_query):
             yield sites.live()

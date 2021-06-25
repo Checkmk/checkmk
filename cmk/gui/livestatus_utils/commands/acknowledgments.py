@@ -57,7 +57,7 @@ def acknowledge_service_problem(
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
         >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
+        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id='NO_SITE')
         ...     acknowledge_service_problem(live, 'example.com', 'drain')
 
     """
@@ -189,7 +189,7 @@ def acknowledge_host_problem(
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
         >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
-        ...     _ = live.expect_query(cmd, match_type="ellipsis")
+        ...     _ = live.expect_query(cmd, match_type="ellipsis", site_id="NO_SITE")
         ...     acknowledge_host_problem(live, 'example.com')
 
     """

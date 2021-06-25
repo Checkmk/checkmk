@@ -48,17 +48,19 @@ def test_openapi_schedule_hostgroup_downtime(
             'members': ['example.com', 'heute'],
             'name': 'windows',
         },
-    ])
+    ],
+                   site='NO_SITE')
     live.expect_query('GET hostgroups\nColumns: members\nFilter: name = windows')
     live.expect_query(
         'GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2')
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
-    )
+        site_id='NO_SITE')
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     with live:
         wsgi_app.post(
@@ -90,6 +92,7 @@ def test_openapi_schedule_host_downtime(
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     with live:
         wsgi_app.post(
@@ -122,19 +125,23 @@ def test_openapi_schedule_servicegroup_downtime(
                         ['heute', 'CPU load']],
             'name': 'routers',
         },
-    ])
+    ],
+                   site='NO_SITE')
     live.expect_query('GET servicegroups\nColumns: members\nFilter: name = routers')
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     with live:
         wsgi_app.post(
@@ -166,10 +173,12 @@ def test_openapi_schedule_service_downtime(
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     with live:
         wsgi_app.post(
@@ -417,7 +426,8 @@ def test_openapi_create_host_downtime_with_query(
         'end_time': 1606913913,
         'recurring': 0,
         'comment': 'some host downtime'
-    }])
+    }],
+                   site='NO_SITE')
 
     live.add_table('hosts', [
         {
@@ -434,13 +444,15 @@ def test_openapi_create_host_downtime_with_query(
             'downtimes_with_info': [],
             'scheduled_downtime_depth': 0,
         },
-    ])
+    ],
+                   site='NO_SITE')
 
     live.expect_query(['GET hosts', 'Columns: name', 'Filter: name ~ heute'])
     live.expect_query(['GET hosts', 'Columns: name', 'Filter: name = heute'])
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     with live:
         wsgi_app.post(
@@ -493,6 +505,7 @@ def test_openapi_create_service_downtime_with_query(
                 'acknowledged': 0,
             },
         ],
+        site='NO_SITE',
     )
 
     live.expect_query(
@@ -500,6 +513,7 @@ def test_openapi_create_service_downtime_with_query(
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Memory;1577836800;1577923200;1;0;0;...;Downtime for service Memory@heute',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
 
     with live:
@@ -578,32 +592,37 @@ def test_openapi_delete_downtime_with_query(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
-    live.add_table('downtimes', [{
-        'id': 123,
-        'host_name': 'heute',
-        'service_description': 'CPU load',
-        'is_service': 1,
-        'author': 'random',
-        'start_time': 1606913913,
-        'end_time': 1606913913,
-        'recurring': 0,
-        'comment': 'literally nothing'
-    }, {
-        'id': 124,
-        'host_name': 'example.com',
-        'service_description': 'null',
-        'is_service': 0,
-        'author': 'random',
-        'start_time': 1606913913,
-        'end_time': 1606913913,
-        'recurring': 0,
-        'comment': 'some host downtime'
-    }])
+    live.add_table(
+        'downtimes',
+        [{
+            'id': 123,
+            'host_name': 'heute',
+            'service_description': 'CPU load',
+            'is_service': 1,
+            'author': 'random',
+            'start_time': 1606913913,
+            'end_time': 1606913913,
+            'recurring': 0,
+            'comment': 'literally nothing'
+        }, {
+            'id': 124,
+            'host_name': 'example.com',
+            'service_description': 'null',
+            'is_service': 0,
+            'author': 'random',
+            'start_time': 1606913913,
+            'end_time': 1606913913,
+            'recurring': 0,
+            'comment': 'some host downtime'
+        }],
+        site='NO_SITE',
+    )
 
     live.expect_query(['GET downtimes', 'Columns: id is_service', 'Filter: host_name ~ heute'],)
     live.expect_query(
         'COMMAND [...] DEL_SVC_DOWNTIME;123',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
 
     with live:
@@ -652,14 +671,19 @@ def test_openapi_delete_downtime_by_id(
         'end_time': 1606913913,
         'recurring': 0,
         'comment': 'some service downtime'
-    }])
+    }],
+                   site='NO_SITE')
 
     live.expect_query([
         'GET downtimes',
         'Columns: is_service',
         'Filter: id = 123',
     ])
-    live.expect_query('COMMAND [...] DEL_SVC_DOWNTIME;123', match_type='ellipsis')
+    live.expect_query(
+        'COMMAND [...] DEL_SVC_DOWNTIME;123',
+        match_type='ellipsis',
+        site_id='NO_SITE',
+    )
 
     with live:
         wsgi_app.post(
@@ -684,27 +708,31 @@ def test_openapi_delete_downtime_with_params(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
-    live.add_table('downtimes', [{
-        'id': 123,
-        'host_name': 'heute',
-        'service_description': 'CPU load',
-        'is_service': 1,
-        'author': 'random',
-        'start_time': 1606913913,
-        'end_time': 1606913913,
-        'recurring': 0,
-        'comment': 'literally nothing'
-    }, {
-        'id': 124,
-        'host_name': 'heute',
-        'service_description': 'Memory',
-        'is_service': 1,
-        'author': 'random',
-        'start_time': 1606913913,
-        'end_time': 1606913913,
-        'recurring': 0,
-        'comment': 'some service downtime'
-    }])
+    live.add_table(
+        'downtimes',
+        [{
+            'id': 123,
+            'host_name': 'heute',
+            'service_description': 'CPU load',
+            'is_service': 1,
+            'author': 'random',
+            'start_time': 1606913913,
+            'end_time': 1606913913,
+            'recurring': 0,
+            'comment': 'literally nothing'
+        }, {
+            'id': 124,
+            'host_name': 'heute',
+            'service_description': 'Memory',
+            'is_service': 1,
+            'author': 'random',
+            'start_time': 1606913913,
+            'end_time': 1606913913,
+            'recurring': 0,
+            'comment': 'some service downtime'
+        }],
+        site='NO_SITE',
+    )
 
     live.expect_query([
         'GET downtimes',
@@ -715,8 +743,16 @@ def test_openapi_delete_downtime_with_params(
         'Or: 2',
         'And: 2',
     ])
-    live.expect_query('COMMAND [...] DEL_SVC_DOWNTIME;123', match_type='ellipsis')
-    live.expect_query('COMMAND [...] DEL_SVC_DOWNTIME;124', match_type='ellipsis')
+    live.expect_query(
+        'COMMAND [...] DEL_SVC_DOWNTIME;123',
+        match_type='ellipsis',
+        site_id='NO_SITE',
+    )
+    live.expect_query(
+        'COMMAND [...] DEL_SVC_DOWNTIME;124',
+        match_type='ellipsis',
+        site_id='NO_SITE',
+    )
 
     with live:
         wsgi_app.post(

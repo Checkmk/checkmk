@@ -39,15 +39,15 @@ def send_command(
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> with simple_expect(
-        ...         "COMMAND [...] ADD_HOST_COMMENT", match_type="ellipsis") as live:
+        ...         "COMMAND [...] ADD_HOST_COMMENT", match_type="ellipsis", site_id="NO_SITE") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [])
 
         >>> with simple_expect(
-        ...          "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis") as live:
+        ...          "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis", site_id="NO_SITE") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [1, 2, 3])
 
         >>> with simple_expect(
-        ...         "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis") as live:
+        ...         "COMMAND [...] ADD_HOST_COMMENT;1;2;3", match_type="ellipsis", site_id="NO_SITE") as live:
         ...      send_command(live, "ADD_HOST_COMMENT", [object()])
         Traceback (most recent call last):
         ...

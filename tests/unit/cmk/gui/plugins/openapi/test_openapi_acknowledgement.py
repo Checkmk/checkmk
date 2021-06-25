@@ -61,7 +61,7 @@ def test_openapi_acknowledge_all_services(
         live.expect_query(
             f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;{host_name};{service};2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
-        )
+            site_id="NO_SITE")
 
     with live:
         wsgi_app.post(
@@ -118,7 +118,8 @@ def test_openapi_acknowledge_specific_service(
             'description': 'Filesystem /boot',
             'state': 1,
         },
-    ])
+    ],
+                   site='NO_SITE')
 
     live.expect_query([
         'GET services',
@@ -133,6 +134,7 @@ def test_openapi_acknowledge_specific_service(
         live.expect_query(
             f'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;{service};2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
+            site_id='NO_SITE',
         )
 
     with live:
@@ -193,7 +195,8 @@ def test_openapi_acknowledge_host(
             'name': 'heute',
             'state': 0,
         },
-    ])
+    ],
+                   site='NO_SITE')
 
     live.expect_query(f'GET hosts\nColumns: name\nFilter: name = {host_name}')
     live.expect_query(f"GET hosts\nColumns: state\nFilter: name = {host_name}")
@@ -203,7 +206,7 @@ def test_openapi_acknowledge_host(
         live.expect_query(
             f'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;{host_name};2;1;1;test123-...;Hello world!',
             match_type='ellipsis',
-        )
+            site_id='NO_SITE')
 
     with live:
         wsgi_app.post(
@@ -239,7 +242,8 @@ def test_openapi_bulk_acknowledge(
         'host_name': 'example.com',
         'description': 'CPU load',
         'state': 1
-    }])
+    }],
+                   site='NO_SITE')
 
     live.expect_query([
         'GET services',
@@ -253,11 +257,12 @@ def test_openapi_bulk_acknowledge(
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!',
         match_type='ellipsis',
-    )
+        site_id='NO_SITE')
     live.expect_query(f'GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;2;1;1;test123-...;Hello world!',
-        match_type='ellipsis')
+        match_type='ellipsis',
+        site_id='NO_SITE')
 
     with live():
         wsgi_app.post(
@@ -302,17 +307,18 @@ def test_openapi_acknowledge_servicegroup(
             'members': [('example.com', 'Memory'), ('example.com', 'CPU load')],
             'name': 'routers',
         },
-    ])
+    ],
+                   site='NO_SITE')
 
     live.expect_query('GET servicegroups\nColumns: members\nFilter: name = routers',)
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;Memory;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
-    )
+        site_id='NO_SITE')
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
-    )
+        site_id='NO_SITE')
     with live:
         wsgi_app.post(
             base + '/domain-types/acknowledge/collections/service',
@@ -345,16 +351,19 @@ def test_openapi_acknowledge_hostgroup(
             'members': ['example.com', 'heute'],
             'name': 'windows',
         },
-    ])
+    ],
+                   site='NO_SITE')
     live.expect_query('GET hostgroups\nColumns: name\nFilter: name = windows')
     live.expect_query('GET hostgroups\nColumns: members\nFilter: name = windows')
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
 
     with live:
@@ -425,13 +434,15 @@ def test_openapi_acknowledge_host_with_query(
             'name': 'heute',
             'state': 0,
         },
-    ])
+    ],
+                   site='NO_SITE')
 
     live.expect_query('GET hosts\nColumns: name\nFilter: state = 1')
     live.expect_query(f'GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123...;Acknowledged',
         match_type='ellipsis',
+        site_id='NO_SITE',
     )
 
     with live:

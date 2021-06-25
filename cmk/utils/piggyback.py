@@ -9,7 +9,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple
+from typing import Container, Dict, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 import cmk.utils
 import cmk.utils.paths
@@ -41,7 +41,11 @@ class PiggybackRawDataInfo(NamedTuple):
     raw_data: AgentRawData
 
 
-PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
+_PiggybackTimeSetting = Tuple[Optional[str], str, int]
+
+PiggybackTimeSettings = Sequence[_PiggybackTimeSetting]
+
+_PiggybackTimeSettingsMap = Mapping[Tuple[Optional[str], str], int]
 
 # ***** Terminology *****
 # "piggybacked_host_folder":
@@ -64,7 +68,7 @@ PiggybackTimeSettings = List[Tuple[Optional[str], str, int]]
 def get_piggyback_raw_data(
     piggybacked_hostname: Optional[HostName],
     time_settings: PiggybackTimeSettings,
-) -> List[PiggybackRawDataInfo]:
+) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -164,7 +168,7 @@ def has_piggyback_raw_data(
 def _get_piggyback_processed_file_infos(
     piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
-) -> List[PiggybackFileInfo]:
+) -> Sequence[PiggybackFileInfo]:
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -176,7 +180,7 @@ def _get_piggyback_processed_file_infos(
     matching_time_settings = _get_matching_time_settings(source_hostnames, piggybacked_hostname,
                                                          time_settings)
 
-    file_infos: List[PiggybackFileInfo] = []
+    file_infos = []
     for source_hostname in source_hostnames:
         if source_hostname.startswith("."):
             continue
@@ -193,10 +197,10 @@ def _get_piggyback_processed_file_infos(
 
 
 def _get_matching_time_settings(
-    source_hostnames: List[HostName],
+    source_hostnames: Container[HostName],
     piggybacked_hostname: HostName,
     time_settings: PiggybackTimeSettings,
-) -> Dict[Tuple[Optional[str], str], int]:
+) -> Mapping[Tuple[Optional[str], str], int]:
     matching_time_settings: Dict[Tuple[Optional[str], str], int] = {}
     for expr, key, value in time_settings:
         # expr may be
@@ -216,7 +220,7 @@ def _get_piggyback_processed_file_info(
     source_hostname: HostName,
     piggybacked_hostname: HostName,
     piggyback_file_path: Path,
-    time_settings: Dict[Tuple[Optional[str], str], int],
+    time_settings: _PiggybackTimeSettingsMap,
 ) -> Tuple[bool, str, int]:
 
     max_cache_age = _get_max_cache_age(source_hostname, piggybacked_hostname, time_settings)
@@ -246,7 +250,7 @@ def _get_piggyback_processed_file_info(
 def _get_max_cache_age(
     source_hostname: HostName,
     piggybacked_hostname: HostName,
-    time_settings: Dict[Tuple[Optional[str], str], int],
+    time_settings: _PiggybackTimeSettingsMap,
 ) -> int:
     key = 'max_cache_age'
     dflt: int = time_settings[(None, key)]
@@ -257,7 +261,7 @@ def _get_max_cache_age(
 def _get_validity_period(
     source_hostname: HostName,
     piggybacked_hostname: HostName,
-    time_settings: Dict[Tuple[Optional[str], str], int],
+    time_settings: _PiggybackTimeSettingsMap,
 ) -> Optional[int]:
     key = 'validity_period'
     dflt: Optional[int] = time_settings.get((None, key))
@@ -268,7 +272,7 @@ def _get_validity_period(
 def _get_validity_state(
     source_hostname: HostName,
     piggybacked_hostname: HostName,
-    time_settings: Dict[Tuple[Optional[str], str], int],
+    time_settings: _PiggybackTimeSettingsMap,
 ) -> int:
     key = 'validity_state'
     dflt = 0
@@ -323,7 +327,7 @@ def remove_source_status_file(source_hostname: HostName) -> bool:
 
 def store_piggyback_raw_data(
     source_hostname: HostName,
-    piggybacked_raw_data: Dict[HostName, List[bytes]],
+    piggybacked_raw_data: Mapping[HostName, Sequence[bytes]],
 ) -> None:
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
@@ -355,7 +359,7 @@ def store_piggyback_raw_data(
 
 def _store_status_file_of(
     status_file_path: Path,
-    piggyback_file_paths: List[Path],
+    piggyback_file_paths: Iterable[Path],
 ) -> None:
     store.makedirs(status_file_path.parent)
 
@@ -400,7 +404,7 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> List[HostName]:
+def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> Sequence[HostName]:
     if piggybacked_hostname is None:
         return [
             HostName(source_host.name)
@@ -415,7 +419,7 @@ def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> Lis
     ]
 
 
-def _get_piggybacked_host_folders() -> List[Path]:
+def _get_piggybacked_host_folders() -> Sequence[Path]:
     try:
         return [
             piggybacked_host_folder
@@ -428,7 +432,7 @@ def _get_piggybacked_host_folders() -> List[Path]:
         raise
 
 
-def _get_piggybacked_host_sources(piggybacked_host_folder: Path) -> List[Path]:
+def _get_piggybacked_host_sources(piggybacked_host_folder: Path) -> Sequence[Path]:
     try:
         return [
             piggybacked_host_source
@@ -441,7 +445,7 @@ def _get_piggybacked_host_sources(piggybacked_host_folder: Path) -> List[Path]:
         raise
 
 
-def _get_source_state_files() -> List[Path]:
+def _get_source_state_files() -> Sequence[Path]:
     try:
         return [
             source_state_file
@@ -476,7 +480,7 @@ def _get_piggybacked_file_path(
 #   '----------------------------------------------------------------------'
 
 
-def cleanup_piggyback_files(time_settings: List[Tuple[Optional[str], str, int]]) -> None:
+def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
     """This is a housekeeping job to clean up different old files from the
     piggyback directories.
 
@@ -497,8 +501,8 @@ def cleanup_piggyback_files(time_settings: List[Tuple[Optional[str], str, int]])
 
 
 def _get_piggybacked_hosts_settings(
-    time_settings: List[Tuple[Optional[str], str, int]]
-) -> List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]:
+    time_settings: PiggybackTimeSettings,
+) -> Sequence[Tuple[Path, Sequence[Path], _PiggybackTimeSettingsMap]]:
     piggybacked_hosts_settings = []
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         source_hosts = _get_piggybacked_host_sources(piggybacked_host_folder)
@@ -513,7 +517,7 @@ def _get_piggybacked_hosts_settings(
 
 
 def _cleanup_old_source_status_files(
-    piggybacked_hosts_settings: List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]
+    piggybacked_hosts_settings: Iterable[Tuple[Path, Iterable[Path], _PiggybackTimeSettingsMap]]
 ) -> None:
     """Remove source status files which exceed configured maximum cache age.
     There may be several 'Piggybacked Host Files' rules where the max age is configured.
@@ -562,7 +566,7 @@ def _cleanup_old_source_status_files(
 
 
 def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: List[Tuple[Path, List[Path], Dict[Tuple[Optional[str], str], int]]]
+    piggybacked_hosts_settings: Iterable[Tuple[Path, Iterable[Path], _PiggybackTimeSettingsMap]]
 ) -> None:
     """Remove piggybacked data files which exceed configured maximum cache age."""
 

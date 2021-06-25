@@ -103,7 +103,7 @@ class PiggybackFetcher(AgentFetcher):
     def _raw_data(
         hostname: Optional[str],
         time_settings: PiggybackTimeSettings,
-    ) -> List[PiggybackRawDataInfo]:
+    ) -> Sequence[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)
 
 

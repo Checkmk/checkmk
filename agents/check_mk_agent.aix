@@ -141,7 +141,7 @@ function run_cached {
     fi
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
     then
-        nohup sh -c $CMDLINE > $CACHEFILE.new 2> /dev/null && mv $CACHEFILE.new $CACHEFILE  &
+        nohup sh -c "$CMDLINE" > "$CACHEFILE.new" 2> /dev/null && mv -f "$CACHEFILE.new" "$CACHEFILE" || rm -f "$CACHEFILE.new" "$CACHEFILE"  &
     fi
 }
 
@@ -153,44 +153,54 @@ function add_failed_python_plugin {
     fi
 }
 
-function run_agent_plugin {
+function may_get_plugin_interpreter {
+    # run_cached::sh -c "COMMAND-STRING"
+    # ksh/dash/...: it's not allowed to use function within COMMAND-STRING
+
     if [ "${1:0:2}" == "./" ]; then
         agent_plugin="${1:2}"
     else
         agent_plugin="$1"
     fi
+
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        ./"$agent_plugin"
-        return
+        return 0
     fi
+
     if [ "${filename#${filename%??}}" != "_2" ]; then
         if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
             add_failed_python_plugin "$agent_plugin"
-            return
+            return 1
         fi
+
         if [ -n "$PYTHON3" ]; then
-            $PYTHON3 "$agent_plugin"
-            return
+            echo "$PYTHON3"
+            return 0
         fi
+
         if [ ! -e "${filename}_2.py" ]; then
             add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
-            return
+            return 1
         fi
-        return
+
+        # Python2 file but no Python interpreter found.
+        return 1
     fi
+
     if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
-        return
+        return 1
     fi
 
     if [ -n "$PYTHON2" ]; then
-        $PYTHON2 "$agent_plugin"
-        return
+        echo "$PYTHON2"
+        return 0
     fi
 
     add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
+    return 1
 }
 
 echo "<<<check_mk>>>"
@@ -350,21 +360,23 @@ esac
 echo $(((DAYS*86400)+(HOURS*3600)+(MINS*60)))
 
 
-if cd $PLUGINSDIR 2>/dev/null
-then
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ] ; then
-            run_agent_plugin "$skript"
-    fi
-  done
+if cd $PLUGINSDIR 2>/dev/null; then
+    for skript in $(ls); do
+        if [ ! -d "$skript" ] && [ -x "$skript" ] ; then
+            if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
+                $plugin_interpreter "./$skript"
+            fi
+        fi
+    done
 
-  # Call some plugins only every X'th second
-  for skript in [1-9]*/* ; do
-      if [ -x "$skript" ] ; then
-          run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
-      fi
-  done
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/* ; do
+        if [ -x "$skript" ] ; then
+            if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
+                run_cached plugins_${skript//\//\#} ${skript%/*} "$plugin_interpreter $skript"
+            fi
+        fi
+    done
 fi
 
 

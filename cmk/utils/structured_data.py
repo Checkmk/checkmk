@@ -48,7 +48,7 @@ SDNodes = Dict[SDNodeName, "Node"]
 
 SDChild = Union["Container", "Numeration", "Attributes"]
 
-SDNodeChildren = Set[SDChild]
+SDSortedNodeChildren = List[SDChild]
 SDCompNodeChildren = Set[Tuple[SDChild, SDChild]]
 
 SDChildren = Set[Tuple[SDNodeName, SDChild]]
@@ -217,7 +217,7 @@ class StructuredDataTree:
     def get_sub_attributes(self, path: SDPath) -> Optional["Attributes"]:
         return self._root.get_sub_attributes(path)
 
-    def get_sub_children(self, path: SDPath) -> Optional[SDNodeChildren]:
+    def get_sub_children(self, path: SDPath) -> Optional[SDSortedNodeChildren]:
         return self._root.get_sub_children(path)
 
     #   ---structured tree methods----------------------------------------------
@@ -246,9 +246,7 @@ class StructuredDataTree:
 
         filtered_tree = StructuredDataTree()
         for path, keys in allowed_paths:
-            # Make a copy of 'paths' which is mutable
-            # later 'paths' is modified via .pop(0)
-            sub_tree = self._root.get_filtered_branch(list(path), keys, Container())
+            sub_tree = self._root.get_filtered_branch(path, keys)
             if sub_tree is None:
                 continue
             filtered_tree._root.merge_with(sub_tree)
@@ -514,49 +512,48 @@ class Container:
         edge: SDNodeName,
         child: Union["Container", "Numeration", "Attributes"],
     ):
-        node = self._nodes.setdefault(edge, Node(self._path + (edge,)))
-        return node.add_node_child(child)
+        return self._nodes.setdefault(edge, Node(self._path + (edge,))).add_node_child(child)
 
     def has_edge(self, edge: SDNodeName) -> bool:
         return bool(self._nodes.get(edge))
 
-    def get_filtered_branch(
-        self,
-        path: SDPath,
-        keys: Optional[SDKeys],
-        parent: "Container",
-    ) -> Optional["Container"]:
-        sub_node = self._get_sub_node(path[:1])
+    def get_filtered_branch(self, path: SDPath, keys: Optional[SDKeys]) -> Optional["Container"]:
+        # First check if node exists
+        sub_node = self._get_sub_node(path)
         if sub_node is None:
             return None
 
-        edge = path.pop(0)
-        if path:
-            container = sub_node.get_node_container()
-            if container is not None:
-                filtered = container.get_filtered_branch(path, keys, Container())
-                if filtered is not None:
-                    parent.add_child(edge, filtered)
-            return parent
+        filtered = Container()
+        node = filtered._create_node_hierarchy(path)
 
         if keys is None:
-            for child in sub_node.get_node_children():
-                parent.add_child(edge, child)
-            return parent
+            container = sub_node.get_node_container()
+            if container is not None:
+                node.add_node_child(container)
 
         numeration = sub_node.get_node_numeration()
         if numeration is not None:
             if keys:
                 numeration = numeration.get_filtered_data(keys)
-            parent.add_child(edge, numeration)
+            node.add_node_child(numeration)
 
         attributes = sub_node.get_node_attributes()
         if attributes is not None:
             if keys:
                 attributes = attributes.get_filtered_data(keys)
-            parent.add_child(edge, attributes)
+            node.add_node_child(attributes)
 
-        return parent
+        return filtered
+
+    def _create_node_hierarchy(self, path: SDPath) -> "Node":
+        edge = path[0]
+        node = self._nodes.setdefault(edge, Node(self._path + (edge,)))
+        if len(path) == 1:
+            return node
+
+        container = node.add_node_child(Container())
+        assert isinstance(container, Container)
+        return container._create_node_hierarchy(path[1:])
 
     #   ---getting [sub] nodes/node attributes----------------------------------
 
@@ -567,7 +564,7 @@ class Container:
         """Returns a flatten list of tuples (edge, absolute path, child)"""
         return {(edge, child)
                 for edge, node in self._nodes.items()
-                for child in node.get_node_children()
+                for child in node.get_sorted_children()
                 if edges is None or edge in edges}
 
     def _get_comparable_children(
@@ -583,27 +580,19 @@ class Container:
 
     def get_sub_container(self, path: SDPath) -> Optional["Container"]:
         sub_node = self._get_sub_node(path)
-        if sub_node is None:
-            return None
-        return sub_node.get_node_container()
+        return None if sub_node is None else sub_node.get_node_container()
 
     def get_sub_numeration(self, path: SDPath) -> Optional["Numeration"]:
         sub_node = self._get_sub_node(path)
-        if sub_node is None:
-            return None
-        return sub_node.get_node_numeration()
+        return None if sub_node is None else sub_node.get_node_numeration()
 
     def get_sub_attributes(self, path: SDPath) -> Optional["Attributes"]:
         sub_node = self._get_sub_node(path)
-        if sub_node is None:
-            return None
-        return sub_node.get_node_attributes()
+        return None if sub_node is None else sub_node.get_node_attributes()
 
-    def get_sub_children(self, path: SDPath) -> Optional[SDNodeChildren]:
+    def get_sub_children(self, path: SDPath) -> Optional[SDSortedNodeChildren]:
         sub_node = self._get_sub_node(path)
-        if sub_node is None:
-            return None
-        return sub_node.get_node_children()
+        return None if sub_node is None else sub_node.get_sorted_children()
 
     def _get_sub_node(self, path: SDPath) -> Optional["Node"]:
         if not path:
@@ -614,10 +603,7 @@ class Container:
             return sub_node
 
         container = sub_node.get_node_container()
-        if container is None:
-            return None
-
-        return container._get_sub_node(path[1:])
+        return None if container is None else container._get_sub_node(path[1:])
 
     #   ---web------------------------------------------------------------------
 
@@ -946,17 +932,25 @@ class Node:
         self._abs_path = abs_path
 
     def get_absolute_path(self) -> SDNodePath:
-        # Only needed in GUI::NodeRenderer, can be removed as soon as NodeRenderer is refactored.
+        # Only needed in GUI::NodeRenderer
         return self._abs_path
+
+    def get_sorted_children(self) -> SDSortedNodeChildren:
+        # Only needed in GUI::NodeRenderer
+        return [
+            child for child in [
+                self.get_node_attributes(),
+                self.get_node_numeration(),
+                self.get_node_container(),
+            ] if child is not None
+        ]
 
     def add_node_child(self, child: SDChild) -> SDChild:
         child.set_path(self._abs_path)
         return self._children.setdefault(type(child), child)
 
     def remove_node_child(self, child: SDChild) -> None:
-        child_type = type(child)
-        if child_type in self._children:
-            del self._children[child_type]
+        self._children.pop(type(child), None)
 
     def get_node_container(self) -> Optional["Container"]:
         return self._children.get(type(Container()))
@@ -966,9 +960,6 @@ class Node:
 
     def get_node_attributes(self) -> Optional["Attributes"]:
         return self._children.get(type(Attributes()))
-
-    def get_node_children(self) -> SDNodeChildren:
-        return set(self._children.values())
 
     def get_comparable_node_children(self, other: object) -> SDCompNodeChildren:
         if not isinstance(other, Node):

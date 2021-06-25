@@ -18,7 +18,7 @@ import dicttoxml  # type: ignore[import]
 import livestatus
 
 import cmk.utils.paths
-from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
+from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -110,17 +110,6 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
             except ValueError:
                 parsed_path.append(part_)
     return parsed_path, attribute_keys
-
-
-def sort_children(children):
-    if not children:
-        return []
-    ordering = {
-        type(Attributes()): 1,
-        type(Numeration()): 2,
-        type(Container()): 3,
-    }
-    return sorted(children, key=lambda x: ordering[type(x)])
 
 
 def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:

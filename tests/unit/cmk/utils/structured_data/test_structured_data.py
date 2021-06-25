@@ -730,7 +730,9 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
 ])
 def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths, node_types,
                                                                      amount_if_entries):
+    the_paths = list(paths)
     filtered = tree.get_filtered_tree(paths)
+    assert the_paths == paths
     assert filtered.has_edge('networking')
     assert not filtered.has_edge('hardware')
     assert not filtered.has_edge('software')

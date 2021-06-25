@@ -1806,7 +1806,7 @@ class NodeRenderer:
                                     fetch_url=fetch_url) as is_open:
                 if is_open:
                     # Render only if it is open. We'll get the stuff via ajax later if it's closed
-                    for child in inventory.sort_children(node.get_node_children()):
+                    for child in node.get_sorted_children():
                         child.show(self)
 
     def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
@@ -2067,11 +2067,11 @@ def ajax_inv_render_tree() -> None:
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:
-        children = {struct_tree.get_root_container()}
+        children = [struct_tree.get_root_container()]
 
     if children is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
     else:
-        for child in inventory.sort_children(children):
+        for child in children:
             child.show(tree_renderer)

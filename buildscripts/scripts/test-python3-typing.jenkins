@@ -41,6 +41,17 @@ node (NODE) {
                 ]
             )
         }
+        stage("Publish coverage") {
+            publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: 'mypy_reports/html',
+                reportFiles: 'index.html',
+                reportName: 'Typing coverage',
+                reportTitles: ''
+            ])
+        }
     }catch(Exception e) {
         notify.notify_error(e)
     }

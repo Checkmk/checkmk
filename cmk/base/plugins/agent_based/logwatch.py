@@ -165,7 +165,7 @@ def check_logwatch(
 
     loglines = []
     for node, node_data in section.items():
-        item_data: logwatch.ItemData = node_data["logfiles"].get(item, {
+        item_data: logwatch.ItemData = node_data.logfiles.get(item, {
             "attr": "missing",
             "lines": []
         })
@@ -299,7 +299,7 @@ def check_logwatch_groups(
     loglines = []
     # node name ignored (only used in regular logwatch check)
     for node_data in section.values():
-        for logfile_name, item_data in node_data['logfiles'].items():
+        for logfile_name, item_data in node_data.logfiles.items():
             for inclusion, exclusion in group_patterns:
                 if _match_group_patterns(logfile_name, inclusion, exclusion):
                     loglines.extend(item_data['lines'])

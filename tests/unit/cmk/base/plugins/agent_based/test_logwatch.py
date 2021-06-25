@@ -47,9 +47,9 @@ def test_logwatch_groups_of_logfile_exception(group_patterns, filename):
         logwatch._groups_of_logfile(group_patterns, filename)
 
 
-SECTION1: logwatch.logwatch.Section = {
-    'errors': [],
-    'logfiles': {
+SECTION1 = logwatch.logwatch.Section(
+    errors=[],
+    logfiles={
         'mylog': {
             'attr': 'ok',
             'lines': ['C whoha! Someone mooped!'],
@@ -71,7 +71,7 @@ SECTION1: logwatch.logwatch.Section = {
             'lines': ['W watch your step!'],
         },
     },
-}
+)
 
 
 def test_discovery_single(monkeypatch):
@@ -112,9 +112,9 @@ def test_check_single(monkeypatch):
     ]
 
 
-SECTION2: logwatch.logwatch.Section = {
-    'errors': [],
-    'logfiles': {
+SECTION2 = logwatch.logwatch.Section(
+    errors=[],
+    logfiles={
         'log1': {
             'attr': 'ok',
             'lines': [],
@@ -136,7 +136,7 @@ SECTION2: logwatch.logwatch.Section = {
             'lines': [],
         },
     },
-}
+)
 
 
 def test_logwatch_discover_single_restrict(monkeypatch):

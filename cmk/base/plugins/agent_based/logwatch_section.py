@@ -14,7 +14,7 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.logwatch import ItemData, Section
 
@@ -48,7 +48,7 @@ def _extract_item_attribute(line: str) -> Optional[Tuple[str, str]]:
 def parse_logwatch(string_table: StringTable) -> Section:
     """
         >>> import pprint
-        >>> pprint.pprint(parse_logwatch([
+        >>> section = parse_logwatch([
         ...     ['[[[mylog]]]'],
         ...     ['C', 'whoha!', 'Someone', 'mooped!'],
         ...     ['[[[missinglog:missing]]]'],
@@ -56,16 +56,20 @@ def parse_logwatch(string_table: StringTable) -> Section:
         ...     ['[[[empty.log]]]'],
         ...     ['[[[my_other_log]]]'],
         ...     ['W', 'watch', 'your', 'step!'],
-        ... ]))
-        {'errors': [],
-         'logfiles': {'empty.log': {'attr': 'ok', 'lines': []},
-                      'missinglog': {'attr': 'missing', 'lines': []},
-                      'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
-                      'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
-                      'unreadablelog': {'attr': 'cannotopen', 'lines': []}}}
+        ... ])
+        >>> pprint.pprint(section.errors)
+        []
+        >>> pprint.pprint(section.logfiles)
+        {'empty.log': {'attr': 'ok', 'lines': []},
+         'missinglog': {'attr': 'missing', 'lines': []},
+         'my_other_log': {'attr': 'ok', 'lines': ['W watch your step!']},
+         'mylog': {'attr': 'ok', 'lines': ['C whoha! Someone mooped!']},
+         'unreadablelog': {'attr': 'cannotopen', 'lines': []}}
     """
 
-    section: Section = {"errors": [], "logfiles": {}}
+    errors = []
+    logfiles: Dict[str, ItemData] = {}
+
     item_data: Optional[ItemData] = None
 
     for raw_line in string_table:
@@ -73,19 +77,19 @@ def parse_logwatch(string_table: StringTable) -> Section:
 
         error_msg = _extract_error_message(line)
         if error_msg is not None:
-            section['errors'].append(error_msg)
+            errors.append(error_msg)
             continue
 
         item_attribute = _extract_item_attribute(line)
         if item_attribute is not None:
             item, attribute = item_attribute
-            item_data = section['logfiles'].setdefault(item, {'attr': attribute, 'lines': []})
+            item_data = logfiles.setdefault(item, {'attr': attribute, 'lines': []})
             continue
 
         if item_data is not None:
             item_data['lines'].append(line)
 
-    return section
+    return Section(errors=errors, logfiles=logfiles)
 
 
 register.agent_section(

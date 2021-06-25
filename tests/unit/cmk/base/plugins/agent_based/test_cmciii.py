@@ -745,7 +745,7 @@ def _generictest_cmciii():
     ('cmciii_psm_plugs', None, []),
     (
         'cmciii_io',
-        None,
+        {},
         [
             Service(item='CMC-IOModul Input 1', parameters={'_item_key': 'CMC-IOModul Input 1'}),
             Service(item='CMC-IOModul Input 2', parameters={'_item_key': 'CMC-IOModul Input 2'}),
@@ -1013,7 +1013,7 @@ def _generictest_cmciii_input_regression():
     ('cmciii_psm_plugs', None, []),
     (
         'cmciii_io',
-        None,
+        {},
         [
             Service(item='CMCIII-IO2 Input 2', parameters={'_item_key': u'CMCIII-IO2 Input 2'}),
             Service(item='CMCIII-IO2 Input 3', parameters={'_item_key': u'CMCIII-IO2 Input 3'}),

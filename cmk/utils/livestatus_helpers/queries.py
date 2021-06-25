@@ -127,6 +127,23 @@ class Query(BaseQuery):
 
     This holds all necessary information to generate a valid livestatus query.
 
+    This class provides a number of convenience metehods to query data from Livestatus.
+
+    These are:
+
+      * fetch_values - returns list of tuples
+      * to_dict - converts a list of 2-tuples into a dict
+
+      * fetchone - returns a dict, first entry
+      * first - returns a dict, first entry or None
+      * iterate - returns a list of dicts
+
+      * value - returns a scalar
+      * first_value - returns a scalar or None
+
+    All methods honor the "set_prepend_site" setting of livestatus.py and prepend the site
+    on each row or add the site into the dictionary with the key "site".
+
     Examples:
 
         >>> from cmk.utils.livestatus_helpers.expressions import Not
@@ -176,7 +193,11 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         False
 
     """
-    def __init__(self, columns: List[Column], filter_expr: QueryExpression = NothingExpression()):
+    def __init__(
+            self,
+            columns: List[Column],
+            filter_expr: QueryExpression = NothingExpression(),
+    ):
         """A representation of a livestatus query.
 
         Args:
@@ -299,6 +320,12 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             {'name': 'heute'}
 
             >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = heute")
+            ...    live.set_prepend_site(True)
+            ...    Query([Hosts.name], Hosts.name == "heute").fetchone(live)
+            {'site': 'NO_SITE', 'name': 'heute'}
+
+            >>> with simple_expect() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name")
             ...    Query([Hosts.name]).fetchone(live)
             Traceback (most recent call last):
@@ -387,8 +414,21 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
             [{'name': 'heute', 'parents': ['example.com']}, {'name': 'example.com', 'parents': []}]
 
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
+            ...    live.set_prepend_site(True)
+            ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
+            [{'site': 'NO_SITE', 'name': 'heute', 'parents': ['example.com']}, \
+{'site': 'NO_SITE', 'name': 'example.com', 'parents': []}]
+
         """
-        names = self.column_names
+        if sites.prepend_site:
+            if 'site' in self.column_names:
+                raise ValueError("Conflict: site both as column in a table and via prepend_site")
+            names = ['site', *self.column_names]
+        else:
+            names = self.column_names
+
         for entry in self.fetch_values(sites):
             # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))

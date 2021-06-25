@@ -3,7 +3,7 @@ FROM centos:centos8
 SHELL ["/bin/bash", "-c"]
 
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools --allowerasing install \
     bind-utils \
     curl \
     curl-devel \
@@ -60,7 +60,7 @@ RUN yum -y makecache \
     which \
     && yum clean all
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools reinstall \
+    && yum -y --enablerepo=powertools --allowerasing install \
     kernel-headers \
     && yum clean all
 
@@ -81,8 +81,8 @@ RUN yum -y makecache \
 # New packages that are not needed for the build toolchain above should be added here.
 # We avoid rebuild of the whole previous steps this way
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
-        chrpath \
+    && yum -y --enablerepo=powertools --allowerasing install \
+    chrpath \
     joe \
     iputils \
     vim \

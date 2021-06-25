@@ -782,8 +782,7 @@ div.dashlet.nodata {
 
 div.site_overview,
 div.alert_statistics,
-div.hoststats,
-div.servicestats {
+div.stats {
   g.element_box:hover {
     path + path {
       fill-opacity: 0.96;
@@ -898,8 +897,7 @@ div.servicestats {
   }
 }
 
-div.hoststats,
-div.servicestats {
+div.stats {
   height: 100%;
 
   path.hexagon {
@@ -983,14 +981,13 @@ div.servicestats {
       background-color: transparent;
     }
   }
-}
 
-div.stats_table {
-  div.hoststats & {
+  &.hoststats div.stats_table,
+  &.eventstats div.stats_table {
     top: 44px;
   }
 
-  div.servicestats & {
+  &.servicestats div.stats_table {
     top: 28px;
   }
 }

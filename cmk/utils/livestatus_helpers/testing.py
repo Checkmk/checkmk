@@ -255,10 +255,6 @@ program_start num_hosts num_services core_pid'
 
         return result
 
-    def set_prepend_site(self, prepend_site: bool) -> None:
-        for single_conn in self.connections.values():
-            single_conn.set_prepend_site(prepend_site)
-
     def enabled_and_disabled_sites(self, user_id) -> Tuple[dict, dict]:
         """This method is used to inject the currently configured sites into livestatus.py"""
         return {site_name: {'socket': 'unix:'} for site_name in self.sites}, {}
@@ -475,7 +471,6 @@ class MockSingleSiteConnection:
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: Optional[io.StringIO] = None
-        self._prepend_site = False
         self._expected_queries: List[Tuple[str, MatchType]] = []
 
         self.socket = FakeSocket(self)
@@ -533,15 +528,9 @@ class MockSingleSiteConnection:
             if _show_columns(query):
                 yield _columns
 
-            if self._prepend_site:
-                yield from [['NO_SITE'] + line for line in _response]
-            else:
-                yield from _response
+            yield from _response
 
         return list(_generate_output())
-
-    def set_prepend_site(self, prepend_site: bool) -> None:
-        self._prepend_site = prepend_site
 
     def socket_recv(self, length: int) -> bytes:
         if self._last_response is None:

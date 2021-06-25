@@ -34,25 +34,6 @@ from cmk.utils.structured_data import StructuredDataTree, Container, Attributes,
 
 
 def mk_root():
-    # This tree contains all possibilities:
-    # {'0_cna': {'__Att__': '{:}',
-    #            '__Con__': {'1_ca': {'__Att__': '{:}',
-    #                                 '__Con__': {'2_a': {'__Att__': '{:}',
-    #                                                     '__path__': ('0_cna',
-    #                                                                  '1_ca',
-    #                                                                  '2_a')}},
-    #                                 '__path__': ('0_cna', '1_ca')},
-    #                        '1_cn': {'__Con__': {'2_n': {'__Num__': '[:]',
-    #                                                     '__path__': ('0_cna',
-    #                                                                  '1_ca',
-    #                                                                  '2_n')}},
-    #                                 '__Num__': '[:]',
-    #                                 '__path__': ('0_cna', '1_cn')},
-    #                        '1_na': {'__Att__': '{:}',
-    #                                 '__Num__': '[:]',
-    #                                 '__path__': ('0_cna', '1_na')}},
-    #            '__Num__': '[:]',
-    #            '__path__': ('0_cna',)}}
     root = Container()
     container_0 = Container()
     numeration_0 = Numeration()
@@ -538,7 +519,7 @@ def test_structured_data_StructuredDataTree_equal_numerations():
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
 
 
-@pytest.mark.parametrize("tree", trees)
+@pytest.mark.parametrize("tree", trees[:1])
 def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_path):
     try:
         tree.save_to(str(tmp_path), "foo", False)
@@ -620,12 +601,10 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
 
 @pytest.mark.parametrize("tree,len_children", list(zip(
     trees_old,
-    [2, 1, 1, 4, 1, 4],
+    [2, 1, 1, 3, 1, 3],
 )))
 def test_structured_data_StructuredDataTree_get_children(tree, len_children):
-    tree_children = tree._root._get_children()
-    for entry in tree_children:
-        assert len(entry) == 2
+    tree_children = tree._root._nodes
     assert len(tree_children) == len_children
 
 
@@ -712,23 +691,21 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
         assert filtered.get_sub_container(path) is None
 
 
-@pytest.mark.parametrize("tree,paths,node_types,amount_if_entries", [
-    (tree_new_interfaces, [(['networking'], None)], [Container, Attributes], 3178),
-    (tree_new_interfaces, [(['networking'], [])], [Attributes], None),
+@pytest.mark.parametrize("tree,paths,amount_if_entries", [
+    (tree_new_interfaces, [(['networking'], None)], 3178),
+    (tree_new_interfaces, [(['networking'], [])], None),
     (tree_new_interfaces, [
         (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports'])
-    ], [Attributes], None),
-    (tree_new_interfaces, [(['networking', 'interfaces'], None)], [Container], 3178),
-    (tree_new_interfaces, [(['networking', 'interfaces'], [])], [Container], 3178),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], [Container], 326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], [Container
-                                                                                        ], 326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])
-                          ], [Container], 652),
+    ], None),
+    (tree_new_interfaces, [(['networking', 'interfaces'], None)], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], [])], 3178),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], 326),
+    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])], 652),
     (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
-                          ], [Container], 652),
+                          ], 652),
 ])
-def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths, node_types,
+def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths,
                                                                      amount_if_entries):
     the_paths = list(paths)
     filtered = tree.get_filtered_tree(paths)
@@ -737,17 +714,10 @@ def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths
     assert not filtered.has_edge('hardware')
     assert not filtered.has_edge('software')
 
-    children = filtered.get_sub_children(['networking'])
-    assert len(children) == len(node_types)
-    for child in children:
-        assert type(child) in node_types  # pylint: disable=unidiomatic-typecheck
-
     interfaces = filtered.get_sub_numeration(['networking', 'interfaces'])
-    if Container in node_types:
+    if interfaces is not None:
         assert bool(interfaces)
         assert interfaces.count_entries() == amount_if_entries
-    else:
-        assert interfaces is None
 
 
 def test_structured_data_StructuredDataTree_building_tree():
@@ -773,7 +743,7 @@ def test_structured_data_StructuredDataTree_building_tree():
     plugin_dict()
     plugin_list()
     plugin_nested_list()
-    struct_tree.normalize_nodes()
+    struct_tree._root.normalize_nodes()
 
     assert struct_tree.has_edge("level0_0")
     assert struct_tree.has_edge("level0_1")
@@ -794,8 +764,8 @@ def test_structured_data_StructuredDataTree_building_tree():
     known_keys = [key for row in level1_list.get_child_data() for key in row]
     assert 'l1' in known_keys
     assert 'l2' in known_keys
-    assert level1_nested_list_num is None
-    assert level1_nested_list_att is None
+    assert level1_nested_list_num is not None and level1_nested_list_num.is_empty()
+    assert level1_nested_list_att is not None and level1_nested_list_att.is_empty()
 
     assert isinstance(level1_nested_list_con, Container)
     assert list(level1_nested_list_con._nodes) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]

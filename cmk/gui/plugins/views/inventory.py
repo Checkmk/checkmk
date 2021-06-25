@@ -131,16 +131,16 @@ def _paint_host_inventory_tree_children(
     parsed_path: InventoryPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
-    children: Optional[Iterable[Union[Container, Numeration, Attributes]]]
     if parsed_path:
-        children = struct_tree.get_sub_children(parsed_path)
+        node = struct_tree.get_sub_container(parsed_path)
     else:
-        children = [struct_tree.get_root_container()]
-    if children is None:
+        node = struct_tree.get_root_container()
+
+    if node is None:
         return "", ""
+
     with output_funnel.plugged():
-        for child in children:
-            child.show(tree_renderer)
+        node.show(tree_renderer)
         code = HTML(output_funnel.drain())
     return "invtree", code
 
@@ -1775,39 +1775,36 @@ class NodeRenderer:
     #   ---container------------------------------------------------------------
 
     def show_container(self, container: Container) -> None:
-        for edge, node in container.get_edge_nodes():
-            node_abs_path = node.get_absolute_path()
-            invpath = ".%s." % self._get_raw_path(list(node_abs_path))
+        invpath = ".%s." % self._get_raw_path(list(container.path))
 
-            icon, title = _inv_titleinfo(invpath, key=str(edge))
+        edge = container.path[-1] if container.path else ""
+        icon, title = _inv_titleinfo(invpath, key=str(edge))
 
-            # Replace placeholders in title with the real values for this path
-            if "%d" in title or "%s" in title:
-                title = self._replace_placeholders(title, invpath)
+        # Replace placeholders in title with the real values for this path
+        if "%d" in title or "%s" in title:
+            title = self._replace_placeholders(title, invpath)
 
-            header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = makeuri_contextless(
-                request,
-                [
-                    ("site", self._site_id),
-                    ("host", self._hostname),
-                    ("path", invpath),
-                    ("show_internal_tree_paths", self._show_internal_tree_paths),
-                    ("treeid", self._tree_id),
-                ],
-                "ajax_inv_render_tree.py",
-            )
+        header = self._get_header(title, ".".join(map(str, container.path)), "#666")
+        fetch_url = makeuri_contextless(
+            request,
+            [
+                ("site", self._site_id),
+                ("host", self._hostname),
+                ("path", invpath),
+                ("show_internal_tree_paths", self._show_internal_tree_paths),
+                ("treeid", self._tree_id),
+            ],
+            "ajax_inv_render_tree.py",
+        )
 
-            with foldable_container(treename="inv_%s%s" % (self._hostname, self._tree_id),
-                                    id_=invpath,
-                                    isopen=False,
-                                    title=header,
-                                    icon=icon,
-                                    fetch_url=fetch_url) as is_open:
-                if is_open:
-                    # Render only if it is open. We'll get the stuff via ajax later if it's closed
-                    for child in node.get_sorted_children():
-                        child.show(self)
+        with foldable_container(treename="inv_%s%s" % (self._hostname, self._tree_id),
+                                id_=invpath,
+                                isopen=False,
+                                title=header,
+                                icon=icon,
+                                fetch_url=fetch_url) as is_open:
+            if is_open:
+                container.show(self)
 
     def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
         hint_id = _find_display_hint_id(invpath)
@@ -2065,13 +2062,12 @@ def ajax_inv_render_tree() -> None:
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
     if parsed_path:
-        children = struct_tree.get_sub_children(parsed_path)
+        node = struct_tree.get_sub_container(parsed_path)
     else:
-        children = [struct_tree.get_root_container()]
+        node = struct_tree.get_root_container()
 
-    if children is None:
+    if node is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))
     else:
-        for child in children:
-            child.show(tree_renderer)
+        node.show(tree_renderer)

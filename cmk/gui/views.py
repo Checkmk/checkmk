@@ -261,10 +261,11 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
 def _has_children(struct_tree, invpath):
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
     if parsed_path:
-        children = struct_tree.get_sub_children(parsed_path)
+        node = struct_tree.get_sub_container(parsed_path)
     else:
-        children = [struct_tree.get_root_container()]
-    if children is None:
+        node = struct_tree.get_root_container()
+
+    if node is None or node.is_empty():
         return False
     return True
 

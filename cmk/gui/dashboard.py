@@ -1155,6 +1155,12 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
 def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
     yield PageMenuEntryCEEOnly(
+        title='Host State',
+        icon_name='dashboard',  # TODO: Needs its own icon!
+        item=_dashboard_add_non_view_dashlet_link(name, "state_host"),
+    )
+
+    yield PageMenuEntryCEEOnly(
         title='Service State',
         icon_name='dashboard',  # TODO: Needs its own icon!
         item=_dashboard_add_non_view_dashlet_link(name, "state_service"),

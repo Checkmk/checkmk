@@ -415,7 +415,7 @@ def _paint_service_state_short(row: Row) -> CellSpec:
     return "state svcstate state%s" % state, html.render_span(name, class_=["state_rounded_fill"])
 
 
-def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
+def host_state_short(row: Row) -> Tuple[str, str]:
     if row["host_has_been_checked"] == 1:
         state = str(row["host_state"])
         # A state of 3 is sent by livestatus in cases where no normal state
@@ -424,7 +424,11 @@ def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
     else:
         state = "p"
         name = _("PEND")
+    return state, name
 
+
+def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
+    state, name = host_state_short(row)
     if is_stale(row):
         state = state + " stale"
 

@@ -11,7 +11,9 @@ import json
 import time
 import urllib.parse
 from itertools import chain
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, TypedDict, Literal
+from dataclasses import dataclass
+from functools import partial
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
@@ -33,7 +35,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
-from cmk.gui.plugins.views.painters import service_state_short
+from cmk.gui.plugins.views.painters import service_state_short, host_state_short
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext, Row
 from cmk.gui.utils.html import HTML
@@ -474,6 +476,15 @@ def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
         _("These macros can be combined with arbitrary text elements, e.g. \"some text "
           "<tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."),
     )
+
+
+class VsResultGeneralSettings(TypedDict):
+    type: str
+    background: bool
+    show_title: Union[bool, Literal['transparent']]
+    title: str
+    title_url: str
+    single_infos: List[str]
 
 
 def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
@@ -1004,12 +1015,19 @@ def copy_view_into_dashlet(dashlet: DashletConfig,
     dashlet['mustsearch'] = False
 
 
+def host_table_query(properties, context, column_generator):
+    return _table_query(properties, context, column_generator, "hosts", ["host"])
+
+
 def service_table_query(properties, context, column_generator):
-    filter_headers, only_sites = visuals.get_filter_headers("services", ["host", "service"],
-                                                            context)
+    return _table_query(properties, context, column_generator, "services", ["host", "service"])
+
+
+def _table_query(properties, context, column_generator, table: str, infos: List[str]):
+    filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
     columns = column_generator(properties, context)
 
-    query = ("GET services\n"
+    query = (f"GET {table}\n"
              "Columns: %(cols)s\n"
              "%(filter)s" % {
                  "cols": " ".join(columns),
@@ -1025,6 +1043,18 @@ def service_table_query(properties, context, column_generator):
             raise MKGeneralException(_("The query returned no data."))
 
     return ['site'] + columns, rows
+
+
+def create_host_view_url(context):
+    return makeuri_contextless(
+        request,
+        [
+            ("view_name", "host"),
+            ("site", context["site"]),
+            ("host", context["host_name"]),
+        ],
+        filename="view.py",
+    )
 
 
 def create_service_view_url(context):
@@ -1098,11 +1128,45 @@ def make_mk_missing_data_error() -> MKMissingDataError:
     return MKMissingDataError(_("No data was found with the current parameters of this dashlet."))
 
 
-def svc_map(
-    conf: Optional[Tuple[str, str]],
-    row: Row,
-    message_template: str = "{}",
-) -> Dict[str, str]:
+@dataclass
+class StateFormatter:
+    css: str
+    _state_names: Callable[[Row], Tuple[str, str]]
+    message_template: str
+
+    def state_names(self, row: Row) -> Tuple[str, str]:
+        # TODO: remove underscore from _state_names and remove this method
+        # when https://github.com/python/mypy/pull/10548 is released
+        return self._state_names(row)  # type: ignore
+
+
+class ServiceStateFormatter(StateFormatter):
+    def __init__(self, message_template: str = "{}") -> None:
+        self.css = "svcstate state{}"
+        # TODO: see comment in StateFormatter.state_names
+        self._state_names = service_state_short  # type: ignore
+        self.message_template = message_template
+
+
+def state_map(conf: Optional[Tuple[str, str]], row: Row, formatter: StateFormatter):
     style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
-    state, status_name = service_state_short(row)
-    return {"css": "svcstate state%s" % state, "msg": message_template.format(status_name), **style}
+    state, status_name = formatter.state_names(row)
+    return {
+        "css": formatter.css.format(state),
+        "msg": formatter.message_template.format(status_name),
+        **style
+    }
+
+
+host_map = partial(
+    state_map,
+    formatter=StateFormatter(
+        "hoststate hstate{}",
+        host_state_short,
+        "{}",
+    ),
+)
+svc_map = partial(
+    state_map,
+    formatter=ServiceStateFormatter(),
+)

@@ -62,7 +62,7 @@ from cmk.gui.page_menu import (
     make_confirmed_form_submit_link,
 )
 from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless, makeactionuri
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:

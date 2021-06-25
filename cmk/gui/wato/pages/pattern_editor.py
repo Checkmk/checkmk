@@ -39,7 +39,7 @@ from cmk.gui.watolib.search import (
     match_item_generator_registry,
 )
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place

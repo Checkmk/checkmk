@@ -17,7 +17,7 @@ import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 
-from cmk.gui.escaping import escape_html
+from cmk.gui.utils.escaping import escape_html
 from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

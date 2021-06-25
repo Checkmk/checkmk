@@ -18,7 +18,7 @@ from typing import (
 
 import cmk.utils.version as cmk_version
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.valuespec import Checkbox, Transform
@@ -53,7 +53,7 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,

@@ -152,7 +152,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-from cmk.gui.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import (
     makeuri_contextless,
     makeuri_contextless_rulespec_group,

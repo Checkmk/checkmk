@@ -26,7 +26,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
 from cmk.gui.config import user
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 
 
 def enable_page_menu_entry(name: str):

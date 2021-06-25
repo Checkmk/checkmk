@@ -11,7 +11,7 @@ from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,

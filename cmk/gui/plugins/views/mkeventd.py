@@ -11,7 +11,7 @@ from livestatus import SiteId
 
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.type_defs import HTTPVariables, Row

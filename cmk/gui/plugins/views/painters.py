@@ -18,7 +18,7 @@ from cmk.utils.defines import short_service_state_name, short_host_state_name
 from cmk.utils.type_defs import Timestamp
 import cmk.utils.version as cmk_version
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites

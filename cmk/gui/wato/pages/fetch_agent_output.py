@@ -20,7 +20,7 @@ import cmk.gui.background_job as background_job
 from cmk.gui.globals import html, request, transactions, response
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
-from cmk.gui.escaping import escape_attribute
+from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem

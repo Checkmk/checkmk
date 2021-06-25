@@ -22,7 +22,7 @@ import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException

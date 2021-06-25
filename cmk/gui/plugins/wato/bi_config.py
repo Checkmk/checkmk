@@ -10,7 +10,7 @@ import copy
 from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional, overload
 
 import cmk.utils.version as cmk_version
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.pages import page_registry, AjaxPage
 
 try:

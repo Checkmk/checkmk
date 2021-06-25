@@ -8,7 +8,7 @@ from typing import Optional, Type
 
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.bi as bi
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.htmllib import HTML

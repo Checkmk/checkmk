@@ -48,7 +48,7 @@ from cmk.gui.plugins.wato import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

@@ -60,7 +60,7 @@ from cmk.gui.sites import (
 )
 import cmk.gui.config as config
 import cmk.gui.log as log
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, request as _request
 from cmk.gui.log import logger

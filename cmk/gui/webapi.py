@@ -17,7 +17,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config

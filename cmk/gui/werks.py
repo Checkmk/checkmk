@@ -54,7 +54,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 from cmk.gui.page_state import PageState
-from cmk.gui.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"

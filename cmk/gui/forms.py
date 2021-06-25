@@ -8,7 +8,7 @@ import base64
 from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
 from six import ensure_binary, ensure_str
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, user_errors, theme

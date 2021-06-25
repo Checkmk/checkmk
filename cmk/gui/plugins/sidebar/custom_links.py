@@ -10,7 +10,7 @@ from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.utils.html import HTML
-from cmk.gui.escaping import escape_html
+from cmk.gui.utils.escaping import escape_html
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,

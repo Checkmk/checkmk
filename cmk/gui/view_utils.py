@@ -13,7 +13,7 @@ from livestatus import SiteId
 from cmk.utils.type_defs import Labels, LabelSources, TagID, TaggroupID, TaggroupIDToTagID
 from cmk.gui.type_defs import HTTPVariables
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, theme
 from cmk.gui.utils.html import HTML

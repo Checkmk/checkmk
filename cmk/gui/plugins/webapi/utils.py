@@ -18,7 +18,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

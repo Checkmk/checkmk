@@ -42,7 +42,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.escaping import strip_tags, escape_html_permissive
+from cmk.gui.utils.escaping import strip_tags, escape_html_permissive
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.view_utils

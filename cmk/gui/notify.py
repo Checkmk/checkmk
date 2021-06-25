@@ -21,7 +21,7 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.htmllib import HTML
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
     Permission,

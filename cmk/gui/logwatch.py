@@ -33,7 +33,7 @@ from cmk.gui.page_menu import (
     make_display_options_dropdown,
 )
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |

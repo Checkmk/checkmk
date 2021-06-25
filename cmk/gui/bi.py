@@ -27,7 +27,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, g, request, theme, output_funnel
 from cmk.gui.htmllib import HTML

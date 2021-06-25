@@ -54,7 +54,7 @@ from cmk.utils.macros import replace_macros_in_str
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.log as log
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.valuespec import (
     FixedValue,
     Dictionary,

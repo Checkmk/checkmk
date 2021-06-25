@@ -22,7 +22,7 @@ from cmk.gui.log import logger
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import (
     RequestTimeout,

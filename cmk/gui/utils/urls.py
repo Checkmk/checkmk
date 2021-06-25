@@ -11,7 +11,7 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
 
 from cmk.gui.utils.transaction_manager import TransactionManager
-from cmk.gui.escaping import escape_text
+from cmk.gui.utils.escaping import escape_text
 
 QueryVars = Mapping[str, Sequence[str]]
 

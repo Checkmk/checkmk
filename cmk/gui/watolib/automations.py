@@ -33,7 +33,7 @@ import cmk.gui.hooks as hooks
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
 from cmk.gui.background_job import BackgroundProcessInterface

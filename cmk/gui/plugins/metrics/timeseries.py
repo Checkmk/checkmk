@@ -11,7 +11,7 @@ from itertools import chain
 
 from cmk.utils.prediction import TimeSeries
 import cmk.utils.version as cmk_version
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (

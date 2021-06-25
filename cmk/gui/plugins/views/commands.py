@@ -14,7 +14,7 @@ import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _u, _, _l, ungettext
 from cmk.gui.globals import html, request
 from cmk.gui.type_defs import Choices, Row

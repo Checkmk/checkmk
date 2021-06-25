@@ -23,7 +23,7 @@ import cmk.utils.crash_reporting
 
 import cmk.gui.pages
 import cmk.gui.i18n
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, response, transactions, user_errors
 from cmk.gui.htmllib import HTML

@@ -76,7 +76,7 @@ import cmk.utils.plugin_registry
 from cmk.utils.type_defs import Seconds
 
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
@@ -96,7 +96,7 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.urls import makeuri, urlencode
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400

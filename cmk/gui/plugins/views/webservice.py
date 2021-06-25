@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, List, Dict, Union
 
 from six import ensure_str
 
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.globals import request, response
 from cmk.gui.type_defs import Rows
 from cmk.gui.plugins.views import (

@@ -13,7 +13,7 @@ from typing import (
 from cmk.gui.globals import html
 from cmk.gui.i18n import _u
 from cmk.gui.utils.html import HTML
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 
 def text_with_links_to_user_translated_html(

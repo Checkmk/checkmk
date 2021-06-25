@@ -24,7 +24,8 @@ from cmk.utils.object_diff import make_object_diff
 import cmk.gui.utils
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.globals import request
-from cmk.gui import config, escaping
+from cmk.gui import config
+from cmk.gui.utils import escaping
 from cmk.gui.config import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML

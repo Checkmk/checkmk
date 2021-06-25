@@ -27,12 +27,12 @@ from six import ensure_str
 from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, output_funnel, response
 from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
-from cmk.gui.escaping import escape_html_permissive
+from cmk.gui.utils.escaping import escape_html_permissive
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes

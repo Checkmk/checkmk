@@ -39,7 +39,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms

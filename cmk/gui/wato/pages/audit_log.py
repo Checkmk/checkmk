@@ -15,7 +15,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
-from cmk.gui import escaping
+from cmk.gui.utils import escaping
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRefType
 from cmk.gui.userdb import UserSelection
 from cmk.gui.valuespec import (

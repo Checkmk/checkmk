@@ -7,7 +7,7 @@
 from typing import List, Optional, Set, Tuple, Union
 
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.view_utils

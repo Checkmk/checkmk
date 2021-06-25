@@ -18,7 +18,7 @@ from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb

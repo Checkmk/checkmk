@@ -38,7 +38,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, M
 from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.language_cookie import del_language_cookie
-from cmk.gui.escaping import escape_html
+from cmk.gui.utils.escaping import escape_html
 
 auth_logger = logger.getChild("auth")
 

@@ -31,7 +31,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, user_errors, output_funnel
 from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.valuespec import Dictionary, Checkbox
-from cmk.gui.escaping import escape_text, escape_html
+from cmk.gui.utils.escaping import escape_text, escape_html
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,

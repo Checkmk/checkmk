@@ -10,7 +10,7 @@ from typing import Optional, Union, List, Dict, Iterator, cast
 
 from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import CSSSpec
-from cmk.gui import escaping
+from cmk.gui.utils import escaping
 
 HTMLTagName = str
 HTMLTagValue = Optional[str]

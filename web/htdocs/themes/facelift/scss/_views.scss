@@ -784,7 +784,7 @@ table.data.availability {
   }
 }
 
-table.data td.flapping,
+table.data td.flapping span,
 table.timeline td.flapping,
 div.avlegend.timeline div.state.flapping span {
   background-color: rgb(255, 0, 255);
@@ -803,7 +803,7 @@ div.avlegend.timeline div.state.hostdown span {
   background-color: $hostdown-bg-color;
 }
 
-table.data tr.data td.unmonitored,
+table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored span {
   color: $unmonitored-font-color;

@@ -11,7 +11,6 @@ YAPF := $(PIPENV) run yapf
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
-MYPY := $(SCRIPTS)/run-mypy
 ADDITIONAL_MYPY_ARGS :=
 # TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
 GCC_TOOLCHAIN := /opt/gcc-11.1.0
@@ -209,14 +208,15 @@ test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
 test-mypy:
-	$(FIND_PYTHON_FILES) | \
+	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath '../enterprise/cmk/__init__.py') | \
-	grep -v $$(realpath '../enterprise/cmk/base/__init__.py') | \
-	xargs $(MYPY) $(ADDITIONAL_MYPY_ARGS)
+	grep -v $$(realpath '../enterprise/cmk/base/__init__.py') \
+	) ; \
+	cd .. ; scripts/run-mypy $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

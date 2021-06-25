@@ -258,10 +258,19 @@ class ModeBulkImport(WatoMode):
 
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
-            config.user.set_rowselection(weblib.selection_id(),
-                                         'wato-folder-/' + watolib.Folder.current().path(),
-                                         selected, 'set')
-            return redirect(mode_url("bulkinventory", _bulk_inventory='1', show_checkboxes='1'))
+            config.user.set_rowselection(
+                weblib.selection_id(),
+                'wato-folder-/' + watolib.Folder.current().path(),
+                selected,
+                "set",
+            )
+            return redirect(
+                mode_url(
+                    "bulkinventory",
+                    _bulk_inventory='1',
+                    show_checkboxes='1',
+                    selection=weblib.selection_id(),
+                ))
         flash(msg)
         return redirect(mode_url("folder"))
 

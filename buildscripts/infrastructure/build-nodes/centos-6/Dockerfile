@@ -2,6 +2,9 @@ FROM centos:6
 
 SHELL ["/bin/bash", "-c"]
 
+# Handle Centos-6 EOL repos, taken from https://www.getpagespeed.com/server-setup/how-to-fix-yum-after-centos-6-went-eol
+COPY CentOS-Base.repo CentOS-SCLo-scl-rh.repo CentOS-SCLo-scl.repo  /etc/yum.repos.d/
+
 RUN yum -y makecache \
     && yum -y install \
     bind-utils \

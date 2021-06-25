@@ -182,66 +182,8 @@ class StructuredDataTree:
 
     def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataTree":
         if raw_tree:
-            self._create_hierarchy_from_data(raw_tree, self._root)
+            self._root._create_hierarchy_from_data(raw_tree)
         return self
-
-    def _create_hierarchy_from_data(
-        self,
-        raw_tree: SDRawTree,
-        parent: "Container",
-    ) -> None:
-        for edge, attrs in raw_tree.items():
-            if not attrs:
-                continue
-
-            if isinstance(attrs, list):
-                numeration = Numeration()
-                numeration.set_child_data(attrs)
-                parent.add_child(edge, numeration)
-            else:
-                sub_raw_tree, leaf_data = self._get_child_data(attrs)
-                if leaf_data:
-                    attributes = Attributes()
-                    attributes.set_child_data(leaf_data)
-                    parent.add_child(edge, attributes)
-                if sub_raw_tree:
-                    container = parent.add_child(edge, Container())
-                    self._create_hierarchy_from_data(sub_raw_tree, container)
-
-    def _get_child_data(self, raw_entries: Dict) -> Tuple[Dict, Dict]:
-        leaf_data: Dict = {}
-        sub_raw_tree: Dict = {}
-        for k, v in raw_entries.items():
-            if isinstance(v, dict):
-                # Dict based values mean that current key
-                # is a node.
-                sub_raw_tree.setdefault(k, v)
-            elif isinstance(v, list):
-                # Concerns "a.b:" and "a.b:*.c".
-                # In the second case we have to deal with nested numerations
-                # We take a look at children which may be real numerations
-                # or sub trees.
-                if self._is_numeration(v):
-                    sub_raw_tree.setdefault(k, v)
-                else:
-                    sub_raw_tree.setdefault(k, dict(enumerate(v)))
-            else:
-                # Here we collect all other values meaning simple
-                # attributes of this node.
-                leaf_data.setdefault(k, v)
-        return sub_raw_tree, leaf_data
-
-    def _is_numeration(self, entries: List) -> bool:
-        for entry in entries:
-            # Skipping invalid entries such as
-            # {u'KEY': [LIST OF STRINGS], ...}
-            try:
-                for v in entry.values():
-                    if isinstance(v, list):
-                        return False
-            except AttributeError:
-                return False
-        return True
 
     #   ---delegators-----------------------------------------------------------
 
@@ -296,11 +238,12 @@ class StructuredDataTree:
         return self._root
 
     def get_filtered_tree(
-            self,
-            allowed_paths: Optional[List[Tuple[SDPath,
-                                               Optional[List[str]]]]]) -> "StructuredDataTree":
+        self,
+        allowed_paths: Optional[List[Tuple[SDPath, Optional[List[str]]]]],
+    ) -> "StructuredDataTree":
         if allowed_paths is None:
             return self
+
         filtered_tree = StructuredDataTree()
         for path, keys in allowed_paths:
             # Make a copy of 'paths' which is mutable
@@ -413,6 +356,67 @@ class Container:
         for edge, child in self._get_children():
             delta_node.add_child(edge, child.encode_for_delta_tree(encode_as))
         return delta_node
+
+    # Deserializing
+
+    def _create_hierarchy_from_data(
+        self,
+        raw_tree: SDRawTree,
+    ) -> None:
+        for edge, attrs in raw_tree.items():
+            if not attrs:
+                continue
+
+            if isinstance(attrs, list):
+                numeration = Numeration()
+                numeration.set_child_data(attrs)
+                self.add_child(edge, numeration)
+            else:
+                sub_raw_tree, leaf_data = self._get_child_data(attrs)
+                if leaf_data:
+                    attributes = Attributes()
+                    attributes.set_child_data(leaf_data)
+                    self.add_child(edge, attributes)
+                if sub_raw_tree:
+                    container = self.add_child(edge, Container())
+                    container._create_hierarchy_from_data(sub_raw_tree)
+
+    def _get_child_data(self, raw_entries: Dict) -> Tuple[Dict, Dict]:
+        leaf_data: Dict = {}
+        sub_raw_tree: Dict = {}
+        for k, v in raw_entries.items():
+            if isinstance(v, dict):
+                # Dict based values mean that current key
+                # is a node.
+                sub_raw_tree.setdefault(k, v)
+            elif isinstance(v, list):
+                # Concerns "a.b:" and "a.b:*.c".
+                # In the second case we have to deal with nested numerations
+                # We take a look at children which may be real numerations
+                # or sub trees.
+                if self._is_numeration(v):
+                    sub_raw_tree.setdefault(k, v)
+                else:
+                    sub_raw_tree.setdefault(k, dict(enumerate(v)))
+            else:
+                # Here we collect all other values meaning simple
+                # attributes of this node.
+                leaf_data.setdefault(k, v)
+        return sub_raw_tree, leaf_data
+
+    def _is_numeration(self, entries: List) -> bool:
+        for entry in entries:
+            # Skipping invalid entries such as
+            # {u'KEY': [LIST OF STRINGS], ...}
+            try:
+                for v in entry.values():
+                    if isinstance(v, list):
+                        return False
+            except AttributeError:
+                return False
+        return True
+
+    # Serializing
 
     def get_raw_tree(self) -> Dict:
         tree: Dict = {}

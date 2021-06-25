@@ -216,7 +216,7 @@ test-mypy:
 	grep -v $$(realpath '../enterprise/cmk/__init__.py') | \
 	grep -v $$(realpath '../enterprise/cmk/base/__init__.py') \
 	) ; \
-	cd .. ; scripts/run-mypy $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
+	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

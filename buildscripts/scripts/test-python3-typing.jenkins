@@ -22,12 +22,24 @@ node (NODE) {
             }
             ENV_VARS = ["TEST_CONTAINER=${TEST_CONTAINER}"]
             withEnv(ENV_VARS) {
-                sh("make -C $WORKSPACE/tests TEST_CONTAINER=${TEST_CONTAINER} test-mypy-docker")
+                sh("MYPY_ADDOPTS='--cobertura-xml-report=$WORKSPACE/mypy_reports --html-report=$WORKSPACE/mypy_reports/html' make -C $WORKSPACE/tests TEST_CONTAINER=${TEST_CONTAINER} test-mypy-docker")
             }
         }
+        stage("Archive reports") {
+            archiveArtifacts(artifacts: "mypy_reports/**")
+        }
         stage("Analyse Issues") {
-            def CLANG = scanForIssues tool: clang()
-            publishIssues issues:[CLANG], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
+            publishIssues(
+                issues:[scanForIssues(tool: clang())],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [
+                    [
+                        threshold: 1,
+                        type: 'TOTAL',
+                        unstable: false
+                    ]
+                ]
+            )
         }
     }catch(Exception e) {
         notify.notify_error(e)

@@ -29,6 +29,7 @@ docker run -t -a stdout -a stderr \
     -e PYLINT_ARGS \
     -e PYTEST_ADDOPTS \
     -e DOCKER_ADDOPTS \
+    -e MYPY_ADDOPTS \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \

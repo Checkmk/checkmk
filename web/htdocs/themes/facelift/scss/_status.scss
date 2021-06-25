@@ -55,7 +55,7 @@ div.tile {
     height: 100%;
     padding: 0 1px;
 
-    span.state {
+    span.state_rounded_fill {
       display: flex;
       align-items: center;
       height: calc(100% - 3px);
@@ -64,11 +64,11 @@ div.tile {
   }
 }
 
-td.state span.state {
+td.state span.state_rounded_fill {
   justify-content: center;
 }
 
-td.hstate span.state {
+td.hstate span.state_rounded_fill {
   padding: 0 5px;
 
   &.host {

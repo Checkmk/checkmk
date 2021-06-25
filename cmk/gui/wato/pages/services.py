@@ -837,7 +837,9 @@ class DiscoveryPageRenderer:
                                  show_bulk_actions)
         self._show_actions(table, discovery_result, check)
 
-        table.cell(_("State"), html.render_span(statename), css=stateclass)
+        table.cell(_("State"),
+                   html.render_span(statename, class_=["state_rounded_fill"]),
+                   css=stateclass)
         table.cell(_("Service"), descr, css="service")
         table.cell(_("Status detail"), css="expanding")
         self._show_status_detail(table_source, check_type, item, descr, output)

@@ -598,7 +598,7 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
             table.cell(_("Until"), row["until_text"], css="nobr narrow")
             table.cell(_("Duration"), row["duration_text"], css="narrow number")
             table.cell(_("State"),
-                       html.render_span(row["state_name"]),
+                       html.render_span(row["state_name"], class_=["state_rounded_fill"]),
                        css=row["css"] + " state narrow")
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:

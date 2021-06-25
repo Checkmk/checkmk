@@ -266,7 +266,7 @@ def _paint_aggr_state_short(state, assumed=False):
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, html.render_span(name)
+    return classes, html.render_span(name, class_=["state_rounded_fill"])
 
 
 @painter_registry.register

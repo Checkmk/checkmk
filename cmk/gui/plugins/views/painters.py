@@ -411,7 +411,7 @@ def _paint_service_state_short(row: Row) -> CellSpec:
     state, name = service_state_short(row)
     if is_stale(row):
         state = state + " stale"
-    return "state svcstate state%s" % state, html.render_span(name, class_=["state"])
+    return "state svcstate state%s" % state, html.render_span(name, class_=["state_rounded_fill"])
 
 
 def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
@@ -430,7 +430,7 @@ def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
     if short:
         name = name[0]
 
-    return "state hstate hstate%s" % state, html.render_span(name, class_=["state"])
+    return "state hstate hstate%s" % state, html.render_span(name, class_=["state_rounded_fill"])
 
 
 @painter_registry.register
@@ -2462,7 +2462,8 @@ class PainterHost(Painter):
                 css.append("hstate%s" % option_state)
                 break
 
-        return " ".join(css), html.render_span(row["host_name"], class_=["state", "host"])
+        return " ".join(css), html.render_span(row["host_name"],
+                                               class_=["state_rounded_fill", "host"])
 
 
 @painter_registry.register

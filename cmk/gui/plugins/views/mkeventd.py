@@ -663,7 +663,8 @@ class PainterEventState(Painter):
     def render(self, row, cell):
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, html.render_span(name)
+        return "state svcstate state%s" % state, html.render_span(name,
+                                                                  class_=["state_rounded_fill"])
 
 
 @painter_registry.register

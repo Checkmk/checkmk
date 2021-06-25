@@ -182,7 +182,11 @@ class VirtualHostTree(SidebarSnapin):
         return code + " "
 
     def _tag_tree_url(self, tree_spec, node_values, viewname):
-        urlvars = [("view_name", viewname), ("filled_in", "filter")]
+        urlvars = [
+            ("view_name", viewname),
+            ("filled_in", "filter"),
+            ("_show_filter_form", "0"),
+        ]
         if viewname == "svcproblems":
             urlvars += [("st1", "on"), ("st2", "on"), ("st3", "on")]
 

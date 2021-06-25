@@ -1208,6 +1208,15 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "servicestats"),
     )
 
+    yield PageMenuEntry(
+        title='Event statistics',
+        icon_name={
+            'icon': 'event_console',
+            'emblem': 'statistic',
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "eventstats"),
+    )
+
     yield PageMenuEntryCEEOnly(
         title='Notification timeline',
         icon_name={

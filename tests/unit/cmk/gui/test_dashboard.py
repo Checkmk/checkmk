@@ -36,9 +36,10 @@ class DummyDashlet(dashboard.Dashlet):
 def test_dashlet_registry_plugins():
     expected_plugins = [
         'hoststats',
+        'servicestats',
+        'eventstats',
         'notify_failed_notifications',
         'mk_logo',
-        'servicestats',
         'url',
         'overview',
         'pnpgraph',

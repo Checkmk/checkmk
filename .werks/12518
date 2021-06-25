@@ -1,0 +1,12 @@
+Title: New dashlet "Event Statistics"
+Level: 1
+Component: ec
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.0.0p7
+Date: 1624613323
+
+A new dashlet "Event Statistics" is added alongside the analogous dashlets for host and service statistics.
+The number of events per status is visualized through a hexagon and a table.

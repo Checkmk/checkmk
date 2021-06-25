@@ -10,7 +10,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 
 from cmk.gui.valuespec import (
     Age,
@@ -241,7 +241,7 @@ class NotificationParameterMail(NotificationParameter):
              _get_url_prefix_specs(
                  "http://" + socket.gethostname() + "/" +
                  (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                 html.request.is_ssl_request and "automatic_https" or "automatic_http")),
+                 request.is_ssl_request and "automatic_https" or "automatic_http")),
             ("no_floating_graphs",
              FixedValue(
                  True,

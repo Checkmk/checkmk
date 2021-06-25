@@ -74,7 +74,7 @@ class ModeAuditLog(WatoMode):
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super(ModeAuditLog, self).__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())
-        self._show_details = html.request.get_integer_input_mandatory("show_details", 1) == 1
+        self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self):
         return _("Audit log")
@@ -212,7 +212,7 @@ class ModeAuditLog(WatoMode):
         return self._store.exists()
 
     def action(self) -> ActionResult:
-        if html.request.var("_action") == "clear":
+        if request.var("_action") == "clear":
             config.user.need_permission("wato.auditlog")
             config.user.need_permission("wato.clear_auditlog")
             config.user.need_permission("wato.edit")
@@ -224,7 +224,7 @@ class ModeAuditLog(WatoMode):
 
         audit = self._parse_audit_log()
 
-        if html.request.var("_action") == "csv":
+        if request.var("_action") == "csv":
             config.user.need_permission("wato.auditlog")
             return self._export_audit_log(audit)
 
@@ -240,7 +240,7 @@ class ModeAuditLog(WatoMode):
     def _get_audit_log_options_from_request(self):
         options = {}
         for name, vs in self._audit_log_options():
-            if not list(html.request.itervars("options_" + name)):
+            if not list(request.itervars("options_" + name)):
                 continue
 
             try:

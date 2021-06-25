@@ -2028,13 +2028,13 @@ class DeltaNodeRenderer(NodeRenderer):
 # Ajax call for fetching parts of the tree
 @cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree() -> None:
-    site_id = html.request.get_ascii_input_mandatory("site")
-    hostname = html.request.get_ascii_input_mandatory("host")
+    site_id = request.get_ascii_input_mandatory("site")
+    hostname = request.get_ascii_input_mandatory("host")
     inventory.verify_permission(hostname, site_id)
 
-    invpath = html.request.get_ascii_input_mandatory("path")
-    tree_id = html.request.get_ascii_input("treeid", "")
-    show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))
+    invpath = request.get_ascii_input_mandatory("path")
+    tree_id = request.get_ascii_input("treeid", "")
+    show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
     if tree_id:
         struct_tree, corrupted_history_files = \

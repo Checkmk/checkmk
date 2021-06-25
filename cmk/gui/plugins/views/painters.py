@@ -2994,9 +2994,9 @@ class PainterHostGroupMemberlist(Painter):
         links = []
         for group in row["host_groups"]:
             link = "view.py?view_name=hostgroup&hostgroup=" + group
-            if html.request.var("display_options"):
+            if request.var("display_options"):
                 link += "&display_options=%s" % escaping.escape_attribute(
-                    html.request.var("display_options"))
+                    request.var("display_options"))
             links.append(html.render_a(group, link))
         return "", HTML(", ").join(links)
 

@@ -163,7 +163,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return True
 
     def action(self) -> ActionResult:
-        if html.request.var("_action") != "discard":
+        if request.var("_action") != "discard":
             return None
 
         if not transactions.check_transaction():
@@ -262,7 +262,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def _get_initial_message(self) -> str:
         changes = sum(len(self._changes_of_site(site_id)) for site_id in config.activation_sites())
         if changes == 0:
-            if html.request.has_var("_finished"):
+            if request.has_var("_finished"):
                 return _("Activation has finished.")
             return _("Currently there are no changes to activate.")
         if changes == 1:
@@ -654,14 +654,14 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = html.request.get_ascii_input_mandatory("site_id")
+        site_id = request.get_ascii_input_mandatory("site_id")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
         try:
-            domains = ast.literal_eval(html.request.get_ascii_input_mandatory("domains"))
+            domains = ast.literal_eval(request.get_ascii_input_mandatory("domains"))
         except SyntaxError:
             raise watolib.MKAutomationException(
-                _("Invalid request: %r") % html.request.get_ascii_input_mandatory("domains"))
+                _("Invalid request: %r") % request.get_ascii_input_mandatory("domains"))
 
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 

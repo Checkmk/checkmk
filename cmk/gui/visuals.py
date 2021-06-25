@@ -507,10 +507,10 @@ def page_list(what,
         html.show_message(message)
 
     # Deletion of visuals
-    delname = html.request.var("_delete")
+    delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if config.user.may('general.delete_foreign_%s' % what):
-            user_id_str = html.request.get_unicode_input('_user_id', config.user.id)
+            user_id_str = request.get_unicode_input('_user_id', config.user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
             user_id = config.user.id
@@ -694,7 +694,7 @@ def page_create_visual(what, info_keys, next_url=None):
           'of objects you want to restrict to manually.') % what_s)
     html.close_p()
 
-    if html.request.var('save') and transactions.check_transaction():
+    if request.var('save') and transactions.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars('single_infos')
             vs_infos.validate_value(single_infos, 'single_infos')
@@ -924,8 +924,8 @@ def page_edit_visual(
         'link_from': {},
     }
 
-    mode = html.request.get_str_input_mandatory("mode", "edit")
-    visualname = html.request.get_str_input_mandatory("load_name", "")
+    mode = request.get_str_input_mandatory("mode", "edit")
+    visualname = request.get_str_input_mandatory("load_name", "")
     oldname = visualname
     owner_user_id = config.user.id
 
@@ -937,7 +937,7 @@ def page_edit_visual(
         raise MKUserError(mode, _('The %s does not exist.') % visual_type.title)
 
     if visualname:
-        owner_id = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
+        owner_id = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy
@@ -968,7 +968,7 @@ def page_edit_visual(
         title = _('Create %s') % visual_type.title
         mode = "create"
         single_infos = []
-        single_infos_raw = html.request.var('single_infos')
+        single_infos_raw = request.var('single_infos')
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
@@ -1028,11 +1028,10 @@ def page_edit_visual(
     # handle case of save or try or press on search button
     save_and_go = None
     for nr, (title, pagename, _icon) in enumerate(sub_pages):
-        if html.request.var("save%d" % nr):
+        if request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.request.var("save") or html.request.var(
-            "save_and_view") or html.request.var("search"):
+    if save_and_go or request.var("save") or request.var("save_and_view") or request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
 
@@ -1072,7 +1071,7 @@ def page_edit_visual(
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.request.var("save") or html.request.var("save_and_view") or save_and_go:
+            if request.var("save") or request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
                         request,
@@ -1080,7 +1079,7 @@ def page_edit_visual(
                         filename=save_and_go + '.py',
                     )
 
-                if html.request.var("save_and_view"):
+                if request.var("save_and_view"):
                     back_url = makeuri_contextless(
                         request,
                         [(visual_type.ident_attr, visual['name'])],
@@ -1101,7 +1100,7 @@ def page_edit_visual(
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                if not html.request.var("save_and_view"):
+                if not request.var("save_and_view"):
                     flash(_('Your %s has been saved.') % visual_type.title)
                 html.reload_whole_page(back_url)
                 html.footer()
@@ -1113,8 +1112,8 @@ def page_edit_visual(
     html.begin_form("visual", method="POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
-    if html.request.has_var("owner"):
-        html.hidden_field("owner", html.request.var("owner"))
+    if request.has_var("owner"):
+        html.hidden_field("owner", request.var("owner"))
     html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
@@ -1301,7 +1300,7 @@ def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -
     for filter_name, filter_vars in context.items():
         # Enforce the single context variables that are available in the visual context
         if filter_name in single_info_keys:
-            html.request.set_var(filter_name, "%s" % uri_vars[filter_name])
+            request.set_var(filter_name, "%s" % uri_vars[filter_name])
             continue
 
         if not isinstance(filter_vars, dict):
@@ -1310,11 +1309,11 @@ def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -
         # This is a multi-context filter
         # We add the filter only if *none* of its HTML variables are present on the URL. This is
         # important because checkbox variables are not present if the box is not checked.
-        if any(html.request.has_var(uri_varname) for uri_varname in filter_vars):
+        if any(request.has_var(uri_varname) for uri_varname in filter_vars):
             continue
 
         for uri_varname in filter_vars.keys():
-            html.request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
+            request.set_var(uri_varname, "%s" % uri_vars[uri_varname])
 
 
 def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
@@ -1361,10 +1360,10 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
 
         this_filter_vars: FilterHTTPVariables = {}
         for varname in filter_object.htmlvars:
-            if not html.request.has_var(varname):
+            if not request.has_var(varname):
                 continue  # Variable to set in environment
 
-            filter_value = html.request.get_str_input_mandatory(varname)
+            filter_value = request.get_str_input_mandatory(varname)
             if not filter_value:
                 continue
 
@@ -1557,7 +1556,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
             html.close_div()
         html.close_div()
-        filters_applied = html.request.get_ascii_input("filled_in") == "filter"
+        filters_applied = request.get_ascii_input("filled_in") == "filter"
         html.javascript('cmk.valuespecs.listofmultiple_init(%s, %s);' %
                         (json.dumps(varprefix), json.dumps(filters_applied)))
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
@@ -1695,7 +1694,7 @@ class VisualFilter(ValueSpec):
         """Is used to populate a value, for example loaded from persistance, into
         the HTML context where it can be used by e.g. the display() method."""
         if isinstance(value, str):
-            html.request.set_var(self._filter.htmlvars[0], value)
+            request.set_var(self._filter.htmlvars[0], value)
             return
 
         for varname in self._filter.htmlvars:
@@ -1713,7 +1712,7 @@ class VisualFilter(ValueSpec):
                     elif var_value is False:
                         var_value = ""
 
-                html.request.set_var(varname, var_value)
+                request.set_var(varname, var_value)
 
 
 def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
@@ -1936,7 +1935,7 @@ def get_singlecontext_html_vars(context: VisualContext,
                                 single_infos: SingleInfos) -> Dict[str, str]:
     vars_ = get_singlecontext_vars(context, single_infos)
     for key in get_single_info_keys(single_infos):
-        val = html.request.get_unicode_input(key)
+        val = request.get_unicode_input(key)
         if val is not None:
             vars_[key] = val
     return vars_
@@ -1981,7 +1980,7 @@ def may_add_site_hint(visual_name: str, info_keys: List[InfoName], single_info_k
 def ajax_popup_add() -> None:
     # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
-        add_type=html.request.get_ascii_input_mandatory("add_type"), name="")[0]
+        add_type=request.get_ascii_input_mandatory("add_type"), name="")[0]
 
     html.open_ul()
 
@@ -2072,16 +2071,15 @@ def set_page_context(page_context: VisualContext) -> None:
 
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual() -> None:
-    visual_type_name = html.request.get_str_input_mandatory(
-        'visual_type')  # dashboards / views / ...
+    visual_type_name = request.get_str_input_mandatory('visual_type')  # dashboards / views / ...
     visual_type = visual_type_registry[visual_type_name]()
 
-    visual_name = html.request.get_str_input_mandatory("visual_name")  # add to this visual
+    visual_name = request.get_str_input_mandatory("visual_name")  # add to this visual
 
     # type of the visual to add (e.g. view)
-    element_type = html.request.get_str_input_mandatory("type")
+    element_type = request.get_str_input_mandatory("type")
 
-    create_info_raw = html.request.get_str_input_mandatory("create_info")
+    create_info_raw = request.get_str_input_mandatory("create_info")
 
     create_info = json.loads(create_info_raw)
     visual_type.add_visual_handler(visual_name, element_type, create_info["context"],

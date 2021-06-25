@@ -210,7 +210,7 @@ class SimpleListMode(_SimpleWatoModeBase):
         if not transactions.transaction_valid():
             return None
 
-        action_var = html.request.get_str_input("_action")
+        action_var = request.get_str_input("_action")
         if action_var is None:
             return None
 
@@ -222,7 +222,7 @@ class SimpleListMode(_SimpleWatoModeBase):
 
         entries = self._store.load_for_modification()
 
-        ident = html.request.get_ascii_input("_delete")
+        ident = request.get_ascii_input("_delete")
         if ident not in entries:
             raise MKUserError("_delete",
                               _("This %s does not exist.") % self._mode_type.name_singular())
@@ -305,7 +305,7 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _from_vars(self):
-        ident = html.request.get_ascii_input("ident")
+        ident = request.get_ascii_input("ident")
         if ident is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[ident]
@@ -318,7 +318,7 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
             self._entry = entry
             return
 
-        clone = html.request.get_ascii_input("clone")
+        clone = request.get_ascii_input("clone")
         if clone is not None:
             try:
                 entry = self._store.filter_editable_entries(self._store.load_for_reading())[clone]

@@ -8,8 +8,8 @@
 #
 # Notes for future rewrite:
 #
-# - Find all call sites which do something like "int(html.request.var(...))"
-#   and replace it with html.request.get_integer_input_mandatory(...)
+# - Find all call sites which do something like "int(request.var(...))"
+#   and replace it with request.get_integer_input_mandatory(...)
 #
 # - Make clear which functions return values and which write out values
 #   render_*, add_*, write_* (e.g. icon() -> outputs directly,

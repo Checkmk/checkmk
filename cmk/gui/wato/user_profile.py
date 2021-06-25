@@ -188,7 +188,7 @@ class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user to a dashboard"""
     def page(self) -> AjaxPageResult:
         try:
-            name = html.request.get_str_input_mandatory("name")
+            name = request.get_str_input_mandatory("name")
             url = makeuri_contextless(request, [("name", name)], "dashboard.py")
             cmk.gui.utils.validate_start_url(url, "")
             _set_user_attribute("start_url", repr(url))
@@ -310,7 +310,7 @@ class ABCUserProfilePage(Page):
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
-        if html.request.has_var('_save') and transactions.check_transaction():
+        if request.has_var('_save') and transactions.check_transaction():
             try:
                 self._action()
             except MKUserError as e:
@@ -377,9 +377,9 @@ class UserChangePasswordPage(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user = users[config.user.id]
 
-        cur_password = html.request.get_str_input_mandatory('cur_password')
-        password = html.request.get_str_input_mandatory('password')
-        password2 = html.request.get_str_input_mandatory('password2', '')
+        cur_password = request.get_str_input_mandatory('cur_password')
+        password = request.get_str_input_mandatory('password')
+        password2 = request.get_str_input_mandatory('password2', '')
 
         # Force change pw mode
         if not cur_password:
@@ -423,7 +423,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
-        origtarget = html.request.get_str_input_mandatory('_origtarget', 'user_change_pw.py')
+        origtarget = request.get_str_input_mandatory('_origtarget', 'user_change_pw.py')
         if config.user.authorized_login_sites():
             raise redirect(
                 makeuri_contextless(request, [("back", origtarget)],
@@ -435,7 +435,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        change_reason = html.request.get_ascii_input('reason')
+        change_reason = request.get_ascii_input('reason')
 
         if change_reason == 'expired':
             html.p(_('Your password is too old, you need to choose a new password.'))
@@ -490,7 +490,7 @@ class UserProfile(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user = users[config.user.id]
 
-        language = html.request.get_ascii_input_mandatory('language', "")
+        language = request.get_ascii_input_mandatory('language', "")
         # Set the users language if requested to set it explicitly
         if language != "_default_":
             user['language'] = language

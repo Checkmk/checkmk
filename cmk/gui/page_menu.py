@@ -377,7 +377,7 @@ def make_checkbox_selection_json_text() -> Tuple[str, str]:
 
 
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    is_selected = user.get_rowselection(html.request.var("selection") or "", selection_key)
+    is_selected = user.get_rowselection(request.var("selection") or "", selection_key)
     name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),
@@ -733,7 +733,7 @@ def search_form(title: Optional[str] = None,
 def inpage_search_form(mode: Optional[str] = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
-    was_submitted = html.request.get_ascii_input("filled_in") == form_name
+    was_submitted = request.get_ascii_input("filled_in") == form_name
     html.begin_form(form_name, add_transid=False)
     html.text_input("search",
                     size=32,
@@ -744,8 +744,7 @@ def inpage_search_form(mode: Optional[str] = None, default_value: str = "") -> N
     html.hidden_fields()
     if mode:
         html.hidden_field("mode", mode, add_var=True)
-    reset_url = html.request.get_ascii_input_mandatory("reset_url",
-                                                       requested_file_with_query(request))
+    reset_url = request.get_ascii_input_mandatory("reset_url", requested_file_with_query(request))
     html.hidden_field("reset_url", reset_url, add_var=True)
     html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))

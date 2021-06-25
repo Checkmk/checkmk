@@ -99,10 +99,10 @@ class ActionMenuIcon(Icon):
         if what == 'service':
             url_vars.append(('service', row['service_description']))
 
-        if html.request.has_var('display_options'):
-            url_vars.append(('display_options', html.request.var('display_options')))
-        if html.request.has_var('_display_options'):
-            url_vars.append(('_display_options', html.request.var('_display_options')))
+        if request.has_var('display_options'):
+            url_vars.append(('display_options', request.var('display_options')))
+        if request.has_var('_display_options'):
+            url_vars.append(('_display_options', request.var('_display_options')))
         url_vars.append(('_back_url', makeuri(request, [])))
 
         return html.render_popup_trigger(

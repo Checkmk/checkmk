@@ -27,12 +27,12 @@ def confirm_with_preview(msg: Union[str, HTML],
     is used during rendering a normal page, for example when deleting a dashlet from a dashboard. In
     such cases, the transid must be added by the confirm dialog.
     """
-    if html.request.var("_do_actions") == _("Cancel"):
+    if request.var("_do_actions") == _("Cancel"):
         # User has pressed "Cancel", now invalidate the unused transid
         transactions.check_transaction()
         return None  # None --> "Cancel"
 
-    if not any(html.request.has_var(varname) for _title, varname in confirm_options):
+    if not any(request.has_var(varname) for _title, varname in confirm_options):
         mobile = is_mobile(request, response)
         if mobile:
             html.open_center()

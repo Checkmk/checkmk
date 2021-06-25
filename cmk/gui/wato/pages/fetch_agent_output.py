@@ -82,11 +82,11 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
     def _from_vars(self) -> None:
         config.user.need_permission("wato.download_agent_output")
 
-        host_name = html.request.var("host")
+        host_name = request.var("host")
         if not host_name:
             raise MKGeneralException(_("The host is missing."))
 
-        ty = html.request.var("type")
+        ty = request.var("type")
         if ty not in ["walk", "agent"]:
             raise MKGeneralException(_("Invalid type specified."))
 
@@ -117,7 +117,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        if html.request.has_var("_start"):
+        if request.has_var("_start"):
             self._start_fetch()
         self._show_status()
 
@@ -187,7 +187,7 @@ class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
     def get_request(self) -> FetchAgentOutputRequest:
         config.user.need_permission("wato.download_agent_output")
 
-        ascii_input = html.request.get_ascii_input("request")
+        ascii_input = request.get_ascii_input("request")
         if ascii_input is None:
             raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
         return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))

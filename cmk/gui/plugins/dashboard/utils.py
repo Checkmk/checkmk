@@ -588,7 +588,7 @@ dashlet_registry = DashletRegistry()
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
     def page(self):
-        settings = json.loads(html.request.get_str_input_mandatory("settings"))
+        settings = json.loads(request.get_str_input_mandatory("settings"))
 
         try:
             dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
@@ -598,9 +598,9 @@ class FigureDashletPage(AjaxPage):
         settings = dashlet_vs_general_settings(
             dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
 
-        raw_properties = html.request.get_str_input_mandatory("properties")
+        raw_properties = request.get_str_input_mandatory("properties")
         properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
-        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
+        context = json.loads(request.get_str_input_mandatory("context", "{}"))
         # Inject the infos because the datagenerator is a separate instance to dashlet
         settings["infos"] = dashlet_type.infos()
         response_data = dashlet_type.generate_response_data(properties, context, settings)

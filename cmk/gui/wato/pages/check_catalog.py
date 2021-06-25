@@ -214,7 +214,7 @@ class ModeCheckPluginTopic(WatoMode):
         return self.mode_url(topic=self._topic)
 
     def _from_vars(self):
-        self._topic = html.request.get_ascii_input_mandatory("topic", "")
+        self._topic = request.get_ascii_input_mandatory("topic", "")
         if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
             raise MKUserError("topic", _("Invalid topic"))
 
@@ -407,7 +407,7 @@ class ModeCheckManPage(WatoMode):
             return super().breadcrumb()
 
     def _from_vars(self):
-        self._check_type = html.request.get_ascii_input_mandatory("check_type", "")
+        self._check_type = request.get_ascii_input_mandatory("check_type", "")
 
         builtin_check_types = ['check-mk', "check-mk-inventory"]
         if not re.match("^[a-zA-Z0-9_.]+$", self._check_type) and \

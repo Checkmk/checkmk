@@ -202,11 +202,11 @@ class ModeUsers(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if html.request.var('_delete'):
-            delete_users([html.request.get_unicode_input("_delete")])
+        if request.var('_delete'):
+            delete_users([request.get_unicode_input("_delete")])
             return redirect(self.mode_url())
 
-        if html.request.var('_sync'):
+        if request.var('_sync'):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
@@ -228,7 +228,7 @@ class ModeUsers(WatoMode):
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
             return redirect(self.mode_url())
 
-        if html.request.var("_bulk_delete_users"):
+        if request.var("_bulk_delete_users"):
             self._bulk_delete_users_after_confirm()
             return redirect(self.mode_url())
 
@@ -244,7 +244,7 @@ class ModeUsers(WatoMode):
     def _bulk_delete_users_after_confirm(self):
         selected_users = []
         users = userdb.load_users()
-        for varname, _value in html.request.itervars(prefix="_c_user_"):
+        for varname, _value in request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
                 user = base64.b64decode(
                     varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
@@ -561,15 +561,15 @@ class ModeEditUser(WatoMode):
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
-        self._user_id = html.request.get_unicode_input("edit")  # missing -> new user
+        self._user_id = request.get_unicode_input("edit")  # missing -> new user
         # This is needed for the breadcrumb computation:
         # When linking from user notification rules page the request variable is "user"
         # instead of "edit". We should also change that variable to "user" on this page,
         # then we can simply use self._user_id.
-        if not self._user_id and html.request.has_var("user"):
-            self._user_id = html.request.get_str_input_mandatory("user")
+        if not self._user_id and request.has_var("user"):
+            self._user_id = request.get_str_input_mandatory("user")
 
-        self._cloneid = html.request.get_unicode_input("clone")  # Only needed in 'new' mode
+        self._cloneid = request.get_unicode_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
@@ -629,11 +629,11 @@ class ModeEditUser(WatoMode):
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs = {}
         else:
-            self._user_id = html.request.get_unicode_input_mandatory("edit").strip()
+            self._user_id = request.get_unicode_input_mandatory("edit").strip()
             user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
-        user_attrs["alias"] = html.request.get_unicode_input_mandatory("alias").strip()
+        user_attrs["alias"] = request.get_unicode_input_mandatory("alias").strip()
 
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
@@ -644,18 +644,17 @@ class ModeEditUser(WatoMode):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
-        auth_method = html.request.var("authmethod")
+        auth_method = request.var("authmethod")
         if auth_method == "secret":
-            secret = html.request.get_str_input_mandatory("_auth_secret", "").strip()
+            secret = request.get_str_input_mandatory("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = hash_password(secret)
             increase_serial = True  # password changed, reflect in auth serial
 
         else:
-            password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(),
-                                                            '').strip()
-            password2 = html.request.get_str_input_mandatory("_password2_" + self._pw_suffix(),
-                                                             '').strip()
+            password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), '').strip()
+            password2 = request.get_str_input_mandatory("_password2_" + self._pw_suffix(),
+                                                        '').strip()
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -695,7 +694,7 @@ class ModeEditUser(WatoMode):
             del user_attrs["idle_timeout"]
 
         # Pager
-        user_attrs["pager"] = html.request.get_str_input_mandatory("pager", '').strip()
+        user_attrs["pager"] = request.get_str_input_mandatory("pager", '').strip()
 
         if cmk_version.is_managed_edition():
             customer = self._vs_customer.from_html_vars("customer")
@@ -722,7 +721,7 @@ class ModeEditUser(WatoMode):
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
-                user_attrs[ntop_username_attribute] = html.request.get_unicode_input_mandatory(
+                user_attrs[ntop_username_attribute] = request.get_unicode_input_mandatory(
                     ntop_username_attribute)
 
         # Roles
@@ -731,7 +730,7 @@ class ModeEditUser(WatoMode):
         ]
 
         # Language configuration
-        language = html.request.get_ascii_input_mandatory("language", "")
+        language = request.get_ascii_input_mandatory("language", "")
         if language != "_default_":
             user_attrs["language"] = language
         elif "language" in user_attrs:
@@ -750,7 +749,7 @@ class ModeEditUser(WatoMode):
             # Notifications
             user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
-            ntp = html.request.var("notification_period")
+            ntp = request.var("notification_period")
             if ntp not in self._timeperiods:
                 ntp = "24X7"
             user_attrs["notification_period"] = ntp

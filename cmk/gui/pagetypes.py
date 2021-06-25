@@ -427,7 +427,7 @@ class PageRenderer(Base):
 
     @classmethod
     def requested_page(cls):
-        name = html.request.var(cls.ident_attr())
+        name = request.var(cls.ident_attr())
         cls.load()
         page = cls.find_page(name)
         if not page:
@@ -1032,9 +1032,9 @@ class Overridable(Base):
             html.show_message(message)
 
         # Deletion
-        delname = html.request.var("_delete")
+        delname = request.var("_delete")
         if delname and transactions.check_transaction():
-            owner = UserId(html.request.get_unicode_input_mandatory('_owner', config.user.id))
+            owner = UserId(request.get_unicode_input_mandatory('_owner', config.user.id))
             pagetype_title = cls.phrase("title")
 
             try:
@@ -1058,7 +1058,7 @@ class Overridable(Base):
             flash(_('Your %s has been deleted.') % pagetype_title)
             html.reload_whole_page(cls.list_url())
 
-        elif html.request.var("_bulk_delete") and transactions.check_transaction():
+        elif request.var("_bulk_delete") and transactions.check_transaction():
             cls._bulk_delete_after_confirm()
 
         my_instances, foreign_instances, builtin_instances = cls.get_instances()
@@ -1166,7 +1166,7 @@ class Overridable(Base):
     @classmethod
     def _bulk_delete_after_confirm(cls):
         to_delete: List[Tuple[UserId, str]] = []
-        for varname, _value in html.request.itervars(prefix="_c_"):
+        for varname, _value in request.itervars(prefix="_c_"):
             if html.get_checkbox(varname):
                 raw_user, name = varname[3:].split("+")
                 to_delete.append((UserId(raw_user), name))
@@ -1200,7 +1200,7 @@ class Overridable(Base):
         # "create" -> create completely new page
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
-        mode = html.request.get_ascii_input_mandatory('mode', 'edit')
+        mode = request.get_ascii_input_mandatory('mode', 'edit')
         if mode == "create":
             page_name = ""
             title = cls.phrase("create")
@@ -1209,12 +1209,11 @@ class Overridable(Base):
                 "topic": cls.default_topic(),
             }
         else:
-            page_name = html.request.get_str_input_mandatory("load_name")
+            page_name = request.get_str_input_mandatory("load_name")
             if mode == "edit":
                 title = cls.phrase("edit")
 
-                owner_user_id = UserId(
-                    html.request.get_unicode_input_mandatory("owner", config.user.id))
+                owner_user_id = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
                 if owner_user_id == config.user.id:
                     page = cls.find_my_page(page_name)
                 else:
@@ -1234,7 +1233,7 @@ class Overridable(Base):
                 page_dict = page.internal_representation()
             else:  # clone
                 title = cls.phrase("clone")
-                owner_id = html.request.get_unicode_input_mandatory("owner")
+                owner_id = request.get_unicode_input_mandatory("owner")
 
                 try:
                     page = cls.instance((owner_id, page_name))
@@ -1263,8 +1262,7 @@ class Overridable(Base):
         parameters, keys_by_topic = cls._collect_parameters(mode)
 
         def _validate_clone(page_dict, varprefix):
-            owner_user_id = UserId(html.request.get_unicode_input_mandatory(
-                "owner", config.user.id))
+            owner_user_id = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
             page_name = page_dict["name"]
             if owner_user_id == config.user.id:
                 page = cls.find_my_page(page_name)
@@ -1285,7 +1283,7 @@ class Overridable(Base):
         )
 
         varprefix = ""
-        if html.request.get_ascii_input("filled_in") == "edit" and transactions.check_transaction():
+        if request.get_ascii_input("filled_in") == "edit" and transactions.check_transaction():
             try:
                 new_page_dict = vs.from_html_vars(varprefix)
                 vs.validate_value(new_page_dict, varprefix)
@@ -1299,7 +1297,7 @@ class Overridable(Base):
             else:
                 page_dict = new_page_dict
 
-            owner = UserId(html.request.get_unicode_input_mandatory("owner", config.user.id))
+            owner = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
             page_dict["owner"] = owner
             new_page = cls(page_dict)
 
@@ -1332,7 +1330,7 @@ class Overridable(Base):
         html.help(vs.help())
         vs.render_input(varprefix, page_dict)
         # Should be ignored by hidden_fields, but I do not dare to change it there
-        html.request.del_var("filled_in")
+        request.del_var("filled_in")
         html.hidden_fields()
         html.end_form()
         html.footer()
@@ -1638,10 +1636,10 @@ class OverridableContainer(Overridable, Container):
     # class by the URL variable page_type.
     @classmethod
     def ajax_add_element(cls):
-        page_type_name = html.request.get_ascii_input_mandatory("page_type")
-        page_name = html.request.get_ascii_input_mandatory("page_name")
-        element_type = html.request.get_ascii_input_mandatory("element_type")
-        create_info = json.loads(html.request.get_ascii_input_mandatory("create_info"))
+        page_type_name = request.get_ascii_input_mandatory("page_type")
+        page_name = request.get_ascii_input_mandatory("page_name")
+        element_type = request.get_ascii_input_mandatory("element_type")
+        create_info = json.loads(request.get_ascii_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

@@ -17,7 +17,7 @@ from cmk.utils.type_defs import MetricName
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.metrics import (
     get_graph_templates,
@@ -260,8 +260,8 @@ class GraphDashlet(Dashlet):
     def _resolve_site(host):
         # When the site is available via URL context, use it. Otherwise it is needed
         # to check all sites for the requested host
-        if html.request.has_var('site'):
-            return html.request.var('site')
+        if request.has_var('site'):
+            return request.var('site')
 
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)

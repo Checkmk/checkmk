@@ -15,7 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -272,23 +272,23 @@ class ModeParentScan(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(html.request.var("_start"))
+        self._start = bool(request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
         # otherwise: all host in this folder, maybe recursively
-        self._all = bool(html.request.var("all"))
+        self._all = bool(request.var("all"))
         self._complete_folder = self._all
 
         # Ignored during initial form display
         self._settings = ParentScanSettings(
-            where=html.request.get_ascii_input_mandatory("where", "subfolder"),
-            alias=html.request.get_unicode_input_mandatory("alias", "").strip(),
+            where=request.get_ascii_input_mandatory("where", "subfolder"),
+            alias=request.get_unicode_input_mandatory("alias", "").strip(),
             recurse=html.get_checkbox("recurse") or False,
-            select=html.request.get_ascii_input_mandatory("select", "noexplicit"),
-            timeout=html.request.get_integer_input_mandatory("timeout", 8),
-            probes=html.request.get_integer_input_mandatory("probes", 2),
-            max_ttl=html.request.get_integer_input_mandatory("max_ttl", 10),
+            select=request.get_ascii_input_mandatory("select", "noexplicit"),
+            timeout=request.get_integer_input_mandatory("timeout", 8),
+            probes=request.get_integer_input_mandatory("probes", 2),
+            max_ttl=request.get_integer_input_mandatory("max_ttl", 10),
             force_explicit=html.get_checkbox("force_explicit") or False,
-            ping_probes=html.request.get_integer_input_mandatory("ping_probes", 5),
+            ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
         )
         self._job = ParentScanBackgroundJob()
 
@@ -310,7 +310,7 @@ class ModeParentScan(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     def _get_tasks(self):
-        if not html.request.var("all"):
+        if not request.var("all"):
             return self._get_current_folder_host_tasks()
         return self._get_folder_tasks()
 

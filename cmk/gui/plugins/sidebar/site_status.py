@@ -100,7 +100,7 @@ class SiteStatus(SidebarSnapin):
         if not transactions.check_transaction():
             return
 
-        switch_var = html.request.var("_site_switch")
+        switch_var = request.var("_site_switch")
         if switch_var:
             for info in switch_var.split(","):
                 sitename, onoff = info.split(":")

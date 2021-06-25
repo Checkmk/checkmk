@@ -98,7 +98,7 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = watolib.Folder.current().host(html.request.get_ascii_input_mandatory("host"))
+        self._host = watolib.Folder.current().host(request.get_ascii_input_mandatory("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -107,7 +107,7 @@ class ModeDiscovery(WatoMode):
         action = DiscoveryAction.NONE
         if config.user.may("wato.services"):
             show_checkboxes = config.user.discovery_checkboxes
-            if html.request.var("_scan") == "1":
+            if request.var("_scan") == "1":
                 action = DiscoveryAction.REFRESH
         else:
             show_checkboxes = False
@@ -169,7 +169,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
     def get_request(self) -> StartDiscoveryRequest:
         config.user.need_permission("wato.hosts")
 
-        host_name = html.request.get_ascii_input("host_name")
+        host_name = request.get_ascii_input("host_name")
         if host_name is None:
             raise MKGeneralException(_("Host is missing"))
         host = watolib.Host.host(host_name)
@@ -181,7 +181,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                   "for further information.") % (host_name, config.omd_site()))
         host.need_permission("read")
 
-        ascii_input = html.request.get_ascii_input("options")
+        ascii_input = request.get_ascii_input("options")
         if ascii_input is not None:
             options = json.loads(ascii_input)
         else:
@@ -193,7 +193,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
     def execute(self, api_request: StartDiscoveryRequest) -> str:
         # Be compatible with pre-2.0.0p1 central sites. The version was not sent before this
         # version. We need to skip the new_labels, vanished_labels and replaced_labels.
-        version = html.request.headers.get("x-checkmk-version")
+        version = request.headers.get("x-checkmk-version")
         if not version or version.startswith("1.6.0"):
             data = execute_discovery_job(api_request)
             # Shorten check_table entries, alienate paramstring to store additional info
@@ -1262,20 +1262,20 @@ class DiscoveryPageRenderer:
 @page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
-        self._site = html.request.get_ascii_input_mandatory("site")
+        self._site = request.get_ascii_input_mandatory("site")
         if self._site not in config.sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = html.request.get_ascii_input_mandatory("host")
+        self._host_name = request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
 
         # TODO: Validate
-        self._check_type = html.request.get_ascii_input_mandatory("checktype")
+        self._check_type = request.get_ascii_input_mandatory("checktype")
         # TODO: Validate
-        self._item = html.request.get_unicode_input_mandatory("item")
+        self._item = request.get_unicode_input_mandatory("item")
 
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)

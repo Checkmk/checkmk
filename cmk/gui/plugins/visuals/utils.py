@@ -21,7 +21,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, user_errors
+from cmk.gui.globals import html, user_errors, request
 from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import Choices, ColumnName, Row, Rows, VisualContext
 from cmk.gui.page_menu import PageMenuEntry
@@ -296,7 +296,7 @@ class Filter(metaclass=abc.ABCMeta):
         var context. This can be used to persist the filter settings."""
         val = {}
         for varname in self.htmlvars:
-            val[varname] = html.request.var(varname, '')
+            val[varname] = request.var(varname, '')
         return val
 
 
@@ -322,7 +322,7 @@ class FilterTristate(Filter):
         self.deflt = deflt
 
     def display(self):
-        current = html.request.var(self.varname)
+        current = request.var(self.varname)
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [None, ""] and int(value) == self.deflt)
@@ -330,7 +330,7 @@ class FilterTristate(Filter):
         html.end_radio_group()
 
     def tristate_value(self):
-        return html.request.get_integer_input_mandatory(self.varname, self.deflt)
+        return request.get_integer_input_mandatory(self.varname, self.deflt)
 
     def filter(self, infoname):
         current = self.tristate_value()
@@ -411,27 +411,27 @@ class FilterTime(Filter):
     def _get_time_range_of(self, what: str) -> Union[None, int, float]:
         varprefix = self.ident + "_" + what
 
-        rangename = html.request.var(varprefix + "_range")
+        rangename = request.var(varprefix + "_range")
         if rangename == "abs":
             try:
                 return time.mktime(
-                    time.strptime(html.request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
+                    time.strptime(request.get_str_input_mandatory(varprefix), "%Y-%m-%d"))
             except Exception:
                 user_errors.add(
                     MKUserError(varprefix, _("Please enter the date in the format YYYY-MM-DD.")))
                 return None
 
         if rangename == "unix":
-            return html.request.get_integer_input_mandatory(varprefix)
+            return request.get_integer_input_mandatory(varprefix)
         if rangename is None:
             return None
 
         try:
-            count = html.request.get_integer_input_mandatory(varprefix)
+            count = request.get_integer_input_mandatory(varprefix)
             secs = count * int(rangename)
             return int(time.time()) - secs
         except Exception:
-            html.request.set_var(varprefix, "")
+            request.set_var(varprefix, "")
             return None
 
 
@@ -443,7 +443,7 @@ def filter_cre_choices():
 
 
 def filter_cre_heading_info():
-    current_value = html.request.var("site")
+    current_value = request.var("site")
     return config.site(current_value)["alias"] if current_value else None
 
 

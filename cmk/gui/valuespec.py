@@ -373,10 +373,10 @@ class Age(ValueSpec):
 
     def from_html_vars(self, varprefix: str) -> Seconds:
         # TODO: Validate for correct numbers!
-        return (html.request.get_integer_input_mandatory(varprefix + '_days', 0) * 3600 * 24 +
-                html.request.get_integer_input_mandatory(varprefix + '_hours', 0) * 3600 +
-                html.request.get_integer_input_mandatory(varprefix + '_minutes', 0) * 60 +
-                html.request.get_integer_input_mandatory(varprefix + '_seconds', 0))
+        return (request.get_integer_input_mandatory(varprefix + '_days', 0) * 3600 * 24 +
+                request.get_integer_input_mandatory(varprefix + '_hours', 0) * 3600 +
+                request.get_integer_input_mandatory(varprefix + '_minutes', 0) * 60 +
+                request.get_integer_input_mandatory(varprefix + '_seconds', 0))
 
     def value_to_text(self, value: Seconds) -> str:
         days, rest = divmod(value, 60 * 60 * 24)
@@ -504,7 +504,7 @@ class Integer(ValueSpec):
         return self._display_format % utils.saveint(value)
 
     def from_html_vars(self, varprefix: str) -> int:
-        return html.request.get_integer_input_mandatory(varprefix)
+        return request.get_integer_input_mandatory(varprefix)
 
     def value_to_text(self, value: int) -> str:
         return self._renderer.format_text(self._render_value(value))
@@ -550,8 +550,8 @@ class Filesize(Integer):
 
     def from_html_vars(self, varprefix: str) -> int:
         try:
-            return html.request.get_integer_input_mandatory(varprefix + '_size') * (
-                1024**html.request.get_integer_input_mandatory(varprefix + '_unit'))
+            return request.get_integer_input_mandatory(varprefix + '_size') * (
+                1024**request.get_integer_input_mandatory(varprefix + '_unit'))
         except Exception:
             raise MKUserError(varprefix + '_size', _("Please enter a valid integer number"))
 
@@ -645,7 +645,7 @@ class TextInput(ValueSpec):
         return str(value)
 
     def from_html_vars(self, varprefix: str) -> str:
-        value = html.request.get_str_input_mandatory(varprefix, "")
+        value = request.get_str_input_mandatory(varprefix, "")
         if self._strip and value:
             value = value.strip()
         return value
@@ -701,7 +701,7 @@ class UUID(TextInput):
 
     """
     def from_html_vars(self, varprefix: str) -> str:
-        value = html.request.get_str_input_mandatory(varprefix, "")
+        value = request.get_str_input_mandatory(varprefix, "")
         if not value:
             value = str(uuid.uuid4())
         return value
@@ -1421,7 +1421,7 @@ class TextAreaUnicode(TextInput):
         if self._rows == "auto":
             func = 'cmk.valuespecs.textarea_resize(this);'
             attrs = {"onkeyup": func, "onmousedown": func, "onmouseup": func, "onmouseout": func}
-            if html.request.has_var(varprefix):
+            if request.has_var(varprefix):
                 rows = len(self.from_html_vars(varprefix).splitlines())
             else:
                 rows = len(value.splitlines())
@@ -1443,7 +1443,7 @@ class TextAreaUnicode(TextInput):
 
     # Overridden because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix: str) -> str:
-        text = html.request.get_unicode_input_mandatory(varprefix, "").replace('\r', '')
+        text = request.get_unicode_input_mandatory(varprefix, "").replace('\r', '')
         if text and not text.endswith("\n"):
             text += "\n"  # force newline at end
         return text
@@ -1590,13 +1590,13 @@ class ListOfStrings(ValueSpec):
 
     def render_input(self, varprefix: str, value: List[str]) -> None:
         # Form already submitted?
-        if html.request.has_var(varprefix + "_0"):
+        if request.has_var(varprefix + "_0"):
             value = self.from_html_vars(varprefix)
             # Remove variables from URL, so that they do not appear
             # in hidden_fields()
             nr = 0
-            while html.request.has_var(varprefix + "_%d" % nr):
-                html.request.del_var(varprefix + "_%d" % nr)
+            while request.has_var(varprefix + "_%d" % nr):
+                request.del_var(varprefix + "_%d" % nr)
                 nr += 1
 
         class_ = ["listofstrings"]
@@ -1642,7 +1642,7 @@ class ListOfStrings(ValueSpec):
         list_prefix = varprefix + "_"
         return [
             self._valuespec.from_html_vars(varname)
-            for varname, value in html.request.itervars()
+            for varname, value in request.itervars()
             if varname.startswith(list_prefix) and varname[len(list_prefix):].isdigit() and
             value.strip()
         ]
@@ -1762,7 +1762,7 @@ class ListOf(ValueSpec):
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
-        if html.request.has_var("%s_count" % varprefix):
+        if request.has_var("%s_count" % varprefix):
             count = len(self.get_indexes(varprefix))
             value = [None] * count  # dummy for the loop
         else:
@@ -1919,11 +1919,11 @@ class ListOf(ValueSpec):
             html.render_tr(html.render_td(self._valuespec.value_to_text(v))) for v in value))
 
     def get_indexes(self, varprefix: str) -> Dict[int, int]:
-        count = html.request.get_integer_input_mandatory(varprefix + "_count", 0)
+        count = request.get_integer_input_mandatory(varprefix + "_count", 0)
         n = 1
         indexes = {}
         while n <= count:
-            indexof = html.request.var(varprefix + "_indexof_%d" % n)
+            indexof = request.var(varprefix + "_indexof_%d" % n)
             # for deleted entries, we have removed the whole row, therefore indexof is None
             if indexof is not None:
                 indexes[int(indexof)] = n
@@ -2027,7 +2027,7 @@ class ListOfMultiple(ValueSpec):
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
-        if html.request.var("%s_active" % varprefix):
+        if request.var("%s_active" % varprefix):
             value = self.from_html_vars(varprefix)
 
         sorted_idents: List[str] = []
@@ -2105,7 +2105,7 @@ class ListOfMultiple(ValueSpec):
 
     def from_html_vars(self, varprefix: str) -> Dict[str, Any]:
         value: Dict[str, Any] = {}
-        active = html.request.get_str_input_mandatory('%s_active' % varprefix).strip()
+        active = request.get_str_input_mandatory('%s_active' % varprefix).strip()
         if not active:
             return value
 
@@ -2184,7 +2184,7 @@ class Float(ValueSpec):
         return self._display_format % utils.savefloat(value)
 
     def from_html_vars(self, varprefix: str) -> float:
-        return html.request.get_float_input_mandatory(varprefix)
+        return request.get_float_input_mandatory(varprefix)
 
     def value_to_text(self, value: float) -> str:
         txt = self._renderer.format_text(self._render_value(value))
@@ -2296,7 +2296,7 @@ class Checkbox(ValueSpec):
         return json_value
 
     def from_html_vars(self, varprefix: str) -> bool:
-        return bool(html.request.var(varprefix))
+        return bool(request.var(varprefix))
 
     def validate_datatype(self, value: bool, varprefix: str) -> None:
         if not isinstance(value, bool):
@@ -2469,10 +2469,10 @@ class DropdownChoice(ValueSpec):
             raise MKUserError(varprefix, self._empty_text)
         raise MKUserError(
             varprefix,
-            self._get_invalid_choice_text(self._invalid_choice_error, html.request.var(varprefix)))
+            self._get_invalid_choice_text(self._invalid_choice_error, request.var(varprefix)))
 
     def _is_selected_option_from_html(self, varprefix: str, val: DropdownChoiceValue) -> bool:
-        selected_value = html.request.var(varprefix)
+        selected_value = request.var(varprefix)
         return selected_value == self._option_for_html(val)
 
     def _option_for_html(self, value: DropdownChoiceValue) -> DropdownChoiceValue:
@@ -2538,7 +2538,7 @@ class AjaxDropdownChoice(DropdownChoice):
         self._strict = strict
 
     def from_html_vars(self, varprefix: str) -> str:
-        return html.request.get_str_input_mandatory(varprefix, "")
+        return request.get_str_input_mandatory(varprefix, "")
 
     def validate_datatype(self, value: str, varprefix: str) -> None:
         if not isinstance(value, str):
@@ -2865,7 +2865,7 @@ class CascadingDropdown(ValueSpec):
         # cases:
         # 1. Form painted for the first time (no submission yet, vp missing in URL)
         # 2. Form already submitted -> honor URL variable vp for visibility
-        cur_val = html.request.var(vp)
+        cur_val = request.var(vp)
 
         if self._orientation == "vertical":
             html.br()
@@ -3015,7 +3015,7 @@ class CascadingDropdown(ValueSpec):
         if not choices:
             return self.default_value()
 
-        sel = html.request.get_integer_input_mandatory(varprefix + "_sel", 0)
+        sel = request.get_integer_input_mandatory(varprefix + "_sel", 0)
         choice: CascadingDropdownCleanChoice = choices[sel]
         value: CascadingDropdownChoiceValue = choice[0]
         vs: _Optional[ValueSpec] = choice[2]
@@ -3383,7 +3383,7 @@ class DualListChoice(ListChoice):
     def from_html_vars(self, varprefix):
         self.load_elements()
         value: List = []
-        selection_str = html.request.var(varprefix, '')
+        selection_str = request.var(varprefix, '')
         if selection_str is None:
             return value
         selected = selection_str.split('|')
@@ -3482,8 +3482,8 @@ class OptionalDropdownChoice(DropdownChoice):
             options,
             deflt=defval,  # style="float:left;",
             onchange="cmk.valuespecs.toggle_dropdown(this, '%s_ex');" % varprefix)
-        if html.request.has_var(varprefix):
-            div_is_open = html.request.var(varprefix) == "other"
+        if request.has_var(varprefix):
+            div_is_open = request.var(varprefix) == "other"
         else:
             div_is_open = self.value_is_explicit(value)
 
@@ -3507,7 +3507,7 @@ class OptionalDropdownChoice(DropdownChoice):
 
     def from_html_vars(self, varprefix):
         choices = self.choices()
-        sel = html.request.var(varprefix)
+        sel = request.var(varprefix)
         if sel == "other":
             return self._explicit.from_html_vars(varprefix + "_ex")
 
@@ -3743,7 +3743,7 @@ class AbsoluteDate(ValueSpec):
         for what, title, mmin, mmax in entries:
             try:
                 varname = varprefix + "_" + what
-                part_str = html.request.var(varname, "")
+                part_str = request.var(varname, "")
                 if part_str is None:
                     raise ValueError()
                 part = int(part_str)
@@ -3845,7 +3845,7 @@ class Timeofday(ValueSpec):
 
     def from_html_vars(self, varprefix: str) -> _Optional[TimeofdayValue]:
         # Fully specified
-        text = html.request.get_str_input_mandatory(varprefix, "").strip()
+        text = request.get_str_input_mandatory(varprefix, "").strip()
         if not text:
             return None
 
@@ -4468,7 +4468,7 @@ class Alternative(ValueSpec):
     def render_input(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
         options: List[_Tuple[_Optional[str], str]] = []
-        sel_option = html.request.var(varprefix + "_use")
+        sel_option = request.var(varprefix + "_use")
         for nr, vs in enumerate(self._elements):
             if not sel_option and vs == mvs:
                 sel_option = str(nr)
@@ -4540,7 +4540,7 @@ class Alternative(ValueSpec):
         return json_value
 
     def from_html_vars(self, varprefix):
-        nr = html.request.get_integer_input_mandatory(varprefix + "_use")
+        nr = request.get_integer_input_mandatory(varprefix + "_use")
         vs = self._elements[nr]
         return vs.from_html_vars(varprefix + "_%d" % nr)
 
@@ -5103,7 +5103,7 @@ class ElementSelection(ValueSpec):
         return self._elements.get(value, value)
 
     def from_html_vars(self, varprefix):
-        return html.request.var(varprefix)
+        return request.var(varprefix)
 
     def _validate_value(self, value, varprefix):
         self.load_elements()
@@ -5367,7 +5367,7 @@ class Password(TextInput):
             return value  # New password entered or unencrypted password
 
         # Gather the value produced by render_input() and use it.
-        value = html.request.get_str_input_mandatory(varprefix + "_orig", "")
+        value = request.get_str_input_mandatory(varprefix + "_orig", "")
         if not value:
             return value
 
@@ -5490,7 +5490,7 @@ class FileUpload(ValueSpec):
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix: str) -> UploadedFile:
-        return html.request.uploaded_file(varprefix)
+        return request.uploaded_file(varprefix)
 
 
 class ImageUpload(FileUpload):
@@ -5658,7 +5658,7 @@ class Labels(ValueSpec):
         labels: Dict[str, Any] = {}
 
         try:
-            decoded_labels = json.loads(html.request.get_unicode_input(varprefix) or "[]")
+            decoded_labels = json.loads(request.get_unicode_input(varprefix) or "[]")
         except ValueError as e:
             raise MKUserError(varprefix, _("Failed to parse labels: %s") % e)
 
@@ -5883,7 +5883,7 @@ class IconSelector(ValueSpec):
         # Handle complain phase with validation errors correctly and get the value
         # from the HTML vars
         if value is None:
-            value = html.request.var(varprefix + "_value")
+            value = request.var(varprefix + "_value")
 
         if not value:
             value = self._empty_img
@@ -5967,7 +5967,7 @@ class IconSelector(ValueSpec):
 
         if config.user.may('wato.icons'):
             back_param = '&back=' + urlencode(
-                request.get_url_input('back')) if html.request.has_var('back') else ''
+                request.get_url_input('back')) if request.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
         html.close_div()
@@ -5986,7 +5986,7 @@ class IconSelector(ValueSpec):
         return {'icon': icon, 'emblem': emblem}
 
     def _from_html_vars(self, varprefix):
-        icon = html.request.var(varprefix + '_value')
+        icon = request.var(varprefix + '_value')
         if icon == 'empty':
             return None
         return icon
@@ -6073,7 +6073,7 @@ class Color(ValueSpec):
                            onclose=self._on_change)
 
     def from_html_vars(self, varprefix):
-        color = html.request.var(varprefix + '_value')
+        color = request.var(varprefix + '_value')
         if color == '':
             return None
         return color
@@ -6146,8 +6146,8 @@ class SSHKeyPair(ValueSpec):
         return self._get_key_fingerprint(value)
 
     def from_html_vars(self, varprefix: str) -> SSHKeyPairValue:
-        if html.request.has_var(varprefix):
-            return self._decode_key_from_url(html.request.get_ascii_input_mandatory(varprefix))
+        if request.has_var(varprefix):
+            return self._decode_key_from_url(request.get_ascii_input_mandatory(varprefix))
         return self._generate_ssh_key(varprefix)
 
     @staticmethod

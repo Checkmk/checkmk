@@ -92,7 +92,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         return self._all_attrs[self._type]
 
     def _from_vars(self):
-        self._name = html.request.get_ascii_input("edit")  # missing -> new custom attr
+        self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -164,7 +164,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         if not transactions.check_transaction():
             return None
 
-        title = html.request.get_unicode_input_mandatory("title").strip()
+        title = request.get_unicode_input_mandatory("title").strip()
         if not title:
             raise MKUserError("title", _("Please specify a title."))
 
@@ -174,13 +174,13 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
                     "alias",
                     _("This alias is already used by the attribute %s.") % this_attr['name'])
 
-        topic = html.request.get_unicode_input_mandatory('topic', '').strip()
-        help_txt = html.request.get_unicode_input_mandatory('help', '').strip()
+        topic = request.get_unicode_input_mandatory('topic', '').strip()
+        help_txt = request.get_unicode_input_mandatory('help', '').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 
         if self._new:
-            self._name = html.request.get_ascii_input_mandatory("name", '').strip()
+            self._name = request.get_ascii_input_mandatory("name", '').strip()
             if not self._name:
                 raise MKUserError("name", _("Please specify a name for the new attribute."))
             if ' ' in self._name:
@@ -193,7 +193,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
-            ty = html.request.get_ascii_input_mandatory('type', '').strip()
+            ty = request.get_ascii_input_mandatory('type', '').strip()
             if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
@@ -470,10 +470,10 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if not html.request.var('_delete'):
+        if not request.var('_delete'):
             return redirect(self.mode_url())
 
-        delname = html.request.var("_delete")
+        delname = request.var("_delete")
         for index, attr in enumerate(self._attrs):
             if attr['name'] == delname:
                 self._attrs.pop(index)

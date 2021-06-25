@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors
+from cmk.gui.globals import html, transactions, user_errors, request
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -74,7 +74,7 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self):
-        self._hostname = html.request.get_ascii_input_mandatory("host")
+        self._hostname = request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         self._host.need_permission("read")
 
@@ -135,14 +135,14 @@ class ModeDiagHost(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        if html.request.var('_try'):
+        if request.var('_try'):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
                 user_errors.add(e)
             return None
 
-        if html.request.var('_save'):
+        if request.var('_save'):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
             new = vs_host.from_html_vars('vs_host')
@@ -223,7 +223,7 @@ class ModeDiagHost(WatoMode):
 
         # When clicking "Save & Test" on the "Edit host" page, this will be set
         # to immediately execute the tests using the just saved settings
-        if html.request.has_var("_start_on_load"):
+        if request.has_var("_start_on_load"):
             html.final_javascript("cmk.page_menu.form_submit('diag_host', '_try');")
 
         html.hidden_fields()
@@ -235,7 +235,7 @@ class ModeDiagHost(WatoMode):
         self._show_diagnose_output()
 
     def _show_diagnose_output(self):
-        if not html.request.var('_try'):
+        if not request.var('_try'):
             html.show_message(
                 _('You can diagnose the connection to a specific host using this dialog. '
                   'You can either test whether your current configuration is still working '
@@ -361,9 +361,9 @@ class ModeAjaxDiagHost(AjaxPage):
         if not transactions.check_transaction():
             raise MKAuthException(_("Invalid transaction"))
 
-        request = self.webapi_request()
+        api_request = self.webapi_request()
 
-        hostname = request.get("host")
+        hostname = api_request.get("host")
         if not hostname:
             raise MKGeneralException(_('The hostname is missing.'))
 
@@ -376,7 +376,7 @@ class ModeAjaxDiagHost(AjaxPage):
 
         host.need_permission("read")
 
-        _test = request.get('_test')
+        _test = api_request.get('_test')
         if not _test:
             raise MKGeneralException(_('The test is missing.'))
 
@@ -394,37 +394,37 @@ class ModeAjaxDiagHost(AjaxPage):
                 'snmp_retries',
                 'tcp_connect_timeout',
         ]):
-            args[idx] = request.get(what, u"")
+            args[idx] = api_request.get(what, u"")
 
-        if request.get("snmpv3_use"):
+        if api_request.get("snmpv3_use"):
             snmpv3_use = {
                 u"0": u"noAuthNoPriv",
                 u"1": u"authNoPriv",
                 u"2": u"authPriv",
-            }.get(request.get("snmpv3_use", u""), u"")
+            }.get(api_request.get("snmpv3_use", u""), u"")
 
             args[7] = snmpv3_use
             if snmpv3_use != u"noAuthNoPriv":
                 snmpv3_auth_proto = {
                     str(DropdownChoice.option_id("md5")): u"md5",
                     str(DropdownChoice.option_id("sha")): u"sha"
-                }.get(request.get("snmpv3_auth_proto", u""), u"")
+                }.get(api_request.get("snmpv3_auth_proto", u""), u"")
 
                 args[8] = snmpv3_auth_proto
-                args[9] = request.get("snmpv3_security_name", u"")
-                args[10] = request.get("snmpv3_security_password", u"")
+                args[9] = api_request.get("snmpv3_security_name", u"")
+                args[10] = api_request.get("snmpv3_security_password", u"")
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
                         str(DropdownChoice.option_id("DES")): u"DES",
                         str(DropdownChoice.option_id("AES")): u"AES"
-                    }.get(request.get("snmpv3_privacy_proto", u""), u"")
+                    }.get(api_request.get("snmpv3_privacy_proto", u""), u"")
 
                     args[11] = snmpv3_privacy_proto
 
-                    args[12] = request.get("snmpv3_privacy_password", u"")
+                    args[12] = api_request.get("snmpv3_privacy_password", u"")
             else:
-                args[9] = request.get("snmpv3_security_name", u"")
+                args[9] = api_request.get("snmpv3_security_name", u"")
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {

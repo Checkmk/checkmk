@@ -469,7 +469,7 @@ def _graph_margin_ex(graph_render_options, defaults=(8, 16, 4, 8)):
 def ajax_graph():
     response.set_content_type("application/json")
     try:
-        context_var = html.request.get_str_input_mandatory("context")
+        context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
         response_data = render_ajax_graph(context)
         response.set_data(json.dumps(response_data))
@@ -485,9 +485,9 @@ def render_ajax_graph(context):
     graph_render_options = context["render_options"]
     graph_recipe = context["definition"]
 
-    start_time_var = html.request.var("start_time")
-    end_time_var = html.request.var("end_time")
-    step_var = html.request.var("step")
+    start_time_var = request.var("start_time")
+    end_time_var = request.var("end_time")
+    step_var = request.var("step")
     if start_time_var is not None and end_time_var is not None and step_var is not None:
         start_time = float(start_time_var)
         end_time = float(end_time_var)
@@ -498,8 +498,8 @@ def render_ajax_graph(context):
 
     size = graph_render_options["size"]
 
-    resize_x_var = html.request.var("resize_x")
-    resize_y_var = html.request.var("resize_y")
+    resize_x_var = request.var("resize_x")
+    resize_y_var = request.var("resize_y")
 
     if resize_x_var is not None and resize_y_var is not None:
         render_opt_x, render_opt_y = context["render_options"]["size"]
@@ -508,18 +508,18 @@ def render_ajax_graph(context):
         config.user.save_file("graph_size", (size_x, size_y))
         size = (size_x, size_y)
 
-    range_from_var = html.request.var("range_from")
-    range_to_var = html.request.var("range_to")
+    range_from_var = request.var("range_from")
+    range_to_var = request.var("range_to")
     if range_from_var is not None and range_to_var is not None:
         vertical_range: Optional[Tuple[float, float]] = (float(range_from_var), float(range_to_var))
     else:
         vertical_range = None
 
-    if html.request.has_var("pin"):
+    if request.has_var("pin"):
         artwork.save_graph_pin()
 
-    if html.request.has_var("consolidation_function"):
-        graph_recipe["consolidation_function"] = html.request.var("consolidation_function")
+    if request.has_var("consolidation_function"):
+        graph_recipe["consolidation_function"] = request.var("consolidation_function")
 
     graph_render_options["size"] = size
     graph_data_range["time_range"] = (start_time, end_time)
@@ -774,9 +774,9 @@ def estimate_graph_step_for_html(time_range, graph_render_options):
 def ajax_graph_hover():
     response.set_content_type("application/json")
     try:
-        context_var = html.request.get_str_input_mandatory("context")
+        context_var = request.get_str_input_mandatory("context")
         context = json.loads(context_var)
-        hover_time = html.request.get_integer_input_mandatory("hover_time")
+        hover_time = request.get_integer_input_mandatory("hover_time")
         response_data = render_ajax_graph_hover(context, hover_time)
         response.set_data(json.dumps(response_data))
     except Exception as e:
@@ -866,10 +866,10 @@ def host_service_graph_dashlet_cmk(
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 
-    width_var = html.request.get_float_input_mandatory("width", 0.0)
+    width_var = request.get_float_input_mandatory("width", 0.0)
     width = int((width_var / html_size_per_ex))
 
-    height_var = html.request.get_float_input_mandatory("height", 0.0)
+    height_var = request.get_float_input_mandatory("height", 0.0)
     height = int((height_var / html_size_per_ex))
 
     bounds = _graph_margin_ex(graph_render_options)
@@ -888,7 +888,7 @@ def host_service_graph_dashlet_cmk(
         "4": 366 * 86400,
     }
 
-    secs_var = html.request.var("timerange")
+    secs_var = request.var("timerange")
     if secs_var not in range_secs:
         secs = 4 * 3600
     else:

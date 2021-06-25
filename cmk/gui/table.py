@@ -155,7 +155,7 @@ class Table:
         # determine row limit
         if limit is None:
             limit = config.table_row_limit
-        if html.request.get_ascii_input('limit') == 'none' or output_format != "html":
+        if request.get_ascii_input('limit') == 'none' or output_format != "html":
             limit = None
 
         self.id = table_id
@@ -276,8 +276,7 @@ class Table:
             return
 
         if self.options["output_format"] == "csv":
-            self._write_csv(
-                csv_separator=html.request.get_str_input_mandatory("csv_separator", ";"))
+            self._write_csv(csv_separator=request.get_str_input_mandatory("csv_separator", ";"))
             return
 
         container: ContextManager[bool] = nullcontext(False)
@@ -359,20 +358,20 @@ class Table:
 
         # Handle the initial visibility of the actions
         actions_visible = table_opts.get('actions_visible', False)
-        if html.request.get_ascii_input('_%s_actions' % table_id):
-            actions_visible = html.request.get_ascii_input('_%s_actions' % table_id) == '1'
+        if request.get_ascii_input('_%s_actions' % table_id):
+            actions_visible = request.get_ascii_input('_%s_actions' % table_id) == '1'
             table_opts['actions_visible'] = actions_visible
 
         if self.options["searchable"]:
-            search_term = html.request.get_unicode_input_mandatory('search', '')
+            search_term = request.get_unicode_input_mandatory('search', '')
             # Search is always lower case -> case insensitive
             search_term = search_term.lower()
             if search_term:
-                html.request.set_var('search', search_term)
+                request.set_var('search', search_term)
                 rows = _filter_rows(rows, search_term)
 
-        if html.request.get_ascii_input('_%s_reset_sorting' % table_id):
-            html.request.del_var('_%s_sort' % table_id)
+        if request.get_ascii_input('_%s_reset_sorting' % table_id):
+            request.del_var('_%s_sort' % table_id)
             if 'sort' in table_opts:
                 del table_opts['sort']  # persist
 
@@ -380,7 +379,7 @@ class Table:
             # Now apply eventual sorting settings
             sort = self._get_sort_column(table_opts)
             if sort is not None:
-                html.request.set_var('_%s_sort' % table_id, sort)
+                request.set_var('_%s_sort' % table_id, sort)
                 table_opts['sort'] = sort  # persist
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
                 rows = _sort_rows(rows, sort_col, sort_reverse)
@@ -391,7 +390,7 @@ class Table:
         return rows, actions_visible, search_term
 
     def _get_sort_column(self, table_opts: Dict[str, Any]) -> Optional[str]:
-        return html.request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
+        return request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
 
     def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
                      actions_visible: bool, search_term: Optional[str]) -> None:
@@ -423,7 +422,7 @@ class Table:
             if not html.in_form():
                 html.begin_form("%s_actions" % table_id)
 
-            if html.request.has_var('_%s_sort' % table_id):
+            if request.has_var('_%s_sort' % table_id):
                 html.open_div(class_=["sort"])
                 html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
                 html.close_div()
@@ -555,7 +554,7 @@ class Table:
             else:
                 css_class.insert(0, "sort")
                 reverse = 0
-                sort = html.request.get_ascii_input('_%s_sort' % table_id)
+                sort = request.get_ascii_input('_%s_sort' % table_id)
                 if sort:
                     sort_col, sort_reverse = map(int, sort.split(',', 1))
                     if sort_col == nr:

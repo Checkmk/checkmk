@@ -10,7 +10,7 @@ import cmk.utils.render as render
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 
 
 def message():
@@ -44,4 +44,4 @@ def is_enabled():
 
 def may_override():
     return config.user.id in config.wato_read_only["rw_users"] \
-            or (html.request.var("mode") == "read_only" and config.user.may("wato.set_read_only"))
+            or (request.var("mode") == "read_only" and config.user.may("wato.set_read_only"))

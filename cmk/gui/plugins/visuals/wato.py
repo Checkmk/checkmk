@@ -12,7 +12,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.type_defs import Choices
 
 from cmk.gui.valuespec import ListOf, DropdownChoice
@@ -89,7 +89,7 @@ class FilterWatoFolder(Filter):
 
     def filter(self, infoname):
         self.check_wato_data_update()
-        folder = html.request.get_str_input_mandatory(self.ident, "")
+        folder = request.get_str_input_mandatory(self.ident, "")
         if folder:
             return "Filter: host_filename %s\n" % _wato_folders_to_lq_regex(folder)
         return ""
@@ -118,7 +118,7 @@ class FilterWatoFolder(Filter):
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
         self.check_wato_data_update()
-        current = html.request.var(self.ident)
+        current = request.var(self.ident)
         if current and current != "/":
             return self.path_to_tree.get(current)
 

@@ -15,7 +15,7 @@ import cmk.gui.forms as forms
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -50,8 +50,8 @@ class ModeBulkDiscovery(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(html.request.var("_start"))
-        self._all = bool(html.request.var("all"))
+        self._start = bool(request.var("_start"))
+        self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()

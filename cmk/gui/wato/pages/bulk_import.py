@@ -24,7 +24,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -89,7 +89,7 @@ class ModeBulkImport(WatoMode):
         return _("Bulk host import")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if not html.request.has_var("file_id"):
+        if not request.has_var("file_id"):
             return make_simple_form_page_menu(_("Hosts"),
                                               breadcrumb,
                                               form_name="upload",
@@ -130,18 +130,18 @@ class ModeBulkImport(WatoMode):
 
     def action(self) -> ActionResult:
         if transactions.transaction_valid():
-            if html.request.has_var("_do_upload"):
+            if request.has_var("_do_upload"):
                 self._upload_csv_file()
 
             csv_reader = self._open_csv_file()
 
-            if html.request.var("_do_import"):
+            if request.var("_do_import"):
                 return self._import(csv_reader)
         return None
 
     def _file_path(self) -> Path:
-        file_id = html.request.get_unicode_input_mandatory(
-            "file_id", "%s-%d" % (config.user.id, int(time.time())))
+        file_id = request.get_unicode_input_mandatory("file_id",
+                                                      "%s-%d" % (config.user.id, int(time.time())))
         return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -160,10 +160,10 @@ class ModeBulkImport(WatoMode):
         store.save_text_to_file(self._file_path(), upload_info["file"])
 
         # make selections available to next page
-        html.request.set_var("file_id", file_id)
+        request.set_var("file_id", file_id)
 
         if upload_info["do_service_detection"]:
-            html.request.set_var("do_service_detection", "1")
+            request.set_var("do_service_detection", "1")
 
     def _cleanup_old_files(self) -> None:
         for path in self._upload_tmp_path.iterdir():
@@ -184,7 +184,7 @@ class ModeBulkImport(WatoMode):
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
 
-        if list(html.request.itervars(prefix="_preview")):
+        if list(request.itervars(prefix="_preview")):
             params = self._vs_parse_params().from_html_vars("_preview")
         else:
             params = {
@@ -256,7 +256,7 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        if num_succeeded > 0 and html.request.var("do_service_detection") == "1":
+        if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             config.user.set_rowselection(weblib.selection_id(),
                                          'wato-folder-/' + watolib.Folder.current().path(),
@@ -275,7 +275,7 @@ class ModeBulkImport(WatoMode):
             if not value:
                 continue
 
-            attribute = html.request.var("attribute_%d" % col_num)
+            attribute = request.var("attribute_%d" % col_num)
             if attribute == "host_name":
                 Hostname().validate_value(value, "host")
                 host_name = value
@@ -321,7 +321,7 @@ class ModeBulkImport(WatoMode):
         return host_name, attributes
 
     def page(self) -> None:
-        if not html.request.has_var("file_id"):
+        if not request.has_var("file_id"):
             self._upload_form()
         else:
             self._preview()
@@ -405,11 +405,11 @@ class ModeBulkImport(WatoMode):
                 header = headers[col_num] if len(headers) > col_num else None
                 table.cell(escape_html_permissive(header))
                 attribute_varname = "attribute_%d" % col_num
-                if html.request.var(attribute_varname):
-                    attribute_method = html.request.get_ascii_input_mandatory(attribute_varname)
+                if request.var(attribute_varname):
+                    attribute_method = request.get_ascii_input_mandatory(attribute_varname)
                 else:
                     attribute_method = self._try_detect_default_attribute(attributes, header)
-                    html.request.del_var(attribute_varname)
+                    request.del_var(attribute_varname)
 
                 html.dropdown("attribute_%d" % col_num,
                               attributes,

@@ -182,11 +182,11 @@ class PainterOptions:
         if not self.painter_option_form_enabled():
             return
 
-        if html.request.has_var("_reset_painter_options"):
+        if request.has_var("_reset_painter_options"):
             self._clear_painter_options(view.name)
             return
 
-        if html.request.has_var("_update_painter_options"):
+        if request.has_var("_update_painter_options"):
             self._set_from_submitted_form(view.name)
 
     def _set_from_submitted_form(self, view_name: str) -> None:
@@ -223,8 +223,8 @@ class PainterOptions:
         # Also remove the options from current html vars. Otherwise the
         # painter option form will display the just removed options as
         # defaults of the painter option form.
-        for varname, _value in list(html.request.itervars(prefix="po_")):
-            html.request.del_var(varname)
+        for varname, _value in list(request.itervars(prefix="po_")):
+            request.del_var(varname)
 
     def get_valuespec_of(self, name: str) -> ValueSpec:
         return painter_option_registry[name]().valuespec
@@ -1294,8 +1294,8 @@ def get_linked_visual_request_vars(visual: Visual,
                                                   single_info_keys=visual["single_infos"],
                                                   filter_names=list(dict(vars_values).keys()))
 
-        if add_site_hint and html.request.var('site'):
-            vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+        if add_site_hint and request.var('site'):
+            vars_values.append(('site', request.get_ascii_input_mandatory('site')))
 
     return vars_values
 
@@ -1335,7 +1335,7 @@ def paint_age(timestamp: Timestamp,
 
     painter_options = PainterOptions.get_instance()
     if mode is None:
-        mode = html.request.var("po_ts_format", painter_options.get("ts_format"))
+        mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
     if mode == "epoch":
         return "", str(int(timestamp))
@@ -1347,7 +1347,7 @@ def paint_age(timestamp: Timestamp,
 
     age = time.time() - timestamp
     if mode == "abs" or (mode == "mixed" and abs(age) >= 48 * 3600):
-        dateformat = html.request.var("po_ts_date", painter_options.get("ts_date"))
+        dateformat = request.var("po_ts_date", painter_options.get("ts_date"))
         assert dateformat is not None
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
@@ -1547,7 +1547,7 @@ def join_row(row: Row, cell: 'Cell') -> Row:
 
 def get_view_infos(view: ViewSpec) -> List[str]:
     """Return list of available datasources (used to render filters)"""
-    ds_name = view.get('datasource', html.request.var('datasource'))
+    ds_name = view.get('datasource', request.var('datasource'))
     return data_source_registry[ds_name]().infos
 
 

@@ -127,23 +127,23 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
             "page": requested_file_name(request) + ".py",
             "vars": {
                 key: "***" if value in ["password", "_password"] else value
-                for key, value in html.request.itervars()
+                for key, value in request.itervars()
             },
             "username": config.user.id,
-            "user_agent": html.request.user_agent.string,
-            "referer": html.request.referer,
+            "user_agent": request.user_agent.string,
+            "referer": request.referer,
             "is_mobile": is_mobile(request, response),
-            "is_ssl_request": html.request.is_ssl_request,
+            "is_ssl_request": request.is_ssl_request,
             "language": cmk.gui.i18n.get_current_language(),
-            "request_method": html.request.request_method,
+            "request_method": request.request_method,
         },)
 
 
 class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def __init__(self):
         super(ABCCrashReportPage, self).__init__()
-        self._crash_id = html.request.get_unicode_input_mandatory("crash_id")
-        self._site_id = html.request.get_unicode_input_mandatory("site")
+        self._crash_id = request.get_unicode_input_mandatory("crash_id")
+        self._site_id = request.get_unicode_input_mandatory("site")
 
     def _get_crash_info(self, row):
         return json.loads(row["crash_info"])
@@ -195,7 +195,7 @@ class PageCrash(ABCCrashReportPage):
             html.footer()
             return
 
-        if html.request.has_var("_report") and transactions.check_transaction():
+        if request.has_var("_report") and transactions.check_transaction():
             details = self._handle_report_form(crash_info)
         else:
             details = {}

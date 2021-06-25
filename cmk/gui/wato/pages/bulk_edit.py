@@ -12,7 +12,7 @@ from typing import Type, Optional
 
 from six import ensure_binary
 
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.i18n import _
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -82,10 +82,10 @@ class ModeBulkEdit(WatoMode):
         # and then another bulk edit has made, the attributes need to be reset before
         # rendering the form. Otherwise the second edit will have the attributes of the
         # first set.
-        host_hash = html.request.var("host_hash")
+        host_hash = request.var("host_hash")
         if not host_hash or host_hash != current_host_hash:
-            html.request.del_vars(prefix="attr_")
-            html.request.del_vars(prefix="bulk_change_")
+            request.del_vars(prefix="attr_")
+            request.del_vars(prefix="bulk_change_")
 
         html.p("%s%s %s" %
                (_("You have selected <b>%d</b> hosts for bulk edit. You can now change "

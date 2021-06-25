@@ -30,7 +30,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g, transactions
+from cmk.gui.globals import html, g, transactions, request
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -1367,16 +1367,16 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> None:
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
             self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
             del rules[nr]
             save_rules(rules)
 
-        elif html.request.has_var("_move"):
+        elif request.has_var("_move"):
             if transactions.check_transaction():
-                from_pos = html.request.get_integer_input_mandatory("_move")
-                to_pos = html.request.get_integer_input_mandatory("_index")
+                from_pos = request.get_integer_input_mandatory("_move")
+                to_pos = request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -1987,9 +1987,9 @@ class HostTagCondition(ValueSpec):
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
-                tagvalue = html.request.var(varprefix + "tagvalue_" + tag_group.id)
+                tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
 
-            mode = html.request.var(varprefix + "tag_" + tag_group.id)
+            mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
@@ -1997,7 +1997,7 @@ class HostTagCondition(ValueSpec):
 
         # Auxiliary tags
         for aux_tag in config.tags.aux_tag_list.get_tags():
-            mode = html.request.var(varprefix + "auxtag_" + aux_tag.id)
+            mode = request.var(varprefix + "auxtag_" + aux_tag.id)
             if mode == "is":
                 tag_list.append(aux_tag.id)
             elif mode == "isnot":
@@ -2117,7 +2117,7 @@ class HostTagCondition(ValueSpec):
 
         html.open_td(class_="tag_sel")
         if html.form_submitted():
-            div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
+            div_is_open = request.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
         html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
@@ -2279,7 +2279,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = html.request.get_unicode_input("search")
+    search = request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search
@@ -2291,7 +2291,7 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
     This is needed for bulk operations."""
     selected = config.user.get_rowselection(weblib.selection_id(),
                                             'wato-folder-/' + watolib.Folder.current().path())
-    search_text = html.request.var("search")
+    search_text = request.var("search")
 
     selected_host_names = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):

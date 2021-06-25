@@ -370,7 +370,7 @@ class ABCNotificationsMode(ABCEventsMode):
                 config.user.may(permission_name))
 
     def _rule_links(self, rule, nr, profilemode, userid):
-        anavar = html.request.var("analyse", "")
+        anavar = request.var("analyse", "")
 
         if profilemode:
             listmode = "user_notifications_p"
@@ -525,24 +525,24 @@ class ModeNotifications(ABCNotificationsMode):
             ))
 
     def action(self) -> ActionResult:
-        if html.request.has_var("_show_user"):
+        if request.has_var("_show_user"):
             if transactions.check_transaction():
-                self._show_user_rules = bool(html.request.var("_show_user"))
+                self._show_user_rules = bool(request.var("_show_user"))
                 self._save_notification_display_options()
 
-        elif html.request.has_var("_show_backlog"):
+        elif request.has_var("_show_backlog"):
             if transactions.check_transaction():
-                self._show_backlog = bool(html.request.var("_show_backlog"))
+                self._show_backlog = bool(request.var("_show_backlog"))
                 self._save_notification_display_options()
 
-        elif html.request.has_var("_show_bulks"):
+        elif request.has_var("_show_bulks"):
             if transactions.check_transaction():
-                self._show_bulks = bool(html.request.var("_show_bulks"))
+                self._show_bulks = bool(request.var("_show_bulks"))
                 self._save_notification_display_options()
 
-        elif html.request.has_var("_replay"):
+        elif request.has_var("_replay"):
             if transactions.check_transaction():
-                nr = html.request.get_integer_input_mandatory("_replay")
+                nr = request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
                 flash(_("Replayed notifiation number %d") % (nr + 1))
                 return None
@@ -677,8 +677,8 @@ class ModeNotifications(ABCNotificationsMode):
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
                                  "reload_cmk")
 
-                if (html.request.var("analyse") and
-                        nr == html.request.get_integer_input_mandatory("analyse")):
+                if (request.var("analyse") and
+                        nr == request.get_integer_input_mandatory("analyse")):
                     html.icon("rulematch", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), str(nr + 1), css="number")
@@ -744,8 +744,8 @@ class ModeNotifications(ABCNotificationsMode):
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
-        if html.request.var("analyse"):
-            nr = html.request.get_integer_input_mandatory("analyse")
+        if request.var("analyse"):
+            nr = request.get_integer_input_mandatory("analyse")
             analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
         else:
             analyse = False
@@ -799,7 +799,7 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
     def _from_vars(self):
         self._users = userdb.load_users(
-            lock=transactions.is_transaction() or html.request.has_var("_move"))
+            lock=transactions.is_transaction() or request.has_var("_move"))
 
         try:
             user = self._users[self._user_id()]
@@ -819,16 +819,16 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(user=self._user_id()))
 
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
             del self._rules[nr]
             userdb.save_users(self._users)
             self._add_change("notification-delete-user-rule",
                              _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
 
-        elif html.request.has_var("_move"):
-            from_pos = html.request.get_integer_input_mandatory("_move")
-            to_pos = html.request.get_integer_input_mandatory("_index")
+        elif request.has_var("_move"):
+            from_pos = request.get_integer_input_mandatory("_move")
+            to_pos = request.get_integer_input_mandatory("_index")
             rule = self._rules[from_pos]
             del self._rules[from_pos]  # make to_pos now match!
             self._rules[to_pos:to_pos] = [rule]
@@ -894,7 +894,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return self.mode_url(user=self._user_id())
 
     def _user_id(self):
-        return html.request.get_unicode_input("user")
+        return request.get_unicode_input("user")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = PageMenu(
@@ -1040,14 +1040,14 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
     # TODO: Refactor this
     def _from_vars(self):
-        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)
-        self._clone_nr = html.request.get_integer_input_mandatory("clone", -1)
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)
+        self._clone_nr = request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
 
         self._rules = self._load_rules()
 
         if self._new:
-            if self._clone_nr >= 0 and not html.request.var("_clear"):
+            if self._clone_nr >= 0 and not request.var("_clear"):
                 self._rule = {}
                 try:
                     self._rule.update(self._rules[self._clone_nr])
@@ -1502,7 +1502,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return ModeUserNotifications
 
     def _user_id(self):
-        return html.request.get_unicode_input_mandatory("user")
+        return request.get_unicode_input_mandatory("user")
 
     def _back_mode(self) -> ActionResult:
         return redirect(mode_url("user_notifications", user=self._user_id()))

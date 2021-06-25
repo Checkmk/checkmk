@@ -147,7 +147,7 @@ def _generate_hash(username: UserId, value: str) -> str:
 
 def del_auth_cookie() -> None:
     cookie_name = auth_cookie_name()
-    if not html.request.has_cookie(cookie_name):
+    if not request.has_cookie(cookie_name):
         return
 
     cookie = _fetch_cookie(cookie_name)
@@ -185,7 +185,7 @@ def update_auth_cookie(username: UserId) -> None:
 def _set_auth_cookie(username: UserId, session_id: str) -> None:
     response.set_http_cookie(auth_cookie_name(),
                              _auth_cookie_value(username, session_id),
-                             secure=html.request.is_secure)
+                             secure=request.is_secure)
 
 
 def user_from_cookie(raw_cookie: str) -> Tuple[UserId, str, str]:
@@ -221,10 +221,10 @@ def _renew_cookie(cookie_name: str, username: UserId, session_id: str) -> None:
     # a) The _ajaxid var is set
     # b) A logout is requested
     requested_file = requested_file_name(request)
-    if (requested_file != 'logout' and not html.request.has_var('_ajaxid')) \
+    if (requested_file != 'logout' and not request.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
         auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" %
-                          (requested_file, dict(html.request.itervars())))
+                          (requested_file, dict(request.itervars())))
         _renew_auth_session(username, session_id)
 
 
@@ -252,7 +252,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
 
 
 def _fetch_cookie(cookie_name: str) -> str:
-    raw_cookie = html.request.cookie(cookie_name, "::")
+    raw_cookie = request.cookie(cookie_name, "::")
     assert raw_cookie is not None
     return raw_cookie
 
@@ -286,7 +286,7 @@ def auth_cookie_is_valid(cookie_text: str) -> bool:
 def _check_auth(req: Request) -> Optional[UserId]:
     user_id = _check_auth_web_server(req)
 
-    if html.request.var("_secret"):
+    if req.var("_secret"):
         user_id = _check_auth_automation()
 
     elif config.auth_by_http_header:
@@ -327,8 +327,8 @@ def verify_automation_secret(user_id: UserId, secret: str) -> bool:
 
 
 def _check_auth_automation() -> UserId:
-    secret = html.request.get_str_input_mandatory("_secret", "").strip()
-    user_id = html.request.get_unicode_input_mandatory("_username", "")
+    secret = request.get_str_input_mandatory("_secret", "").strip()
+    user_id = request.get_unicode_input_mandatory("_username", "")
 
     user_id = UserId(user_id.strip())
     request.del_var_from_env('_username')
@@ -345,7 +345,7 @@ def _check_auth_automation() -> UserId:
 def _check_auth_http_header() -> Optional[UserId]:
     """When http header auth is enabled, try to read the user_id from the var"""
     assert isinstance(config.auth_by_http_header, str)
-    user_id = html.request.get_request_header(config.auth_by_http_header)
+    user_id = request.get_request_header(config.auth_by_http_header)
     if not user_id:
         return None
 
@@ -370,7 +370,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
 
 def _check_auth_by_cookie() -> Optional[UserId]:
     cookie_name = auth_cookie_name()
-    if not html.request.has_cookie(cookie_name):
+    if not request.has_cookie(cookie_name):
         return None
 
     try:
@@ -393,7 +393,7 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId):
     The authentication is already done on web server level. We accept the provided
     username as authenticated and create our cookie here.
     """
-    if auth_cookie_name() not in html.request.cookies:
+    if auth_cookie_name() not in request.cookies:
         session_id = userdb.on_succeeded_login(user_id)
         _create_auth_session(user_id, session_id)
         return
@@ -430,7 +430,7 @@ class LoginPage(Page):
     def page(self) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(html.request.var("lang", config.get_language()))
+        cmk.gui.i18n.localize(request.var("lang", config.get_language()))
 
         self._do_login()
 
@@ -445,20 +445,20 @@ class LoginPage(Page):
 
     def _do_login(self) -> None:
         """handle the sent login form"""
-        if not html.request.var('_login'):
+        if not request.var('_login'):
             return
 
         try:
             if not config.user_login:
                 raise MKUserError(None, _('Login is not allowed on this site.'))
 
-            username_var = html.request.get_unicode_input('_username', '')
+            username_var = request.get_unicode_input('_username', '')
             assert username_var is not None
             username = UserId(username_var.rstrip())
             if not username:
                 raise MKUserError('_username', _('No username given.'))
 
-            password = html.request.var('_password', '')
+            password = request.var('_password', '')
             if not password:
                 raise MKUserError('_password', _('No password given.'))
 
@@ -518,7 +518,7 @@ class LoginPage(Page):
 }''')
 
         # When someone calls the login page directly and is already authed redirect to main page
-        if requested_file_name(request) == 'login' and _check_auth(html.request):
+        if requested_file_name(request) == 'login' and _check_auth(request):
             raise HTTPRedirect(origtarget)
 
         html.open_div(id_="login")
@@ -600,10 +600,10 @@ class LogoutPage(Page):
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
 
         # Implement HTTP logout with cookie hack
-        if not html.request.has_cookie('logout'):
+        if not request.has_cookie('logout'):
             response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
                                                     config.omd_site())
-            response.set_http_cookie('logout', '1', secure=html.request.is_secure)
+            response.set_http_cookie('logout', '1', secure=request.is_secure)
             raise FinalizeRequest(http.client.UNAUTHORIZED)
 
         response.delete_cookie('logout')

@@ -571,9 +571,9 @@ def ajax_snapin():
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
-    snapin_id = html.request.var("name")
-    snapin_ids = [snapin_id] if snapin_id else html.request.get_str_input_mandatory("names",
-                                                                                    "").split(",")
+    snapin_id = request.var("name")
+    snapin_ids = [snapin_id] if snapin_id else request.get_str_input_mandatory("names",
+                                                                               "").split(",")
 
     snapin_code: List[str] = []
     for snapin_id in snapin_ids:
@@ -589,7 +589,7 @@ def ajax_snapin():
         # them, when the core has been restarted after their initial
         # rendering
         if not snapin_instance.refresh_regularly() and snapin_instance.refresh_on_restart():
-            since = html.request.get_float_input_mandatory('since', 0)
+            since = request.get_float_input_mandatory('since', 0)
             newest = since
             for site in sites.states().values():
                 prog_start = site.get("program_start", 0)
@@ -607,8 +607,7 @@ def ajax_snapin():
                 write_snapin_exception(e)
                 e_message = _("Exception during element refresh (element \'%s\')"
                              ) % snapin_instance.type_name()
-                logger.error("%s %s: %s", html.request.requested_url, e_message,
-                             traceback.format_exc())
+                logger.error("%s %s: %s", request.requested_url, e_message, traceback.format_exc())
             finally:
                 snapin_code.append(output_funnel.drain())
 
@@ -619,7 +618,7 @@ def ajax_snapin():
 def ajax_fold():
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
-    user_config.folded = html.request.var("fold") == "yes"
+    user_config.folded = request.var("fold") == "yes"
     user_config.save()
 
 
@@ -629,11 +628,11 @@ def ajax_openclose() -> None:
     if not config.user.may("general.configure_sidebar"):
         return None
 
-    snapin_id = html.request.var("name")
+    snapin_id = request.var("name")
     if snapin_id is None:
         return None
 
-    state = html.request.var("state")
+    state = request.var("state")
     if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
         raise MKUserError("state", "Invalid state: %s" % state)
 
@@ -658,7 +657,7 @@ def move_snapin() -> None:
     if not config.user.may("general.configure_sidebar"):
         return None
 
-    snapin_id = html.request.var("name")
+    snapin_id = request.var("name")
     if snapin_id is None:
         return None
 
@@ -669,7 +668,7 @@ def move_snapin() -> None:
     except KeyError:
         return None
 
-    before_id = html.request.var("before")
+    before_id = request.var("before")
     before_snapin: Optional[UserSidebarSnapin] = None
     if before_id:
         try:
@@ -828,7 +827,7 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
         if not config.user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-        addname = html.request.var("name")
+        addname = request.var("name")
 
         if addname is None or addname not in snapin_registry:
             raise MKUserError(None, _("Invalid sidebar element %s") % addname)
@@ -860,11 +859,11 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
 @cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
     response.set_content_type("application/json")
-    ident = html.request.var("ident")
+    ident = request.var("ident")
     if ident not in snapin_registry:
         raise MKUserError(None, _("Invalid ident"))
 
-    site = html.request.var("site")
+    site = request.var("site")
     site_choices = dict([("", _("All sites"))] + config.get_configured_site_choices())
 
     if site not in site_choices:

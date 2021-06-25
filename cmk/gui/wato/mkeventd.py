@@ -1128,12 +1128,12 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         html.end_form()
         html.br()
 
-        if html.request.var("_simulate") or html.request.var("_generate"):
+        if request.var("_simulate") or request.var("_generate"):
             return self._vs_mkeventd_event().from_html_vars("event")
         return None
 
     def _event_simulation_action(self) -> bool:
-        if not html.request.var("_simulate") and not html.request.var("_generate"):
+        if not request.var("_simulate") and not request.var("_generate"):
             return False
 
         # Validation of input for rule simulation (no further action here)
@@ -1142,7 +1142,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         vs.validate_value(event, "event")
         config.user.save_file("simulated_event", event)
 
-        if html.request.var("_simulate"):
+        if request.var("_simulate"):
             return True
 
         if not event.get("application"):
@@ -1326,21 +1326,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             return None
 
         # Deletion of rule packs
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
             rule_pack = self._rule_packs[nr]
             self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
             del self._rule_packs[nr]
             save_mkeventd_rules(self._rule_packs)
 
         # Reset all rule hit counteres
-        elif html.request.has_var("_reset_counters"):
+        elif request.has_var("_reset_counters"):
             for site in _get_event_console_sync_sites():
                 cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=site)
             self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
 
         # Copy rules from master
-        elif html.request.has_var("_copy_rules"):
+        elif request.has_var("_copy_rules"):
             self._copy_rules_from_master()
             self._add_change(
                 "copy-rules-from-master",
@@ -1350,9 +1350,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             return redirect(self.mode_url())
 
         # Move rule packages
-        elif html.request.has_var("_move"):
-            from_pos = html.request.get_integer_input_mandatory("_move")
-            to_pos = html.request.get_integer_input_mandatory("_index")
+        elif request.has_var("_move"):
+            from_pos = request.get_integer_input_mandatory("_move")
+            to_pos = request.get_integer_input_mandatory("_index")
             rule_pack = self._rule_packs[from_pos]
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
@@ -1361,8 +1361,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                              _("Changed position of rule pack %s") % rule_pack["id"])
 
         # Export rule pack
-        elif html.request.has_var("_export"):
-            nr = html.request.get_integer_input_mandatory("_export")
+        elif request.has_var("_export"):
+            nr = request.get_integer_input_mandatory("_export")
             try:
                 rule_pack = self._rule_packs[nr]
             except KeyError:
@@ -1375,8 +1375,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                              _("Made rule pack %s available for MKP export") % rule_pack["id"])
 
         # Make rule pack non-exportable
-        elif html.request.has_var("_dissolve"):
-            nr = html.request.get_integer_input_mandatory("_dissolve")
+        elif request.has_var("_dissolve"):
+            nr = request.get_integer_input_mandatory("_dissolve")
             try:
                 self._rule_packs[nr] = self._rule_packs[nr].rule_pack
             except KeyError:
@@ -1387,8 +1387,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                              _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"])
 
         # Reset to rule pack provided via MKP
-        elif html.request.has_var("_reset"):
-            nr = html.request.get_integer_input_mandatory("_reset")
+        elif request.has_var("_reset"):
+            nr = request.get_integer_input_mandatory("_reset")
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
             except KeyError:
@@ -1400,8 +1400,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 self._rule_packs[nr].id_)
 
         # Synchronize modified rule pack with MKP
-        elif html.request.has_var("_synchronize"):
-            nr = html.request.get_integer_input_mandatory("_synchronize")
+        elif request.has_var("_synchronize"):
+            nr = request.get_integer_input_mandatory("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
@@ -1678,7 +1678,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return self.mode_url(rule_pack=self._rule_pack_id)
 
     def _from_vars(self):
-        self._rule_pack_id = html.request.get_ascii_input_mandatory("rule_pack")
+        self._rule_pack_id = request.get_ascii_input_mandatory("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
@@ -1753,11 +1753,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
-        if html.request.var("_move_to"):
+        if request.var("_move_to"):
             for move_nr, rule in enumerate(self._rules):
                 move_var = "_move_to_%s" % rule["id"]
-                if html.request.var(move_var):
-                    other_pack_nr, other_pack = self._rule_pack_with_id(html.request.var(move_var))
+                if request.var(move_var):
+                    other_pack_nr, other_pack = self._rule_pack_with_id(request.var(move_var))
 
                     other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
                     if other_type_ == ec.RulePackType.unmodified_mkp:
@@ -1783,8 +1783,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if self._event_simulation_action():
             return None
 
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
             rules = self._rules
             rule = rules[nr]
             self._add_change("delete-rule", _("Deleted rule %s") % self._rules[nr]["id"])
@@ -1799,9 +1799,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             save_mkeventd_rules(self._rule_packs)
             return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-        if html.request.has_var("_move"):
-            from_pos = html.request.get_integer_input_mandatory("_move")
-            to_pos = html.request.get_integer_input_mandatory("_index")
+        if request.has_var("_move"):
+            from_pos = request.get_integer_input_mandatory("_move")
+            to_pos = request.get_integer_input_mandatory("_index")
 
             rules = self._rules
             if type_ == ec.RulePackType.unmodified_mkp:
@@ -2020,8 +2020,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return ModeEventConsoleRulePacks
 
     def _from_vars(self):
-        self._edit_nr = html.request.get_integer_input_mandatory("edit",
-                                                                 -1)  # missing -> new rule pack
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule pack
         self._new = self._edit_nr < 0
 
         if self._new:
@@ -2133,22 +2132,21 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return ModeEventConsoleRules
 
     def _from_vars(self):
-        if html.request.has_var("rule_pack"):
-            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(
-                html.request.var("rule_pack"))
+        if request.has_var("rule_pack"):
+            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(request.var("rule_pack"))
 
         else:
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
-            rule_id = html.request.get_ascii_input_mandatory("rule_id")
+            rule_id = request.get_ascii_input_mandatory("rule_id")
 
             self._rule_pack = None
             for nr, pack in enumerate(self._rule_packs):
                 for rnr, rule in enumerate(pack["rules"]):
                     if rule_id == rule["id"]:
                         self._rule_pack_nr, self._rule_pack = nr, pack
-                        html.request.set_var("edit", str(rnr))
-                        html.request.set_var("rule_pack", pack["id"])
+                        request.set_var("edit", str(rnr))
+                        request.set_var("rule_pack", pack["id"])
                         break
 
             if not self._rule_pack:
@@ -2156,9 +2154,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
         self._rules = self._rule_pack["rules"]
 
-        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
-        self._clone_nr = html.request.get_integer_input_mandatory("clone",
-                                                                  -1)  # Only needed in 'new' mode
+        self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
+        self._clone_nr = request.get_integer_input_mandatory("clone",
+                                                             -1)  # Only needed in 'new' mode
         self._new = self._edit_nr < 0
 
         if self._new:
@@ -2337,7 +2335,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         if not config.user.may("mkeventd.switchmode"):
             return None
 
-        if html.request.has_var("_switch_sync"):
+        if request.has_var("_switch_sync"):
             new_mode = "sync"
         else:
             new_mode = "takeover"
@@ -2459,8 +2457,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self) -> ActionResult:
-        varname = html.request.var("_varname")
-        action = html.request.var("_action")
+        varname = request.var("_varname")
+        action = request.var("_action")
         if not varname:
             return None
 
@@ -2638,12 +2636,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if html.request.has_var("_delete"):
-            filename = html.request.var("_delete")
+        if request.has_var("_delete"):
+            filename = request.var("_delete")
             mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
             if filename in mibs:
                 self._delete_mib(filename, mibs[filename]["name"])
-        elif html.request.var("_bulk_delete_custom_mibs"):
+        elif request.var("_bulk_delete_custom_mibs"):
             self._bulk_delete_custom_mibs_after_confirm()
 
         return redirect(self.mode_url())
@@ -2651,7 +2649,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def _bulk_delete_custom_mibs_after_confirm(self):
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
         selected_custom_mibs = []
-        for varname, _value in html.request.itervars(prefix="_c_mib_"):
+        for varname, _value in request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
                 filename = varname.split("_c_mib_")[-1]
                 if filename in custom_mibs:
@@ -2797,10 +2795,10 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return menu
 
     def action(self) -> ActionResult:
-        if not html.request.uploaded_file("_upload_mib"):
+        if not request.uploaded_file("_upload_mib"):
             return None
 
-        uploaded_mib = html.request.uploaded_file("_upload_mib")
+        uploaded_mib = request.uploaded_file("_upload_mib")
         filename, mimetype, content = uploaded_mib
         if filename:
             try:

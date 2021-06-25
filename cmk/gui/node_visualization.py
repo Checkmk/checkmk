@@ -18,7 +18,7 @@ from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
 from cmk.utils.type_defs import HostName
 
 from cmk.gui import sites
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html, theme, request
 from cmk.gui.i18n import _
 import cmk.gui.bi as bi
 
@@ -113,24 +113,21 @@ class ParentChildTopologyPage(Page):
         config.user.need_permission("general.parent_child_topology")
 
         topology_settings = TopologySettings()
-        if html.request.var("filled_in"):
+        if request.var("filled_in"):
             # Parameters from the check_mk filters
             topology_settings.growth_root_nodes = self._get_hostnames_from_filters()
-        elif html.request.var("host_name"):
+        elif request.var("host_name"):
             # Explicit host_name. Used by icon linking to Topology
-            topology_settings.growth_root_nodes = {
-                html.request.get_str_input_mandatory("host_name")
-            }
+            topology_settings.growth_root_nodes = {request.get_str_input_mandatory("host_name")}
         else:
             # Default page without further context
             topology_settings.growth_root_nodes = self._get_default_view_hostnames(
                 topology_settings.growth_auto_max_nodes)
 
-        if html.request.has_var("topology_settings"):
+        if request.has_var("topology_settings"):
             # These parameters are usually generated within javascript through user interactions
             try:
-                settings_from_var = json.loads(
-                    html.request.get_str_input_mandatory("topology_settings"))
+                settings_from_var = json.loads(request.get_str_input_mandatory("topology_settings"))
                 for key, value in settings_from_var.items():
                     setattr(topology_settings, key, value)
             except (TypeError, ValueError):
@@ -141,7 +138,7 @@ class ParentChildTopologyPage(Page):
     def _get_default_view_hostnames(self, max_nodes: int) -> Set[HostName]:
         """ Returns all hosts without any parents """
         query = "GET hosts\nColumns: name\nFilter: parents ="
-        with sites.prepend_site(), sites.only_sites(html.request.var("site")):
+        with sites.prepend_site(), sites.only_sites(request.var("site")):
             hosts = [(x[0], x[1]) for x in sites.live().query(query)]
 
         # If no explicit site is set and the number of initially displayed hosts
@@ -160,7 +157,7 @@ class ParentChildTopologyPage(Page):
         if filter_headers:
             query += "\n%s" % filter_headers
 
-        with sites.only_sites(html.request.var("site")):
+        with sites.only_sites(request.var("site")):
             return {x[0] for x in sites.live().query(query)}
 
     def show_topology(self, topology_settings: TopologySettings) -> None:
@@ -234,8 +231,8 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
 
 @cmk.gui.pages.register("bi_map")
 def _bi_map() -> None:
-    aggr_name = html.request.var("aggr_name")
-    layout_id = html.request.var("layout_id")
+    aggr_name = request.var("aggr_name")
+    layout_id = request.var("layout_id")
     title = _("BI visualization")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
     html.header(title, breadcrumb)
@@ -251,10 +248,10 @@ def _bi_map() -> None:
 @page_registry.register_page("ajax_fetch_aggregation_data")
 class AjaxFetchAggregationData(AjaxPage):
     def page(self) -> AjaxPageResult:
-        aggregations_var = html.request.get_str_input_mandatory("aggregations", "[]")
+        aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
 
-        forced_layout_id = html.request.var("layout_id")
+        forced_layout_id = request.var("layout_id")
         if forced_layout_id not in BILayoutManagement.get_all_bi_template_layouts():
             forced_layout_id = None
 
@@ -420,7 +417,7 @@ class NodeVisualizationBIDataMapper:
 @page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        layout_var = html.request.get_str_input_mandatory("layout", "{}")
+        layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["aggregations"].update(layout_config)
         BILayoutManagement.save_layouts()
@@ -430,7 +427,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        for_aggregation = html.request.var("aggregation_name")
+        for_aggregation = request.var("aggregation_name")
         config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
         return {}
@@ -439,7 +436,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_load_bi_aggregation_layout")
 class AjaxLoadBIAggregationLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        aggregation_name = html.request.var("aggregation_name")
+        aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 
 
@@ -447,7 +444,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 @page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        layout_var = html.request.get_str_input_mandatory("layout", "{}")
+        layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["templates"].update(layout_config)
         BILayoutManagement.save_layouts()
@@ -457,7 +454,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 @page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        layout_id = html.request.var("layout_id")
+        layout_id = request.var("layout_id")
         config.bi_layouts["templates"].pop(layout_id)
         BILayoutManagement.save_layouts()
         return {}
@@ -466,7 +463,7 @@ class AjaxDeleteBITemplateLayout(AjaxPage):
 @page_registry.register_page("ajax_load_bi_template_layout")
 class AjaxLoadBITemplateLayout(AjaxPage):
     def page(self) -> AjaxPageResult:
-        layout_id = html.request.var("layout_id")
+        layout_id = request.var("layout_id")
         return BILayoutManagement.load_bi_template_layout(layout_id)
 
 
@@ -484,7 +481,7 @@ class AjaxFetchTopology(AjaxPage):
         # growth_forbidden: block further traversal at the given nodes
         # growth_continue_nodes: expand these nodes, event if the depth has been reached
 
-        topology_config_var = html.request.get_str_input_mandatory("topology_settings")
+        topology_config_var = request.get_str_input_mandatory("topology_settings")
         try:
             topology_settings = TopologySettingsJSON.from_json(json.loads(topology_config_var))
         except (TypeError, ValueError):

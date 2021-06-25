@@ -11,7 +11,7 @@ from six import ensure_binary, ensure_str
 import cmk.gui.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors, theme
+from cmk.gui.globals import html, request, transactions, user_errors, theme
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import (foldable_container_id, foldable_container_onclick,
                                                 foldable_container_img_id)
@@ -51,7 +51,7 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
                       formname: str = "form",
                       consume_transid: bool = True):
 
-    if html.request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
+    if request.get_ascii_input("filled_in") == formname and transactions.transaction_valid():
         if not preview and consume_transid:
             transactions.check_transaction()
 
@@ -95,7 +95,7 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
 
     end()
     # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.request.del_var("filled_in")
+    request.del_var("filled_in")
     html.hidden_fields()
     html.end_form()
 

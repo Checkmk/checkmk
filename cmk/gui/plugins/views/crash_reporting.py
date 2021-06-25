@@ -319,7 +319,7 @@ class CommandDeleteCrashReports(Command):
 
     def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.has_var("_delete_crash_reports"):
+        if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")
         return None

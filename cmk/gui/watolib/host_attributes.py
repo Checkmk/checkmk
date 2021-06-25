@@ -16,7 +16,7 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.config as config
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
@@ -321,7 +321,7 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
             return False
         if not html:
             return True
-        return html.request.var('attr_display_%s' % self.name(), "1") == "1"
+        return request.var('attr_display_%s' % self.name(), "1") == "1"
 
     def is_visible(self, for_what: str, new: bool) -> bool:
         """Gets the type of current view as argument and returns whether or not
@@ -732,7 +732,7 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     host = {}
     for attr in host_attribute_registry.attributes():
         attrname = attr.name()
-        if not html.request.var(for_what + "_change_%s" % attrname, ""):
+        if not request.var(for_what + "_change_%s" % attrname, ""):
             continue
 
         value = attr.from_html_vars(varprefix)
@@ -765,7 +765,7 @@ class ABCHostAttributeText(ABCHostAttribute, metaclass=abc.ABCMeta):
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
     def from_html_vars(self, varprefix):
-        value = html.request.get_unicode_input(varprefix + "attr_" + self.name())
+        value = request.get_unicode_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()
@@ -829,7 +829,7 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, metaclass=abc.ABCMeta):
             html.write_text(value)
 
     def from_html_vars(self, varprefix):
-        return html.request.var(varprefix + "attr_" + self.name())
+        return request.var(varprefix + "attr_" + self.name())
 
 
 class ABCHostAttributeNagiosText(ABCHostAttributeText):
@@ -861,7 +861,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
         html.dropdown(varprefix + "attr_" + self.name(), self._enumlist, value)
 
     def from_html_vars(self, varprefix):
-        return html.request.var(varprefix + "attr_" + self.name(), self.default_value())
+        return request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
 class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):

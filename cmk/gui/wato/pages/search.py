@@ -20,7 +20,7 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 
 
@@ -59,7 +59,7 @@ class ModeSearch(WatoMode):
         return redirect(self._folder.url())
 
     def _remove_unused_search_vars(self):
-        """Reduce the HTTP vars (html.request.vars) to the amount of necessary attributes
+        """Reduce the HTTP vars (request.vars) to the amount of necessary attributes
 
         The form submits all variables which may result in a too big collection for being
         used as URL variables. Once we are here we can analyze the attribute checkboxes and
@@ -68,11 +68,10 @@ class ModeSearch(WatoMode):
         """
         keep_vars = {}
 
-        if html.request.has_var("host_search_host"):
-            keep_vars["host_search_host"] = html.request.get_ascii_input_mandatory(
-                "host_search_host")
+        if request.has_var("host_search_host"):
+            keep_vars["host_search_host"] = request.get_ascii_input_mandatory("host_search_host")
 
-        for varname, value in html.request.itervars(prefix="host_search_change_"):
+        for varname, value in request.itervars(prefix="host_search_change_"):
             if html.get_checkbox(varname) is False:
                 continue
 
@@ -83,13 +82,13 @@ class ModeSearch(WatoMode):
             # The URL variable naming scheme is not clear. Try to match with "attr_" prefix
             # and without. We should investigate and clean this up.
             attr_prefix = "host_search_attr_%s" % attr_ident
-            keep_vars.update(html.request.itervars(prefix=attr_prefix))
+            keep_vars.update(request.itervars(prefix=attr_prefix))
             attr_prefix = "host_search_%s" % attr_ident
-            keep_vars.update(html.request.itervars(prefix=attr_prefix))
+            keep_vars.update(request.itervars(prefix=attr_prefix))
 
-        html.request.del_vars("host_search_")
+        request.del_vars("host_search_")
         for varname, value in keep_vars.items():
-            html.request.set_var(varname, value)
+            request.set_var(varname, value)
 
     def page(self):
         # Show search form

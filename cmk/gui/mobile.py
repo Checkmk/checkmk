@@ -252,7 +252,7 @@ def page_index() -> None:
 
 @cmk.gui.pages.register("mobile_view")
 def page_view() -> None:
-    view_name = html.request.var("view_name")
+    view_name = request.var("view_name")
     if not view_name:
         return page_index()
 
@@ -277,7 +277,7 @@ def page_view() -> None:
 
     # Need to be loaded before processing the painter_options below.
     # TODO: Make this dependency explicit
-    display_options.load_from_html(html)
+    display_options.load_from_html(request, html)
 
     painter_options = PainterOptions.get_instance()
     painter_options.load(view_name)
@@ -305,7 +305,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
-        page = html.request.var("page")
+        page = request.var("page")
         if not page:
             if view_spec.get("mustsearch"):
                 page = "filter"
@@ -336,7 +336,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
             if config.user.may("general.act"):
                 jqm_page_header(_("Commands"), left_button=home, id_="commands")
                 show_commands = True
-                if html.request.has_var("_do_actions"):
+                if request.has_var("_do_actions"):
                     try:
                         show_commands = do_commands(self.view.datasource.infos[0], rows)
                     except MKUserError as e:

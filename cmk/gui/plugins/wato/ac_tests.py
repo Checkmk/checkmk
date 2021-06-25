@@ -23,7 +23,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.htpasswd
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
@@ -352,7 +352,7 @@ class ACTestHTTPSecured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACResult]:
-        if html.request.is_ssl_request:
+        if request.is_ssl_request:
             yield ACResultOK(_("Site is using HTTPS"))
         else:
             yield ACResultWARN(_("Site is using plain HTTP. Consider enabling HTTPS."))

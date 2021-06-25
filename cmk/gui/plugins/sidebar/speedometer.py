@@ -8,7 +8,7 @@ import json
 
 from cmk.gui.plugins.sidebar import snapin_width
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, theme, response
+from cmk.gui.globals import html, theme, response, request
 import cmk.gui.sites as sites
 
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
@@ -55,9 +55,9 @@ class Speedometer(SidebarSnapin):
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
             # TODO: Do we need a get_float_input_mandatory?
-            last_perc = float(html.request.get_str_input_mandatory("last_perc"))
-            scheduled_rate = float(html.request.get_str_input_mandatory("scheduled_rate"))
-            last_program_start = html.request.get_integer_input_mandatory("program_start")
+            last_perc = float(request.get_str_input_mandatory("last_perc"))
+            scheduled_rate = float(request.get_str_input_mandatory("scheduled_rate"))
+            last_program_start = request.get_integer_input_mandatory("program_start")
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.

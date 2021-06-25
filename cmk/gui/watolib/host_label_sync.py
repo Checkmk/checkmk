@@ -30,7 +30,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 
 
@@ -219,7 +219,7 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand):
         return "discovered-host-label-sync"
 
     def get_request(self) -> SiteRequest:
-        ascii_input = html.request.get_ascii_input("request")
+        ascii_input = request.get_ascii_input("request")
         if ascii_input is None:
             raise MKUserError("request", _("The parameter \"%s\" is missing.") % "request")
         return SiteRequest.deserialize(ast.literal_eval(ascii_input))

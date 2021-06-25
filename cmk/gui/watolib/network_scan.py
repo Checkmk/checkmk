@@ -20,7 +20,7 @@ from cmk.utils.translations import translate_hostname
 
 from cmk.gui.log import logger
 from cmk.gui import config, userdb
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
@@ -166,7 +166,7 @@ class AutomationNetworkScan(AutomationCommand):
         return "network-scan"
 
     def get_request(self) -> NetworkScanRequest:
-        folder_path = html.request.var("folder")
+        folder_path = request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)

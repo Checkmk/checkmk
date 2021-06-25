@@ -23,7 +23,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, transactions, request
 from cmk.gui.valuespec import (
     ValueSpec,
     FixedValue,
@@ -121,7 +121,7 @@ class ModeTimeperiods(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        delname = html.request.var("_delete")
+        delname = request.var("_delete")
         if not delname:
             return redirect(mode_url("timeperiods"))
 
@@ -623,7 +623,7 @@ class ModeEditTimeperiod(WatoMode):
 
     def _from_vars(self):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
-        self._name = html.request.var("edit")  # missing -> new group
+        self._name = request.var("edit")  # missing -> new group
         # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
         self._new = self._name is None
 
@@ -631,8 +631,8 @@ class ModeEditTimeperiod(WatoMode):
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
 
         if self._new:
-            clone_name = html.request.var("clone")
-            if html.request.var("mode") == "import_ical":
+            clone_name = request.var("clone")
+            if request.var("mode") == "import_ical":
                 self._timeperiod = {}
             elif clone_name:
                 self._name = clone_name

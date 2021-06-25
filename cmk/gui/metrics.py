@@ -28,7 +28,7 @@ import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.html_render import (
@@ -630,9 +630,9 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 @cmk.gui.pages.register("host_service_graph_popup")
 def page_host_service_graph_popup() -> None:
-    site_id = html.request.var('site')
-    host_name = html.request.var('host_name')
-    service_description = html.request.get_unicode_input('service')
+    site_id = request.var('site')
+    host_name = request.var('host_name')
+    service_description = request.get_unicode_input('service')
     host_service_graph_popup_cmk(site_id, host_name, service_description)
 
 
@@ -651,14 +651,14 @@ def page_host_service_graph_popup() -> None:
 
 @cmk.gui.pages.register("graph_dashlet")
 def page_graph_dashlet() -> None:
-    spec = html.request.var("spec")
+    spec = request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_identification = json.loads(html.request.get_str_input_mandatory("spec"))
+    graph_identification = json.loads(request.get_str_input_mandatory("spec"))
 
-    render = html.request.var("render")
+    render = request.var("render")
     if not render:
         raise MKUserError("render", _("Missing render parameter"))
-    custom_graph_render_options = json.loads(html.request.get_str_input_mandatory("render"))
+    custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
 
     host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)

@@ -18,7 +18,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
@@ -220,7 +220,7 @@ class PushUserProfilesToSite(AutomationCommand):
 
     def get_request(self):
         return PushUserProfilesRequest(
-            ast.literal_eval(html.request.get_ascii_input_mandatory("profiles")))
+            ast.literal_eval(request.get_ascii_input_mandatory("profiles")))
 
     def execute(self, api_request):
         user_profiles = api_request.user_profiles

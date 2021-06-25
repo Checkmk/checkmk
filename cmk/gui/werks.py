@@ -80,7 +80,7 @@ class ModeReleaseNotesPage(cmk.gui.pages.Page):
         return _("Welcome to Checkmk %s" % __version__)
 
     def page(self) -> cmk.gui.pages.PageResult:
-        if html.request.get_integer_input_mandatory("major", 0):
+        if request.get_integer_input_mandatory("major", 0):
             self._major_page()
         else:
             self._patch_page()
@@ -143,8 +143,8 @@ def handle_acknowledgement():
     if not transactions.check_transaction():
         return
 
-    if html.request.var("_werk_ack"):
-        werk_id = html.request.get_integer_input_mandatory("_werk_ack")
+    if request.var("_werk_ack"):
+        werk_id = request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
@@ -157,7 +157,7 @@ def handle_acknowledgement():
             load_werks()  # reload ack states after modification
             render_unacknowleged_werks()
 
-    elif html.request.var("_ack_all"):
+    elif request.var("_ack_all"):
         num = len(unacknowledged_incompatible_werks())
         acknowledge_all_werks()
         flash(_("%d incompatible Werks have been acknowledged.") % num)
@@ -270,7 +270,7 @@ def _show_werk_options_controls() -> None:
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
-    werk_id = html.request.get_integer_input_mandatory("werk")
+    werk_id = request.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
@@ -485,7 +485,7 @@ def _werk_table_option_entries():
 
 def render_unacknowleged_werks():
     werks = unacknowledged_incompatible_werks()
-    if werks and not html.request.has_var("show_unack"):
+    if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
         html.write_text(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
@@ -604,14 +604,14 @@ def _default_werk_table_options():
 
 
 def _werk_table_options_from_request() -> Dict[str, Any]:
-    if html.request.var("show_unack") and not html.request.has_var("wo_set"):
+    if request.var("show_unack") and not request.has_var("wo_set"):
         return _default_werk_table_options()
 
     werk_table_options: Dict[str, Any] = {}
     for name, _height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
-            if html.request.has_var("wo_set"):
+            if request.has_var("wo_set"):
                 value = vs.from_html_vars("wo_" + name)
                 vs.validate_value(value, "wo_" + name)
         except MKUserError as e:

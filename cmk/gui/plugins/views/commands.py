@@ -16,7 +16,7 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _u, _, _l, ungettext
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.type_defs import Choices, Row
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
@@ -122,8 +122,8 @@ class CommandReschedule(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_resched_checks"):
-            spread = utils.saveint(html.request.var("_resched_spread"))
+        if request.var("_resched_checks"):
+            spread = utils.saveint(request.var("_resched_spread"))
             title = "<b>" + _("reschedule an immediate check")
             if spread:
                 title += _(" spread over %d minutes ") % spread
@@ -189,10 +189,10 @@ class CommandNotifications(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_enable_notifications"):
+        if request.var("_enable_notifications"):
             return ("ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>enable notifications</b> for"))
-        if html.request.var("_disable_notifications"):
+        if request.var("_disable_notifications"):
             return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>disable notifications</b> for"))
         return None
@@ -248,9 +248,9 @@ class CommandToggleActiveChecks(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_enable_checks"):
+        if request.var("_enable_checks"):
             return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
-        if html.request.var("_disable_checks"):
+        if request.var("_disable_checks"):
             return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>disable active checks</b> for"))
         return None
 
@@ -296,10 +296,10 @@ class CommandTogglePassiveChecks(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_enable_passive_checks"):
+        if request.var("_enable_passive_checks"):
             return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>enable passive checks</b> for"))
-        if html.request.var("_disable_passive_checks"):
+        if request.var("_disable_passive_checks"):
             return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>disable passive checks</b> for"))
         return None
@@ -355,7 +355,7 @@ class CommandClearModifiedAttributes(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_clear_modattr"):
+        if request.var("_clear_modattr"):
             return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _(
                 "<b>clear the modified attributes</b> of")
         return None
@@ -468,13 +468,13 @@ class CommandFakeCheckResult(Command):
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
         for s in [0, 1, 2, 3]:
-            statename = html.request.var("_fake_%d" % s)
+            statename = request.var("_fake_%d" % s)
             if statename:
-                pluginoutput = html.request.get_unicode_input_mandatory("_fake_output").strip()
+                pluginoutput = request.get_unicode_input_mandatory("_fake_output").strip()
                 if not pluginoutput:
                     pluginoutput = _("Manually set to %s by %s") % (
                         escaping.escape_attribute(statename), config.user.id)
-                perfdata = html.request.var("_fake_perfdata")
+                perfdata = request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
                 if cmdtag == "SVC":
@@ -560,8 +560,8 @@ class CommandCustomNotification(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_customnotification"):
-            comment = html.request.get_unicode_input_mandatory("_cusnot_comment")
+        if request.var("_customnotification"):
+            comment = request.get_unicode_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
             command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
@@ -690,17 +690,17 @@ class CommandAcknowledge(Command):
                     cmdtag = "HOST"
                 specs.append((site, spec, cmdtag))
 
-        if html.request.var("_acknowledge"):
-            comment = html.request.get_unicode_input("_ack_comment")
+        if request.var("_acknowledge"):
+            comment = request.get_unicode_input("_ack_comment")
             if not comment:
                 raise MKUserError("_ack_comment", _("You need to supply a comment."))
             if ";" in comment:
                 raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
             non_empty_comment = comment
 
-            sticky = 2 if html.request.var("_ack_sticky") else 0
-            sendnot = 1 if html.request.var("_ack_notify") else 0
-            perscomm = 1 if html.request.var("_ack_persistent") else 0
+            sticky = 2 if request.var("_ack_sticky") else 0
+            sendnot = 1 if request.var("_ack_notify") else 0
+            perscomm = 1 if request.var("_ack_persistent") else 0
 
             expire_secs = self._vs_expire().from_html_vars("_ack_expire")
             if expire_secs:
@@ -725,7 +725,7 @@ class CommandAcknowledge(Command):
                 expire_text and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
             return commands, title
 
-        if html.request.var("_remove_ack"):
+        if request.var("_remove_ack"):
 
             def make_command_rem(spec, cmdtag):
                 return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
@@ -804,8 +804,8 @@ class CommandAddComment(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_add_comment"):
-            comment = html.request.get_unicode_input("_comment")
+        if request.var("_add_comment"):
+            comment = request.get_unicode_input("_comment")
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
@@ -894,16 +894,16 @@ class CommandScheduleDowntimes(Command):
         return ["host", "service", "aggr"]
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
-        if cmdtag == "SVC" and not html.request.var("_down_remove"):
+        if cmdtag == "SVC" and not request.var("_down_remove"):
             return title + "?"
         return super().user_dialog_suffix(
-            title if html.request.var("_down_remove") else title + " on",
+            title if request.var("_down_remove") else title + " on",
             len_action_rows,
             cmdtag,
         )
 
     def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
-        if cmdtag == "SVC" and not html.request.var("_down_remove"):
+        if cmdtag == "SVC" and not request.var("_down_remove"):
             return [
                 (_("Schedule downtime for %d %s") %
                  (len_rows, ungettext("service", "services", len_rows)),
@@ -989,23 +989,23 @@ class CommandScheduleDowntimes(Command):
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
-        if html.request.var("_down_remove"):
+        if request.var("_down_remove"):
             return self._remove_downtime_details(cmdtag, row)
 
         recurring_number = self._recurring_number()
         title_prefix = self._title_prefix(recurring_number)
 
-        if html.request.var("_down_from_now"):
+        if request.var("_down_from_now"):
             start_time = self._current_local_time()
             duration_minutes = self._from_now_minutes()
             end_time = self._time_after_minutes(start_time, duration_minutes)
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
-        elif html.request.var("_down_adhoc"):
+        elif request.var("_down_adhoc"):
             start_time = self._current_local_time()
             duration_minutes = config.adhoc_downtime.get("duration", 0)
             end_time = self._time_after_minutes(start_time, duration_minutes)
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
-        elif html.request.var("_down_custom"):
+        elif request.var("_down_custom"):
             start_time = self._custom_start_time()
             end_time = self._custom_end_time(start_time)
             title = self._title_range(start_time, end_time)
@@ -1035,7 +1035,7 @@ class CommandScheduleDowntimes(Command):
     def _remove_downtime_details(self, cmdtag, row):
         if not config.user.may("action.remove_all_downtimes"):
             return
-        if html.request.var("_on_hosts"):
+        if request.var("_on_hosts"):
             raise MKUserError(
                 "_on_hosts",
                 _("The checkbox for setting host downtimes does not work when removing downtimes."))
@@ -1068,13 +1068,13 @@ class CommandScheduleDowntimes(Command):
             <same day of the month> : 8
         """
         if self._has_recurring_downtimes() and html.get_checkbox("_down_do_recur"):
-            recurring_type = html.request.get_integer_input_mandatory("_down_recurring")
+            recurring_type = request.get_integer_input_mandatory("_down_recurring")
         else:
             recurring_type = 0
         return recurring_type
 
     def _flexible_option(self):
-        if html.request.var("_down_flexible"):
+        if request.var("_down_flexible"):
             delayed_duration = self._vs_duration().from_html_vars("_down_duration")  # type: Seconds
             self._vs_duration().validate_value(delayed_duration, "_down_duration")
         else:
@@ -1082,8 +1082,8 @@ class CommandScheduleDowntimes(Command):
         return delayed_duration
 
     def _comment(self):
-        comment = config.adhoc_downtime.get("comment", "") if html.request.var("_down_adhoc") else \
-                html.request.get_unicode_input("_down_comment")
+        comment = config.adhoc_downtime.get("comment", "") if request.var("_down_adhoc") else \
+                request.get_unicode_input("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         return comment
@@ -1096,7 +1096,7 @@ class CommandScheduleDowntimes(Command):
 
     def _from_now_minutes(self):
         try:
-            minutes = html.request.get_integer_input_mandatory("_down_minutes", 0)
+            minutes = request.get_integer_input_mandatory("_down_minutes", 0)
         except MKUserError:
             minutes = 0
 
@@ -1148,7 +1148,7 @@ class CommandScheduleDowntimes(Command):
             time.localtime(start_time)), time.asctime(time.localtime(end_time)))
 
     def button_interval_value(self):
-        rangebtns = (varname for varname, _value in html.request.itervars(prefix="_downrange"))
+        rangebtns = (varname for varname, _value in request.itervars(prefix="_downrange"))
         try:
             rangebtn: Optional[str] = next(rangebtns)
         except StopIteration:
@@ -1160,10 +1160,10 @@ class CommandScheduleDowntimes(Command):
 
     def _downtime_specs(self, cmdtag: str, row: Row, spec: str,
                         title: str) -> Tuple[str, List[str], str]:
-        if html.request.var("_include_childs"):  # only for hosts
+        if request.var("_include_childs"):  # only for hosts
             specs = [spec] + self._get_child_hosts(
-                row["site"], [spec], recurse=bool(html.request.var("_include_childs_recurse")))
-        elif html.request.var("_on_hosts"):  # set on hosts instead of services
+                row["site"], [spec], recurse=bool(request.var("_include_childs_recurse")))
+        elif request.var("_on_hosts"):  # set on hosts instead of services
             specs = [spec.split(";")[0]]
             title += " the hosts of"
             cmdtag = "HOST"
@@ -1353,7 +1353,7 @@ class CommandRemoveDowntime(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.has_var("_remove_downtimes"):
+        if request.has_var("_remove_downtimes"):
             return ("DEL_%s_DOWNTIME;%s" % (cmdtag, spec), _("remove"))
         return None
 
@@ -1393,7 +1393,7 @@ class CommandRemoveComments(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.has_var("_remove_comments"):
+        if request.has_var("_remove_comments"):
             commands = [("DEL_%s_COMMENT;%s" % (cmdtag, spec))]
             if row.get("comment_entry_type") == 4:
                 if row.get("service_description"):
@@ -1456,8 +1456,8 @@ class CommandFavorites(Command):
 
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
-        if html.request.var("_star") or html.request.var("_unstar"):
-            star = 1 if html.request.var("_star") else 0
+        if request.var("_star") or request.var("_unstar"):
+            star = 1 if request.var("_star") else 0
             if star:
                 title = _("<b>add to you favorites</b>")
             else:

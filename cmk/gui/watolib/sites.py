@@ -22,7 +22,7 @@ from cmk.gui.sites import SiteConfigurations
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import request, transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -708,10 +708,10 @@ class AutomationPushSnapshot(AutomationCommand):
         return "push-snapshot"
 
     def get_request(self) -> PushSnapshotRequest:
-        site_id = html.request.get_ascii_input_mandatory("siteid")
+        site_id = request.get_ascii_input_mandatory("siteid")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
-        snapshot = html.request.uploaded_file("snapshot")
+        snapshot = request.uploaded_file("snapshot")
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 

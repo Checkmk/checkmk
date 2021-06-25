@@ -33,19 +33,19 @@ class ABCViewDashlet(IFrameDashlet):
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
 
-        is_reload = html.request.has_var("_reload")
+        is_reload = request.has_var("_reload")
 
         view_display_options = "SIXLW"
         if not is_reload:
             view_display_options += "HR"
 
-        html.request.set_var('display_options', view_display_options)
-        html.request.set_var('_display_options', view_display_options)
+        request.set_var('display_options', view_display_options)
+        request.set_var('_display_options', view_display_options)
         html.add_body_css_class('dashlet')
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
-        display_options.load_from_html(html)
+        display_options.load_from_html(request, html)
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(self._dashlet_spec["name"])
@@ -96,7 +96,7 @@ class ViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (urlencode(html.request.var('name')),
+            (urlencode(request.var('name')),
              urlencode(makeuri(request, [('edit', '1')])))
 
     def update(self):
@@ -106,8 +106,8 @@ class ViewDashlet(ABCViewDashlet):
     def infos(self):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
-        if requested_file_name(request) == "edit_dashlet" and html.request.has_var("datasource"):
-            ds_name = html.request.get_str_input_mandatory('datasource')
+        if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
+            ds_name = request.get_str_input_mandatory('datasource')
             return views.data_source_registry[ds_name]().infos
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
@@ -150,7 +150,7 @@ class LinkedViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (urlencode(html.request.var('name')),
+            (urlencode(request.var('name')),
              urlencode(makeuri(request, [('edit', '1')])))
 
     def _get_view_spec(self) -> ViewSpec:

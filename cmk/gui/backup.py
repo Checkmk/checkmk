@@ -628,14 +628,14 @@ class PageBackup:
         return True
 
     def action(self) -> ActionResult:
-        ident = html.request.var("_job")
+        ident = request.var("_job")
         jobs = self.jobs()
         try:
             job = jobs.get(ident)
         except KeyError:
             raise MKUserError("_job", _("This backup job does not exist."))
 
-        action = html.request.var("_action")
+        action = request.var("_action")
 
         if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup")]))
@@ -677,7 +677,7 @@ class PageBackup:
 class PageEditBackupJob:
     def __init__(self):
         super(PageEditBackupJob, self).__init__()
-        job_ident = html.request.var("job")
+        job_ident = request.var("job")
 
         if job_ident is not None:
             try:
@@ -956,7 +956,7 @@ class PageBackupJobState(PageAbstractBackupJobState):
         self._from_vars()
 
     def _from_vars(self):
-        job_ident = html.request.var("job")
+        job_ident = request.var("job")
         if job_ident is not None:
             try:
                 self._job = self.jobs().get(job_ident)
@@ -1163,7 +1163,7 @@ class PageBackupTargets:
         if not transactions.check_transaction():
             return redirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-        ident = html.request.var("target")
+        ident = request.var("target")
         targets = self.targets()
         try:
             target = targets.get(ident)
@@ -1196,7 +1196,7 @@ class PageBackupTargets:
 class PageEditBackupTarget:
     def __init__(self):
         super(PageEditBackupTarget, self).__init__()
-        target_ident = html.request.var("target")
+        target_ident = request.var("target")
 
         if target_ident is not None:
             try:
@@ -1653,7 +1653,7 @@ class PageBackupRestore:
         raise NotImplementedError()
 
     def _load_target(self):
-        ident = html.request.var("target")
+        ident = request.var("target")
         if ident is None:
             self._target_ident = None
             self._target = None
@@ -1720,8 +1720,8 @@ class PageBackupRestore:
         )
 
     def action(self) -> ActionResult:
-        action = html.request.var("_action")
-        backup_ident = html.request.var("_backup")
+        action = request.var("_action")
+        backup_ident = request.var("_backup")
 
         if action is None:
             return None  # Only choosen the target
@@ -1789,7 +1789,7 @@ class PageBackupRestore:
         if html.form_submitted("key"):
             try:
                 value = self._vs_key().from_html_vars("_key")
-                if html.request.has_var("_key_p_passphrase"):
+                if request.has_var("_key_p_passphrase"):
                     self._vs_key().validate_value(value, "_key")
                     passphrase = value["passphrase"]
 

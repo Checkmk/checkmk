@@ -155,8 +155,8 @@ class ABCBIMode(WatoMode):
         self._bi_pack = self._get_pack_from_request()
 
     def _get_pack_from_request(self) -> _Optional[BIAggregationPack]:
-        if html.request.has_var("pack"):
-            pack_id = html.request.get_str_input_mandatory("pack")
+        if request.has_var("pack"):
+            pack_id = request.get_str_input_mandatory("pack")
             try:
                 return self._bi_packs.get_pack_mandatory(pack_id)
             except KeyError:
@@ -190,7 +190,7 @@ class ABCBIMode(WatoMode):
         checkbox_name = "_c_%s_" % _type
         return [
             varname.split(checkbox_name)[-1]  #
-            for varname, _value in html.request.itervars(prefix=checkbox_name)
+            for varname, _value in request.itervars(prefix=checkbox_name)
             if html.get_checkbox(varname)
         ]
 
@@ -453,12 +453,12 @@ class ModeBIPacks(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if not html.request.has_var("_delete"):
+        if not request.has_var("_delete"):
             return redirect(self.mode_url())
 
         config.user.need_permission("wato.bi_admin")
 
-        pack_id = html.request.get_str_input_mandatory("_delete")
+        pack_id = request.get_str_input_mandatory("_delete")
         pack = self._bi_packs.get_pack(pack_id)
         if pack is None:
             raise MKUserError("_delete", _("This BI pack does not exist."))
@@ -548,7 +548,7 @@ class ModeBIRules(ABCBIMode):
 
     def __init__(self):
         super().__init__()
-        self._view_type = html.request.var("view", "list")
+        self._view_type = request.var("view", "list")
 
     @classmethod
     def parent_mode(cls) -> _Optional[Type[WatoMode]]:
@@ -673,19 +673,19 @@ class ModeBIRules(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
-        if html.request.var("_del_rule"):
+        if request.var("_del_rule"):
             self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_rules"):
+        elif request.var("_bulk_delete_bi_rules"):
             self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_rules"):
+        elif request.var("_bulk_move_bi_rules"):
             self._bulk_move_after_confirm()
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 
     def _delete_after_confirm(self) -> None:
-        rule_id = html.request.get_str_input_mandatory("_del_rule")
+        rule_id = request.get_str_input_mandatory("_del_rule")
         self._check_delete_rule_id_permission(rule_id)
         self._bi_packs.delete_rule(rule_id)
         self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
@@ -715,8 +715,8 @@ class ModeBIRules(ABCBIMode):
 
     def _bulk_move_after_confirm(self) -> None:
         target_pack_id = None
-        if html.request.has_var('bulk_moveto'):
-            target_pack_id = html.request.get_str_input_mandatory('bulk_moveto', '')
+        if request.has_var('bulk_moveto'):
+            target_pack_id = request.get_str_input_mandatory('bulk_moveto', '')
             html.javascript('cmk.selection.update_bulk_moveto("%s")' % target_pack_id)
 
         if target_pack_id is None:
@@ -774,9 +774,9 @@ class ModeBIRules(ABCBIMode):
             if not move_choices:
                 return HTML()
 
-            if html.request.has_var('bulk_moveto'):
+            if request.has_var('bulk_moveto'):
                 html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                html.request.var('bulk_moveto', ''))
+                                request.var('bulk_moveto', ''))
 
             html.add_confirm_on_submit("bulk_action_form",
                                        _("Do you really want to move the selected rules?"))
@@ -958,7 +958,7 @@ class ModeBIEditRule(ABCBIMode):
 
     def __init__(self):
         super().__init__()
-        self._rule_id = html.request.get_str_input("id")
+        self._rule_id = request.get_str_input("id")
         self._new = self._rule_id is None
 
         if not self._new and self._rule_id is not None and not self.bi_pack.get_rule(self._rule_id):
@@ -1054,7 +1054,7 @@ class ModeBIEditRule(ABCBIMode):
         self.verify_pack_permission(self.bi_pack)
 
         if self._new:
-            cloneid = html.request.var("clone")
+            cloneid = request.var("clone")
             if cloneid is not None:
                 try:
                     bi_rule = self.bi_pack.get_rule_mandatory(cloneid).clone()
@@ -1295,12 +1295,12 @@ class AjaxBIRulePreview(AjaxPage):
 
         # Create preview rule
         vs = ModeBIEditRule.valuespec(rule_id=None)
-        varprefix = html.request.var("varprefix")
+        varprefix = request.var("varprefix")
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_rule = BIRule(preview_config)
 
         mapped_example_arguments = {}
-        example_arguments = json.loads(html.request.get_str_input_mandatory("example_arguments"))
+        example_arguments = json.loads(request.get_str_input_mandatory("example_arguments"))
         for idx, name in enumerate(preview_bi_rule.params.arguments):
             if idx >= len(example_arguments):
                 break
@@ -1337,7 +1337,7 @@ class AjaxBIAggregationPreview(AjaxPage):
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview aggr
-        varprefix = html.request.var("varprefix")
+        varprefix = request.var("varprefix")
         vs = BIModeEditAggregation.get_vs_aggregation(aggregation_id=None)
         preview_config = vs.from_html_vars(varprefix)
         preview_bi_aggr = BIAggregation(preview_config)
@@ -1381,7 +1381,7 @@ class NodeVisualizationLayoutStyle(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = self.default_value()
-        for key, val in html.request.itervars():
+        for key, val in request.itervars():
             if key.startswith(varprefix):
                 clean_key = key[len(varprefix):]
                 if clean_key == "type":
@@ -1425,8 +1425,8 @@ class BIModeEditAggregation(ABCBIMode):
 
     def __init__(self):
         super().__init__()
-        aggr_id = html.request.get_str_input_mandatory("id", "")
-        clone_id = html.request.get_str_input_mandatory("clone", "")
+        aggr_id = request.get_str_input_mandatory("id", "")
+        clone_id = request.get_str_input_mandatory("clone", "")
         self._new = False
         self._clone = False
         if clone_id:
@@ -1453,7 +1453,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def title(self):
         if self._clone:
-            return _("Clone Aggregation %s") % html.request.get_str_input_mandatory("clone")
+            return _("Clone Aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
             return _("Add Aggregation")
         return _("Edit Aggregation")
@@ -1725,19 +1725,19 @@ class BIModeAggregations(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url(pack=self.bi_pack.id))
 
-        if html.request.var("_del_aggr"):
+        if request.var("_del_aggr"):
             self._delete_after_confirm()
 
-        elif html.request.var("_bulk_delete_bi_aggregations"):
+        elif request.var("_bulk_delete_bi_aggregations"):
             self._bulk_delete_after_confirm()
 
-        elif html.request.var("_bulk_move_bi_aggregations"):
+        elif request.var("_bulk_move_bi_aggregations"):
             self._bulk_move_after_confirm()
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 
     def _delete_after_confirm(self) -> None:
-        aggregation_id = html.request.get_str_input_mandatory("_del_aggr")
+        aggregation_id = request.get_str_input_mandatory("_del_aggr")
         self._bi_packs.delete_aggregation(aggregation_id)
         self._add_change("bi-delete-aggregation", _("Deleted BI aggregation %s") % (aggregation_id))
         self._bi_packs.save_config()
@@ -1755,8 +1755,8 @@ class BIModeAggregations(ABCBIMode):
 
     def _bulk_move_after_confirm(self) -> None:
         target = None
-        if html.request.has_var('bulk_moveto'):
-            target = html.request.var('bulk_moveto', '')
+        if request.has_var('bulk_moveto'):
+            target = request.var('bulk_moveto', '')
             html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
@@ -1868,9 +1868,9 @@ class BIModeAggregations(ABCBIMode):
             if not move_choices:
                 return HTML()
 
-            if html.request.has_var('bulk_moveto'):
+            if request.has_var('bulk_moveto'):
                 html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                html.request.var('bulk_moveto', ''))
+                                request.var('bulk_moveto', ''))
 
             html.add_confirm_on_submit("bulk_action_form",
                                        _("Do you really want to move the selected aggregations?"))
@@ -2004,7 +2004,7 @@ class ModeBIRuleTree(ABCBIMode):
 
     def __init__(self):
         super().__init__()
-        self._rule_id = html.request.get_str_input_mandatory("id")
+        self._rule_id = request.get_str_input_mandatory("id")
         self._rule_tree_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id)
         if not self._rule_tree_bi_pack:
             raise MKUserError("id", _("This BI rule does not exist"))

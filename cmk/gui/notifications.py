@@ -206,8 +206,8 @@ def render_page_confirm(acktime, failed_notifications):
 
 @cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
-    acktime = html.request.get_float_input_mandatory('acktime', time.time())
-    if html.request.var('_confirm'):
+    acktime = request.get_float_input_mandatory('acktime', time.time())
+    if request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
 
         if config.user.authorized_login_sites():
@@ -227,5 +227,5 @@ def page_clear():
 
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
     render_page_confirm(acktime, failed_notifications)
-    if html.request.var('_confirm'):
+    if request.var('_confirm'):
         html.reload_whole_page()

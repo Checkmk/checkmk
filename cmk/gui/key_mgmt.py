@@ -135,8 +135,8 @@ class PageKeyManagement:
         return True
 
     def action(self) -> ActionResult:
-        if self._may_edit_config() and html.request.has_var("_delete"):
-            key_id_as_str = html.request.var("_delete")
+        if self._may_edit_config() and request.has_var("_delete"):
+            key_id_as_str = request.var("_delete")
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
@@ -219,7 +219,7 @@ class PageEditKey:
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
             # leak the secret information
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
             return redirect(mode_url(self.back_mode))
@@ -304,7 +304,7 @@ class PageUploadKey:
     def action(self) -> ActionResult:
         if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
             key_file = self._get_uploaded(value, "key_file")
@@ -432,7 +432,7 @@ class PageDownloadKey:
             keys = self.load()
 
             try:
-                key_id_str = html.request.var("key")
+                key_id_str = request.var("key")
                 if key_id_str is None:
                     raise Exception("cannot happen")  # is this really the case?
                 key_id = int(key_id_str)

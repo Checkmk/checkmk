@@ -662,9 +662,9 @@ class GUIViewRenderer(ABCViewRenderer):
         if command_form:
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
-            if html.request.has_var("_row_id") and html.do_actions():
+            if request.has_var("_row_id") and html.do_actions():
                 rows = _filter_selected_rows(view_spec, rows,
-                                             [html.request.get_str_input_mandatory("_row_id")])
+                                             [request.get_str_input_mandatory("_row_id")])
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
@@ -691,9 +691,9 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
-            if html.request.has_var("_row_id") and html.do_actions():
+            if request.has_var("_row_id") and html.do_actions():
                 rows = _filter_selected_rows(view_spec, rows,
-                                             [html.request.get_str_input_mandatory("_row_id")])
+                                             [request.get_str_input_mandatory("_row_id")])
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
@@ -782,14 +782,14 @@ class GUIViewRenderer(ABCViewRenderer):
         d) In case there are single info filters missing
         """
 
-        show_form = html.request.get_integer_input("_show_filter_form")
+        show_form = request.get_integer_input("_show_filter_form")
         if show_form is not None:
             return show_form == 1
 
         if self.view.spec.get("mustsearch"):
             return True
 
-        if html.request.get_ascii_input("filled_in") == "filter":
+        if request.get_ascii_input("filled_in") == "filter":
             return True
 
         if self.view.missing_single_infos:
@@ -950,7 +950,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 ))
 
     def _page_menu_entries_filter(self, show_filters: List[Filter]) -> Iterator[PageMenuEntry]:
-        is_filter_set = html.request.var("filled_in") == "filter"
+        is_filter_set = request.var("filled_in") == "filter"
 
         yield PageMenuEntry(
             title=_("Filter"),
@@ -989,7 +989,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
             url_vars: HTTPVariables = [
-                ("back", html.request.requested_url),
+                ("back", request.requested_url),
                 ("load_name", self.view.name),
             ]
 
@@ -1277,7 +1277,7 @@ def show_create_view_dialog(next_url=None):
                                    button_name="save",
                                    save_title=_("Continue")))
 
-    if html.request.var('save') and transactions.check_transaction():
+    if request.var('save') and transactions.check_transaction():
         try:
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')
@@ -1636,7 +1636,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
 
 
 def render_view_config(view_spec: ViewSpec, general_properties=True):
-    ds_name = view_spec.get("datasource", html.request.var("datasource"))
+    ds_name = view_spec.get("datasource", request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
     if ds_name not in data_source_registry:
@@ -1714,7 +1714,7 @@ def transform_valuespec_value_to_view(ident, attrs):
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
 def create_view_from_valuespec(old_view, view):
-    ds_name = old_view.get('datasource', html.request.var('datasource'))
+    ds_name = old_view.get('datasource', request.var('datasource'))
     view['datasource'] = ds_name
 
     def update_view(ident, vs):
@@ -1824,7 +1824,7 @@ def page_view():
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
-        display_options.load_from_html(html)
+        display_options.load_from_html(request, html)
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
@@ -1849,8 +1849,8 @@ def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -
         config.user.id,
         view.row_limit,
         # as in get_limit()
-        html.request.var("limit", "soft"),
-        ["%s=%s" % (k, v) for k, v in html.request.itervars() if k != 'selection' and v != ''],
+        request.var("limit", "soft"),
+        ["%s=%s" % (k, v) for k, v in request.itervars() if k != 'selection' and v != ''],
         view.context,
         view.process_tracking.amount_unfiltered_rows,
         view.process_tracking.amount_filtered_rows,
@@ -1875,11 +1875,10 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
     # This is also somehow connected to the datasource.link_filters hack hat has been created for
     # linking hosts / services with groups
     if view_spec["datasource"] in ['hosts', 'services']:
-        if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
-            html.request.set_var("opthost_group", html.request.get_str_input_mandatory("hostgroup"))
-        if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
-            html.request.set_var("optservice_group",
-                                 html.request.get_str_input_mandatory("servicegroup"))
+        if request.has_var('hostgroup') and not request.has_var("opthost_group"):
+            request.set_var("opthost_group", request.get_str_input_mandatory("hostgroup"))
+        if request.has_var('servicegroup') and not request.has_var("optservice_group"):
+            request.set_var("optservice_group", request.get_str_input_mandatory("servicegroup"))
 
     # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
     # which is of single context "host" using a host name of a unrelated event, the list of
@@ -1893,13 +1892,13 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
     # with the current mode.
     if _is_ec_unrelated_host_view(view_spec):
         # Set the value for the event host filter
-        if not html.request.has_var("event_host") and html.request.has_var("host"):
-            html.request.set_var("event_host", html.request.get_str_input_mandatory("host"))
+        if not request.has_var("event_host") and request.has_var("host"):
+            request.set_var("event_host", request.get_str_input_mandatory("host"))
 
 
 def process_view(view_renderer: ABCViewRenderer) -> None:
     """Rendering all kind of views"""
-    if html.request.var("mode") == "availability":
+    if request.var("mode") == "availability":
         _process_availability_view(view_renderer)
     else:
         _process_regular_view(view_renderer)
@@ -1961,7 +1960,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
     # later)
-    if "aggr" not in view.datasource.infos or html.request.var("timeline_aggr"):
+    if "aggr" not in view.datasource.infos or request.var("timeline_aggr"):
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
         show_view_func = lambda: cmk.gui.plugins.views.availability.show_availability_page(
             view, filterheaders)
@@ -2050,7 +2049,7 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter],
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
-            html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
+            request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         columns = _get_needed_regular_columns(
             all_active_filters,
             view,
@@ -2096,7 +2095,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
     browser_reload = painter_options.get("refresh", view.spec.get("browser_reload", None))
 
     force_checkboxes = view.spec.get("force_checkboxes", False)
-    show_checkboxes = force_checkboxes or html.request.var('show_checkboxes', '0') == '1'
+    show_checkboxes = force_checkboxes or request.var('show_checkboxes', '0') == '1'
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
@@ -2173,7 +2172,7 @@ def _get_needed_regular_columns(
     """
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
-    if html.request.var("mode") == "availability" and "aggr" in view.datasource.infos:
+    if request.var("mode") == "availability" and "aggr" in view.datasource.infos:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
     columns = columns_of_cells(view.group_cells + view.row_cells)
@@ -2412,17 +2411,17 @@ def play_alarm_sounds() -> None:
 
 def get_user_sorters() -> List[SorterSpec]:
     """Returns a list of optionally set sort parameters from HTTP request"""
-    return _parse_url_sorters(html.request.var("sort"))
+    return _parse_url_sorters(request.var("sort"))
 
 
 def get_want_checkboxes() -> bool:
     """Whether or not the user requested checkboxes to be shown"""
-    return html.request.get_integer_input_mandatory("show_checkboxes", 0) == 1
+    return request.get_integer_input_mandatory("show_checkboxes", 0) == 1
 
 
 def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
-    limitvar = html.request.var("limit", "soft")
+    limitvar = request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
         return config.hard_query_limit
     if limitvar == "none" and config.user.may("general.ignore_hard_limit"):
@@ -2521,7 +2520,7 @@ def _get_ntop_page_menu_topics(view, host_address):
     if "host" not in view.spec['single_infos'] or "host" in view.missing_single_infos:
         return []
 
-    host_name = html.request.get_ascii_input_mandatory("host")
+    host_name = request.get_ascii_input_mandatory("host")
     # TODO insert icons when available
     topics = [
         PageMenuTopic(title="Network statistics",
@@ -2875,7 +2874,7 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
         return []
 
-    host_name = html.request.get_ascii_input_mandatory("host")
+    host_name = request.get_ascii_input_mandatory("host")
 
     return [
         PageMenuTopic(
@@ -3129,7 +3128,7 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
         if info_name in command.tables and config.user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.
-            if command.only_view and html.request.var('view_name') != command.only_view:
+            if command.only_view and request.var('view_name') != command.only_view:
                 continue
             by_group.setdefault(command.group, []).append(command)
 
@@ -3220,8 +3219,8 @@ def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) 
     if not confirm_with_preview(command_title, confirm_options, method='GET'):
         return False
 
-    if html.request.has_var("_do_confirm_host_downtime"):
-        html.request.set_var("_on_hosts", "on")
+    if request.has_var("_do_confirm_host_downtime"):
+        request.set_var("_on_hosts", "on")
 
     count = 0
     already_executed = set()
@@ -3257,13 +3256,13 @@ def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) 
     if message:
         backurl += "&filled_in=filter&_show_filter_form=0"
         message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
-        if html.request.var("show_checkboxes") == "1":
-            html.request.del_var("selection")
+        if request.var("show_checkboxes") == "1":
+            request.del_var("selection")
             weblib.selection_id()
-            backurl += "&selection=" + html.request.get_str_input_mandatory("selection")
+            backurl += "&selection=" + request.get_str_input_mandatory("selection")
             message += '<br><a href="%s">%s</a>' % (backurl,
                                                     _('Back to view with checkboxes reset'))
-        if html.request.var("_show_result") == "0":
+        if request.var("_show_result") == "0":
             html.immediate_browser_redirect(0.5, backurl)
         html.show_message(message)
 
@@ -3305,10 +3304,10 @@ def get_view_by_name(view_name: ViewName) -> ViewSpec:
 
 @cmk.gui.pages.register("ajax_popup_icon_selector")
 def ajax_popup_icon_selector() -> None:
-    varprefix = html.request.var('varprefix')
-    value = html.request.var('value')
-    allow_empty = html.request.var('allow_empty') == '1'
-    show_builtin_icons = html.request.var('show_builtin_icons') == '1'
+    varprefix = request.var('varprefix')
+    value = request.var('value')
+    allow_empty = request.var('allow_empty') == '1'
+    show_builtin_icons = request.var('show_builtin_icons') == '1'
 
     vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
     vs.render_popup_input(varprefix, value)
@@ -3346,12 +3345,12 @@ def query_action_data(what: str, host: HostName, site: SiteId,
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu() -> None:
-    site = html.request.get_str_input_mandatory('site')
-    host = html.request.get_str_input_mandatory('host')
-    svcdesc = html.request.get_unicode_input('service')
+    site = request.get_str_input_mandatory('site')
+    host = request.get_str_input_mandatory('host')
+    svcdesc = request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
-    display_options.load_from_html(html)
+    display_options.load_from_html(request, html)
 
     row = query_action_data(what, host, site, svcdesc)
     icons = get_icons(what, row, toplevel=False)

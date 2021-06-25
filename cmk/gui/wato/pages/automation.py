@@ -20,7 +20,7 @@ import cmk.gui.userdb as userdb
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.log import logger
-from cmk.gui.globals import html, response
+from cmk.gui.globals import response, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
@@ -45,7 +45,7 @@ class ModeAutomationLogin(AjaxPage):
 
         response.set_content_type("text/plain")
 
-        if not html.request.has_var("_version"):
+        if not request.has_var("_version"):
             # Be compatible to calls from sites using versions before 1.5.0p10.
             # Deprecate with 1.7 by throwing an exception in this situation.
             resp = _get_login_secret(create_on_demand=True)
@@ -77,10 +77,10 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
-        self._command = html.request.get_str_input_mandatory("command")
+        self._command = request.get_str_input_mandatory("command")
 
     def _authenticate(self):
-        secret = html.request.var("secret")
+        secret = request.var("secret")
 
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
@@ -114,11 +114,11 @@ class ModeAutomation(AjaxPage):
             self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
-        cmk_command = html.request.get_str_input_mandatory("automation")
-        args = watolib.mk_eval(html.request.get_str_input_mandatory("arguments"))
-        indata = watolib.mk_eval(html.request.get_str_input_mandatory("indata"))
-        stdin_data = watolib.mk_eval(html.request.get_str_input_mandatory("stdin_data"))
-        timeout = watolib.mk_eval(html.request.get_str_input_mandatory("timeout"))
+        cmk_command = request.get_str_input_mandatory("automation")
+        args = watolib.mk_eval(request.get_str_input_mandatory("arguments"))
+        indata = watolib.mk_eval(request.get_str_input_mandatory("indata"))
+        stdin_data = watolib.mk_eval(request.get_str_input_mandatory("stdin_data"))
+        timeout = watolib.mk_eval(request.get_str_input_mandatory("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         response.set_data(repr(result))
@@ -133,11 +133,11 @@ class ModeAutomation(AjaxPage):
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
     def _automation_push_profile(self):
-        site_id = html.request.var("siteid")
+        site_id = request.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
 
-        user_id = html.request.var("user_id")
+        user_id = request.var("user_id")
         if not user_id:
             raise MKGeneralException(_("Missing variable user_id"))
 
@@ -148,7 +148,7 @@ class ModeAutomation(AjaxPage):
                 _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
                 (our_id, site_id))
 
-        profile = html.request.var("profile")
+        profile = request.var("profile")
         if not profile:
             raise MKGeneralException(_('Invalid call: The profile is missing.'))
 

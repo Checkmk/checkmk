@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Dict, Union
 from six import ensure_str
 
 import cmk.gui.escaping as escaping
-from cmk.gui.globals import html, response
+from cmk.gui.globals import request, response
 from cmk.gui.type_defs import Rows
 from cmk.gui.plugins.views import (
     exporter_registry,
@@ -119,7 +119,7 @@ exporter_registry.register(Exporter(
 
 def _export_jsonp(view: "View", rows: Rows) -> None:
     response.set_data("%s(\n%s);\n" %
-                      (html.request.var('jsonp', 'myfunction'), _get_json_body(view, rows)))
+                      (request.var('jsonp', 'myfunction'), _get_json_body(view, rows)))
 
 
 exporter_registry.register(Exporter(
@@ -130,7 +130,7 @@ exporter_registry.register(Exporter(
 
 class CSVRenderer:
     def show(self, view: "View", rows: Rows) -> None:
-        csv_separator = html.request.get_str_input_mandatory("csv_separator", ";")
+        csv_separator = request.get_str_input_mandatory("csv_separator", ";")
         first = True
         resp = []
         for cell in view.group_cells + view.row_cells:

@@ -93,7 +93,7 @@ class WatoMode(metaclass=abc.ABCMeta):
     def _breadcrumb_item(self) -> BreadcrumbItem:
         """Return the breadcrumb item for the current mode"""
         # For the currently active mode use the same link as the "page title click"
-        if html.request.get_ascii_input("mode") == self.name():
+        if request.get_ascii_input("mode") == self.name():
             breadcrumb_url = "javascript:window.location.reload(false)"
         else:
             breadcrumb_url = self._breadcrumb_url()

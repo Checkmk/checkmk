@@ -10,7 +10,7 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -186,7 +186,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         if not error_handling:
             arguments = ["@raiseerrors"] + arguments
 
-        timeout = html.request.request_timeout - 2
+        timeout = request.request_timeout - 2
 
         return execute_automation_discovery(site_id=task.site_id,
                                             args=arguments,

@@ -174,13 +174,13 @@ class ModeTags(ABCTagMode):
         if not transactions.check_transaction():
             return redirect(mode_url("tags"))
 
-        if html.request.has_var("_delete"):
+        if request.has_var("_delete"):
             return self._delete_tag_group()
 
-        if html.request.has_var("_del_aux"):
+        if request.has_var("_del_aux"):
             return self._delete_aux_tag()
 
-        if html.request.var("_move"):
+        if request.var("_move"):
             return self._move_tag_group()
 
         return redirect(mode_url("tags"))
@@ -189,7 +189,7 @@ class ModeTags(ABCTagMode):
         del_id = request.get_item_input("_delete",
                                         dict(self._tag_config.get_tag_group_choices()))[1]
 
-        if not html.request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
+        if not request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
                 del_id):
             message: Union[bool,
                            str] = _("Transformed the user tag group \"%s\" to builtin.") % del_id
@@ -267,8 +267,8 @@ class ModeTags(ABCTagMode):
 
     # Mypy wants the explicit return, pylint does not like it.
     def _move_tag_group(self) -> ActionResult:  # pylint: disable=useless-return
-        move_nr = html.request.get_integer_input_mandatory("_move")
-        move_to = html.request.get_integer_input_mandatory("_index")
+        move_nr = request.get_integer_input_mandatory("_move")
+        move_to = request.get_integer_input_mandatory("_index")
 
         moved = self._tag_config.tag_groups.pop(move_nr)
         self._tag_config.tag_groups.insert(move_to, moved)
@@ -421,7 +421,7 @@ class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _is_new_tag(self):
-        return html.request.var("edit") is None
+        return request.var("edit") is None
 
     def _basic_elements(self, id_title):
         if self._new:
@@ -596,7 +596,7 @@ class ModeEditAuxtag(ABCEditTagMode):
             self._aux_tag = self._tag_config.aux_tag_list.get_aux_tag(self._id)
 
     def _get_id(self):
-        if not html.request.has_var("edit"):
+        if not request.has_var("edit"):
             return None
 
         return request.get_item_input("edit", dict(self._tag_config.aux_tag_list.get_choices()))[1]
@@ -679,7 +679,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         self._tag_group = cmk.utils.tags.TagGroup() if tg is None else tg
 
     def _get_id(self):
-        return html.request.var("edit", html.request.var("tag_id"))
+        return request.var("edit", request.var("tag_id"))
 
     def title(self):
         if self._new:
@@ -839,7 +839,7 @@ def _rename_tags_after_confirmation(breadcrumb: Breadcrumb,
         False: "Question dialog" shown
         str: Action done after "question" dialog
     """
-    repair_mode = html.request.var("_repair")
+    repair_mode = request.var("_repair")
     if repair_mode is not None:
         try:
             mode = TagCleanupMode(repair_mode)

@@ -22,7 +22,7 @@ import cmk.utils.prediction as prediction
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
 
@@ -56,9 +56,9 @@ def _load_prediction_information(
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = html.request.get_str_input_mandatory("host")
-    service = html.request.get_str_input_mandatory("service")
-    dsname = html.request.get_str_input_mandatory("dsname")
+    host = request.get_str_input_mandatory("host")
+    service = request.get_str_input_mandatory("service")
+    dsname = request.get_str_input_mandatory("dsname")
 
     breadcrumb = make_service_breadcrumb(host, service)
     html.header(_("Prediction for %s - %s - %s") % (host, service, dsname), breadcrumb)
@@ -69,7 +69,7 @@ def page_graph():
     prediction_store = prediction.PredictionStore(host, service, dsname)
 
     timegroup, choices = _load_prediction_information(
-        tg_name=html.request.var("timegroup"),
+        tg_name=request.var("timegroup"),
         prediction_store=prediction_store,
     )
 

@@ -455,7 +455,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
-        is_host = bool(html.request.var("host")) or html.request.var("mode") == "newhost"
+        is_host = bool(request.var("host")) or request.var("mode") == "newhost"
         is_search = varprefix == "host_search"
 
         # Only show contact groups I'm currently in and contact

@@ -27,7 +27,7 @@ from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 from cmk.gui.utils.urls import urlencode_vars
@@ -448,7 +448,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
 
     def get_request(self) -> CheckmkAutomationRequest:
         return CheckmkAutomationRequest(
-            *ast.literal_eval(html.request.get_ascii_input_mandatory("request")))
+            *ast.literal_eval(request.get_ascii_input_mandatory("request")))
 
     def execute(self, api_request: CheckmkAutomationRequest) -> Tuple:
         job = CheckmkAutomationBackgroundJob(api_request=api_request)
@@ -465,7 +465,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         return "checkmk-remote-automation-get-status"
 
     def get_request(self) -> str:
-        return ast.literal_eval(html.request.get_ascii_input_mandatory("request"))
+        return ast.literal_eval(request.get_ascii_input_mandatory("request"))
 
     def execute(self, api_request: str) -> Tuple:
         job_id = api_request

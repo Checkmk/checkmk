@@ -285,7 +285,7 @@ class ModeEditHost(ABCHostMode):
         return self.mode_url(host=self._host.name())
 
     def _init_host(self) -> watolib.CREHost:
-        hostname = html.request.get_ascii_input_mandatory("host")
+        hostname = request.get_ascii_input_mandatory("host")
         folder = watolib.Folder.current()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -323,7 +323,7 @@ class ModeEditHost(ABCHostMode):
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
-        if html.request.var("_update_dns_cache") and self._should_use_dns_cache():
+        if request.var("_update_dns_cache") and self._should_use_dns_cache():
             config.user.need_permission("wato.update_dns_cache")
             num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
                                                                     "update-dns-cache", [])
@@ -334,7 +334,7 @@ class ModeEditHost(ABCHostMode):
             flash(infotext)
             return None
 
-        if html.request.var("delete"):  # Delete this host
+        if request.var("delete"):  # Delete this host
             folder.delete_hosts([self._host.name()])
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -343,9 +343,9 @@ class ModeEditHost(ABCHostMode):
         watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
         self._host = folder.host(self._host.name())
 
-        if html.request.var("services"):
+        if request.var("services"):
             return redirect(mode_url("inventory", folder=folder.path(), host=self._host.name()))
-        if html.request.var("diag_host"):
+        if request.var("diag_host"):
             return redirect(
                 mode_url("diag_host",
                          folder=folder.path(),
@@ -422,7 +422,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
             icon_name="rulesets",
             item=make_simple_link(
                 makeuri_contextless(
-                    html.request,
+                    request,
                     [
                         ("mode", "rule_search"),
                         ("filled_in", "search"),
@@ -505,13 +505,13 @@ class CreateHostMode(ABCHostMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        if html.request.var("clone") and self._init_host():
+        if request.var("clone") and self._init_host():
             self._mode = "clone"
         else:
             self._mode = "new"
 
     def _init_host(self) -> watolib.CREHost:
-        clonename = html.request.get_ascii_input("clone")
+        clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
         if not watolib.Folder.current().has_host(clonename):
@@ -529,7 +529,7 @@ class CreateHostMode(ABCHostMode):
         attributes = watolib.collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = html.request.get_ascii_input_mandatory("host")
+        hostname = request.get_ascii_input_mandatory("host")
         Hostname().validate_value(hostname, "host")
 
         folder = watolib.Folder.current()
@@ -550,10 +550,10 @@ class CreateHostMode(ABCHostMode):
               '<a href="%s">service discovery</a> in order to auto-configure '
               'all services to be checked on this host.') % inventory_url)
 
-        if html.request.var("services"):
+        if request.var("services"):
             raise redirect(inventory_url)
 
-        if html.request.var("diag_host"):
+        if request.var("diag_host"):
             if create_msg:
                 flash(create_msg)
             return redirect(
@@ -585,7 +585,7 @@ class ModeCreateHost(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls):
         return watolib.Host(folder=watolib.Folder.current(),
-                            host_name=html.request.var("host"),
+                            host_name=request.var("host"),
                             attributes={},
                             cluster_nodes=None)
 
@@ -620,7 +620,7 @@ class ModeCreateCluster(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls):
         return watolib.Host(folder=watolib.Folder.current(),
-                            host_name=html.request.var("host"),
+                            host_name=request.var("host"),
                             attributes={},
                             cluster_nodes=[])
 

@@ -49,9 +49,9 @@ from cmk.gui.escaping import escape_html_permissive
 
 @cmk.gui.pages.register("logwatch")
 def page_show():
-    site = html.request.var("site")  # optional site hint
-    host_name = html.request.var("host", "")
-    file_name = html.request.get_unicode_input("file", "")
+    site = request.var("site")  # optional site hint
+    host_name = request.var("host", "")
+    file_name = request.get_unicode_input("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
@@ -76,7 +76,7 @@ def show_log_list():
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
     html.header(title, breadcrumb, _log_list_page_menu(breadcrumb))
 
-    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+    if request.has_var('_ack') and not request.var("_do_actions") == _("No"):
         do_log_ack(site=None, host_name=None, file_name=None)
         return
 
@@ -166,7 +166,7 @@ def show_host_log_list(site, host_name):
     breadcrumb = _host_log_list_breadcrumb(host_name, title)
     html.header(title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
 
-    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+    if request.has_var('_ack') and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name=None)
         return
 
@@ -283,7 +283,7 @@ def show_file(site, host_name, file_name):
     breadcrumb = _show_file_breadcrumb(host_name, title)
     html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
 
-    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+    if request.has_var('_ack') and not request.var("_do_actions") == _("No"):
         do_log_ack(site, host_name, file_name)
         return
 
@@ -291,7 +291,7 @@ def show_file(site, host_name, file_name):
         log_chunks = parse_file(site,
                                 host_name,
                                 int_filename,
-                                hidecontext=html.request.var('_hidecontext', 'no') == 'yes')
+                                hidecontext=request.var('_hidecontext', 'no') == 'yes')
     except Exception as e:
         if config.debug:
             raise
@@ -412,7 +412,7 @@ def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_na
 
 def _extend_display_dropdown(menu: PageMenu) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
-    context_hidden = html.request.var('_hidecontext', 'no') == 'yes'
+    context_hidden = request.var('_hidecontext', 'no') == 'yes'
     display_dropdown.topics.insert(
         0,
         PageMenuTopic(
@@ -500,7 +500,7 @@ def do_log_ack(site, host_name, file_name):
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
 
     ack_msg = _get_ack_msg(host_name, file_name)
-    ack = html.request.var('_ack')
+    ack = request.var('_ack')
 
     if not config.user.may("general.act"):
         html.h1(_('Permission denied'), class_=["error"])

@@ -161,9 +161,9 @@ class MasterControlSnapin(SidebarSnapin):
         if not transactions.check_transaction():
             return
 
-        site = html.request.get_ascii_input_mandatory("site")
-        column = html.request.get_ascii_input_mandatory("switch")
-        state = html.request.get_integer_input_mandatory("state")
+        site = request.get_ascii_input_mandatory("site")
+        column = request.get_ascii_input_mandatory("switch")
+        state = request.get_integer_input_mandatory("state")
         commands = {
             ("enable_notifications", 1): "ENABLE_NOTIFICATIONS",
             ("enable_notifications", 0): "DISABLE_NOTIFICATIONS",

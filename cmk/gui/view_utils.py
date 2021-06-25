@@ -96,8 +96,8 @@ def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
             ("host", host),
         ]
 
-        if html.request.var("display_options"):
-            args.append(("display_options", html.request.var("display_options")))
+        if request.var("display_options"):
+            args.append(("display_options", request.var("display_options")))
 
         url = makeuri_contextless(request, args, filename="view.py")
         link = str(html.render_a(host, href=url))
@@ -113,12 +113,12 @@ def query_limit_exceeded_warn(limit: Optional[int], user_config: 'LoggedInUser')
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML(_("Your query produced more than %d results. ") % limit)
 
-    if html.request.get_ascii_input(
-            "limit", "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
+    if request.get_ascii_input("limit",
+                               "soft") == "soft" and user_config.may("general.ignore_soft_limit"):
         text += html.render_a(_('Repeat query and allow more results.'),
                               target="_self",
                               href=makeuri(request, [("limit", "hard")]))
-    elif html.request.get_ascii_input("limit") == "hard" and user_config.may(
+    elif request.get_ascii_input("limit") == "hard" and user_config.may(
             "general.ignore_hard_limit"):
         text += html.render_a(_('Repeat query without limit.'),
                               target="_self",

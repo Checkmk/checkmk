@@ -12,7 +12,7 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 
@@ -291,8 +291,8 @@ class Bookmarks(SidebarSnapin):
         return ["admin", "user", "guest"]
 
     def _ajax_add_bookmark(self):
-        title = html.request.var("title")
-        url = html.request.var("url")
+        title = request.var("title")
+        url = request.var("url")
         if title and url:
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url)
@@ -309,7 +309,7 @@ class Bookmarks(SidebarSnapin):
         bookmarks.save_user_instances()
 
     def _try_shorten_url(self, url):
-        referer = html.request.referer
+        referer = request.referer
         if referer:
             ref_p = urllib.parse.urlsplit(referer)
             url_p = urllib.parse.urlsplit(url)

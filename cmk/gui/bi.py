@@ -206,10 +206,10 @@ def _get_state_assumption_key(site: Any, host: Any,
 
 @cmk.gui.pages.register("bi_set_assumption")
 def ajax_set_assumption() -> None:
-    site = html.request.get_unicode_input("site")
-    host = html.request.get_unicode_input("host")
-    service = html.request.get_unicode_input("service")
-    state = html.request.var("state")
+    site = request.get_unicode_input("site")
+    host = request.get_unicode_input("host")
+    service = request.get_unicode_input("service")
+    state = request.var("state")
     if state == 'none':
         del config.user.bi_assumptions[_get_state_assumption_key(site, host, service)]
     elif state is not None:
@@ -221,13 +221,13 @@ def ajax_set_assumption() -> None:
 
 @cmk.gui.pages.register("bi_save_treestate")
 def ajax_save_treestate():
-    path_id = html.request.get_unicode_input_mandatory("path")
+    path_id = request.get_unicode_input_mandatory("path")
     current_ex_level_str, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level_str)
 
     if config.user.bi_expansion_level != current_ex_level:
         config.user.set_tree_states('bi', {})
-    config.user.set_tree_state('bi', path, html.request.var("state") == "open")
+    config.user.set_tree_state('bi', path, request.var("state") == "open")
     config.user.save_tree_states()
 
     config.user.bi_expansion_level = current_ex_level
@@ -235,22 +235,22 @@ def ajax_save_treestate():
 
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
-    aggr_group = html.request.get_unicode_input("group")
-    aggr_title = html.request.get_unicode_input("title")
-    omit_root = bool(html.request.var("omit_root"))
-    only_problems = bool(html.request.var("only_problems"))
+    aggr_group = request.get_unicode_input("group")
+    aggr_title = request.get_unicode_input("title")
+    omit_root = bool(request.var("omit_root"))
+    only_problems = bool(request.var("only_problems"))
 
     rows = []
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
-    aggregation_id = html.request.get_str_input_mandatory("aggregation_id")
+    aggregation_id = request.get_str_input_mandatory("aggregation_id")
     bi_aggregation_filter = BIAggregationFilter([], [], [aggregation_id],
                                                 [aggr_title] if aggr_title is not None else [],
                                                 [aggr_group] if aggr_group is not None else [], [])
     rows = bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
     # TODO: Cleanup the renderer to use a class registry for lookup
-    renderer_class_name = html.request.var("renderer")
+    renderer_class_name = request.var("renderer")
     if renderer_class_name == "FoldableTreeRendererTree":
         renderer_cls: Type[ABCFoldableTreeRenderer] = FoldableTreeRendererTree
     elif renderer_class_name == "FoldableTreeRendererBoxes":
@@ -271,7 +271,7 @@ def ajax_render_tree():
 
 
 def render_tree_json(row):
-    expansion_level = html.request.get_integer_input_mandatory("expansion_level", 999)
+    expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
     treestate = config.user.get_tree_states('bi')
     if expansion_level != config.user.bi_expansion_level:

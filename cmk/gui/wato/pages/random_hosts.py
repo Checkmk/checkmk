@@ -15,7 +15,7 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions
+from cmk.gui.globals import html, request, transactions
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -50,9 +50,9 @@ class ModeRandomHosts(WatoMode):
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=watolib.Folder.current().path()))
 
-        count = html.request.get_integer_input_mandatory("count")
-        folders = html.request.get_integer_input_mandatory("folders")
-        levels = html.request.get_integer_input_mandatory("levels")
+        count = request.get_integer_input_mandatory("count")
+        folders = request.get_integer_input_mandatory("folders")
+        levels = request.get_integer_input_mandatory("levels")
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         flash(_("Added %d random hosts.") % created)
         return redirect(mode_url("folder", folder=watolib.Folder.current().path()))

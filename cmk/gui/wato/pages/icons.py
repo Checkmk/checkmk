@@ -16,7 +16,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, theme
+from cmk.gui.globals import html, transactions, theme, request
 from cmk.gui.valuespec import (
     IconSelector,
     ImageUpload,
@@ -98,13 +98,13 @@ class ModeIcons(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if html.request.has_var("_delete"):
-            icon_name = html.request.var("_delete")
+        if request.has_var("_delete"):
+            icon_name = request.var("_delete")
             if icon_name in self._load_custom_icons():
                 os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                           (cmk.utils.paths.omd_root, icon_name))
 
-        elif html.request.has_var("_do_upload"):
+        elif request.has_var("_do_upload"):
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')

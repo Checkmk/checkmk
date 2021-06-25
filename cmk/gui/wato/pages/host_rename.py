@@ -346,7 +346,7 @@ class ModeBulkRenameHost(WatoMode):
 
 
 def _confirm(html_title, message):
-    if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
+    if not request.has_var("_do_confirm") and not request.has_var("_do_actions"):
         # TODO: get the breadcrumb from all call sites
         wato_html_head(title=html_title, breadcrumb=Breadcrumb())
     confirm_options = [(_("Confirm"), "_do_confirm")]
@@ -382,7 +382,7 @@ class ModeRenameHost(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        host_name = html.request.get_ascii_input_mandatory("host")
+        host_name = request.get_ascii_input_mandatory("host")
 
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -438,7 +438,7 @@ class ModeRenameHost(WatoMode):
             raise MKUserError("newname",
                               _("You cannot rename a host while you have pending changes."))
 
-        newname = html.request.var("newname")
+        newname = request.var("newname")
         self._check_new_host_name("newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.

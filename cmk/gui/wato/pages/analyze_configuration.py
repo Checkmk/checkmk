@@ -69,9 +69,9 @@ class ModeAnalyzeConfig(WatoMode):
         self._acks = self._load_acknowledgements()
 
     def _from_vars(self):
-        self._show_ok = html.request.has_var("show_ok")
-        self._show_failed = not html.request.has_var("hide_failed")
-        self._show_ack = html.request.has_var("show_ack")
+        self._show_ok = request.has_var("show_ok")
+        self._show_failed = not request.has_var("hide_failed")
+        self._show_ack = request.has_var("show_ack")
 
     def title(self):
         return _("Analyze configuration")
@@ -103,30 +103,30 @@ class ModeAnalyzeConfig(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        test_id = html.request.var("_test_id")
-        site_id = html.request.var("_site_id")
-        status_id = html.request.get_integer_input_mandatory("_status_id", 0)
+        test_id = request.var("_test_id")
+        site_id = request.var("_site_id")
+        status_id = request.get_integer_input_mandatory("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
 
-        if html.request.var("_do") in ["ack", "unack"]:
+        if request.var("_do") in ["ack", "unack"]:
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
             if site_id not in config.activation_sites():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
-        if html.request.var("_do") == "ack":
+        if request.var("_do") == "ack":
             self._acknowledge_test(test_id, site_id, status_id)
 
-        elif html.request.var("_do") == "unack":
+        elif request.var("_do") == "unack":
             self._unacknowledge_test(test_id, site_id, status_id)
 
-        elif html.request.var("_do") == "disable":
+        elif request.var("_do") == "disable":
             self._disable_test(test_id)
 
-        elif html.request.var("_do") == "enable":
+        elif request.var("_do") == "enable":
             self._enable_test(test_id)
 
         else:
@@ -373,8 +373,7 @@ class ModeAnalyzeConfig(WatoMode):
             else:
                 results_data = watolib.do_remote_automation(config.site(site_id),
                                                             "check-analyze-config", [],
-                                                            timeout=html.request.request_timeout -
-                                                            10)
+                                                            timeout=request.request_timeout - 10)
 
             self._logger.debug("[%s] Finished" % site_id)
 

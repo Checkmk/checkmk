@@ -17,7 +17,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.plugins.visuals import (
@@ -44,13 +44,13 @@ class FilterInvtableText(Filter):
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
-        value = html.request.get_unicode_input(htmlvar)
+        value = request.get_unicode_input(htmlvar)
         html.text_input(htmlvar, value if value is not None else '')
 
     # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         htmlvar = self.htmlvars[0]
-        request_var = html.request.var(htmlvar)
+        request_var = request.var(htmlvar)
         if request_var is None:
             return rows
 
@@ -150,8 +150,8 @@ class FilterInvtableIDRange(Filter):
 
     # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        from_value = utils.saveint(html.request.var(self.ident + "_from"))
-        to_value = utils.saveint(html.request.var(self.ident + "_to"))
+        from_value = utils.saveint(request.var(self.ident + "_from"))
+        to_value = utils.saveint(request.var(self.ident + "_to"))
 
         if not from_value and not to_value:
             return rows
@@ -197,7 +197,7 @@ class FilterInvtableOperStatus(Filter):
         # are either on (default) or off (unset)
         settings = set([])
         for varname in self.htmlvars:
-            settings.add(html.request.var(varname))
+            settings.add(request.var(varname))
         if len(settings) == 1:
             return rows
 
@@ -227,7 +227,7 @@ class FilterInvtableAdminStatus(Filter):
 
     # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        current = html.request.var(self.ident)
+        current = request.var(self.ident)
         if current not in ("1", "2"):
             return rows
 
@@ -256,7 +256,7 @@ class FilterInvtableAvailable(Filter):
 
     # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        current = html.request.var(self.ident)
+        current = request.var(self.ident)
         if current not in ("no", "yes"):
             return rows
 
@@ -292,7 +292,7 @@ class FilterInvtableInterfaceType(Filter):
         )
 
     def selection(self) -> List[str]:
-        request_var = html.request.var(self.ident)
+        request_var = request.var(self.ident)
         if request_var is None:
             return []
         current = request_var.strip().split("|")
@@ -335,8 +335,8 @@ class FilterInvtableVersion(Filter):
 
     # TODO: get value to filter against from context instead of from html vars
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
-        from_version = html.request.var(self.htmlvars[0])
-        to_version = html.request.var(self.htmlvars[1])
+        from_version = request.var(self.htmlvars[0])
+        to_version = request.var(self.htmlvars[1])
         if not from_version and not to_version:
             return rows  # Filter not used
 
@@ -366,14 +366,14 @@ class FilterInvText(Filter):
     @property
     def filtertext(self):
         "Returns the string to filter"
-        return html.request.get_str_input_mandatory(self.htmlvars[0], "").strip().lower()
+        return request.get_str_input_mandatory(self.htmlvars[0], "").strip().lower()
 
     def need_inventory(self) -> bool:
         return bool(self.filtertext)
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
-        value = html.request.var(htmlvar)
+        value = request.var(htmlvar)
         html.text_input(htmlvar, value if value is not None else "")
 
     # TODO: get value to filter against from context instead of from html vars
@@ -424,14 +424,14 @@ class FilterInvFloat(Filter):
     def display(self) -> None:
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
-        current_value = html.request.var(htmlvar, "")
+        current_value = request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
             html.write_text(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
-        current_value = html.request.var(htmlvar, "")
+        current_value = request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
             html.write_text(" %s" % self._unit)
@@ -441,7 +441,7 @@ class FilterInvFloat(Filter):
 
         def _scaled_bound(value):
             try:
-                return html.request.get_float_input_mandatory(value) * self._scale
+                return request.get_float_input_mandatory(value) * self._scale
             except MKUserError:
                 return None
 
@@ -544,7 +544,7 @@ class FilterInvHasSoftwarePackage(Filter):
 
     @property
     def filtername(self):
-        return html.request.get_unicode_input(self._varprefix + "name")
+        return request.get_unicode_input(self._varprefix + "name")
 
     def need_inventory(self) -> bool:
         return bool(self.filtername)
@@ -578,10 +578,10 @@ class FilterInvHasSoftwarePackage(Filter):
         if not name:
             return rows
 
-        from_version = html.request.var(self._varprefix + "from_version")
-        to_version = html.request.var(self._varprefix + "to_version")
+        from_version = request.var(self._varprefix + "from_version")
+        to_version = request.var(self._varprefix + "to_version")
         negate = html.get_checkbox(self._varprefix + "negate")
-        match = html.request.var(self._varprefix + "match")
+        match = request.var(self._varprefix + "match")
         if match == "regex":
             try:
                 name = re.compile(name)

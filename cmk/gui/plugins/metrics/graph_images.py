@@ -25,7 +25,7 @@ from cmk.gui.exceptions import (
 )
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, response
+from cmk.gui.globals import response, request
 from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.graph_pdf import (
@@ -46,20 +46,20 @@ from cmk.gui.plugins.metrics import html_render
 def ajax_graph_images_for_notifications():
     graphs = []
 
-    if html.request.remote_ip not in ["127.0.0.1", "::1"]:
+    if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
-            _("You are not allowed to access this page (%s).") % html.request.remote_ip)
+            _("You are not allowed to access this page (%s).") % request.remote_ip)
 
     config.set_super_user()
 
     try:
-        host_name = html.request.var("host")
+        host_name = request.var("host")
         if not host_name:
             raise MKGeneralException(_("Missing mandatory \"host\" parameter"))
 
-        service_description = html.request.var("service", "_HOST_")
+        service_description = request.var("service", "_HOST_")
 
-        site = html.request.var("site")
+        site = request.var("site")
         # FIXME: We should really enforce site here. But it seems that the notification context
         # has no idea about the site of the host. This could be optimized later.
         #if not site:
@@ -93,7 +93,7 @@ def ajax_graph_images_for_notifications():
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
         graph_recipes = graph_identification_types.create_graph_recipes(
             graph_identification, destination=html_render.GraphDestinations.notification)
-        num_graphs = html.request.get_integer_input("num_graphs") or len(graph_recipes)
+        num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         for graph_recipe in graph_recipes[:num_graphs]:
             graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
@@ -116,7 +116,7 @@ def graph_image_data_range(graph_render_options, start_time, end_time):
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(request=None):
+def graph_image_render_options(api_request=None):
     # Set image rendering defaults
     graph_render_options = {
         "font_size": 8.0,  # pt
@@ -136,8 +136,8 @@ def graph_image_render_options(request=None):
                                                               render_unthemed=True)
 
     # Enforce settings optionally setable via request
-    if request and request.get("render_options"):
-        graph_render_options.update(request["render_options"])
+    if api_request and api_request.get("render_options"):
+        graph_render_options.update(api_request["render_options"])
 
     return graph_render_options
 
@@ -179,9 +179,9 @@ def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
     return pdf.pdf2png(pdf_graph)
 
 
-def graph_recipes_for_api_request(request):
+def graph_recipes_for_api_request(api_request):
     # Get and validate the specification
-    graph_identification = request.get("specification", [])
+    graph_identification = api_request.get("specification", [])
     if not graph_identification:
         raise MKUserError(None, _("The graph specification is missing"))
 
@@ -194,7 +194,7 @@ def graph_recipes_for_api_request(request):
     default_time_range = (time.time() - (25 * 3600), time.time())
 
     # Get and validate the data range
-    graph_data_range = request.get("data_range", {})
+    graph_data_range = api_request.get("data_range", {})
     graph_data_range.setdefault("time_range", default_time_range)
 
     time_range = graph_data_range["time_range"]
@@ -218,15 +218,15 @@ def graph_recipes_for_api_request(request):
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    if request.get("consolidation_function"):
+    if api_request.get("consolidation_function"):
         for graph_recipe in graph_recipes:
-            graph_recipe["consolidation_function"] = request.get("consolidation_function")
+            graph_recipe["consolidation_function"] = api_request.get("consolidation_function")
 
     return graph_data_range, graph_recipes
 
 
-def graph_spec_from_request(request):
-    graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
+def graph_spec_from_request(api_request):
+    graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
 
     try:
         graph_recipe = graph_recipes[0]

@@ -14851,6 +14851,10 @@ msgstr "Affiche le contenu d'un site web personnalisé."
 msgid "Displays the content of a view"
 msgstr "Affiche le contenu d'une vue"
 
+#, fuzzy
+msgid "Displays the state of a specific service."
+msgstr "Affiche une seule métrique d'un hôte et d'un service spécifique."
+
 msgid "Dissolve operation"
 msgstr "Opération de dissolution"
 
@@ -15618,6 +15622,10 @@ msgstr "Ne pas publier aux autres utilisateurs"
 
 msgid "Don't remove matching vanished services"
 msgstr "Ne pas supprimer les services disparus correspondants"
+
+#, fuzzy
+msgid "Don't show Summary"
+msgstr "Ne pas montrer une ligne de résumé"
 
 msgid "Don't show and check"
 msgstr "Ne pas montrer et vérifier"
@@ -40597,6 +40605,10 @@ msgstr "Service Regex :"
 msgid "Service Speed-O-Meter"
 msgstr "Service Speed-O-Meter"
 
+#, fuzzy
+msgid "Service State"
+msgstr "État du service"
+
 msgid "Service Status Grouping"
 msgstr "Groupement d'états de service"
 
@@ -41810,6 +41822,10 @@ msgstr "Afficher l'espace réservé à l'utilisateur <tt>root</tt>."
 
 msgid "Show stale hosts and services"
 msgstr "Afficher les hôtes et services périmés"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Résumé des notifications des hôtes"
 
 msgid ""
 "Show the dialog that can be used to update the dashboard context on initial "

@@ -14657,6 +14657,10 @@ msgstr "Toont de inhoud van een aangepaste website."
 msgid "Displays the content of a view"
 msgstr "Geeft de inhoud van een view weer"
 
+#, fuzzy
+msgid "Displays the state of a specific service."
+msgstr "Geeft een enkele metric weer van een specifieke host en service."
+
 msgid "Dissolve operation"
 msgstr "Oplossen"
 
@@ -15417,6 +15421,10 @@ msgstr "Niet publiceren naar andere gebruikers"
 
 msgid "Don't remove matching vanished services"
 msgstr "Verwijder niet overeenkomende verdwenen diensten"
+
+#, fuzzy
+msgid "Don't show Summary"
+msgstr "Geen samenvattingsregel tonen"
 
 msgid "Don't show and check"
 msgstr "Laat je niet zien en controleer"
@@ -40072,6 +40080,10 @@ msgstr "Service Regex:"
 msgid "Service Speed-O-Meter"
 msgstr "Service Snelheids-O-Meter"
 
+#, fuzzy
+msgid "Service State"
+msgstr "Dienststaat"
+
 msgid "Service Status Grouping"
 msgstr "Groepering van dienstverleningsstatussen"
 
@@ -41267,6 +41279,10 @@ msgstr "Toon ruimte gereserveerd voor de <tt>root</tt> gebruiker"
 
 msgid "Show stale hosts and services"
 msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Samenvatting voor hostmeldingen"
 
 msgid ""
 "Show the dialog that can be used to update the dashboard context on initial "

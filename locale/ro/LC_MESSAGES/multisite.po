@@ -14189,6 +14189,10 @@ msgid "Displays the content of a view"
 msgstr ""
 
 #, fuzzy
+msgid "Displays the state of a specific service."
+msgstr "O listă cu utilizatori specifici"
+
+#, fuzzy
 msgid "Dissolve operation"
 msgstr "Optiuni tabel"
 
@@ -14948,6 +14952,10 @@ msgstr ""
 #, fuzzy
 msgid "Don't remove matching vanished services"
 msgstr "nemonitorizat"
+
+#, fuzzy
+msgid "Don't show Summary"
+msgstr "Numele Elementului"
 
 msgid "Don't show and check"
 msgstr ""
@@ -39010,6 +39018,10 @@ msgid "Service Speed-O-Meter"
 msgstr ""
 
 #, fuzzy
+msgid "Service State"
+msgstr "Statusul Serverului"
+
+#, fuzzy
 msgid "Service Status Grouping"
 msgstr "Statusul Serverului"
 
@@ -40226,6 +40238,10 @@ msgstr ""
 
 msgid "Show stale hosts and services"
 msgstr ""
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "(Nu primi notificări)"
 
 msgid ""
 "Show the dialog that can be used to update the dashboard context on initial "
@@ -59877,10 +59893,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Host Groups (Grid)"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Host Groups (Summary)"
-#~ msgstr "Numele Elementului"
 
 #, fuzzy
 #~ msgid "Host Report"

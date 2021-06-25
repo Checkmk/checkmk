@@ -14129,6 +14129,10 @@ msgstr "カスタムWebサイトのコンテンツを表示します。"
 msgid "Displays the content of a view"
 msgstr "ビューのコンテンツを表示します"
 
+#, fuzzy
+msgid "Displays the state of a specific service."
+msgstr "特定のホストとサービスの単一のメトリックを表示します。"
+
 msgid "Dissolve operation"
 msgstr "溶解操作"
 
@@ -14881,6 +14885,10 @@ msgstr "他のユーザーに公開しないでください"
 
 msgid "Don't remove matching vanished services"
 msgstr "一致する消失したサービスを削除しないでください"
+
+#, fuzzy
+msgid "Don't show Summary"
+msgstr "要約行を表示しない"
 
 msgid "Don't show and check"
 msgstr "表示して確認しないでください"
@@ -38731,6 +38739,10 @@ msgstr "サービス正規表現:"
 msgid "Service Speed-O-Meter"
 msgstr "サービス速度-O-Meter"
 
+#, fuzzy
+msgid "Service State"
+msgstr "サービス状態"
+
 msgid "Service Status Grouping"
 msgstr "サービスステータスのグループ化"
 
@@ -39879,6 +39891,10 @@ msgstr "<tt>root</tt>ユーザー用に予約されているスペースを表�
 
 msgid "Show stale hosts and services"
 msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "ホスト通知の概要"
 
 msgid ""
 "Show the dialog that can be used to update the dashboard context on initial "

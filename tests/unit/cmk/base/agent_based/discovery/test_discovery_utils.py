@@ -6,7 +6,7 @@
 
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter, DiscoveryMode
 

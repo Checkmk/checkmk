@@ -9,7 +9,7 @@
 from typing import Dict, List, Union
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from mockldap import MockLdap, LDAPObject  # type: ignore[import]
 
 # userdb is needed to make the module register the post-config-load-hooks

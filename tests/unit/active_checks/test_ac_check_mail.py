@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import email
-import pytest  # type: ignore[import]
+import pytest
 from argparse import Namespace as Args
 from testlib import import_module  # type: ignore[import]
 

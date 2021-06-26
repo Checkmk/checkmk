@@ -10,7 +10,7 @@ from cmk.gui.plugins.visuals.utils import Filter
 import copy
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.config as config
 import cmk.utils.version as cmk_version

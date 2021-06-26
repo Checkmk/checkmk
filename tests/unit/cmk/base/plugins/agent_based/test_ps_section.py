@@ -10,7 +10,7 @@
 import itertools
 from typing import List, Optional
 #
-import pytest  # type: ignore[import]
+import pytest
 #
 # from cmk.utils.type_defs import CheckPluginName
 #

@@ -6,7 +6,7 @@
 
 import logging
 from typing import Dict
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.ec.main import RuleMatcher, EventServer, make_config, MatchPriority, MatchSuccess
 from cmk.ec.defaults import default_config

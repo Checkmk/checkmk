@@ -11,7 +11,7 @@ import re
 import os
 import tarfile
 import fnmatch
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 

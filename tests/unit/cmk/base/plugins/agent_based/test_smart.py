@@ -7,7 +7,7 @@
 # yapf: disable
 # type: ignore
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State

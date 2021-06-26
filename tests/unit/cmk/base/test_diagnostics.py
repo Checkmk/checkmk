@@ -9,7 +9,7 @@ from pathlib import Path
 import shutil
 import collections
 import requests
-import pytest  # type: ignore[import]
+import pytest
 
 import livestatus
 

@@ -11,7 +11,7 @@ from testlib import Check  # type: ignore[import]
 import datetime as dt
 
 import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from checktestlib import mock_item_state, assertCheckResultsEqual, CheckResult
 

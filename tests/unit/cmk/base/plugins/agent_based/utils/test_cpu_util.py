@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 
 from typing import Any, Dict
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils import cpu_util

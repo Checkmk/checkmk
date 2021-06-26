@@ -8,7 +8,7 @@
 
 from typing import List
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 

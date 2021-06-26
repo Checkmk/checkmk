@@ -8,7 +8,7 @@ import os
 import subprocess
 import re
 import logging
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.misc import is_daily_build_version
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-import pytest  # type: ignore[import]
+import pytest
 import responses  # type: ignore[import]
 
 from cmk.special_agents.agent_salesforce import main

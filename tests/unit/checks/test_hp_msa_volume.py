@@ -8,7 +8,7 @@ from typing import Any, Dict, Tuple
 from testlib import Check  # type: ignore[import]
 import freezegun  # type: ignore[import]
 
-import pytest  # type: ignore[import]
+import pytest
 from checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state
 
 # all tests in this file are hp_msa_volume check related

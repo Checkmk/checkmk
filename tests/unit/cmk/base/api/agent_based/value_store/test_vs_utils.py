@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils import store
 from cmk.utils.type_defs import CheckPluginName

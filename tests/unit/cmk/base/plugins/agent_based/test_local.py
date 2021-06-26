@@ -6,7 +6,7 @@
 
 from typing import Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric

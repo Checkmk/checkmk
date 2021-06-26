@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 
 # No stub file
-import pytest  # type: ignore[import]
+import pytest
 import cmk.base.core
 import cmk.base.config
 import cmk.base.agent_based.checking as checking

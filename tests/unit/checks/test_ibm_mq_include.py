@@ -9,7 +9,7 @@
 import os
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.check_api import MKCounterWrapped
 from cmk.base.check_legacy_includes.ibm_mq import (

@@ -8,7 +8,7 @@ import ast
 import math
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario
 

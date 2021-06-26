@@ -7,7 +7,7 @@
 # yapf: disable
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
 from cmk.gui.globals import request

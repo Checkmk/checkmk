@@ -6,7 +6,7 @@
 
 from typing import Any, Dict
 from testlib import Check  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
 from test_ibm_mq_include import parse_info
 

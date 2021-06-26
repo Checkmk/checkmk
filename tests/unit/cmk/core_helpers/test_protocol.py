@@ -9,7 +9,7 @@ import socket
 from itertools import repeat
 
 import pyghmi.exceptions  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import (

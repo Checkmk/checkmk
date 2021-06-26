@@ -6,7 +6,7 @@
 
 # TODO: This should be realized as unit tests
 
-import pytest  # type: ignore[import]
+import pytest
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 

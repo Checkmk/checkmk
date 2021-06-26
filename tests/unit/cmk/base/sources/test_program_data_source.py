@@ -7,7 +7,7 @@
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario
 

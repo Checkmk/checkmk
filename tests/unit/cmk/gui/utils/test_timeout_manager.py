@@ -6,7 +6,7 @@
 
 import time
 import signal
-import pytest  # type: ignore[import]
+import pytest
 from werkzeug.test import create_environ
 
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp

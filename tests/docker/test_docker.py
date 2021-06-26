@@ -9,7 +9,7 @@
 import sys
 import os
 import subprocess
-import pytest  # type: ignore[import]
+import pytest
 import requests
 import requests.exceptions
 import docker  # type: ignore[import]

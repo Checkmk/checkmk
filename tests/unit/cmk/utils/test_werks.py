@@ -11,7 +11,7 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from six import ensure_binary, ensure_str
 
 import testlib

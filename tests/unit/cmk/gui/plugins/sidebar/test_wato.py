@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
 from cmk.gui.plugins.sidebar.wato import (

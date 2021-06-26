@@ -10,7 +10,7 @@ import types
 from typing import Any, Callable, NamedTuple
 
 import mock
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.check_api import Service

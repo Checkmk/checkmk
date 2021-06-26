@@ -6,7 +6,7 @@
 
 from collections.abc import MutableMapping
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

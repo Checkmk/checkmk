@@ -7,7 +7,7 @@
 import io
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 from werkzeug.test import create_environ
 from cmk.gui.utils.script_helpers import application_and_request_context

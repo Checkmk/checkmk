@@ -7,7 +7,7 @@
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.msi_engine as msi_engine
 

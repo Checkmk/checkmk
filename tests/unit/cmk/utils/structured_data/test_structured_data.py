@@ -7,7 +7,7 @@
 from typing import Dict, List
 
 import shutil
-import pytest  # type: ignore[import]
+import pytest
 from pathlib import Path
 import gzip
 

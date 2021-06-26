@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 import cmk.gui.backup as backup

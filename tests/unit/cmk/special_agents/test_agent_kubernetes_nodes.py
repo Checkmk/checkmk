@@ -6,7 +6,7 @@
 
 from datetime import datetime, timezone
 
-import pytest  # type: ignore[import]
+import pytest
 from kubernetes.client.models import V1ObjectMeta, V1Node  # type: ignore # pylint: disable=import-error
 
 from cmk.special_agents.agent_kubernetes import Node, NodeList

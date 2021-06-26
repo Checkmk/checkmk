@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 from cmk.base.plugins.agent_based.utils.cpu import Section, Load
 from cmk.base.plugins.agent_based.cpu_load import check_cpu_load
 from cmk.base.api.agent_based.checking_classes import State, Metric, Result

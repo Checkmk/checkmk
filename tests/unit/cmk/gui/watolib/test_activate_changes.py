@@ -9,7 +9,7 @@ import io
 import logging
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.watolib.utils
 import cmk.utils.paths

@@ -7,7 +7,7 @@
 # yapf: disable
 # type: ignore
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib import Check  # type: ignore[import]
 from cmk.base.check_api import MKCounterWrapped
 

@@ -7,7 +7,7 @@
 # Note: this test only tests `parse_f5_bigip_vcmpfailover()` since f5_bigip_vcmpfailover
 #       uses function from f5_bigip_cluster_status
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,

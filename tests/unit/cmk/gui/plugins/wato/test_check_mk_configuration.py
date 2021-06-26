@@ -6,7 +6,7 @@
 
 import os
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.config as config
 from cmk.gui.valuespec import (

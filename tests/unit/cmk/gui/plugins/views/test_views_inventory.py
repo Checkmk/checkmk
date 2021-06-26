@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # No stub file
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.inventory
 from cmk.gui.views import View

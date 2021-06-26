@@ -6,7 +6,7 @@
 
 import time
 import ast
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import on_time
 

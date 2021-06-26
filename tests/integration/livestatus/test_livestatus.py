@@ -10,7 +10,7 @@ import time as _time
 import uuid as _uuid
 from typing import Dict, List
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import web, create_linux_test_host  # noqa: F401 # pylint: disable=unused-import
 

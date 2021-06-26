@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato

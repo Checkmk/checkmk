@@ -8,7 +8,7 @@ from cmk.base.plugins.agent_based.utils import memory
 from cmk.base.plugins.agent_based.mem_used import check_mem_used, discover_mem_used
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Metric, Service, State
 
-import pytest  # type: ignore[import]
+import pytest
 
 state = State  # TODO: cleanup
 

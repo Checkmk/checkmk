@@ -10,7 +10,7 @@ import pathlib  # pylint: disable=import-error
 import threading
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import CMKEventConsole
 import cmk.utils.paths

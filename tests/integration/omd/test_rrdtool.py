@@ -31,7 +31,7 @@ v returned data rows, includes end y
       x---v---v---v---v---y
 """
 import subprocess
-import pytest  # type: ignore[import]
+import pytest
 
 # NOTE: rrdtool consists of a C part only, so mypy is clueless...
 import rrdtool  # type: ignore[import]

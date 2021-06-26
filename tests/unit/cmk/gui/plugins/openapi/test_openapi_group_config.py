@@ -8,7 +8,7 @@ import json
 import random
 import string
 
-import pytest  # type: ignore[import]
+import pytest
 
 from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
 

@@ -12,7 +12,7 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 
-import pytest  # type: ignore[import]
+import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.version as cmk_version

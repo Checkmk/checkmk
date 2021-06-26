@@ -6,7 +6,7 @@
 
 import collections
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.log import logger
 from cmk.utils.exceptions import MKGeneralException

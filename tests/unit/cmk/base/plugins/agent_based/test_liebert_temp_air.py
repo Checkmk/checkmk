@@ -7,7 +7,7 @@
 import typing
 
 import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.liebert_temp_air import (
     parse_liebert_temp_air,

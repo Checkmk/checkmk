@@ -10,7 +10,7 @@ import os
 import re
 import sys
 import locale
-import pytest  # type: ignore[import]
+import pytest
 from utils import import_module
 
 

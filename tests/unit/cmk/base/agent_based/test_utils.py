@@ -8,7 +8,7 @@
 
 from typing import Callable, Iterable
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType

@@ -7,7 +7,7 @@
 from testlib import Check  # type: ignore[import]
 import cmk.gui.plugins.wato.check_parameters.windows_tasks as wato_windows_tasks
 
-import pytest  # type: ignore[import]
+import pytest
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

@@ -12,7 +12,7 @@ import logging
 import time
 from collections import defaultdict
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario  # type: ignore[import]
 

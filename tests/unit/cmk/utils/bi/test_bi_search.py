@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.bi.bi_search import (
     BIEmptySearch,

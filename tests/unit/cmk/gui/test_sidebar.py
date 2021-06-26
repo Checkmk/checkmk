@@ -6,7 +6,7 @@
 
 from typing import Optional
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config

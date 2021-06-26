@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-import pytest  # type: ignore[import]
+import pytest
 
 
 @pytest.mark.parametrize("args", [

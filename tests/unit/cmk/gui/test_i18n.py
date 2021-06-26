@@ -10,7 +10,7 @@ import gettext
 import subprocess
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import cmk_path
 

@@ -6,7 +6,7 @@
 
 import typing as t
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based import cisco_vpn_sessions

@@ -10,7 +10,7 @@ import re
 
 from typing import Dict, List
 
-import pytest  # type: ignore[import]
+import pytest
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 

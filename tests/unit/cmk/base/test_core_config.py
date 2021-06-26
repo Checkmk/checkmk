@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario
 

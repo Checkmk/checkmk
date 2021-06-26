@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario  # type: ignore[import]
 

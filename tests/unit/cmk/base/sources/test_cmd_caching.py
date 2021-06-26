@@ -11,7 +11,7 @@
 
 from functools import partial
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.base import Scenario
 from testlib.debug_utils import cmk_debug_enabled

@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import testlib  # type: ignore[import]
 

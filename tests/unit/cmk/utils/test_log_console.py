@@ -7,7 +7,7 @@
 import io
 import logging
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.log import console
 

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based import inv_checkmk
 from cmk.base.api.agent_based.inventory_classes import TableRow, Attributes

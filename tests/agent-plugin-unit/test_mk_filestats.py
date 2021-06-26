@@ -8,7 +8,7 @@ import ast
 import configparser
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import pytest  # type: ignore[import]
+import pytest
 import sys
 from utils import import_module
 

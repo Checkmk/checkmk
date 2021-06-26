@@ -6,7 +6,7 @@
 
 from typing import Optional, List
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State

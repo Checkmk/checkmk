@@ -6,7 +6,7 @@
 
 import time
 from pathlib import Path
-import pytest  # type: ignore[import]
+import pytest
 
 import omdlib.tmpfs
 from omdlib.tmpfs import add_to_fstab, unmount_tmpfs, restore_tmpfs_dump

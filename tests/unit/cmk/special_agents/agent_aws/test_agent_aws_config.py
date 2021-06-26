@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,)

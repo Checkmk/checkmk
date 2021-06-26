@@ -6,7 +6,7 @@
 
 import os
 import re  # noqa: F401 # pylint: disable=unused-import
-import pytest  # type: ignore[import]
+import pytest
 
 from checktestlib import CheckResult, assertCheckResultsEqual
 from cmk.base.check_api import (  # noqa: F401 # pylint: disable=unused-import

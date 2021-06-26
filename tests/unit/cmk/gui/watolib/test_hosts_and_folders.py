@@ -8,7 +8,7 @@ import contextlib
 import os
 import shutil
 
-import pytest  # type: ignore[import]
+import pytest
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 import cmk.gui.config as config

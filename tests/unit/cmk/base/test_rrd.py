@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+import pytest
 import cmk.base.rrd as rrd
 
 NAGIOS_SERVICE_XML_MULTIPLE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

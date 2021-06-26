@@ -6,7 +6,7 @@
 
 # yapf: disable
 from typing import Any, Dict
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,

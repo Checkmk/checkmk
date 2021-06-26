@@ -9,7 +9,7 @@ import re
 import subprocess
 from typing import List
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import web  # noqa: F401 # pylint: disable=unused-import
 from testlib.utils import get_standard_linux_agent_output

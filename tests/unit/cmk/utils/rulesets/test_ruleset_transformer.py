@@ -6,7 +6,7 @@
 
 from typing import Dict, List, NamedTuple, Tuple, Union
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 import cmk.utils.tags

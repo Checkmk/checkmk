@@ -14,7 +14,7 @@ import sys
 import time
 from typing import Any, Dict, List
 
-import pytest  # type: ignore[import]
+import pytest
 from PIL import Image  # type: ignore[import]
 
 import cmk.utils.version as cmk_version

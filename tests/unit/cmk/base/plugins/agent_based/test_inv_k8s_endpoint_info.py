@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.inventory_k8s_endpoint_info import inventory_k8s_endpoints
 from cmk.base.plugins.agent_based.k8s_endpoint_info import parse_k8s_endpoint_info

@@ -10,7 +10,7 @@ import datetime
 import itertools
 from typing import Any, Dict, List, Optional, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state

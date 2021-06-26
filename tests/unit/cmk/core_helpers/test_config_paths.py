@@ -8,7 +8,7 @@ import shutil
 from contextlib import suppress
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 

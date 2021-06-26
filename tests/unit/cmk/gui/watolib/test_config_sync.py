@@ -11,7 +11,7 @@ from io import BufferedIOBase
 from typing import Dict, List
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 import responses  # type: ignore[import]
 
 import cmk.utils.paths

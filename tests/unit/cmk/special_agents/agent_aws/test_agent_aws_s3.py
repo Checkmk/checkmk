@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+import pytest
 
 from datetime import datetime as dt
 from agent_aws_fake_clients import (

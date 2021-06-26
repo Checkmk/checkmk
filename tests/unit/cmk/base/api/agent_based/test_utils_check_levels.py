@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 import math
 
-import pytest  # type: ignore[import]
+import pytest
 from cmk.base.api.agent_based import utils, render
 from cmk.base.api.agent_based.checking_classes import State, Metric, Result
 

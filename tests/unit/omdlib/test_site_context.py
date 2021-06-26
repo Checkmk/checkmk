@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+import pytest
 
 import omdlib.main
 

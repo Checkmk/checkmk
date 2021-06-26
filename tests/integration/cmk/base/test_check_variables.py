@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 import cmk.base.config as config

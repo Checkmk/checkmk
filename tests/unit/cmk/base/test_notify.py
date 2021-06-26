@@ -6,7 +6,7 @@
 
 import os
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base import notify
 

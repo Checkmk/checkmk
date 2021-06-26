@@ -7,7 +7,7 @@
 import hashlib
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.config
 from cmk.gui.exceptions import MKUserError

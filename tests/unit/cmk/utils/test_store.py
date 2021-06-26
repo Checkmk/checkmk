@@ -16,7 +16,7 @@ import errno
 from pathlib import Path
 
 from six import ensure_binary
-import pytest  # type: ignore[import]
+import pytest
 from testlib import import_module, wait_until
 
 import cmk.utils.store as store

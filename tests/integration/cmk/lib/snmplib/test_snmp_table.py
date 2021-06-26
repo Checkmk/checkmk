@@ -6,7 +6,7 @@
 
 from typing import List, MutableMapping, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.exceptions import MKSNMPError
 from cmk.utils.type_defs import SectionName

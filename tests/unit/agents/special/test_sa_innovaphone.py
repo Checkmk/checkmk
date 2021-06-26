@@ -7,7 +7,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 import os
 import vcr  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 from cmk.special_agents import agent_innovaphone
 
 

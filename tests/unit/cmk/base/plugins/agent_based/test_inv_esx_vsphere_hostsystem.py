@@ -6,7 +6,7 @@
 
 from collections import OrderedDict
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib import set_timezone
 
 import cmk.base.api.agent_based.register as agent_based_register

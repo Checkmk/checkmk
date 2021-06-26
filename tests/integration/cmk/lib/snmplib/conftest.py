@@ -10,7 +10,7 @@ import subprocess
 from typing import NamedTuple
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import wait_until  # type: ignore[import]
 

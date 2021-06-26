@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.http import Response

@@ -6,7 +6,7 @@
 import os
 import typing
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

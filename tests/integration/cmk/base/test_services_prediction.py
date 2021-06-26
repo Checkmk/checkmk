@@ -9,7 +9,7 @@ from datetime import datetime
 import json
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException

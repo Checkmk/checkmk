@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+import pytest
 from typing import List, Optional, Tuple
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,)

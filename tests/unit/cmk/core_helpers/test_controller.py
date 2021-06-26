@@ -6,7 +6,7 @@
 
 import logging
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.paths import core_helper_config_dir
 

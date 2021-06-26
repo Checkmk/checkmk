@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,

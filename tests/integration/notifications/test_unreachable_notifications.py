@@ -9,7 +9,7 @@ import os
 import time
 from typing import Optional
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import web, WatchLog, wait_until  # noqa: F401 # pylint: disable=unused-import
 

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, NamedTuple, Literal, Optional, Dict
 from functools import lru_cache
 
-import pytest  # type: ignore[import]
+import pytest
 import webtest  # type: ignore[import]
 from mock import MagicMock
 

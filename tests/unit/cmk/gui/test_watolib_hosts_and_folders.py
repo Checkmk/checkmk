@@ -8,7 +8,7 @@ import datetime
 import time
 
 import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import on_time
 import cmk.gui.watolib as watolib

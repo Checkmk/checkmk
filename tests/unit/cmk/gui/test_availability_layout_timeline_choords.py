@@ -7,7 +7,7 @@
 import calendar
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.gui.availability import layout_timeline_choords
 

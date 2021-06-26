@@ -12,7 +12,7 @@ import errno
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from _pytest.doctest import DoctestItem
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?

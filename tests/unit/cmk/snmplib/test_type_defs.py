@@ -6,7 +6,7 @@
 
 import json
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.snmplib.type_defs import (
     BackendOIDSpec,

@@ -6,7 +6,7 @@
 
 from typing import Callable
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.type_defs import SectionName
 

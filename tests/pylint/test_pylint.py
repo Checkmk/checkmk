@@ -13,7 +13,7 @@ import subprocess
 import sys
 import tempfile
 
-import pytest  # type: ignore[import]
+import pytest
 
 import testlib.pylint_cmk as pylint_cmk
 from testlib import is_enterprise_repo, repo_path

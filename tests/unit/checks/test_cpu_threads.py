@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Any
-import pytest  # type: ignore[import]
+import pytest
 from cmk.base.plugins.agent_based.utils.cpu import Section, Load
 from cmk.base.plugins.agent_based.cpu import parse_cpu
 from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads

@@ -8,7 +8,7 @@ import os
 import socket
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]

@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import time
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.config as config
 import cmk.gui.http as http

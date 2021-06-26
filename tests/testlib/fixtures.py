@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.web_session import CMKWebSession
 from testlib.event_console import CMKEventConsole

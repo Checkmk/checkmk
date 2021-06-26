@@ -11,7 +11,7 @@ import socket
 import ssl
 from contextlib import closing
 
-import pytest  # type: ignore[import]
+import pytest
 
 import omdlib.certs as certs
 import livestatus

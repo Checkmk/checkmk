@@ -8,7 +8,7 @@
 
 import os
 import subprocess
-import pytest  # type: ignore[import]
+import pytest
 
 
 def test_01_python_interpreter_exists(site):

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.bi.bi_legacy_config_converter
 import bi_test_data.sample_config as sample_config

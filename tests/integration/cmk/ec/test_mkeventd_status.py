@@ -6,7 +6,7 @@
 
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
 

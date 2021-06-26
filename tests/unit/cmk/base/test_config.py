@@ -7,7 +7,7 @@
 import re
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from six import ensure_str
 
 # No stub file

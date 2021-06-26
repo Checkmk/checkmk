@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

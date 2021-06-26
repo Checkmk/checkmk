@@ -6,7 +6,7 @@
 
 import time
 import os
-import pytest  # type: ignore[import]
+import pytest
 import cmk.utils.paths
 import cmk.utils.log
 import cmk.utils.piggyback as piggyback

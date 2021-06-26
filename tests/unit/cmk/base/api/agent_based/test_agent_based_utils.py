@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification

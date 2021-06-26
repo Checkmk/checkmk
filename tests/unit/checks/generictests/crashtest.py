@@ -42,7 +42,7 @@ import pprint
 import tarfile
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 import generictests
 from generictests.regression import WritableDataset

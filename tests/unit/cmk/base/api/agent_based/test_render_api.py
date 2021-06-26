@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import inspect
 import time
-import pytest  # type: ignore[import]
+import pytest
 import cmk.base.api.agent_based.render as render
 
 

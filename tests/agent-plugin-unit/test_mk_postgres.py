@@ -7,7 +7,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 import sys
 import copy
-import pytest  # type: ignore[import]
+import pytest
 from mock import patch, Mock
 from utils import import_module
 

@@ -6,7 +6,7 @@
 
 import sys
 from typing import List
-import pytest  # type: ignore[import]
+import pytest
 from cmk.utils.python_printer import pformat
 
 

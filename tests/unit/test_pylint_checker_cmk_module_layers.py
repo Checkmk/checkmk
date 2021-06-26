@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 
 import itertools
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib.pylint_checker_cmk_module_layers import (
     _get_absolute_importee,

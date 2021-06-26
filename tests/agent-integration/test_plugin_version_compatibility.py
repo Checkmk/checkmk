@@ -8,7 +8,7 @@
 
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 import docker  # type: ignore[import]
 
 import testlib

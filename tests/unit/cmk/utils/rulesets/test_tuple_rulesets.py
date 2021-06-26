@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 from typing import Dict, List, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib.base import Scenario
 
 import cmk.base.config as config

@@ -7,7 +7,7 @@
 from collections import namedtuple
 from testlib import Check  # type: ignore[import]
 
-import pytest  # type: ignore[import]
+import pytest
 
 from checktestlib import CheckResult, assertCheckResultsEqual
 # Mark all tests in this file as check related tests

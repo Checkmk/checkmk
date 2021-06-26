@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName
 

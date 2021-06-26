@@ -10,7 +10,7 @@ import os
 from typing import Dict, List
 from importlib import import_module
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib import cmk_path  # type: ignore[import]
 
 # TODO: Actually fix this stuff.

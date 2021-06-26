@@ -6,7 +6,7 @@
 
 from typing import Dict, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.api.agent_based.utils import GetRateError, get_rate, get_average
 

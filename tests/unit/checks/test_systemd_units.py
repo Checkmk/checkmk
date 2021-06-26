@@ -6,7 +6,7 @@
 
 import collections
 from testlib import Check  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 pytestmark = pytest.mark.checks
 

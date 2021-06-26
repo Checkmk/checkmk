@@ -6,7 +6,7 @@
 
 import time
 import os
-import pytest  # type: ignore[import]
+import pytest
 
 from testlib import WatchLog
 from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import

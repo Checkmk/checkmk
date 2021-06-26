@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import pytest  # type: ignore[import]
+import pytest
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
 

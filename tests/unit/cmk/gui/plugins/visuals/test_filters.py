@@ -6,7 +6,7 @@
 
 # yapf: disable
 from collections import namedtuple
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tags

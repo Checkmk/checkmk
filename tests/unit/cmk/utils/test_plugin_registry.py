@@ -6,7 +6,7 @@
 from typing import Type
 
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.plugin_registry
 

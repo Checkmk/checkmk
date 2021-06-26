@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
-import pytest  # type: ignore[import]
+import pytest
 from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks

@@ -7,7 +7,7 @@
 import math
 import time
 from pprint import pprint
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base import prediction
 from testlib import on_time

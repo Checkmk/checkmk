@@ -7,7 +7,7 @@
 import re
 
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element

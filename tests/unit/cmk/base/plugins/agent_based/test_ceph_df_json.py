@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 import cmk.base.plugins.agent_based.ceph_df as ceph_df
 
 SECTION1 = [('SUMMARY', 28536947.359375, 22427607.171875, 0),

@@ -9,7 +9,7 @@
 import json
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import cmk.utils.paths

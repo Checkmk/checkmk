@@ -11,7 +11,7 @@ import json
 from io import BytesIO
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from six import ensure_str
 
 from cmk.utils.i18n import _

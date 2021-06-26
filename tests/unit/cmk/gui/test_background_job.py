@@ -9,7 +9,7 @@ import time
 import multiprocessing
 import sys
 
-import pytest  # type: ignore[import]
+import pytest
 
 import testlib
 

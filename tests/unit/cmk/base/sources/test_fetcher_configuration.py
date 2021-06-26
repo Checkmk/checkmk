@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
 from cmk.core_helpers import FetcherType
 

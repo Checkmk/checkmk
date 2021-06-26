@@ -10,8 +10,7 @@ from pathlib import Path
 import pytest
 from six import ensure_str
 
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback

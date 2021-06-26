@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
 
 @pytest.fixture(autouse=True, scope="session")

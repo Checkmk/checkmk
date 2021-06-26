@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import testlib  # type: ignore[import]
+import testlib
 
 import cmk.utils.paths
 import cmk.base.config as config

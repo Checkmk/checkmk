@@ -6,8 +6,8 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import pytest
-from testlib import import_module  # type: ignore[import]
-from cmk.utils.mailbox import _active_check_main_core  # type: ignore[import]
+from testlib import import_module
+from cmk.utils.mailbox import _active_check_main_core
 
 
 @pytest.fixture(scope="module")

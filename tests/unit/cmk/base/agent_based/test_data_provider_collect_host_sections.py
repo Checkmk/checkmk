@@ -8,8 +8,7 @@
 
 import pytest
 
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot

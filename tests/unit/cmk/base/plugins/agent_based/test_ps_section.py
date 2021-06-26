@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.utils import ps
 #
 # from checktestlib import CheckResult, assertCheckResultsEqual
 #
-# from testlib import on_time  # type: ignore[import]
+# from testlib import on_time
 
 pytestmark = pytest.mark.checks
 

@@ -12,7 +12,7 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
                          MockHostExtraConf, mock_item_state, \
                          Immutables, assertEqual
-from testlib import MissingCheckInfoError, Check  # type: ignore[import]
+from testlib import MissingCheckInfoError, Check
 from generictests.checkhandler import checkhandler
 
 from cmk.utils.check_utils import maincheckify

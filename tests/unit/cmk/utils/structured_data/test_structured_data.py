@@ -11,7 +11,7 @@ import pytest
 from pathlib import Path
 import gzip
 
-from testlib import cmk_path  # type: ignore[import]
+from testlib import cmk_path
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree, Container, Attributes, Numeration

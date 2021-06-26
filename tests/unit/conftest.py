@@ -25,11 +25,9 @@ import cmk.utils.version as cmk_version
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
 
-# No stub file
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
-# No stub file
-from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+from testlib import is_managed_repo, is_enterprise_repo
+from testlib.debug_utils import cmk_debug_enabled
 
 logger = logging.getLogger(__name__)
 

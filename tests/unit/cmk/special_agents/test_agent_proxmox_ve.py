@@ -451,7 +451,7 @@ def test_parse_backup_logs(logfile, expected_results, expected_exception) -> Non
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from testlib.utils import cmk_path  # type: ignore[import]
+    from testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",
         os.path.join(cmk_path(), "cmk/special_agents/agent_proxmox_ve.py"),

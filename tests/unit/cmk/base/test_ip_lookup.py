@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from testlib.base import Scenario
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

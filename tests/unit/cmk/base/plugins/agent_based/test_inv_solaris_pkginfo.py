@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import set_timezone  # type: ignore[import]
+from testlib import set_timezone
 
 from cmk.utils.type_defs import InventoryPluginName
 from cmk.base.api.agent_based import register

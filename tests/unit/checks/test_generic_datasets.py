@@ -23,7 +23,7 @@ regression test dataset as described in ''checks/generictests/regression.py''
 from importlib import import_module
 import pytest
 
-from testlib import on_time  # type: ignore[import]
+from testlib import on_time
 import generictests
 
 pytestmark = pytest.mark.checks

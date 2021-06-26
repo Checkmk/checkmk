@@ -15,9 +15,7 @@
 #########################################################################################
 
 import fnmatch
-import getpass
 import hashlib
-import os
 import pathlib
 import time
 from typing import (
@@ -84,14 +82,8 @@ def _compile_params() -> Dict[str, Any]:
 
 
 def _is_cache_new(last_run: float, node: Optional[str]) -> bool:
-    if node is None:
-        return True
-
-    path = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
-    try:
-        return os.stat(path).st_mtime > last_run
-    except FileNotFoundError as exc:
-        raise FileNotFoundError("cache not found: %s" % path) from exc
+    return (node is None or
+            pathlib.Path(cmk.utils.paths.tcp_cache_dir, node).stat().st_mtime > last_run)
 
 
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
@@ -455,12 +447,8 @@ def check_logwatch_generic(
     block_collector = LogwatchBlockCollector()
 
     logmsg_file_exists = logmsg_file_path.exists()
-    mode = 'r+' if logmsg_file_exists else 'w'
-    try:
-        logmsg_file_handle = logmsg_file_path.open(mode, encoding='utf-8')
-    except IOError as exc:
-        raise IOError("User %r cannot open file for writing: %s" %
-                      (getpass.getuser(), exc)) from exc
+    logmsg_file_handle = logmsg_file_path.open('r+' if logmsg_file_exists else 'w',
+                                               encoding='utf-8')
 
     # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()

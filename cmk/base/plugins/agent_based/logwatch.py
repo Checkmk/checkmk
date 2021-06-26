@@ -462,13 +462,7 @@ def check_logwatch_generic(
     else:  # parse cached log lines
         reclassify = _patterns_changed(logmsg_file_handle, pattern_hash)
 
-        logfile_size = logmsg_file_path.stat().st_size
-        if not reclassify and logfile_size > max_filesize:
-            # early out: without reclassification the file won't shrink and if it is already at
-            # the maximum size, all input is dropped anyway
-            if logfile_size > max_filesize * 2:
-                # if the file is far too large, truncate it
-                truncate_by_line(logmsg_file_path, max_filesize)
+        if not reclassify and _truncate_way_too_large_result(logmsg_file_path, max_filesize):
             yield _dropped_msg_result(max_filesize)
             return
 
@@ -560,6 +554,22 @@ def _patterns_changed(file_handle: IO[str], current_pattern: str) -> bool:
     if (pref, suff) == ('[[[', ']]]'):
         return pattern != current_pattern
     file_handle.seek(0)
+    return True
+
+
+def _truncate_way_too_large_result(
+    file_path: pathlib.Path,
+    max_filesize: int,
+) -> bool:
+    logfile_size = file_path.stat().st_size
+    if logfile_size <= max_filesize:
+        return False
+
+    # early out: without reclassification the file won't shrink and if it is already at
+    # the maximum size, all input is dropped anyway
+    if logfile_size > max_filesize * 2:
+        # if the file is far too large, truncate it
+        truncate_by_line(file_path, max_filesize)
     return True
 
 

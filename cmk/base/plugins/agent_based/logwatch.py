@@ -353,6 +353,7 @@ class LogwatchBlock:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines = []
+        self.saw_lines = False
         self.last_worst_line = ''
         self.counts: Counter[int] = Counter()  # matches of a certain pattern
         self.states_counter: Counter[str] = Counter()  # lines with a certain state
@@ -364,6 +365,7 @@ class LogwatchBlock:
         return [header] + self.lines
 
     def add_line(self, line, reclassify):
+        self.saw_lines = True
 
         try:
             level, text = line.split(None, 1)
@@ -392,6 +394,7 @@ class LogwatchBlockCollector:
     def __init__(self):
         self.worst = 0
         self.last_worst_line = ""
+        self.saw_lines = False
         self._output_lines: List[str] = []
         self._states_counter: Counter[str] = Counter()
 
@@ -400,7 +403,12 @@ class LogwatchBlockCollector:
         return sum(len(line.encode('utf-8')) for line in self._output_lines)
 
     def __call__(self, block: Optional[LogwatchBlock]) -> None:
-        if not block or block.worst <= -1:
+        if not block:
+            return
+
+        self.saw_lines |= block.saw_lines
+
+        if block.worst <= -1:
             return
 
         self._states_counter += block.states_counter
@@ -455,7 +463,6 @@ def check_logwatch_generic(
 
     # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
-    net_lines = 0
     if not logmsg_file_exists:
         output_size = 0
         reclassify = True
@@ -479,7 +486,6 @@ def check_logwatch_generic(
                 current_block = LogwatchBlock(line, patterns)
             elif current_block is not None:
                 current_block.add_line(line, reclassify)
-                net_lines += 1
 
         # The last section is finished here. Add it to the list of reclassified lines if the
         # state of the block is not "I" -> "ignore"
@@ -501,7 +507,6 @@ def check_logwatch_generic(
         current_block = LogwatchBlock(header, patterns)
         for line in loglines:
             current_block.add_line(line, False)
-            net_lines += 1
             output_size += len(line.encode('utf-8'))
             if output_size >= max_filesize:
                 break
@@ -517,8 +522,9 @@ def check_logwatch_generic(
         logmsg_file_handle.write(line)
     # correct output size
     logmsg_file_handle.close()
-    if net_lines == 0 and logmsg_file_exists:
-        logmsg_file_path.unlink()
+
+    if not block_collector.saw_lines:
+        logmsg_file_path.unlink(missing_ok=True)
 
     # if logfile has reached maximum size, abort with critical state
     if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > max_filesize:

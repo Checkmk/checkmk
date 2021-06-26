@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 from checktestlib import (
     assertDiscoveryResultsEqual,
     DiscoveryResult,

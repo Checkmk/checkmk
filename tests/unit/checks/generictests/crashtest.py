@@ -46,7 +46,7 @@ import pytest
 
 import generictests
 from generictests.regression import WritableDataset
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks

@@ -6,7 +6,7 @@
 
 import time
 
-import pytest  # mypy: ignore
+import pytest
 from freezegun import freeze_time  # type: ignore[import]
 from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
     Section,

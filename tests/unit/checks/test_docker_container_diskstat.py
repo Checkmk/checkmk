@@ -8,7 +8,7 @@
 import os
 from typing import Tuple, Callable
 import pytest
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 from cmk.base.check_api import MKCounterWrapped
 from checktestlib import (
     DiscoveryResult,

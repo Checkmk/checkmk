@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from testlib import Check  # type: ignore[import]
-import pytest  #type: ignore[import]
+from testlib import Check
+import pytest
 from checktestlib import (
     BasicCheckResult,
     CheckResult,

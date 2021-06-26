@@ -7,7 +7,7 @@
 # coding=utf-8
 # yapf: disable
 import collections
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 import datetime as dt
 
 import freezegun  # type: ignore[import]

@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 
 from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.api.agent_based.register as agent_based_register

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import ActiveCheck  # type: ignore[import]
+from testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 

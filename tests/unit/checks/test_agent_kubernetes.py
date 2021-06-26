@@ -7,7 +7,7 @@
 from typing import List, Dict, Any
 
 import pytest
-from testlib import SpecialAgent  # type: ignore[import]
+from testlib import SpecialAgent
 
 from cmk.base.config import SpecialAgentInfoFunctionResult
 from cmk.special_agents.agent_kubernetes import parse_arguments, get_api_client

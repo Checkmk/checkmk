@@ -1,7 +1,7 @@
 import pytest
 
 from collections import namedtuple
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 from checktestlib import (
     CheckResult,
     BasicCheckResult,

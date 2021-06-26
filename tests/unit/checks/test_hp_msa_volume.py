@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Tuple
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 import freezegun  # type: ignore[import]
 
 import pytest

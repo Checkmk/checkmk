@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List, Tuple
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 import pytest
 
 from cmk.base.check_api import MKCounterWrapped

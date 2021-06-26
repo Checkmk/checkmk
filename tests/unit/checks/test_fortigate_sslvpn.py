@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from testlib import Check  # type: ignore[import]
+from testlib import Check
 import pytest
 
 

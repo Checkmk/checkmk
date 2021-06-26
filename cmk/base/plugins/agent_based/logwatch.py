@@ -488,14 +488,8 @@ def check_logwatch_generic(
     header = six.ensure_str(header)
 
     # process new input lines - but only when there is some room left in the file
-    if output_size < max_filesize:
-        current_block = LogwatchBlock(header, patterns)
-        for line in loglines:
-            current_block.add_line(line, False)
-            output_size += len(line.encode('utf-8'))
-            if output_size >= max_filesize:
-                break
-        block_collector.add(current_block)
+    block_collector.extend(
+        _extract_blocks([header] + loglines, patterns, False, limit=max_filesize - output_size))
 
     # when reclassifying, rewrite the whole file, otherwise append
     if reclassify and block_collector.get_lines():
@@ -565,9 +559,11 @@ def _truncate_way_too_large_result(
 
 
 def _extract_blocks(
-    lines: Iterable[str],
-    patterns,
-    reclassify: bool,
+        lines: Iterable[str],
+        patterns,
+        reclassify: bool,
+        *,
+        limit=float('inf'),
 ) -> Iterable[LogwatchBlock]:
     current_block = None
     for line in lines:
@@ -581,6 +577,9 @@ def _extract_blocks(
             current_block = LogwatchBlock(line, patterns)
         elif current_block is not None:
             current_block.add_line(line, reclassify)
+            limit -= len(line.encode('utf-8'))
+            if limit <= 0:
+                return
 
     if current_block is not None:
         yield current_block

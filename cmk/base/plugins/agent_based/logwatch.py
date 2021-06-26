@@ -402,6 +402,10 @@ class LogwatchBlockCollector:
     def size(self) -> int:
         return sum(len(line.encode('utf-8')) for line in self._output_lines)
 
+    def extend(self, blocks: Iterable[LogwatchBlock]) -> None:
+        for block in blocks:
+            self.add(block)
+
     def add(self, block: LogwatchBlock) -> None:
         self.saw_lines |= block.saw_lines
 
@@ -470,21 +474,7 @@ def check_logwatch_generic(
             yield _dropped_msg_result(max_filesize)
             return
 
-        current_block = None
-        for line in logmsg_file_handle:
-            line = line.rstrip('\n')
-            # Skip empty lines
-            if not line:
-                continue
-            if line.startswith('<<<') and line.endswith('>>>'):
-                if current_block is not None:
-                    block_collector.add(current_block)
-                current_block = LogwatchBlock(line, patterns)
-            elif current_block is not None:
-                current_block.add_line(line, reclassify)
-
-        if current_block is not None:
-            block_collector.add(current_block)
+        block_collector.extend(_extract_blocks(logmsg_file_handle, patterns, reclassify))
 
         if reclassify:
             output_size = block_collector.size
@@ -572,6 +562,28 @@ def _truncate_way_too_large_result(
         # if the file is far too large, truncate it
         truncate_by_line(file_path, max_filesize)
     return True
+
+
+def _extract_blocks(
+    lines: Iterable[str],
+    patterns,
+    reclassify: bool,
+) -> Iterable[LogwatchBlock]:
+    current_block = None
+    for line in lines:
+        line = line.rstrip('\n')
+        # Skip empty lines
+        if not line:
+            continue
+        if line.startswith('<<<') and line.endswith('>>>'):
+            if current_block is not None:
+                yield current_block
+            current_block = LogwatchBlock(line, patterns)
+        elif current_block is not None:
+            current_block.add_line(line, reclassify)
+
+    if current_block is not None:
+        yield current_block
 
 
 def _dropped_msg_result(max_size: int) -> Result:

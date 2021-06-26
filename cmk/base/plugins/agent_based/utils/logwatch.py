@@ -112,13 +112,13 @@ def reclassify(
     return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
 
 
-def errors(cluster_section: Dict[Optional[str], Section]) -> Iterable[Result]:
+def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[Result]:
     """
         >>> cluster_section = {
         ...     None: {"errors": ["error w/o node info"]},
         ...     "node": {"errors": ["some error"]},
         ... }
-        >>> for r in errors(cluster_section):
+        >>> for r in check_errors(cluster_section):
         ...     print((r.state, r.summary))
         (<State.UNKNOWN: 3>, 'error w/o node info')
         (<State.UNKNOWN: 3>, '[node] some error')

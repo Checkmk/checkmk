@@ -165,7 +165,7 @@ def check_logwatch(
     item: str,
     section: ClusterSection,
 ) -> CheckResult:
-    yield from logwatch.errors(section)
+    yield from logwatch.check_errors(section)
 
     value_store = get_value_store()
     last_run = value_store.get("last_run", 0)
@@ -300,7 +300,7 @@ def check_logwatch_groups(
     params: DiscoveredGroupParams,
     section: ClusterSection,
 ) -> CheckResult:
-    yield from logwatch.errors(section)
+    yield from logwatch.check_errors(section)
 
     group_patterns = set(params['group_patterns'])
 

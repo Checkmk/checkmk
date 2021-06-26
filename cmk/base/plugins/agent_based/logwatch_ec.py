@@ -209,7 +209,7 @@ def check_logwatch_ec_common(
     *,
     service_level: int,
 ) -> CheckResult:
-    yield from logwatch.errors(parsed)
+    yield from logwatch.check_errors(parsed)
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log

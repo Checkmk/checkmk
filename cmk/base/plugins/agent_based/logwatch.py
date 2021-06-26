@@ -362,14 +362,14 @@ class LogwatchBlock:
         header = u"<<<%s %s>>>\n" % (self._timestamp, state_str)
         return [header] + self.lines
 
-    def add_line(self, line, skip_reclassification):
+    def add_line(self, line, reclassify):
 
         try:
             level, text = line.split(None, 1)
         except ValueError:
             level, text = line.strip(), ""
 
-        if not skip_reclassification:
+        if reclassify:
             level = logwatch.reclassify(self.counts, self._patterns, text, level)
 
         state_int = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
@@ -383,7 +383,7 @@ class LogwatchBlock:
         if level != '.':
             self.states_counter[level] += 1
 
-        if not skip_reclassification and level != "I":
+        if reclassify and level != "I":
             self.lines.append(u"%s %s\n" % (level, text))
 
 
@@ -443,7 +443,6 @@ def check_logwatch_generic(
         return
 
     block_collector = LogwatchBlockCollector()
-    current_block = None
 
     logmsg_file_exists = logmsg_file_path.exists()
     mode = 'r+' if logmsg_file_exists else 'w'
@@ -456,21 +455,23 @@ def check_logwatch_generic(
     # TODO: repr() of a dict may change.
     pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
     net_lines = 0
-    # parse cached log lines
-    if logmsg_file_exists:
+    if not logmsg_file_exists:
+        output_size = 0
+        reclassify = True
+    else:  # parse cached log lines
         # new format contains hash of patterns on the first line so we only reclassify if they
         # changed
         initline = logmsg_file_handle.readline().rstrip('\n')
         if initline.startswith('[[[') and initline.endswith(']]]'):
             old_pattern_hash = initline[3:-3]
-            skip_reclassification = old_pattern_hash == pattern_hash
+            reclassify = old_pattern_hash != pattern_hash
         else:
             logmsg_file_handle.seek(0)
-            skip_reclassification = False
+            reclassify = True
 
         logfile_size = logmsg_file_path.stat().st_size
-        if skip_reclassification and logfile_size > max_filesize:
-            # early out: without reclassification the file wont shrink and if it is already at
+        if not reclassify and logfile_size > max_filesize:
+            # early out: without reclassification the file won't shrink and if it is already at
             # the maximum size, all input is dropped anyway
             if logfile_size > max_filesize * 2:
                 # if the file is far too large, truncate it
@@ -478,6 +479,7 @@ def check_logwatch_generic(
             yield _dropped_msg_result(max_filesize)
             return
 
+        current_block = None
         for line in logmsg_file_handle:
             line = line.rstrip('\n')
             # Skip empty lines
@@ -489,22 +491,19 @@ def check_logwatch_generic(
                 block_collector(current_block)
                 current_block = LogwatchBlock(line, patterns)
             elif current_block is not None:
-                current_block.add_line(line, skip_reclassification)
+                current_block.add_line(line, reclassify)
                 net_lines += 1
 
         # The last section is finished here. Add it to the list of reclassified lines if the
         # state of the block is not "I" -> "ignore"
         block_collector(current_block)
 
-        if skip_reclassification:
-            output_size = logmsg_file_handle.tell()
-            # when skipping reclassification, output lines contains only headers anyway
-            block_collector.clear_lines()
-        else:
+        if reclassify:
             output_size = block_collector.size
-    else:
-        output_size = 0
-        skip_reclassification = False
+        else:
+            output_size = logmsg_file_handle.tell()
+            # when skipping reclassification, output lines contain only headers anyway
+            block_collector.clear_lines()
 
     header = time.strftime("<<<%Y-%m-%d %H:%M:%S UNKNOWN>>>\n")
     output_size += len(header)
@@ -521,8 +520,8 @@ def check_logwatch_generic(
                 break
         block_collector(current_block)
 
-    # when reclassifying, rewrite the whole file, outherwise append
-    if not skip_reclassification and block_collector.get_lines():
+    # when reclassifying, rewrite the whole file, otherwise append
+    if reclassify and block_collector.get_lines():
         logmsg_file_handle.seek(0)
         logmsg_file_handle.truncate()
         logmsg_file_handle.write(u"[[[%s]]]\n" % pattern_hash)

@@ -22,7 +22,7 @@ from typing import (
 )
 
 import urllib3  # type: ignore[import]
-import freezegun  # type: ignore[import]
+import freezegun
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 

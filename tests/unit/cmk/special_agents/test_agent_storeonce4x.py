@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from mock import mock_open, patch
-from freezegun import freeze_time  # type: ignore[import]
+from freezegun import freeze_time
 import responses  # type: ignore[import]
 from cmk.special_agents.agent_storeonce4x import StoreOnceOauth2Session
 

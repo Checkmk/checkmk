@@ -6,7 +6,7 @@
 """Submodule providing the `run` function of generictests package"""
 from ast import literal_eval
 from contextlib import contextmanager
-import freezegun  # type: ignore[import]
+import freezegun
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \

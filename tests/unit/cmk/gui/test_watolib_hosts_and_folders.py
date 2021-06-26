@@ -7,7 +7,7 @@
 import datetime
 import time
 
-import freezegun  # type: ignore[import]
+import freezegun
 import pytest
 
 from testlib import on_time

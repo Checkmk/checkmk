@@ -6,7 +6,7 @@
 
 from typing import Any, Dict, Tuple
 from testlib import Check
-import freezegun  # type: ignore[import]
+import freezegun
 
 import pytest
 from checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state

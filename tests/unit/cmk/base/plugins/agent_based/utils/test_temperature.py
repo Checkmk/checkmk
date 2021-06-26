@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import freezegun  # type: ignore[import]
+import freezegun
 import pytest
 
 from cmk.base.plugins.agent_based.utils import temperature

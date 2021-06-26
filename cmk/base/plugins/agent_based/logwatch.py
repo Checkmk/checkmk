@@ -402,10 +402,7 @@ class LogwatchBlockCollector:
     def size(self) -> int:
         return sum(len(line.encode('utf-8')) for line in self._output_lines)
 
-    def __call__(self, block: Optional[LogwatchBlock]) -> None:
-        if not block:
-            return
-
+    def add(self, block: LogwatchBlock) -> None:
         self.saw_lines |= block.saw_lines
 
         if block.worst <= -1:
@@ -480,16 +477,14 @@ def check_logwatch_generic(
             if not line:
                 continue
             if line.startswith('<<<') and line.endswith('>>>'):
-                # The section is finished here. Add it to the list of reclassified lines if the
-                # state of the block is not "I" -> "ignore"
-                block_collector(current_block)
+                if current_block is not None:
+                    block_collector.add(current_block)
                 current_block = LogwatchBlock(line, patterns)
             elif current_block is not None:
                 current_block.add_line(line, reclassify)
 
-        # The last section is finished here. Add it to the list of reclassified lines if the
-        # state of the block is not "I" -> "ignore"
-        block_collector(current_block)
+        if current_block is not None:
+            block_collector.add(current_block)
 
         if reclassify:
             output_size = block_collector.size
@@ -510,7 +505,7 @@ def check_logwatch_generic(
             output_size += len(line.encode('utf-8'))
             if output_size >= max_filesize:
                 break
-        block_collector(current_block)
+        block_collector.add(current_block)
 
     # when reclassifying, rewrite the whole file, otherwise append
     if reclassify and block_collector.get_lines():

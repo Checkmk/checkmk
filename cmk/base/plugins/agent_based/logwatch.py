@@ -24,6 +24,7 @@ from typing import (
     Any,
     Counter,
     Dict,
+    IO,
     Iterable,
     List,
     Literal,
@@ -459,15 +460,7 @@ def check_logwatch_generic(
         output_size = 0
         reclassify = True
     else:  # parse cached log lines
-        # new format contains hash of patterns on the first line so we only reclassify if they
-        # changed
-        initline = logmsg_file_handle.readline().rstrip('\n')
-        if initline.startswith('[[[') and initline.endswith(']]]'):
-            old_pattern_hash = initline[3:-3]
-            reclassify = old_pattern_hash != pattern_hash
-        else:
-            logmsg_file_handle.seek(0)
-            reclassify = True
+        reclassify = _patterns_changed(logmsg_file_handle, pattern_hash)
 
         logfile_size = logmsg_file_path.stat().st_size
         if not reclassify and logfile_size > max_filesize:
@@ -559,6 +552,15 @@ def check_logwatch_generic(
         summary=summary,
         details=details,
     )
+
+
+def _patterns_changed(file_handle: IO[str], current_pattern: str) -> bool:
+    first_line = file_handle.readline().rstrip('\n')
+    pref, pattern, suff = first_line[:3], first_line[3:-3], first_line[-3:]
+    if (pref, suff) == ('[[[', ']]]'):
+        return pattern != current_pattern
+    file_handle.seek(0)
+    return True
 
 
 def _dropped_msg_result(max_size: int) -> Result:

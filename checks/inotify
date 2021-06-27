@@ -38,7 +38,7 @@ def parse_inotify(info) -> Section:
         if line[0].startswith("warning"):
             warnings[line[1]] += 1
             continue
-        elif line[0].startswith("configured"):
+        if line[0].startswith("configured"):
             configured[line[2]] = "file" if line[1] == "file" else "folder"
             continue
 
@@ -68,29 +68,17 @@ def _check_inotify(item, params, section: Section, last_status, now):
 
     last_status.update(section.stats.get(path, {}))
 
-    def _check_levels(what):
-        for mode, warn, crit in params.get("age_last_operation", []):
-            if mode != what:
-                continue
-            timestamp = last_status[what]
-            if now - timestamp >= crit:
-                return (2, "> %s" % get_age_human_readable(crit))
-            elif now - timestamp >= warn:
-                return (1, "> %s" % get_age_human_readable(warn))
-        return
+    levels = {mode: (warn, crit) for mode, warn, crit in params.get("age_last_operation", [])}
 
     for mode, timestamp in sorted(last_status.items()):
-        levels_info = _check_levels(mode)
-        if levels_info:
-            state = levels_info[0]
-            yield state, "Last %s: %s ago (%s)" % (
-                mode.title(), get_age_human_readable(now - timestamp), levels_info[1])
-        else:
-            yield 0, "Last %s: %s ago" % (mode.title(), get_age_human_readable(now - timestamp))
+        yield check_levels(now - timestamp,
+                           None,
+                           levels.get(mode),
+                           human_readable_func=get_age_human_readable,
+                           infoname=f"Time since last {mode}")
 
-    for mode, _warn, _crit in params.get("age_last_operation", []):
-        if mode not in last_status:
-            yield 3, "Last %s unknown" % mode.title()
+    for mode in set(levels) - set(last_status):
+        yield 3, f"Time since last {mode}: unknown"
 
     if section.warnings:
         yield 1, "Incomplete data!"

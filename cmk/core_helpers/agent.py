@@ -586,9 +586,9 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     )) for header, content in piggyback_sections.items()
             },
             cache_info={
-                header.name: cast(Tuple[int, int], header.cache_info(now))
+                header.name: cache_info_tuple
                 for header in section_info.values()
-                if header.cache_info(now) is not None
+                if (cache_info_tuple := header.cache_info(now)) is not None
             },
         )
 

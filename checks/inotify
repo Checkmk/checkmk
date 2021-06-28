@@ -7,9 +7,9 @@
 import os
 
 # <<<inotify:sep(9)>>>
-# monitored folder    /tmp/noti
-# monitored file  /tmp/noti/test
-# monitored file  /tmp/noti/other
+# configured folder    /tmp/noti
+# configured file  /tmp/noti/test
+# configured file  /tmp/noti/other
 # 1465470055  modify  /tmp/noti/test  5   1465470055
 # 1465470055  open    /tmp/noti/test  5   1465470055
 # 1465470055  modify  /tmp/noti/test  5   1465470055
@@ -62,21 +62,24 @@ def inventory_inotify(parsed):
 
 
 def check_inotify(item, params, parsed):
+    last_status = get_item_state(None, default={})
+    now = time.time()
+    yield from _check_inotify(item, params, parsed, last_status, now)
+    set_item_state(None, last_status)
+
+
+def _check_inotify(item, params, parsed, last_status, now):
     what, path = item.split(" ", 1)
     if path not in parsed["configured"][what.lower()]:
         return
 
     data = parsed["stats"].get(path, {})
 
-    last_status = get_item_state(None, default={})
     for file_dict in data:
         mode = file_dict["mode"]
         for key, value in file_dict.items():
             last_status.setdefault(mode, {})
             last_status[mode][key] = value
-
-    set_item_state(None, last_status)
-    now = time.time()
 
     def _check_levels(what):
         for mode, warn, crit in params.get("age_last_operation", []):

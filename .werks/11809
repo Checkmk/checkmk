@@ -1,0 +1,12 @@
+Title: Add missing IMAP Mailboxes rule
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1624871613
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p7
+
+The rule "Check IMAP Mailboxes" was missing the option to configure the thresholds for checking the age of the newest mails.
+This was added with this werk.

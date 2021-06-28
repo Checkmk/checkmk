@@ -2293,13 +2293,32 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
                                             'wato-folder-/' + watolib.Folder.current().path())
     search_text = html.request.var("search")
 
-    selected_host_names = []
+    selected_host_names: List[str] = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if ((not search_text or (search_text.lower() in host_name.lower())) and
+        if (not search_text or _search_text_matches(host, search_text) and
             ('_c_' + host_name) in selected):
             if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names
+
+
+def _search_text_matches(
+    host: watolib.CREHost,
+    search_text: str,
+) -> bool:
+
+    match_regex = re.compile(search_text, re.IGNORECASE)
+    for pattern in [
+            host.name(),
+            host.effective_attributes().get("ipaddress"),
+            host.site_id(),
+            config.site(host.site_id())["alias"],
+            str(host.tag_groups()),
+            str(host.labels()),
+    ]:
+        if match_regex.search(pattern):
+            return True
+    return False
 
 
 def get_hosts_from_checkboxes(filterfunc=None):

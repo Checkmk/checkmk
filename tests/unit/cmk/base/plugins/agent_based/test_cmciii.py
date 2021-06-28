@@ -60,15 +60,6 @@ def test_sensor_id_temp_in_out():
     assert cmciii.sensor_id('temp_in_out', ['Air'], 'Liquid_Cooling_Package') == 'Air LCP'
 
 
-@pytest.fixture(name="discovery_params")
-def mock_discovery_params(monkeypatch):
-    cmciii = Check('cmciii')
-    discovery_params = cmciii.context['discovery_params']
-    cmciii.context['discovery_params'] = lambda: {'use_sensor_descriptions': False}
-    yield
-    cmciii.context['discovery_params'] = discovery_params
-
-
 def run_discovery(section, plugin, info, params=None):
     section_plugin = agent_based_register.get_section_plugin(SectionName(section))
     assert section_plugin
@@ -85,7 +76,8 @@ def run_check(section, plugin, item, info, params=None):
     assert section_plugin
     plugin = agent_based_register.get_check_plugin(CheckPluginName(plugin))
     assert plugin
-    params = params or {}
+    if params is None:
+        return list(plugin.check_function(item=item, section=section_plugin.parse_function(info)))
     return list(
         plugin.check_function(item=item, params=params,
                               section=section_plugin.parse_function(info)))
@@ -131,9 +123,12 @@ def _leakage_info(status, position):
         ],
     ),
 ])
-def test_cmciii_leakage_sensors(discovery_params, status, position, expected):
-    assert run_check('cmciii', 'cmciii_leakage', "CMCIII-LEAK Leakage",
-                     _leakage_info(status, position)) == expected
+def test_cmciii_leakage_sensors(status, position, expected):
+    assert run_check('cmciii',
+                     'cmciii_leakage',
+                     "CMCIII-LEAK Leakage",
+                     _leakage_info(status, position),
+                     params={}) == expected
 
 
 def _lcp_sensor():
@@ -191,7 +186,7 @@ def _lcp_sensor():
             ['2.49', 'Air.Fans.Fan4.Status', '7', '', '0', 'OK', '4'],
             ['2.50', 'Air.Fans.Fan4.Category', '14', '', '0', '2', '2'],
         ],
-    ]
+    ]  # yapf: disable
 
 
 @pytest.mark.parametrize('plugin,expected', [
@@ -211,7 +206,7 @@ def _lcp_sensor():
         [],
     ),
 ])
-def test_cmciii_lcp_discovery(discovery_params, plugin, expected):
+def test_cmciii_lcp_discovery(plugin, expected):
     assert run_discovery('cmciii', plugin, _lcp_sensor(), params={}) == expected
 
 
@@ -244,8 +239,8 @@ def test_cmciii_lcp_discovery(discovery_params, plugin, expected):
         ],
     ),
 ])
-def test_cmciii_lcp_check(discovery_params, item, expected):
-    assert run_check('cmciii', 'cmciii_temp_in_out', item, _lcp_sensor()) == expected
+def test_cmciii_lcp_check(item, expected):
+    assert run_check('cmciii', 'cmciii_temp_in_out', item, _lcp_sensor(), params={}) == expected
 
 
 def _phase_sensor():
@@ -394,10 +389,10 @@ def _phase_sensor():
             ['1.128', 'Memory.USB-Stick.Status', '7', '', '0', 'n.a.', '1'],
             ['1.129', 'Memory.USB-Stick.Category', '14', '', '1', '16', '16'],
         ]
-    ]
+    ]  # yapf: disable
 
 
-def test_phase_sensors(discovery_params):
+def test_phase_sensors():
     params = {'use_sensor_description': False}
     section = cmciii.parse_cmciii(_phase_sensor())
     assert list(cmciii_phase.discover_cmciii_phase(params, section)) == [
@@ -424,8 +419,8 @@ def test_phase_sensors(discovery_params):
         ],
     ),
 ])
-def test_cmciii_phase_check(discovery_params, item, expected):
-    assert run_check('cmciii', 'cmciii_phase', item, _phase_sensor()) == expected
+def test_cmciii_phase_check(item, expected):
+    assert run_check('cmciii', 'cmciii_phase', item, _phase_sensor(), params={}) == expected
 
 
 def _status_info(variable, status):
@@ -458,7 +453,7 @@ def _status_info(variable, status):
     'Mains adapter',
     'Ignition',
 ])
-def test_cmciii_status_discovery(discovery_params, variable):
+def test_cmciii_status_discovery(variable):
     service_description = 'DET-AC_III_Master %s' % variable
     params = {'use_sensor_description': False}
     section = cmciii.parse_cmciii(_status_info(variable, 'OK'))
@@ -472,9 +467,14 @@ def test_cmciii_status_discovery(discovery_params, variable):
     ('Air flow', 'Too Low', [Result(state=State.CRIT, summary='Status: Too Low')]),
     ('Battery change', 'Service', [Result(state=State.CRIT, summary='Status: Service')]),
 ])
-def test_cmciii_status_sensors(discovery_params, variable, status, expected):
-    assert run_check('cmciii', 'cmciii_status', "DET-AC_III_Master %s" % variable,
-                     _status_info(variable, status)) == expected
+def test_cmciii_status_sensors(variable, status, expected):
+    assert run_check(
+        'cmciii',
+        'cmciii_status',
+        "DET-AC_III_Master %s" % variable,
+        _status_info(variable, status),
+        params={},
+    ) == expected
 
 
 def _access_info():
@@ -490,14 +490,20 @@ def _access_info():
     ]  # yapf: disable
 
 
-def test_cmciii_access_discovery(discovery_params):
+def test_cmciii_access_discovery():
     assert run_discovery('cmciii', 'cmciii_access', _access_info(), {}) == [
         Service(item='Tuer_GN-31-F Access', parameters={'_item_key': 'Tuer_GN-31-F Access'})
     ]
 
 
 def test_cmciii_access_check():
-    assert run_check('cmciii', 'cmciii_access', "Tuer_GN-31-F Access", _access_info()) == [
+    assert run_check(
+        'cmciii',
+        'cmciii_access',
+        "Tuer_GN-31-F Access",
+        _access_info(),
+        params={},
+    ) == [
         Result(state=State.OK, summary='Access: Closed'),
         Result(state=State.OK, summary='Delay: 5 s'),
         Result(state=State.OK, summary='Sensitivity: 2.0'),
@@ -802,14 +808,14 @@ def _generictest_cmciii():
     ),
     ('cmciii_phase', {}, []),
 ])
-def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expected):
+def test_genericdataset_cmciii_discovery(plugin, params, expected):
     assert run_discovery('cmciii', plugin, _generictest_cmciii(), params) == expected
 
 
 @pytest.mark.parametrize('plugin, params, items', [
     (
         'cmciii',
-        {},
+        None,
         [
             ('CMC-IOModul', [Result(state=State.OK, summary='Status: OK')]),
             ('CMC-PU', [Result(state=State.OK, summary='Status: OK')]),
@@ -975,7 +981,7 @@ def test_genericdataset_cmciii_discovery(discovery_params, plugin, params, expec
         )],
     ),
 ])
-def test_genericdataset_cmciii_check(discovery_params, plugin, params, items):
+def test_genericdataset_cmciii_check(plugin, params, items):
     for item, expected in items:
         assert run_check(
             'cmciii',
@@ -1077,8 +1083,7 @@ def _generictest_cmciii_input_regression():
     ('cmciii_humidity', {}, []),
     ('cmciii_phase', {}, []),
 ])
-def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plugin, params,
-                                                          expected):
+def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expected):
     assert run_discovery(
         'cmciii',
         plugin,
@@ -1087,9 +1092,10 @@ def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plug
     ) == expected
 
 
-@pytest.mark.parametrize('plugin, items', [
+@pytest.mark.parametrize('plugin,params,items', [
     (
         'cmciii',
+        None,
         [
             ('CMCIII-IO1', [Result(state=State.OK, summary='Status: OK')]),
             ('CMCIII-IO2', [Result(state=State.OK, summary='Status: OK')]),
@@ -1102,6 +1108,7 @@ def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plug
     ),
     (
         'cmciii_io',
+        {},
         [
             ('CMCIII-IO2 Input 2', [
                 Result(state=State.OK, summary='Status: OK'),
@@ -1145,11 +1152,12 @@ def test_genericdataset_cmciii_input_regression_discovery(discovery_params, plug
         ],
     ),
 ])
-def test_genericdataset_cmciii_input_regression_check(discovery_params, plugin, items):
+def test_genericdataset_cmciii_input_regression_check(plugin, params, items):
     for item, expected in items:
         assert run_check(
             'cmciii',
             plugin,
             item,
             _generictest_cmciii_input_regression(),
+            params,
         ) == expected, "Item %s does not match" % item

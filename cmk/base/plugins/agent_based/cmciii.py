@@ -6,8 +6,32 @@
 
 from typing import Dict, List, Optional, Tuple, Union
 
-from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, type_defs
-from .utils.cmciii import Devices, SensorType, Sensors, Variable
+from .agent_based_api.v1 import (
+    contains,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+    type_defs,
+)
+from .utils.cmciii import (
+    Devices,
+    Section,
+    SensorType,
+    Sensors,
+    Variable,
+)
+
+MAP_STATES = {
+    '1': (State.UNKNOWN, "not available"),
+    '2': (State.OK, "OK"),
+    '3': (State.WARN, "detect"),
+    '4': (State.CRIT, "lost"),
+    '5': (State.WARN, "changed"),
+    '6': (State.CRIT, "error"),
+}
 
 
 def sanitize_variable(variable: str) -> Variable:
@@ -219,4 +243,26 @@ register.snmp_section(
         ),
     ],
     parse_function=parse_cmciii,
+)
+
+
+def discover_cmciii(section: Section) -> type_defs.DiscoveryResult:
+    for entry in section["state"]:
+        yield Service(item=entry)
+
+
+def check_cmciii(item: str, section: Section) -> type_defs.CheckResult:
+    entry = section["state"].get(item)
+    if not entry:
+        return
+
+    state, state_readable = MAP_STATES[entry["status"]]
+    yield Result(state=state, summary="Status: %s" % state_readable)
+
+
+register.check_plugin(
+    name="cmciii",
+    service_name="State %s",
+    discovery_function=discover_cmciii,
+    check_function=check_cmciii,
 )

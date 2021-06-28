@@ -102,30 +102,3 @@ check_info['cmciii.psm_current'] = {
     "service_description": "Current %s",
     "has_perfdata": True,
 }
-
-#.
-#   .--PSM plugs-----------------------------------------------------------.
-#   |            ____  ____  __  __         _                              |
-#   |           |  _ \/ ___||  \/  |  _ __ | |_   _  __ _ ___              |
-#   |           | |_) \___ \| |\/| | | '_ \| | | | |/ _` / __|             |
-#   |           |  __/ ___) | |  | | | |_) | | |_| | (_| \__ \             |
-#   |           |_|   |____/|_|  |_| | .__/|_|\__,_|\__, |___/             |
-#   |                                |_|            |___/                  |
-#   '----------------------------------------------------------------------'
-
-
-def check_cmciii_psm_plugs(item, params, parsed):
-    entry = get_sensor(item, params, parsed["psm_plugs"])
-    if not entry:
-        return
-
-    state_readable = entry["Status"]
-    state = 0 if state_readable == "OK" else 0
-    return state, "Status: %s" % state_readable
-
-
-check_info['cmciii.psm_plugs'] = {
-    "inventory_function": lambda parsed: discover_cmciii_sensors("psm_plugs", parsed),
-    "check_function": check_cmciii_psm_plugs,
-    "service_description": "%s",
-}

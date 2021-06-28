@@ -742,7 +742,7 @@ def _generictest_cmciii():
         ],
     ),
     ('cmciii_psm_current', None, []),
-    ('cmciii_psm_plugs', None, []),
+    ('cmciii_psm_plugs', {}, []),
     (
         'cmciii_io',
         {},
@@ -1055,7 +1055,7 @@ def _generictest_cmciii_input_regression():
         ],
     ),
     ('cmciii_psm_current', None, []),
-    ('cmciii_psm_plugs', None, []),
+    ('cmciii_psm_plugs', {}, []),
     (
         'cmciii_io',
         {},

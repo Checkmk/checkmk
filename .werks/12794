@@ -1,0 +1,14 @@
+Title: SLA details general view
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1624870727
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p7
+
+"Problem details" on "sla_details_general" page did not show a table.
+Also the mouseover effect on timeline elements to highlight the corresponding
+element in the details table was broken, and showed an javascript error,
+'sla_details_table_hover' not defined.

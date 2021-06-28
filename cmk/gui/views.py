@@ -702,12 +702,16 @@ class GUIViewRenderer(ABCViewRenderer):
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
+                row_limit = None if self.view.datasource.ignore_limit else self.view.row_limit
                 if cmk.gui.view_utils.row_limit_exceeded(
                         unfiltered_amount_of_rows,
-                        self.view.row_limit) or cmk.gui.view_utils.row_limit_exceeded(
-                            len(rows), self.view.row_limit):
-                    cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
-                    del rows[self.view.row_limit:]
+                        row_limit,
+                ) or cmk.gui.view_utils.row_limit_exceeded(
+                        len(rows),
+                        row_limit,
+                ):
+                    cmk.gui.view_utils.query_limit_exceeded_warn(row_limit, config.user)
+                    del rows[row_limit:]
                     self.view.process_tracking.amount_rows_after_limit = len(rows)
 
             layout.render(rows, view_spec, self.view.group_cells, self.view.row_cells, num_columns,

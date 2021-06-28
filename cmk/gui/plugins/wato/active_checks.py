@@ -2299,9 +2299,17 @@ def _valuespec_active_checks_mailboxes():
                  unit=_('sec'),
              )),
             ('age',
-             Tuple(title=_("Message Age"),
-                   elements=[Age(title=_("Warning at")),
-                             Age(title=_("Critical at"))])),
+             Tuple(title=_("Message Age of oldest messages"),
+                   elements=[
+                       Age(title=_("Warning if older than")),
+                       Age(title=_("Critical if older than"))
+                   ])),
+            ('age_newest',
+             Tuple(title=_("Message Age of newest messages"),
+                   elements=[
+                       Age(title=_("Warning if older than")),
+                       Age(title=_("Critical if older than"))
+                   ])),
             ('count',
              Tuple(title=_("Message Count"),
                    elements=[Integer(title=_("Warning at")),

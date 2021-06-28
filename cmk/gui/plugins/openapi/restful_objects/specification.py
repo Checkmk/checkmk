@@ -213,7 +213,7 @@ This is equivalent to
 
 ## Combination nodes
 
-`and` and `or` combinators are supported. They can be nested arbitrarily. `exprs` is a list of
+`and` and `or` combinators are supported. They can be nested arbitrarily. `expr` is a list of
 valid *filter expressions*, so any number of *binary nodes*, *negation nodes* or *combination nodes*
 may be used there. These expression do not have to all be of the same type, so a mix of *binary
 expression nodes*, *negation nodes* and *combination nodes* is also possible.
@@ -222,19 +222,19 @@ expression nodes*, *negation nodes* and *combination nodes* is also possible.
 
 This results in a *filter expression* in which all the contained expression must be true:
 
-    {'op': 'and', 'exprs': [<any filter expr>, ...]}
+    {'op': 'and', 'expr': [<any filter expr>, ...]}
 
 This results in a *filter expression* in which only one of the contained expression needs to
 be true:
 
-    {'op': 'or', 'exprs': [<any filter expr>, ...]}
+    {'op': 'or', 'expr': [<any filter expr>, ...]}
 
 ### Example
 
 This example filters for the host "example.com" only when the `state` column is set to `0`, which
 means the state is OK.
 
-    {'op': 'and', 'exprs': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
+    {'op': 'and', 'expr': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
                             {'op': '=', 'left': 'state', 'right': 0}}
 
 # Authentication

@@ -700,7 +700,7 @@ def query_field(table: typing.Type[Table], required: bool = False, example=None)
     if example is None:
         example = json.dumps({
             'op': 'and',
-            'exprs': [{
+            'expr': [{
                 'op': '=',
                 'left': 'name',
                 'right': 'example.com'

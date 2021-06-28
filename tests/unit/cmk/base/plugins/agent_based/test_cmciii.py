@@ -741,7 +741,7 @@ def _generictest_cmciii():
             Service(item='CMC-Temperatur'),
         ],
     ),
-    ('cmciii_psm_current', None, []),
+    ('cmciii_psm_current', {}, []),
     ('cmciii_psm_plugs', {}, []),
     (
         'cmciii_io',
@@ -1054,7 +1054,7 @@ def _generictest_cmciii_input_regression():
             Service(item='Doors'),
         ],
     ),
-    ('cmciii_psm_current', None, []),
+    ('cmciii_psm_current', {}, []),
     ('cmciii_psm_plugs', {}, []),
     (
         'cmciii_io',

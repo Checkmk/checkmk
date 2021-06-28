@@ -20,10 +20,11 @@ def _fixture_setup_test(web, site):  # noqa: F811 # pylint: disable=redefined-ou
         "ipaddress": "127.0.0.1",
     })
 
+    config_file = "etc/check_mk/conf.d/disco-params-test-host.mk"
+
     site.write_file(
-        "etc/check_mk/conf.d/modes-test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['modes-test-host']))\n"
-    )
+        config_file, "datasource_programs = ["
+        "('cat ~/var/check_mk/agent_output/<HOST>', [], ['disco-params-test-host'])]\n")
 
     site.makedirs("var/check_mk/agent_output/")
 
@@ -35,14 +36,15 @@ def _fixture_setup_test(web, site):  # noqa: F811 # pylint: disable=redefined-ou
         # Cleanup code
         #
         print("Cleaning up test config")
-        web.delete_host("modes-test-host")
+        site.delete_file(config_file)
+        web.delete_host("disco-params-test-host")
         web.activate_changes()
 
 
 @pytest.fixture(name="clear_cache")
 def _fixture_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-name
 
-    cache_file = "tmp/check_mk/cache/modes-test-host"
+    cache_file = "tmp/check_mk/cache/disco-params-test-host"
     if site.file_exists(cache_file):
         site.delete_file(cache_file)
     yield
@@ -50,7 +52,6 @@ def _fixture_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-
         site.delete_file(cache_file)
 
 
-@pytest.mark.skip(reason="test is flaky")
 @pytest.mark.usefixtures("clear_cache", "setup_test")
 def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
@@ -60,8 +61,8 @@ def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: d
         if site.file_exists("etc/check_mk/conf.d/test_check_1.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_1.mk")
 
-        if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
-            site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+        if site.file_exists("var/check_mk/autochecks/disco-params-test-host.mk"):
+            site.delete_file("var/check_mk/autochecks/disco-params-test-host.mk")
 
         site.delete_file(test_check_path)
 
@@ -94,15 +95,16 @@ register.check_plugin(
 )
 """)
 
-    site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
+    site.write_file("var/check_mk/agent_output/disco-params-test-host", "<<<test_check_1>>>\n1 2\n")
 
     config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
-    web.discover_services("modes-test-host")
+    web.discover_services("disco-params-test-host")
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+    services = autochecks.parse_autochecks_file("disco-params-test-host",
+                                                config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42})"
@@ -115,9 +117,10 @@ register.check_plugin(
                     "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n")
 
     # rediscover with the setting in the config
-    site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
-    web.discover_services("modes-test-host")
-    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+    site.delete_file("var/check_mk/autochecks/disco-params-test-host.mk")
+    web.discover_services("disco-params-test-host")
+    services = autochecks.parse_autochecks_file("disco-params-test-host",
+                                                config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_1":
             assert service.item == "Parameters({'default': 42, 'levels': (1, 2)})"
@@ -135,8 +138,8 @@ def test_test_check_1_all_rule(request, site, web):  # noqa: F811 # pylint: disa
         if site.file_exists("etc/check_mk/conf.d/test_check_2.mk"):
             site.delete_file("etc/check_mk/conf.d/test_check_2.mk")
 
-        if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
-            site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+        if site.file_exists("var/check_mk/autochecks/disco-params-test-host.mk"):
+            site.delete_file("var/check_mk/autochecks/disco-params-test-host.mk")
 
         site.delete_file(test_check_path)
 
@@ -169,15 +172,16 @@ register.check_plugin(
 )
 """)
 
-    site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
+    site.write_file("var/check_mk/agent_output/disco-params-test-host", "<<<test_check_2>>>\n1 2\n")
 
     config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
-    web.discover_services("modes-test-host")
+    web.discover_services("disco-params-test-host")
 
     # Verify that the discovery worked as expected
-    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+    services = autochecks.parse_autochecks_file("disco-params-test-host",
+                                                config.service_description)
 
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
@@ -191,9 +195,10 @@ register.check_plugin(
                     "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n")
 
     # rediscover with the setting in the config
-    site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
-    web.discover_services("modes-test-host")
-    services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+    site.delete_file("var/check_mk/autochecks/disco-params-test-host.mk")
+    web.discover_services("disco-params-test-host")
+    services = autochecks.parse_autochecks_file("disco-params-test-host",
+                                                config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
             assert service.item == ("[Parameters({'levels': (1, 2)}),"

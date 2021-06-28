@@ -19,7 +19,7 @@ def discover_cmciii_leakage(params: DiscoveryParams, section: Section) -> type_d
     yield from discover_cmciii_sensors("leakage", params, section)
 
 
-def check_cmciii_status(item: str, params: CheckParams, section: Section) -> type_defs.CheckResult:
+def check_cmciii_leakage(item: str, params: CheckParams, section: Section) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["leakage"])
     if not entry:
         return
@@ -39,7 +39,7 @@ register.check_plugin(
     sections=['cmciii'],
     service_name="%s",
     discovery_function=discover_cmciii_leakage,
-    check_function=check_cmciii_status,
+    check_function=check_cmciii_leakage,
     discovery_ruleset_name="discovery_cmciii",
     discovery_default_parameters=discovery_default_parameters(),
     discovery_ruleset_type=register.RuleSetType.MERGED,

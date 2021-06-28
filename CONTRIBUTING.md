@@ -117,7 +117,7 @@ To set up the development environment do the following:
     execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
     introduce delays and additional work.
 
-    Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+    Additional helpers can be found in `scripts/`. One notable one is `scripts/check-current-commit`
     which checks your commit *after* it has been made. You can then fix errors and amend or squash
     your commit. You can also use this script in a rebase like such:
 
@@ -332,9 +332,10 @@ understand which names are really available and needed in the current namespace.
     ```python
     def get_status(file):
         if not os.path.exists(file):
-            print "file not found"
+            print("file not found")
             sys.exit(1)
-        return open(file).readline()
+        with open(file) as f:
+            return f.readline()
     ```
 
     vs.
@@ -342,9 +343,10 @@ understand which names are really available and needed in the current namespace.
     ```python
     def get_status(file):
         try:
-            return open(file).readline()
-        except EnvironmentError as e:
-            print "Unable to open file: %s" % e
+            with open(file) as f:
+                return f.readline()
+        except OSError as e:
+            print("Unable to open file: %s" % e)
             sys.exit(1)
     ```
 
@@ -416,7 +418,7 @@ understand which names are really available and needed in the current namespace.
       downsides.
     * Tuples of a fixed length: Slightly better, they have a fixed number of
       slots and are immutable. Still, one has no clue what a slot should mean.
-    * `collectons.namedtuple`: A bit better than tuples of a fixed length, at
+    * `collections.namedtuple`: A bit better than tuples of a fixed length, at
       least the slots have names now. Still no clue about the valid values of a
       slot.
     * `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still

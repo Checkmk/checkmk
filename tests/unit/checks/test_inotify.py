@@ -107,10 +107,21 @@ def test_updated_data():
     }
 
 
+def test_not_configured():
+    item = "File /tmp/noti/nodata"
+    params = {'age_last_operation': [('modify', 90, 110)]}
+    section = Section(Counter(), {}, {})
+    last_status: Dict = {}
+    now = 1465470156
+
+    assert not list(check_inotify(item, params, section, last_status, now))
+    assert not last_status
+
+
 def test_nodata():
     item = "File /tmp/noti/nodata"
     params = {'age_last_operation': [('modify', 90, 110)]}
-    section = Section(Counter(), *PARSED[1:])
+    section = Section(Counter(), {'/tmp/noti/nodata': 'file'}, {})
     last_status: Dict = {}
     now = 1465470156
 
@@ -124,7 +135,7 @@ def test_nodata():
 def test_old_status():
     item = "File /tmp/noti/nodata"
     params = {'age_last_operation': [('modify', 90, 110)]}
-    section = Section(Counter(), *PARSED[1:])
+    section = Section(Counter(), {'/tmp/noti/nodata': 'file'}, {})
     last_status = {'modify': 1465470000}
     now = 1465470156
 

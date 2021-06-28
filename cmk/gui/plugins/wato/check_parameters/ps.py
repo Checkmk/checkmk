@@ -329,7 +329,7 @@ def process_discovery_descr_option():
         title=_('Process Name'),
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
-        help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+        help=_("<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
                "you do this, then the pattern must be a regular expression and be prefixed "
                "with ~. For each <tt>%s</tt> in the description, the expression has to "
                "contain one \"group\". A group is a subexpression enclosed in brackets, "
@@ -337,7 +337,7 @@ def process_discovery_descr_option():
                "When the inventory finds a process matching the pattern, it will "
                "substitute all such groups with the actual values when creating the "
                "check. That way one rule can create several checks on a host.</p>"
-               "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
+               "<p>If the pattern contains more groups then occurrences of <tt>%s</tt> in "
                "the service description then only the first matching subexpressions are "
                "used for the service descriptions. The matched substrings corresponding to "
                "the remaining groups are copied into the regular expression, "
@@ -353,7 +353,7 @@ def process_match_options():
         title=_("Process Matching"),
         elements=[
             TextInput(
-                title=_("Exact name of the process without argments"),
+                title=_("Exact name of the process without arguments"),
                 label=_("Executable:"),
                 size=50,
             ),
@@ -523,7 +523,7 @@ rulespec_registry.register(
 
 
 # In version 1.2.4 the check parameters for the resulting ps check
-# where defined in the dicovery rule. We moved that to an own rule
+# where defined in the discovery rule. We moved that to an own rule
 # in the classical check parameter style. In order to support old
 # configuration we allow reading old discovery rules and ship these
 # settings in an optional sub-dictionary.

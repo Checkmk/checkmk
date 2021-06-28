@@ -868,6 +868,10 @@ class RowTableInventory(ABCRowTable):
 
 
 class ABCDataSourceInventory(ABCDataSource):
+    @property
+    def ignore_limit(self):
+        return True
+
     @abc.abstractproperty
     def inventory_path(self) -> str:
         raise NotImplementedError()

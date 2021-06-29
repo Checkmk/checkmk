@@ -193,7 +193,6 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
-    --json
     {%- if endpoint.does_redirects %}
     --follow \\
     --all \\
@@ -206,7 +205,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
 {%- if query_params %}
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    {{ param.name }}=="{{ param.example }}" \\
+    {{ param.name }}=='{{ param.example }}' \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}

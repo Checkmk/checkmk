@@ -20,7 +20,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.core_helpers.paths as paths
-from cmk.core_helpers.paths import ConfigSerial
+from cmk.core_helpers.paths import VersionedConfigPath
 
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
@@ -210,44 +210,49 @@ def test_create_nagios_host_spec(hostname, result, monkeypatch):
     assert host_spec == result
 
 
-@pytest.fixture(name="serial")
-def fixture_serial() -> ConfigSerial:
-    return ConfigSerial("42")
+@pytest.fixture(name="config_path")
+def fixture_config_path() -> VersionedConfigPath:
+    return VersionedConfigPath(42)
 
 
 class TestHostCheckStore:
-    def test_host_check_file_path(self, serial):
-        assert core_nagios.HostCheckStore.host_check_file_path(serial, "abc") == Path(
-            paths.make_helper_config_path(serial), "host_checks", "abc")
+    def test_host_check_file_path(self, config_path):
+        assert core_nagios.HostCheckStore.host_check_file_path(config_path, "abc") == Path(
+            paths.make_helper_config_path(config_path),
+            "host_checks",
+            "abc",
+        )
 
-    def test_host_check_source_file_path(self, serial):
-        assert core_nagios.HostCheckStore.host_check_source_file_path(serial, "abc") == Path(
-            paths.make_helper_config_path(serial), "host_checks", "abc.py")
+    def test_host_check_source_file_path(self, config_path):
+        assert core_nagios.HostCheckStore.host_check_source_file_path(
+            config_path,
+            "abc",
+        ) == Path(paths.make_helper_config_path(config_path), "host_checks", "abc.py")
 
-    def test_write(self, serial):
+    def test_write(self, config_path):
         hostname = "aaa"
         store = core_nagios.HostCheckStore()
 
         assert config.delay_precompile is False
 
-        assert not store.host_check_source_file_path(serial, hostname).exists()
-        assert not store.host_check_file_path(serial, hostname).exists()
+        assert not store.host_check_source_file_path(config_path, hostname).exists()
+        assert not store.host_check_file_path(config_path, hostname).exists()
 
-        store.write(serial, hostname, "xyz")
+        store.write(config_path, hostname, "xyz")
 
-        assert store.host_check_source_file_path(serial, hostname).exists()
-        assert store.host_check_file_path(serial, hostname).exists()
+        assert store.host_check_source_file_path(config_path, hostname).exists()
+        assert store.host_check_file_path(config_path, hostname).exists()
 
-        with store.host_check_source_file_path(serial, hostname).open() as s:
+        with store.host_check_source_file_path(config_path, hostname).open() as s:
             assert s.read() == "xyz"
 
-        with store.host_check_file_path(serial, hostname).open("rb") as p:
+        with store.host_check_file_path(config_path, hostname).open("rb") as p:
             assert p.read().startswith(importlib.util.MAGIC_NUMBER)
 
-        assert os.access(store.host_check_file_path(serial, hostname), os.X_OK)
+        assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
 
 
-def test_dump_precompiled_hostcheck(monkeypatch, serial):
+def test_dump_precompiled_hostcheck(monkeypatch, config_path):
     ts = Scenario().add_host("localhost")
     config_cache = ts.apply(monkeypatch)
 
@@ -258,25 +263,37 @@ def test_dump_precompiled_hostcheck(monkeypatch, serial):
         lambda c: (set(), {CheckPluginName("uptime")}, set()),
     )
 
-    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, serial, "localhost")
+    host_check = core_nagios._dump_precompiled_hostcheck(
+        config_cache,
+        config_path,
+        "localhost",
+    )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
 
 
-def test_dump_precompiled_hostcheck_without_check_mk_service(monkeypatch, serial):
+def test_dump_precompiled_hostcheck_without_check_mk_service(monkeypatch, config_path):
     ts = Scenario().add_host("localhost")
     config_cache = ts.apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, serial, "localhost")
+    host_check = core_nagios._dump_precompiled_hostcheck(
+        config_cache,
+        config_path,
+        "localhost",
+    )
     assert host_check is None
 
 
-def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch, serial):
+def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch, config_path):
     config_cache = Scenario().apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(config_cache, serial, "not-existing")
+    host_check = core_nagios._dump_precompiled_hostcheck(
+        config_cache,
+        config_path,
+        "not-existing",
+    )
     assert host_check is None
 
 
-def test_compile_delayed_host_check(monkeypatch, serial):
+def test_compile_delayed_host_check(monkeypatch, config_path):
     hostname = "localhost"
     ts = Scenario().add_host(hostname)
     ts.set_option("delay_precompile", True)
@@ -289,20 +306,25 @@ def test_compile_delayed_host_check(monkeypatch, serial):
         lambda c: (set(), {CheckPluginName("uptime")}, set()),
     )
 
-    source_file = core_nagios.HostCheckStore.host_check_source_file_path(serial, hostname)
-    compiled_file = core_nagios.HostCheckStore.host_check_file_path(serial, hostname)
+    source_file = core_nagios.HostCheckStore.host_check_source_file_path(
+        config_path,
+        hostname,
+    )
+    compiled_file = core_nagios.HostCheckStore.host_check_file_path(config_path, hostname)
 
     assert config.delay_precompile is True
     assert not source_file.exists()
     assert not compiled_file.exists()
 
     # Write the host check source file
-    host_check = core_nagios._dump_precompiled_hostcheck(config_cache,
-                                                         serial,
-                                                         hostname,
-                                                         verify_site_python=False)
+    host_check = core_nagios._dump_precompiled_hostcheck(
+        config_cache,
+        config_path,
+        hostname,
+        verify_site_python=False,
+    )
     assert host_check is not None
-    core_nagios.HostCheckStore().write(serial, hostname, host_check)
+    core_nagios.HostCheckStore().write(config_path, hostname, host_check)
 
     # The compiled file path links to the source file until it has been executed for the first
     # time. Then the symlink is replaced with the compiled file

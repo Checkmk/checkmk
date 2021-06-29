@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType
 
-from cmk.core_helpers.paths import ConfigSerial, LATEST_SERIAL
+from cmk.core_helpers.paths import VersionedConfigPath
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2094,30 +2094,28 @@ cmc_host_rrd_config = [
 """ % (condition, value))
 
 
-@pytest.fixture(name="serial")
-def fixture_serial():
-    return ConfigSerial("13")
+@pytest.fixture(name="config_path")
+def fixture_config_path():
+    return VersionedConfigPath(13)
 
 
-def test_save_packed_config(monkeypatch, serial):
+def test_save_packed_config(monkeypatch, config_path):
     ts = Scenario()
     ts.add_host("bla1")
     config_cache = ts.apply(monkeypatch)
 
-    assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                    "precompiled_check_config.mk").exists()
+    assert not (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
 
-    config.save_packed_config(serial, config_cache)
+    config.save_packed_config(config_path, config_cache)
 
-    assert Path(cmk.utils.paths.core_helper_config_dir, serial,
-                "precompiled_check_config.mk").exists()
+    assert (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
 
 
-def test_load_packed_config(serial):
-    config.PackedConfigStore.from_serial(serial).write({"abc": 1})
+def test_load_packed_config(config_path):
+    config.PackedConfigStore.from_serial(config_path).write({"abc": 1})
 
     assert "abc" not in config.__dict__
-    config.load_packed_config(serial)
+    config.load_packed_config(config_path)
     # Mypy does not understand that we add some new member for testing
     assert config.abc == 1  # type: ignore[attr-defined]
     del config.__dict__["abc"]
@@ -2125,61 +2123,33 @@ def test_load_packed_config(serial):
 
 class TestPackedConfigStore:
     @pytest.fixture()
-    def store(self, serial):
-        return config.PackedConfigStore.from_serial(serial)
-
-    def test_latest_serial_path(self):
-        store = config.PackedConfigStore.from_serial(LATEST_SERIAL)
-        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
-                                  "precompiled_check_config.mk")
-
-    def test_given_serial_path(self):
-        store = config.PackedConfigStore.from_serial(ConfigSerial("42"))
-        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "42",
-                                  "precompiled_check_config.mk")
+    def store(self, config_path):
+        return config.PackedConfigStore.from_serial(config_path)
 
     def test_read_not_existing_file(self, store):
         with pytest.raises(FileNotFoundError):
             store.read()
 
-    def test_write(self, store, serial):
-        assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                        "precompiled_check_config.mk").exists()
+    def test_write(self, store, config_path):
+        assert not (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
 
         store.write({"abc": 1})
 
-        packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, serial,
-                                "precompiled_check_config.mk")
-        assert packed_file_path.exists()
-
-        assert store.read() == {
-            "abc": 1,
-        }
+        assert (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
+        assert store.read() == {"abc": 1}
 
 
 @pytest.mark.parametrize("params, expected_result", [
-    (
-        None,
-        False,
-    ),
-    (
-        {},
-        False,
-    ),
+    (None, False),
+    ({}, False),
     (
         {
             'x': 'y'
         },
         False,
     ),
-    (
-        [1, (2, 3)],
-        False,
-    ),
-    (
-        4,
-        False,
-    ),
+    ([1, (2, 3)], False),
+    (4, False),
     (
         {
             'tp_default_value': 1,

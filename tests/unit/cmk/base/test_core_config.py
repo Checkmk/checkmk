@@ -16,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import LATEST_SERIAL
+from cmk.core_helpers.paths import LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -29,7 +29,7 @@ def test_do_create_config_nagios(core_scenario):
     core_config.do_create_config(create_core("nagios"))
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
-    assert config.PackedConfigStore.from_serial(LATEST_SERIAL).path.exists()
+    assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
 def test_active_check_arguments_basics():

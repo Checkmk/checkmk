@@ -100,7 +100,7 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
 
 import cmk.core_helpers.cache as cache_file
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import LATEST_SERIAL, OptionalConfigSerial
+from cmk.core_helpers.paths import LATEST_CONFIG, ConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -263,7 +263,7 @@ def load(with_conf_d: bool = True,
     _verify_no_deprecated_variables_used()
 
 
-def load_packed_config(serial: OptionalConfigSerial) -> None:
+def load_packed_config(config_path: ConfigPath) -> None:
     """Load the configuration for the CMK helpers of CMC
 
     These files are written by PackedConfig().
@@ -272,9 +272,13 @@ def load_packed_config(serial: OptionalConfigSerial) -> None:
     check helpers would only need check related config variables.
 
     The validations which are performed during load() also don't need to be performed.
+
+    See Also:
+        cmk.base.core_nagios._dump_precompiled_hostcheck()
+
     """
     _initialize_config()
-    globals().update(PackedConfigStore.from_serial(serial).read())
+    globals().update(PackedConfigStore.from_serial(config_path).read())
     _perform_post_config_loading_actions()
 
 
@@ -619,9 +623,9 @@ def all_nonfunction_vars() -> Set[str]:
     }
 
 
-def save_packed_config(serial: OptionalConfigSerial, config_cache: "ConfigCache") -> None:
+def save_packed_config(config_path: ConfigPath, config_cache: "ConfigCache") -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
-    PackedConfigStore.from_serial(serial).write(PackedConfigGenerator(config_cache).generate())
+    PackedConfigStore.from_serial(config_path).write(PackedConfigGenerator(config_cache).generate())
 
 
 class PackedConfigGenerator:
@@ -751,9 +755,8 @@ class PackedConfigStore:
         self.path: Final = path
 
     @classmethod
-    def from_serial(cls, serial: OptionalConfigSerial) -> "PackedConfigStore":
-        return cls(
-            cmk.core_helpers.paths.make_helper_config_path(serial) / "precompiled_check_config.mk")
+    def from_serial(cls, config_path: ConfigPath) -> "PackedConfigStore":
+        return cls(config_path.helper_config_path() / "precompiled_check_config.mk")
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -767,12 +770,12 @@ class PackedConfigStore:
             return pickle.load(f)
 
 
-def make_core_autochecks_dir(serial: OptionalConfigSerial) -> Path:
-    return cmk.core_helpers.paths.make_helper_config_path(serial) / "autochecks"
+def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
+    return config_path.helper_config_path() / "autochecks"
 
 
-def make_core_discovered_host_labels_dir(serial: OptionalConfigSerial) -> Path:
-    return cmk.core_helpers.paths.make_helper_config_path(serial) / "discovered_host_labels"
+def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
+    return config_path.helper_config_path() / "discovered_host_labels"
 
 
 @contextlib.contextmanager
@@ -791,9 +794,9 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
     _orig_discovered_host_labels_dir = cmk.utils.paths.discovered_host_labels_dir
     try:
         if use_core_config:
-            cmk.utils.paths.autochecks_dir = str(make_core_autochecks_dir(LATEST_SERIAL))
+            cmk.utils.paths.autochecks_dir = str(make_core_autochecks_dir(LATEST_CONFIG))
             cmk.utils.paths.discovered_host_labels_dir = make_core_discovered_host_labels_dir(
-                LATEST_SERIAL)
+                LATEST_CONFIG)
         else:
             cmk.utils.paths.autochecks_dir = cmk.utils.paths.base_autochecks_dir
             cmk.utils.paths.discovered_host_labels_dir = cmk.utils.paths.base_discovered_host_labels_dir

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import time
 import itertools
 import json
@@ -213,10 +215,11 @@ def _show_availability_options_controls() -> None:
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None:
+def show_availability_page(view: View, filterheaders: FilterHeaders) -> None:
     config.user.need_permission("general.see_availability")
 
     # We make reports about hosts, services or BI aggregates
+    what: AVObjectType
     if "service" in view.datasource.infos:
         what = "service"
     elif "aggr_name" in view.datasource.infos:

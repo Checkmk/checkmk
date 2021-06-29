@@ -11,7 +11,6 @@ import functools
 import json
 import pprint
 import time
-from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set, Mapping
 from typing import Tuple as _Tuple
@@ -135,6 +134,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     Visual,
     ViewName,
+    ViewProcessTracking,
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -150,16 +150,6 @@ multisite_commands: List[Dict[str, Any]] = []
 multisite_datasources: Dict[str, Any] = {}
 multisite_painters: Dict[str, Dict[str, Any]] = {}
 multisite_sorters: Dict[str, Any] = {}
-
-
-@dataclass
-class ViewProcessTracking:
-    amount_unfiltered_rows: int = 0
-    amount_filtered_rows: int = 0
-    amount_rows_after_limit: int = 0
-    duration_fetch_rows: Snapshot = Snapshot.null()
-    duration_filter_rows: Snapshot = Snapshot.null()
-    duration_view_render: Snapshot = Snapshot.null()
 
 
 @visual_type_registry.register

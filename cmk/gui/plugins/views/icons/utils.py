@@ -4,12 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
-from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union, Dict
+
+import cmk.utils.plugin_registry
+from cmk.utils.type_defs import TagID
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-import cmk.utils.plugin_registry
+
+from cmk.gui.type_defs import Row
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -62,8 +68,13 @@ class Icon(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def render(self, what: str, row: dict, tags: list,
-               custom_vars: dict) -> Union[None, 'HTML', Tuple, str]:
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: List[TagID],
+        custom_vars: Dict[str, str],
+    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
         raise NotImplementedError()
 
     def columns(self) -> List[str]:

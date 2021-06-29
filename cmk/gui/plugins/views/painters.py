@@ -45,6 +45,8 @@ from cmk.gui.plugins.views.icons import (
     get_icons,
     iconpainter_columns,
     IconObjectType,
+    IconEntry,
+    LegacyIconEntry,
 )
 
 from cmk.gui.plugins.views import (
@@ -225,14 +227,13 @@ def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
     # In case of non HTML output, just return the top level icon names
     # as space separated string
     if html.output_format != 'html':
-        return 'icons', ' '.join([i[1] for i in toplevel_icons])
+        return 'icons', ' '.join(i.icon_name for i in toplevel_icons if isinstance(i, IconEntry))
 
     output = HTML()
     for icon in toplevel_icons:
-        if len(icon) == 4:
-            icon_name, title, url_spec = icon[1:]
-            if url_spec:
-                url, target_frame = transform_action_url(url_spec)
+        if isinstance(icon, IconEntry):
+            if icon.url_spec:
+                url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
 
                 onclick = ''
@@ -241,14 +242,14 @@ def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
                     url = 'javascript:void(0)'
 
                 output += html.render_icon_button(url,
-                                                  title,
-                                                  icon_name,
+                                                  icon.title or "",
+                                                  icon.icon_name,
                                                   onclick=onclick,
                                                   target=target_frame)
             else:
-                output += html.render_icon(icon_name, title)
-        else:
-            output += icon[1]
+                output += html.render_icon(icon.icon_name, icon.title)
+        elif isinstance(icon, LegacyIconEntry):
+            output += icon.code
 
     return "icons", output
 

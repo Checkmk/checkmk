@@ -68,7 +68,7 @@ from cmk.gui.permissions import declare_permission, permission_section_registry,
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
-    IconObjectType,
+    IconObjectType, LegacyIconEntry, IconEntry,
 )
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
@@ -3337,9 +3337,9 @@ def query_action_data(what: IconObjectType, host: HostName, site: SiteId,
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu() -> None:
-    site = request.get_str_input_mandatory('site')
-    host = request.get_str_input_mandatory('host')
-    svcdesc = request.get_unicode_input('service')
+    site = request.get_ascii_input_mandatory('site')
+    host = request.get_ascii_input_mandatory('host')
+    svcdesc = request.get_str_input('service')
     what: IconObjectType = 'service' if svcdesc else 'host'
 
     display_options.load_from_html(request, html)
@@ -3349,16 +3349,14 @@ def ajax_popup_action_menu() -> None:
 
     html.open_ul()
     for icon in icons:
-        if len(icon) != 4:
+        if isinstance(icon, LegacyIconEntry):
             html.open_li()
-            html.write_text(icon[1])
+            html.write_text(icon.code)
             html.close_li()
-        else:
+        elif isinstance(icon, IconEntry):
             html.open_li()
-            icon_name, title, url_spec = icon[1:]
-
-            if url_spec:
-                url, target_frame = transform_action_url(url_spec)
+            if icon.url_spec:
+                url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
                 onclick = None
                 if url.startswith('onclick:'):
@@ -3366,12 +3364,12 @@ def ajax_popup_action_menu() -> None:
                     url = 'javascript:void(0);'
                 html.open_a(href=url, target=target_frame, onclick=onclick)
 
-            html.icon(icon_name)
-            if title:
-                html.write_text(title)
+            html.icon(icon.icon_name)
+            if icon.title:
+                html.write_text(icon.title)
             else:
                 html.write_text(_("No title"))
-            if url_spec:
+            if icon.url_spec:
                 html.close_a()
             html.close_li()
     html.close_ul()

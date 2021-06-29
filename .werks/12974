@@ -1,0 +1,12 @@
+Title: Fix parse error on iCalendar import
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1624959381
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p7
+
+Timeperiod imports of iCalender could lead to an error "Failed to parse file:
+Tuple or struct_time argument required".

@@ -5,13 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from typing import Any as _Any, Dict as _Dict
+from typing import Any, Dict, List, Literal, Optional, Iterator
 
 import cmk.utils.regex
+from cmk.utils.type_defs import TagID
 
 import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+from cmk.gui.type_defs import Row, ColumnName
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -19,6 +21,9 @@ from cmk.utils.plugin_loader import load_plugins
 from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
     Icon, icon_and_action_registry,
 )
+
+IconObjectType = Literal["host", "service"]
+ABCIconEntry = Any  # TODO: Improve this type
 
 #.
 #   .--Plugin API----------------------------------------------------------.
@@ -32,10 +37,10 @@ from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
 
 # Use this structure for new icons
 # TODO: Move this to cmk.gui.views once this is only used by legacy view/icon plugins
-multisite_icons_and_actions: _Dict[str, _Dict[str, _Any]] = {}
+multisite_icons_and_actions: Dict[str, Dict[str, Any]] = {}
 
 
-def get_multisite_icons():
+def get_multisite_icons() -> Dict[str, Icon]:
     icons = {}
 
     for icon_class in icon_and_action_registry.values():
@@ -44,7 +49,7 @@ def get_multisite_icons():
     return icons
 
 
-def get_icons(what, row, toplevel):
+def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> List[ABCIconEntry]:
     host_custom_vars = dict(
         zip(
             row["host_custom_variable_names"],
@@ -75,8 +80,15 @@ def get_icons(what, row, toplevel):
     return sorted(icons, key=lambda i: i[0])
 
 
-def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
-    icons = []
+def _process_icons(
+    what: IconObjectType,
+    row: Row,
+    tags: List[TagID],
+    custom_vars: Dict[str, str],
+    toplevel: bool,
+    user_icon_ids: List[str],
+) -> List[ABCIconEntry]:
+    icons: List[ABCIconEntry] = []
     for icon_id, icon in get_multisite_icons().items():
         if icon.toplevel() != toplevel:
             continue
@@ -96,7 +108,14 @@ def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
     return icons
 
 
-def _process_icon(what, row, tags, custom_vars, icon_id, icon):
+def _process_icon(
+    what: IconObjectType,
+    row: Row,
+    tags: List[TagID],
+    custom_vars: Dict[str, str],
+    icon_id: str,
+    icon: Icon,
+) -> Iterator[ABCIconEntry]:
     # In old versions, the icons produced html code directly. The new API
     # is that the icon functions need to return:
     # a) None          - nothing to be rendered
@@ -147,11 +166,7 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
     yield icon.sort_index(), icon_name, title, url
 
 
-# toplevel may be
-#  True to get only columns for top level icons
-#  False to get only columns for dropdown menu icons
-#  None to get columns for all active icons
-def iconpainter_columns(what, toplevel):
+def iconpainter_columns(what: IconObjectType, toplevel: Optional[bool]) -> List[ColumnName]:
     cols = {
         'site',
         'host_name',
@@ -174,7 +189,7 @@ def iconpainter_columns(what, toplevel):
             if what == "service":
                 cols.update(["service_" + c for c in icon.service_columns()])
 
-    return cols
+    return list(cols)
 
 
 #.

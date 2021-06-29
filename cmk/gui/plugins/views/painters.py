@@ -44,6 +44,7 @@ from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 from cmk.gui.plugins.views.icons import (
     get_icons,
     iconpainter_columns,
+    IconObjectType,
 )
 
 from cmk.gui.plugins.views import (
@@ -208,12 +209,11 @@ def _paint_day(timestamp: Timestamp) -> CellSpec:
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
 
 
-# Paint column with various icons. The icons use
-# a plugin based mechanism so it is possible to
-# register own icon "handlers".
-# what: either "host" or "service"
-# row: the data row of the host or service
-def _paint_icons(what: str, row: Row) -> CellSpec:
+def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
+    """Paint column with various icons
+
+    The icons use a plugin based mechanism so it is possible to register own icon "handlers".
+    """
     # EC: In case of unrelated events also skip rendering this painter. All the icons
     # that display a host state are useless in this case. Maybe we make this decision
     # individually for the single icons one day.

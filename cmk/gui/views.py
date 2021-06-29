@@ -68,6 +68,7 @@ from cmk.gui.permissions import declare_permission, permission_section_registry,
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
+    IconObjectType,
 )
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
@@ -3317,7 +3318,7 @@ def ajax_popup_icon_selector() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def query_action_data(what: str, host: HostName, site: SiteId,
+def query_action_data(what: IconObjectType, host: HostName, site: SiteId,
                       svcdesc: Optional[ServiceName]) -> Row:
     # Now fetch the needed data from livestatus
     columns = list(iconpainter_columns(what, toplevel=False))
@@ -3339,7 +3340,7 @@ def ajax_popup_action_menu() -> None:
     site = request.get_str_input_mandatory('site')
     host = request.get_str_input_mandatory('host')
     svcdesc = request.get_unicode_input('service')
-    what = 'service' if svcdesc else 'host'
+    what: IconObjectType = 'service' if svcdesc else 'host'
 
     display_options.load_from_html(request, html)
 

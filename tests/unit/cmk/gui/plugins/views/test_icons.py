@@ -68,7 +68,7 @@ def test_legacy_icon_plugin():
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
-        "paint": lambda: "bla",
+        "paint": lambda what, row, tags, custom_vars: "bla",
         "sort_index": 10,
         "toplevel": True,
     }
@@ -79,7 +79,7 @@ def test_legacy_icon_plugin():
     assert registered_icon.columns() == icon["columns"]
     assert registered_icon.host_columns() == icon["host_columns"]
     assert registered_icon.service_columns() == icon["service_columns"]
-    assert registered_icon.render() == icon["paint"]()
+    assert registered_icon.render("host", {}, [], {}) == icon["paint"]("host", {}, [], {})
     assert registered_icon.toplevel() is True
     assert registered_icon.sort_index() == 10
 

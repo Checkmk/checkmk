@@ -12,7 +12,17 @@ import io
 import gzip
 import re
 import pprint
-from typing import Dict, List, Optional, Any, Union, Tuple, Set, Callable
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Any,
+    Union,
+    Tuple,
+    Set,
+    Callable,
+    NamedTuple,
+)
 from pathlib import Path
 
 import cmk.utils.store as store
@@ -263,12 +273,12 @@ class Container:
                 self._table.is_equal(other._table)):
             return False
 
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._nodes, self._nodes)
-        if removed_keys or new_keys:
+        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
+        if compared_keys.only_old or compared_keys.only_new:
             return False
 
-        for kept_key in kept_keys:
-            if not self._nodes[kept_key].is_equal(other._nodes[kept_key]):
+        for key in compared_keys.both:
+            if not self._nodes[key].is_equal(other._nodes[key]):
                 return False
         return True
 
@@ -302,9 +312,9 @@ class Container:
         delta_node._table.set_child_data(delta_table._numeration)
 
         # Nodes
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._nodes, self._nodes)
+        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
-        for key in new_keys:
+        for key in compared_keys.only_new:
             node = self._nodes[key]
             new_entries = node.count_entries()
             if new_entries:
@@ -314,7 +324,7 @@ class Container:
                     node.encode_for_delta_tree(encode_as=_new_delta_tree_node),
                 )
 
-        for key in kept_keys:
+        for key in compared_keys.both:
             node = self._nodes[key]
             other_node = other._nodes[key]
 
@@ -335,7 +345,7 @@ class Container:
                 num_removed += removed_entries
                 delta_node.add_child(key, delta_sub_node)
 
-        for key in removed_keys:
+        for key in compared_keys.only_old:
             other_node = other._nodes[key]
             removed_entries = other_node.count_entries()
             if removed_entries:
@@ -462,12 +472,12 @@ class Container:
         self._attributes.merge_with(other._attributes)
         self._table.merge_with(other._table)
 
-        removed_keys, kept_keys, _new_keys = _compare_dict_keys(other._nodes, self._nodes)
+        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
-        for key in kept_keys:
+        for key in compared_keys.both:
             self._nodes[key].merge_with(other._nodes[key])
 
-        for key in removed_keys:
+        for key in compared_keys.only_old:
             self.add_child(key, other._nodes[key])
 
     def copy(self) -> "Container":
@@ -686,16 +696,18 @@ class Numeration:
         num_new, num_changed, num_removed = 0, 0, 0
         compared_rows = []
         for own_row, other_row in zip(own_rows, other_rows):
-            new_entries, changed_entries, removed_entries, identical_entries = \
-                _compare_dicts(other_row, own_row)
-            num_new += len(new_entries)
-            num_changed += len(changed_entries)
-            num_removed += len(removed_entries)
+            compared_dicts = _compare_dicts(old_dict=other_row, new_dict=own_row)
+            num_new += len(compared_dicts.new)
+            num_changed += len(compared_dicts.changed)
+            num_removed += len(compared_dicts.removed)
+
             row: Dict = {}
-            for entries in [new_entries, changed_entries, removed_entries]:
+            for entries in [compared_dicts.new, compared_dicts.changed, compared_dicts.removed]:
                 row.update(entries)
-            if keep_identical or new_entries or changed_entries or removed_entries:
-                row.update(identical_entries)
+
+            if keep_identical:
+                row.update(compared_dicts.identical)
+
             if row:
                 compared_rows.append(row)
         return num_new, num_changed, num_removed, compared_rows
@@ -815,15 +827,16 @@ class Attributes:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         delta_attributes = Attributes()
-        new, changed, removed, identical = _compare_dicts(other._attributes, self._attributes)
+        compared_dicts = _compare_dicts(old_dict=other._attributes, new_dict=self._attributes)
 
-        delta_attributes.set_child_data(new)
-        delta_attributes.set_child_data(changed)
-        delta_attributes.set_child_data(removed)
+        delta_attributes.set_child_data(compared_dicts.new)
+        delta_attributes.set_child_data(compared_dicts.changed)
+        delta_attributes.set_child_data(compared_dicts.removed)
         if keep_identical:
-            delta_attributes.set_child_data(identical)
+            delta_attributes.set_child_data(compared_dicts.identical)
 
-        return len(new), len(changed), len(removed), delta_attributes
+        return (len(compared_dicts.new), len(compared_dicts.changed), len(compared_dicts.removed),
+                delta_attributes)
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Attributes":
         delta_attributes = Attributes()
@@ -875,7 +888,14 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
-def _compare_dicts(old_dict: Dict, new_dict: Dict) -> Tuple[Dict, Dict, Dict, Dict]:
+class ComparedDicts(NamedTuple):
+    removed: Dict
+    changed: Dict
+    new: Dict
+    identical: Dict
+
+
+def _compare_dicts(*, old_dict: Dict, new_dict: Dict) -> ComparedDicts:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -883,21 +903,32 @@ def _compare_dicts(old_dict: Dict, new_dict: Dict) -> Tuple[Dict, Dict, Dict, Di
       removed:      {k: (old_value, None), ...}
       identical:    {k: (value, value), ...}
     """
-    removed_keys, kept_keys, new_keys = _compare_dict_keys(old_dict, new_dict)
+    compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
     identical: Dict = {}
     changed: Dict = {}
-    for k in kept_keys:
+    for k in compared_keys.both:
         new_value = new_dict[k]
         old_value = old_dict[k]
         if new_value == old_value:
             identical.setdefault(k, _identical_delta_tree_node(old_value))
         else:
             changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
-    return {k: _new_delta_tree_node(new_dict[k]) for k in new_keys}, changed,\
-           {k: _removed_delta_tree_node(old_dict[k]) for k in removed_keys}, identical
+
+    return ComparedDicts(
+        removed={k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old},
+        changed=changed,
+        new={k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new},
+        identical=identical,
+    )
 
 
-def _compare_dict_keys(old_dict: Dict, new_dict: Dict) -> Tuple[Set, Set, Set]:
+class ComparedDictKeys(NamedTuple):
+    only_old: Set
+    both: Set
+    only_new: Set
+
+
+def _compare_dict_keys(*, old_dict: Dict, new_dict: Dict) -> ComparedDictKeys:
     """
     Returns the set relationships of the keys between two dictionaries:
     - relative complement of new_dict in old_dict
@@ -905,8 +936,11 @@ def _compare_dict_keys(old_dict: Dict, new_dict: Dict) -> Tuple[Set, Set, Set]:
     - relative complement of old_dict in new_dict
     """
     old_keys, new_keys = set(old_dict), set(new_dict)
-    return old_keys - new_keys, old_keys.intersection(new_keys),\
-           new_keys - old_keys
+    return ComparedDictKeys(
+        only_old=old_keys - new_keys,
+        both=old_keys.intersection(new_keys),
+        only_new=new_keys - old_keys,
+    )
 
 
 def _get_filtered_dict(entries: Dict, keys: SDKeys) -> Dict:

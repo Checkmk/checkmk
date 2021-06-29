@@ -42,7 +42,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import ConfigSerial, VersionedConfigPath
+from cmk.core_helpers.paths import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -72,7 +72,7 @@ class MonitoringCore(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_config(self, serial: ConfigSerial) -> None:
+    def create_config(self, config_path: VersionedConfigPath) -> None:
         raise NotImplementedError
 
 
@@ -347,7 +347,7 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
 
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
-        core.create_config(ConfigSerial(str(config_path.serial)))
+        core.create_config(config_path)
 
     cmk.utils.password_store.save(config.stored_passwords)
 

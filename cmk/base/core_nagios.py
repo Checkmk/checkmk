@@ -37,7 +37,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.paths
-from cmk.core_helpers.paths import ConfigSerial
+from cmk.core_helpers.paths import VersionedConfigPath, ConfigSerial
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
@@ -68,9 +68,9 @@ class NagiosCore(core_config.MonitoringCore):
     def name(cls) -> str:
         return "nagios"
 
-    def create_config(self, serial: ConfigSerial) -> None:
+    def create_config(self, config_path: VersionedConfigPath) -> None:
         self._create_core_config()
-        self._precompile_hostchecks(serial)
+        self._precompile_hostchecks(config_path)
 
     def _create_core_config(self) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
@@ -86,9 +86,9 @@ class NagiosCore(core_config.MonitoringCore):
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
-    def _precompile_hostchecks(self, serial: ConfigSerial) -> None:
+    def _precompile_hostchecks(self, config_path: VersionedConfigPath) -> None:
         out.output("Precompiling host checks...")
-        _precompile_hostchecks(serial)
+        _precompile_hostchecks(config_path)
         out.output(tty.ok + "\n")
 
 
@@ -972,29 +972,35 @@ class HostCheckStore:
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def _precompile_hostchecks(serial: ConfigSerial) -> None:
+def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
 
-    config.save_packed_config(serial, config_cache)
+    config.save_packed_config(config_path.to_deprecated(), config_cache)
 
     console.verbose("Precompiling host checks...\n")
 
     host_check_store = HostCheckStore()
     for hostname in config_cache.all_active_hosts():
         try:
-            console.verbose("%s%s%-16s%s:",
-                            tty.bold,
-                            tty.blue,
-                            hostname,
-                            tty.normal,
-                            stream=sys.stderr)
-            host_check = _dump_precompiled_hostcheck(config_cache, serial, hostname)
+            console.verbose(
+                "%s%s%-16s%s:",
+                tty.bold,
+                tty.blue,
+                hostname,
+                tty.normal,
+                stream=sys.stderr,
+            )
+            host_check = _dump_precompiled_hostcheck(
+                config_cache,
+                config_path.to_deprecated(),
+                hostname,
+            )
             if host_check is None:
                 console.verbose("(no Checkmk checks)\n")
                 continue
 
-            host_check_store.write(serial, hostname, host_check)
+            host_check_store.write(config_path.to_deprecated(), hostname, host_check)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

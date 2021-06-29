@@ -13,8 +13,16 @@ import json
 import re
 import subprocess
 from contextlib import nullcontext
-from typing import (Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple, Dict,
-                    ContextManager)
+from typing import (
+    Callable,
+    ContextManager,
+    Dict,
+    List,
+    Mapping,
+    Optional as _Optional,
+    Tuple as _Tuple,
+    Type,
+)
 
 from six import ensure_str
 
@@ -31,9 +39,10 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g, transactions, request
-from cmk.gui.htmllib import foldable_container
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.utils.escaping import escape_html
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
@@ -1509,7 +1518,7 @@ def configure_attributes(new,
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
             # This does not apply in "host_search" mode.
-            inherited_from = None
+            inherited_from: _Optional[HTML] = None
             inherited_value = None
             has_inherited = False
             container = None
@@ -1522,8 +1531,8 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + str(
-                            html.render_a(container.title(), href=url))
+                        inherited_from = escape_html(_("Inherited from ")) + html.render_a(
+                            container.title(), href=url)
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
@@ -1534,7 +1543,7 @@ def configure_attributes(new,
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = _("Default value")
+                inherited_from = escape_html(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -1650,13 +1659,14 @@ def configure_attributes(new,
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = u""
+            explanation: HTML = HTML("")
             if for_what == "bulk":
                 if num_haveit == 0:
-                    explanation = u" (%s)" % inherited_from
+                    assert inherited_from is not None
+                    explanation = HTML(" (") + inherited_from + HTML(")")
                     value = inherited_value
                 elif not unique:
-                    explanation = _("This value differs between the selected hosts.")
+                    explanation = escape_html(_("This value differs between the selected hosts."))
                 else:
                     value = values[0]
 

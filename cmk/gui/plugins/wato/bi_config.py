@@ -454,6 +454,10 @@ class ModeBIPacks(ABCBIMode):
         if not html.check_transaction():
             return redirect(self.mode_url())
 
+        if html.request.has_var("_bi_packs_reset_sorting") or html.request.has_var(
+                "_bi_packs_sort"):
+            return None
+
         if not html.request.has_var("_delete"):
             return redirect(self.mode_url())
 
@@ -475,7 +479,7 @@ class ModeBIPacks(ABCBIMode):
         return redirect(self.mode_url())
 
     def page(self):
-        with table_element(title=_("BI Configuration Packs")) as table:
+        with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
             for pack in sorted(self._bi_packs.packs.values(), key=lambda x: x.id):
                 if not bi_valuespecs.may_use_rules_in_pack(pack):
                     continue
@@ -683,6 +687,9 @@ class ModeBIRules(ABCBIMode):
 
         elif html.request.var("_bulk_move_bi_rules"):
             self._bulk_move_after_confirm()
+
+        else:
+            return None
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 
@@ -1733,6 +1740,9 @@ class BIModeAggregations(ABCBIMode):
 
         elif html.request.var("_bulk_move_bi_aggregations"):
             self._bulk_move_after_confirm()
+
+        else:
+            return None
 
         return redirect(self.mode_url(pack=self.bi_pack.id))
 

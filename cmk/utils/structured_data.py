@@ -58,9 +58,6 @@ SDPath = List[SDNodeName]
 SDNodePath = Tuple[SDNodeName, ...]
 SDNodes = Dict[SDNodeName, "Container"]
 
-SDChild = Union["Container", "Numeration", "Attributes"]
-SDSortedNodeChildren = List[SDChild]
-
 SDEncodeAs = Callable
 
 SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
@@ -126,7 +123,7 @@ class StructuredDataTree:
         return self._get_object(tree_path)._table.get_child_data()
 
     def _get_object(self, tree_path: Optional[SDRawPath]) -> "Container":
-        return self._root._create_hierarchy(self._parse_tree_path(tree_path))
+        return self._root.setdefault_node(self._parse_tree_path(tree_path))
 
     def _parse_tree_path(self, tree_path: Optional[SDRawPath]) -> SDPath:
         if not tree_path:
@@ -331,12 +328,12 @@ class Container:
         # Attributes
         delta_attributes_result = self._attributes.compare_with(other._attributes)
         counter.update(delta_attributes_result.counter)
-        delta_node._attributes.set_child_data(delta_attributes_result.delta._attributes)
+        delta_node.add_attributes(delta_attributes_result.delta._attributes)
 
         # Table
         delta_table_result = self._table.compare_with(other._table)
         counter.update(delta_table_result.counter)
-        delta_node._table.set_child_data(delta_table_result.delta._numeration)
+        delta_node.add_table(delta_table_result.delta._numeration)
 
         # Nodes
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -346,7 +343,7 @@ class Container:
             new_entries = node.count_entries()
             if new_entries:
                 counter.update(new=new_entries)
-                delta_node.add_child(
+                delta_node.add_node(
                     key,
                     node.encode_for_delta_tree(encode_as=_new_delta_tree_node),
                 )
@@ -357,7 +354,7 @@ class Container:
 
             if node.is_equal(other_node):
                 if keep_identical:
-                    delta_node.add_child(
+                    delta_node.add_node(
                         key,
                         node.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
                     )
@@ -371,14 +368,14 @@ class Container:
             if (delta_node_result.counter['new'] or delta_node_result.counter['changed'] or
                     delta_node_result.counter['removed']):
                 counter.update(delta_node_result.counter)
-                delta_node.add_child(key, delta_node_result.delta)
+                delta_node.add_node(key, delta_node_result.delta)
 
         for key in compared_keys.only_old:
             other_node = other._nodes[key]
             removed_entries = other_node.count_entries()
             if removed_entries:
                 counter.update(removed=removed_entries)
-                delta_node.add_child(
+                delta_node.add_node(
                     key,
                     other_node.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
                 )
@@ -388,12 +385,11 @@ class Container:
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Container":
         delta_node = Container()
 
-        delta_node._attributes.set_child_data(
-            self._attributes.encode_for_delta_tree(encode_as)._attributes)
-        delta_node._table.set_child_data(self._table.encode_for_delta_tree(encode_as)._numeration)
+        delta_node.add_attributes(self._attributes.encode_for_delta_tree(encode_as)._attributes)
+        delta_node.add_table(self._table.encode_for_delta_tree(encode_as)._numeration)
 
         for edge, node in self._nodes.items():
-            delta_node.add_child(edge, node.encode_for_delta_tree(encode_as))
+            delta_node.add_node(edge, node.encode_for_delta_tree(encode_as))
         return delta_node
 
     # Deserializing
@@ -402,20 +398,18 @@ class Container:
         raw_attributes: SDAttributes = {}
         for key, value in raw_tree.items():
             if isinstance(value, dict):
-                node = self.add_child(key, Container())
-                node._create_hierarchy_from_data(value)
+                self.setdefault_node([key])._create_hierarchy_from_data(value)
                 continue
 
             if isinstance(value, list):
                 if self._is_numeration(value):
-                    node = self.add_child(key, Container())
-                    node._table.set_child_data(value)
+                    self.setdefault_node([key]).add_table(value)
                 else:
                     self._add_indexed_nodes(key, value)
                 continue
 
             raw_attributes.setdefault(key, value)
-        self._attributes.set_child_data(raw_attributes)
+        self.add_attributes(raw_attributes)
 
     def _is_numeration(self, entries: List) -> bool:
         for entry in entries:
@@ -432,14 +426,13 @@ class Container:
     def _add_indexed_nodes(self, key, value):
         for idx, entry in enumerate(value):
             idx_attributes: SDAttributes = {}
-            node = self.add_child(key, Container()).add_child(idx, Container())
+            node = self.setdefault_node([key, idx])
             for idx_key, idx_entry in entry.items():
                 if isinstance(idx_entry, list):
-                    sub_node = node.add_child(idx_key, Container())
-                    sub_node._table.set_child_data(idx_entry)
+                    node.setdefault_node([idx_key]).add_table(idx_entry)
                 else:
                     idx_attributes.setdefault(idx_key, idx_entry)
-            node._attributes.set_child_data(idx_attributes)
+            node.add_attributes(idx_attributes)
 
     def normalize_nodes(self):
         """
@@ -456,12 +449,12 @@ class Container:
         for idx, entry in enumerate(self._table.get_child_data()):
             for k, v in entry.items():
                 if isinstance(v, list):
-                    node = self.add_child(idx, Container()).add_child(k, Container())
-                    node._table.set_child_data(v)
+                    self.setdefault_node([idx, k]).add_table(v)
                     remove_table = True
 
         if remove_table:
             self._table = Numeration()
+            self._table.set_path(self.path)
 
         for node in self._nodes.values():
             node.normalize_nodes()
@@ -506,48 +499,44 @@ class Container:
             self._nodes[key].merge_with(other._nodes[key])
 
         for key in compared_keys.only_old:
-            self.add_child(key, other._nodes[key])
+            self.add_node(key, other._nodes[key])
 
     def copy(self) -> "Container":
         new_node = Container()
 
-        new_node._attributes.set_child_data(self._attributes._attributes)
-        new_node._table.set_child_data(self._table._numeration)
+        new_node.add_attributes(self._attributes._attributes)
+        new_node.add_table(self._table._numeration)
 
         for edge, node in self._nodes.items():
-            new_node.add_child(edge, node.copy())
+            new_node.add_node(edge, node.copy())
         return new_node
 
     #   ---container methods----------------------------------------------------
 
-    def _create_hierarchy(self, path: SDPath) -> "Container":
+    def setdefault_node(self, path: SDPath) -> "Container":
         if not path:
             return self
-        return self.add_child(path[0], Container())._create_hierarchy(path[1:])
-
-    def add_child(
-        self,
-        edge: SDNodeName,
-        child: Union["Container", "Numeration", "Attributes"],
-    ):
-        path = self._path + (edge,)
+        edge = path[0]
         node = self._nodes.setdefault(edge, Container())
-        if isinstance(child, Container):
-            child.merge_with(node)
-            self._nodes[edge] = child
-            child.set_path(path)
-            return child
+        node.set_path(self._path + (edge,))
+        return node.setdefault_node(path[1:])
 
-        node.set_path(path)
-        if isinstance(child, Attributes):
-            node._attributes = child
-            node._attributes.set_path(path)
+    def add_node(self, edge: SDNodeName, node: "Container") -> "Container":
+        the_node = self._nodes.setdefault(edge, Container())
+        the_node.set_path(self._path + (edge,))
+        the_node.merge_with(node)
+        return the_node
 
-        if isinstance(child, Numeration):
-            node._table = child
-            node._table.set_path(path)
+    def add_attributes(self, attributes: SDAttributes) -> None:
+        tmp_attributes = Attributes()
+        tmp_attributes.set_child_data(attributes)
+        self._attributes.merge_with(tmp_attributes)
 
-        return child
+    def add_table(self, table: SDTable) -> None:
+        # TODO Check call sites: extend (set_child_data) or insert (merge_with)
+        tmp_table = Numeration()
+        tmp_table.set_child_data(table)
+        self._table.merge_with(tmp_table)
 
     def has_edge(self, edge: SDNodeName) -> bool:
         return bool(self._nodes.get(edge))
@@ -559,19 +548,19 @@ class Container:
             return None
 
         filtered = Container()
-        filtered_node = filtered._create_hierarchy(path)
+        filtered_node = filtered.setdefault_node(path)
 
-        table = node._table
-        if table is not None:
+        the_table = node._table
+        if the_table is not None:
             if keys:
-                table = table.get_filtered_data(keys)
-            filtered_node._table.set_child_data(table._numeration)
+                the_table = the_table.get_filtered_data(keys)
+            filtered_node.add_table(the_table._numeration)
 
-        attributes = node._attributes
-        if attributes is not None:
+        the_attributes = node._attributes
+        if the_attributes is not None:
             if keys:
-                attributes = attributes.get_filtered_data(keys)
-            filtered_node._attributes.set_child_data(attributes._attributes)
+                the_attributes = the_attributes.get_filtered_data(keys)
+            filtered_node.add_attributes(the_attributes._attributes)
 
         return filtered
 

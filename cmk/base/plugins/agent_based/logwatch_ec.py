@@ -482,7 +482,7 @@ def logwatch_forward_send_tcp(
                 except IndexError:
                     break  # chunk complete
 
-                sock.send(message.encode("utf-8") + b"\n")
+                sock.sendall(message.encode("utf-8") + b"\n")
                 message_chunk.pop(0)  # remove sent message
                 result.num_forwarded += 1
     except Exception as exc:

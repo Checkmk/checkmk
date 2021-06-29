@@ -258,9 +258,10 @@ class ModeBulkImport(WatoMode):
 
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
+            folder_path = watolib.Folder.current().path()
             config.user.set_rowselection(
                 weblib.selection_id(),
-                'wato-folder-/' + watolib.Folder.current().path(),
+                'wato-folder-/' + folder_path,
                 selected,
                 "set",
             )
@@ -272,7 +273,7 @@ class ModeBulkImport(WatoMode):
                     selection=weblib.selection_id(),
                 ))
         flash(msg)
-        return redirect(mode_url("folder"))
+        return redirect(mode_url("folder", folder=folder_path))
 
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()

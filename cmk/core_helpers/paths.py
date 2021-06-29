@@ -28,10 +28,6 @@ __all__ = [
 # LATEST_SERIAL, ConfigSerial, and OptionalConfigSerial are deprecated.
 
 LATEST_SERIAL: Final[Literal["latest"]] = "latest"
-# TODO(ml): The strings in ConfigSerial look like this: "0", "1", "2"...
-#           We should use `int` or even better make a full-blown
-#           abstraction out of that.
-#           See also: a few of its "methods" are below.
 ConfigSerial = NewType("ConfigSerial", str)
 OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 
@@ -44,6 +40,23 @@ class ConfigPath(abc.ABC):
     @property
     @abc.abstractmethod
     def _path_elem(self) -> str:
+        raise NotImplementedError()
+
+    @staticmethod
+    def from_deprecated(config_paths: Union[ConfigPath, str]) -> ConfigPath:
+        if isinstance(config_paths, str):
+            # Deprecated!
+            try:
+                return VersionedConfigPath(int(config_paths))
+            except ValueError:
+                # int(config_paths) failed
+                return LATEST_CONFIG
+
+        assert isinstance(config_paths, ConfigPath), repr(config_paths)
+        return config_paths
+
+    @abc.abstractmethod
+    def to_deprecated(self) -> OptionalConfigSerial:
         raise NotImplementedError()
 
     def __str__(self) -> str:
@@ -105,6 +118,9 @@ class VersionedConfigPath(ConfigPath, Iterator):
         )
         return cls(serial)
 
+    def to_deprecated(self) -> ConfigSerial:
+        return ConfigSerial(str(self))
+
     def __iter__(self) -> Iterator[VersionedConfigPath]:
         serial = self.serial
         while True:
@@ -159,6 +175,9 @@ class LatestConfigPath(ConfigPath):
     def _path_elem(self) -> str:
         return "latest"
 
+    def to_deprecated(self) -> Literal["latest"]:
+        return LATEST_SERIAL
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
@@ -167,30 +186,17 @@ class LatestConfigPath(ConfigPath):
 LATEST_CONFIG: Final = LatestConfigPath()
 
 
-def _from_deprecated(config_paths: Union[ConfigPath, str]) -> ConfigPath:
-    if isinstance(config_paths, str):
-        # Deprecated!!
-        try:
-            return VersionedConfigPath(int(config_paths))
-        except ValueError:
-            # int(config_paths) failed
-            return LatestConfigPath()
-
-    assert isinstance(config_paths, ConfigPath), repr(config_paths)
-    return config_paths
-
-
 def make_helper_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return _from_deprecated(config_paths).helper_config_path()
+    return ConfigPath.from_deprecated(config_paths).helper_config_path()
 
 
 def make_fetchers_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return _from_deprecated(config_paths).fetchers_config_path()
+    return ConfigPath.from_deprecated(config_paths).fetchers_config_path()
 
 
 def make_local_config_path(config_paths: Union[ConfigPath, str], host_name: HostName) -> Path:
-    return _from_deprecated(config_paths).local_config_path(host_name)
+    return ConfigPath.from_deprecated(config_paths).local_config_path(host_name)
 
 
 def make_global_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return _from_deprecated(config_paths).global_config_path()
+    return ConfigPath.from_deprecated(config_paths).global_config_path()

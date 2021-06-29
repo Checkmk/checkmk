@@ -8,15 +8,7 @@ import logging
 
 import pytest
 
-from cmk.utils.paths import core_helper_config_dir
-
-from cmk.core_helpers.controller import (
-    GlobalConfig,
-    make_global_config_path,
-    make_local_config_path,
-    write_bytes,
-)
-from cmk.core_helpers.paths import ConfigSerial
+from cmk.core_helpers.controller import GlobalConfig, write_bytes
 from cmk.core_helpers.protocol import CMCMessage
 from cmk.core_helpers.snmp import SNMPPluginStore
 
@@ -43,16 +35,6 @@ class TestControllerApi:
 
     def test_controller_end_of_reply(self):
         assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"
-
-    def test_make_local_config_path(self):
-        assert make_local_config_path(
-            ConfigSerial("69"),
-            "host",
-        ) == core_helper_config_dir / "69" / "fetchers" / "hosts" / "host.json"
-
-    def test_make_global_config_path(self):
-        assert make_global_config_path(
-            ConfigSerial("69")) == core_helper_config_dir / "69" / "fetchers" / "global_config.json"
 
     def test_write_bytes(self, capfdbinary):
         write_bytes(b"123")

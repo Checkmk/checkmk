@@ -16,13 +16,11 @@ import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.type_defs import HostName
 
-from .paths import ConfigSerial
-
 CrashReportStore = crash_reporting.CrashReportStore
 
 
 def create_fetcher_crash_dump(
-    serial: Optional[ConfigSerial],
+    serial: Optional[str],
     host: Optional[HostName],
 ) -> str:
     """Create a crash dump from an exception occured during fetcher execution
@@ -55,7 +53,7 @@ class CMKFetcherCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def from_exception_and_context(
         cls,
-        serial: Optional[ConfigSerial],
+        serial: Optional[str],
         host: Optional[HostName],
     ) -> crash_reporting.ABCCrashReport:
         return super(CMKFetcherCrashReport, cls).from_exception(details={

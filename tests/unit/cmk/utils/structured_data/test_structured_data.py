@@ -138,12 +138,13 @@ def test_structured_data_NodeAttribute_count_entries(node_attribute, result):
 
 @pytest.mark.parametrize("na_old,na_new,result", [(mk_root(), mk_filled_root(), (12, 0, 0))])
 def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
-    n, c, r, d = na_new.compare_with(na_old)
-    assert (n, c, r) == result
+    delta_result = na_new.compare_with(na_old)
+    assert (delta_result.counter['new'], delta_result.counter['changed'],
+            delta_result.counter['removed']) == result
     if result == (0, 0, 0):
-        assert d.is_empty()
+        assert delta_result.delta.is_empty()
     else:
-        assert not d.is_empty()
+        assert not delta_result.delta.is_empty()
 
 
 @pytest.mark.parametrize("old_numeration_data,new_numeration_data,result", [
@@ -317,8 +318,9 @@ def test_structured_data_Numeration_compare_with(old_numeration_data, new_numera
     old_numeration.set_child_data(old_numeration_data)
     new_numeration = Numeration()
     new_numeration.set_child_data(new_numeration_data)
-    n, c, r, _d = new_numeration.compare_with(old_numeration)
-    assert (n, c, r) == result
+    delta_result = new_numeration.compare_with(old_numeration)
+    assert (delta_result.counter['new'], delta_result.counter['changed'],
+            delta_result.counter['removed']) == result
 
 
 @pytest.mark.parametrize("node_attribute,edge", [
@@ -550,8 +552,9 @@ def test_structured_data_StructuredDataTree_count_entries(tree, result):
 
 @pytest.mark.parametrize("tree", trees)
 def test_structured_data_StructuredDataTree_compare_with_self(tree):
-    new, changed, removed, _delta = tree.compare_with(tree)
-    assert (new, changed, removed) == (0, 0, 0)
+    delta_result = tree.compare_with(tree)
+    assert (delta_result.counter['new'], delta_result.counter['changed'],
+            delta_result.counter['removed']) == (0, 0, 0)
 
 
 @pytest.mark.parametrize("tree_old,tree_new,result",
@@ -565,8 +568,9 @@ def test_structured_data_StructuredDataTree_compare_with_self(tree):
                                  (1, 1, 2),
                              ])))
 def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, result):
-    new, changed, removed, _delta = tree_new.compare_with(tree_old)
-    assert (new, changed, removed) == result
+    delta_result = tree_new.compare_with(tree_old)
+    assert (delta_result.counter['new'], delta_result.counter['changed'],
+            delta_result.counter['removed']) == result
 
 
 @pytest.mark.parametrize("tree,edges_t,edges_f",
@@ -780,9 +784,9 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
 
     old_tree.load_from(old_filename)
     new_tree.load_from(new_filename)
-    _, __, ___, delta_tree = old_tree.compare_with(new_tree)
+    delta_result = old_tree.compare_with(new_tree)
 
     new_delta_tree = StructuredDataTree()
-    new_delta_tree.create_tree_from_raw_tree(delta_tree.get_raw_tree())
+    new_delta_tree.create_tree_from_raw_tree(delta_result.delta.get_raw_tree())
 
-    assert delta_tree.is_equal(new_delta_tree)
+    assert delta_result.delta.is_equal(new_delta_tree)

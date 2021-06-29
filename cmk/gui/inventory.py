@@ -234,7 +234,9 @@ def get_history_deltas(
         try:
             previous_tree = get_tree(previous_timestamp)
             current_tree = get_tree(timestamp)
-            delta_data: InventoryDeltaData = current_tree.compare_with(previous_tree)
+            delta_result = current_tree.compare_with(previous_tree)
+            delta_data = (delta_result.counter['new'], delta_result.counter['changed'],
+                          delta_result.counter['removed'], delta_result.delta)
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
                 store.save_file(

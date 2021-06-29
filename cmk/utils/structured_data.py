@@ -22,8 +22,11 @@ from typing import (
     Set,
     Callable,
     NamedTuple,
+    Literal,
+    Counter as TCounter,
 )
 from pathlib import Path
+from collections import Counter
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -60,10 +63,38 @@ SDSortedNodeChildren = List[SDChild]
 
 SDEncodeAs = Callable
 
-SDDeltaResult = Tuple[int, int, int, "StructuredDataTree"]
-CDeltaResult = Tuple[int, int, int, "Container"]
-NDeltaResult = Tuple[int, int, int, "Numeration"]
-ADeltaResult = Tuple[int, int, int, "Attributes"]
+SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
+
+
+class SDDeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: "StructuredDataTree"
+
+
+class CDeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: "Container"
+
+
+class NDeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: "Numeration"
+
+
+class TDeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: SDTable
+
+
+class ADeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: "Attributes"
+
+
+class DDeltaResult(NamedTuple):
+    counter: SDDeltaCounter
+    delta: SDAttributes
+
 
 #   .--StructuredDataTree--------------------------------------------------.
 #   |         ____  _                   _                      _           |
@@ -189,10 +220,12 @@ class StructuredDataTree:
 
     def compare_with(self, old_tree: "StructuredDataTree") -> SDDeltaResult:
         delta_tree = StructuredDataTree()
-        num_new, num_changed, num_removed, delta_root_node =\
-            self._root.compare_with(old_tree._root)
+        delta_root_counter, delta_root_node = self._root.compare_with(old_tree._root)
         delta_tree._root = delta_root_node
-        return num_new, num_changed, num_removed, delta_tree
+        return SDDeltaResult(
+            counter=delta_root_counter,
+            delta=delta_tree,
+        )
 
     def copy(self) -> "StructuredDataTree":
         new_tree = StructuredDataTree()
@@ -292,24 +325,18 @@ class Container:
         if not isinstance(other, Container):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
+        counter: SDDeltaCounter = Counter()
         delta_node = Container()
-        num_new, num_changed, num_removed = 0, 0, 0
 
         # Attributes
-        num_new_a, num_changed_a, num_removed_a, delta_attributes = self._attributes.compare_with(
-            other._attributes)
-        num_new += num_new_a
-        num_changed += num_changed_a
-        num_removed += num_removed_a
-        delta_node._attributes.set_child_data(delta_attributes._attributes)
+        delta_attributes_result = self._attributes.compare_with(other._attributes)
+        counter.update(delta_attributes_result.counter)
+        delta_node._attributes.set_child_data(delta_attributes_result.delta._attributes)
 
         # Table
-        num_new_t, num_changed_t, num_removed_t, delta_table = self._table.compare_with(
-            other._table)
-        num_new += num_new_t
-        num_changed += num_changed_t
-        num_removed += num_removed_t
-        delta_node._table.set_child_data(delta_table._numeration)
+        delta_table_result = self._table.compare_with(other._table)
+        counter.update(delta_table_result.counter)
+        delta_node._table.set_child_data(delta_table_result.delta._numeration)
 
         # Nodes
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -318,7 +345,7 @@ class Container:
             node = self._nodes[key]
             new_entries = node.count_entries()
             if new_entries:
-                num_new += new_entries
+                counter.update(new=new_entries)
                 delta_node.add_child(
                     key,
                     node.encode_for_delta_tree(encode_as=_new_delta_tree_node),
@@ -336,26 +363,27 @@ class Container:
                     )
                 continue
 
-            new_entries, changed_entries, removed_entries, delta_sub_node = \
-                node.compare_with(other_node, keep_identical=keep_identical)
+            delta_node_result = node.compare_with(
+                other_node,
+                keep_identical=keep_identical,
+            )
 
-            if (new_entries or changed_entries or removed_entries):
-                num_new += new_entries
-                num_changed += changed_entries
-                num_removed += removed_entries
-                delta_node.add_child(key, delta_sub_node)
+            if (delta_node_result.counter['new'] or delta_node_result.counter['changed'] or
+                    delta_node_result.counter['removed']):
+                counter.update(delta_node_result.counter)
+                delta_node.add_child(key, delta_node_result.delta)
 
         for key in compared_keys.only_old:
             other_node = other._nodes[key]
             removed_entries = other_node.count_entries()
             if removed_entries:
-                num_removed += removed_entries
+                counter.update(removed=removed_entries)
                 delta_node.add_child(
                     key,
                     other_node.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
                 )
 
-        return num_new, num_changed, num_removed, delta_node
+        return CDeltaResult(counter=counter, delta=delta_node)
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Container":
         delta_node = Container()
@@ -625,8 +653,8 @@ class Numeration:
         if not isinstance(other, Numeration):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
+        counter: SDDeltaCounter = Counter()
         delta_table = Numeration()
-        num_new, num_changed, num_removed = 0, 0, 0
 
         remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
@@ -641,11 +669,13 @@ class Numeration:
 
         elif remaining_other_rows and remaining_own_rows:
             if len(remaining_other_rows) == len(remaining_own_rows):
-                num_new, num_changed, num_removed, compared_rows =\
-                    self._compare_remaining_rows_with_same_length(
-                        remaining_own_rows,
-                        remaining_other_rows,
-                        keep_identical=keep_identical)
+                delta_rows_result = self._compare_remaining_rows_with_same_length(
+                    remaining_own_rows,
+                    remaining_other_rows,
+                    keep_identical=keep_identical,
+                )
+                counter.update(delta_rows_result.counter)
+                compared_rows.extend(delta_rows_result.delta)
             else:
                 new_rows.extend(remaining_own_rows)
                 removed_rows.extend(remaining_other_rows)
@@ -665,7 +695,8 @@ class Numeration:
 
         delta_table.set_child_data(delta_table_rows)
 
-        return len(new_rows) + num_new, num_changed, len(removed_rows) + num_removed, delta_table
+        counter.update(new=len(new_rows), removed=len(removed_rows))
+        return NDeltaResult(counter=counter, delta=delta_table)
 
     def _get_categorized_rows(self, other: "Numeration") -> Tuple[SDTable, SDTable, SDTable]:
         identical_rows = []
@@ -690,27 +721,22 @@ class Numeration:
         own_rows: SDTable,
         other_rows: SDTable,
         keep_identical: bool = False,
-    ) -> Tuple[int, int, int, SDTable]:
+    ) -> TDeltaResult:
         # In this case we assume that each entry corresponds to the
         # other one with the same index.
-        num_new, num_changed, num_removed = 0, 0, 0
+        counter: SDDeltaCounter = Counter()
         compared_rows = []
         for own_row, other_row in zip(own_rows, other_rows):
-            compared_dicts = _compare_dicts(old_dict=other_row, new_dict=own_row)
-            num_new += len(compared_dicts.new)
-            num_changed += len(compared_dicts.changed)
-            num_removed += len(compared_dicts.removed)
+            delta_dict_result = _compare_dicts(
+                old_dict=other_row,
+                new_dict=own_row,
+                keep_identical=keep_identical,
+            )
 
-            row: Dict = {}
-            for entries in [compared_dicts.new, compared_dicts.changed, compared_dicts.removed]:
-                row.update(entries)
-
-            if keep_identical:
-                row.update(compared_dicts.identical)
-
-            if row:
-                compared_rows.append(row)
-        return num_new, num_changed, num_removed, compared_rows
+            counter.update(delta_dict_result.counter)
+            if delta_dict_result.delta:
+                compared_rows.append(delta_dict_result.delta)
+        return TDeltaResult(counter=counter, delta=compared_rows)
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Numeration":
         delta_table = Numeration()
@@ -826,17 +852,19 @@ class Attributes:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
+        delta_dict_result = _compare_dicts(
+            old_dict=other._attributes,
+            new_dict=self._attributes,
+            keep_identical=keep_identical,
+        )
+
         delta_attributes = Attributes()
-        compared_dicts = _compare_dicts(old_dict=other._attributes, new_dict=self._attributes)
+        delta_attributes.set_child_data(delta_dict_result.delta)
 
-        delta_attributes.set_child_data(compared_dicts.new)
-        delta_attributes.set_child_data(compared_dicts.changed)
-        delta_attributes.set_child_data(compared_dicts.removed)
-        if keep_identical:
-            delta_attributes.set_child_data(compared_dicts.identical)
-
-        return (len(compared_dicts.new), len(compared_dicts.changed), len(compared_dicts.removed),
-                delta_attributes)
+        return ADeltaResult(
+            counter=delta_dict_result.counter,
+            delta=delta_attributes,
+        )
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Attributes":
         delta_attributes = Attributes()
@@ -888,14 +916,7 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
-class ComparedDicts(NamedTuple):
-    removed: Dict
-    changed: Dict
-    new: Dict
-    identical: Dict
-
-
-def _compare_dicts(*, old_dict: Dict, new_dict: Dict) -> ComparedDicts:
+def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> DDeltaResult:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -904,6 +925,7 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict) -> ComparedDicts:
       identical:    {k: (value, value), ...}
     """
     compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
+
     identical: Dict = {}
     changed: Dict = {}
     for k in compared_keys.both:
@@ -914,11 +936,19 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict) -> ComparedDicts:
         else:
             changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
 
-    return ComparedDicts(
-        removed={k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old},
-        changed=changed,
-        new={k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new},
-        identical=identical,
+    new = {k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new}
+    removed = {k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old}
+
+    delta_dict: Dict = {}
+    delta_dict.update(new)
+    delta_dict.update(changed)
+    delta_dict.update(removed)
+    if keep_identical:
+        delta_dict.update(identical)
+
+    return DDeltaResult(
+        counter=Counter(new=len(new), changed=len(changed), removed=len(removed)),
+        delta=delta_dict,
     )
 
 

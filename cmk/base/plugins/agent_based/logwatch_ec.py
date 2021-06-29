@@ -500,7 +500,7 @@ def logwatch_forward_send_tcp(
     try:
         for _time_spooled, _num_spooled, message_chunk in message_chunks:
             for message in message_chunk:
-                sock.send(message.encode("utf-8") + b"\n")
+                sock.sendall(message.encode("utf-8") + b"\n")
                 result.num_forwarded += 1
     except Exception as exc:
         result.exception = exc

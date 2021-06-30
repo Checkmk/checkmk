@@ -1663,7 +1663,7 @@ def configure_attributes(new,
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation: HTML
+            explanation: HTML = HTML("")
             if for_what == "bulk":
                 if num_haveit == 0:
                     explanation = HTML(" (") + inherited_from + HTML(")")

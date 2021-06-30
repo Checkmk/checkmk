@@ -258,6 +258,8 @@ def remove(package: PackageInfo) -> None:
 
     (package_dir() / package["name"]).unlink()
 
+    _build_setup_search_index_background()
+
 
 def disable(package_name: PackageName, package_info: PackageInfo) -> None:
     """Moves a package to the "disabled packages" path
@@ -456,6 +458,9 @@ def install(file_object: BinaryIO) -> PackageInfo:
 
     # Last but not least install package file
     write_package_info(package)
+
+    _build_setup_search_index_background()
+
     return package
 
 
@@ -885,3 +890,10 @@ def _is_16_feature_pack_package(package_name: PackageName, package_info: Package
         return False
 
     return package_info.get("version", "").startswith("1.")
+
+
+def _build_setup_search_index_background() -> None:
+    subprocess.run(
+        ["init-redis"],
+        check=False,
+    )

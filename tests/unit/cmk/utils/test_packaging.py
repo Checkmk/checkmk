@@ -14,6 +14,8 @@ from pathlib import Path
 import pytest  # type: ignore[import]
 from six import ensure_str
 
+from _pytest.monkeypatch import MonkeyPatch
+
 from cmk.utils.i18n import _
 import cmk.utils.paths
 import cmk.utils.packaging as packaging
@@ -68,6 +70,15 @@ def fixture_mkp_file(tmp_path, mkp_bytes):
         mkp.write(mkp_bytes.getvalue())
 
     return mkp_path
+
+
+@pytest.fixture(scope="function", autouse=True)
+def fixture_build_setup_search_index_background(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        packaging,
+        "_build_setup_search_index_background",
+        lambda: None,
+    )
 
 
 def test_package_parts():

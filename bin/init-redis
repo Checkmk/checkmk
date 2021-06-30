@@ -26,7 +26,7 @@ def main():
                 sleep_time=5,
             )
     except Exception as excpt:
-        logger.error("ERROR: Failed to launch building of search index after starting Redis")
+        logger.error("ERROR: Failed to launch building of search index")
         logger.error(excpt)
 
 

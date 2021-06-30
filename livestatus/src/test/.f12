@@ -5,7 +5,7 @@
 
 set -e
 
-CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:2.0.0-latest"
 REPO_DIR=$(git rev-parse --show-toplevel)
 
 execute_test() {

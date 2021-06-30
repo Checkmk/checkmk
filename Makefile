@@ -603,8 +603,9 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; \
-	    rm -rf .venv \
+	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; RC=$$? ; \
+	    rm -rf .venv ; \
+	    exit $$RC \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # Remake .venv everytime Pipfile or Pipfile.lock are updated. Using the 'sync'

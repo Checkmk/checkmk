@@ -4521,7 +4521,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def is_affected_by_change(change_action_name: str) -> bool:
         # rule packs: new-rule-pack, edit-rule-pack, ...
         # rules within rule packs: new-rule, edit-rule, ...
-        return "rule" in change_action_name or change_action_name.endswith("-package")
+        return "rule" in change_action_name
 
     @property
     def is_localization_dependent(self) -> bool:

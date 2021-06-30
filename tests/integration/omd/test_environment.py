@@ -5,6 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+from cmk.utils.paths import mkbackup_lock_dir
+
+
+def test_backup_dir(site):
+    backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
+    assert backup_permission_mask == "0770"
+    assert mkbackup_lock_dir.group() == "omd"
 
 
 def test_locales(site):

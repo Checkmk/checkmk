@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterator
 from itertools import chain, repeat
 import os
 import platform
@@ -89,6 +90,7 @@ def expected_output():
     else:
         plugin_fixed = []
 
+    plugin_variadic: Iterator[str]
     if Globals.pluginname == 'netstat_an.bat':
         plugin_fixed += [
             re.escape(r'<<<') + r'win_netstat%s' %
@@ -169,7 +171,7 @@ def manage_plugins(request, plugin_dir):
                 try:
                     os.unlink(os.path.join(plugin_dir, plugin))
                     break
-                except WindowsError as e:
+                except OSError as e:
                     # For some reason, the exe plugin remains locked for a short
                     # while every now and then. Just sleep 1 s and retry.
                     sys.stderr.write('%s\n' % str(e))

@@ -22,13 +22,11 @@ see:
 ## Usage
 
         # to register a new image ()
-        register.py IMAGE_CMK_BASE debian:buster-slim
+        register.py IMAGE_DEBIAN_DEFAULT debian:buster-slim  # -> git add/commit/push
 
-        # -> git add/commit/push `IMAGE_CMK_BASE/`
-
-        # to use `IMAGE_CMK_BASE` with Dockerfile example
+        # to use `IMAGE_DEBIAN_DEFAULT` with Dockerfile example
         docker build \
-            --build-arg "IMAGE_CMK_BASE=$(./resolve.sh IMAGE_CMK_BASE)" \
+            --build-arg "IMAGE_CMK_BASE=$(./resolve IMAGE_CMK_BASE)" \
             -t debian_example example
 
         # to update all or specified aliases to their respective upstreams

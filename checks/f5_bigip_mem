@@ -57,7 +57,7 @@ def check_f5_bigip_mem(_item, params, parsed):
         mem_used,
         mem_total,
         params.get("levels"),
-        metric_name="memory_used",
+        metric_name="mem_used",
     )
 
 
@@ -96,7 +96,7 @@ def check_f5_bigip_mem_tmm(_item, params, parsed):
         mem_used,
         mem_total,
         params.get("levels"),
-        metric_name="memory_used",
+        metric_name="mem_used",
     )
 
 

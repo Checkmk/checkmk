@@ -551,25 +551,6 @@ table.data.single {
     td:not(.left) {
       width: auto;
     }
-
-    td.invtree table {
-      margin: 8px 0 12px;
-      border: 1px solid $color-table-border;
-      box-shadow: none;
-
-      th,
-      td {
-        height: 14px;
-        padding: 2px 6px;
-        background-color: $invtree-td-bg-color;
-        border: 1px solid $color-table-border;
-      }
-
-      th {
-        color: $font-color;
-        background-color: $invtree-th-bg-color;
-      }
-    }
   }
 
   > tbody > tr > td,
@@ -597,12 +578,6 @@ table.data.single {
 
     &.perfometer div.glass {
       width: 100%;
-    }
-
-    /* Make td class of invtree more specific, when shown in single dataset mode */
-    /* td.data.single td.invtree td.number { */
-    &.invtree td.number {
-      text-align: right;
     }
   }
 }
@@ -1021,6 +996,31 @@ td.invtree {
 
   table td {
     background-color: rgb(255, 255, 255);
+  }
+
+  table.data.single tr.data & table,
+  table.data.table tr.data & table {
+    margin: 8px 0 12px;
+    border: 1px solid $color-table-border;
+    box-shadow: none;
+
+    th,
+    td {
+      height: 14px;
+      padding: 2px 6px;
+      background-color: $invtree-td-bg-color;
+      border: 1px solid $color-table-border;
+    }
+
+    th {
+      color: $font-color;
+      background-color: $invtree-th-bg-color;
+    }
+  }
+
+  /* Make td class of invtree more specific, when shown in single dataset mode */
+  table.data.single & td.number {
+    text-align: right;
   }
 }
 

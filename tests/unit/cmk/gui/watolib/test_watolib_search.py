@@ -150,7 +150,7 @@ class TestIndexBuilder:
         start_lang = ""
         localize_with_memory(start_lang)
         index_builder.build_full_index()
-        assert current_lang == "de"  # bug, fixed in following commit
+        assert current_lang == start_lang
 
 
 class TestIndexBuilderAndSearcher:

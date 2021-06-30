@@ -23,6 +23,7 @@ from cmk.gui.watolib.search import (
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
+    localize,
 )
 from cmk.gui.watolib.search import (
     match_item_generator_registry as real_match_item_generator_registry,)
@@ -189,6 +190,36 @@ class TestIndexBuilder:
     ) -> None:
         index_builder.build_changed_sub_indices("something")
         assert not index_builder.index_is_built(index_builder._redis_client)
+
+    def test_language_after_built(
+        self,
+        monkeypatch: MonkeyPatch,
+        index_builder: IndexBuilder,
+    ) -> None:
+
+        current_lang = ""
+
+        def localize_with_memory(lang):
+            """Needed to remember currently set language"""
+            nonlocal current_lang
+            current_lang = lang
+            localize(lang)
+
+        monkeypatch.setattr(
+            search,
+            "localize",
+            localize_with_memory,
+        )
+        monkeypatch.setattr(
+            search,
+            "get_current_language",
+            lambda: current_lang,
+        )
+
+        start_lang = ""
+        localize_with_memory(start_lang)
+        index_builder.build_full_index()
+        assert current_lang == "de"  # bug, fixed in following commit
 
 
 class TestIndexBuilderAndSearcher:

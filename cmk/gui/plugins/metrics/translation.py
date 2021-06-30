@@ -1350,6 +1350,8 @@ check_metrics["check_mk-f5_bigip_conns"] = {
         "name": "connections_ssl"
     },
 }
+check_metrics["check_mk-f5_bigip_mem"] = memory_simple_translation
+check_metrics["check_mk-f5_bigip_mem_tmm"] = memory_simple_translation
 check_metrics["check_mk-mbg_lantime_state"] = {
     "offset": {
         "name": "time_offset",

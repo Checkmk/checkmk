@@ -54,7 +54,7 @@ def test_f5_bigip_mem_tmm_discovery(info, result):
         (
             0,
             'Usage: 26.15% - 12.32 GB of 47.11 GB',
-            [('memory_used', 13228459584.0, None, None, 0, 50586898432.0)],
+            [('mem_used', 13228459584.0, None, None, 0, 50586898432.0)],
         ),
     ),
 ])
@@ -72,7 +72,7 @@ def test_f5_bigip_mem_check(parsed, expected_result):
         (
             0,
             'Usage: 4.32% - 844.84 MB of 19.09 GB',
-            [('memory_used', 885875712.0, None, None, 0, 20497563648.0)],
+            [('mem_used', 885875712.0, None, None, 0, 20497563648.0)],
         ),
     ),
 ])

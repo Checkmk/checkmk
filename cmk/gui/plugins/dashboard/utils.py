@@ -47,6 +47,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     TextInput,
+    Transform,
     ValueSpec,
     ValueSpecValidateFunc,
 )
@@ -646,11 +647,24 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         return "%s_%s" % (self.type_name(), self._dashlet_id)
 
     @classmethod
-    def vs_parameters(cls) -> Dictionary:
-        return Dictionary(title=_("Properties"),
-                          render="form",
-                          optional_keys=False,
-                          elements=cls._vs_elements())
+    def vs_parameters(cls) -> ValueSpec:
+        return Transform(
+            Dictionary(
+                title=_("Properties"),
+                render="form",
+                optional_keys=False,
+                elements=cls._vs_elements(),
+            ),
+            forth=cls._transform_vs_forth,
+        )
+
+    @classmethod
+    def _transform_vs_forth(cls, valuespec_result):
+        if "svc_status_display" in valuespec_result:
+            # now as code is shared between host and service (svc) dashlet,
+            # the `svc_` prefix is removed.
+            valuespec_result["status_display"] = valuespec_result.pop("svc_status_display")
+        return valuespec_result
 
     @staticmethod
     def _vs_elements() -> DictionaryElements:
@@ -705,7 +719,7 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
         dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
         dashlet_params = self.vs_parameters()
-        assert isinstance(dashlet_params, Dictionary)  # help mypy
+        assert isinstance(dashlet_params, Transform)  # help mypy
         dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
 
         args: HTTPVariables = []

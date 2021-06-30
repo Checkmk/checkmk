@@ -5288,6 +5288,12 @@ class Transform(ValueSpec):
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
+    def value_to_json(self, value):
+        return self._valuespec.value_to_json(self.forth(value))
+
+    def value_from_json(self, json_value):
+        return self.back(self._valuespec.value_from_json(json_value))
+
 
 # TODO: Change to factory, cleanup kwargs
 class LDAPDistinguishedName(TextInput):

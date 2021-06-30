@@ -314,6 +314,21 @@ def test_transform_value_in_cascading_dropdown():
     assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")
 
 
+def test_transform_value_and_json():
+    # before all keys where upper case, then we decided to move to lower case,
+    # but want to keep compatibility with old values saved in the config
+    valuespec = vs.Transform(
+        vs.Dictionary(elements=[
+            ("key1", vs.TextInput()),
+        ]),
+        forth=lambda x: {k.lower(): v for k, v in x.items()},
+    )
+    assert valuespec.transform_value({"KEY1": "value1"}) == {"key1": "value1"}
+
+    assert valuespec.value_to_json({"KEY1": "value1"}) == {"key1": "value1"}
+    assert valuespec.value_from_json({"key1": "value1"}) == {"key1": "value1"}
+
+
 @pytest.fixture()
 def fixture_auth_secret():
     secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"

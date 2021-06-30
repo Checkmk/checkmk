@@ -97,6 +97,30 @@ def test_transform_dashlets_mut(entry, result):
 
 
 @pytest.mark.parametrize(
+    "entry, result",
+    [
+        pytest.param(
+            {
+                'svc_status_display': {
+                    'some': 'content'
+                },
+                'some': 'other stuff'
+            },
+            {
+                'status_display': {
+                    'some': 'content'
+                },
+                'some': 'other stuff'
+            },
+            id="2.0.0->2.1.0i1",
+        ),
+    ],
+)
+def test_transform_dashlet_status_display(entry, result):
+    assert utils.ABCFigureDashlet._transform_vs_forth(entry) == result
+
+
+@pytest.mark.parametrize(
     "context, single_infos, title, additional_macros, result",
     [
         pytest.param(

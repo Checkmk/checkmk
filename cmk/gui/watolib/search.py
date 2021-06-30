@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from functools import partial
 from itertools import chain
 from time import sleep
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     DefaultDict,
@@ -22,16 +21,22 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Sequence,
+    TYPE_CHECKING,
 )
 
 import redis
 from werkzeug.test import create_environ
 
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.plugin_registry import Registry
+from cmk.utils.redis import get_redis_client
+
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
-from cmk.gui.config import UserContext, user
+from cmk.gui.config import user, UserContext
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import RequestContext, g, request
+from cmk.gui.globals import g, request, RequestContext
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request
@@ -40,9 +45,6 @@ from cmk.gui.pages import get_page_handler
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.redis import get_redis_client
-from cmk.utils.plugin_registry import Registry
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded
@@ -125,45 +127,78 @@ class IndexBuilder:
 
     def _build_index(
         self,
-        names_and_generators: Iterable[ABCMatchItemGenerator],
+        match_item_generators: Iterable[ABCMatchItemGenerator],
     ) -> None:
-        localization_dependent_generators = []
-
         with self._redis_client.pipeline() as pipeline:
-            key_categories_li = self.key_categories(self.PREFIX_LOCALIZATION_INDEPENDENT)
-            for match_item_generator in names_and_generators:
-                if match_item_generator.is_localization_dependent:
-                    localization_dependent_generators.append(match_item_generator)
-                    continue
-                pipeline.sadd(
-                    key_categories_li,
-                    match_item_generator.name,
-                )
-                self._add_match_items_to_redis(
-                    match_item_generator,
-                    pipeline,
-                    self.PREFIX_LOCALIZATION_INDEPENDENT,
-                )
-
-            key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)
-            for language, language_name in self._all_languages.items():
-                localize(language)
-                prefix_ld = self.add_to_prefix(
-                    self.PREFIX_LOCALIZATION_DEPENDENT,
-                    language_name,
-                )
-                for match_item_generator in localization_dependent_generators:
-                    pipeline.sadd(
-                        key_categories_ld,
-                        match_item_generator.name,
-                    )
-                    self._add_match_items_to_redis(
-                        match_item_generator,
-                        pipeline,
-                        prefix_ld,
-                    )
-
+            self._add_language_independent_item_generators_to_redis(
+                iter(  # to make pylint happy
+                    filter(
+                        lambda match_item_gen: not match_item_gen.is_localization_dependent,
+                        match_item_generators,
+                    )),
+                pipeline,
+            )
+            self._add_language_dependent_item_generators_to_redis(
+                list(
+                    filter(
+                        lambda match_item_gen: match_item_gen.is_localization_dependent,
+                        match_item_generators,
+                    )),
+                pipeline,
+            )
             pipeline.execute()
+
+    @classmethod
+    def _add_language_independent_item_generators_to_redis(
+        cls,
+        match_item_generators: Iterable[ABCMatchItemGenerator],
+        redis_pipeline: redis.client.Pipeline,
+    ) -> None:
+        key_categories_li = cls.key_categories(cls.PREFIX_LOCALIZATION_INDEPENDENT)
+        for match_item_generator in match_item_generators:
+            cls._add_match_item_generator_to_redis(
+                match_item_generator,
+                redis_pipeline,
+                key_categories_li,
+                cls.PREFIX_LOCALIZATION_INDEPENDENT,
+            )
+
+    def _add_language_dependent_item_generators_to_redis(
+        self,
+        match_item_generators: Sequence[ABCMatchItemGenerator],
+        redis_pipeline: redis.client.Pipeline,
+    ) -> None:
+        key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)
+        for language, language_name in self._all_languages.items():
+            localize(language)
+            for match_item_generator in match_item_generators:
+                self._add_match_item_generator_to_redis(
+                    match_item_generator,
+                    redis_pipeline,
+                    key_categories_ld,
+                    self.add_to_prefix(
+                        self.PREFIX_LOCALIZATION_DEPENDENT,
+                        language_name,
+                    ),
+                )
+
+    @classmethod
+    def _add_match_item_generator_to_redis(
+        cls,
+        match_item_generator: ABCMatchItemGenerator,
+        redis_pipeline: redis.client.Pipeline,
+        category_key: str,
+        prefix: str,
+    ) -> None:
+        redis_pipeline.sadd(
+            category_key,
+            match_item_generator.name,
+        )
+        cls._add_match_items_to_redis(
+            match_item_generator,
+            redis_pipeline,
+            prefix,
+        )
 
     @classmethod
     def _add_match_items_to_redis(
@@ -456,10 +491,8 @@ def build_index_background(
             n_attempts_redis_connection=n_attempts_redis_connection,
             sleep_time=sleep_time,
         ))
-    try:
+    with suppress(BackgroundJobAlreadyRunning):
         build_job.start()
-    except BackgroundJobAlreadyRunning:
-        pass
 
 
 def _update_index_background(
@@ -480,10 +513,8 @@ def _update_index_background(
 def update_index_background(change_action_name: str) -> None:
     update_job = SearchIndexBackgroundJob()
     update_job.set_function(_update_index_background, change_action_name)
-    try:
+    with suppress(BackgroundJobAlreadyRunning):
         update_job.start()
-    except BackgroundJobAlreadyRunning:
-        pass
 
 
 @job_registry.register

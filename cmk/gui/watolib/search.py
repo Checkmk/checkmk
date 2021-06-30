@@ -132,6 +132,8 @@ class IndexBuilder:
         self,
         match_item_generators: Iterable[ABCMatchItemGenerator],
     ) -> None:
+        current_language = get_current_language()
+
         with self._redis_client.pipeline() as pipeline:
             self._add_language_independent_item_generators_to_redis(
                 iter(  # to make pylint happy
@@ -150,6 +152,8 @@ class IndexBuilder:
                 pipeline,
             )
             pipeline.execute()
+
+        localize(current_language)
 
     @classmethod
     def _add_language_independent_item_generators_to_redis(

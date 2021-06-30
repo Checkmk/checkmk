@@ -3,17 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# The test image is selected automatically, but can still be set via 
-# enviroment. e.g. for master:
-# export IMAGE_TESTING="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+# The test container should be set via the enviroment. e.g. for master:
+# export TEST_CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 
 set -ex
 COMMAND=$@
 REPO_DIR=$(git rev-parse --show-toplevel)
-: "${IMAGE_TESTING:="$($REPO_DIR/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
 
-echo "Running in Docker container from $IMAGE_TESTING (workdir $PWD)"
+if [ -e $TEST_CONTAINER ]; then
+    echo "Please set TEST_CONTAINER via the environment:"
+    echo "e.g.: export TEST_CONTAINER='artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest'"
+    exit 1
+fi
 
+echo "Running in Docker Container $TEST_CONTAINER (workdir $PWD)"
+docker pull $TEST_CONTAINER
 docker run -t -a stdout -a stderr \
     --init \
     -u "$UID:$(id -g)" \
@@ -29,5 +33,5 @@ docker run -t -a stdout -a stderr \
     -e PYTHON_FILES \
     -e RESULTS \
     -e WORKDIR \
-    "$IMAGE_TESTING" \
+    "$TEST_CONTAINER" \
     $COMMAND

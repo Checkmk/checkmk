@@ -83,10 +83,6 @@ class FilterText(Filter):
         self.negateable = negateable
         self._show_heading = show_heading
 
-    def _current_value(self):
-        htmlvar = self.htmlvars[0]
-        return request.var(htmlvar, "")
-
     def display(self, value: FilterHTTPVariables) -> None:
         current_value = value.get(self.htmlvars[0], "")
         column = self.link_columns[0]
@@ -128,9 +124,10 @@ class FilterText(Filter):
         assert isinstance(self.column, str)
         return {self.htmlvars[0]: row[self.column]}
 
-    def heading_info(self):
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if self._show_heading:
-            return self._current_value()
+            return value.get(self.htmlvars[0])
+        return None
 
 
 class FilterRegExp(FilterText):
@@ -301,8 +298,8 @@ class FilterIPAddress(Filter):
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.htmlvars[0]: row["host_address"]}
 
-    def heading_info(self):
-        return request.var(self.htmlvars[0])
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[0])
 
 
 filter_registry.register(
@@ -528,10 +525,6 @@ class FilterGroupCombo(Filter):
             html.checkbox(self.htmlvars[1], bool(value.get(self.htmlvars[1])), label=_("negate"))
             html.close_nobr()
 
-    def current_value(self):
-        htmlvar = self.htmlvars[0]
-        return request.var(htmlvar)
-
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         current_value = value.get(self.htmlvars[0])
         if not current_value:
@@ -556,15 +549,15 @@ class FilterGroupCombo(Filter):
             return s
         return {}
 
-    def heading_info(self):
-        current_value = self.current_value()
-        if current_value:
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        if current_value := value.get(self.htmlvars[0]):
             table = self.what.replace("host_contact",
                                       "contact").replace("service_contact", "contact")
             alias = sites.live().query_value(
                 "GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
                 (table, livestatus.lqencode(current_value)), current_value)
             return alias
+        return None
 
 
 filter_registry.register(
@@ -1343,10 +1336,10 @@ class SiteFilter(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.dropdown("site", ([] if self.enforce else [("", "")]) + self.choices())
 
-    def heading_info(self):
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         if cmk_version.is_managed_edition():
-            return filter_cme_heading_info()
-        return filter_cre_heading_info()
+            return filter_cme_heading_info(value)
+        return filter_cre_heading_info(value)
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {"site": row["site"]}
@@ -2074,11 +2067,11 @@ class LabelFilter(Filter):
     def _column(self):
         return "%s_labels" % self._object_type
 
-    def _current_value(self):
-        return self._valuespec().from_html_vars(self._var_prefix)
+    def _parsed_value(self, value: FilterHTTPVariables):
+        return self._valuespec()._from_html_vars(value.get(self._var_prefix, ""), self._var_prefix)
 
-    def heading_info(self):
-        return " ".join(":".join(e) for e in sorted(self._current_value().items()))
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return " ".join(":".join(e) for e in sorted(self._parsed_value(value).items()))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {self.htmlvars[0]: row[self._column]}
@@ -2090,10 +2083,9 @@ class LabelFilter(Filter):
         self._valuespec().render_input(self._var_prefix, value)
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        value = self._valuespec()._from_html_vars(value.get(self._var_prefix, ""), self._var_prefix)
-        if not value:
-            return ""
-        return encode_labels_for_livestatus(self._column, iter(value.items())) + "\n"
+        if value := self._parsed_value(value):
+            return encode_labels_for_livestatus(self._column, iter(value.items())) + "\n"
+        return ""
 
 
 filter_registry.register(
@@ -2406,8 +2398,8 @@ class FilterAggrGroup(Filter):
             return [row for row in rows if row[self.column] == group]
         return rows
 
-    def heading_info(self):
-        return request.get_unicode_input(self.htmlvars[0])
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[0])
 
 
 @filter_registry.register_instance
@@ -2428,8 +2420,8 @@ class FilterAggrGroupTree(Filter):
         htmlvar = self.htmlvars[0]
         html.dropdown(htmlvar, [("", "")] + self._get_selection(), deflt=value.get(htmlvar, ""))
 
-    def heading_info(self):
-        return request.get_unicode_input(self.htmlvars[0])
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[0])
 
     def _get_selection(self):
         def _build_tree(group, parent, path):
@@ -2493,8 +2485,8 @@ class BITextFilter(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""))
 
-    def heading_info(self):
-        return request.get_unicode_input(self.htmlvars[0])
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[0])
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
@@ -2561,8 +2553,8 @@ class FilterAggrHosts(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
 
-    def heading_info(self):
-        return request.var(self.htmlvars[1])
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[1])
 
     def find_host(self, host, hostlist):
         return any((h == host for _s, h in hostlist))
@@ -2604,9 +2596,8 @@ class FilterAggrService(Filter):
         html.write(_("Service") + ": ")
         html.text_input(self.htmlvars[2], default_value=value.get(self.htmlvars[2], ""))
 
-    def heading_info(self):
-        return (request.get_unicode_input_mandatory(self.htmlvars[1], "") + " / " +
-                request.get_unicode_input_mandatory(self.htmlvars[2], ""))
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
 
     def service_spec(self):
         if request.has_var(self.htmlvars[2]):

@@ -304,7 +304,7 @@ class Filter(metaclass=abc.ABCMeta):
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
@@ -463,8 +463,8 @@ def filter_cre_choices():
                   key=lambda a: a[1].lower())
 
 
-def filter_cre_heading_info():
-    current_value = request.var("site")
+def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
+    current_value = value.get("site")
     return get_site_config(current_value)["alias"] if current_value else None
 
 

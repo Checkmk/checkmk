@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Tuple, Iterator, Set, List
+from typing import Tuple, Iterator, Set, List, Optional, Dict
 
 from cmk.utils.prediction import lq_logic
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.type_defs import Choices, FilterHTTPVariables, FilterHeader
 
 from cmk.gui.valuespec import DualListChoice
@@ -51,7 +51,7 @@ class FilterWatoFolder(Filter):
 
     def load_wato_data(self):
         self.tree = watolib.Folder.root_folder()
-        self.path_to_tree = {}  # will be filled by self.folder_selection
+        self.path_to_tree: Dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
 
@@ -108,7 +108,7 @@ class FilterWatoFolder(Filter):
         for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
             yield from self.folder_selection(subfolder, depth + 1)
 
-    def heading_info(self):
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         # FIXME: There is a problem with caching data and changing titles of WATO files
         # Everything is changed correctly but the filter object is stored in the
         # global multisite_filters var and self.path_to_tree is not refreshed when
@@ -117,9 +117,10 @@ class FilterWatoFolder(Filter):
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
         self.check_wato_data_update()
-        current = request.var(self.ident)
+        current = value.get(self.ident)
         if current and current != "/":
             return self.path_to_tree.get(current)
+        return None
 
 
 filter_registry.register(
@@ -158,6 +159,13 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         """Returns the current representation of the filter settings from the HTML
         var context. This can be used to persist the filter settings."""
         return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
+
+    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+        self.check_wato_data_update()
+        return ", ".join(
+            filter(None, (self.path_to_tree.get(folder)
+                          for folder in self._to_list(value)
+                          if folder and folder != "/")))
 
 
 filter_registry.register(

@@ -1845,18 +1845,26 @@ def visual_title(what: VisualTypeName,
 
 
 def _add_context_title(context: VisualContext, single_infos: List[str], title: str) -> str:
+    def filter_heading(
+        filter_name: FilterName,
+        filter_vars: Union[str, FilterHTTPVariables],
+    ) -> Optional[str]:
+        try:
+            filt = get_filter(filter_name)
+        except KeyError:
+            return ""  # silently ignore not existing filters
+
+        if isinstance(filter_vars, str):
+            filter_vars = {filt.htmlvars[0]: filter_vars}
+        return filt.heading_info(filter_vars)
+
     extra_titles = list(get_singlecontext_vars(context, single_infos).values())
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not single_infos:
-        # Context is already merged, don't allow the last instant query to uri vars.
-        with context_uri_vars(context, single_infos):
-            for fn in context:
-                try:
-                    if heading := get_filter(fn).heading_info():
-                        extra_titles.append(heading)
-                except KeyError:
-                    pass  # silently ignore not existing filters
+        for filter_name, filt_vars in context.items():
+            if heading := filter_heading(filter_name, filt_vars):
+                extra_titles.append(heading)
 
     if extra_titles:
         title += " " + ", ".join(extra_titles)
@@ -1866,10 +1874,8 @@ def _add_context_title(context: VisualContext, single_infos: List[str], title: s
         if fn == "wato_folder" and (not config.wato_enabled or 'host' in single_infos):
             continue
 
-        # Context is already merged, don't allow the last instant query to uri vars.
-        with context_uri_vars(context, single_infos):
-            if heading := get_filter(fn).heading_info():
-                title = heading + " - " + title
+        if heading := filter_heading(fn, context.get(fn, {})):
+            title = heading + " - " + title
 
     return title
 

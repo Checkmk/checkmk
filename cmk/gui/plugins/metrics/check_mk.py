@@ -6083,18 +6083,13 @@ check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
     }
 }
 
-check_metrics["check_mk-hp_procurve_mem"] = {
-    "memory_used": {
-        "name": "mem_used"
-    },
-}
-
 memory_simple_translation = {
     "memory_used": {
         "name": "mem_used"
     },
 }
 
+check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
 check_metrics["check_mk-datapower_mem"] = memory_simple_translation
 check_metrics["check_mk-ucd_mem"] = memory_simple_translation
 check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
@@ -7253,6 +7248,8 @@ check_metrics["check_mk-f5_bigip_conns"] = {
     },
 }
 
+check_metrics["check_mk-f5_bigip_mem"] = memory_simple_translation
+check_metrics["check_mk-f5_bigip_mem.tmm"] = memory_simple_translation
 check_metrics["check_mk-mbg_lantime_state"] = {
     "offset": {
         "name": "time_offset",

@@ -1,0 +1,11 @@
+Title: Correct unit for memory in f5_bigip_mem
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1625059365
+Class: fix
+
+On the service view of this check-plugin the memory value was displayed as a
+large number. Now, memory is correctly represented in bytes.

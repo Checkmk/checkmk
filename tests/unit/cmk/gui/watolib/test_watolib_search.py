@@ -5,35 +5,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.gui.type_defs import SearchResult
-from cmk.gui.watolib import (
-    hosts_and_folders,
-    search,
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from cmk.gui.plugins.wato.omd_configuration import (
+    ConfigDomainApache,
+    ConfigDomainDiskspace,
+    ConfigDomainRRDCached,
 )
+from cmk.gui.type_defs import SearchResult
+from cmk.gui.watolib import hosts_and_folders, search
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
+)
+from cmk.gui.watolib.search import (
+    match_item_generator_registry as real_match_item_generator_registry,)
+from cmk.gui.watolib.search import (
     MatchItem,
-    MatchItems,
     MatchItemGeneratorRegistry,
+    MatchItems,
     PermissionsHandler,
     URLChecker,
-    match_item_generator_registry as real_match_item_generator_registry,
-)
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.plugins.wato.omd_configuration import (
-    ConfigDomainDiskspace,
-    ConfigDomainApache,
-    ConfigDomainRRDCached,
 )
 
 
 @pytest.fixture(scope='function')
-def fake_omd_default_globals(monkeypatch):
+def fake_omd_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainOMD, "default_globals", lambda s: {
             'site_admin_mail': '',
@@ -62,7 +65,7 @@ def fake_omd_default_globals(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def fake_diskspace_default_globals(monkeypatch):
+def fake_diskspace_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(ConfigDomainDiskspace, "default_globals", lambda s: {
         'diskspace_cleanup': {
             'cleanup_abandoned_host_files': 2592000
@@ -71,7 +74,7 @@ def fake_diskspace_default_globals(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def fake_apache_default_globals(monkeypatch):
+def fake_apache_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(ConfigDomainApache, "default_globals",
                         lambda s: {'apache_process_tuning': {
                             'number_of_processes': 64
@@ -79,7 +82,7 @@ def fake_apache_default_globals(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def fake_rrdcached_default_globals(monkeypatch):
+def fake_rrdcached_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         ConfigDomainRRDCached, "default_globals", lambda s: {
             'rrdcached_tuning': {
@@ -91,7 +94,7 @@ def fake_rrdcached_default_globals(monkeypatch):
         })
 
 
-def test_match_item():
+def test_match_item() -> None:
     assert MatchItem(
         "1",
         "2",
@@ -149,7 +152,7 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
 
 
 @pytest.fixture(name="get_languages", scope="function", autouse=True)
-def fixture_get_languages(monkeypatch):
+def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         search,
         "get_languages",
@@ -158,7 +161,7 @@ def fixture_get_languages(monkeypatch):
 
 
 @pytest.fixture(name="match_item_generator_registry")
-def fixture_match_item_generator_registry():
+def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
     match_item_generator_registry = MatchItemGeneratorRegistry()
     match_item_generator_registry.register(MatchItemGeneratorLocDep("localization_dependent"))
     match_item_generator_registry.register(MatchItemGeneratorChangeDep("change_dependent"))
@@ -166,60 +169,71 @@ def fixture_match_item_generator_registry():
 
 
 @pytest.fixture(name="index_builder")
-def fixture_index_builder(match_item_generator_registry):
+def fixture_index_builder(
+    match_item_generator_registry: MatchItemGeneratorRegistry,) -> IndexBuilder:
     return IndexBuilder(match_item_generator_registry)
 
 
 @pytest.fixture(name="index_searcher")
-def fixture_index_searcher(index_builder):
+def fixture_index_searcher(index_builder: IndexBuilder) -> IndexSearcher:
     index_searcher = IndexSearcher()
     index_searcher._redis_client = index_builder._redis_client
     return index_searcher
 
 
 class TestIndexBuilder:
-    def test_update_only_not_built(self, with_admin_login, index_builder):
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_update_only_not_built(
+        self,
+        index_builder: IndexBuilder,
+    ) -> None:
         index_builder.build_changed_sub_indices("something")
         assert not index_builder.index_is_built(index_builder._redis_client)
 
 
 class TestIndexBuilderAndSearcher:
-    def test_full_build_and_search(self, with_admin_login, index_builder, index_searcher):
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_full_build_and_search(
+        self,
+        index_builder: IndexBuilder,
+        index_searcher: IndexSearcher,
+    ) -> None:
         index_builder.build_full_index()
         assert list(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
         ]
 
+    @pytest.mark.usefixtures("with_admin_login")
     def test_update_and_search_no_update(
         self,
-        with_admin_login,
-        index_builder,
-        index_searcher,
-    ):
+        index_builder: IndexBuilder,
+        index_searcher: IndexSearcher,
+    ) -> None:
         index_builder._mark_index_as_built()
         index_builder.build_changed_sub_indices("something")
         assert not list(index_searcher.search("**"))
 
+    @pytest.mark.usefixtures("with_admin_login")
     def test_update_and_search_with_update(
         self,
-        with_admin_login,
-        index_builder,
-        index_searcher,
-    ):
+        index_builder: IndexBuilder,
+        index_searcher: IndexSearcher,
+    ) -> None:
         index_builder._mark_index_as_built()
         index_builder.build_changed_sub_indices("some_change_dependent_whatever")
         assert list(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
         ]
 
+    @pytest.mark.usefixtures("with_admin_login")
     def test_update_with_empty_and_search(
         self,
-        with_admin_login,
-        match_item_generator_registry,
-        index_builder,
-        index_searcher,
-    ):
+        monkeypatch: MonkeyPatch,
+        match_item_generator_registry: MatchItemGeneratorRegistry,
+        index_builder: IndexBuilder,
+        index_searcher: IndexSearcher,
+    ) -> None:
         """
         Test if things can also be deleted from the index during an update
         """
@@ -227,8 +241,13 @@ class TestIndexBuilderAndSearcher:
             yield from ()
 
         index_builder.build_full_index()
-        match_item_generator_registry[
-            "change_dependent"].generate_match_items = empty_match_item_gen
+
+        monkeypatch.setattr(
+            match_item_generator_registry["change_dependent"],
+            "generate_match_items",
+            empty_match_item_gen,
+        )
+
         index_builder.build_changed_sub_indices("some_change_dependent_whatever")
         assert list(index_searcher.search("**")) == [
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
@@ -236,28 +255,33 @@ class TestIndexBuilderAndSearcher:
 
 
 @pytest.fixture(name="created_host_url")
-def fixture_created_host_url(with_admin_login):
+def fixture_created_host_url(with_admin_login) -> str:
     folder = Folder.root_folder()
     folder.create_hosts([("host", {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
 
 
 class TestURLChecker:
-    def test_is_permitted_false(self, module_wide_request_context):
+    @pytest.mark.usefixtures("module_wide_request_context")
+    def test_is_permitted_false(self) -> None:
         assert not URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
 
-    def test_is_permitted_true(self, with_admin_login):
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_is_permitted_true(self) -> None:
         assert URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
 
-    def test_is_permitted_host_true(self, created_host_url):
+    def test_is_permitted_host_true(
+        self,
+        created_host_url: str,
+    ) -> None:
         assert URLChecker().is_permitted(created_host_url)
 
     def test_is_permitted_host_false(
         self,
-        monkeypatch,
+        monkeypatch: MonkeyPatch,
         module_wide_request_context,
-        created_host_url,
-    ):
+        created_host_url: str,
+    ) -> None:
         monkeypatch.setattr(
             hosts_and_folders.config.user,
             "may",
@@ -267,18 +291,20 @@ class TestURLChecker:
 
 
 class TestPermissionHandler:
-    def test_may_see_category(self, with_admin_login):
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_may_see_category(self) -> None:
         permissions_handler = PermissionsHandler()
         for category in permissions_handler._category_permissions:
             assert permissions_handler.may_see_category(category)
 
 
 class TestIndexSearcher:
-    def test_search_no_index(self, with_admin_login):
+    @pytest.mark.usefixtures("with_admin_login")
+    def test_search_no_index(self) -> None:
         with pytest.raises(IndexNotFoundException):
             list(IndexSearcher().search("change_dep"))
 
-    def test_sort_search_results(self):
+    def test_sort_search_results(self) -> None:
         assert list(
             IndexSearcher._sort_search_results({
                 "Hosts": [SearchResult(title="host", url="")],
@@ -303,7 +329,10 @@ class TestIndexSearcher:
         "fake_rrdcached_default_globals",
         "suppress_automation_calls",
     )
-    def test_real_search_without_exception(self, mock_livestatus) -> None:
+    def test_real_search_without_exception(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
         builder = IndexBuilder(real_match_item_generator_registry)
 
         with self._livestatus_mock(mock_livestatus):
@@ -316,7 +345,10 @@ class TestIndexSearcher:
 
         assert len(list(searcher.search("Host"))) > 4
 
-    def _livestatus_mock(self, live):
+    def _livestatus_mock(
+        self,
+        live: MockLiveStatusConnection,
+    ) -> MockLiveStatusConnection:
         live.add_table('eventconsolerules', [])
         live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
         live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')

@@ -6,9 +6,13 @@
 
 include ../defines.make
 
-CREDENTIALS_FILE   := $$HOME/.cmk-credentials
-DOCKER_REPO_NAME   := checkmk
-SHELL              := /bin/bash -e -o pipefail
+CREDENTIALS_FILE         := $$HOME/.cmk-credentials
+DOCKER_REPO_NAME         := checkmk
+SHELL                    := /bin/bash -e -o pipefail
+RESOLVE_CMD              := ../buildscripts/docker_image_aliases/resolve.sh
+SECRET_CONTAINER_ID_CMD  := docker run -d --rm \
+    --volume $(CREDENTIALS_FILE):/files/secret \
+    $$($(RESOLVE_CMD) IMAGE_BUSYBOX_LATEST) timeout 180 httpd -f -p 8000 -h /files
 
 .PHONY: help setup setversion image image-daily clean test-lint-dockerfile test-lint-entrypoint
 
@@ -42,30 +46,29 @@ check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo | gzip > check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz
 
 image: needed-packages
-	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
-	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
+	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
+	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 
 image-demo: needed-packages
-	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
-	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
+	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION).demo" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
+	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION).demo \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 
 image-daily: needed-packages
-	SECRET_CONTAINER_ID=$$(docker run -d --rm --volume $(CREDENTIALS_FILE):/files/secret \
-	    busybox timeout 180 httpd -f -p 8000 -h /files) ; \
+	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	BRANCH_PREFIX="$$(git rev-parse --abbrev-ref HEAD)" ; \
 	if [[ "$$BRANCH_PREFIX" == "master" || "$$BRANCH_PREFIX" =~ "/" ]]; then \
 	    BRANCH_PREFIX="" ; \
@@ -78,13 +81,14 @@ image-daily: needed-packages
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$${VERSION}" \
 	    --build-arg CMK_EDITION=$(EDITION) \
+	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${VERSION} \
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$${BRANCH_PREFIX}daily \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 
 test-lint-dockerfile:
-	sudo docker run --rm -i hadolint/hadolint < Dockerfile
+	docker run --rm -i $$($(RESOLVE_CMD) IMAGE_HADOLINT) < Dockerfile
 
 test-lint-entrypoint:
 	shellcheck $(SHELLCHECK_OUTPUT_ARGS) docker-entrypoint.sh

@@ -18,7 +18,7 @@ import dicttoxml  # type: ignore[import]
 import livestatus
 
 import cmk.utils.paths
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataTree, load_tree_from
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -207,8 +207,7 @@ def get_history_deltas(
             tree_lookup[timestamp] = inventory_tree
         else:
             inventory_archive_path = "%s/%s" % (inventory_archive_dir, timestamp)
-            tree_lookup[timestamp] = _filter_tree(
-                StructuredDataTree().load_from(inventory_archive_path))
+            tree_lookup[timestamp] = _filter_tree(load_tree_from(inventory_archive_path))
         return tree_lookup[timestamp]
 
     corrupted_history_files = []
@@ -332,7 +331,7 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
         cache_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir if tree_type == "inventory"
                                 else cmk.utils.paths.status_data_dir, hostname)
         try:
-            inventory_tree = StructuredDataTree().load_from(cache_path)
+            inventory_tree = load_tree_from(cache_path)
         except Exception as e:
             if config.debug:
                 html.show_warning("%s" % e)

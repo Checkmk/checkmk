@@ -28,7 +28,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataTree, load_tree_from, save_tree_to
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
@@ -389,7 +389,7 @@ def _save_inventory_tree(
             os.remove(filepath + ".gz")
         return None
 
-    old_tree = StructuredDataTree().load_from(filepath)
+    old_tree = load_tree_from(filepath)
     old_tree.normalize_nodes()
     if old_tree.is_equal(inventory_tree):
         console.verbose("Inventory was unchanged\n")
@@ -403,14 +403,14 @@ def _save_inventory_tree(
         arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
         store.makedirs(arcdir)
         os.rename(filepath, arcdir + ("/%d" % old_time))
-    inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
+    save_tree_to(inventory_tree, cmk.utils.paths.inventory_output_dir, hostname)
     return old_tree
 
 
 def _save_status_data_tree(hostname: HostName, status_data_tree: StructuredDataTree) -> None:
     if status_data_tree and not status_data_tree.is_empty():
         store.makedirs(cmk.utils.paths.status_data_dir)
-        status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
+        save_tree_to(status_data_tree, cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(host_config: config.HostConfig,

@@ -424,7 +424,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                                           checkmk_server_name)
 
         infos = {}
-        tree = structured_data.StructuredDataTree().load_from(filepath)
+        tree = structured_data.load_tree_from(filepath)
         attrs = tree.get_sub_attributes(["software", "applications", "check_mk"])
         if attrs:
             infos.update(attrs.get_raw_tree())

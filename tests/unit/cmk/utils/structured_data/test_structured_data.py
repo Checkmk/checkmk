@@ -14,7 +14,14 @@ import gzip
 from testlib import cmk_path
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import StructuredDataTree, Container, Attributes, Numeration
+from cmk.utils.structured_data import (
+    StructuredDataTree,
+    Container,
+    Attributes,
+    Numeration,
+    load_tree_from,
+    save_tree_to,
+)
 
 # Convention: test functions are named like
 #   test_structured_data_INFIX_METHODNAME where
@@ -387,8 +394,8 @@ def test_structured_data_StructuredDataTree_get_list():
 
 
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
-def test_structured_data_StructuredDataTree_load_from(tree_name):
-    StructuredDataTree().load_from(tree_name)
+def test_structured_data_StructuredDataTree_load_tree_from(tree_name):
+    load_tree_from(tree_name)
 
 
 def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
@@ -402,7 +409,7 @@ def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
     }
     tree = StructuredDataTree().create_tree_from_raw_tree(raw_tree)
 
-    tree.save_to(tmp_path, filename)
+    save_tree_to(tree, tmp_path, filename)
 
     assert target.exists()
 
@@ -413,21 +420,19 @@ def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
         f.read()
 
 
-tree_old_addresses_arrays_memory = StructuredDataTree().load_from(
-    tree_name_old_addresses_arrays_memory)
-tree_old_addresses = StructuredDataTree().load_from(tree_name_old_addresses)
-tree_old_arrays = StructuredDataTree().load_from(tree_name_old_arrays)
-tree_old_interfaces = StructuredDataTree().load_from(tree_name_old_interfaces)
-tree_old_memory = StructuredDataTree().load_from(tree_name_old_memory)
-tree_old_heute = StructuredDataTree().load_from(tree_name_old_heute)
+tree_old_addresses_arrays_memory = load_tree_from(tree_name_old_addresses_arrays_memory)
+tree_old_addresses = load_tree_from(tree_name_old_addresses)
+tree_old_arrays = load_tree_from(tree_name_old_arrays)
+tree_old_interfaces = load_tree_from(tree_name_old_interfaces)
+tree_old_memory = load_tree_from(tree_name_old_memory)
+tree_old_heute = load_tree_from(tree_name_old_heute)
 
-tree_new_addresses_arrays_memory = StructuredDataTree().load_from(
-    tree_name_new_addresses_arrays_memory)
-tree_new_addresses = StructuredDataTree().load_from(tree_name_new_addresses)
-tree_new_arrays = StructuredDataTree().load_from(tree_name_new_arrays)
-tree_new_interfaces = StructuredDataTree().load_from(tree_name_new_interfaces)
-tree_new_memory = StructuredDataTree().load_from(tree_name_new_memory)
-tree_new_heute = StructuredDataTree().load_from(tree_name_new_heute)
+tree_new_addresses_arrays_memory = load_tree_from(tree_name_new_addresses_arrays_memory)
+tree_new_addresses = load_tree_from(tree_name_new_addresses)
+tree_new_arrays = load_tree_from(tree_name_new_arrays)
+tree_new_interfaces = load_tree_from(tree_name_new_interfaces)
+tree_new_memory = load_tree_from(tree_name_new_memory)
+tree_new_heute = load_tree_from(tree_name_new_heute)
 
 # Must have same order as tree_new
 trees_old = [
@@ -471,9 +476,8 @@ def test_structured_data_StructuredDataTree_is_equal(tree_x, tree_y):
 
 
 def test_structured_data_StructuredDataTree_equal_numerations():
-    tree_addresses_ordered = StructuredDataTree().load_from("%s/tree_addresses_ordered" % TEST_DIR)
-    tree_addresses_unordered = StructuredDataTree().load_from("%s/tree_addresses_unordered" %
-                                                              TEST_DIR)
+    tree_addresses_ordered = load_tree_from("%s/tree_addresses_ordered" % TEST_DIR)
+    tree_addresses_unordered = load_tree_from("%s/tree_addresses_unordered" % TEST_DIR)
     assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
 
@@ -481,8 +485,8 @@ def test_structured_data_StructuredDataTree_equal_numerations():
 @pytest.mark.parametrize("tree", trees[:1])
 def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_path):
     try:
-        tree.save_to(str(tmp_path), "foo", False)
-        loaded_tree = StructuredDataTree().load_from(str(tmp_path / "foo"))
+        save_tree_to(tree, str(tmp_path), "foo", False)
+        loaded_tree = load_tree_from(str(tmp_path / "foo"))
         assert tree.is_equal(loaded_tree)
     finally:
         shutil.rmtree(str(tmp_path))
@@ -615,8 +619,8 @@ def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_sta
             assert m(path) is not None
 
 
-TREE_INV = StructuredDataTree().load_from("%s/tree_inv" % TEST_DIR)
-TREE_STATUS = StructuredDataTree().load_from("%s/tree_status" % TEST_DIR)
+TREE_INV = load_tree_from("%s/tree_inv" % TEST_DIR)
+TREE_STATUS = load_tree_from("%s/tree_status" % TEST_DIR)
 
 
 @pytest.mark.parametrize("tree_inv,tree_status", [
@@ -739,8 +743,8 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
 
     old_filename, new_filename = zipped_trees
 
-    old_tree.load_from(old_filename)
-    new_tree.load_from(new_filename)
+    old_tree = load_tree_from(old_filename)
+    new_tree = load_tree_from(new_filename)
     delta_result = old_tree.compare_with(new_tree)
 
     new_delta_tree = StructuredDataTree()

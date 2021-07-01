@@ -93,6 +93,33 @@ class DDeltaResult(NamedTuple):
     delta: SDAttributes
 
 
+AllowedPaths = List[Tuple[SDPath, Optional[List[str]]]]
+
+
+def save_tree_to(
+    tree: "StructuredDataTree",
+    path: str,
+    filename: str,
+    pretty: bool = False,
+) -> None:
+    filepath = "%s/%s" % (path, filename)
+    output = tree.get_raw_tree()
+    store.save_object_to_file(filepath, output, pretty=pretty)
+
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+        f.write((repr(output) + "\n").encode("utf-8"))
+    store.save_bytes_to_file(filepath + ".gz", buf.getvalue())
+
+    # Inform Livestatus about the latest inventory update
+    store.save_text_to_file("%s/.last" % path, u"")
+
+
+def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataTree":
+    raw_tree = store.load_object_from_file(filepath)
+    return StructuredDataTree().create_tree_from_raw_tree(raw_tree)
+
+
 #   .--StructuredDataTree--------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
@@ -117,62 +144,10 @@ class StructuredDataTree:
     #   ---building tree from plugins-------------------------------------------
 
     def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
-        return self._get_object(tree_path)._attributes.get_child_data()
+        return self._root.setdefault_node(_parse_tree_path(tree_path))._attributes.get_child_data()
 
     def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self._get_object(tree_path)._table.get_child_data()
-
-    def _get_object(self, tree_path: Optional[SDRawPath]) -> "Container":
-        return self._root.setdefault_node(self._parse_tree_path(tree_path))
-
-    def _parse_tree_path(self, tree_path: Optional[SDRawPath]) -> SDPath:
-        if not tree_path:
-            raise MKGeneralException("Empty tree path or zero.")
-
-        if not isinstance(tree_path, str):
-            raise MKGeneralException("Wrong tree path format. Must be of type string.")
-
-        if not tree_path.endswith((":", ".")):
-            raise MKGeneralException("No valid tree path.")
-
-        if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
-            raise MKGeneralException("Specified tree path contains unexpected characters.")
-
-        if tree_path.startswith("."):
-            tree_path = tree_path[1:]
-
-        if tree_path.endswith(":") or tree_path.endswith("."):
-            tree_path = tree_path[:-1]
-
-        # TODO merge with cmk.gui.inventory::_parse_visible_raw_inventory_path
-        parsed_path: SDPath = []
-        for part in tree_path.split("."):
-            if not part:
-                continue
-            try:
-                parsed_path.append(int(part))
-            except ValueError:
-                parsed_path.append(part)
-        return parsed_path
-
-    #   ---loading and saving tree----------------------------------------------
-
-    def save_to(self, path: str, filename: str, pretty: bool = False) -> None:
-        filepath = "%s/%s" % (path, filename)
-        output = self.get_raw_tree()
-        store.save_object_to_file(filepath, output, pretty=pretty)
-
-        buf = io.BytesIO()
-        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-            f.write((repr(output) + "\n").encode("utf-8"))
-        store.save_bytes_to_file(filepath + ".gz", buf.getvalue())
-
-        # Inform Livestatus about the latest inventory update
-        store.save_text_to_file("%s/.last" % path, u"")
-
-    def load_from(self, filepath: Union[Path, str]) -> "StructuredDataTree":
-        raw_tree = store.load_object_from_file(filepath)
-        return self.create_tree_from_raw_tree(raw_tree)
+        return self._root.setdefault_node(_parse_tree_path(tree_path))._table.get_child_data()
 
     def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataTree":
         if raw_tree:
@@ -232,19 +207,12 @@ class StructuredDataTree:
     def get_root_container(self) -> "Container":
         return self._root
 
-    def get_filtered_tree(
-        self,
-        allowed_paths: Optional[List[Tuple[SDPath, Optional[List[str]]]]],
-    ) -> "StructuredDataTree":
+    def get_filtered_tree(self, allowed_paths: Optional[AllowedPaths]) -> "StructuredDataTree":
         if allowed_paths is None:
             return self
 
         filtered_tree = StructuredDataTree()
-        for path, keys in allowed_paths:
-            sub_tree = self._root.get_filtered_branch(path, keys)
-            if sub_tree is None:
-                continue
-            filtered_tree._root.merge_with(sub_tree)
+        filtered_tree._root = self._root.get_filtered_node(allowed_paths)
         return filtered_tree
 
     def __repr__(self) -> str:
@@ -541,26 +509,19 @@ class Container:
     def has_edge(self, edge: SDNodeName) -> bool:
         return bool(self._nodes.get(edge))
 
-    def get_filtered_branch(self, path: SDPath, keys: Optional[SDKeys]) -> Optional["Container"]:
-        # First check if node exists
-        node = self._get_node(path)
-        if node is None:
-            return None
-
+    def get_filtered_node(self, allowed_paths: AllowedPaths) -> "Container":
         filtered = Container()
-        filtered_node = filtered.setdefault_node(path)
+        for path, keys in allowed_paths:
+            # First check if node exists
+            node = self._get_node(path)
+            if node is None:
+                continue
 
-        the_table = node._table
-        if the_table is not None:
-            if keys:
-                the_table = the_table.get_filtered_data(keys)
-            filtered_node.add_table(the_table._numeration)
-
-        the_attributes = node._attributes
-        if the_attributes is not None:
-            if keys:
-                the_attributes = the_attributes.get_filtered_data(keys)
-            filtered_node.add_attributes(the_attributes._attributes)
+            filtered_node = filtered.setdefault_node(path)
+            filtered_node.add_attributes((node._attributes.get_filtered_data(keys)
+                                          if keys else node._attributes.get_child_data()))
+            filtered_node.add_table(
+                node._table.get_filtered_data(keys) if keys else node._table.get_child_data())
 
         return filtered
 
@@ -785,15 +746,11 @@ class Numeration:
     def get_child_data(self) -> SDTable:
         return self._numeration
 
-    def get_filtered_data(self, keys: SDKeys) -> "Numeration":
-        filtered = Numeration()
-        numeration = []
-        for entry in self._numeration:
-            filtered_entry = _get_filtered_dict(entry, keys)
-            if filtered_entry:
-                numeration.append(filtered_entry)
-        filtered.set_child_data(numeration)
-        return filtered
+    def get_filtered_data(self, keys: SDKeys) -> SDTable:
+        return [
+            filtered_row for row in self._numeration
+            if (filtered_row := _get_filtered_dict(row, keys))
+        ]
 
     #   ---web------------------------------------------------------------------
 
@@ -882,10 +839,8 @@ class Attributes:
     def get_child_data(self) -> SDAttributes:
         return self._attributes
 
-    def get_filtered_data(self, keys: SDKeys) -> "Attributes":
-        filtered = Attributes()
-        filtered.set_child_data(_get_filtered_dict(self._attributes, keys))
-        return filtered
+    def get_filtered_data(self, keys: SDKeys) -> SDAttributes:
+        return _get_filtered_dict(self._attributes, keys)
 
     #   ---web------------------------------------------------------------------
 
@@ -984,3 +939,34 @@ def _changed_delta_tree_node(old_value: SDValue, new_value: SDValue) -> Tuple[SD
 
 def _identical_delta_tree_node(value: SDValue) -> Tuple[SDValue, SDValue]:
     return (value, value)
+
+
+def _parse_tree_path(tree_path: Optional[SDRawPath]) -> SDPath:
+    if not tree_path:
+        raise MKGeneralException("Empty tree path or zero.")
+
+    if not isinstance(tree_path, str):
+        raise MKGeneralException("Wrong tree path format. Must be of type string.")
+
+    if not tree_path.endswith((":", ".")):
+        raise MKGeneralException("No valid tree path.")
+
+    if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
+        raise MKGeneralException("Specified tree path contains unexpected characters.")
+
+    if tree_path.startswith("."):
+        tree_path = tree_path[1:]
+
+    if tree_path.endswith(":") or tree_path.endswith("."):
+        tree_path = tree_path[:-1]
+
+    # TODO merge with cmk.gui.inventory::_parse_visible_raw_inventory_path
+    parsed_path: SDPath = []
+    for part in tree_path.split("."):
+        if not part:
+            continue
+        try:
+            parsed_path.append(int(part))
+        except ValueError:
+            parsed_path.append(part)
+    return parsed_path

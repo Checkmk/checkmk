@@ -1058,7 +1058,7 @@ def _valuespec_special_agents_vsphere():
                          _("The IP of the other hostname needs to be the same IP as the host address"
                           ))
                  ],
-                 default_value=False)),
+                 default_value=True)),
             ("timeout",
              Integer(
                  title=_("Connect Timeout"),

@@ -1,0 +1,12 @@
+Title: Change default SSL setting of "VMWare ESX via vSphere" rule
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1625120575
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p7
+
+Per default the "SSL certificate checking" setting of the
+"VMWare ESX via vSphere" rule is now enabled.

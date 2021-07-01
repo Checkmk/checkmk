@@ -309,16 +309,18 @@ def load_werks() -> None:
 
 def save_last_werkid(wid: int) -> None:
     try:
-        open(".last", "w").write("%d\n" % int(wid))
-    except Exception:
+        with open(".last", "w") as f:
+            f.write("%d\n" % int(wid))
+    except OSError:
         pass
 
 
 def load_current_version() -> str:
-    for line in open("../defines.make"):
-        if line.startswith("VERSION"):
-            version = line.split("=", 1)[1].strip()
-            return version
+    with open("../defines.make") as f:
+        for line in f:
+            if line.startswith("VERSION"):
+                version = line.split("=", 1)[1].strip()
+                return version
 
     bail_out("Failed to read VERSION from defines.make")
 
@@ -357,13 +359,13 @@ def load_werk(werkid: int) -> Werk:
         "knowledge": "undoc",
     }
 
-    f = open(str(werkid))
-    for line in f:
-        line = line.strip()
-        if line == "":
-            break
-        header, value = line.split(":", 1)
-        werk[header.strip().lower()] = value.strip()
+    with open(str(werkid)) as f:
+        for line in f:
+            line = line.strip()
+            if line == "":
+                break
+            header, value = line.split(":", 1)
+            werk[header.strip().lower()] = value.strip()
 
     werk["description"] = f.read()
     versions.add(werk["version"])
@@ -371,14 +373,13 @@ def load_werk(werkid: int) -> Werk:
 
 
 def save_werk(werk: Werk) -> None:
-    f = open(werk["id"], "w")
-    f.write("Title: %s\n" % werk["title"])
-    for key, val in sorted(werk.items()):
-        if key not in ["title", "description", "id"]:
-            f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
-    f.write("\n")
-    f.write(werk["description"])
-    f.close()
+    with open(werk["id"], "w") as f:
+        f.write("Title: %s\n" % werk["title"])
+        for key, val in sorted(werk.items()):
+            if key not in ["title", "description", "id"]:
+                f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
+        f.write("\n")
+        f.write(werk["description"])
     git_add(werk)
     save_last_werkid(int(werk["id"]))
 
@@ -927,7 +928,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
 def get_werk_ids() -> List[int]:
     try:
-        return eval(open(RESERVED_IDS_FILE_PATH, 'r').read())
+        with open(RESERVED_IDS_FILE_PATH, 'r') as f:
+            return eval(f.read())
     except Exception:
         return []
 
@@ -941,7 +943,8 @@ def invalidate_my_werkid(wid: int) -> None:
 
 
 def store_werk_ids(l: List[int]) -> None:
-    open(RESERVED_IDS_FILE_PATH, 'w').write(repr(l) + "\n")
+    with open(RESERVED_IDS_FILE_PATH, 'w') as f:
+        f.write(repr(l) + "\n")
     sys.stdout.write(f'Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n')
 
 
@@ -959,7 +962,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     # Get the start werk_id to reserve
     try:
-        first_free = int(open('first_free').read().strip())
+        with open('first_free') as f:
+            first_free = int(f.read().strip())
     except (IOError, ValueError):
         first_free = 0
 
@@ -987,7 +991,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids
-    open('first_free', 'w').write(str(new_first_free) + "\n")
+    with open('first_free', 'w') as f:
+        f.write(str(new_first_free) + "\n")
 
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                      (args.count, len(my_ids)))

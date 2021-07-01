@@ -27,14 +27,14 @@ PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += six-1.16.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
+PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.1.tar.gz # direct dependency
 
 PYTHON3_MODULES_LIST += PyYAML-5.4.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += wrapt-1.12.1.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += yarl-1.6.0.tar.gz # needed by vcrpy
 PYTHON3_MODULES_LIST += multidict-4.7.6.tar.gz # needed by yarl
-PYTHON3_MODULES_LIST += idna-2.10.tar.gz # needed by yarl, requests
+PYTHON3_MODULES_LIST += idna-2.8.tar.gz # needed by yarl, requests
 PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock HTTP transactions
 
 PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
@@ -52,13 +52,13 @@ PYTHON3_MODULES_LIST += pysmi-0.3.4.tar.gz # needed by pysnmp
 PYTHON3_MODULES_LIST += pysnmp-4.4.12.tar.gz # needed by Event Console
 PYTHON3_MODULES_LIST += snmpsim-0.4.7.tar.gz # needed by SNMP integration tests
 
-PYTHON3_MODULES_LIST += certifi-2021.5.30.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += chardet-4.0.0.tar.gz # needed by requests
-PYTHON3_MODULES_LIST += urllib3-1.26.5.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += certifi-2019.11.28.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += chardet-3.0.4.tar.gz # needed by requests
+PYTHON3_MODULES_LIST += urllib3-1.25.10.tar.gz # needed by requests
 PYTHON3_MODULES_LIST += pyOpenSSL-19.1.0.tar.gz # needed by requests with extras = ["security"]
 PYTHON3_MODULES_LIST += pbr-5.4.4.tar.gz # needed by jira, pyghmi
 PYTHON3_MODULES_LIST += pyghmi-1.5.13.tar.gz # needed by base for IPMI
-PYTHON3_MODULES_LIST += requests-2.25.1.tar.gz # needed by DCD
+PYTHON3_MODULES_LIST += requests-2.22.0.tar.gz # needed by DCD
 PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
@@ -107,8 +107,8 @@ PYTHON3_MODULES_LIST += rsa-4.7.2.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
-PYTHON3_MODULES_LIST += jmespath-0.10.0.tar.gz # needed by boto3 (aws)
-PYTHON3_MODULES_LIST += botocore-1.20.102.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += jmespath-0.9.4.tar.gz # needed by boto3 (aws)
+PYTHON3_MODULES_LIST += botocore-1.14.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += s3transfer-0.3.2.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += boto3-1.11.11.tar.gz # needed by boto3 (aws)
 PYTHON3_MODULES_LIST += python-snap7-0.10.tar.gz # needed by Siemens PLC special agent

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
+import ipaddress
 import os
 import socket
 from typing import AnyStr, cast, Dict, List, Optional, Tuple, Union
@@ -91,9 +92,14 @@ def lookup_ip_address(host_config: config.HostConfig,
         # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
         # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
         # here.
-        ipa = host_config.management_address
+        mgmt_address = host_config.management_address or hostname
+        try:
+            return str(ipaddress.ip_address(mgmt_address))
+        except ValueError:
+            return mgmt_address if host_config.is_dyndns_host else cached_dns_lookup(
+                mgmt_address, family, False)
 
-    elif family == 4:
+    if family == 4:
         ipa = config.ipaddresses.get(hostname)
 
     else:
@@ -104,10 +110,8 @@ def lookup_ip_address(host_config: config.HostConfig,
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
-    if host_config.is_dyndns_host:
-        return hostname
-
-    return cached_dns_lookup(hostname, family, host_config.is_no_ip_host)
+    return hostname if host_config.is_dyndns_host else cached_dns_lookup(
+        hostname, family, host_config.is_no_ip_host)
 
 
 # Variables needed during the renaming of hosts (see automation.py)

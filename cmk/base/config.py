@@ -3170,8 +3170,11 @@ class HostConfig:
 
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
     try:
+        # (1/3) The call below is the result of a refactoring. I believe it to be wrong, as
+        # configured_ip_address may be a configured management board host address
+        # (e.g. "myhost-idrac"), for which the DNS resolution will not be cached.
         return ip_lookup.lookup_ip_address(
-            host_config=host_config,
+            host_name=host_config.hostname,
             family=host_config.default_address_family,
             # TODO Cleanup:
             # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
@@ -3179,8 +3182,13 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddres
             # here.
             configured_ip_address=host_config.management_address,
             simulation_mode=simulation_mode,
+            # (2/3) I don't think this is thought through for the mgmt case, either:
+            is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
             override_dns=fake_dns,
             use_dns_cache=use_dns_cache,
+            # (3/3) nor are these:
+            is_dyndns_host=host_config.is_dyndns_host,
+            is_no_ip_host=host_config.is_no_ip_host,
         )
     except MKIPAddressLookupError:
         return None
@@ -3194,13 +3202,16 @@ def lookup_ip_address(
     if family is None:
         family = host_config.default_address_family
     return ip_lookup.lookup_ip_address(
-        host_config=host_config,
+        host_name=host_config.hostname,
         family=family,
         configured_ip_address=(ipaddresses if family is socket.AF_INET else ipv6addresses).get(
             host_config.hostname),
         simulation_mode=simulation_mode,
+        is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
         override_dns=fake_dns,
         use_dns_cache=use_dns_cache,
+        is_dyndns_host=host_config.is_dyndns_host,
+        is_no_ip_host=host_config.is_no_ip_host,
     )
 
 

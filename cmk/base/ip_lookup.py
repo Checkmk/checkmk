@@ -96,13 +96,17 @@ def enforce_localhost() -> None:
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(
     *,
-    host_config: _HostConfigLike,
+    host_name: HostName,
     family: socket.AddressFamily,
     configured_ip_address: Optional[HostAddress],
     simulation_mode: bool,
+    is_snmp_usewalk_host: bool,
     override_dns: Optional[HostAddress],
     use_dns_cache: bool,
+    is_dyndns_host: bool,
+    is_no_ip_host: bool,
 ) -> Optional[HostAddress]:
+    """This function *may* look up an IP address, or return a host name"""
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -111,11 +115,8 @@ def lookup_ip_address(
         return override_dns
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    if simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
-                                                 host_config.is_snmp_host):
+    if simulation_mode or _enforce_localhost or is_snmp_usewalk_host:
         return "127.0.0.1" if family is socket.AF_INET else "::1"
-
-    hostname = host_config.hostname
 
     # check if IP address is hard coded by the user
     if configured_ip_address:
@@ -123,13 +124,13 @@ def lookup_ip_address(
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
-    if host_config.is_dyndns_host:
-        return hostname
+    if is_dyndns_host:
+        return host_name
 
     return cached_dns_lookup(
-        hostname,
+        host_name,
         family=family,
-        is_no_ip_host=host_config.is_no_ip_host,
+        is_no_ip_host=is_no_ip_host,
         use_dns_cache=use_dns_cache,
     )
 
@@ -341,13 +342,16 @@ def update_dns_cache(
         console.verbose(f"{host_config.hostname} ({family})...")
         try:
             ip = lookup_ip_address(
-                host_config=host_config,
+                host_name=host_config.hostname,
                 family=family,
                 configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET else
                                        configured_ipv4_addresses).get(host_config.hostname),
                 simulation_mode=simulation_mode,
+                is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                 override_dns=override_dns,
                 use_dns_cache=False,  # it's cleared anyway
+                is_dyndns_host=host_config.is_dyndns_host,
+                is_no_ip_host=host_config.is_no_ip_host,
             )
             console.verbose(f"{ip}\n")
 

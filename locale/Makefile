@@ -23,8 +23,8 @@ setup:
 
 mo:
 	for lang in $(LANGUAGES) ; do \
-           msgfmt -v -o $$lang/LC_MESSAGES/multisite.mo $$lang/LC_MESSAGES/multisite.po ; \
-        done
+		   msgfmt -v -o $$lang/LC_MESSAGES/multisite.mo $$lang/LC_MESSAGES/multisite.po ; \
+		done
 
 # Update multisite.pot (in Checkmk localization repository) by running xgettext on our code, commit and push. This is
 # executed in a cronjob on the VM webdeploy. See https://wiki.lan.tribe29.com/link/898#bkmrk-backend.
@@ -36,7 +36,7 @@ update-pot:
 	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 -o scanned.pot \
 	../web/app/index.wsgi \
 	../livestatus/api/python/livestatus.py \
-        $$(find -L ../cmk -type f -name "*.py") 2>&1 | \
+		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \
 	sed "/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d"
 	sed -i "0,/^$$/d" scanned.pot # Remove default header, i.e. everything before first empty line
 	cat header scanned.pot > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT) # Add our header and write to Checkmk localization repo
@@ -44,8 +44,8 @@ update-pot:
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	git pull; \
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
-	    git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \
-	    git push; \
+		git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \
+		git push; \
 	fi
 
 # 1) Pull in Checkmk localization repo
@@ -57,9 +57,9 @@ update-pos:
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	git pull; \
 	for lang in $(LANGUAGES); do \
-	    sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
+		sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
 	done
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then # Checkmk repo \
-	    git commit ./ -m "$$PO_COMMIT_MSG"; \
-	    git push; \
+		git commit ./ -m "$$PO_COMMIT_MSG"; \
+		git push; \
 	fi

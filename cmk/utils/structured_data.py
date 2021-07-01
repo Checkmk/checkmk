@@ -28,7 +28,7 @@ from typing import (
 from pathlib import Path
 from collections import Counter
 
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
 # TODO
@@ -133,9 +133,9 @@ def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
 
 class StructuredDataNode:
     def __init__(self) -> None:
-        self._path: SDNodePath = tuple()
-        self._attributes = Attributes()
-        self._table = Numeration()
+        self.path: SDNodePath = tuple()
+        self.attributes = Attributes()
+        self.table = Numeration()
         self._nodes: SDNodes = {}
 
     def __repr__(self) -> str:
@@ -144,22 +144,18 @@ class StructuredDataNode:
     #   ---building tree from plugins-------------------------------------------
 
     def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
-        return self.setdefault_node(_parse_tree_path(tree_path))._attributes.get_child_data()
+        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.data
 
     def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self.setdefault_node(_parse_tree_path(tree_path))._table.get_child_data()
+        return self.setdefault_node(_parse_tree_path(tree_path)).table.data
 
     def set_path(self, path: SDNodePath) -> None:
-        self._path = path
-        self._attributes.set_path(path)
-        self._table.set_path(path)
-
-    @property
-    def path(self) -> SDNodePath:
-        return self._path
+        self.path = path
+        self.attributes.set_path(path)
+        self.table.set_path(path)
 
     def is_empty(self) -> bool:
-        if not (self._attributes.is_empty() and self._table.is_empty()):
+        if not (self.attributes.is_empty() and self.table.is_empty()):
             return False
 
         for node in self._nodes.values():
@@ -171,8 +167,7 @@ class StructuredDataNode:
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        if not (self._attributes.is_equal(other._attributes) and
-                self._table.is_equal(other._table)):
+        if not (self.attributes.is_equal(other.attributes) and self.table.is_equal(other.table)):
             return False
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -186,8 +181,8 @@ class StructuredDataNode:
 
     def count_entries(self) -> int:
         return sum([
-            self._attributes.count_entries(),
-            self._table.count_entries(),
+            self.attributes.count_entries(),
+            self.table.count_entries(),
         ] + [node.count_entries() for node in self._nodes.values()])
 
     def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
@@ -198,14 +193,14 @@ class StructuredDataNode:
         delta_node = StructuredDataNode()
 
         # Attributes
-        delta_attributes_result = self._attributes.compare_with(other._attributes)
+        delta_attributes_result = self.attributes.compare_with(other.attributes)
         counter.update(delta_attributes_result.counter)
-        delta_node.add_attributes(delta_attributes_result.delta._attributes)
+        delta_node.add_attributes(delta_attributes_result.delta.data)
 
         # Table
-        delta_table_result = self._table.compare_with(other._table)
+        delta_table_result = self.table.compare_with(other.table)
         counter.update(delta_table_result.counter)
-        delta_node.add_table(delta_table_result.delta._numeration)
+        delta_node.add_table(delta_table_result.delta.data)
 
         # Nodes
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -257,8 +252,8 @@ class StructuredDataNode:
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
         delta_node = StructuredDataNode()
 
-        delta_node.add_attributes(self._attributes.encode_for_delta_tree(encode_as)._attributes)
-        delta_node.add_table(self._table.encode_for_delta_tree(encode_as)._numeration)
+        delta_node.add_attributes(self.attributes.encode_for_delta_tree(encode_as).data)
+        delta_node.add_table(self.table.encode_for_delta_tree(encode_as).data)
 
         for edge, node in self._nodes.items():
             delta_node.add_node(edge, node.encode_for_delta_tree(encode_as))
@@ -319,15 +314,15 @@ class StructuredDataNode:
         numerated nodes ('arrays') containing real numerations ('devices').
         """
         remove_table = False
-        for idx, entry in enumerate(self._table.get_child_data()):
+        for idx, entry in enumerate(self.table.data):
             for k, v in entry.items():
                 if isinstance(v, list):
                     self.setdefault_node([idx, k]).add_table(v)
                     remove_table = True
 
         if remove_table:
-            self._table = Numeration()
-            self._table.set_path(self.path)
+            self.table = Numeration()
+            self.table.set_path(self.path)
 
         for node in self._nodes.values():
             node.normalize_nodes()
@@ -338,11 +333,11 @@ class StructuredDataNode:
         if self._has_indexed_nodes():
             return [self._nodes[k].get_raw_tree() for k in sorted(self._nodes)]
 
-        if not self._table.is_empty():
-            return self._table.get_raw_tree()
+        if not self.table.is_empty():
+            return self.table.get_raw_tree()
 
         tree: Dict = {}
-        tree.update(self._attributes.get_raw_tree())
+        tree.update(self.attributes.get_raw_tree())
 
         for edge, node in self._nodes.items():
             node_raw_tree = node.get_raw_tree()
@@ -363,8 +358,8 @@ class StructuredDataNode:
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        self._attributes.merge_with(other._attributes)
-        self._table.merge_with(other._table)
+        self.attributes.merge_with(other.attributes)
+        self.table.merge_with(other.table)
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
@@ -377,8 +372,8 @@ class StructuredDataNode:
     def copy(self) -> "StructuredDataNode":
         new_node = StructuredDataNode()
 
-        new_node.add_attributes(self._attributes._attributes)
-        new_node.add_table(self._table._numeration)
+        new_node.add_attributes(self.attributes.data)
+        new_node.add_table(self.table.data)
 
         for edge, node in self._nodes.items():
             new_node.add_node(edge, node.copy())
@@ -391,25 +386,20 @@ class StructuredDataNode:
             return self
         edge = path[0]
         node = self._nodes.setdefault(edge, StructuredDataNode())
-        node.set_path(self._path + (edge,))
+        node.set_path(self.path + (edge,))
         return node.setdefault_node(path[1:])
 
     def add_node(self, edge: SDNodeName, node: "StructuredDataNode") -> "StructuredDataNode":
         the_node = self._nodes.setdefault(edge, StructuredDataNode())
-        the_node.set_path(self._path + (edge,))
+        the_node.set_path(self.path + (edge,))
         the_node.merge_with(node)
         return the_node
 
     def add_attributes(self, attributes: SDAttributes) -> None:
-        tmp_attributes = Attributes()
-        tmp_attributes.set_child_data(attributes)
-        self._attributes.merge_with(tmp_attributes)
+        self.attributes.add_attributes(attributes)
 
     def add_table(self, table: SDTable) -> None:
-        # TODO Check call sites: extend (set_child_data) or insert (merge_with)
-        tmp_table = Numeration()
-        tmp_table.set_child_data(table)
-        self._table.merge_with(tmp_table)
+        self.table.add_table(table)
 
     def has_edge(self, edge: SDNodeName) -> bool:
         return bool(self._nodes.get(edge))
@@ -429,10 +419,9 @@ class StructuredDataNode:
                 continue
 
             filtered_node = filtered.setdefault_node(path)
-            filtered_node.add_attributes((node._attributes.get_filtered_data(keys)
-                                          if keys else node._attributes.get_child_data()))
-            filtered_node.add_table(
-                node._table.get_filtered_data(keys) if keys else node._table.get_child_data())
+            filtered_node.add_attributes(
+                (node.attributes.get_filtered_data(keys) if keys else node.attributes.data))
+            filtered_node.add_table(node.table.get_filtered_data(keys) if keys else node.table.data)
 
         return filtered
 
@@ -443,11 +432,11 @@ class StructuredDataNode:
 
     def get_sub_numeration(self, path: SDPath) -> Optional["Numeration"]:
         node = self._get_node(path)
-        return None if node is None else node._table
+        return None if node is None else node.table
 
     def get_sub_attributes(self, path: SDPath) -> Optional["Attributes"]:
         node = self._get_node(path)
-        return None if node is None else node._attributes
+        return None if node is None else node.attributes
 
     def _get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
         if not path:
@@ -459,11 +448,11 @@ class StructuredDataNode:
 
     def show(self, renderer):
         # TODO
-        if not self._attributes.is_empty():
-            renderer.show_attributes(self._attributes)
+        if not self.attributes.is_empty():
+            renderer.show_attributes(self.attributes)
 
-        if not self._table.is_empty():
-            renderer.show_numeration(self._table)
+        if not self.table.is_empty():
+            renderer.show_numeration(self.table)
 
         for edge in sorted(self._nodes):
             renderer.show_container(self._nodes[edge])
@@ -482,33 +471,29 @@ class StructuredDataNode:
 
 class Numeration:
     def __init__(self) -> None:
-        self._path: SDNodePath = tuple()
-        self._numeration: SDTable = []
+        self.path: SDNodePath = tuple()
+        self.data: SDTable = []
 
     def set_path(self, path: SDNodePath) -> None:
-        self._path = path
-
-    @property
-    def path(self) -> SDNodePath:
-        return self._path
+        self.path = path
 
     def is_empty(self) -> bool:
-        return self._numeration == []
+        return self.data == []
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
         if not isinstance(other, Numeration):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        for row in self._numeration:
-            if row not in other._numeration:
+        for row in self.data:
+            if row not in other.data:
                 return False
-        for row in other._numeration:
-            if row not in self._numeration:
+        for row in other.data:
+            if row not in self.data:
                 return False
         return True
 
     def count_entries(self) -> int:
-        return sum(map(len, self._numeration))
+        return sum(map(len, self.data))
 
     def compare_with(self, other: object, keep_identical: bool = False) -> NDeltaResult:
         if not isinstance(other, Numeration):
@@ -520,7 +505,6 @@ class Numeration:
         remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
         removed_rows: List = []
-        compared_rows: List = []
 
         if not remaining_other_rows and remaining_own_rows:
             new_rows.extend(remaining_own_rows)
@@ -536,25 +520,20 @@ class Numeration:
                     keep_identical=keep_identical,
                 )
                 counter.update(delta_rows_result.counter)
-                compared_rows.extend(delta_rows_result.delta)
+                delta_table.add_table(delta_rows_result.delta)
             else:
                 new_rows.extend(remaining_own_rows)
                 removed_rows.extend(remaining_other_rows)
 
-        delta_table_rows = compared_rows\
-                          + [{k: _new_delta_tree_node(v)
-                             for k,v in row.items()}
-                             for row in new_rows]\
-                          + [{k: _removed_delta_tree_node(v)
-                             for k,v in row.items()}
-                             for row in removed_rows]
+        delta_table.add_table(
+            [{k: _new_delta_tree_node(v) for k, v in row.items()} for row in new_rows])
+        delta_table.add_table(
+            [{k: _removed_delta_tree_node(v) for k, v in row.items()} for row in removed_rows])
 
         if keep_identical:
-            delta_table_rows += [
+            delta_table.add_table([
                 {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
-            ]
-
-        delta_table.set_child_data(delta_table_rows)
+            ])
 
         counter.update(new=len(new_rows), removed=len(removed_rows))
         return NDeltaResult(counter=counter, delta=delta_table)
@@ -563,14 +542,14 @@ class Numeration:
         identical_rows = []
         remaining_other_rows = []
         remaining_new_rows = []
-        for row in other._numeration:
-            if row in self._numeration:
+        for row in other.data:
+            if row in self.data:
                 if row not in identical_rows:
                     identical_rows.append(row)
             else:
                 remaining_other_rows.append(row)
-        for row in self._numeration:
-            if row in other._numeration:
+        for row in self.data:
+            if row in other.data:
                 if row not in identical_rows:
                     identical_rows.append(row)
             else:
@@ -601,14 +580,12 @@ class Numeration:
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Numeration":
         delta_table = Numeration()
-        table = []
-        for entry in self._numeration:
-            table.append({k: encode_as(v) for k, v in entry.items()})
-        delta_table.set_child_data(table)
+        for entry in self.data:
+            delta_table.data.append({k: encode_as(v) for k, v in entry.items()})
         return delta_table
 
     def get_raw_tree(self) -> SDTable:
-        return self._numeration
+        return self.data
 
     def merge_with(self, other: object) -> None:
         if not isinstance(other, Numeration):
@@ -621,46 +598,40 @@ class Numeration:
         # In case there is no intersection, append all other rows without
         # merging with own rows
         if not intersect_keys:
-            self._numeration += other._numeration
+            self.add_table(other.data)
             return
 
         # Try to match rows of both trees based on the keys that are found in
         # both. Matching rows are updated. Others are appended.
-        other_num = {
-            other._prepare_key(entry, intersect_keys): entry for entry in other._numeration
-        }
+        other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.data}
 
-        for entry in self._numeration:
+        for entry in self.data:
             key = self._prepare_key(entry, intersect_keys)
             if key in other_num:
                 entry.update(other_num[key])
                 del other_num[key]
 
-        self._numeration += list(other_num.values())
+        self.add_table(list(other_num.values()))
 
     def _get_numeration_keys(self) -> Set[SDKey]:
-        return {key for row in self._numeration for key in row}
+        return {key for row in self.data for key in row}
 
     def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
         return tuple(entry[key] for key in sorted(keys) if key in entry)
 
     def copy(self) -> "Numeration":
-        new_node = Numeration()
-        new_node.set_child_data(self._numeration[:])
-        return new_node
+        new = Numeration()
+        new.add_table(self.data)
+        return new
 
     #   ---leaf methods---------------------------------------------------------
 
-    def set_child_data(self, data: SDTable) -> None:
-        self._numeration += data
-
-    def get_child_data(self) -> SDTable:
-        return self._numeration
+    def add_table(self, table: SDTable) -> None:
+        self.data.extend(table)
 
     def get_filtered_data(self, keys: SDKeys) -> SDTable:
         return [
-            filtered_row for row in self._numeration
-            if (filtered_row := _get_filtered_dict(row, keys))
+            filtered_row for row in self.data if (filtered_row := _get_filtered_dict(row, keys))
         ]
 
     #   ---web------------------------------------------------------------------
@@ -683,40 +654,36 @@ class Numeration:
 
 class Attributes:
     def __init__(self) -> None:
-        self._path: SDNodePath = tuple()
-        self._attributes: SDAttributes = {}
+        self.path: SDNodePath = tuple()
+        self.data: SDAttributes = {}
 
     def set_path(self, path: SDNodePath) -> None:
-        self._path = path
-
-    @property
-    def path(self) -> SDNodePath:
-        return self._path
+        self.path = path
 
     def is_empty(self) -> bool:
-        return self._attributes == {}
+        return self.data == {}
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        return self._attributes == other._attributes
+        return self.data == other.data
 
     def count_entries(self) -> int:
-        return len(self._attributes)
+        return len(self.data)
 
     def compare_with(self, other: object, keep_identical: bool = False) -> ADeltaResult:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         delta_dict_result = _compare_dicts(
-            old_dict=other._attributes,
-            new_dict=self._attributes,
+            old_dict=other.data,
+            new_dict=self.data,
             keep_identical=keep_identical,
         )
 
         delta_attributes = Attributes()
-        delta_attributes.set_child_data(delta_dict_result.delta)
+        delta_attributes.add_attributes(delta_dict_result.delta)
 
         return ADeltaResult(
             counter=delta_dict_result.counter,
@@ -725,33 +692,30 @@ class Attributes:
 
     def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Attributes":
         delta_attributes = Attributes()
-        delta_attributes.set_child_data({k: encode_as(v) for k, v in self._attributes.items()})
+        delta_attributes.add_attributes({k: encode_as(v) for k, v in self.data.items()})
         return delta_attributes
 
     def get_raw_tree(self) -> SDAttributes:
-        return self._attributes
+        return self.data
 
     def merge_with(self, other: object) -> None:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        self._attributes.update(other._attributes)
+        self.add_attributes(other.data)
 
     def copy(self) -> "Attributes":
-        new_node = Attributes()
-        new_node.set_child_data(self._attributes.copy())
-        return new_node
+        new = Attributes()
+        new.add_attributes(self.data)
+        return new
 
     #   ---leaf methods---------------------------------------------------------
 
-    def set_child_data(self, data: SDAttributes) -> None:
-        self._attributes.update(data)
-
-    def get_child_data(self) -> SDAttributes:
-        return self._attributes
+    def add_attributes(self, attributes: SDAttributes) -> None:
+        self.data.update(attributes)
 
     def get_filtered_data(self, keys: SDKeys) -> SDAttributes:
-        return _get_filtered_dict(self._attributes, keys)
+        return _get_filtered_dict(self.data, keys)
 
     #   ---web------------------------------------------------------------------
 

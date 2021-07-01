@@ -60,13 +60,13 @@ def get_inventory_data(inventory_tree: StructuredDataNode,
     if attribute_keys == []:
         numeration = inventory_tree.get_sub_numeration(parsed_path)
         if numeration is not None:
-            invdata = numeration.get_child_data()
+            invdata = numeration.data
     elif attribute_keys:
         attributes = inventory_tree.get_sub_attributes(parsed_path)
         if attributes is not None:
             # In paint_host_inventory_tree we parse invpath and get
             # a path and attribute_keys which may be either None, [], or ["KEY"].
-            invdata = attributes.get_child_data().get(attribute_keys[-1])
+            invdata = attributes.data.get(attribute_keys[-1])
     return invdata
 
 

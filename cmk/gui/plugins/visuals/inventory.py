@@ -597,7 +597,7 @@ class FilterInvHasSoftwarePackage(Filter):
             packages_numeration = row["host_inventory"].get_sub_numeration(["software", "packages"])
             if packages_numeration is None:
                 continue
-            packages = packages_numeration.get_child_data()
+            packages = packages_numeration.data
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

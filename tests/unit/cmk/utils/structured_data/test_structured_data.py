@@ -271,9 +271,9 @@ def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
 ])
 def test_structured_data_Numeration_compare_with(old_numeration_data, new_numeration_data, result):
     old_numeration = Numeration()
-    old_numeration.set_child_data(old_numeration_data)
+    old_numeration.add_table(old_numeration_data)
     new_numeration = Numeration()
-    new_numeration.set_child_data(new_numeration_data)
+    new_numeration.add_table(new_numeration_data)
     delta_result = new_numeration.compare_with(old_numeration)
     assert (delta_result.counter['new'], delta_result.counter['changed'],
             delta_result.counter['removed']) == result
@@ -622,7 +622,7 @@ def test_structured_data_StructuredDataNode_merge_with_numeration(tree_inv, tree
     tree_inv.merge_with(tree_status)
     assert 'foobar' in tree_inv.get_raw_tree()
     num = tree_inv.get_sub_numeration(['foobar'])
-    assert len(num.get_child_data()) == 5
+    assert len(num.data) == 5
 
 
 @pytest.mark.parametrize(
@@ -709,11 +709,11 @@ def test_structured_data_StructuredDataNode_building_tree():
     level1_nested_list_att = struct_tree.get_sub_attributes(["level0_2", "level1_nested_list"])
 
     assert isinstance(level1_dict, Attributes)
-    assert 'd1' in level1_dict.get_child_data()
-    assert 'd2' in level1_dict.get_child_data()
+    assert 'd1' in level1_dict.data
+    assert 'd2' in level1_dict.data
 
     assert isinstance(level1_list, Numeration)
-    known_keys = [key for row in level1_list.get_child_data() for key in row]
+    known_keys = [key for row in level1_list.data for key in row]
     assert 'l1' in known_keys
     assert 'l2' in known_keys
     assert level1_nested_list_num is not None and level1_nested_list_num.is_empty()

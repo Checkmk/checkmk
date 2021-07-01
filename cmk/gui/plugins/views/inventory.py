@@ -171,7 +171,7 @@ def _paint_host_inventory_tree_value(
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             # TODO parse instead of validate
             assert isinstance(child, Attributes)
-            tree_renderer.show_attribute(child.get_child_data().get(attribute_keys[-1]),
+            tree_renderer.show_attribute(child.data.get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
         code = HTML(output_funnel.drain())
     return "", code
@@ -1831,7 +1831,7 @@ class NodeRenderer:
         invpath = ".%s:" % self._get_raw_path(list(numeration.path))
         hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
-        data = numeration.get_child_data()
+        data = numeration.data
 
         # Add titles for those keys
         titles = []
@@ -1926,7 +1926,7 @@ class NodeRenderer:
                 return item[0]
 
         html.open_table()
-        for key, value in sorted(attributes.get_child_data().items(), key=sort_func):
+        for key, value in sorted(attributes.data.items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
             hint = _inv_display_hint(sub_invpath)

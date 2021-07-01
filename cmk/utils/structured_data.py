@@ -31,8 +31,13 @@ from collections import Counter
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 
+# TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO
-# - Cleanup path in utils, base, gui, find ONE place (type defs or similar)
+# - is_empty -> __bool__
+# - is_equal -> __eq__/__ne__
+# - merge_with -> __add__
+# - count_entries -> __len__?
+# TODO remove has_edge
 
 SDRawPath = str
 SDRawTree = Dict
@@ -375,7 +380,7 @@ class StructuredDataNode:
                 counter.update(new=new_entries)
                 delta_node.add_node(
                     key,
-                    node.encode_for_delta_tree(encode_as=_new_delta_tree_node),
+                    node.get_encoded_node(encode_as=_new_delta_tree_node),
                 )
 
         for key in compared_keys.both:
@@ -386,7 +391,7 @@ class StructuredDataNode:
                 if keep_identical:
                     delta_node.add_node(
                         key,
-                        node.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
+                        node.get_encoded_node(encode_as=_identical_delta_tree_node),
                     )
                 continue
 
@@ -407,19 +412,19 @@ class StructuredDataNode:
                 counter.update(removed=removed_entries)
                 delta_node.add_node(
                     key,
-                    other_node.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
+                    other_node.get_encoded_node(encode_as=_removed_delta_tree_node),
                 )
 
         return SDDeltaResult(counter=counter, delta=delta_node)
 
-    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
+    def get_encoded_node(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
         delta_node = StructuredDataNode()
 
-        delta_node.add_attributes(self.attributes.encode_for_delta_tree(encode_as).data)
-        delta_node.add_table(self.table.encode_for_delta_tree(encode_as).data)
+        delta_node.add_attributes(self.attributes.get_encoded_attributes(encode_as))
+        delta_node.add_table(self.table.get_encoded_table(encode_as))
 
         for edge, node in self._nodes.items():
-            delta_node.add_node(edge, node.encode_for_delta_tree(encode_as))
+            delta_node.add_node(edge, node.get_encoded_node(encode_as))
         return delta_node
 
     #   ---filtering------------------------------------------------------------
@@ -528,11 +533,6 @@ class Table:
     def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
         return tuple(entry[key] for key in sorted(keys) if key in entry)
 
-    def copy(self) -> "Table":
-        new = Table()
-        new.add_table(self.data)
-        return new
-
     #   ---table methods--------------------------------------------------------
 
     def add_table(self, table: SDTable) -> None:
@@ -628,11 +628,8 @@ class Table:
                 compared_rows.append(delta_dict_result.delta)
         return TDeltaResult(counter=counter, delta=compared_rows)
 
-    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Table":
-        delta_table = Table()
-        for entry in self.data:
-            delta_table.data.append({k: encode_as(v) for k, v in entry.items()})
-        return delta_table
+    def get_encoded_table(self, encode_as: SDEncodeAs) -> SDTable:
+        return [{k: encode_as(v) for k, v in row.items()} for row in self.data]
 
     #   ---filtering------------------------------------------------------------
 
@@ -685,11 +682,6 @@ class Attributes:
 
         self.data.update(other.data)
 
-    def copy(self) -> "Attributes":
-        new = Attributes()
-        new.data.update(self.data)
-        return new
-
     #   ---attributes methods---------------------------------------------------
 
     def add_attributes(self, attributes: SDAttributes) -> None:
@@ -720,10 +712,8 @@ class Attributes:
             delta=delta_attributes,
         )
 
-    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Attributes":
-        delta_attributes = Attributes()
-        delta_attributes.add_attributes({k: encode_as(v) for k, v in self.data.items()})
-        return delta_attributes
+    def get_encoded_attributes(self, encode_as: SDEncodeAs) -> SDAttributes:
+        return {k: encode_as(v) for k, v in self.data.items()}
 
     #   ---filtering------------------------------------------------------------
 

@@ -127,7 +127,7 @@ AVLayoutTableRow = Dict[str, Any]  # TODO: Improve this type
 
 AVBIPhaseData = Dict[_Tuple[HostName, ServiceName], Row]
 AVBIPhases = List[_Tuple[int, AVBIPhaseData]]
-AVBITimelineState = _Tuple[int, str, bool, bool]
+AVBITimelineState = _Tuple[int, str, bool, bool]  # state, output, in_downtime, in_service_period
 AVBITimelineStates = Dict[_Tuple[SiteId, HostName, ServiceName], AVBITimelineState]
 AVLevels = _Tuple[float, float]
 
@@ -2226,12 +2226,14 @@ def _compute_bi_tree_state(timeline_container: TimelineContainer,
     #
     status = timeline_container.states
     services_by_host: Dict[BIHostSpec, Dict[str, BIServiceWithFullState]] = {}
-    hosts = {}
+    hosts: Dict[BIHostSpec, AVBITimelineState] = {}
     for site_host_service, state_output in status.items():
         site_host = BIHostSpec(site_host_service[0], site_host_service[1])
         service = site_host_service[2]
         state: _Optional[int] = state_output[0]
 
+        # Create an entry for hosts that are not explicitly referenced in the timeline container.
+        hosts.setdefault(site_host, (0, "", False, False))
         if service:
             if state == -1:
                 # Ignore pending services
@@ -2257,7 +2259,7 @@ def _compute_bi_tree_state(timeline_container: TimelineContainer,
     results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
 
     if not results:
-        # The aggregation did not found any hosts/svcs
+        # The aggregation did not find any hosts or services
         # It is not the job of the compiled_aggregation to offer a fallback result
         # for this special availability scenario
         return _get_not_monitored_result(compiled_aggregation, branch)

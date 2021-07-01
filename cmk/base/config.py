@@ -2977,9 +2977,9 @@ class HostConfig:
 
     @property
     def management_address(self) -> Optional[HostAddress]:
-        mgmt_ip_address = host_attributes.get(self.hostname, {}).get("management_address")
-        if mgmt_ip_address:
-            return mgmt_ip_address
+        mgmt_host_address = host_attributes.get(self.hostname, {}).get("management_address")
+        if mgmt_host_address:
+            return mgmt_host_address
 
         if self.is_ipv6_primary:
             return ipv6addresses.get(self.hostname)

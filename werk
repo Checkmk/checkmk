@@ -896,20 +896,24 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
         cmd.append("--no-commit")
     cmd.append(commit_id)
     pick = subprocess.run(cmd, check=False)
+
+    # Find werks that have been cherry-picked and change their version
+    # to our current version
+    load_werks()  # might have changed
+    if werk_id is not None:
+        # Change the werk's version before checking the pick return code.
+        # Otherwise the dev may forget to change the version
+        change_werk_version(werk_id, g_current_version)
+        sys.stdout.write("Changed version of werk %s to %s.\n" %
+                         (format_werk_id(werk_id), g_current_version))
+
     if pick.returncode:
         # Exit with the result of the pick. This may be a merge conflict, so
         # other tools may need to know about this.
         sys.exit(pick.returncode)
 
-    # Find werks that have been cherry-picked and change their version
-    # to our current version
-    load_werks()  # might have changed
-
     # Commit
     if werk_id is not None:
-        change_werk_version(werk_id, g_current_version)
-        sys.stdout.write("Changed version of werk %s to %s.\n" %
-                         (format_werk_id(werk_id), g_current_version))
 
         # This allows for picking regular commits as well
         if not no_commit:

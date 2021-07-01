@@ -425,11 +425,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
         infos = {}
         tree = structured_data.load_tree_from(filepath)
-        attrs = tree.get_sub_attributes(["software", "applications", "check_mk"])
+        attrs = tree.get_attributes(["software", "applications", "check_mk"])
         if attrs:
             infos.update(attrs.get_raw_tree())
 
-        node = tree.get_sub_container(["software", "applications", "check_mk"])
+        node = tree.get_node(["software", "applications", "check_mk"])
         if node:
             infos.update(node.get_raw_tree())
 

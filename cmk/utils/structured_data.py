@@ -33,7 +33,6 @@ from cmk.utils.exceptions import MKGeneralException
 
 # TODO
 # - Cleanup path in utils, base, gui, find ONE place (type defs or similar)
-# - rename Numeration -> Table
 
 SDRawPath = str
 SDRawTree = Dict
@@ -68,7 +67,7 @@ class SDDeltaResult(NamedTuple):
 
 class NDeltaResult(NamedTuple):
     counter: SDDeltaCounter
-    delta: "Numeration"
+    delta: "Table"
 
 
 class TDeltaResult(NamedTuple):
@@ -135,7 +134,7 @@ class StructuredDataNode:
     def __init__(self) -> None:
         self.path: SDNodePath = tuple()
         self.attributes = Attributes()
-        self.table = Numeration()
+        self.table = Table()
         self._nodes: SDNodes = {}
 
     def __repr__(self) -> str:
@@ -269,7 +268,7 @@ class StructuredDataNode:
                 continue
 
             if isinstance(value, list):
-                if self._is_numeration(value):
+                if self._is_table(value):
                     self.setdefault_node([key]).add_table(value)
                 else:
                     self._add_indexed_nodes(key, value)
@@ -279,7 +278,7 @@ class StructuredDataNode:
         self.add_attributes(raw_attributes)
         return self
 
-    def _is_numeration(self, entries: List) -> bool:
+    def _is_table(self, entries: List) -> bool:
         for entry in entries:
             # Skipping invalid entries such as
             # {u'KEY': [LIST OF STRINGS], ...}
@@ -306,12 +305,12 @@ class StructuredDataNode:
         """
         After the execution of plugins there may remain empty
         nodes which will be removed within this method.
-        Moreover we have to deal with nested numerations, eg.
+        Moreover we have to deal with nested tables, eg.
         at paths like "hardware.memory.arrays:*.devices:" where
         we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
         In this case we have to convert this
         'list-composed-of-dicts-containing-lists' structure into
-        numerated nodes ('arrays') containing real numerations ('devices').
+        numerated nodes ('arrays') containing real tables ('devices').
         """
         remove_table = False
         for idx, entry in enumerate(self.table.data):
@@ -321,7 +320,7 @@ class StructuredDataNode:
                     remove_table = True
 
         if remove_table:
-            self.table = Numeration()
+            self.table = Table()
             self.table.set_path(self.path)
 
         for node in self._nodes.values():
@@ -427,14 +426,14 @@ class StructuredDataNode:
 
     #   ---getting [sub] nodes/node attributes----------------------------------
 
-    def get_sub_container(self, path: SDPath) -> Optional["StructuredDataNode"]:
+    def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
         return self._get_node(path)
 
-    def get_sub_numeration(self, path: SDPath) -> Optional["Numeration"]:
+    def get_table(self, path: SDPath) -> Optional["Table"]:
         node = self._get_node(path)
         return None if node is None else node.table
 
-    def get_sub_attributes(self, path: SDPath) -> Optional["Attributes"]:
+    def get_attributes(self, path: SDPath) -> Optional["Attributes"]:
         node = self._get_node(path)
         return None if node is None else node.attributes
 
@@ -452,24 +451,24 @@ class StructuredDataNode:
             renderer.show_attributes(self.attributes)
 
         if not self.table.is_empty():
-            renderer.show_numeration(self.table)
+            renderer.show_table(self.table)
 
         for edge in sorted(self._nodes):
-            renderer.show_container(self._nodes[edge])
+            renderer.show_node(self._nodes[edge])
 
 
 #.
-#   .--Numeration----------------------------------------------------------.
-#   |       _   _                                _   _                     |
-#   |      | \ | |_   _ _ __ ___   ___ _ __ __ _| |_(_) ___  _ __          |
-#   |      |  \| | | | | '_ ` _ \ / _ \ '__/ _` | __| |/ _ \| '_ \         |
-#   |      | |\  | |_| | | | | | |  __/ | | (_| | |_| | (_) | | | |        |
-#   |      |_| \_|\__,_|_| |_| |_|\___|_|  \__,_|\__|_|\___/|_| |_|        |
+#   .--Table---------------------------------------------------------------.
+#   |                       _____     _     _                              |
+#   |                      |_   _|_ _| |__ | | ___                         |
+#   |                        | |/ _` | '_ \| |/ _ \                        |
+#   |                        | | (_| | |_) | |  __/                        |
+#   |                        |_|\__,_|_.__/|_|\___|                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
-class Numeration:
+class Table:
     def __init__(self) -> None:
         self.path: SDNodePath = tuple()
         self.data: SDTable = []
@@ -481,7 +480,7 @@ class Numeration:
         return self.data == []
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
-        if not isinstance(other, Numeration):
+        if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         for row in self.data:
@@ -496,11 +495,11 @@ class Numeration:
         return sum(map(len, self.data))
 
     def compare_with(self, other: object, keep_identical: bool = False) -> NDeltaResult:
-        if not isinstance(other, Numeration):
+        if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_table = Numeration()
+        delta_table = Table()
 
         remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
@@ -538,7 +537,7 @@ class Numeration:
         counter.update(new=len(new_rows), removed=len(removed_rows))
         return NDeltaResult(counter=counter, delta=delta_table)
 
-    def _get_categorized_rows(self, other: "Numeration") -> Tuple[SDTable, SDTable, SDTable]:
+    def _get_categorized_rows(self, other: "Table") -> Tuple[SDTable, SDTable, SDTable]:
         identical_rows = []
         remaining_other_rows = []
         remaining_new_rows = []
@@ -578,8 +577,8 @@ class Numeration:
                 compared_rows.append(delta_dict_result.delta)
         return TDeltaResult(counter=counter, delta=compared_rows)
 
-    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Numeration":
-        delta_table = Numeration()
+    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Table":
+        delta_table = Table()
         for entry in self.data:
             delta_table.data.append({k: encode_as(v) for k, v in entry.items()})
         return delta_table
@@ -588,11 +587,11 @@ class Numeration:
         return self.data
 
     def merge_with(self, other: object) -> None:
-        if not isinstance(other, Numeration):
+        if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        other_keys = other._get_numeration_keys()
-        my_keys = self._get_numeration_keys()
+        other_keys = other._get_table_keys()
+        my_keys = self._get_table_keys()
         intersect_keys = my_keys.intersection(other_keys)
 
         # In case there is no intersection, append all other rows without
@@ -613,14 +612,14 @@ class Numeration:
 
         self.add_table(list(other_num.values()))
 
-    def _get_numeration_keys(self) -> Set[SDKey]:
+    def _get_table_keys(self) -> Set[SDKey]:
         return {key for row in self.data for key in row}
 
     def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
         return tuple(entry[key] for key in sorted(keys) if key in entry)
 
-    def copy(self) -> "Numeration":
-        new = Numeration()
+    def copy(self) -> "Table":
+        new = Table()
         new.add_table(self.data)
         return new
 
@@ -638,7 +637,7 @@ class Numeration:
 
     def show(self, renderer):
         # TODO
-        renderer.show_numeration(self)
+        renderer.show_table(self)
 
 
 #.

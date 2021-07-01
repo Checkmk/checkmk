@@ -18,7 +18,7 @@ from livestatus import SiteId, LivestatusResponse, OnlySites
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.structured_data import StructuredDataNode, Numeration, Attributes
+from cmk.utils.structured_data import StructuredDataNode, Table, Attributes
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -131,7 +131,7 @@ def _paint_host_inventory_tree_children(
     parsed_path: InventoryPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
-    node = struct_tree.get_sub_container(parsed_path) if parsed_path else struct_tree
+    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
     if node is None:
         return "", ""
 
@@ -148,11 +148,11 @@ def _paint_host_inventory_tree_value(
     invpath: RawInventoryPath,
     attribute_keys: inventory.AttributesKeys,
 ) -> CellSpec:
-    child: Optional[Union[Numeration, Attributes]]
+    child: Optional[Union[Table, Attributes]]
     if attribute_keys == []:
-        child = struct_tree.get_sub_numeration(parsed_path)
+        child = struct_tree.get_table(parsed_path)
     else:
-        child = struct_tree.get_sub_attributes(parsed_path)
+        child = struct_tree.get_attributes(parsed_path)
 
     if child is None:
         return "", ""
@@ -163,8 +163,8 @@ def _paint_host_inventory_tree_value(
 
         if attribute_keys == []:
             # TODO parse instead of validate
-            assert isinstance(child, Numeration)
-            tree_renderer.show_numeration(child)
+            assert isinstance(child, Table)
+            tree_renderer.show_table(child)
 
         elif attribute_keys:
             # In paint_host_inventory_tree we parse invpath and get
@@ -1769,19 +1769,19 @@ class NodeRenderer:
         else:
             self._show_internal_tree_paths = ""
 
-    #   ---container------------------------------------------------------------
+    #   ---node-----------------------------------------------------------------
 
-    def show_container(self, container: StructuredDataNode) -> None:
-        invpath = ".%s." % self._get_raw_path(list(container.path))
+    def show_node(self, node: StructuredDataNode) -> None:
+        invpath = ".%s." % self._get_raw_path(list(node.path))
 
-        edge = container.path[-1] if container.path else ""
+        edge = node.path[-1] if node.path else ""
         icon, title = _inv_titleinfo(invpath, key=str(edge))
 
         # Replace placeholders in title with the real values for this path
         if "%d" in title or "%s" in title:
             title = self._replace_placeholders(title, invpath)
 
-        header = self._get_header(title, ".".join(map(str, container.path)), "#666")
+        header = self._get_header(title, ".".join(map(str, node.path)), "#666")
         fetch_url = makeuri_contextless(
             request,
             [
@@ -1801,7 +1801,7 @@ class NodeRenderer:
                                 icon=icon,
                                 fetch_url=fetch_url) as is_open:
             if is_open:
-                container.show(self)
+                node.show(self)
 
     def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
         hint_id = _find_display_hint_id(invpath)
@@ -1823,15 +1823,15 @@ class NodeRenderer:
         num_macros = raw_title.count("%d") + raw_title.count("%s")
         return raw_title % tuple(replace_vars[:num_macros])
 
-    #   ---numeration-----------------------------------------------------------
+    #   ---table----------------------------------------------------------------
 
-    def show_numeration(self, numeration: Numeration) -> None:
+    def show_table(self, table: Table) -> None:
         #FIXME these kind of paths are required for hints.
         # Clean this up one day.
-        invpath = ".%s:" % self._get_raw_path(list(numeration.path))
+        invpath = ".%s:" % self._get_raw_path(list(table.path))
         hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
-        data = numeration.data
+        data = table.data
 
         # Add titles for those keys
         titles = []
@@ -1843,7 +1843,7 @@ class NodeRenderer:
             titles.append((short_title, key))
 
         # Determine *all* keys, in order to find unknown ones
-        keys = self._get_numeration_keys(data)
+        keys = self._get_table_keys(data)
 
         # Order not well-known keys alphabetically
         extratitles = []
@@ -1866,15 +1866,15 @@ class NodeRenderer:
             html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
                      class_="invtablelink")
 
-        self._show_numeration_table(titles, invpath, data)
+        self._show_table_data(titles, invpath, data)
 
-    def _get_numeration_keys(self, data: Iterable) -> Set[str]:
+    def _get_table_keys(self, data: Iterable) -> Set[str]:
         keys = set([])
         for entry in data:
             keys.update(entry.keys())
         return keys
 
-    def _show_numeration_table(
+    def _show_table_data(
         self,
         titles: List[Tuple[str, str]],
         invpath: RawInventoryPath,
@@ -1902,12 +1902,12 @@ class NodeRenderer:
                     tdclass = None
 
                 html.open_td(class_=tdclass)
-                self._show_numeration_value(value, hint)
+                self._show_table_value(value, hint)
                 html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _show_numeration_value(self, value: Any, hint: Dict) -> None:
+    def _show_table_value(self, value: Any, hint: Dict) -> None:
         raise NotImplementedError()
 
     #   ---attributes-----------------------------------------------------------
@@ -1972,7 +1972,7 @@ class NodeRenderer:
 
 
 class AttributeRenderer(NodeRenderer):
-    def _show_numeration_value(self, value: Any, hint: Dict) -> None:
+    def _show_table_value(self, value: Any, hint: Dict) -> None:
         self._show_child_value(value, hint)
 
     def show_attribute(self, value: Any, hint: Dict) -> None:
@@ -1980,7 +1980,7 @@ class AttributeRenderer(NodeRenderer):
 
 
 class DeltaNodeRenderer(NodeRenderer):
-    def _show_numeration_value(self, value: Any, hint: Dict) -> None:
+    def _show_table_value(self, value: Any, hint: Dict) -> None:
         if value is None:
             value = (None, None)
         self.show_attribute(value, hint)
@@ -2058,7 +2058,7 @@ def ajax_inv_render_tree() -> None:
         return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
-    node = struct_tree.get_sub_container(parsed_path) if parsed_path else struct_tree
+    node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
     if node is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))

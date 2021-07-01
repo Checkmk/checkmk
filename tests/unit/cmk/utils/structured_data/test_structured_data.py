@@ -17,7 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import (
     StructuredDataNode,
     Attributes,
-    Numeration,
+    Table,
     load_tree_from,
     save_tree_to,
 )
@@ -34,26 +34,26 @@ from cmk.utils.structured_data import (
 
 def mk_root():
     root = StructuredDataNode()
-    container_0 = root.setdefault_node(["0_cna"])
-    container_0.setdefault_node(["1_cn"])
-    container_0.setdefault_node(["1_ca"])
+    node_0 = root.setdefault_node(["0_cna"])
+    node_0.setdefault_node(["1_cn"])
+    node_0.setdefault_node(["1_ca"])
     return root
 
 
 def mk_filled_root():
     root = StructuredDataNode()
-    container_1 = root.setdefault_node(["0_cna", "1_cn"])
-    container_2 = root.setdefault_node(["0_cna", "1_ca"])
-    container_3 = root.setdefault_node(["0_cna", "1_na"])
-    container_4 = root.setdefault_node(["0_cna", "1_cn", "2_n"])
-    container_5 = root.setdefault_node(["0_cna", "1_ca", "2_a"])
+    node_1 = root.setdefault_node(["0_cna", "1_cn"])
+    node_2 = root.setdefault_node(["0_cna", "1_ca"])
+    node_3 = root.setdefault_node(["0_cna", "1_na"])
+    node_4 = root.setdefault_node(["0_cna", "1_cn", "2_n"])
+    node_5 = root.setdefault_node(["0_cna", "1_ca", "2_a"])
 
-    container_1.add_table([{"n10": "N-1-0"}])
-    container_2.add_attributes({"a10": "A-1-0"})
-    container_3.add_table([{"n20": "N-2-0"}, {"n21": "N-2-1"}])
-    container_3.add_attributes({"a20": "A-2-0", "a21": "A-1-1"})
-    container_4.add_table([{"n30": "N-3-0"}, {"n31": "N-3-1"}, {"n32": "N-3-2"}])
-    container_5.add_attributes({"a30": "A-3-0", "a31": "A-3-1", "a32": "A-3-2"})
+    node_1.add_table([{"n10": "N-1-0"}])
+    node_2.add_attributes({"a10": "A-1-0"})
+    node_3.add_table([{"n20": "N-2-0"}, {"n21": "N-2-1"}])
+    node_3.add_attributes({"a20": "A-2-0", "a21": "A-1-1"})
+    node_4.add_table([{"n30": "N-3-0"}, {"n31": "N-3-1"}, {"n32": "N-3-2"}])
+    node_5.add_attributes({"a30": "A-3-0", "a31": "A-3-1", "a32": "A-3-2"})
     return root
 
 
@@ -103,7 +103,7 @@ def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
         assert not delta_result.delta.is_empty()
 
 
-@pytest.mark.parametrize("old_numeration_data,new_numeration_data,result", [
+@pytest.mark.parametrize("old_table_data,new_table_data,result", [
     ([], [], (0, 0, 0)),
     ([{
         "id": "1",
@@ -269,12 +269,12 @@ def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
         "val": 1
     }], (4, 0, 3)),
 ])
-def test_structured_data_Numeration_compare_with(old_numeration_data, new_numeration_data, result):
-    old_numeration = Numeration()
-    old_numeration.add_table(old_numeration_data)
-    new_numeration = Numeration()
-    new_numeration.add_table(new_numeration_data)
-    delta_result = new_numeration.compare_with(old_numeration)
+def test_structured_data_Table_compare_with(old_table_data, new_table_data, result):
+    old_table = Table()
+    old_table.add_table(old_table_data)
+    new_table = Table()
+    new_table.add_table(new_table_data)
+    delta_result = new_table.compare_with(old_table)
     assert (delta_result.counter['new'], delta_result.counter['changed'],
             delta_result.counter['removed']) == result
 
@@ -467,7 +467,7 @@ def test_structured_data_StructuredDataNode_is_equal(tree_x, tree_y):
         assert not tree_x.is_equal(tree_y)
 
 
-def test_structured_data_StructuredDataNode_equal_numerations():
+def test_structured_data_StructuredDataNode_equal_tables():
     tree_addresses_ordered = load_tree_from("%s/tree_addresses_ordered" % TEST_DIR)
     tree_addresses_unordered = load_tree_from("%s/tree_addresses_unordered" % TEST_DIR)
     assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
@@ -575,29 +575,29 @@ def test_structured_data_StructuredDataNode_copy(tree):
 @pytest.mark.parametrize("tree_start,tree_edges", [
     (tree_old_addresses, [
         (tree_old_arrays, ["hardware", "networking"], [
-            ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
-            ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
-            ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
+            ("get_attributes", ["hardware", "memory", "arrays", 0]),
+            ("get_table", ["hardware", "memory", "arrays", 0, "devices"]),
+            ("get_table", ["hardware", "memory", "arrays", 1, "others"]),
         ]),
         (tree_new_memory, ["hardware", "networking"], [
-            ("get_sub_attributes", ["hardware", "memory"]),
+            ("get_attributes", ["hardware", "memory"]),
         ]),
         (tree_new_interfaces, ["hardware", "networking", "software"], [
-            ("get_sub_numeration", ["hardware", "components", "backplanes"]),
-            ("get_sub_numeration", ["hardware", "components", "chassis"]),
-            ("get_sub_numeration", ["hardware", "components", "containers"]),
-            ("get_sub_numeration", ["hardware", "components", "fans"]),
-            ("get_sub_numeration", ["hardware", "components", "modules"]),
-            ("get_sub_numeration", ["hardware", "components", "others"]),
-            ("get_sub_numeration", ["hardware", "components", "psus"]),
-            ("get_sub_numeration", ["hardware", "components", "sensors"]),
-            ("get_sub_attributes", ["hardware", "system"]),
-            ("get_sub_attributes", ["software", "applications", "check_mk", "cluster"]),
-            ("get_sub_attributes", ["software", "os"]),
+            ("get_table", ["hardware", "components", "backplanes"]),
+            ("get_table", ["hardware", "components", "chassis"]),
+            ("get_table", ["hardware", "components", "containers"]),
+            ("get_table", ["hardware", "components", "fans"]),
+            ("get_table", ["hardware", "components", "modules"]),
+            ("get_table", ["hardware", "components", "others"]),
+            ("get_table", ["hardware", "components", "psus"]),
+            ("get_table", ["hardware", "components", "sensors"]),
+            ("get_attributes", ["hardware", "system"]),
+            ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
+            ("get_attributes", ["software", "os"]),
         ])
     ]),
 ])
-def test_structured_data_StructuredDataNode_merge_with_get_sub_children(tree_start, tree_edges):
+def test_structured_data_StructuredDataNode_merge_with_get_children(tree_start, tree_edges):
     tree_start = tree_start.copy()
     for tree, edges, sub_children in tree_edges:
         tree_start.merge_with(tree)
@@ -618,10 +618,10 @@ TREE_STATUS = load_tree_from("%s/tree_status" % TEST_DIR)
 @pytest.mark.parametrize("tree_inv,tree_status", [
     (TREE_INV, TREE_STATUS),
 ])
-def test_structured_data_StructuredDataNode_merge_with_numeration(tree_inv, tree_status):
+def test_structured_data_StructuredDataNode_merge_with_table(tree_inv, tree_status):
     tree_inv.merge_with(tree_status)
     assert 'foobar' in tree_inv.get_raw_tree()
-    num = tree_inv.get_sub_numeration(['foobar'])
+    num = tree_inv.get_table(['foobar'])
     assert len(num.data) == 5
 
 
@@ -630,7 +630,7 @@ def test_structured_data_StructuredDataNode_merge_with_numeration(tree_inv, tree
     [
         (
             tree_new_interfaces,
-            # container                   numeration                    attributes
+            # node                   table                    attributes
             [(["hardware", "components"], None), (["networking", "interfaces"], None),
              (["software", "os"], None)],
             [["hardware", "system"], ["software", "applications"]]),
@@ -640,7 +640,7 @@ def test_structured_data_StructuredDataNode_filtered_tree(tree, paths, unavail):
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
-        assert filtered.get_sub_container(path) is None
+        assert filtered.get_node(path) is None
 
 
 @pytest.mark.parametrize("tree,paths,amount_if_entries", [
@@ -666,7 +666,7 @@ def test_structured_data_StructuredDataNode_filtered_tree_networking(tree, paths
     assert not filtered.has_edge('hardware')
     assert not filtered.has_edge('software')
 
-    interfaces = filtered.get_sub_numeration(['networking', 'interfaces'])
+    interfaces = filtered.get_table(['networking', 'interfaces'])
     if interfaces is not None:
         assert bool(interfaces)
         assert interfaces.count_entries() == amount_if_entries
@@ -702,17 +702,17 @@ def test_structured_data_StructuredDataNode_building_tree():
     assert struct_tree.has_edge("level0_2")
     assert not struct_tree.has_edge("foobar")
 
-    level1_dict = struct_tree.get_sub_attributes(["level0_0", "level1_dict"])
-    level1_list = struct_tree.get_sub_numeration(["level0_1", "level1_list"])
-    level1_nested_list_con = struct_tree.get_sub_container(["level0_2", "level1_nested_list"])
-    level1_nested_list_num = struct_tree.get_sub_numeration(["level0_2", "level1_nested_list"])
-    level1_nested_list_att = struct_tree.get_sub_attributes(["level0_2", "level1_nested_list"])
+    level1_dict = struct_tree.get_attributes(["level0_0", "level1_dict"])
+    level1_list = struct_tree.get_table(["level0_1", "level1_list"])
+    level1_nested_list_con = struct_tree.get_node(["level0_2", "level1_nested_list"])
+    level1_nested_list_num = struct_tree.get_table(["level0_2", "level1_nested_list"])
+    level1_nested_list_att = struct_tree.get_attributes(["level0_2", "level1_nested_list"])
 
     assert isinstance(level1_dict, Attributes)
     assert 'd1' in level1_dict.data
     assert 'd2' in level1_dict.data
 
-    assert isinstance(level1_list, Numeration)
+    assert isinstance(level1_list, Table)
     known_keys = [key for row in level1_list.data for key in row]
     assert 'l1' in known_keys
     assert 'l2' in known_keys

@@ -58,11 +58,11 @@ def get_inventory_data(inventory_tree: StructuredDataNode,
     invdata = None
     parsed_path, attribute_keys = parse_tree_path(tree_path)
     if attribute_keys == []:
-        numeration = inventory_tree.get_sub_numeration(parsed_path)
-        if numeration is not None:
-            invdata = numeration.data
+        table = inventory_tree.get_table(parsed_path)
+        if table is not None:
+            invdata = table.data
     elif attribute_keys:
-        attributes = inventory_tree.get_sub_attributes(parsed_path)
+        attributes = inventory_tree.get_attributes(parsed_path)
         if attributes is not None:
             # In paint_host_inventory_tree we parse invpath and get
             # a path and attribute_keys which may be either None, [], or ["KEY"].
@@ -97,7 +97,7 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
     parsed_path: InventoryPath = []
     for part in path:
         if ":" in part:
-            # Nested numerations, see also lib/structured_data.py
+            # Nested tables, see also lib/structured_data.py
             parts = part.split(":")
         else:
             parts = [part]

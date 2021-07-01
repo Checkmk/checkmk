@@ -126,10 +126,9 @@ def lookup_ip_address(
     if is_dyndns_host:
         return host_name
 
-    return cached_dns_lookup(
+    return None if is_no_ip_host else cached_dns_lookup(
         host_name,
         family=family,
-        is_no_ip_host=is_no_ip_host,
         use_dns_cache=use_dns_cache,
     )
 
@@ -139,7 +138,6 @@ def cached_dns_lookup(
     hostname: HostName,
     *,
     family: socket.AddressFamily,
-    is_no_ip_host: bool,
     use_dns_cache: bool,
 ) -> Optional[str]:
     """Cached DNS lookup in *two* caching layers
@@ -175,10 +173,6 @@ def cached_dns_lookup(
     if cached_ip and use_dns_cache:
         cache[cache_id] = cached_ip
         return cached_ip
-
-    if is_no_ip_host:
-        cache[cache_id] = None
-        return None
 
     # Now do the actual DNS lookup
     try:

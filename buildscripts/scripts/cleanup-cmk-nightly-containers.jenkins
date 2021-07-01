@@ -5,8 +5,10 @@ import groovy.transform.Field
 currentBuild.description = '\nCleaning up Nightly Docker images in Nexus Regisrty\n'
 
 def BRANCH = ''
+def BUILD_NODE = ''
 withFolderProperties{
     BRANCH = env.BRANCH
+    BUILD_NODE = env.BUILD_NODE
 }
 
 properties([
@@ -16,7 +18,17 @@ properties([
 // Pattern for the daily version to be deleted
 def PATTERN = get_pattern(BRANCH)
 def BUILDS = [:]
-def NODE_LIST = ['dc4', 'dc14']
+def hostNames(label) {
+  def nodes = []
+  jenkins.model.Jenkins.instance.computers.each { c ->
+    if (c.node.labelString.contains(label)) {
+      nodes.add(c.node.selfLabel.name)
+    }
+  }
+  return nodes
+}
+
+def NODE_LIST = hostNames(BUILD_NODE)
 
 node ('both') {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
@@ -64,3 +76,4 @@ def get_pattern(BRANCH) {
     
     return "cee-${VERSION_BRANCH}${DATE_FORMAT.format(DATE)}"
 }
+

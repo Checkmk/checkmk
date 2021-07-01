@@ -8,6 +8,7 @@ import ast
 import contextlib
 import copy
 import inspect
+import ipaddress
 import itertools
 import marshal
 import numbers
@@ -2501,11 +2502,11 @@ class HostConfig:
 
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
-    def snmp_config(self, ipaddress: HostAddress) -> SNMPHostConfig:
+    def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
-            ipaddress=ipaddress,
+            ipaddress=ip_address,
             credentials=self._snmp_credentials(),
             port=self._snmp_port(),
             is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
@@ -3169,26 +3170,25 @@ class HostConfig:
 
 
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
+    mgmt_address = host_config.management_address
     try:
-        # (1/3) The call below is the result of a refactoring. I believe it to be wrong, as
-        # configured_ip_address may be a configured management board host address
-        # (e.g. "myhost-idrac"), for which the DNS resolution will not be cached.
+        mgmt_ipa: Optional[HostAddress] = HostAddress(ipaddress.ip_address(mgmt_address))
+    except (ValueError, TypeError):
+        mgmt_ipa = None
+
+    try:
         return ip_lookup.lookup_ip_address(
-            host_name=host_config.hostname,
+            # host name is ignored, if mgmt_ipa is trueish.
+            host_name=mgmt_address or host_config.hostname,
             family=host_config.default_address_family,
-            # TODO Cleanup:
-            # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
-            # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
-            # here.
-            configured_ip_address=host_config.management_address,
+            configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
-            # (2/3) I don't think this is thought through for the mgmt case, either:
-            is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
+            is_snmp_usewalk_host=host_config.is_usewalk_host and
+            (host_config.management_protocol == "snmp"),
             override_dns=fake_dns,
             use_dns_cache=use_dns_cache,
-            # (3/3) nor are these:
             is_dyndns_host=host_config.is_dyndns_host,
-            is_no_ip_host=host_config.is_no_ip_host,
+            is_no_ip_host=False,
         )
     except MKIPAddressLookupError:
         return None

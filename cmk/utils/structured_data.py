@@ -240,15 +240,13 @@ class Container:
     def __init__(self) -> None:
         self._path: SDNodePath = tuple()
         self._attributes = Attributes()
-        self._attributes.set_path(self._path)
-
         self._table = Numeration()
-        self._table.set_path(self._path)
-
         self._nodes: SDNodes = {}
 
     def set_path(self, path: SDNodePath) -> None:
         self._path = path
+        self._attributes.set_path(path)
+        self._table.set_path(path)
 
     @property
     def path(self) -> SDNodePath:
@@ -554,8 +552,8 @@ class Container:
         if not self._table.is_empty():
             renderer.show_numeration(self._table)
 
-        for node in self._nodes.values():
-            renderer.show_container(node)
+        for edge in sorted(self._nodes):
+            renderer.show_container(self._nodes[edge])
 
 
 #.

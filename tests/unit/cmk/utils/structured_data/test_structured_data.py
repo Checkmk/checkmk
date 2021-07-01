@@ -482,7 +482,7 @@ def test_structured_data_StructuredDataTree_equal_numerations():
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
 
 
-@pytest.mark.parametrize("tree", trees[:1])
+@pytest.mark.parametrize("tree", trees)
 def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_path):
     try:
         save_tree_to(tree, str(tmp_path), "foo", False)

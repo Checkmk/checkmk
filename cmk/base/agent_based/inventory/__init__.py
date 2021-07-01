@@ -28,7 +28,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataTree, load_tree_from, save_tree_to
+from cmk.utils.structured_data import StructuredDataNode, load_tree_from, save_tree_to
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
@@ -180,7 +180,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
 
 def _check_inventory_tree(
     trees: InventoryTrees,
-    old_tree: Optional[StructuredDataTree],
+    old_tree: Optional[StructuredDataNode],
     sw_missing: ServiceState,
     sw_changes: ServiceState,
     hw_changes: ServiceState,
@@ -303,11 +303,11 @@ def _cleanup_status_data(hostname: HostName) -> None:
 
 
 def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
-    inventory_tree = StructuredDataTree()
+    inventory_tree = StructuredDataNode()
     _set_cluster_property(inventory_tree, host_config)
 
     if not host_config.nodes:
-        return InventoryTrees(inventory_tree, StructuredDataTree())
+        return InventoryTrees(inventory_tree, StructuredDataNode())
 
     inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
     for node_name in host_config.nodes:
@@ -316,7 +316,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
         })
 
     inventory_tree.normalize_nodes()
-    return InventoryTrees(inventory_tree, StructuredDataTree())
+    return InventoryTrees(inventory_tree, StructuredDataNode())
 
 
 def _do_inv_for_realhost(
@@ -367,7 +367,7 @@ def _do_inv_for_realhost(
 
 
 def _set_cluster_property(
-    inventory_tree: StructuredDataTree,
+    inventory_tree: StructuredDataNode,
     host_config: config.HostConfig,
 ) -> None:
     inventory_tree.get_dict(
@@ -376,8 +376,8 @@ def _set_cluster_property(
 
 def _save_inventory_tree(
     hostname: HostName,
-    inventory_tree: StructuredDataTree,
-) -> Optional[StructuredDataTree]:
+    inventory_tree: StructuredDataNode,
+) -> Optional[StructuredDataNode]:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
@@ -407,14 +407,14 @@ def _save_inventory_tree(
     return old_tree
 
 
-def _save_status_data_tree(hostname: HostName, status_data_tree: StructuredDataTree) -> None:
+def _save_status_data_tree(hostname: HostName, status_data_tree: StructuredDataNode) -> None:
     if status_data_tree and not status_data_tree.is_empty():
         store.makedirs(cmk.utils.paths.status_data_dir)
         save_tree_to(status_data_tree, cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(host_config: config.HostConfig,
-                                inventory_tree: StructuredDataTree) -> None:
+                                inventory_tree: StructuredDataNode) -> None:
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
     hooks = host_config.inventory_export_hooks
 

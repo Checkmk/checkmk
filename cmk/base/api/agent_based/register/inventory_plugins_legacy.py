@@ -22,7 +22,7 @@ from cmk.base.api.agent_based.register.inventory_plugins import create_inventory
 from cmk.base.api.agent_based.type_defs import Parameters
 
 
-class MockStructuredDataTree:
+class MockStructuredDataNode:
     def __init__(self):
         self.attributes = {}
         self.tables = {}
@@ -38,7 +38,7 @@ class MockStructuredDataTree:
         return self.tables.setdefault(self._normalize(path), list())
 
 
-g_inv_tree = MockStructuredDataTree()  # every plugin will get its own!
+g_inv_tree = MockStructuredDataNode()  # every plugin will get its own!
 
 
 def inv_tree(path: str) -> Dict:
@@ -64,8 +64,8 @@ def _create_inventory_function(
     def _inventory_generator(*args) -> InventoryResult:
         # mock the inventory/status data trees to later generate API objects
         # base on the info contained in them after running the legacy inventory function
-        local_status_data_tree = MockStructuredDataTree()
-        local_inventory_tree = MockStructuredDataTree()
+        local_status_data_tree = MockStructuredDataNode()
+        local_inventory_tree = MockStructuredDataNode()
         global g_inv_tree
         g_inv_tree = local_inventory_tree
 
@@ -109,8 +109,8 @@ def _function_has_params(legacy_function: Callable) -> bool:
 
 
 def _generate_api_objects(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> InventoryResult:
 
     yield from _generate_attributes(local_status_data_tree, local_inventory_tree)
@@ -118,8 +118,8 @@ def _generate_api_objects(
 
 
 def _generate_attributes(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> Generator[Attributes, None, None]:
 
     for path in sorted(
@@ -140,8 +140,8 @@ def _generate_attributes(
 
 
 def _generate_table_rows(
-    local_status_data_tree: MockStructuredDataTree,
-    local_inventory_tree: MockStructuredDataTree,
+    local_status_data_tree: MockStructuredDataNode,
+    local_inventory_tree: MockStructuredDataNode,
 ) -> Generator[TableRow, None, None]:
 
     for path in sorted(set(local_status_data_tree.tables) | set(local_inventory_tree.tables)):

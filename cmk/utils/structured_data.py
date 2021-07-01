@@ -34,8 +34,6 @@ from cmk.utils.exceptions import MKGeneralException
 # TODO
 # - Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # - rename Numeration -> Table
-# - rename Container -> Node
-# - merge Container and StructuredDataTree
 
 SDRawPath = str
 SDRawTree = Dict
@@ -56,7 +54,7 @@ SDNodeName = Union[str, int]
 SDPath = List[SDNodeName]
 
 SDNodePath = Tuple[SDNodeName, ...]
-SDNodes = Dict[SDNodeName, "Container"]
+SDNodes = Dict[SDNodeName, "StructuredDataNode"]
 
 SDEncodeAs = Callable
 
@@ -65,12 +63,7 @@ SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
 
 class SDDeltaResult(NamedTuple):
     counter: SDDeltaCounter
-    delta: "StructuredDataTree"
-
-
-class CDeltaResult(NamedTuple):
-    counter: SDDeltaCounter
-    delta: "Container"
+    delta: "StructuredDataNode"
 
 
 class NDeltaResult(NamedTuple):
@@ -97,7 +90,7 @@ AllowedPaths = List[Tuple[SDPath, Optional[List[str]]]]
 
 
 def save_tree_to(
-    tree: "StructuredDataTree",
+    tree: "StructuredDataNode",
     path: str,
     filename: str,
     pretty: bool = False,
@@ -115,133 +108,46 @@ def save_tree_to(
     store.save_text_to_file("%s/.last" % path, u"")
 
 
-def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataTree":
+def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
     raw_tree = store.load_object_from_file(filepath)
-    return StructuredDataTree().create_tree_from_raw_tree(raw_tree)
+    if raw_tree:
+        return StructuredDataNode().create_tree_from_raw_tree(raw_tree)
+    return StructuredDataNode()
 
 
-#   .--StructuredDataTree--------------------------------------------------.
+#   .--Structured DataNode-------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
 #   |        \___ \| __| '__| | | |/ __| __| | | | '__/ _ \/ _` |          |
 #   |         ___) | |_| |  | |_| | (__| |_| |_| | | |  __/ (_| |          |
 #   |        |____/ \__|_|   \__,_|\___|\__|\__,_|_|  \___|\__,_|          |
 #   |                                                                      |
-#   |               ____        _       _____                              |
-#   |              |  _ \  __ _| |_ __ |_   _| __ ___  ___                 |
-#   |              | | | |/ _` | __/ _` || || '__/ _ \/ _ \                |
-#   |              | |_| | (_| | || (_| || || | |  __/  __/                |
-#   |              |____/ \__,_|\__\__,_||_||_|  \___|\___|                |
+#   |             ____        _        _   _           _                   |
+#   |            |  _ \  __ _| |_ __ _| \ | | ___   __| | ___              |
+#   |            | | | |/ _` | __/ _` |  \| |/ _ \ / _` |/ _ \             |
+#   |            | |_| | (_| | || (_| | |\  | (_) | (_| |  __/             |
+#   |            |____/ \__,_|\__\__,_|_| \_|\___/ \__,_|\___|             |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
-class StructuredDataTree:
-    """Interface for structured data tree"""
-    def __init__(self) -> None:
-        self._root = Container()
-
-    #   ---building tree from plugins-------------------------------------------
-
-    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
-        return self._root.setdefault_node(_parse_tree_path(tree_path))._attributes.get_child_data()
-
-    def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self._root.setdefault_node(_parse_tree_path(tree_path))._table.get_child_data()
-
-    def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataTree":
-        if raw_tree:
-            self._root._create_hierarchy_from_data(raw_tree)
-        return self
-
-    #   ---delegators-----------------------------------------------------------
-
-    def is_empty(self) -> bool:
-        return self._root.is_empty()
-
-    def is_equal(self, struct_tree: "StructuredDataTree", edges: Optional[SDPath] = None) -> bool:
-        return self._root.is_equal(struct_tree._root, edges=edges)
-
-    def count_entries(self) -> int:
-        return self._root.count_entries()
-
-    def get_raw_tree(self) -> SDRawTree:
-        raw_tree = self._root.get_raw_tree()
-        assert isinstance(raw_tree, dict)
-        return raw_tree
-
-    def normalize_nodes(self) -> None:
-        self._root.normalize_nodes()
-
-    def merge_with(self, struct_tree: "StructuredDataTree") -> None:
-        self._root.merge_with(struct_tree._root)
-
-    def has_edge(self, edge: SDNodeName) -> bool:
-        return self._root.has_edge(edge)
-
-    def get_sub_container(self, path: SDPath) -> Optional["Container"]:
-        return self._root.get_sub_container(path)
-
-    def get_sub_numeration(self, path: SDPath) -> Optional["Numeration"]:
-        return self._root.get_sub_numeration(path)
-
-    def get_sub_attributes(self, path: SDPath) -> Optional["Attributes"]:
-        return self._root.get_sub_attributes(path)
-
-    #   ---structured tree methods----------------------------------------------
-
-    def compare_with(self, old_tree: "StructuredDataTree") -> SDDeltaResult:
-        delta_tree = StructuredDataTree()
-        delta_root_counter, delta_root_node = self._root.compare_with(old_tree._root)
-        delta_tree._root = delta_root_node
-        return SDDeltaResult(
-            counter=delta_root_counter,
-            delta=delta_tree,
-        )
-
-    def copy(self) -> "StructuredDataTree":
-        new_tree = StructuredDataTree()
-        new_tree._root = self._root.copy()
-        return new_tree
-
-    def get_root_container(self) -> "Container":
-        return self._root
-
-    def get_filtered_tree(self, allowed_paths: Optional[AllowedPaths]) -> "StructuredDataTree":
-        if allowed_paths is None:
-            return self
-
-        filtered_tree = StructuredDataTree()
-        filtered_tree._root = self._root.get_filtered_node(allowed_paths)
-        return filtered_tree
-
-    def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
-
-    #   ---web------------------------------------------------------------------
-
-    def show(self, renderer) -> None:
-        # TODO
-        self._root.show(renderer)
-
-
-#.
-#   .--Container-----------------------------------------------------------.
-#   |              ____            _        _                              |
-#   |             / ___|___  _ __ | |_ __ _(_)_ __   ___ _ __              |
-#   |            | |   / _ \| '_ \| __/ _` | | '_ \ / _ \ '__|             |
-#   |            | |__| (_) | | | | || (_| | | | | |  __/ |                |
-#   |             \____\___/|_| |_|\__\__,_|_|_| |_|\___|_|                |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class Container:
+class StructuredDataNode:
     def __init__(self) -> None:
         self._path: SDNodePath = tuple()
         self._attributes = Attributes()
         self._table = Numeration()
         self._nodes: SDNodes = {}
+
+    def __repr__(self) -> str:
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
+
+    #   ---building tree from plugins-------------------------------------------
+
+    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
+        return self.setdefault_node(_parse_tree_path(tree_path))._attributes.get_child_data()
+
+    def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
+        return self.setdefault_node(_parse_tree_path(tree_path))._table.get_child_data()
 
     def set_path(self, path: SDNodePath) -> None:
         self._path = path
@@ -262,7 +168,7 @@ class Container:
         return True
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
-        if not isinstance(other, Container):
+        if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         if not (self._attributes.is_equal(other._attributes) and
@@ -284,12 +190,12 @@ class Container:
             self._table.count_entries(),
         ] + [node.count_entries() for node in self._nodes.values()])
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> CDeltaResult:
-        if not isinstance(other, Container):
+    def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
+        if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_node = Container()
+        delta_node = StructuredDataNode()
 
         # Attributes
         delta_attributes_result = self._attributes.compare_with(other._attributes)
@@ -346,10 +252,10 @@ class Container:
                     other_node.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
                 )
 
-        return CDeltaResult(counter=counter, delta=delta_node)
+        return SDDeltaResult(counter=counter, delta=delta_node)
 
-    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "Container":
-        delta_node = Container()
+    def encode_for_delta_tree(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
+        delta_node = StructuredDataNode()
 
         delta_node.add_attributes(self._attributes.encode_for_delta_tree(encode_as)._attributes)
         delta_node.add_table(self._table.encode_for_delta_tree(encode_as)._numeration)
@@ -360,11 +266,11 @@ class Container:
 
     # Deserializing
 
-    def _create_hierarchy_from_data(self, raw_tree: SDRawTree) -> None:
+    def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataNode":
         raw_attributes: SDAttributes = {}
         for key, value in raw_tree.items():
             if isinstance(value, dict):
-                self.setdefault_node([key])._create_hierarchy_from_data(value)
+                self.setdefault_node([key]).create_tree_from_raw_tree(value)
                 continue
 
             if isinstance(value, list):
@@ -376,6 +282,7 @@ class Container:
 
             raw_attributes.setdefault(key, value)
         self.add_attributes(raw_attributes)
+        return self
 
     def _is_numeration(self, entries: List) -> bool:
         for entry in entries:
@@ -453,7 +360,7 @@ class Container:
         return False
 
     def merge_with(self, other: object) -> None:
-        if not isinstance(other, Container):
+        if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         self._attributes.merge_with(other._attributes)
@@ -467,8 +374,8 @@ class Container:
         for key in compared_keys.only_old:
             self.add_node(key, other._nodes[key])
 
-    def copy(self) -> "Container":
-        new_node = Container()
+    def copy(self) -> "StructuredDataNode":
+        new_node = StructuredDataNode()
 
         new_node.add_attributes(self._attributes._attributes)
         new_node.add_table(self._table._numeration)
@@ -479,16 +386,16 @@ class Container:
 
     #   ---container methods----------------------------------------------------
 
-    def setdefault_node(self, path: SDPath) -> "Container":
+    def setdefault_node(self, path: SDPath) -> "StructuredDataNode":
         if not path:
             return self
         edge = path[0]
-        node = self._nodes.setdefault(edge, Container())
+        node = self._nodes.setdefault(edge, StructuredDataNode())
         node.set_path(self._path + (edge,))
         return node.setdefault_node(path[1:])
 
-    def add_node(self, edge: SDNodeName, node: "Container") -> "Container":
-        the_node = self._nodes.setdefault(edge, Container())
+    def add_node(self, edge: SDNodeName, node: "StructuredDataNode") -> "StructuredDataNode":
+        the_node = self._nodes.setdefault(edge, StructuredDataNode())
         the_node.set_path(self._path + (edge,))
         the_node.merge_with(node)
         return the_node
@@ -507,8 +414,14 @@ class Container:
     def has_edge(self, edge: SDNodeName) -> bool:
         return bool(self._nodes.get(edge))
 
-    def get_filtered_node(self, allowed_paths: AllowedPaths) -> "Container":
-        filtered = Container()
+    def get_filtered_node(
+        self,
+        allowed_paths: Optional[AllowedPaths],
+    ) -> "StructuredDataNode":
+        if allowed_paths is None:
+            return self
+
+        filtered = StructuredDataNode()
         for path, keys in allowed_paths:
             # First check if node exists
             node = self._get_node(path)
@@ -525,7 +438,7 @@ class Container:
 
     #   ---getting [sub] nodes/node attributes----------------------------------
 
-    def get_sub_container(self, path: SDPath) -> Optional["Container"]:
+    def get_sub_container(self, path: SDPath) -> Optional["StructuredDataNode"]:
         return self._get_node(path)
 
     def get_sub_numeration(self, path: SDPath) -> Optional["Numeration"]:
@@ -536,7 +449,7 @@ class Container:
         node = self._get_node(path)
         return None if node is None else node._attributes
 
-    def _get_node(self, path: SDPath) -> Optional["Container"]:
+    def _get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
         if not path:
             return self
         node = self._nodes.get(path[0])

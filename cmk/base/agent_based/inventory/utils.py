@@ -6,9 +6,9 @@
 
 from typing import NamedTuple
 
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataNode
 
 
 class InventoryTrees(NamedTuple):
-    inventory: StructuredDataTree
-    status_data: StructuredDataTree
+    inventory: StructuredDataNode
+    status_data: StructuredDataNode

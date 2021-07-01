@@ -7,7 +7,7 @@
 from typing import Optional, Iterable, Union, Tuple, Sequence, Hashable, Dict, Literal
 
 import cmk.utils.debug
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
@@ -22,8 +22,8 @@ from .utils import InventoryTrees
 class TreeAggregator:
     def __init__(self):
         self.trees = InventoryTrees(
-            inventory=StructuredDataTree(),
-            status_data=StructuredDataTree(),
+            inventory=StructuredDataNode(),
+            status_data=StructuredDataNode(),
         )
         self._index_cache = {}
         self._class_mutex = {}

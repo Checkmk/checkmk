@@ -15,20 +15,12 @@ from testlib import cmk_path
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import (
-    StructuredDataTree,
-    Container,
+    StructuredDataNode,
     Attributes,
     Numeration,
     load_tree_from,
     save_tree_to,
 )
-
-# Convention: test functions are named like
-#   test_structured_data_INFIX_METHODNAME where
-#   INFIX in [NodeAttribute, StructuredDataTree,]
-
-# TODO functions to test
-# egrep "    def\s*[^_]|\s*class" lib/structured_data.py | grep -v "__init__" > ~/playground/inventory/functions_to_test
 
 #   .--NodeAttribute-------------------------------------------------------.
 #   |  _   _           _         _   _   _        _ _           _          |
@@ -41,7 +33,7 @@ from cmk.utils.structured_data import (
 
 
 def mk_root():
-    root = Container()
+    root = StructuredDataNode()
     container_0 = root.setdefault_node(["0_cna"])
     container_0.setdefault_node(["1_cn"])
     container_0.setdefault_node(["1_ca"])
@@ -49,7 +41,7 @@ def mk_root():
 
 
 def mk_filled_root():
-    root = Container()
+    root = StructuredDataNode()
     container_1 = root.setdefault_node(["0_cna", "1_cn"])
     container_2 = root.setdefault_node(["0_cna", "1_ca"])
     container_3 = root.setdefault_node(["0_cna", "1_na"])
@@ -345,60 +337,60 @@ new_trees = [
 ]
 
 
-def test_structured_data_StructuredDataTree_get_dict():
+def test_structured_data_StructuredDataNode_get_dict():
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict("")
+        StructuredDataNode().get_dict("")
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict(0)  # type: ignore[arg-type]
+        StructuredDataNode().get_dict(0)  # type: ignore[arg-type]
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict(100)  # type: ignore[arg-type]
+        StructuredDataNode().get_dict(100)  # type: ignore[arg-type]
     assert 'Wrong tree path format' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict("a?")
+        StructuredDataNode().get_dict("a?")
     assert 'No valid tree path' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_dict("a$.")
+        StructuredDataNode().get_dict("a$.")
     assert 'Specified tree path contains unexpected characters' in "%s" % e
 
-    assert StructuredDataTree().get_dict("a.") == {}
+    assert StructuredDataNode().get_dict("a.") == {}
 
 
-def test_structured_data_StructuredDataTree_get_list():
+def test_structured_data_StructuredDataNode_get_list():
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list("")
+        StructuredDataNode().get_list("")
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list(0)  # type: ignore[arg-type]
+        StructuredDataNode().get_list(0)  # type: ignore[arg-type]
     assert 'Empty tree path or zero' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list(100)  # type: ignore[arg-type]
+        StructuredDataNode().get_list(100)  # type: ignore[arg-type]
     assert 'Wrong tree path format' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list("a?")
+        StructuredDataNode().get_list("a?")
     assert 'No valid tree path' in "%s" % e
 
     with pytest.raises(MKGeneralException) as e:
-        StructuredDataTree().get_list("a$.")
+        StructuredDataNode().get_list("a$.")
     assert 'Specified tree path contains unexpected characters' in "%s" % e
 
-    assert StructuredDataTree().get_list("a:") == []
+    assert StructuredDataNode().get_list("a:") == []
 
 
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
-def test_structured_data_StructuredDataTree_load_tree_from(tree_name):
+def test_structured_data_StructuredDataNode_load_tree_from(tree_name):
     load_tree_from(tree_name)
 
 
-def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
+def test_structured_data_StructuredDataNode_save_gzip(tmp_path):
     filename = "heute"
     target = Path(tmp_path).joinpath(filename)
     raw_tree = {
@@ -407,7 +399,7 @@ def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
             "bär": 2,
         },
     }
-    tree = StructuredDataTree().create_tree_from_raw_tree(raw_tree)
+    tree = StructuredDataNode().create_tree_from_raw_tree(raw_tree)
 
     save_tree_to(tree, tmp_path, filename)
 
@@ -457,25 +449,25 @@ trees_new = [
 trees = trees_old + trees_new
 
 
-def test_structured_data_StructuredDataTree_is_empty():
-    assert StructuredDataTree().is_empty() is True
+def test_structured_data_StructuredDataNode_is_empty():
+    assert StructuredDataNode().is_empty() is True
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_is_empty_trees(tree):
+def test_structured_data_StructuredDataNode_is_empty_trees(tree):
     assert not tree.is_empty()
 
 
 @pytest.mark.parametrize("tree_x", trees)
 @pytest.mark.parametrize("tree_y", trees)
-def test_structured_data_StructuredDataTree_is_equal(tree_x, tree_y):
+def test_structured_data_StructuredDataNode_is_equal(tree_x, tree_y):
     if id(tree_x) == id(tree_y):
         assert tree_x.is_equal(tree_y)
     else:
         assert not tree_x.is_equal(tree_y)
 
 
-def test_structured_data_StructuredDataTree_equal_numerations():
+def test_structured_data_StructuredDataNode_equal_numerations():
     tree_addresses_ordered = load_tree_from("%s/tree_addresses_ordered" % TEST_DIR)
     tree_addresses_unordered = load_tree_from("%s/tree_addresses_unordered" % TEST_DIR)
     assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
@@ -507,12 +499,12 @@ def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmp_pat
                              2,
                              16653,
                          ])))
-def test_structured_data_StructuredDataTree_count_entries(tree, result):
+def test_structured_data_StructuredDataNode_count_entries(tree, result):
     assert tree.count_entries() == result
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_compare_with_self(tree):
+def test_structured_data_StructuredDataNode_compare_with_self(tree):
     delta_result = tree.compare_with(tree)
     assert (delta_result.counter['new'], delta_result.counter['changed'],
             delta_result.counter['removed']) == (0, 0, 0)
@@ -528,7 +520,7 @@ def test_structured_data_StructuredDataTree_compare_with_self(tree):
                                  (1, 1, 1),
                                  (1, 1, 2),
                              ])))
-def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, result):
+def test_structured_data_StructuredDataNode_compare_with(tree_old, tree_new, result):
     delta_result = tree_new.compare_with(tree_old)
     assert (delta_result.counter['new'], delta_result.counter['changed'],
             delta_result.counter['removed']) == result
@@ -557,7 +549,7 @@ def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, res
                                      "foobar",
                                  ],
                              ])))
-def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
+def test_structured_data_StructuredDataNode_has_edge(tree, edges_t, edges_f):
     for edge_t in edges_t:
         assert tree.has_edge(edge_t)
     for edge_f in edges_f:
@@ -568,13 +560,13 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
     trees_old,
     [2, 1, 1, 3, 1, 3],
 )))
-def test_structured_data_StructuredDataTree_get_children(tree, len_children):
-    tree_children = tree._root._nodes
+def test_structured_data_StructuredDataNode_get_children(tree, len_children):
+    tree_children = tree._nodes
     assert len(tree_children) == len_children
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_copy(tree):
+def test_structured_data_StructuredDataNode_copy(tree):
     copied = tree.copy()
     assert id(tree) != id(copied)
     assert tree.is_equal(copied)
@@ -605,7 +597,7 @@ def test_structured_data_StructuredDataTree_copy(tree):
         ])
     ]),
 ])
-def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_start, tree_edges):
+def test_structured_data_StructuredDataNode_merge_with_get_sub_children(tree_start, tree_edges):
     tree_start = tree_start.copy()
     for tree, edges, sub_children in tree_edges:
         tree_start.merge_with(tree)
@@ -626,16 +618,11 @@ TREE_STATUS = load_tree_from("%s/tree_status" % TEST_DIR)
 @pytest.mark.parametrize("tree_inv,tree_status", [
     (TREE_INV, TREE_STATUS),
 ])
-def test_structured_data_StructuredDataTree_merge_with_numeration(tree_inv, tree_status):
+def test_structured_data_StructuredDataNode_merge_with_numeration(tree_inv, tree_status):
     tree_inv.merge_with(tree_status)
     assert 'foobar' in tree_inv.get_raw_tree()
     num = tree_inv.get_sub_numeration(['foobar'])
     assert len(num.get_child_data()) == 5
-
-
-@pytest.mark.parametrize("tree", trees)
-def test_structured_data_StructuredDataTree_get_root_container(tree):
-    assert id(tree.get_root_container()) == id(tree._root)
 
 
 @pytest.mark.parametrize(
@@ -648,8 +635,8 @@ def test_structured_data_StructuredDataTree_get_root_container(tree):
              (["software", "os"], None)],
             [["hardware", "system"], ["software", "applications"]]),
     ])
-def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
-    filtered = tree.get_filtered_tree(paths)
+def test_structured_data_StructuredDataNode_filtered_tree(tree, paths, unavail):
+    filtered = tree.get_filtered_node(paths)
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
@@ -670,10 +657,10 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
     (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
                           ], 652),
 ])
-def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths,
+def test_structured_data_StructuredDataNode_filtered_tree_networking(tree, paths,
                                                                      amount_if_entries):
     the_paths = list(paths)
-    filtered = tree.get_filtered_tree(paths)
+    filtered = tree.get_filtered_node(paths)
     assert the_paths == paths
     assert filtered.has_edge('networking')
     assert not filtered.has_edge('hardware')
@@ -685,7 +672,7 @@ def test_structured_data_StructuredDataTree_filtered_tree_networking(tree, paths
         assert interfaces.count_entries() == amount_if_entries
 
 
-def test_structured_data_StructuredDataTree_building_tree():
+def test_structured_data_StructuredDataNode_building_tree():
     def plugin_dict():
         node = struct_tree.get_dict("level0_0.level1_dict.")
         for a, b in [("d1", "D1"), ("d2", "D2")]:
@@ -704,11 +691,11 @@ def test_structured_data_StructuredDataTree_building_tree():
                 array["foo"].append({a: "%s-%s" % (b, index)})
             node.append(array)
 
-    struct_tree = StructuredDataTree()
+    struct_tree = StructuredDataNode()
     plugin_dict()
     plugin_list()
     plugin_nested_list()
-    struct_tree._root.normalize_nodes()
+    struct_tree.normalize_nodes()
 
     assert struct_tree.has_edge("level0_0")
     assert struct_tree.has_edge("level0_1")
@@ -732,14 +719,14 @@ def test_structured_data_StructuredDataTree_building_tree():
     assert level1_nested_list_num is not None and level1_nested_list_num.is_empty()
     assert level1_nested_list_att is not None and level1_nested_list_att.is_empty()
 
-    assert isinstance(level1_nested_list_con, Container)
+    assert isinstance(level1_nested_list_con, StructuredDataNode)
     assert list(level1_nested_list_con._nodes) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))
 def test_delta_structured_data_tree_serialization(zipped_trees):
-    old_tree = StructuredDataTree()
-    new_tree = StructuredDataTree()
+    old_tree = StructuredDataNode()
+    new_tree = StructuredDataNode()
 
     old_filename, new_filename = zipped_trees
 
@@ -747,7 +734,9 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
     new_tree = load_tree_from(new_filename)
     delta_result = old_tree.compare_with(new_tree)
 
-    new_delta_tree = StructuredDataTree()
-    new_delta_tree.create_tree_from_raw_tree(delta_result.delta.get_raw_tree())
+    new_delta_tree = StructuredDataNode()
+    raw_delta_tree = delta_result.delta.get_raw_tree()
+    assert isinstance(raw_delta_tree, dict)
+    new_delta_tree.create_tree_from_raw_tree(raw_delta_tree)
 
     assert delta_result.delta.is_equal(new_delta_tree)

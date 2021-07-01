@@ -23,7 +23,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.config as config
@@ -261,11 +261,7 @@ def _has_inventory_tree(linking_view, rows, view, context_vars, invpath, is_hist
 
 def _has_children(struct_tree, invpath):
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
-    if parsed_path:
-        node = struct_tree.get_sub_container(parsed_path)
-    else:
-        node = struct_tree.get_root_container()
-
+    node = struct_tree.get_sub_container(parsed_path) if parsed_path else struct_tree
     if node is None or node.is_empty():
         return False
     return True
@@ -2276,7 +2272,7 @@ def _add_inventory_data(rows: Rows) -> None:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
-            row["host_inventory"] = StructuredDataTree()
+            row["host_inventory"] = StructuredDataNode()
             corrupted_inventory_files.append(
                 str(inventory.get_short_inventory_filepath(row["host_name"])))
 

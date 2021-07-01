@@ -12,7 +12,7 @@ import cmk.utils.version as cmk_version
 from cmk.gui.globals import request
 from cmk.gui.utils.html import HTML
 
-from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataNode
 from cmk.gui import sites
 from cmk.gui.views import View, painters_of_datasource
 from cmk.gui.type_defs import PainterSpec
@@ -823,7 +823,7 @@ def _service_row():
         'host_in_check_period': 1,
         'host_in_notification_period': 1,
         'host_in_service_period': 1,
-        'host_inventory': StructuredDataTree().create_tree_from_raw_tree({
+        'host_inventory': StructuredDataNode().create_tree_from_raw_tree({
             'hardware': {
                 'memory': {
                     'total_ram_usable': 33283784704,

@@ -18,7 +18,7 @@ from livestatus import SiteId, LivestatusResponse, OnlySites
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
+from cmk.utils.structured_data import StructuredDataNode, Numeration, Attributes
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -95,7 +95,7 @@ def paint_host_inventory_tree(row: Row,
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
-    assert isinstance(struct_tree, StructuredDataTree)
+    assert isinstance(struct_tree, StructuredDataNode)
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
@@ -127,15 +127,11 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
 
 
 def _paint_host_inventory_tree_children(
-    struct_tree: StructuredDataTree,
+    struct_tree: StructuredDataNode,
     parsed_path: InventoryPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
-    if parsed_path:
-        node = struct_tree.get_sub_container(parsed_path)
-    else:
-        node = struct_tree.get_root_container()
-
+    node = struct_tree.get_sub_container(parsed_path) if parsed_path else struct_tree
     if node is None:
         return "", ""
 
@@ -146,7 +142,7 @@ def _paint_host_inventory_tree_children(
 
 
 def _paint_host_inventory_tree_value(
-    struct_tree: StructuredDataTree,
+    struct_tree: StructuredDataNode,
     parsed_path: InventoryPath,
     tree_renderer: NodeRenderer,
     invpath: RawInventoryPath,
@@ -289,7 +285,7 @@ def _declare_inv_column(
                 ))
 
 
-def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
+def _cmp_inventory_node(a: Dict[str, StructuredDataNode], b: Dict[str, StructuredDataNode],
                         invpath: str) -> int:
     # TODO merge with _decorate_sort_func
     # Returns
@@ -1775,7 +1771,7 @@ class NodeRenderer:
 
     #   ---container------------------------------------------------------------
 
-    def show_container(self, container: Container) -> None:
+    def show_container(self, container: StructuredDataNode) -> None:
         invpath = ".%s." % self._get_raw_path(list(container.path))
 
         edge = container.path[-1] if container.path else ""
@@ -2062,11 +2058,7 @@ def ajax_inv_render_tree() -> None:
         return
 
     parsed_path, _attribute_keys = inventory.parse_tree_path(invpath or "")
-    if parsed_path:
-        node = struct_tree.get_sub_container(parsed_path)
-    else:
-        node = struct_tree.get_root_container()
-
+    node = struct_tree.get_sub_container(parsed_path) if parsed_path else struct_tree
     if node is None:
         html.show_error(
             _("Invalid path in inventory tree: '%s' >> %s") % (invpath, repr(parsed_path)))

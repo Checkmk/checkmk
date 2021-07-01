@@ -18,7 +18,7 @@ import dicttoxml  # type: ignore[import]
 import livestatus
 
 import cmk.utils.paths
-from cmk.utils.structured_data import StructuredDataTree, load_tree_from
+from cmk.utils.structured_data import StructuredDataNode, load_tree_from
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -50,10 +50,10 @@ InventoryPath = List[Union[str, int]]
 AttributesKeys = List[str]
 # TODO: Can we be more specific on the return value type?
 InventoryData = Any
-InventoryDeltaData = Tuple[int, int, int, StructuredDataTree]
+InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
 
 
-def get_inventory_data(inventory_tree: StructuredDataTree,
+def get_inventory_data(inventory_tree: StructuredDataNode,
                        tree_path: RawInventoryPath) -> InventoryData:
     invdata = None
     parsed_path, attribute_keys = parse_tree_path(tree_path)
@@ -112,12 +112,12 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
     return parsed_path, attribute_keys
 
 
-def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
+def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
     """Loads the host inventory tree from the current file and returns the filtered tree"""
     return _filter_tree(_load_structured_data_tree("inventory", hostname))
 
 
-def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataTree]:
+def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     hostname = row.get("host_name")
@@ -148,7 +148,7 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
 
 
 def load_delta_tree(hostname: HostName,
-                    timestamp: int) -> Tuple[Optional[StructuredDataTree], List[str]]:
+                    timestamp: int) -> Tuple[Optional[StructuredDataNode], List[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
@@ -193,9 +193,9 @@ def get_history_deltas(
 
     tree_lookup: Dict[str, Any] = {}
 
-    def get_tree(timestamp: Optional[str]) -> StructuredDataTree:
+    def get_tree(timestamp: Optional[str]) -> StructuredDataNode:
         if timestamp is None:
-            return StructuredDataTree()
+            return StructuredDataNode()
 
         if timestamp in tree_lookup:
             return tree_lookup[timestamp]
@@ -224,7 +224,7 @@ def get_history_deltas(
 
         if cached_data:
             new, changed, removed, delta_tree_data = cached_data
-            delta_tree = StructuredDataTree()
+            delta_tree = StructuredDataNode()
             delta_tree.create_tree_from_raw_tree(delta_tree_data)
             delta_history.append((timestamp, (new, changed, removed, delta_tree)))
             previous_timestamp = timestamp
@@ -316,7 +316,7 @@ class LoadStructuredDataError(MKException):
 
 
 def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
-                               hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
+                               hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
     """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
         return None
@@ -340,9 +340,9 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
     return inventory_tree
 
 
-def _create_tree_from_raw_tree(raw_tree: Optional[bytes]) -> Optional[StructuredDataTree]:
+def _create_tree_from_raw_tree(raw_tree: Optional[bytes]) -> Optional[StructuredDataNode]:
     if raw_tree:
-        return StructuredDataTree().create_tree_from_raw_tree(
+        return StructuredDataNode().create_tree_from_raw_tree(
             ast.literal_eval(raw_tree.decode("utf-8")))
     return None
 
@@ -352,17 +352,17 @@ def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
         return
 
     if inventory_tree is None:
-        inventory_tree = StructuredDataTree()
+        inventory_tree = StructuredDataNode()
 
     if status_data_tree is not None:
         inventory_tree.merge_with(status_data_tree)
     return inventory_tree
 
 
-def _filter_tree(struct_tree: Optional[StructuredDataTree]) -> Optional[StructuredDataTree]:
+def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[StructuredDataNode]:
     if struct_tree is None:
         return None
-    return struct_tree.get_filtered_tree(_get_permitted_inventory_paths())
+    return struct_tree.get_filtered_node(_get_permitted_inventory_paths())
 
 
 def _get_permitted_inventory_paths():
@@ -484,7 +484,7 @@ def inventory_of_host(host_name: HostName, api_request):
         parsed_paths = []
         for path in api_request["paths"]:
             parsed_paths.append(parse_tree_path(path))
-        merged_tree = merged_tree.get_filtered_tree(parsed_paths)
+        merged_tree = merged_tree.get_filtered_node(parsed_paths)
 
     assert merged_tree is not None
     return merged_tree.get_raw_tree()

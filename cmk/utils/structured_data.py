@@ -534,7 +534,7 @@ class Table:
                 {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
             ])
 
-        counter.update(new=len(new_rows), removed=len(removed_rows))
+        counter.update(new=sum(map(len, new_rows)), removed=sum(map(len, removed_rows)))
         return NDeltaResult(counter=counter, delta=delta_table)
 
     def _get_categorized_rows(self, other: "Table") -> Tuple[SDTable, SDTable, SDTable]:

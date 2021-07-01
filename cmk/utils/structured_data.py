@@ -137,17 +137,6 @@ class StructuredDataNode:
         self.table = Table()
         self._nodes: SDNodes = {}
 
-    def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
-
-    #   ---building tree from plugins-------------------------------------------
-
-    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
-        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.data
-
-    def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self.setdefault_node(_parse_tree_path(tree_path)).table.data
-
     def set_path(self, path: SDNodePath) -> None:
         self.path = path
         self.attributes.set_path(path)
@@ -183,6 +172,181 @@ class StructuredDataNode:
             self.attributes.count_entries(),
             self.table.count_entries(),
         ] + [node.count_entries() for node in self._nodes.values()])
+
+    def merge_with(self, other: object) -> None:
+        if not isinstance(other, StructuredDataNode):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+
+        self.attributes.merge_with(other.attributes)
+        self.table.merge_with(other.table)
+
+        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
+
+        for key in compared_keys.both:
+            self._nodes[key].merge_with(other._nodes[key])
+
+        for key in compared_keys.only_old:
+            self.add_node(key, other._nodes[key])
+
+    def copy(self) -> "StructuredDataNode":
+        new_node = StructuredDataNode()
+
+        new_node.add_attributes(self.attributes.data)
+        new_node.add_table(self.table.data)
+
+        for edge, node in self._nodes.items():
+            new_node.add_node(edge, node.copy())
+        return new_node
+
+    #   ---node methods---------------------------------------------------------
+
+    def setdefault_node(self, path: SDPath) -> "StructuredDataNode":
+        if not path:
+            return self
+        edge = path[0]
+        node = self._nodes.setdefault(edge, StructuredDataNode())
+        node.set_path(self.path + (edge,))
+        return node.setdefault_node(path[1:])
+
+    def add_node(self, edge: SDNodeName, node: "StructuredDataNode") -> "StructuredDataNode":
+        the_node = self._nodes.setdefault(edge, StructuredDataNode())
+        the_node.set_path(self.path + (edge,))
+        the_node.merge_with(node)
+        return the_node
+
+    def add_attributes(self, attributes: SDAttributes) -> None:
+        self.attributes.add_attributes(attributes)
+
+    def add_table(self, table: SDTable) -> None:
+        self.table.add_table(table)
+
+    def has_edge(self, edge: SDNodeName) -> bool:
+        return bool(self._nodes.get(edge))
+
+    def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
+        return self._get_node(path)
+
+    def get_table(self, path: SDPath) -> Optional["Table"]:
+        node = self._get_node(path)
+        return None if node is None else node.table
+
+    def get_attributes(self, path: SDPath) -> Optional["Attributes"]:
+        node = self._get_node(path)
+        return None if node is None else node.attributes
+
+    def _get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
+        if not path:
+            return self
+        node = self._nodes.get(path[0])
+        return None if node is None else node._get_node(path[1:])
+
+    #   ---representation-------------------------------------------------------
+
+    def __repr__(self) -> str:
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
+
+    #   ---building tree from (legacy) plugins----------------------------------
+
+    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
+        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.data
+
+    def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
+        return self.setdefault_node(_parse_tree_path(tree_path)).table.data
+
+    #   ---de/serializing-------------------------------------------------------
+
+    def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataNode":
+        raw_attributes: SDAttributes = {}
+        for key, value in raw_tree.items():
+            if isinstance(value, dict):
+                self.setdefault_node([key]).create_tree_from_raw_tree(value)
+                continue
+
+            if isinstance(value, list):
+                if self._is_table(value):
+                    self.setdefault_node([key]).add_table(value)
+                else:
+                    self._add_indexed_nodes(key, value)
+                continue
+
+            raw_attributes.setdefault(key, value)
+        self.add_attributes(raw_attributes)
+        return self
+
+    def _is_table(self, entries: List) -> bool:
+        for entry in entries:
+            # Skipping invalid entries such as
+            # {u'KEY': [LIST OF STRINGS], ...}
+            try:
+                for v in entry.values():
+                    if isinstance(v, list):
+                        return False
+            except AttributeError:
+                return False
+        return True
+
+    def _add_indexed_nodes(self, key, value):
+        for idx, entry in enumerate(value):
+            idx_attributes: SDAttributes = {}
+            node = self.setdefault_node([key, idx])
+            for idx_key, idx_entry in entry.items():
+                if isinstance(idx_entry, list):
+                    node.setdefault_node([idx_key]).add_table(idx_entry)
+                else:
+                    idx_attributes.setdefault(idx_key, idx_entry)
+            node.add_attributes(idx_attributes)
+
+    def get_raw_tree(self) -> Union[Dict, List]:
+        if self._has_indexed_nodes():
+            return [self._nodes[k].get_raw_tree() for k in sorted(self._nodes)]
+
+        if not self.table.is_empty():
+            return self.table.get_raw_tree()
+
+        tree: Dict = {}
+        tree.update(self.attributes.get_raw_tree())
+
+        for edge, node in self._nodes.items():
+            node_raw_tree = node.get_raw_tree()
+            if isinstance(node_raw_tree, list):
+                tree.setdefault(edge, node_raw_tree)
+                continue
+
+            tree.setdefault(edge, {}).update(node_raw_tree)
+        return tree
+
+    def _has_indexed_nodes(self) -> bool:
+        for key in self._nodes:
+            if isinstance(key, int):
+                return True
+        return False
+
+    def normalize_nodes(self):
+        """
+        After the execution of plugins there may remain empty
+        nodes which will be removed within this method.
+        Moreover we have to deal with nested tables, eg.
+        at paths like "hardware.memory.arrays:*.devices:" where
+        we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
+        In this case we have to convert this
+        'list-composed-of-dicts-containing-lists' structure into
+        numerated nodes ('arrays') containing real tables ('devices').
+        """
+        remove_table = False
+        for idx, entry in enumerate(self.table.data):
+            for k, v in entry.items():
+                if isinstance(v, list):
+                    self.setdefault_node([idx, k]).add_table(v)
+                    remove_table = True
+
+        if remove_table:
+            self.table = Table()
+            self.table.set_path(self.path)
+
+        for node in self._nodes.values():
+            node.normalize_nodes()
+
+    #   ---delta----------------------------------------------------------------
 
     def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
         if not isinstance(other, StructuredDataNode):
@@ -258,150 +422,7 @@ class StructuredDataNode:
             delta_node.add_node(edge, node.encode_for_delta_tree(encode_as))
         return delta_node
 
-    # Deserializing
-
-    def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataNode":
-        raw_attributes: SDAttributes = {}
-        for key, value in raw_tree.items():
-            if isinstance(value, dict):
-                self.setdefault_node([key]).create_tree_from_raw_tree(value)
-                continue
-
-            if isinstance(value, list):
-                if self._is_table(value):
-                    self.setdefault_node([key]).add_table(value)
-                else:
-                    self._add_indexed_nodes(key, value)
-                continue
-
-            raw_attributes.setdefault(key, value)
-        self.add_attributes(raw_attributes)
-        return self
-
-    def _is_table(self, entries: List) -> bool:
-        for entry in entries:
-            # Skipping invalid entries such as
-            # {u'KEY': [LIST OF STRINGS], ...}
-            try:
-                for v in entry.values():
-                    if isinstance(v, list):
-                        return False
-            except AttributeError:
-                return False
-        return True
-
-    def _add_indexed_nodes(self, key, value):
-        for idx, entry in enumerate(value):
-            idx_attributes: SDAttributes = {}
-            node = self.setdefault_node([key, idx])
-            for idx_key, idx_entry in entry.items():
-                if isinstance(idx_entry, list):
-                    node.setdefault_node([idx_key]).add_table(idx_entry)
-                else:
-                    idx_attributes.setdefault(idx_key, idx_entry)
-            node.add_attributes(idx_attributes)
-
-    def normalize_nodes(self):
-        """
-        After the execution of plugins there may remain empty
-        nodes which will be removed within this method.
-        Moreover we have to deal with nested tables, eg.
-        at paths like "hardware.memory.arrays:*.devices:" where
-        we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
-        In this case we have to convert this
-        'list-composed-of-dicts-containing-lists' structure into
-        numerated nodes ('arrays') containing real tables ('devices').
-        """
-        remove_table = False
-        for idx, entry in enumerate(self.table.data):
-            for k, v in entry.items():
-                if isinstance(v, list):
-                    self.setdefault_node([idx, k]).add_table(v)
-                    remove_table = True
-
-        if remove_table:
-            self.table = Table()
-            self.table.set_path(self.path)
-
-        for node in self._nodes.values():
-            node.normalize_nodes()
-
-    # Serializing
-
-    def get_raw_tree(self) -> Union[Dict, List]:
-        if self._has_indexed_nodes():
-            return [self._nodes[k].get_raw_tree() for k in sorted(self._nodes)]
-
-        if not self.table.is_empty():
-            return self.table.get_raw_tree()
-
-        tree: Dict = {}
-        tree.update(self.attributes.get_raw_tree())
-
-        for edge, node in self._nodes.items():
-            node_raw_tree = node.get_raw_tree()
-            if isinstance(node_raw_tree, list):
-                tree.setdefault(edge, node_raw_tree)
-                continue
-
-            tree.setdefault(edge, {}).update(node_raw_tree)
-        return tree
-
-    def _has_indexed_nodes(self) -> bool:
-        for key in self._nodes:
-            if isinstance(key, int):
-                return True
-        return False
-
-    def merge_with(self, other: object) -> None:
-        if not isinstance(other, StructuredDataNode):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
-
-        self.attributes.merge_with(other.attributes)
-        self.table.merge_with(other.table)
-
-        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
-
-        for key in compared_keys.both:
-            self._nodes[key].merge_with(other._nodes[key])
-
-        for key in compared_keys.only_old:
-            self.add_node(key, other._nodes[key])
-
-    def copy(self) -> "StructuredDataNode":
-        new_node = StructuredDataNode()
-
-        new_node.add_attributes(self.attributes.data)
-        new_node.add_table(self.table.data)
-
-        for edge, node in self._nodes.items():
-            new_node.add_node(edge, node.copy())
-        return new_node
-
-    #   ---container methods----------------------------------------------------
-
-    def setdefault_node(self, path: SDPath) -> "StructuredDataNode":
-        if not path:
-            return self
-        edge = path[0]
-        node = self._nodes.setdefault(edge, StructuredDataNode())
-        node.set_path(self.path + (edge,))
-        return node.setdefault_node(path[1:])
-
-    def add_node(self, edge: SDNodeName, node: "StructuredDataNode") -> "StructuredDataNode":
-        the_node = self._nodes.setdefault(edge, StructuredDataNode())
-        the_node.set_path(self.path + (edge,))
-        the_node.merge_with(node)
-        return the_node
-
-    def add_attributes(self, attributes: SDAttributes) -> None:
-        self.attributes.add_attributes(attributes)
-
-    def add_table(self, table: SDTable) -> None:
-        self.table.add_table(table)
-
-    def has_edge(self, edge: SDNodeName) -> bool:
-        return bool(self._nodes.get(edge))
+    #   ---filtering------------------------------------------------------------
 
     def get_filtered_node(
         self,
@@ -423,25 +444,6 @@ class StructuredDataNode:
             filtered_node.add_table(node.table.get_filtered_data(keys) if keys else node.table.data)
 
         return filtered
-
-    #   ---getting [sub] nodes/node attributes----------------------------------
-
-    def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
-        return self._get_node(path)
-
-    def get_table(self, path: SDPath) -> Optional["Table"]:
-        node = self._get_node(path)
-        return None if node is None else node.table
-
-    def get_attributes(self, path: SDPath) -> Optional["Attributes"]:
-        node = self._get_node(path)
-        return None if node is None else node.attributes
-
-    def _get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
-        if not path:
-            return self
-        node = self._nodes.get(path[0])
-        return None if node is None else node._get_node(path[1:])
 
     #   ---web------------------------------------------------------------------
 
@@ -493,6 +495,55 @@ class Table:
 
     def count_entries(self) -> int:
         return sum(map(len, self.data))
+
+    def merge_with(self, other: object) -> None:
+        if not isinstance(other, Table):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+
+        other_keys = other._get_table_keys()
+        my_keys = self._get_table_keys()
+        intersect_keys = my_keys.intersection(other_keys)
+
+        # In case there is no intersection, append all other rows without
+        # merging with own rows
+        if not intersect_keys:
+            self.add_table(other.data)
+            return
+
+        # Try to match rows of both trees based on the keys that are found in
+        # both. Matching rows are updated. Others are appended.
+        other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.data}
+
+        for entry in self.data:
+            key = self._prepare_key(entry, intersect_keys)
+            if key in other_num:
+                entry.update(other_num[key])
+                del other_num[key]
+
+        self.add_table(list(other_num.values()))
+
+    def _get_table_keys(self) -> Set[SDKey]:
+        return {key for row in self.data for key in row}
+
+    def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
+        return tuple(entry[key] for key in sorted(keys) if key in entry)
+
+    def copy(self) -> "Table":
+        new = Table()
+        new.add_table(self.data)
+        return new
+
+    #   ---table methods--------------------------------------------------------
+
+    def add_table(self, table: SDTable) -> None:
+        self.data.extend(table)
+
+    #   ---de/serializing-------------------------------------------------------
+
+    def get_raw_tree(self) -> SDTable:
+        return self.data
+
+    #   ---delta----------------------------------------------------------------
 
     def compare_with(self, other: object, keep_identical: bool = False) -> NDeltaResult:
         if not isinstance(other, Table):
@@ -583,50 +634,7 @@ class Table:
             delta_table.data.append({k: encode_as(v) for k, v in entry.items()})
         return delta_table
 
-    def get_raw_tree(self) -> SDTable:
-        return self.data
-
-    def merge_with(self, other: object) -> None:
-        if not isinstance(other, Table):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
-
-        other_keys = other._get_table_keys()
-        my_keys = self._get_table_keys()
-        intersect_keys = my_keys.intersection(other_keys)
-
-        # In case there is no intersection, append all other rows without
-        # merging with own rows
-        if not intersect_keys:
-            self.add_table(other.data)
-            return
-
-        # Try to match rows of both trees based on the keys that are found in
-        # both. Matching rows are updated. Others are appended.
-        other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.data}
-
-        for entry in self.data:
-            key = self._prepare_key(entry, intersect_keys)
-            if key in other_num:
-                entry.update(other_num[key])
-                del other_num[key]
-
-        self.add_table(list(other_num.values()))
-
-    def _get_table_keys(self) -> Set[SDKey]:
-        return {key for row in self.data for key in row}
-
-    def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
-        return tuple(entry[key] for key in sorted(keys) if key in entry)
-
-    def copy(self) -> "Table":
-        new = Table()
-        new.add_table(self.data)
-        return new
-
-    #   ---leaf methods---------------------------------------------------------
-
-    def add_table(self, table: SDTable) -> None:
-        self.data.extend(table)
+    #   ---filtering------------------------------------------------------------
 
     def get_filtered_data(self, keys: SDKeys) -> SDTable:
         return [
@@ -671,6 +679,29 @@ class Attributes:
     def count_entries(self) -> int:
         return len(self.data)
 
+    def merge_with(self, other: object) -> None:
+        if not isinstance(other, Attributes):
+            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+
+        self.data.update(other.data)
+
+    def copy(self) -> "Attributes":
+        new = Attributes()
+        new.data.update(self.data)
+        return new
+
+    #   ---attributes methods---------------------------------------------------
+
+    def add_attributes(self, attributes: SDAttributes) -> None:
+        self.data.update(attributes)
+
+    #   ---de/serializing-------------------------------------------------------
+
+    def get_raw_tree(self) -> SDAttributes:
+        return self.data
+
+    #   ---delta----------------------------------------------------------------
+
     def compare_with(self, other: object, keep_identical: bool = False) -> ADeltaResult:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
@@ -694,24 +725,7 @@ class Attributes:
         delta_attributes.add_attributes({k: encode_as(v) for k, v in self.data.items()})
         return delta_attributes
 
-    def get_raw_tree(self) -> SDAttributes:
-        return self.data
-
-    def merge_with(self, other: object) -> None:
-        if not isinstance(other, Attributes):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
-
-        self.add_attributes(other.data)
-
-    def copy(self) -> "Attributes":
-        new = Attributes()
-        new.add_attributes(self.data)
-        return new
-
-    #   ---leaf methods---------------------------------------------------------
-
-    def add_attributes(self, attributes: SDAttributes) -> None:
-        self.data.update(attributes)
+    #   ---filtering------------------------------------------------------------
 
     def get_filtered_data(self, keys: SDKeys) -> SDAttributes:
         return _get_filtered_dict(self.data, keys)

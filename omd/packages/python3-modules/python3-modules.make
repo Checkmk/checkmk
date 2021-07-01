@@ -92,7 +92,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-8.2.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-8.1.2.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy
@@ -103,7 +103,7 @@ PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 PYTHON3_MODULES_LIST += cachetools-4.1.1.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += google-auth-1.21.3.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += rsa-4.7.2.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 

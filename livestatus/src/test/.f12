@@ -5,8 +5,8 @@
 
 set -e
 
-CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 REPO_DIR=$(git rev-parse --show-toplevel)
+: "${IMAGE_NAME:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
 
 execute_test() {
     LANG=C make -C ../../.. config.status
@@ -22,7 +22,7 @@ if [ -z "$RUN_HERE" ]; then
         -v "$REPO_DIR:$REPO_DIR" \
         -e RUN_HERE="true" \
         -w "$PWD" \
-        "$CONTAINER" \
+        "${IMAGE_NAME}" \
         ./.f12
 else
     execute_test

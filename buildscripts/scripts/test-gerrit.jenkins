@@ -7,9 +7,6 @@ def NODE = ''
 
 withFolderProperties {
     NODE = env.BUILD_NODE
-    // There is no way to determine the Docker Tag by branch or build in Gerrit jobs
-    // Therefore the folder tag is selected directly
-    TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
 node (NODE) {
@@ -21,10 +18,6 @@ node (NODE) {
             checkout(scm)
             sh("rm -rf ${RESULTS}; mkdir ${RESULTS}")
             test_gerrit_helper = load 'buildscripts/scripts/lib/gerrit_stages.groovy'
-            str_mod = load 'buildscripts/scripts/lib/str_mod.groovy'
-            withFolderProperties {
-                TEST_CONTAINER = str_mod.strip_protocol_from_url(DOCKER_REGISTRY) + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
-            }
             withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
                 sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
             }
@@ -37,19 +30,17 @@ node (NODE) {
         test_gerrit_helper.desc_add_row('Stage', 'Status')
 
         /// Generate list of stages to be added - save them locally for reference
-        withEnv(["TEST_CONTAINER=${TEST_CONTAINER}"]) {
-          sh("""scripts/run-in-docker.sh \
-                  scripts/run-pipenv run \
-                    buildscripts/scripts/verify_changes \
-                    --log-level=DEBUG \
-                    --no-skip=False \
-                    --env "RESULTS=${RESULTS}" \
-                    --env "WORKSPACE=${WORKSPACE}" \
-                    --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
-                    --write-file=${RESULTS}/stages.json \
-                    buildscripts/scripts/stages.yml
-             """);
-        }
+        sh("""scripts/run-in-docker.sh \
+                scripts/run-pipenv run \
+                  buildscripts/scripts/verify_changes \
+                  --log-level=DEBUG \
+                  --no-skip=False \
+                  --env "RESULTS=${RESULTS}" \
+                  --env "WORKSPACE=${WORKSPACE}" \
+                  --env "PATCHSET_REVISION=${GERRIT_PATCHSET_REVISION}" \
+                  --write-file=${RESULTS}/stages.json \
+                  buildscripts/scripts/stages.yml
+           """);
         def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
 
         println(">>> stage configuration")

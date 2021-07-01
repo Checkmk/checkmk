@@ -1,0 +1,12 @@
+Title: Hitachi drive exception during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1625140389
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p7
+
+Fixed the exception: TypeError: unhashable type: 'list' during discovery and checking

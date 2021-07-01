@@ -13,13 +13,15 @@ import cmk.utils.plugin_registry
 
 
 class PermissionSection(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """The identity of a permission section.
         One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Display name representing the section"""
         raise NotImplementedError()

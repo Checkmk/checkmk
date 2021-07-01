@@ -24,11 +24,13 @@ class Schedule(metaclass=abc.ABCMeta):
     Subclasses have to define the class attribute _delta and the
     instance attribute _rule.
     """
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def rule(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def delta(self):
         pass
 

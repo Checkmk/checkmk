@@ -326,12 +326,14 @@ def _create_dict_key(value: Any) -> Hashable:
 
 
 class PainterOption(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a painter option. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
@@ -374,12 +376,14 @@ class PainterOptionNumColumns(PainterOption):
 
 
 class Layout(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a layout. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Short human readable title of the layout"""
         raise NotImplementedError()
@@ -390,7 +394,8 @@ class Layout(metaclass=abc.ABCMeta):
         """Render the given data in this layout"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def can_display_checkboxes(self) -> bool:
         """Whether this layout can display checkboxes for selecting rows"""
         raise NotImplementedError()
@@ -440,16 +445,19 @@ exporter_registry = ViewExporterRegistry()
 
 
 class CommandGroup(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a command group. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sort_index(self) -> int:
         raise NotImplementedError()
 
@@ -477,20 +485,24 @@ def register_command_group(ident: str, title: str, sort_index: int) -> None:
 
 
 class Command(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a command. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def permission(self) -> Permission:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tables(self) -> List[str]:
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
@@ -587,23 +599,27 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
 
 class ABCDataSource(metaclass=abc.ABCMeta):
     """Provider of rows for the views (basically tables of data) in the GUI"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a data source. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Used as display-string for the datasource in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def table(self) -> 'RowTable':
         """Returns a table object that can provide a list of rows for the provided
         query using the query() method."""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def infos(self) -> List[str]:
         """Infos that are available with this data sources
 
@@ -634,7 +650,8 @@ class ABCDataSource(metaclass=abc.ABCMeta):
         """additional livestatus headers to add to each call"""
         return ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def keys(self) -> List[ColumnName]:
         """columns which must be fetched in order to execute commands on
         the items (= in order to identify the items and gather all information
@@ -642,7 +659,8 @@ class ABCDataSource(metaclass=abc.ABCMeta):
         those columns are always fetched from the datasource for each item"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def id_keys(self) -> List[ColumnName]:
         """These are used to generate a key which is unique for each data row
         is used to identify an item between http requests"""
@@ -851,7 +869,8 @@ class Painter(metaclass=abc.ABCMeta):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a painter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
@@ -865,7 +884,8 @@ class Painter(metaclass=abc.ABCMeta):
         """Additional css classes used to render the title"""
         return []
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def columns(self) -> List[ColumnName]:
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
@@ -1001,17 +1021,20 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
 class Sorter(metaclass=abc.ABCMeta):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a sorter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Used as display string for the sorter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def columns(self) -> List[str]:
         """Livestatus columns needed for this sorter"""
         raise NotImplementedError()

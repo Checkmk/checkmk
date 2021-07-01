@@ -292,15 +292,18 @@ class DiagnosticsElementError(Exception):
 
 
 class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def description(self) -> str:
         raise NotImplementedError()
 
@@ -443,7 +446,8 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def __init__(self, rel_checkmk_files: List[str]) -> None:
         self.rel_checkmk_files = rel_checkmk_files
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 

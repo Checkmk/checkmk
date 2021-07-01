@@ -154,7 +154,8 @@ class SorterSitealias(Sorter):
 
 
 class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def object_type(self):
         raise NotImplementedError()
 
@@ -203,7 +204,8 @@ class SorterServiceTags(ABCTagSorter):
 
 
 class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def object_type(self):
         raise NotImplementedError()
 

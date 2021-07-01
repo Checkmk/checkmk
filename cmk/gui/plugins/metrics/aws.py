@@ -239,9 +239,9 @@ for i, inst_type in enumerate(AWSEC2InstTypes):
         'color': indexed_color(i, len(AWSEC2InstTypes)),
     }
 
-for inst_fam in AWSEC2InstFamilies:
+for inst_fam, inst_fam_title in AWSEC2InstFamilies.items():
     metric_info['aws_ec2_running_ondemand_instances_%s_vcpu' % inst_fam[0]] = {
-        'title': _('Total %s vCPUs') % AWSEC2InstFamilies[inst_fam],
+        'title': _('Total %s vCPUs') % inst_fam_title,
         'unit': 'count',
         'color': '25/a',
     }

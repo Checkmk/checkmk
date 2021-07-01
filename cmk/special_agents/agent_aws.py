@@ -390,7 +390,8 @@ class AWSSection(DataCache):
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results = {}
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self):
         pass
 

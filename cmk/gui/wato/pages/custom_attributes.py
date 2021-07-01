@@ -108,23 +108,28 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         else:
             self._attr = {}
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _type(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _topics(self) -> Choices:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _default_topic(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _macro_help(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _macro_label(self) -> str:
         raise NotImplementedError()
 
@@ -411,7 +416,8 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def _attrs(self):
         return self._all_attrs[self._type]
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _type(self):
         raise NotImplementedError()
 

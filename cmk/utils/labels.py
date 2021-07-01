@@ -106,7 +106,8 @@ class LabelManager:
 
 class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
     """Managing persistance of discovered labels"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def file_path(self) -> Path:
         raise NotImplementedError()
 

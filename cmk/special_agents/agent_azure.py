@@ -170,7 +170,8 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         self._headers = {}
         self._base_url = base_url
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def resource(self):
         pass
 
@@ -792,7 +793,7 @@ def write_group_info(mgmt_client, monitored_groups, monitored_resources):
 
 def write_exception_to_agent_info_section(exception, component):
     # those exeptions are quite noisy. try to make them more concise:
-    msg = str(exception).split('Trace ID')[0]
+    msg = str(exception).split('Trace ID', 1)[0]
     msg = msg.split(':', 2)[-1].strip(' ,')
 
     if "does not have authorization to perform action" in msg:

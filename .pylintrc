@@ -153,6 +153,15 @@ disable=
     #---------------------------------------------------------------------------
     # Emergency suppressions, must be removed SOON!
     consider-using-with,
+    #---------------------------------------------------------------------------
+    ## pylint 2.9.0 introduced these checker. Investigate.
+    consider-using-from-import,
+    consider-using-dict-items,
+    # pylint 2.9.0 introduced this checker which fails because of the
+    # definition in cmk/base/check_api.py. The test could not be disabled in
+    # the file for some reason and the code is OK. Last defense line: disable
+    # it globally.
+    invalid-all-format,
 
 enable=
     #---------------------------------------------------------------------------

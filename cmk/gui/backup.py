@@ -1335,7 +1335,8 @@ class SystemBackupTargetsReadOnly(Targets):
 
 
 class ABCBackupTargetType(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self):
         raise NotImplementedError()
 

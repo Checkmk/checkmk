@@ -1587,9 +1587,9 @@ def main(argv=None):
 
         return 0
 
-    except Exception as e:
+    except Exception as exc:
         # Shouldn't happen at all...
-        server.add_error_message("Agent Exception (contact developer): %s" % e)
+        server.add_error_message("Agent Exception (contact developer): %s" % exc)
         if args.debug:
             raise
         return 1

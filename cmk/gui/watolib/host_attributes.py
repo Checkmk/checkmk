@@ -30,17 +30,20 @@ from cmk.gui.type_defs import Choices
 
 
 class HostAttributeTopic(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """Unique internal ID of this attribute. Only ASCII characters allowed."""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Used as title for the attribute topics on the host edit page"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sort_index(self) -> int:
         """The topics are sorted by this number wherever displayed as a list"""
         raise NotImplementedError()
@@ -850,7 +853,8 @@ class ABCHostAttributeEnum(ABCHostAttribute):
     Enumlist is a list of pairs of keyword / title. The type of value is
     string.  In all cases where no value is defined or the value is not in the
     enumlist, the default value is being used."""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _enumlist(self):
         raise NotImplementedError()
 
@@ -865,11 +869,13 @@ class ABCHostAttributeEnum(ABCHostAttribute):
 
 
 class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def is_checkbox_tag(self) -> bool:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _tag_group(self):
         raise NotImplementedError()
 

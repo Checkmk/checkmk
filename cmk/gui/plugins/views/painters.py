@@ -1677,11 +1677,13 @@ class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
     def list_title(self, cell: Cell) -> str:
         return self._default_title
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _default_title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _object_type(self) -> str:
         raise NotImplementedError()
 
@@ -4871,7 +4873,8 @@ class PainterHostTags(Painter):
 
 
 class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def object_type(self):
         raise NotImplementedError()
 

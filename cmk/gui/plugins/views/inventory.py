@@ -928,7 +928,8 @@ class RowTableInventory(ABCRowTable):
 
 
 class ABCDataSourceInventory(ABCDataSource):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def inventory_path(self) -> str:
         raise NotImplementedError()
 

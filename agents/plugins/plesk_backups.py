@@ -42,8 +42,8 @@ def connect():
             passwd=open('/etc/psa/.psa.shadow').read().strip(),
             charset='utf8',
         )
-    except MySQLdb.Error as e:
-        sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
+    except MySQLdb.Error as exc:
+        sys.stderr.write("MySQL-Error %d: %s\n" % (exc.args[0], exc.args[1]))
         sys.exit(1)
 
 

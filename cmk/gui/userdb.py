@@ -301,7 +301,7 @@ class UserSelection(DropdownChoice):
         return lambda: get_wato_users(none_value)
 
     def value_to_text(self, value) -> str:
-        return str(super().value_to_text(value)).split(" - ")[-1]
+        return str(super().value_to_text(value)).rsplit(" - ", 1)[-1]
 
 
 def on_succeeded_login(username: UserId) -> str:

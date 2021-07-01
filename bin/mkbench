@@ -3281,8 +3281,8 @@ if __name__ == "__main__":
         sys.stderr.write("Terminated.\n")
         sys.exit(0)
 
-    except MKGeneralException as e:
-        sys.stderr.write("%s\n" % e)
+    except MKGeneralException as exc:
+        sys.stderr.write("%s\n" % exc)
         if opt_debug:
             raise
         sys.exit(3)

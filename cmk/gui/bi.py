@@ -147,7 +147,7 @@ def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
                 "infos": collect_infos(node_result_bundle, is_single_host_aggregation)
             }
 
-    have_sites = {x[0] for x in bi_manager.status_fetcher.states.keys()}
+    have_sites = {x[0] for x in bi_manager.status_fetcher.states}
     missing_aggregations = []
     required_sites = set()
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)

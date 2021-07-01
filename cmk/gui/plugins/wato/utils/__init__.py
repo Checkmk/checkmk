@@ -1758,11 +1758,13 @@ def register_hook(name, func):
 
 
 class NotificationParameter(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def spec(self) -> Dictionary:
         raise NotImplementedError()
 

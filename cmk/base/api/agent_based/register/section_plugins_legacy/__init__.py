@@ -83,7 +83,7 @@ def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
         return None
 
     head = _get_head(oids)
-    while (head is not None and all('.' in str(o) and str(o).split('.')[0] == head
+    while (head is not None and all('.' in str(o) and str(o).split('.', 1)[0] == head
                                     for o in oids
                                     if not isinstance(o, int))):
         oids = [o if isinstance(o, int) else type(o)(str(o).split('.', 1)[1]) for o in oids]

@@ -2346,7 +2346,6 @@ class FilterDiscoveryState(Filter):
             htmlvars=[o[0] for o in self.__options],
             link_columns=[],
         )
-        self.__varname = "discovery_state"
 
     def display(self) -> None:
         html.begin_checkbox_group()

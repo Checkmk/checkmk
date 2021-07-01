@@ -26,7 +26,8 @@ class ABCName(abc.ABC):
     """
     VALID_CHARACTERS = string.ascii_letters + '_' + string.digits
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _legacy_naming_exceptions(self) -> Set[str]:
         """we allow to maintain a list of exceptions"""
         return set()

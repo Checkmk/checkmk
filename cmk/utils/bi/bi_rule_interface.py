@@ -76,15 +76,18 @@ class ABCBIRule(ABCWithSchema):
     def __init__(self):
         self.id = ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def params(self) -> BIParams:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def properties(self) -> BIRuleProperties:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 

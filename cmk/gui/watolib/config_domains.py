@@ -362,7 +362,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             if key not in current_settings:
                 continue  # Skip settings unknown to current OMD
 
-            if current_settings[key] == settings[key]:
+            if current_settings[key] == val:
                 continue  # Skip unchanged settings
 
             config_change_commands.append("%s=%s" % (key, val))

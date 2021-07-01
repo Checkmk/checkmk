@@ -29,22 +29,26 @@ from cmk.gui.page_menu import PageMenuEntry
 
 class VisualInfo(metaclass=abc.ABCMeta):
     """Base class for all visual info classes"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title_plural(self) -> str:
         """The human readable GUI title for multiple items"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
@@ -90,32 +94,38 @@ visual_info_registry = VisualInfoRegistry()
 
 class VisualType(metaclass=abc.ABCMeta):
     """Base class for all filters"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a visual type. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The human readable GUI title"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident_attr(self) -> str:
         """The name of the attribute that is used to identify a visual of this type"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def multicontext_links(self) -> bool:
         """Whether or not to show context buttons even if not single infos present"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def plural_title(self) -> str:
         """The plural title to use in the GUI"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def show_url(self) -> str:
         """The URL filename that can be used to show visuals of this type"""
         raise NotImplementedError()
@@ -136,7 +146,8 @@ class VisualType(metaclass=abc.ABCMeta):
         """Load all visuals of this type"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def permitted_visuals(self) -> Dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()

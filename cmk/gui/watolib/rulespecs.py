@@ -49,38 +49,45 @@ from cmk.gui.utils.urls import (
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):
     """Base class for all rulespec group types"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """Unique internal key of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Human readable title of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def help(self) -> Optional[str]:
         """Helpful description of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def choice_title(self) -> str:
         raise NotImplementedError()
 
 
 class RulespecGroup(RulespecBaseGroup):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """Unique internal key of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Human readable title of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def help(self) -> str:
         """Helpful description of this group"""
         raise NotImplementedError()
@@ -91,12 +98,14 @@ class RulespecGroup(RulespecBaseGroup):
 
 
 class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def main_group(self) -> Type[RulespecGroup]:
         """A reference to the main group class"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sub_group_name(self) -> str:
         """The internal name of the sub group"""
         raise NotImplementedError()

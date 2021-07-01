@@ -58,7 +58,8 @@ from cmk.gui.plugins.wato import (
 
 
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def type_name(self) -> GroupType:
         raise NotImplementedError()
 
@@ -187,7 +188,8 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
 
 
 class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def type_name(self) -> GroupType:
         raise NotImplementedError()
 

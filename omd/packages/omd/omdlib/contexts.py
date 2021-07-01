@@ -51,24 +51,29 @@ class AbstractSiteContext(metaclass=abc.ABCMeta):
     def name(self) -> Optional[str]:
         return self._sitename
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def version(self) -> Optional[str]:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tmp_dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_dir(self):
         # type: () -> str
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_tmp_dir(self):
         # type: () -> str
         raise NotImplementedError()

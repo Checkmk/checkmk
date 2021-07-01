@@ -119,6 +119,12 @@ def is_python_file(path, shebang_name=None):
 # to real modules
 class CMKFixFileMixin:
     def handle_message(self, msg):
+        if msg.abspath is None:
+            # NOTE: I'm too lazy to define a Protocol for this mixin which is
+            # already on death row, so let's use a reflection hack...
+            getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
+            return
+
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
         if new_path is None:

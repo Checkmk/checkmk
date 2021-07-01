@@ -43,8 +43,7 @@ def generate_logs():
                 try:
                     yield winreg.EnumKey(key, index)
                     index += 1
-
-                except OSError:
+                except WindowsError:
                     break
 
 

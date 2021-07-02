@@ -1,9 +1,0 @@
-#!/bin/sh
-
-if test $# -lt 1; then
-    echo "Usage: `expr X$0 : X'.*/\(.*\)'` PKG-NAME ..." >&2
-    echo "Download the latest version of the given packages." >&2
-    exit 1
-fi
-
-pip3 download --no-binary :all: "$@"

@@ -59,7 +59,7 @@ def fixture_th() -> Theme:
 
 
 def test_icon_themes(th: Theme) -> None:
-    assert th.icon_themes() == ["facelift", "modern-dark"]
+    assert th.icon_themes() == ["modern-dark", "facelift"]
 
     th.set("facelift")
     assert th.get() == "facelift"
@@ -72,8 +72,8 @@ def test_detect_icon_path(th: Theme) -> None:
     assert th.detect_icon_path("ldap", prefix="icon_") == "themes/facelift/images/icon_ldap.svg"
     assert th.detect_icon_path("email", prefix="icon_") == "themes/facelift/images/icon_email.png"
     assert th.detect_icon_path("window_list", prefix="icon_") == "images/icons/window_list.png"
-    # TODO: Function is buggy at the moment. Enable later
-    # assert th.detect_icon_path("snmpmib", prefix="icon") == "themes/modern-dark/images/icon_snmpmib.png"
+    assert th.detect_icon_path("snmpmib",
+                               prefix="icon_") == "themes/modern-dark/images/icon_snmpmib.svg"
 
 
 def test_url(th: Theme) -> None:

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import os
 
 import cmk.utils.paths
@@ -34,12 +34,12 @@ class Theme:
         return self._theme
 
     def icon_themes(self) -> List[str]:
-        """Returns the themes where icons of a theme can be found in increasing order of importance.
+        """Returns the themes where icons of a theme can be found in decreasing order of importance.
         By default the facelift theme provides all icons. If a theme wants to use different icons it
         only needs to add those icons under the same name. See detect_icon_path for a detailed list
         of paths.
         """
-        return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
+        return ["facelift"] if self._theme == "facelift" else [self._theme, "facelift"]
 
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/
@@ -55,20 +55,23 @@ class Theme:
         8. images/icons/[name].png in standard hierarchy
         """
         for theme_id in self.icon_themes():
-            icon = prefix + icon_name
-            theme_path = "htdocs/themes/%s/images/%s" % (theme_id, icon)
-            for base_dir in [
-                    str(cmk.utils.paths.local_web_dir),
-                    cmk.utils.paths.web_dir,
-            ]:
-                for file_type in ["svg", "png"]:
-                    if os.path.exists(base_dir + "/" + theme_path + "." + file_type):
-                        return "themes/%s/images/%s.%s" % (theme_id, icon, file_type)
-                    if os.path.exists(base_dir + "/htdocs/images/icons/%s.%s" %
-                                      (icon_name, file_type)):
-                        return "images/icons/%s.%s" % (icon_name, file_type)
+            if icon_path := self._find_icon_in_dir("themes/%s/images" % theme_id, icon_name,
+                                                   prefix):
+                return icon_path
 
-        return "themes/facelift/images/icon_missing.svg"
+        if icon_path := self._find_icon_in_dir("images/icons", icon_name, prefix=""):
+            return icon_path
+
+        return self.detect_icon_path("missing", "icon_")
+
+    def _find_icon_in_dir(self, icon_dir: str, icon_name: str, prefix: str) -> Optional[str]:
+        for base_dir in [str(cmk.utils.paths.local_web_dir), cmk.utils.paths.web_dir]:
+            for file_type in ["svg", "png"]:
+                rel_path = icon_dir + "/" + prefix + icon_name + "." + file_type
+                if os.path.exists(base_dir + "/htdocs/" + rel_path):
+                    return rel_path
+
+        return None
 
     def url(self, rel_url: str) -> str:
         return "themes/%s/%s" % (self._theme, rel_url)

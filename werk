@@ -367,7 +367,7 @@ def load_werk(werkid: int) -> Werk:
             header, value = line.split(":", 1)
             werk[header.strip().lower()] = value.strip()
 
-    werk["description"] = f.read()
+        werk["description"] = f.read()
     versions.add(werk["version"])
     return werk
 

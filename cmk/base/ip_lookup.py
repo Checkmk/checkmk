@@ -142,7 +142,7 @@ def cached_dns_lookup(
 ) -> Optional[str]:
     """Cached DNS lookup in *two* caching layers
 
-    1) outer layer:
+    1) outer layer (this function):
        A *config cache* that caches all calls until the configuration is changed or runtime ends.
        Other than activating a changed configuration there is no way to remove cached results during
        runtime. Changes made by a differend process will not be noticed.
@@ -150,13 +150,7 @@ def cached_dns_lookup(
        *once*. Subsequent lookups for this hostname / family combination  will not raise an
        exception, until the configuration is changed.
 
-    2) inner layer:
-       This layer caches *successful* lookups of host name / IP address
-       family combinations, and writes them to a file.
-       Note that after the file is loaded initially, the data in the IPLookupCache is keept in sync
-       with the file, and itself stored in a dict in the config cache.
-       Before a new value is writte to file, the file is re-read, as another process might have
-       changed it.
+    2) inner layer: see _file_cached_dns_lookup
     """
     cache = _config_cache.get("cached_dns_lookup")
     cache_id = hostname, family
@@ -167,25 +161,55 @@ def cached_dns_lookup(
     except KeyError:
         pass
 
-    ip_lookup_cache = _get_ip_lookup_cache()
-
-    cached_ip = ip_lookup_cache.get(cache_id)
-    if cached_ip and not force_file_cache_renewal:
-        cache[cache_id] = cached_ip
-        return cached_ip
-
     try:
-        ipa = _actual_dns_lookup(host_name=hostname, family=family, fallback=cached_ip)
+        ip_address = _file_cached_dns_lookup(
+            hostname,
+            family,
+            force_file_cache_renewal=force_file_cache_renewal,
+        )
     except MKIPAddressLookupError:
         cache[cache_id] = None
         raise
 
-    # Update our cached address if that has changed or was missing
-    if ipa != cached_ip:
-        console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
-        ip_lookup_cache[cache_id] = ipa
+    return cache.setdefault(cache_id, ip_address)
 
-    cache[cache_id] = ipa  # Update in-memory-cache
+
+def _file_cached_dns_lookup(
+    hostname: HostName,
+    family: socket.AddressFamily,
+    *,
+    force_file_cache_renewal: bool,
+) -> HostAddress:
+    # TODO: is there any point in the IPLookupCache being cached in the
+    # *config cache*? It seems to me it could well be kept during the entire
+    # runtime, which means a) this could be a decorator and b) we could use
+    # the same mechanism that the value store uses.
+    """Resolve DNS using a file based cache
+
+    This layer caches *successful* lookups of host name / IP address
+    family combinations, and writes them to a file.
+
+    This layer caches *successful* lookups of host name / IP address family combinations, and writes
+    them to a file.
+
+    Note that after the file is loaded initially, the data in the IPLookupCache is keept in sync
+    with the file, and itself stored in a dict in the config cache.
+    Before a new value is writte to file, the file is re-read, as another process might have changed
+    it.
+    """
+    ip_lookup_cache = _get_ip_lookup_cache()
+    cache_id = hostname, family
+
+    cached_ip = ip_lookup_cache.get(cache_id)
+    if cached_ip and not force_file_cache_renewal:
+        return cached_ip
+
+    ipa = _actual_dns_lookup(host_name=hostname, family=family, fallback=cached_ip)
+
+    if ipa != cached_ip:
+        family_str = {socket.AF_INET: "IPv4", socket.AF_INET6: "IPv6"}[family]
+        console.verbose(f"Updating {family_str} DNS cache for {hostname}: {ipa}\n")
+        ip_lookup_cache[cache_id] = ipa
 
     return ipa
 

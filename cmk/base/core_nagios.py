@@ -36,8 +36,8 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-import cmk.core_helpers.paths
-from cmk.core_helpers.paths import VersionedConfigPath
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
@@ -943,7 +943,7 @@ class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
     @staticmethod
     def host_check_file_path(config_path: VersionedConfigPath, hostname: HostName) -> Path:
-        return config_path.helper_config_path() / "host_checks" / hostname
+        return Path(config_path) / "host_checks" / hostname
 
     @staticmethod
     def host_check_source_file_path(config_path: VersionedConfigPath, hostname: HostName) -> Path:
@@ -1085,7 +1085,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.utils.log\n")
     output.write("import cmk.utils.debug\n")
     output.write("from cmk.utils.exceptions import MKTerminate\n")
-    output.write("from cmk.core_helpers.paths import LATEST_CONFIG\n")
+    output.write("from cmk.core_helpers.config_path import LATEST_CONFIG\n")
     output.write("\n")
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")

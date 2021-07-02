@@ -15,8 +15,8 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.core_helpers.paths
-from cmk.core_helpers.paths import LATEST_CONFIG
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

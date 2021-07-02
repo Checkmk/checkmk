@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import os
+
+import importlib
 import io
 import itertools
-import importlib
+import os
 import subprocess
 from pathlib import Path
 
@@ -19,12 +20,11 @@ from testlib.base import Scenario
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.core_helpers.paths as paths
-from cmk.core_helpers.paths import VersionedConfigPath
+from cmk.core_helpers.config_path import VersionedConfigPath
 
+import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
-import cmk.base.config as config
 
 
 def test_format_nagios_object():
@@ -218,7 +218,7 @@ def fixture_config_path() -> VersionedConfigPath:
 class TestHostCheckStore:
     def test_host_check_file_path(self, config_path):
         assert core_nagios.HostCheckStore.host_check_file_path(config_path, "abc") == Path(
-            paths.make_helper_config_path(config_path),
+            Path(config_path),
             "host_checks",
             "abc",
         )
@@ -227,7 +227,7 @@ class TestHostCheckStore:
         assert core_nagios.HostCheckStore.host_check_source_file_path(
             config_path,
             "abc",
-        ) == Path(paths.make_helper_config_path(config_path), "host_checks", "abc.py")
+        ) == Path(config_path) / "host_checks" / "abc.py"
 
     def test_write(self, config_path):
         hostname = "aaa"

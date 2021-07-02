@@ -23,12 +23,20 @@ from cmk.utils.type_defs import HostName, result
 
 from . import Fetcher, FetcherType, protocol
 from .cache import MaxAge
+from .config_path import ConfigPath, VersionedConfigPath
 from .crash_reporting import create_fetcher_crash_dump
-from .paths import VersionedConfigPath
 from .snmp import SNMPFetcher, SNMPPluginStore
 from .type_defs import Mode
 
 logger = logging.getLogger("cmk.helper")
+
+
+def make_global_config_path(config_path: ConfigPath) -> Path:
+    return Path(config_path) / "fetchers" / "global_config.json"
+
+
+def make_local_config_path(config_path: ConfigPath, host_name: HostName) -> Path:
+    return Path(config_path) / "fetchers" / "hosts" / f"{host_name}.json"
 
 
 class GlobalConfig(NamedTuple):
@@ -113,7 +121,7 @@ def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
             command = Command.from_str(raw_command)
             config_path = command.config_path
             host_name = command.host_name
-            global_config = load_global_config(command.config_path.global_config_path())
+            global_config = load_global_config(make_global_config_path(command.config_path))
             logging.getLogger().setLevel(global_config.log_level)
             SNMPFetcher.plugin_store = global_config.snmp_plugin_store
             run_fetchers(**command._asdict())
@@ -179,7 +187,7 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
 
 
 def _parse_config(config_path: VersionedConfigPath, host_name: HostName) -> Iterator[Fetcher]:
-    with config_path.local_config_path(host_name).open() as f:
+    with make_local_config_path(config_path, host_name).open() as f:
         data = json.load(f)
 
     if "fetchers" in data:
@@ -199,7 +207,7 @@ def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Fetcher]:
 
 def _parse_cluster_config(data: Mapping[str, Any],
                           config_path: VersionedConfigPath) -> Iterator[Fetcher]:
-    global_config = load_global_config(config_path.global_config_path())
+    global_config = load_global_config(make_global_config_path(config_path))
     for host_name in data["clusters"]["nodes"]:
         for fetcher in _parse_config(config_path, host_name):
             fetcher.file_cache.max_age = MaxAge(

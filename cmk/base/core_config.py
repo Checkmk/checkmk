@@ -41,8 +41,8 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-import cmk.core_helpers.paths
-from cmk.core_helpers.paths import VersionedConfigPath
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

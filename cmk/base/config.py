@@ -100,8 +100,8 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
     SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
 
 import cmk.core_helpers.cache as cache_file
-import cmk.core_helpers.paths
-from cmk.core_helpers.paths import LATEST_CONFIG, ConfigPath
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import LATEST_CONFIG, ConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -757,7 +757,7 @@ class PackedConfigStore:
 
     @classmethod
     def from_serial(cls, config_path: ConfigPath) -> "PackedConfigStore":
-        return cls(config_path.helper_config_path() / "precompiled_check_config.mk")
+        return cls(Path(config_path) / "precompiled_check_config.mk")
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -772,11 +772,11 @@ class PackedConfigStore:
 
 
 def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
-    return config_path.helper_config_path() / "autochecks"
+    return Path(config_path) / "autochecks"
 
 
 def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
-    return config_path.helper_config_path() / "discovered_host_labels"
+    return Path(config_path) / "discovered_host_labels"
 
 
 @contextlib.contextmanager

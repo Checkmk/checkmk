@@ -2,24 +2,16 @@
 from __future__ import annotations
 
 import abc
+import os
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final, Iterator, Union
+from typing import Any, Final, Iterator
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostName
 
-__all__ = [
-    "ConfigPath",
-    "VersionedConfigPath",
-    "LATEST_CONFIG",
-    "make_helper_config_path",
-    "make_fetchers_config_path",
-    "make_local_config_path",
-    "make_global_config_path",
-]
+__all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
 
 
 class ConfigPath(abc.ABC):
@@ -36,40 +28,21 @@ class ConfigPath(abc.ABC):
         return self._path_elem
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, ConfigPath):
+        if not isinstance(other, os.PathLike):
             return False
-        return self._path_elem == other._path_elem
+        return Path(self) == Path(other)
 
     def __hash__(self) -> int:
         return hash(type(self)) ^ hash(self._path_elem)
 
-    def __truediv__(self, other: Union[str, Path]) -> Path:
-        try:
-            return Path(str(self)) / other
-        except TypeError:
-            return NotImplemented
-
-    def __rtruediv__(self, other: Union[str, Path]) -> Path:
-        try:
-            return Path(other) / str(self)
-        except TypeError:
-            return NotImplemented
-
-    def helper_config_path(self) -> Path:
-        return self.ROOT / self._path_elem
-
-    def fetchers_config_path(self) -> Path:
-        return self.helper_config_path() / "fetchers"
-
-    def local_config_path(self, host_name: HostName) -> Path:
-        return self.fetchers_config_path() / "hosts" / f"{host_name}.json"
-
-    def global_config_path(self) -> Path:
-        return self.fetchers_config_path() / "global_config.json"
+    def __fspath__(self) -> str:
+        return str(self.ROOT / self._path_elem)
 
 
 class VersionedConfigPath(ConfigPath, Iterator):
     __slots__ = ("serial",)
+
+    _SERIAL_MK: Final = ConfigPath.ROOT / "serial.mk"
 
     def __init__(self, serial: int) -> None:
         super().__init__()
@@ -85,7 +58,7 @@ class VersionedConfigPath(ConfigPath, Iterator):
     @classmethod
     def current(cls) -> VersionedConfigPath:
         serial: int = store.load_object_from_file(
-            cmk.utils.paths.core_helper_config_dir / "serial.mk",
+            VersionedConfigPath._SERIAL_MK,
             default=0,
             lock=True,
         )
@@ -95,18 +68,12 @@ class VersionedConfigPath(ConfigPath, Iterator):
         serial = self.serial
         while True:
             serial += 1
-            store.save_object_to_file(
-                cmk.utils.paths.core_helper_config_dir / "serial.mk",
-                serial,
-            )
+            store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
             yield VersionedConfigPath(serial)
 
     def __next__(self) -> VersionedConfigPath:
         serial = self.serial + 1
-        store.save_object_to_file(
-            cmk.utils.paths.core_helper_config_dir / "serial.mk",
-            serial,
-        )
+        store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
         return VersionedConfigPath(serial)
 
     @contextmanager
@@ -114,7 +81,7 @@ class VersionedConfigPath(ConfigPath, Iterator):
         if not is_cmc:
             # CMC manages the configs on its own.
             self._cleanup()
-        self.helper_config_path().mkdir(parents=True, exist_ok=True)
+        Path(self).mkdir(parents=True, exist_ok=True)
         yield
         # TODO(ml) We should probably remove the files that were created
         #          previously and not update `serial.mk` on error.
@@ -128,14 +95,14 @@ class VersionedConfigPath(ConfigPath, Iterator):
             if path.is_symlink() or not path.is_dir():
                 continue
 
-            if path.resolve() == LATEST_CONFIG.helper_config_path().resolve():
+            if path.resolve() == Path(LATEST_CONFIG).resolve():
                 continue
 
             shutil.rmtree(path)
 
     def _link_latest(self) -> None:
-        LATEST_CONFIG.helper_config_path().unlink(missing_ok=True)
-        LATEST_CONFIG.helper_config_path().symlink_to(self.helper_config_path().name)
+        Path(LATEST_CONFIG).unlink(missing_ok=True)
+        Path(LATEST_CONFIG).symlink_to(Path(self).name)
 
 
 class _LatestConfigPath(ConfigPath):
@@ -151,19 +118,3 @@ class _LatestConfigPath(ConfigPath):
 
 # Singleton
 LATEST_CONFIG: Final = _LatestConfigPath()
-
-
-def make_helper_config_path(config_paths: ConfigPath) -> Path:
-    return config_paths.helper_config_path()
-
-
-def make_fetchers_config_path(config_paths: ConfigPath) -> Path:
-    return config_paths.fetchers_config_path()
-
-
-def make_local_config_path(config_paths: ConfigPath, host_name: HostName) -> Path:
-    return config_paths.local_config_path(host_name)
-
-
-def make_global_config_path(config_paths: ConfigPath) -> Path:
-    return config_paths.global_config_path()

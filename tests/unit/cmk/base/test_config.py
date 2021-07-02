@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType
 
-from cmk.core_helpers.paths import VersionedConfigPath
+from cmk.core_helpers.config_path import VersionedConfigPath
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2103,12 +2103,13 @@ def test_save_packed_config(monkeypatch, config_path):
     ts = Scenario()
     ts.add_host("bla1")
     config_cache = ts.apply(monkeypatch)
+    precompiled_check_config = Path(config_path) / "precompiled_check_config.mk"
 
-    assert not (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
+    assert not precompiled_check_config.exists()
 
     config.save_packed_config(config_path, config_cache)
 
-    assert (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
+    assert precompiled_check_config.exists()
 
 
 def test_load_packed_config(config_path):
@@ -2131,11 +2132,12 @@ class TestPackedConfigStore:
             store.read()
 
     def test_write(self, store, config_path):
-        assert not (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
+        precompiled_check_config = Path(config_path) / "precompiled_check_config.mk"
+        assert not precompiled_check_config.exists()
 
         store.write({"abc": 1})
 
-        assert (config_path.helper_config_path() / "precompiled_check_config.mk").exists()
+        assert precompiled_check_config.exists()
         assert store.read() == {"abc": 1}
 
 

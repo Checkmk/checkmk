@@ -30,7 +30,7 @@ RUN apt-get update \
     && apt-get install -y --force-yes nodejs \
     && apt-get install -y \
     $PACKAGES \
-    && pip install --upgrade pip==20.0.2 zipp==1.2.0 \
+    && pip install --upgrade pip==20.0.2 zipp==1.2.0 contextlib2==0.6.0.post1 \
     # after pip upgrade, "pip2.7" has version 20.0.2 and NOT "pip"
     && pip2.7 install --upgrade 'setuptools<45' \
     && pip2.7 install enum34==1.1.10 typing==3.7.4.1 \

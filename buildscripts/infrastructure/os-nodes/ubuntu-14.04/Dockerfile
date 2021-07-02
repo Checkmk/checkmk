@@ -31,7 +31,7 @@ RUN apt-get update \
     && apt-get install -y nodejs \
     && apt-get install -y \
     $PACKAGES \
-    && pip install --upgrade pip==20.0.2 zipp==1.2.0 \
+    && pip install --upgrade pip==20.0.2 zipp==1.2.0 contextlib2==0.6.0.post1 \
     && pip install --upgrade 'setuptools<45' \
     && pip install enum34==1.1.10 typing==3.7.4.1 \
     && pip install importlib_resources==1.5.0 importlib_metadata==1.6.0 git+https://github.com/pypa/pipenv.git@v2020.6.2 \

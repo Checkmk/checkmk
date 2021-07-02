@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Optional, Tuple
 
 # pylint: disable=protected-access
 import pytest
@@ -24,29 +25,29 @@ _TEST_KEY = ("check", "item", "user-key")
 
 class Test_DynamicDiskSyncedMapping:
     @staticmethod
-    def test_init():
-        ddsm = _DynamicDiskSyncedMapping()
+    def _get_ddsm() -> _DynamicDiskSyncedMapping[Tuple[str, str, str], object]:
+        return _DynamicDiskSyncedMapping()
+
+    def test_init(self):
+        ddsm = self._get_ddsm()
         assert not ddsm
         assert not ddsm.removed_keys
 
-    @staticmethod
-    def test_removed_del():
-        ddsm = _DynamicDiskSyncedMapping()
+    def test_removed_del(self):
+        ddsm = self._get_ddsm()
         try:
             del ddsm[_TEST_KEY]
         except KeyError:
             pass
         assert ddsm.removed_keys == {_TEST_KEY}
 
-    @staticmethod
-    def test_removed_pop():
-        ddsm = _DynamicDiskSyncedMapping()
+    def test_removed_pop(self):
+        ddsm = self._get_ddsm()
         ddsm.pop(_TEST_KEY, None)
         assert ddsm.removed_keys == {_TEST_KEY}
 
-    @staticmethod
-    def test_setitem():
-        ddsm = _DynamicDiskSyncedMapping()
+    def test_setitem(self):
+        ddsm = self._get_ddsm()
         value = object()
         ddsm[_TEST_KEY] = value
         assert ddsm[_TEST_KEY] is value
@@ -57,18 +58,16 @@ class Test_DynamicDiskSyncedMapping:
         ddsm[_TEST_KEY] = value
         assert not ddsm.removed_keys
 
-    @staticmethod
-    def test_delitem():
-        ddsm = _DynamicDiskSyncedMapping()
+    def test_delitem(self):
+        ddsm = self._get_ddsm()
         ddsm[_TEST_KEY] = None
         assert _TEST_KEY in ddsm  # setup
 
         del ddsm[_TEST_KEY]
         assert _TEST_KEY not in ddsm
 
-    @staticmethod
-    def test_popitem():
-        ddsm = _DynamicDiskSyncedMapping()
+    def test_popitem(self):
+        ddsm = self._get_ddsm()
         ddsm[_TEST_KEY] = None
         assert _TEST_KEY in ddsm  # setup
 
@@ -104,10 +103,15 @@ class Test_StaticDiskSyncedMapping:
             autospec=True,
         )
 
+    @staticmethod
+    def _get_sdsm(
+            tmp_path: Path) -> _StaticDiskSyncedMapping[Tuple[str, Optional[str], str], object]:
+        return _StaticDiskSyncedMapping(tmp_path / "test-host", lambda msg: None)
+
     def test_mapping_features(self, mocker, tmp_path: Path):
 
         self._mock_load(mocker)
-        sdsm = _StaticDiskSyncedMapping(tmp_path / "test-host", lambda msg: None)
+        sdsm = self._get_sdsm(tmp_path)
         assert sdsm.get(("check_no", None, "moo")) is None
         with pytest.raises(KeyError):
             _ = sdsm[("check_no", None, "moo")]
@@ -126,7 +130,7 @@ class Test_StaticDiskSyncedMapping:
         self._mock_load(mocker)
         self._mock_store(mocker)
 
-        sdsm = _StaticDiskSyncedMapping(tmp_path / "test-host", lambda msg: None)
+        sdsm = self._get_sdsm(tmp_path)
 
         sdsm.disksync(
             removed={("check2", "item", "stored-user-key-2")},
@@ -145,7 +149,7 @@ class Test_StaticDiskSyncedMapping:
 class Test_DiskSyncedMapping:
     @staticmethod
     def _get_dsm() -> _DiskSyncedMapping:
-        dynstore = _DynamicDiskSyncedMapping()
+        dynstore: _DynamicDiskSyncedMapping[Tuple[str, str, str], str] = _DynamicDiskSyncedMapping()
         dynstore.update({
             ("dyn", "key", "1"): "dyn-val-1",
             ("dyn", "key", "2"): "dyn-val-2",

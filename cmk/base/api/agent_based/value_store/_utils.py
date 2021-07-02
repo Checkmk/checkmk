@@ -11,6 +11,7 @@ from typing import (
     Container,
     Dict,
     Final,
+    Hashable,
     Iterable,
     Iterator,
     Mapping,
@@ -18,6 +19,8 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypeVar,
+    Union,
 )
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -30,8 +33,12 @@ _PluginName = str
 _UserKey = str
 _ValueStoreKey = Tuple[_PluginName, Item, _UserKey]
 
+_TKey = TypeVar("_TKey", bound=Hashable)
+_TValue = TypeVar("_TValue")
+_TDefault = TypeVar("_TDefault")
 
-class _DynamicDiskSyncedMapping(Dict[_ValueStoreKey, Any]):
+
+class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
     """Represents the values that have been changed in a session
 
     This is a dict derivat that remembers if a key has been
@@ -40,26 +47,26 @@ class _DynamicDiskSyncedMapping(Dict[_ValueStoreKey, Any]):
     """
     def __init__(self):
         super().__init__()
-        self._removed_keys: Set[_ValueStoreKey] = set()
+        self._removed_keys: Set[_TKey] = set()
 
     @property
-    def removed_keys(self) -> Set[_ValueStoreKey]:
+    def removed_keys(self) -> Set[_TKey]:
         return self._removed_keys
 
-    def __setitem__(self, key: _ValueStoreKey, value: Any) -> None:
+    def __setitem__(self, key: _TKey, value: _TValue) -> None:
         self._removed_keys.discard(key)
         super().__setitem__(key, value)
 
-    def __delitem__(self, key: _ValueStoreKey) -> None:
+    def __delitem__(self, key: _TKey) -> None:
         self._removed_keys.add(key)
         super().__delitem__(key)
 
-    def pop(self, key: _ValueStoreKey, *args: Any) -> Any:
+    def pop(self, key: _TKey, *args: Union[_TValue, _TDefault]) -> Union[_TValue, _TDefault]:
         self._removed_keys.add(key)
         return super().pop(key, *args)
 
 
-class _StaticDiskSyncedMapping(Mapping[_ValueStoreKey, Any]):
+class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
     """Represents the values stored on disk
 
     This class provides a Mapping-interface for the values stored
@@ -70,14 +77,14 @@ class _StaticDiskSyncedMapping(Mapping[_ValueStoreKey, Any]):
     def __init__(self, path: Path, log_debug: Callable[[str], None]) -> None:
         self._path: Final = path
         self._last_sync: Optional[float] = None
-        self._data: Mapping[_ValueStoreKey, Any] = {}
+        self._data: Mapping[_TKey, _TValue] = {}
         self._log_debug = log_debug
         self.disksync()
 
-    def __getitem__(self, key: _ValueStoreKey) -> Any:
+    def __getitem__(self, key: _TKey) -> _TValue:
         return self._data.__getitem__(key)
 
-    def __iter__(self) -> Iterator[_ValueStoreKey]:
+    def __iter__(self) -> Iterator[_TKey]:
         return self._data.__iter__()
 
     def __len__(self) -> int:
@@ -86,8 +93,8 @@ class _StaticDiskSyncedMapping(Mapping[_ValueStoreKey, Any]):
     def disksync(
             self,
             *,
-            removed: Container[_ValueStoreKey] = (),
-            updated: Iterable[Tuple[_ValueStoreKey, Any]] = (),
+            removed: Container[_TKey] = (),
+            updated: Iterable[Tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values
 
@@ -124,7 +131,7 @@ class _StaticDiskSyncedMapping(Mapping[_ValueStoreKey, Any]):
             store.release_lock(self._path)
 
 
-class _DiskSyncedMapping(MutableMapping[_ValueStoreKey, Any]):  # pylint: disable=too-many-ancestors
+class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors
     """Implements the overlay logic between dynamic and static value store"""
     @classmethod
     def make(cls, *, path: Path, log_debug: Callable[[str], None]) -> "_DiskSyncedMapping":
@@ -136,19 +143,19 @@ class _DiskSyncedMapping(MutableMapping[_ValueStoreKey, Any]):  # pylint: disabl
     def __init__(
         self,
         *,
-        dynamic: _DynamicDiskSyncedMapping,
-        static: _StaticDiskSyncedMapping,
+        dynamic: _DynamicDiskSyncedMapping[_TKey, _TValue],
+        static: _StaticDiskSyncedMapping[_TKey, _TValue],
     ) -> None:
         self._dynamic = dynamic
         self.static = static
 
-    def _keys(self) -> Set[_ValueStoreKey]:
+    def _keys(self) -> Set[_TKey]:
         return {
             k for k in (set(self._dynamic) | set(self.static))
             if k not in self._dynamic.removed_keys
         }
 
-    def __getitem__(self, key: _ValueStoreKey) -> Any:
+    def __getitem__(self, key: _TKey) -> _TValue:
         if key in self._dynamic.removed_keys:
             raise KeyError(key)
         try:
@@ -156,7 +163,7 @@ class _DiskSyncedMapping(MutableMapping[_ValueStoreKey, Any]):  # pylint: disabl
         except KeyError:
             return self.static.__getitem__(key)
 
-    def __delitem__(self, key: _ValueStoreKey) -> None:
+    def __delitem__(self, key: _TKey) -> None:
         if key in self._dynamic.removed_keys:
             raise KeyError(key)
         try:
@@ -165,17 +172,17 @@ class _DiskSyncedMapping(MutableMapping[_ValueStoreKey, Any]):  # pylint: disabl
         except KeyError:
             _ = self.static[key]
 
-    def pop(self, key: _ValueStoreKey, *args: Any) -> Any:
+    def pop(self, key: _TKey, *args: Union[_TValue, _TDefault]) -> Union[_TValue, _TDefault]:
         try:
             return self._dynamic.pop(key)
             # key is now marked as removed.
         except KeyError:
-            return self.static.get(key, *args)
+            return self.static[key] if key in self.static else args[0]
 
-    def __setitem__(self, key: _ValueStoreKey, value: Any) -> None:
+    def __setitem__(self, key: _TKey, value: _TValue) -> None:
         self._dynamic.__setitem__(key, value)
 
-    def __iter__(self) -> Iterator[_ValueStoreKey]:
+    def __iter__(self) -> Iterator[_TKey]:
         return iter(self._keys())
 
     def __len__(self) -> int:
@@ -242,7 +249,7 @@ class ValueStoreManager:
     STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
 
     def __init__(self, host_name: HostName) -> None:
-        self._value_store = _DiskSyncedMapping.make(
+        self._value_store: _DiskSyncedMapping[_ValueStoreKey, Any] = _DiskSyncedMapping.make(
             path=self.STORAGE_PATH / str(host_name),
             log_debug=lambda x: logger.debug("value store: %s", x),
         )

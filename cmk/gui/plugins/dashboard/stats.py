@@ -4,18 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NamedTuple, Tuple, Union
+from typing import Dict, List, NamedTuple, Tuple
 from dataclasses import asdict, dataclass
 from livestatus import MKLivestatusNotFoundError
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 
-from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.i18n import _
 from cmk.gui.globals import request, user
 from cmk.gui.plugins.dashboard import (ABCFigureDashlet, dashlet_registry)
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.type_defs import HTTPVariables
+
+
+def view_url(url_vars: HTTPVariables) -> str:
+    return makeuri_contextless(request, url_vars, filename="view.py")
 
 
 class HostStats(NamedTuple):
@@ -23,6 +27,38 @@ class HostStats(NamedTuple):
     downtime: int
     unreachable: int
     down: int
+
+    def get_parts_data(self, general_url_vars: HTTPVariables) -> List[Tuple[str, str, int, str]]:
+        return [
+            (
+                _("Up"),
+                "ok",
+                self.up,
+                view_url(general_url_vars +
+                         [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")]),
+            ),
+            (
+                _("In downtime"),
+                "downtime",
+                self.downtime,
+                view_url(general_url_vars +
+                         [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")]),
+            ),
+            (
+                _("Unreachable"),
+                "unknown",
+                self.unreachable,
+                view_url(general_url_vars +
+                         [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")]),
+            ),
+            (
+                _("Down"),
+                "critical",
+                self.down,
+                view_url(general_url_vars +
+                         [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")]),
+            ),
+        ]
 
 
 class ServiceStats(NamedTuple):
@@ -33,12 +69,85 @@ class ServiceStats(NamedTuple):
     unknown: int
     critical: int
 
+    def get_parts_data(self, general_url_vars) -> List[Tuple[str, str, int, str]]:
+        return [
+            (
+                _("OK"),
+                "ok",
+                self.ok,
+                view_url(general_url_vars +
+                         [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")]),
+            ),
+            (
+                _("In downtime"),
+                "downtime",
+                self.downtime,
+                view_url(general_url_vars + [("is_in_downtime", "1")]),
+            ),
+            (
+                _("On down host"),
+                "host_down",
+                self.host_down,
+                view_url(general_url_vars +
+                         [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")]),
+            ),
+            (
+                _("Warning"),
+                "warning",
+                self.warning,
+                view_url(general_url_vars +
+                         [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")]),
+            ),
+            (
+                _("Unknown"),
+                "unknown",
+                self.unknown,
+                view_url(general_url_vars +
+                         [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")]),
+            ),
+            (
+                _("Critical"),
+                "critical",
+                self.critical,
+                view_url(general_url_vars +
+                         [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")]),
+            ),
+        ]
+
 
 class EventStats(NamedTuple):
     ok: int
     warning: int
     unknown: int
     critical: int
+
+    def get_parts_data(self, general_url_vars) -> List[Tuple[str, str, int, str]]:
+        return [
+            (
+                _("Ok"),
+                "ok",
+                self.ok,
+                view_url(general_url_vars + [("event_state_0", "on")]),
+            ),
+            (
+                _("Warning"),
+                "warning",
+                self.warning,
+                view_url(general_url_vars + [("event_state_1", "on")]),
+            ),
+            (
+                _("Unknown"),
+                "unknown",
+                self.unknown,
+                view_url(general_url_vars + [("event_state_3", "on")]),
+            ),
+            (
+                _("Critical"),
+                "critical",
+                self.critical,
+                view_url(general_url_vars + [("event_state_2", "on")]),
+            ),
+        ]
 
 
 @dataclass
@@ -90,18 +199,8 @@ class StatsDashletDataGenerator:
     def _collect_data(cls, context, settings) -> StatsElement:
         stats = cls._get_stats(context, settings)
         general_url_vars = cls._general_url_vars(context, settings["single_infos"])
-        parts, total = cls._get_parts_and_total_count(stats, general_url_vars)
-        total_part = StatsPart(
-            title=_("Total"),
-            css_class="",
-            count=total,
-            url=(makeuri_contextless(request, general_url_vars, filename="view.py")),
-        )
-
-        return StatsElement(
-            parts=parts,
-            total=total_part,
-        )
+        parts_data = stats.get_parts_data(general_url_vars)
+        return cls._get_stats_element(parts_data, general_url_vars)
 
     @classmethod
     def _get_stats(cls, context, settings):
@@ -121,28 +220,29 @@ class StatsDashletDataGenerator:
         return cls._named_stats(result)
 
     @classmethod
-    def _get_parts_and_total_count(cls, stats, general_url_vars) -> Tuple[List[StatsPart], int]:
+    def _get_stats_element(cls, parts_data: List[Tuple[str, str, int, str]],
+                           general_url_vars: HTTPVariables) -> StatsElement:
         parts = []
-        total = 0
-        for title, css_class, count, url_vars in cls._get_parts_data(stats):
-            url_vars.extend(general_url_vars)
-            url = makeuri_contextless(request, url_vars, filename="view.py")
+        total_count = 0
+        for title, css_class, count, url in parts_data:
             parts.append(StatsPart(title=title, css_class=css_class, count=count, url=url))
-            total += count
-        return parts, total
+            total_count += count
 
-    @classmethod
-    def _get_parts_data(cls, stats) -> List[Tuple[str, str, int, HTTPVariables]]:
-        '''Return a list of tuples with one tuple per part.
-        Each tuple holds the part-specific title, css_class, count, and url_vars.'''
-        raise NotImplementedError()
+        total_part = StatsPart(
+            title=_("Total"),
+            css_class="",
+            count=total_count,
+            url=view_url(general_url_vars),
+        )
+
+        return StatsElement(parts=parts, total=total_part)
 
     @classmethod
     def _stats_query(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def _general_url_vars(cls, context, single_infos) -> List[Tuple[str, Union[None, int, str]]]:
+    def _general_url_vars(cls, context: Dict, single_infos: List[str]) -> HTTPVariables:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
@@ -169,21 +269,6 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
         if not stats:
             return HostStats(0, 0, 0, 0)
         return HostStats(*stats)
-
-    @classmethod
-    def _get_parts_data(cls, stats: HostStats) -> List[Tuple[str, str, int, HTTPVariables]]:
-        url_filter_vars: Dict[str, HTTPVariables] = {
-            "up": [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")],
-            "downtime": [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")],
-            "unreachable": [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")],
-            "down": [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")],
-        }
-        return [
-            (_("Up"), "ok", stats.up, url_filter_vars["up"]),
-            (_("In downtime"), "downtime", stats.downtime, url_filter_vars["downtime"]),
-            (_("Unreachable"), "unknown", stats.unreachable, url_filter_vars["unreachable"]),
-            (_("Down"), "critical", stats.down, url_filter_vars["down"]),
-        ]
 
     @classmethod
     def _stats_query(cls) -> str:
@@ -231,25 +316,6 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
         if not stats:
             return ServiceStats(0, 0, 0, 0, 0, 0)
         return ServiceStats(*stats)
-
-    @classmethod
-    def _get_parts_data(cls, stats: ServiceStats) -> List[Tuple[str, str, int, HTTPVariables]]:
-        url_filter_vars: Dict[str, HTTPVariables] = {
-            "ok": [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")],
-            "downtime": [("is_in_downtime", "1")],
-            "host_down": [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")],
-            "warning": [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")],
-            "unknown": [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")],
-            "critical": [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")],
-        }
-        return [
-            (_("OK"), "ok", stats.ok, url_filter_vars["ok"]),
-            (_("In downtime"), "downtime", stats.downtime, url_filter_vars["downtime"]),
-            (_("On down host"), "host_down", stats.host_down, url_filter_vars["host_down"]),
-            (_("Warning"), "warning", stats.warning, url_filter_vars["warning"]),
-            (_("Unknown"), "unknown", stats.unknown, url_filter_vars["unknown"]),
-            (_("Critical"), "critical", stats.critical, url_filter_vars["critical"]),
-        ]
 
     @classmethod
     def _stats_query(cls) -> str:
@@ -318,7 +384,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         return "ec_events"
 
     @classmethod
-    def _general_url_vars(cls, context, single_infos) -> List[Tuple[str, Union[None, int, str]]]:
+    def _general_url_vars(cls, context: Dict, single_infos: List[str]) -> HTTPVariables:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
@@ -330,21 +396,6 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         if not stats:
             return EventStats(0, 0, 0, 0)
         return EventStats(*stats)
-
-    @classmethod
-    def _get_parts_data(cls, stats: EventStats) -> List[Tuple[str, str, int, HTTPVariables]]:
-        url_filter_vars: Dict[str, HTTPVariables] = {
-            "ok": [("event_state_0", "on")],
-            "warning": [("event_state_1", "on")],
-            "unknown": [("event_state_3", "on")],
-            "critical": [("event_state_2", "on")],
-        }
-        return [
-            (_("Ok"), "ok", stats.ok, url_filter_vars["ok"]),
-            (_("Warning"), "warning", stats.warning, url_filter_vars["warning"]),
-            (_("Unknown"), "unknown", stats.unknown, url_filter_vars["unknown"]),
-            (_("Critical"), "critical", stats.critical, url_filter_vars["critical"]),
-        ]
 
     @classmethod
     def _stats_query(cls) -> str:

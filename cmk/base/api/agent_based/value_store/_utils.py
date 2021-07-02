@@ -31,7 +31,7 @@ _UserKey = str
 _ValueStoreKey = Tuple[_PluginName, Item, _UserKey]
 
 
-class _DynamicValueStore(Dict[_ValueStoreKey, Any]):
+class _DynamicDiskSyncedMapping(Dict[_ValueStoreKey, Any]):
     """Represents the values that have been changed in a session
 
     This is a dict derivat that remembers if a key has been
@@ -59,7 +59,7 @@ class _DynamicValueStore(Dict[_ValueStoreKey, Any]):
         return super().pop(key, *args)
 
 
-class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
+class _StaticDiskSyncedMapping(Mapping[_ValueStoreKey, Any]):
     """Represents the values stored on disk
 
     This class provides a Mapping-interface for the values stored
@@ -67,11 +67,8 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
 
     The only way to modify the values is the disksync method.
     """
-
-    STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
-
-    def __init__(self, host_name: HostName, log_debug: Callable[[str], None]) -> None:
-        self._path: Final = self.STORAGE_PATH / host_name
+    def __init__(self, path: Path, log_debug: Callable[[str], None]) -> None:
+        self._path: Final = path
         self._last_sync: Optional[float] = None
         self._data: Mapping[_ValueStoreKey, Any] = {}
         self._log_debug = log_debug
@@ -100,7 +97,7 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
         When this method returns, the data provided via the Mapping-interface and
         the data stored on disk must be in sync.
         """
-        self._log_debug("value store: synchronizing")
+        self._log_debug("synchronizing")
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -108,15 +105,15 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
             store.aquire_lock(self._path)
 
             if self._path.stat().st_mtime == self._last_sync:
-                self._log_debug("value store: already loaded")
+                self._log_debug("already loaded")
             else:
-                self._log_debug("value store: loading from disk")
+                self._log_debug("loading from disk")
                 self._data = store.load_object_from_file(self._path, default={}, lock=False)
 
             if removed or updated:
                 data = {k: v for k, v in self._data.items() if k not in removed}
                 data.update(updated)
-                self._log_debug("value store: writing to disk")
+                self._log_debug("writing to disk")
                 store.save_object_to_file(self._path, data, pretty=False)
                 self._data = data
 
@@ -127,13 +124,20 @@ class _StaticValueStore(Mapping[_ValueStoreKey, Any]):
             store.release_lock(self._path)
 
 
-class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disable=too-many-ancestors
+class _DiskSyncedMapping(MutableMapping[_ValueStoreKey, Any]):  # pylint: disable=too-many-ancestors
     """Implements the overlay logic between dynamic and static value store"""
+    @classmethod
+    def make(cls, *, path: Path, log_debug: Callable[[str], None]) -> "_DiskSyncedMapping":
+        return cls(
+            dynamic=_DynamicDiskSyncedMapping(),
+            static=_StaticDiskSyncedMapping(path=path, log_debug=log_debug),
+        )
+
     def __init__(
         self,
         *,
-        dynamic: _DynamicValueStore,
-        static: _StaticValueStore,
+        dynamic: _DynamicDiskSyncedMapping,
+        static: _StaticDiskSyncedMapping,
     ) -> None:
         self._dynamic = dynamic
         self.static = static
@@ -182,7 +186,7 @@ class _EffectiveValueStore(MutableMapping[_ValueStoreKey, Any]):  # pylint: disa
             removed=self._dynamic.removed_keys,
             updated=self._dynamic.items(),
         )
-        self._dynamic = _DynamicValueStore()
+        self._dynamic = _DynamicDiskSyncedMapping()
 
 
 class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-ancestors
@@ -235,10 +239,12 @@ class ValueStoreManager:
     .. automethod:: ValueStoreManager.save
 
     """
+    STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
+
     def __init__(self, host_name: HostName) -> None:
-        self._value_store = _EffectiveValueStore(
-            dynamic=_DynamicValueStore(),
-            static=_StaticValueStore(host_name, logger.debug),
+        self._value_store = _DiskSyncedMapping.make(
+            path=self.STORAGE_PATH / str(host_name),
+            log_debug=lambda x: logger.debug("value store: %s", x),
         )
         self.active_service_interface: Optional[_ValueStore] = None
 
@@ -257,5 +263,5 @@ class ValueStoreManager:
 
     def save(self) -> None:
         """Write all current values of this host to disk"""
-        if isinstance(self._value_store, _EffectiveValueStore):
+        if isinstance(self._value_store, _DiskSyncedMapping):
             self._value_store.commit()

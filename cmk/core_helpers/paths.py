@@ -5,31 +5,21 @@ import abc
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final, Iterator, Literal, NewType, Union
+from typing import Any, Final, Iterator, Union
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
 __all__ = [
-    "LATEST_SERIAL",
-    "ConfigSerial",
-    "OptionalConfigSerial",
     "ConfigPath",
     "VersionedConfigPath",
-    "LatestConfigPath",
     "LATEST_CONFIG",
     "make_helper_config_path",
     "make_fetchers_config_path",
     "make_local_config_path",
     "make_global_config_path",
 ]
-
-# LATEST_SERIAL, ConfigSerial, and OptionalConfigSerial are deprecated.
-
-LATEST_SERIAL: Final[Literal["latest"]] = "latest"
-ConfigSerial = NewType("ConfigSerial", str)
-OptionalConfigSerial = Union[ConfigSerial, Literal["latest"]]
 
 
 class ConfigPath(abc.ABC):
@@ -40,23 +30,6 @@ class ConfigPath(abc.ABC):
     @property
     @abc.abstractmethod
     def _path_elem(self) -> str:
-        raise NotImplementedError()
-
-    @staticmethod
-    def from_deprecated(config_paths: Union[ConfigPath, str]) -> ConfigPath:
-        if isinstance(config_paths, str):
-            # Deprecated!
-            try:
-                return VersionedConfigPath(int(config_paths))
-            except ValueError:
-                # int(config_paths) failed
-                return LATEST_CONFIG
-
-        assert isinstance(config_paths, ConfigPath), repr(config_paths)
-        return config_paths
-
-    @abc.abstractmethod
-    def to_deprecated(self) -> OptionalConfigSerial:
         raise NotImplementedError()
 
     def __str__(self) -> str:
@@ -118,9 +91,6 @@ class VersionedConfigPath(ConfigPath, Iterator):
         )
         return cls(serial)
 
-    def to_deprecated(self) -> ConfigSerial:
-        return ConfigSerial(str(self))
-
     def __iter__(self) -> Iterator[VersionedConfigPath]:
         serial = self.serial
         while True:
@@ -168,35 +138,32 @@ class VersionedConfigPath(ConfigPath, Iterator):
         LATEST_CONFIG.helper_config_path().symlink_to(self.helper_config_path().name)
 
 
-class LatestConfigPath(ConfigPath):
+class _LatestConfigPath(ConfigPath):
     __slots__ = ()
 
     @property
     def _path_elem(self) -> str:
         return "latest"
 
-    def to_deprecated(self) -> Literal["latest"]:
-        return LATEST_SERIAL
-
     def __repr__(self) -> str:
         return f"{type(self).__name__}()"
 
 
 # Singleton
-LATEST_CONFIG: Final = LatestConfigPath()
+LATEST_CONFIG: Final = _LatestConfigPath()
 
 
-def make_helper_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return ConfigPath.from_deprecated(config_paths).helper_config_path()
+def make_helper_config_path(config_paths: ConfigPath) -> Path:
+    return config_paths.helper_config_path()
 
 
-def make_fetchers_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return ConfigPath.from_deprecated(config_paths).fetchers_config_path()
+def make_fetchers_config_path(config_paths: ConfigPath) -> Path:
+    return config_paths.fetchers_config_path()
 
 
-def make_local_config_path(config_paths: Union[ConfigPath, str], host_name: HostName) -> Path:
-    return ConfigPath.from_deprecated(config_paths).local_config_path(host_name)
+def make_local_config_path(config_paths: ConfigPath, host_name: HostName) -> Path:
+    return config_paths.local_config_path(host_name)
 
 
-def make_global_config_path(config_paths: Union[ConfigPath, str]) -> Path:
-    return ConfigPath.from_deprecated(config_paths).global_config_path()
+def make_global_config_path(config_paths: ConfigPath) -> Path:
+    return config_paths.global_config_path()

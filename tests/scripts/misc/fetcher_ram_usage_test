@@ -95,7 +95,9 @@ def _vm_size() -> int:
 
 from pathlib import Path
 
-a_path = Path(os.path.realpath(cmk.core_helpers.paths.make_helper_config_path("latest")))
+a_path = Path(
+    os.path.realpath(
+        cmk.core_helpers.paths.make_helper_config_path(cmk.core_helpers.paths.LATEST_CONFIG)))
 
 
 def print_memory_snapshot(snapshot: tracemalloc.Snapshot):

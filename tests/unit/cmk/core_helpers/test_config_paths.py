@@ -12,39 +12,7 @@ import pytest
 
 import cmk.utils.paths
 
-from cmk.core_helpers.paths import (
-    ConfigPath,
-    ConfigSerial,
-    LATEST_CONFIG,
-    LATEST_SERIAL,
-    LatestConfigPath,
-    VersionedConfigPath,
-)
-
-
-class TestConfigPath:
-    @pytest.mark.parametrize("serial", (LATEST_SERIAL, LATEST_CONFIG))
-    def test_from_deprecated_latest(self, serial):
-        # LATEST_CONFIG is a singleton -> comparing with `is` is correct.
-        assert ConfigPath.from_deprecated(serial) is LATEST_CONFIG
-        assert ConfigPath.from_deprecated(str(serial)) is LATEST_CONFIG
-
-    def test_to_deprecated_latest(self):
-        assert ConfigPath.from_deprecated(LATEST_CONFIG.to_deprecated()) is LATEST_CONFIG
-        assert ConfigPath.from_deprecated(LATEST_SERIAL).to_deprecated() == LATEST_SERIAL
-
-    def test_from_deprecated_versioned(self):
-        assert ConfigPath.from_deprecated(ConfigSerial("69")) == VersionedConfigPath(69)
-        assert ConfigPath.from_deprecated("69") == VersionedConfigPath(69)
-        assert ConfigPath.from_deprecated(VersionedConfigPath(69)) == VersionedConfigPath(69)
-
-    def test_to_deprecated_versioned(self):
-        assert (ConfigPath.from_deprecated(
-            VersionedConfigPath(69).to_deprecated()) == VersionedConfigPath(69))
-        assert ConfigPath.from_deprecated(ConfigSerial("69")).to_deprecated() == ConfigSerial("69")
-
-    def test_from_deprecated_default(self):
-        assert ConfigPath.from_deprecated("i don't know") is LATEST_CONFIG
+from cmk.core_helpers.paths import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:
@@ -152,7 +120,7 @@ class TestVersionedConfigPath:
 class TestLatestConfigPath:
     @pytest.fixture
     def config_path(self):
-        yield LatestConfigPath()
+        yield LATEST_CONFIG
         (cmk.utils.paths.core_helper_config_dir / "serial.mk").unlink(missing_ok=True)
 
     def test_str(self, config_path):
@@ -162,7 +130,6 @@ class TestLatestConfigPath:
         assert isinstance(repr(config_path), str)
 
     def test_eq(self, config_path):
-        assert config_path == LATEST_CONFIG
         assert config_path == type(config_path)()
         assert config_path != VersionedConfigPath(0)
 

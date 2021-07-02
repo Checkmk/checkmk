@@ -10,6 +10,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     apache2-devel \
     bind-utils \
     curl \
+    cyrus-sasl-devel \
     flex \
     freeradius-client-devel \
     freetype2-devel \

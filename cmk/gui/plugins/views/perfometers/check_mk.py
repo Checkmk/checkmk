@@ -851,16 +851,6 @@ def perfometer_battery(row, command, perf):
 perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 
-def perfometer_ups_capacity(row, command, perf):
-    value = [float(data[1]) for data in perf if data[0] == 'percent']
-    if len(value) == 1:
-        return "%0.2f%%" % value[0], perfometer_linear(value[0], '#B2FF7F')
-    return "", ""
-
-
-perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity
-
-
 def perfometer_genu_screen(row, command, perf):
     value = int(perf[0][1])
     return "%d Sessions" % value, perfometer_logarithmic(value, 5000, 2, "#7109AA")

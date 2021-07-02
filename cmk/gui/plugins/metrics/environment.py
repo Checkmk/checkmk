@@ -210,7 +210,7 @@ metric_info["frequency"] = {
 metric_info["battery_capacity"] = {
     "title": _("Battery capacity"),
     "unit": "%",
-    "color": "11/c",
+    "color": "13/a",
 }
 
 metric_info["battery_current"] = {
@@ -228,7 +228,7 @@ metric_info["battery_temp"] = {
 metric_info["battery_seconds_remaining"] = {
     "title": _("Battery time remaining"),
     "unit": "s",
-    "color": "11/c",
+    "color": "21/a",
 }
 
 metric_info["o2_percentage"] = {

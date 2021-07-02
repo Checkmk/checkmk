@@ -27,7 +27,7 @@ trap 'omd stop '"$CMK_SITE_ID"'; exit 0' SIGTERM SIGHUP SIGINT
 
 # Prepare local MTA for sending to smart host
 # TODO: Syslog is only added to support postfix. Can we please find a better solution?
-if [ ! -z "$MAIL_RELAY_HOST" ]; then
+if [ -n "$MAIL_RELAY_HOST" ]; then
     echo "### PREPARE POSTFIX (Hostname: $HOSTNAME, Relay host: $MAIL_RELAY_HOST)"
     echo "$HOSTNAME" >/etc/mailname
     postconf -e myorigin="$HOSTNAME"

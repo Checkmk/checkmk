@@ -174,38 +174,40 @@ def cached_dns_lookup(
         cache[cache_id] = cached_ip
         return cached_ip
 
-    # Now do the actual DNS lookup
     try:
-        ipa = socket.getaddrinfo(hostname, None, family)[0][4][0]
+        ipa = _actual_dns_lookup(host_name=hostname, family=family, fallback=cached_ip)
+    except MKIPAddressLookupError:
+        cache[cache_id] = None
+        raise
 
-        # Update our cached address if that has changed or was missing
-        if ipa != cached_ip:
-            console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
-            ip_lookup_cache[cache_id] = ipa
+    # Update our cached address if that has changed or was missing
+    if ipa != cached_ip:
+        console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
+        ip_lookup_cache[cache_id] = ipa
 
-        cache[cache_id] = ipa  # Update in-memory-cache
-        return ipa
+    cache[cache_id] = ipa  # Update in-memory-cache
 
+    return ipa
+
+
+def _actual_dns_lookup(
+    *,
+    host_name: HostName,
+    family: socket.AddressFamily,
+    fallback: Optional[HostAddress] = None,
+) -> HostAddress:
+    try:
+        return socket.getaddrinfo(host_name, None, family)[0][4][0]
     except (MKTerminate, MKTimeout):
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here
         raise
-
     except Exception as e:
-        # DNS failed. Use cached IP address if present, even if caching
-        # is disabled.
-        if cached_ip:
-            cache[cache_id] = cached_ip
-            return cached_ip
-        cache[cache_id] = None
-        raise MKIPAddressLookupError("Failed to lookup %s address of %s via DNS: %s" % (
-            {
-                socket.AF_INET: "IPv4",
-                socket.AF_INET6: "IPv6"
-            }[family],
-            hostname,
-            e,
-        ))
+        if fallback:
+            return fallback
+        family_str = {socket.AF_INET: "IPv4", socket.AF_INET6: "IPv6"}[family]
+        raise MKIPAddressLookupError(
+            f"Failed to lookup {family_str} address of {host_name} via DNS: {e}")
 
 
 class IPLookupCache:

@@ -1,5 +1,7 @@
+def NODE = ''
 def DISTRO_LIST_DEFAULT
 withFolderProperties{
+    NODE = env.BUILD_NODE
     DISTRO_LIST_DEFAULT = env.DISTRO_LIST
 }
 
@@ -12,7 +14,7 @@ def DISTRO_LIST = DISTROS.split(' ')
 def DOCKER_BUILDS = [:]
 
 currentBuild.description = 'Building for the following Distros:\n' + DISTRO_LIST
-node {
+node(NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker.image('ubuntu-18.04-common').pull()
         docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  --cap-add=SYS_ADMIN --network ci_local-infra') {
@@ -41,7 +43,7 @@ node {
 
 DISTRO_LIST.each { DISTRO ->
     DOCKER_BUILDS[DISTRO] = {
-        node {
+        node(NODE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image('ubuntu-18.04-common').pull()
                 docker.image('ubuntu-18.04-common').inside('-u 0:0 --ulimit nofile=1024:1024  -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {

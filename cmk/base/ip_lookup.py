@@ -9,11 +9,9 @@ import os
 import socket
 from typing import (
     Any,
-    cast,
     Iterable,
     List,
     Mapping,
-    MutableMapping,
     Optional,
     Protocol,
     Tuple,
@@ -29,8 +27,6 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
 IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
-NewIPLookupCache = MutableMapping[IPLookupCacheId, str]
-LegacyIPLookupCache = Mapping[HostName, str]
 
 UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
@@ -68,14 +64,17 @@ def fallback_ip_for(family: socket.AddressFamily) -> str:
     }.get(family, "::")
 
 
-def deserialize_cache_id(serialized: Tuple[HostName, int]) -> Tuple[HostName, socket.AddressFamily]:
+def deserialize_cache_id(
+        serialized: Union[str, Tuple[str, int]]) -> Tuple[HostName, socket.AddressFamily]:
+    if isinstance(serialized, str):  # old pre IPv6 style
+        return HostName(serialized), socket.AF_INET
     # 4 and 6 are legacy values.
-    return serialized[0], {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
+    return HostName(serialized[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
 
 
-def serialize_cache_id(cache_id: Tuple[HostName, socket.AddressFamily]) -> Tuple[HostName, int]:
+def serialize_cache_id(cache_id: Tuple[HostName, socket.AddressFamily]) -> Tuple[str, int]:
     # 4, 6 for legacy.
-    return cache_id[0], {socket.AF_INET: 4, socket.AF_INET6: 6}[cache_id[1]]
+    return str(cache_id[0]), {socket.AF_INET: 4, socket.AF_INET6: 6}[cache_id[1]]
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -291,27 +290,11 @@ def _get_ip_lookup_cache() -> IPLookupCache:
     return cache
 
 
-def _load_ip_lookup_cache(lock: bool) -> NewIPLookupCache:
-    return _convert_legacy_ip_lookup_cache(
-        store.load_object_from_file(_cache_path(), default={}, lock=lock))
-
-
-def _convert_legacy_ip_lookup_cache(
-        cache: Union[LegacyIPLookupCache, NewIPLookupCache]) -> NewIPLookupCache:
-    """be compatible to old caches which were created by Check_MK without IPv6 support"""
-    if not cache:
-        return {}
-
-    # New version has (hostname, ip family) as key
-    if isinstance(list(cache)[0], tuple):
-        return {deserialize_cache_id(cast(IPLookupCacheId, k)): v for k, v in cache.items()}
-
-    cache = cast(LegacyIPLookupCache, cache)
-
-    new_cache: NewIPLookupCache = {}
-    for key, val in cache.items():
-        new_cache[(key, socket.AF_INET)] = val
-    return new_cache
+# TODO: value type should at least be HostAddress (actually a subtype)
+def _load_ip_lookup_cache(lock: bool) -> Mapping[IPLookupCacheId, str]:
+    loaded_object = store.load_object_from_file(_cache_path(), default={}, lock=lock)
+    assert isinstance(loaded_object, dict)
+    return {deserialize_cache_id(k): str(v) for k, v in loaded_object.items()}
 
 
 def _cache_path() -> str:

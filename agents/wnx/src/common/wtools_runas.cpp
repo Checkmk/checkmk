@@ -502,14 +502,15 @@ bool GetUserHandlePredefinedUser(HANDLE& user_handle,
     auto logged_in = LogonUser(
         user.data(), domain.empty() ? nullptr : domain.c_str(), password.data(),
         LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_WINNT50, &user_handle);
-    XLOG::l.t("LogonUser {}", ::GetLastError());
     if ((FALSE == logged_in) || wtools::IsBadHandle(user_handle)) {
         XLOG::l("Error logging in as '{}' [{}]", wtools::ToUtf8(user_name),
                 ::GetLastError());
         return false;
     }
 
-    if (!DupeHandle(user_handle)) LogDupeError(XLOG_FLINE + " !!!");
+    if (!DupeHandle(user_handle)) {
+        LogDupeError(XLOG_FLINE + " !!!");
+    }
 
     return true;
 }
@@ -518,9 +519,11 @@ bool LoadProfile(HANDLE user_handle, PROFILEINFO& profile) {
     EnablePrivilege(SE_RESTORE_NAME);
     EnablePrivilege(SE_BACKUP_NAME);
     auto profile_loaded = ::LoadUserProfile(user_handle, &profile);
-    XLOG::t("LoadUserProfile [{}]",
-            profile_loaded == TRUE ? 0 : ::GetLastError());
-    return profile_loaded == TRUE;
+    if (profile_loaded != TRUE) {
+        XLOG::t("LoadUserProfile failed with error [{}]", ::GetLastError());
+        return false;
+    }
+    return true;
 }
 
 bool GetUserHandle(AppSettings& settings, BOOL& profile_loaded,
@@ -709,15 +712,21 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
     auto* environment = MakeEnvironment(settings.hUser);
     ON_OUT_OF_SCOPE(if (environment)::DestroyEnvironmentBlock(environment));
 
-    if (nullptr != environment) start_flags |= CREATE_UNICODE_ENVIRONMENT;
-    XLOG::l("CreateEnvironmentBlock [{}]", ::GetLastError());
+    if (nullptr != environment) {
+        start_flags |= CREATE_UNICODE_ENVIRONMENT;
+    }
 
-    if (settings.disable_file_redirection) krnl::DisableFileRedirection();
+    if (settings.disable_file_redirection) {
+        krnl::DisableFileRedirection();
+    }
 
-    if (settings.run_limited && !LimitRights(settings.hUser)) return false;
-
-    if (settings.run_elevated && !ElevateUserToken(settings.hUser))
+    if (settings.run_limited && !LimitRights(settings.hUser)) {
         return false;
+    }
+
+    if (settings.run_elevated && !ElevateUserToken(settings.hUser)) {
+        return false;
+    }
 
     auto [domain, user] = GetDomainUser(settings.user);
 

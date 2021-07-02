@@ -49,6 +49,13 @@ TEST(StringUtilTest, JoinTest) {
     EXPECT_EQ("foo, , bar", mk::join(v{"foo", "", "bar"}, ", "));
 }
 
+TEST(StringUtilTest, LStripTest) {
+    EXPECT_EQ("", mk::lstrip("  "));
+    EXPECT_EQ("xx", mk::lstrip("  \t\n\t  xx"));
+    EXPECT_EQ("xx  ", mk::lstrip("  xx  "));
+    EXPECT_EQ("xx  xx", mk::lstrip("xx  xx"));
+}
+
 TEST(StringUtilTest, EscapeNonprintableTest) {
     {
         std::ostringstream out{};

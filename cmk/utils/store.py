@@ -9,21 +9,21 @@ manager."""
 
 import ast
 import enum
-import functools
-import threading
-from contextlib import contextmanager
 import errno
 import fcntl
+import functools
 import logging
 import os
-from pathlib import Path
 import pprint
 import tempfile
-from typing import Any, Union, Dict, Iterator, Optional, AnyStr, cast, List, Tuple
+import threading
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, AnyStr, Dict, Iterator, List, Optional, Tuple, Union
 
 from six import ensure_binary
 
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKTerminate
+from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
@@ -199,33 +199,22 @@ def save_to_mk_file(path: Union[Path, str],
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Union[Path, str], default: Any = None, lock: bool = False) -> Any:
-    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
-    if not content:
-        return default
-    return ast.literal_eval(content)
+    content = _load_bytes_from_file(path, lock=lock).decode("utf-8")
+    return ast.literal_eval(content) if content else default
 
 
-def load_text_from_file(path: Union[Path, str], default: str = u"", lock: bool = False) -> str:
-    content = cast(str, _load_data_from_file(path, lock=lock, encoding="utf-8"))
-    if not content:
-        return default
-    return content
+def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
+    return _load_bytes_from_file(path, lock=lock).decode("utf-8") or default
 
 
 def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: bool = False) -> bytes:
-    content = cast(bytes, _load_data_from_file(path, lock=lock))
-    if not content:
-        return default
-    return content
+    return _load_bytes_from_file(path, lock=lock) or default
 
 
-# TODO: This function has to die! Its return type depends on the value of the
-# encoding parameter, which doesn't work at all with mypy and various APIs like
-# ast.literal_eval. As a workaround, we use casts, but this isn't a real
-# solution....
-def _load_data_from_file(path: Union[Path, str],
-                         lock: bool = False,
-                         encoding: Optional[str] = None) -> Union[None, str, bytes]:
+def _load_bytes_from_file(
+    path: Union[Path, str],
+    lock: bool = False,
+) -> bytes:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -234,11 +223,9 @@ def _load_data_from_file(path: Union[Path, str],
 
     try:
         try:
-            return path.read_text(encoding=encoding) if encoding else path.read_bytes()
-        except IOError as e:
-            if e.errno != errno.ENOENT:  # No such file or directory
-                raise
-            return None
+            return path.read_bytes()
+        except FileNotFoundError:
+            return b''
 
     except (MKTerminate, MKTimeout):
         if lock:

@@ -416,6 +416,11 @@ class Site:
         if self.update_from_git:
             self._update_with_f12_files()
 
+        # The tmpfs is already mounted during "omd create". We have just created some
+        # Checkmk configuration files and want to be sure they are used once the core
+        # starts.
+        self._update_cmk_core_config()
+
         if not os.path.exists(self.result_dir()):
             os.makedirs(self.result_dir())
 
@@ -471,6 +476,10 @@ class Site:
                     "bash .f12" % (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
+
+    def _update_cmk_core_config(self):
+        logger.info("Updating core configuration...")
+        subprocess.run(["cmk", "-U"], check=True)
 
     def _set_number_of_helpers(self):
         self.makedirs("etc/check_mk/conf.d")

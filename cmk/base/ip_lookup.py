@@ -101,9 +101,9 @@ def lookup_ip_address(
     simulation_mode: bool,
     is_snmp_usewalk_host: bool,
     override_dns: Optional[HostAddress],
-    use_dns_cache: bool,
     is_dyndns_host: bool,
     is_no_ip_host: bool,
+    force_file_cache_renewal: bool,
 ) -> Optional[HostAddress]:
     """This function *may* look up an IP address, or return a host name"""
     # Quick hack, where all IP addresses are faked (--fake-dns)
@@ -129,7 +129,7 @@ def lookup_ip_address(
     return None if is_no_ip_host else cached_dns_lookup(
         host_name,
         family=family,
-        use_dns_cache=use_dns_cache,
+        force_file_cache_renewal=force_file_cache_renewal,
     )
 
 
@@ -138,7 +138,7 @@ def cached_dns_lookup(
     hostname: HostName,
     *,
     family: socket.AddressFamily,
-    use_dns_cache: bool,
+    force_file_cache_renewal: bool,
 ) -> Optional[str]:
     """Cached DNS lookup in *two* caching layers
 
@@ -170,7 +170,7 @@ def cached_dns_lookup(
     ip_lookup_cache = _get_ip_lookup_cache()
 
     cached_ip = ip_lookup_cache.get(cache_id)
-    if cached_ip and use_dns_cache:
+    if cached_ip and not force_file_cache_renewal:
         cache[cache_id] = cached_ip
         return cached_ip
 
@@ -343,9 +343,9 @@ def update_dns_cache(
                 simulation_mode=simulation_mode,
                 is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                 override_dns=override_dns,
-                use_dns_cache=False,  # it's cleared anyway
                 is_dyndns_host=host_config.is_dyndns_host,
                 is_no_ip_host=host_config.is_no_ip_host,
+                force_file_cache_renewal=True,  # it's cleared anyway
             )
             console.verbose(f"{ip}\n")
 

@@ -3186,9 +3186,9 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddres
             is_snmp_usewalk_host=host_config.is_usewalk_host and
             (host_config.management_protocol == "snmp"),
             override_dns=fake_dns,
-            use_dns_cache=use_dns_cache,
             is_dyndns_host=host_config.is_dyndns_host,
             is_no_ip_host=False,
+            force_file_cache_renewal=not use_dns_cache,
         )
     except MKIPAddressLookupError:
         return None
@@ -3209,9 +3209,9 @@ def lookup_ip_address(
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
         override_dns=fake_dns,
-        use_dns_cache=use_dns_cache,
         is_dyndns_host=host_config.is_dyndns_host,
         is_no_ip_host=host_config.is_no_ip_host,
+        force_file_cache_renewal=not use_dns_cache,
     )
 
 

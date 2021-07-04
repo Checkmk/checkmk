@@ -142,8 +142,25 @@ def cached_dns_lookup(
     is_no_ip_host: bool,
     use_dns_cache: bool,
 ) -> Optional[str]:
-    cache = _config_cache.get("cached_dns_lookup")
+    """Cached DNS lookup in *two* caching layers
 
+    1) outer layer:
+       A *config cache* that caches all calls until the configuration is changed or runtime ends.
+       Other than activating a changed configuration there is no way to remove cached results during
+       runtime. Changes made by a differend process will not be noticed.
+       This layer caches `None` for lookups that failed, after raising the corresponding exception
+       *once*. Subsequent lookups for this hostname / family combination  will not raise an
+       exception, until the configuration is changed.
+
+    2) inner layer:
+       This layer caches *successful* lookups of host name / IP address
+       family combinations, and writes them to a file.
+       Note that after the file is loaded initially, the data in the IPLookupCache is keept in sync
+       with the file, and itself stored in a dict in the config cache.
+       Before a new value is writte to file, the file is re-read, as another process might have
+       changed it.
+    """
+    cache = _config_cache.get("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?

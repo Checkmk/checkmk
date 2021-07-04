@@ -77,6 +77,8 @@ def check_oracle_jobs(item, params, info):
         # => the agentoutput is responsible for the format of item from Checkmk!
         # item could have the following formats. Keep in mind, that job_name could include a '.'!
         if len(line) == 11 and item.count('.') >= 3:
+            if len(item.split('.', 3)) != 4:
+                continue
             # => sid.pdb_name.job_owner.job_name
             itemsid, itempdb, itemowner, itemname = item.split('.', 3)
             lineformat = 3

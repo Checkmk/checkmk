@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, NamedTuple
+
+from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+
 # Example output from agent:
 # <<<aix_packages:sep(58):persist(1404743142)>>>
 # #Package Name:Fileset:Level:State:PTF Id:Fix State:Type:Description:Destination Dir.:Uninstaller:Message Catalog:Message Set:Message Number:Parent:Automatic:EFIX Locked:Install Path:Build Date
@@ -15,11 +20,24 @@
 # Java6.sdk:Java6.sdk:6.0.0.375: : :C:F:Java SDK 32-bit: : : : : : :0:0:/:
 
 
-def inv_aix_packages(info):
-    headers = info[0]
+class AIXPackage(NamedTuple):
+    name: str
+    summary: str
+    version: str
+    package_type: str
+
+
+Section = List[AIXPackage]
+
+
+def parse_aix_packages(string_table: StringTable) -> Section:
+    if not string_table:
+        return []
+
+    section: Section = []
+    headers = string_table[0]
     headers[0] = headers[0].lstrip("#")
-    parsed_packages = []
-    for line in info[1:]:
+    for line in string_table[1:]:
         row = dict(zip(headers, [x.strip() for x in line]))
 
         # AIX Type codes
@@ -38,18 +56,40 @@ def inv_aix_packages(info):
         else:
             package_type = "aix"
 
-        entry = {
-            "name": row["Package Name"],
-            "summary": row["Description"],
-            "version": row["Level"],
-            "package_type": package_type,
-        }
-        parsed_packages.append(entry)
+        section.append(
+            AIXPackage(
+                name=row["Package Name"],
+                summary=row["Description"],
+                version=row["Level"],
+                package_type=package_type,
+            )
+        )
+    return section
 
-    paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
+
+register.agent_section(
+    name="aix_packages",
+    parse_function=parse_aix_packages,
+)
 
 
-inv_info["aix_packages"] = {
-    "inv_function": inv_aix_packages,
-}
+def inventory_aix_packages(section: Section) -> InventoryResult:
+    path = ["software", "packages"]
+    for row in sorted(section, key=lambda r: r.name):
+        yield TableRow(
+            path=path,
+            key_columns={
+                "name": row.name,
+            },
+            inventory_columns={
+                "summary": row.summary,
+                "version": row.version,
+                "package_type": row.package_type,
+            },
+        )
+
+
+register.inventory_plugin(
+    name="aix_packages",
+    inventory_function=inventory_aix_packages,
+)

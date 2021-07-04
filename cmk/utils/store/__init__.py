@@ -102,19 +102,16 @@ def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False
         aquire_lock(path)
 
     try:
-        try:
-            with path.open(mode="rb") as f:
-                exec(f.read(), globals(), default)
-        except IOError as e:
-            if e.errno != errno.ENOENT:  # No such file or directory
-                raise
-        return default
-
+        exec(path.read_bytes(), globals(), default)
+    except FileNotFoundError:
+        pass
     except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot read configuration file \"%s\": %s") % (path, e))
+
+    return default
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.

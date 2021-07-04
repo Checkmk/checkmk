@@ -441,7 +441,7 @@ class LockTestThread(threading.Thread):
 @pytest.fixture(name="t1")
 def fixture_test_thread_1(locked_file):
     # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
-    t_store = import_module("cmk/utils/store.py")
+    t_store = import_module("cmk/utils/store/__init__.py")
 
     t = LockTestThread(t_store, locked_file)
     t.start()

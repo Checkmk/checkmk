@@ -1048,7 +1048,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         "aruba_aps",
         "aruba_clients",
         "aruba_cpu_util",
-        "aruba_wlc_aps",
         "atto_fibrebridge_chassis.temp",
         "atto_fibrebridge_chassis",
         "atto_fibrebridge_fcport",

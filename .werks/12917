@@ -16,7 +16,7 @@ version. One use case before the 2.0 was e.g to search for the SNMP Info service
 devices and compare the information contained in the description. To achieve the same
 result in verion 2.0 until now it was necessary to add the service details to the views.
 
-This werk puts the description in the summary. The location, name and contact which are
-not needed that often are now put in the details.
+This werk puts the description in the summary again, along with the location, name, and
+contact.
 
 SUP-6809

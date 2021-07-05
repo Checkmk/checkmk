@@ -45,6 +45,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
     Tuple,
+    Float,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
@@ -77,6 +78,11 @@ def transform_if(v):
 
     if new_traffic:
         v['traffic'] = new_traffic
+
+    if "discards" in v:
+        warn, crit = v["discards"]
+        if isinstance(warn, int):
+            v["discards"] = (float(warn), float(crit))
 
     return v
 
@@ -508,8 +514,8 @@ def _parameter_valuespec_if():
                 ("discards",
                  Tuple(title=_("Absolute levels for discards rates"),
                        elements=[
-                           Integer(title=_("Warning at"), unit=_("discards")),
-                           Integer(title=_("Critical at"), unit=_("discards"))
+                           Float(title=_("Warning at"), unit=_("discards")),
+                           Float(title=_("Critical at"), unit=_("discards"))
                        ])),
                 ("average",
                  Integer(

@@ -290,6 +290,7 @@ class DomainObject(Linkable):
 
 
 class HostExtensions(BaseSchema):
+    folder = fields.FolderField(description="The folder, in which this host resides.",)
     attributes = fields.attributes_field(
         "host",
         "update",

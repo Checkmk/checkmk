@@ -1,0 +1,12 @@
+Title: add folder to REST API host endpoints
+Class: feature
+Compatible: compat
+Component: core
+Date: 1625491819
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p7
+
+The path of the folder in which a host resides in is now returned
+in the "extensions" section of the host endpoints.

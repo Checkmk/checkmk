@@ -181,7 +181,7 @@ def cached_dns_lookup(
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
-            ip_lookup_cache.update_cache(cache_id, ipa)
+            ip_lookup_cache[cache_id] = ipa
 
         cache[cache_id] = ipa  # Update in-memory-cache
         return ipa
@@ -242,7 +242,7 @@ class IPLookupCache:
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
-    def update_cache(self, cache_id: IPLookupCacheId, ipa: str) -> None:
+    def __setitem__(self, cache_id: IPLookupCacheId, ipa: str) -> None:
         """Updates the cache with a new / changed entry
 
         When self.persist_on_update update is disabled, this simply updates the in-memory

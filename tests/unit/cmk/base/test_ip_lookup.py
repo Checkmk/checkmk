@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict, Mapping, Optional
 import os
 import socket
 from pathlib import Path
@@ -14,6 +15,165 @@ from testlib.base import Scenario
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+
+_PatchMapping = Mapping[ip_lookup.IPLookupCacheId, Optional[str]]
+
+
+def patch_config_cache(monkeypatch, cache: _PatchMapping) -> None:
+    monkeypatch.setattr(ip_lookup._config_cache, "get", lambda _x: cache)
+
+
+def patch_persisted_cache(monkeypatch, cache: _PatchMapping) -> None:
+    monkeypatch.setattr(ip_lookup, "_get_ip_lookup_cache", lambda: cache)
+
+
+def patch_actual_lookup(monkeypatch, mapping: _PatchMapping) -> None:
+    monkeypatch.setattr(socket, "getaddrinfo",
+                        lambda hn, _a, fm: [[0, 0, 0, 0, [mapping[(hn, fm)]]]])
+
+
+def _empty() -> Dict[ip_lookup.IPLookupCacheId, Optional[str]]:  # just centralize type hint...
+    return {}
+
+
+def test_cached_dns_lookup_is_config_cached_ok(monkeypatch):
+    patch_config_cache(monkeypatch, {("config_cached_host", socket.AF_INET): "1.2.3.4"})
+    patch_persisted_cache(monkeypatch, {("config_cached_host", socket.AF_INET): "6.6.6.6"})
+    patch_actual_lookup(monkeypatch, {("config_cached_host", socket.AF_INET): "7.7.7.7"})
+
+    assert ip_lookup.cached_dns_lookup(
+        "config_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=False,
+    ) == "1.2.3.4"
+    assert ip_lookup.cached_dns_lookup(
+        "config_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) == "1.2.3.4"
+
+
+def test_cached_dns_lookup_is_config_cached_none(monkeypatch):
+    patch_config_cache(monkeypatch, {("the_host_that_raised", socket.AF_INET6): None})
+    patch_persisted_cache(monkeypatch, _empty())
+    patch_actual_lookup(monkeypatch, _empty())
+
+    assert ip_lookup.cached_dns_lookup(
+        "the_host_that_raised",
+        family=socket.AF_INET6,
+        force_file_cache_renewal=False,
+    ) is None
+    assert ip_lookup.cached_dns_lookup(
+        "the_host_that_raised",
+        family=socket.AF_INET6,
+        force_file_cache_renewal=True,
+    ) is None
+
+
+def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch):
+
+    config_ipcache = _empty()
+    persisted_cache = {("persisted_cached_host", socket.AF_INET): "1.2.3.4"}
+
+    patch_config_cache(monkeypatch, config_ipcache)
+    patch_persisted_cache(monkeypatch, persisted_cache)
+    patch_actual_lookup(monkeypatch, {("persisted_cached_host", socket.AF_INET): "6.6.6.6"})
+
+    assert ip_lookup.cached_dns_lookup(
+        "persisted_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=False,
+    ) == "1.2.3.4"
+    assert config_ipcache.pop(("persisted_cached_host", socket.AF_INET)) == "1.2.3.4"
+    assert persisted_cache[("persisted_cached_host", socket.AF_INET)] == "1.2.3.4"
+
+    assert ip_lookup.cached_dns_lookup(
+        "persisted_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) == "6.6.6.6"
+    assert config_ipcache[("persisted_cached_host", socket.AF_INET)] == "6.6.6.6"
+    assert persisted_cache[("persisted_cached_host", socket.AF_INET)] == "6.6.6.6"
+
+
+def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch):
+
+    config_ipcache = _empty()
+    persisted_cache = {("persisted_cached_host", socket.AF_INET): "1.2.3.4"}
+
+    patch_config_cache(monkeypatch, config_ipcache)
+    patch_persisted_cache(monkeypatch, persisted_cache)
+    patch_actual_lookup(monkeypatch, {("persisted_cached_host", socket.AF_INET): "1.2.3.4"})
+
+    assert ip_lookup.cached_dns_lookup(
+        "persisted_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=False,
+    ) == "1.2.3.4"
+    assert config_ipcache.pop(("persisted_cached_host", socket.AF_INET)) == "1.2.3.4"
+    assert persisted_cache[("persisted_cached_host", socket.AF_INET)] == "1.2.3.4"
+
+    assert ip_lookup.cached_dns_lookup(
+        "persisted_cached_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) == "1.2.3.4"
+    assert config_ipcache.pop(("persisted_cached_host", socket.AF_INET)) == "1.2.3.4"
+    assert persisted_cache[("persisted_cached_host", socket.AF_INET)] == "1.2.3.4"
+
+
+def test_cached_dns_lookup_uncached(monkeypatch):
+
+    config_ipcache = _empty()
+    persisted_cache = _empty()
+
+    patch_config_cache(monkeypatch, config_ipcache)
+    patch_persisted_cache(monkeypatch, persisted_cache)
+    patch_actual_lookup(monkeypatch, {("test_host", socket.AF_INET): "3.1.4.1"})
+
+    assert ip_lookup.cached_dns_lookup(
+        "test_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=False,
+    ) == "3.1.4.1"
+    assert config_ipcache.pop(("test_host", socket.AF_INET)) == "3.1.4.1"
+    assert persisted_cache.pop(("test_host", socket.AF_INET)) == "3.1.4.1"
+
+    assert ip_lookup.cached_dns_lookup(
+        "test_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) == "3.1.4.1"
+    assert config_ipcache[("test_host", socket.AF_INET)] == "3.1.4.1"
+    assert persisted_cache[("test_host", socket.AF_INET)] == "3.1.4.1"
+
+
+def test_cached_dns_lookup_raises_once(monkeypatch):
+
+    config_ipcache = _empty()
+    persisted_cache = _empty()
+
+    patch_config_cache(monkeypatch, config_ipcache)
+    patch_persisted_cache(monkeypatch, persisted_cache)
+    patch_actual_lookup(monkeypatch, {})
+
+    with pytest.raises(ip_lookup.MKIPAddressLookupError):
+        _ = ip_lookup.cached_dns_lookup(
+            "test_host",
+            family=socket.AF_INET,
+            force_file_cache_renewal=False,
+        )
+
+    assert ip_lookup.cached_dns_lookup(
+        "test_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=False,
+    ) is None
+    assert ip_lookup.cached_dns_lookup(
+        "test_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) is None
 
 
 # TODO: Can be removed when this is not executed through a symlink anymore.
@@ -74,7 +234,7 @@ def test_get_ip_lookup_cache_existing(_cache_file):
 def test_update_ip_lookup_cache_empty_file(_cache_file):
     cache_id = "host1", socket.AF_INET
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache.update_cache(cache_id, "127.0.0.1")
+    ip_lookup_cache[cache_id] = "127.0.0.1"
 
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
     assert cache[cache_id] == "127.0.0.1"
@@ -88,8 +248,8 @@ def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
     cache_id2 = "host2", socket.AF_INET
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
-    ip_lookup_cache.update_cache(cache_id2, "127.0.0.2")
+    ip_lookup_cache[cache_id1] = "127.0.0.1"
+    ip_lookup_cache[cache_id2] = "127.0.0.2"
 
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
     assert cache[cache_id1] == "127.0.0.1"
@@ -107,7 +267,7 @@ def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
         })
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
+    ip_lookup_cache[cache_id1] = "127.0.0.1"
 
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
     assert cache[cache_id1] == "127.0.0.1"
@@ -119,7 +279,7 @@ def test_ip_lookup_cache_update_without_persistence(_cache_file):
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.persist_on_update = False
-    ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
+    ip_lookup_cache[cache_id1] = "127.0.0.1"
 
     assert ip_lookup_cache[cache_id1] == "127.0.0.1"
     assert not _cache_file.exists()

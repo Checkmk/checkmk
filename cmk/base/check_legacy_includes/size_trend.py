@@ -7,11 +7,12 @@
 # pylint: disable=no-else-return
 
 import time
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from cmk.base.check_api import (
     get_average,
     get_bytes_human_readable,
+    get_percent_human_readable,
     get_rate,
     MKCounterWrapped,
     RAISE,
@@ -24,15 +25,47 @@ from cmk.base.check_api import (
 # cmk/base/plugins/agent_based/utils/size_trend.py
 # ==========================================================================================
 
-
 # ==================================================================================================
-# THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
-# THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FUNCTION ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
+# THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
+# THE NEW CHECK API. PLEASE DO NOT MODIFY THESE FUNCTIONS ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
 # cmk/base/plugins/agent_based/utils/size_trend.py
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
+
+Levels = Tuple[float, float]
+
+
+def _check_shrinking(trend: float, levels: Optional[Levels], range_hours: float,
+                     renderer: Callable[..., str]) -> Tuple[int, str]:
+    """test for negative trend
+    >>> _check_shrinking(5, (1, 2), 7, lambda _: "foo")
+    (0, '')
+    >>> _check_shrinking(-5, None, 7, lambda _: "foo")
+    (0, '')
+    >>> _check_shrinking(-5, (1, 2), 7, lambda _: "foo")
+    (2, 'shrinking too fast (warn/crit at foo/foo per 7.0 h)(!!)')
+    """
+    state, problem = 0, ""
+    if levels is None:
+        return state, problem
+
+    wa, cr = levels
+    if trend <= -wa:
+        problem = "shrinking too fast (warn/crit at %s/%s per %.1f h)(!" % (
+            renderer(wa),
+            renderer(cr),
+            range_hours,
+        )
+        state = 1
+        if trend <= -cr:
+            state = 2
+            problem += "!"
+        problem += ")"
+    return state, problem
+
+
 def size_trend(
     check,
     item,
@@ -57,12 +90,14 @@ def size_trend(
       item (str): The name of the item, e.g. the mountpoint "/" for df.
       resource (str): The resource in question, e.g. "disk", "ram", "swap".
       levels (dict): Level parameters for the trend computation. Items:
-          "trend_range"      : 24,        # interval for the trend in hours
-          "trend_perfdata    : True       # generate perfomance data for trends
-          "trend_bytes"      : (10, 20),  # change during trend_range
-          "trend_perc"       : (1, 2),    # percent change during trend_range
-          "trend_timeleft"   : (72, 48)   # time left in hours until full
-          "trend_showtimeleft: True       # display time left in infotext
+          "trend_range"          : 24,       # interval for the trend in hours
+          "trend_perfdata"       : True      # generate perfomance data for trends
+          "trend_bytes"          : (10, 20), # change during trend_range
+          "trend_shrinking_bytes": (16, 32), # Bytes of shrinking during trend_range
+          "trend_perc"           : (1, 2),   # percent change during trend_range
+          "trend_shrinking_perc" : (1, 2),   # percent decreasing change during trend_range
+          "trend_timeleft"       : (72, 48)  # time left in hours until full
+          "trend_showtimeleft    : True      # display time left in infotext
         The item "trend_range" is required. All other items are optional.
       timestamp (float, optional): Time in secs used to calculate the rate
         and average. Defaults to "None".
@@ -132,6 +167,16 @@ def size_trend(
                 problems[-1] += "!"
             problems[-1] += ")"
 
+    tmp_state, tmp_problem = _check_shrinking(
+        trend * MB,
+        levels.get("trend_shrinking_bytes"),
+        range_hours,
+        get_bytes_human_readable,
+    )
+    if tmp_state > 0:
+        state = max(state, tmp_state)
+        problems.append(tmp_problem)
+
     # apply levels for growth relative to filesystem size
     trend_perc: Optional[Tuple[float, float]] = levels.get("trend_perc")
     if trend_perc:
@@ -145,13 +190,26 @@ def size_trend(
         else:
             warn_perf, crit_perf = wa, cr
         if trend >= wa:
-            problems.append("growing too fast (warn/crit at %.3f%%/%.3f%% per %.1f h)(!" %
-                            (wa_perc, cr_perc, range_hours))
+            problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
+                get_percent_human_readable(wa_perc),
+                get_percent_human_readable(cr_perc),
+                range_hours,
+            ))
             state = max(1, state)
             if trend >= cr:
                 state = 2
                 problems[-1] += "!"
             problems[-1] += ")"
+
+    tmp_state, tmp_problem = _check_shrinking(
+        100 * trend / size_mb,
+        levels.get("trend_shrinking_perc"),
+        range_hours,
+        get_percent_human_readable,
+    )
+    if tmp_state > 0:
+        state = max(state, tmp_state)
+        problems.append(tmp_problem)
 
     # compute time until filesystem is full (only for positive trend, of course)
 

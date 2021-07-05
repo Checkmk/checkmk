@@ -34,6 +34,17 @@ def _level_bytes_to_mb(levels: Optional[Levels]) -> Optional[Levels]:
     return levels[0] / MB, levels[1] / MB
 
 
+def _reverse_level_signs(levels: Optional[Levels]) -> Optional[Levels]:
+    """reverse the sign of all values
+    >>> _reverse_level_signs(None)
+    >>> _reverse_level_signs((-1, 2))
+    (1, -2)
+    """
+    if levels is None:
+        return None
+    return -levels[0], -levels[1]
+
+
 def size_trend(
     *,
     value_store: MutableMapping[str, Any],
@@ -59,12 +70,14 @@ def size_trend(
       value_store_key (str): The key (prefix) to use in the value_store
       resource (str): The resource in question, e.g. "disk", "ram", "swap".
       levels (dict): Level parameters for the trend computation. Items:
-          "trend_range"       : 24,        # interval for the trend in hours
-          "trend_perfdata     : True       # generate perfomance data for trends
-          "trend_bytes"       : (10, 20),  # change during trend_range
-          "trend_perc"        : (1, 2),    # percent change during trend_range
-          "trend_timeleft"    : (72, 48)   # time left in hours until full
-          "trend_showtimeleft": True       # display time left in infotext
+          "trend_range"          : 24,       # interval for the trend in hours
+          "trend_perfdata"       : True      # generate perfomance data for trends
+          "trend_bytes"          : (10, 20), # change during trend_range
+          "trend_shrinking_bytes": (16, 32), # Bytes of shrinking during trend_range
+          "trend_perc"           : (1, 2),   # percent change during trend_range
+          "trend_shrinking_perc" : (1, 2),   # percent decreasing change during trend_range
+          "trend_timeleft"       : (72, 48)  # time left in hours until full
+          "trend_showtimeleft    : True      # display time left in infotext
         The item "trend_range" is required. All other items are optional.
       timestamp (float, optional): Time in secs used to calculate the rate
         and average. Defaults to "None".
@@ -126,6 +139,7 @@ def size_trend(
     yield from check_levels(
         mb_in_range * MB,
         levels_upper=levels.get("trend_bytes"),
+        levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
         render_func=lambda x: ("+" if x >= 0 else "") + render.bytes(x),
         label="trend per %s" % render.timespan(range_sec),
     )
@@ -134,6 +148,7 @@ def size_trend(
     yield from check_levels(
         mb_in_range * 100 / size_mb,
         levels_upper=levels.get("trend_perc"),
+        levels_lower=_reverse_level_signs(levels.get("trend_shrinking_perc")),
         render_func=lambda x: ("+" if x >= 0 else "") + render.percent(x),
         label="trend per %s" % render.timespan(range_sec),
     )

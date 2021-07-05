@@ -381,7 +381,7 @@ checks = {
                 ]),
                 (2,
                  'trend: +121.29 GB / 24 hours - growing too fast (warn/crit at 100.00 MB/200.00 MB per 24.0 h)'
-                 '(!!), growing too fast (warn/crit at 5.000%/10.000% per 24.0 h)(!!), time '
+                 '(!!), growing too fast (warn/crit at 5.0%/10.0% per 24.0 h)(!!), time '
                  'left until disk full: 23 hours', [
                      ('growth', 2190950.615204839),
                      ('trend', 124195.93898073, 100.0, 200.0, 0, 12800.0),

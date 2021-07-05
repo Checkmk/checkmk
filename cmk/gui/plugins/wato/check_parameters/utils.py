@@ -326,6 +326,26 @@ size_trend_elements = [
                    default_value=10,
                ),
            ])),
+    ("trend_shrinking_bytes",
+     Tuple(title=_("Levels on decreasing trends in MB per time range"),
+           elements=[
+               Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+               Filesize(title=_("Critical at"), default_value=4 * 1024**3)
+           ])),
+    ("trend_shrinking_perc",
+     Tuple(title=_("Levels for the percentual shrinking per time range"),
+           elements=[
+               Percentage(
+                   title=_("Warning at"),
+                   unit=_("% / range"),
+                   default_value=5,
+               ),
+               Percentage(
+                   title=_("Critical at"),
+                   unit=_("% / range"),
+                   default_value=10,
+               ),
+           ])),
     ("trend_timeleft",
      Tuple(title=_("Levels on the time left until full"),
            elements=[

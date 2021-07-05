@@ -479,7 +479,8 @@ class Site:
 
     def _update_cmk_core_config(self):
         logger.info("Updating core configuration...")
-        subprocess.run(["cmk", "-U"], check=True)
+        p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
 
     def _set_number_of_helpers(self):
         self.makedirs("etc/check_mk/conf.d")

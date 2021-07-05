@@ -416,7 +416,7 @@ class CreateFolder(BaseSchema):
         required=False,
         description=("Specific attributes to apply for all hosts in this folder "
                      "(among other things)."),
-        example={'criticality': 'prod'},
+        example={'tag_criticality': 'prod'},
     )
 
 
@@ -452,7 +452,7 @@ class UpdateFolder(BaseSchema):
         'update',
         description=("Only set the attributes which are given in this field. Already set "
                      "attributes will not be touched."),
-        example={'criticality': 'prod'},
+        example={'tag_criticality': 'prod'},
         required=False,
     )
     remove_attributes = fields.attributes_field(

@@ -697,6 +697,11 @@ class Endpoint:
 
         responses: ResponseType = {}
 
+        if 401 in self._expected_status_codes:
+            responses["401"] = self._path_item(
+                401, "The user is not authorized to do this request."
+            )
+
         if self.tag_group == "Setup":
             responses["403"] = self._path_item(403, "Configuration via WATO is disabled")
 
@@ -705,6 +710,9 @@ class Endpoint:
 
         if 422 in self._expected_status_codes:
             responses["422"] = self._path_item(422, "The request could not be processed.")
+
+        if 423 in self._expected_status_codes:
+            responses["423"] = self._path_item(423, "This resource is currently locked.")
 
         if 405 in self._expected_status_codes:
             responses["405"] = _path_item(

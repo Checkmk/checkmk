@@ -74,7 +74,7 @@ class ProblemException(HTTPException):
     def to_problem(self):
         return problem(
             status=self.code,
-            title=self.description,
+            title=self.description,  # same as title
             detail=self.detail,
             type_=self.type,
             ext=self.ext,

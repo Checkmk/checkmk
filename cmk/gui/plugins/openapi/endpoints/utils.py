@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Un
 from cmk.utils import version
 from cmk.utils.version import is_managed_edition
 
+from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
@@ -169,7 +170,7 @@ def _retrieve_group(
 @contextlib.contextmanager
 def may_fail(
     exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
-    status: int,
+    status: Optional[int] = None,
 ):
     """Context manager to make Exceptions REST-API safe
 
@@ -179,9 +180,27 @@ def may_fail(
             ...          raise ValueError("Nothing to see here, move along.")
             ... except ProblemException as _exc:
             ...     _exc.to_problem().data
-            b'{"title": "The operation has failed.", \
-"status": 404, \
+            b'{"title": "The operation has failed.", "status": 404, \
 "detail": "Nothing to see here, move along."}'
+
+            >>> from cmk.gui.exceptions import MKUserError
+            >>> try:
+            ...     with may_fail(MKUserError):
+            ...        raise MKUserError(None, "There is an activation already running.",
+            ...                          status=409)
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 409, \
+"detail": "There is an activation already running."}'
+
+            >>> from cmk.gui.exceptions import MKAuthException
+            >>> try:
+            ...     with may_fail(MKAuthException, status=401):
+            ...        raise MKAuthException("These are not the droids that you are looking for.")
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 401, \
+"detail": "These are not the droids that you are looking for."}'
 
     """
 
@@ -194,6 +213,10 @@ def may_fail(
     try:
         yield
     except exc_type as exc:
+        if isinstance(exc, MKHTTPException):
+            status = exc.status
+        elif status is None:
+            status = 400
         raise ProblemException(
             status=status,
             title="The operation has failed.",

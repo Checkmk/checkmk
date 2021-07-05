@@ -45,7 +45,7 @@ DomainType = Literal[
     "service_group_config",
     "time_period",
     "user",
-]
+]  # yapf: disable
 
 DomainObject = Dict[str, Any]
 
@@ -93,7 +93,7 @@ CmkEndpointName = Literal[
     "cmk/service.move-undecided",
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
-]
+]  # yapf: disable
 
 RestfulEndpointName = Literal[
     "describedby",  # sic
@@ -129,7 +129,7 @@ RestfulEndpointName = Literal[
     ".../user",
     ".../value",  # takes params
     ".../version",
-]
+]  # yapf: disable
 
 LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
 
@@ -154,7 +154,7 @@ PropertyFormat = Literal[
     # Non-string values
     "decimal",  # the number should be interpreted as a float-point decimal.
     "int",  # the number should be interpreted as an integer.
-]
+]  # yapf: disable
 CollectionItem = Dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]
@@ -304,6 +304,7 @@ ResponseType = TypedDict(
         "301": PathItem,
         "302": PathItem,
         "400": PathItem,
+        "401": PathItem,
         "403": PathItem,
         "404": PathItem,
         "405": PathItem,
@@ -311,6 +312,7 @@ ResponseType = TypedDict(
         "415": PathItem,
         "412": PathItem,
         "422": PathItem,
+        "423": PathItem,
         "428": PathItem,
     },
     total=False,
@@ -378,8 +380,10 @@ EndpointEntry = TypedDict(
 EndpointKey = Tuple[str, LinkRelation]
 ParameterKey = Tuple[str, ...]
 
-StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 405, 409, 412, 415, 422, 428]
-StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "415", "422", "428"]
+StatusCodeInt = Literal[200, 204, 301, 302, 400, 401, 403, 404, 405, 409, 412, 415, 422, 423, 428]
+StatusCode = Literal[
+    "200", "204", "301", "302", "400", "401", "403", "404", "409", "412", "415", "422", "423", "428"
+]
 
 ContentType = str
 ContentObject = Dict[ContentType, Dict[str, Any]]

@@ -11,17 +11,16 @@
 # <<<kaspersky_av_client>>>
 # Signatures 13.12.2016 11:55:00
 
-factory_settings['kaspersky_av_client_default_levels'] = {
-    'signature_age': (86400, 7 * 86400),
-    'fullscan_age': (86400, 7 * 86400),
-}
+import time
+
+from .agent_based_api.v1 import register, Service, State, Result, render
 
 
-def parse_kaspersky_av_client(info):
+def parse_kaspersky_av_client(string_table):
     now = time.time()
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         if line[1] == 'Missing':
             continue
 
@@ -44,43 +43,52 @@ def parse_kaspersky_av_client(info):
     return parsed
 
 
-def inventory_kaspersky_av_client(parsed):
-    return [(None, {})]
+register.agent_section(
+    name="kaspersky_av_client",
+    parse_function=parse_kaspersky_av_client,
+)
 
 
-def check_kaspersky_av_client(_no_item, params, parsed):
+def discover_kaspersky_av_client(section):
+    if section:
+        yield Service()
+
+
+def check_kaspersky_av_client(params, section):
     for key, what in [
         ("signature_age", "Last update of signatures"),
         ("fullscan_age", "Last fullscan"),
     ]:
-        age = parsed.get(key)
+        age = section.get(key)
         if age is None:
-            yield 3, what + ": unknown"
+            yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
         else:
             warn, crit = params[key]
             if age >= crit:
-                state = 2
+                state = State.CRIT
             elif age >= warn:
-                state = 1
+                state = State.WARN
             else:
-                state = 0
+                state = State.OK
 
-            infotext = "%s %s ago" % (what, get_age_human_readable(age))
-            if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
+            infotext = "%s %s ago" % (what, render.timespan(age))
+            if state in (State.CRIT, State.WARN):
+                infotext += " (warn/crit at %s/%s)" % (render.timespan(warn), render.timespan(crit))
 
-            yield state, infotext
+            yield Result(state=state, summary=infotext)
 
-    if parsed.get("fullscan_failed"):
-        yield 2, "Last fullscan failed"
+    if section.get("fullscan_failed"):
+        yield Result(state=State.CRIT, summary="Last fullscan failed")
 
 
-check_info['kaspersky_av_client'] = {
-    'parse_function': parse_kaspersky_av_client,
-    'inventory_function': inventory_kaspersky_av_client,
-    'check_function': check_kaspersky_av_client,
-    'service_description': 'Kaspersky AV',
-    'default_levels_variable': 'kaspersky_av_client_default_levels',
-    'group': 'kaspersky_av_client',
-}
+register.check_plugin(
+    name="kaspersky_av_client",
+    service_name="Kaspersky AV",
+    discovery_function=discover_kaspersky_av_client,
+    check_function=check_kaspersky_av_client,
+    check_default_parameters={
+        'signature_age': (86400, 7 * 86400),
+        'fullscan_age': (86400, 7 * 86400),
+    },
+    check_ruleset_name="kaspersky_av_client",
+)

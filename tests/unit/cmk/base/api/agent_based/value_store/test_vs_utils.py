@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ast import literal_eval
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -77,36 +78,31 @@ class Test_DynamicDiskSyncedMapping:
 
 class Test_StaticDiskSyncedMapping:
     def _mock_load(self, mocker):
-        stored_item_states = {
-            (
-                "check1",
-                None,
-                "stored-user-key-1",
-            ): 23,
-            (
-                "check2",
-                "item",
-                "stored-user-key-2",
-            ): 42,
-        }
+        stored_item_states = ('{("check1", None, "stored-user-key-1"): 23,'
+                              ' ("check2", "item", "stored-user-key-2"): 42}')
 
         mocker.patch.object(
             store,
-            "load_object_from_file",
+            "load_text_from_file",
             side_effect=lambda *a, **kw: stored_item_states,
         )
 
     def _mock_store(self, mocker):
         mocker.patch.object(
             store,
-            "save_object_to_file",
+            "save_text_to_file",
             autospec=True,
         )
 
     @staticmethod
     def _get_sdsm(
             tmp_path: Path) -> _StaticDiskSyncedMapping[Tuple[str, Optional[str], str], object]:
-        return _StaticDiskSyncedMapping(tmp_path / "test-host", lambda msg: None)
+        return _StaticDiskSyncedMapping(
+            path=tmp_path / "test-host",
+            log_debug=lambda msg: None,
+            serializer=repr,
+            deserializer=literal_eval,
+        )
 
     def test_mapping_features(self, mocker, tmp_path: Path):
 
@@ -141,8 +137,8 @@ class Test_StaticDiskSyncedMapping:
             ("check1", None, "stored-user-key-1"): 23,
             ("check3", "el Barto", "Ay caramba"): "ASDF",
         }
-        written = store.save_object_to_file.call_args.args[1]  # type: ignore[attr-defined]
-        assert written == expected_values
+        written = store.save_text_to_file.call_args.args[1]  # type: ignore[attr-defined]
+        assert written == repr(expected_values)
         assert list(sdsm.items()) == list(expected_values.items())
 
 

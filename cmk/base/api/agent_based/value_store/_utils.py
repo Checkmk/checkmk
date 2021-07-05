@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from ast import literal_eval
 from contextlib import contextmanager
 from pathlib import Path
 from typing import (
@@ -74,11 +76,20 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 
     The only way to modify the values is the disksync method.
     """
-    def __init__(self, path: Path, log_debug: Callable[[str], None]) -> None:
+    def __init__(
+        self,
+        *,
+        path: Path,
+        log_debug: Callable[[str], None],
+        serializer: Callable[[Mapping[_TKey, _TValue]], str],
+        deserializer: Callable[[str], Mapping[_TKey, _TValue]],
+    ) -> None:
         self._path: Final = path
         self._last_sync: Optional[float] = None
         self._data: Mapping[_TKey, _TValue] = {}
         self._log_debug = log_debug
+        self._serializer: Final = serializer
+        self._deserializer: Final = deserializer
         self.disksync()
 
     def __getitem__(self, key: _TKey) -> _TValue:
@@ -115,13 +126,14 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
                 self._log_debug("already loaded")
             else:
                 self._log_debug("loading from disk")
-                self._data = store.load_object_from_file(self._path, default={}, lock=False)
+                self._data = self._deserializer(
+                    store.load_text_from_file(self._path, default='{}', lock=False))
 
             if removed or updated:
                 data = {k: v for k, v in self._data.items() if k not in removed}
                 data.update(updated)
                 self._log_debug("writing to disk")
-                store.save_object_to_file(self._path, data, pretty=False)
+                store.save_text_to_file(self._path, self._serializer(data))
                 self._data = data
 
             self._last_sync = self._path.stat().st_mtime
@@ -134,10 +146,22 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors
     """Implements the overlay logic between dynamic and static value store"""
     @classmethod
-    def make(cls, *, path: Path, log_debug: Callable[[str], None]) -> "_DiskSyncedMapping":
+    def make(
+        cls,
+        *,
+        path: Path,
+        log_debug: Callable[[str], None],
+        serializer: Callable[[Mapping[_TKey, _TValue]], str],
+        deserializer: Callable[[str], Mapping[_TKey, _TValue]],
+    ) -> "_DiskSyncedMapping":
         return cls(
             dynamic=_DynamicDiskSyncedMapping(),
-            static=_StaticDiskSyncedMapping(path=path, log_debug=log_debug),
+            static=_StaticDiskSyncedMapping(
+                path=path,
+                log_debug=log_debug,
+                serializer=serializer,
+                deserializer=deserializer,
+            ),
         )
 
     def __init__(
@@ -252,6 +276,8 @@ class ValueStoreManager:
         self._value_store: _DiskSyncedMapping[_ValueStoreKey, Any] = _DiskSyncedMapping.make(
             path=self.STORAGE_PATH / str(host_name),
             log_debug=lambda x: logger.debug("value store: %s", x),
+            serializer=repr,
+            deserializer=literal_eval,
         )
         self.active_service_interface: Optional[_ValueStore] = None
 

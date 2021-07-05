@@ -6,7 +6,6 @@
 set -e
 
 REPO_DIR=$(git rev-parse --show-toplevel)
-: "${IMAGE_NAME:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
 
 execute_test() {
     LANG=C make -C ../../.. config.status
@@ -17,6 +16,7 @@ execute_test() {
 # same as in scripts/run-cxx-linter
 if [ -z "$RUN_HERE" ]; then
     echo "Running in Docker Container $CONTAINER (workdir $PWD)"
+    : "${IMAGE_NAME:="$(${REPO_DIR}/buildscripts/docker_image_aliases/resolve.sh IMAGE_TESTING)"}"
     docker run -a stdout -a stderr -t \
         -u "$UID:$UID" \
         -v "$REPO_DIR:$REPO_DIR" \

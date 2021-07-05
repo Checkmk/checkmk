@@ -1289,9 +1289,14 @@ sql_recovery_status () {
 }
 
 
-sql_rman () {
-    if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
-
+sql_rman () {                
+    if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+    
+        local archive_target="'PRIMARY'"
+        if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
+            archive_target="'PRIMARY', 'LOCAL'"
+        fi
+        
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1354,77 +1359,7 @@ sql_rman () {
                           and a.dest_id in
                           (select b.dest_id
                            from v\$archive_dest b
-                           where b.target IN ('PRIMARY', 'LOCAL')
-                             and b.SCHEDULE = 'ACTIVE'
-                          )
-                    group by d.NAME, i.instance_name
-                           , case when a.backup_count > 0 then 1 else 0 end);"
-                           
-    elif [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
-
-        echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-        echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
-                     || '|'|| 'COMPLETED'
-                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                     || '|'|| to_char(COMPLETION_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                     || '|'|| case when INCREMENTAL_LEVEL IS NULL
-                              then 'DB_FULL'
-                              else 'DB_INCR'
-                              end
-                     || '|'|| INCREMENTAL_LEVEL
-                     || '|'|| round(((sysdate-COMPLETION_TIME) * 24 * 60), 0)
-                     || '|'|| INCREMENTAL_CHANGE#
-                from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name)) name
-                           , bd2.INCREMENTAL_LEVEL, bd2.INCREMENTAL_CHANGE#, min(bd2.COMPLETION_TIME) COMPLETION_TIME
-                      from (select bd.file#, bd.INCREMENTAL_LEVEL, max(bd.COMPLETION_TIME) COMPLETION_TIME
-                            from v\$backup_datafile bd
-                            join v\$datafile_header dh on dh.file# = bd.file#
-                            where dh.status = 'ONLINE'
-                              and dh.con_id <> 2
-                            group by bd.file#, bd.INCREMENTAL_LEVEL
-                                           ) bd
-                     join v\$backup_datafile bd2 on bd2.file# = bd.file#
-                                               and bd2.COMPLETION_TIME = bd.COMPLETION_TIME
-                     join v\$database vd on vd.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE#
-                     join v\$instance i on 1=1
-                     group by upper(decode(${IGNORE_DB_NAME:-0}, 0, vd.NAME, i.instance_name))
-                            , bd2.INCREMENTAL_LEVEL
-                            , bd2.INCREMENTAL_CHANGE#
-                     order by name, bd2.INCREMENTAL_LEVEL);
-
-              select /*$HINT_RMAN check_mk rman2 */ name
-                    || '|' || 'COMPLETED'
-                    || '|'
-                    || '|' || to_char(CHECKPOINT_TIME, 'yyyy-mm-dd_hh24:mi:ss')
-                    || '|' || 'CONTROLFILE'
-                    || '|'
-                    || '|' || round((sysdate - CHECKPOINT_TIME) * 24 * 60)
-                    || '|' || '0'
-              from (select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
-                          ,max(bcd.CHECKPOINT_TIME) CHECKPOINT_TIME
-                    from v\$database d
-                    join V\$BACKUP_CONTROLFILE_DETAILS bcd on d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE#
-                    join v\$instance i on 1=1
-                    group by upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name))
-                   );
-
-              select /*$HINT_RMAN check_mk rman3 */ name
-                     || '|COMPLETED'
-                     || '|'|| to_char(sysdate, 'YYYY-mm-dd_HH24:MI:SS')
-                     || '|'|| to_char(completed, 'YYYY-mm-dd_HH24:MI:SS')
-                     || '|ARCHIVELOG||'
-                     || round((sysdate - completed)*24*60,0)
-                     || '|'
-              from (
-                    select upper(decode(${IGNORE_DB_NAME:-0}, 0, d.NAME, i.instance_name)) name
-                         , max(a.completion_time) completed
-                         , case when a.backup_count > 0 then 1 else 0 end
-                    from v\$archived_log a, v\$database d, v\$instance i
-                    where a.backup_count > 0
-                          and a.dest_id in
-                          (select b.dest_id
-                           from v\$archive_dest b
-                           where b.target = 'PRIMARY'
+                           where b.target IN (${archive_target})
                              and b.SCHEDULE = 'ACTIVE'
                           )
                     group by d.NAME, i.instance_name

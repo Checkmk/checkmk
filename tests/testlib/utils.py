@@ -116,7 +116,7 @@ def current_base_branch_name():
                 return "master"
 
             if re.match(r"^origin/[0-9]+\.[0-9]+\.[0-9]+$", head):
-                return head
+                return head[7:]
 
     logger.warning("Could not determine base branch, using %s", branch_name)
     return branch_name

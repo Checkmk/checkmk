@@ -115,7 +115,7 @@ class Command(NamedTuple):
 
 def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
     with _confirm_command_processed():
-        config_path: Optional[VersionedConfigPath] = None
+        config_path: Optional[ConfigPath] = None
         host_name: Optional[HostName] = None
         try:
             command = Command.from_str(raw_command)
@@ -142,8 +142,7 @@ def _confirm_command_processed() -> Iterator[None]:
         write_bytes(bytes(protocol.CMCMessage.end_of_reply()))
 
 
-def run_fetchers(config_path: VersionedConfigPath, host_name: HostName, mode: Mode,
-                 timeout: int) -> None:
+def run_fetchers(config_path: ConfigPath, host_name: HostName, mode: Mode, timeout: int) -> None:
     """Entry point from bin/fetcher"""
     try:
         # Usually OMD_SITE/var/check_mk/core/fetcher-config/[config-serial]/[host].json
@@ -186,7 +185,7 @@ def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
     )
 
 
-def _parse_config(config_path: VersionedConfigPath, host_name: HostName) -> Iterator[Fetcher]:
+def _parse_config(config_path: ConfigPath, host_name: HostName) -> Iterator[Fetcher]:
     with make_local_config_path(config_path, host_name).open() as f:
         data = json.load(f)
 
@@ -205,8 +204,7 @@ def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Fetcher]:
                 for entry in data["fetchers"])
 
 
-def _parse_cluster_config(data: Mapping[str, Any],
-                          config_path: VersionedConfigPath) -> Iterator[Fetcher]:
+def _parse_cluster_config(data: Mapping[str, Any], config_path: ConfigPath) -> Iterator[Fetcher]:
     global_config = load_global_config(make_global_config_path(config_path))
     for host_name in data["clusters"]["nodes"]:
         for fetcher in _parse_config(config_path, host_name):
@@ -219,7 +217,7 @@ def _parse_cluster_config(data: Mapping[str, Any],
 
 
 def _run_fetchers_from_file(
-    config_path: VersionedConfigPath,
+    config_path: ConfigPath,
     host_name: HostName,
     mode: Mode,
     timeout: int,

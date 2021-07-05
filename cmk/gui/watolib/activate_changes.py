@@ -2335,7 +2335,7 @@ def activate_changes_start(
     manager = ActivateChangesManager()
     manager.load()
     if manager.is_running():
-        raise MKUserError(None, _("There is an activation already running."), status=400)
+        raise MKUserError(None, _("There is an activation already running."), status=423)
 
     if not manager.has_changes():
         raise MKUserError(None, _("Currently there are no changes to activate."), status=422)

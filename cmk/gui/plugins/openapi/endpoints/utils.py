@@ -184,9 +184,27 @@ def may_fail(
             ...          raise ValueError("Nothing to see here, move along.")
             ... except ProblemException as _exc:
             ...     _exc.to_problem().data
-            b'{"title": "The operation has failed.", \
-"status": 404, \
+            b'{"title": "The operation has failed.", "status": 404, \
 "detail": "Nothing to see here, move along."}'
+
+            >>> from cmk.gui.exceptions import MKUserError
+            >>> try:
+            ...     with may_fail(MKUserError):
+            ...        raise MKUserError(None, "There is an activation already running.",
+            ...                          status=409)
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 409, \
+"detail": "There is an activation already running."}'
+
+            >>> from cmk.gui.exceptions import MKAuthException
+            >>> try:
+            ...     with may_fail(MKAuthException, status=401):
+            ...        raise MKAuthException("These are not the droids that you are looking for.")
+            ... except ProblemException as _exc:
+            ...     _exc.to_problem().data
+            b'{"title": "The operation has failed.", "status": 401, \
+"detail": "These are not the droids that you are looking for."}'
 
     """
     def _get_message(e):

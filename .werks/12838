@@ -1,0 +1,16 @@
+Title: Fix error in reports when livestatus issues occur during report creation
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.6.0p25
+Date: 1625466231
+Class: fix
+
+When a report is being created and the reporting engine recognizes livestatus
+connection issues to a site, error messages are added to the beginning of the
+report to inform the user about the connection issue which may cause missing
+data.
+
+However, this mechanism lead to an exception in some cases with an error like
+this: "Exception: KeyError ('site')".

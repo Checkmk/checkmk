@@ -1289,7 +1289,7 @@ sql_recovery_status () {
 }
 
 
-sql_rman () {                
+sql_rman () {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
     
         local archive_target="'PRIMARY'"

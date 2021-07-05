@@ -198,7 +198,12 @@ def save_to_mk_file(path: Union[Path, str],
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_object_from_file(path: Union[Path, str], default: Any = None, lock: bool = False) -> Any:
+def load_object_from_file(
+    path: Union[Path, str],
+    *,
+    default: Any,
+    lock: bool = False,
+) -> Any:
     content = _load_bytes_from_file(path, lock=lock).decode("utf-8")
     return ast.literal_eval(content) if content else default
 

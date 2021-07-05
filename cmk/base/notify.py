@@ -1907,7 +1907,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
     unhandled_uuids: UUIDs = []
     for mtime, notify_uuid in uuids:
         try:
-            params, context = store.load_object_from_file(dirname + "/" + notify_uuid)
+            params, context = store.load_object_from_file(dirname + "/" + notify_uuid, default=None)
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

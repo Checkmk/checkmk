@@ -587,7 +587,9 @@ class JobStatus:
 
         if params:
             try:
-                status = store.load_object_from_file(str(self._jobstatus_path), {}, lock=True)
+                status = store.load_object_from_file(str(self._jobstatus_path),
+                                                     default={},
+                                                     lock=True)
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:

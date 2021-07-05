@@ -288,7 +288,7 @@ class BIAggregationPacks:
         if not Path(self._bi_configuration_file).exists():
             self._load_config(bi_sample_config)
             return
-        self._load_config(store.load_object_from_file(self._bi_configuration_file))
+        self._load_config(store.load_object_from_file(self._bi_configuration_file, default=None))
 
     def _load_config(self, config: Dict) -> None:
         self.cleanup()

@@ -131,7 +131,7 @@ def save_tree_to(
 
 
 def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
-    raw_tree = store.load_object_from_file(filepath)
+    raw_tree = store.load_object_from_file(filepath, default=None)
     if raw_tree:
         return StructuredDataNode().create_tree_from_raw_tree(raw_tree)
     return StructuredDataNode()

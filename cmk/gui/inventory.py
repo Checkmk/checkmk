@@ -211,7 +211,7 @@ def get_history_deltas(
 
         cached_data = None
         try:
-            cached_data = store.load_object_from_file(cached_delta_path)
+            cached_data = store.load_object_from_file(cached_delta_path, default=None)
         except MKGeneralException:
             pass
 

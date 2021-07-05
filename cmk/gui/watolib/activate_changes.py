@@ -415,7 +415,7 @@ class ActivateChanges:
     def _last_activation_state(self, site_id: SiteId):
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
-            ActivateChangesManager.persisted_site_state_path(site_id), {})
+            ActivateChangesManager.persisted_site_state_path(site_id), default={})
 
     def _get_last_change_id(self) -> str:
         return self._changes[-1][1]["id"]
@@ -688,7 +688,7 @@ class ActivateChangesManager(ActivateChanges):
                 f"Unknown activation process: {info_path!r} not found",
             )
 
-        return store.load_object_from_file(info_path, {})
+        return store.load_object_from_file(info_path, default={})
 
     def _save_activation(self):
         store.makedirs(os.path.dirname(self._info_path(self._activation_id)))
@@ -826,8 +826,9 @@ class ActivateChangesManager(ActivateChanges):
     def get_site_state(self, site_id):
         if self._activation_id is None:
             raise Exception("activation ID is not set")
-        return store.load_object_from_file(
-            ActivateChangesManager.site_state_path(self._activation_id, site_id), {})
+        return store.load_object_from_file(ActivateChangesManager.site_state_path(
+            self._activation_id, site_id),
+                                           default={})
 
     @staticmethod
     def persisted_site_state_path(site_id: SiteId) -> str:

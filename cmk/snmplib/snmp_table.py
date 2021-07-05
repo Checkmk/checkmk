@@ -82,7 +82,7 @@ class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disab
 
                 console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
                 try:
-                    read_walk = store.load_object_from_file(path)
+                    read_walk = store.load_object_from_file(path, default=None)
                 except Exception:
                     console.verbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
                     if cmk.utils.debug.enabled():

@@ -1886,7 +1886,7 @@ declare(PagetypeTopics)
 def _no_bi_aggregate_active() -> bool:
     enabled_info_file = "%s/num_enabled_aggregations" % os.path.join(cmk.utils.paths.var_dir,
                                                                      "wato")
-    return bool(not store.load_object_from_file(enabled_info_file))
+    return bool(not store.load_object_from_file(enabled_info_file, default=None))
 
 
 #   .--Main menu-----------------------------------------------------------.

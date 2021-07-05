@@ -17,18 +17,30 @@ from .agent_based_api.v1 import register, Service, State, Result, render
 
 
 def parse_kaspersky_av_client(string_table):
-    now = time.time()
+    return _parse_kaspersky_av_client(string_table, now=time.time())
+
+
+def _parse_kaspersky_av_client(string_table, now):
+    """
+    # Set up timezone to make doctests reproducable.
+    >>> import os
+    >>> os.environ["TZ"] = "0"
+
+    >>> _parse_kaspersky_av_client([["Signatures", "01.01.1970"]], now=0)
+    {'signature_age': 0.0}
+    """
     parsed = {}
 
     for line in string_table:
         if line[1] == 'Missing':
             continue
 
-        timestamp_text = line[1] + " " + line[2]
+        date_text = line[1]
+        time_text = line[2] if len(line) > 2 else "00:00:00"
         # We assume that the timestamp is to be interpreted in the timezone of
         # the Checkmk server. This might be a problem, if e.g. the agent is located
         # in China and the Checkmk server in USA.
-        age = now - time.mktime(time.strptime(timestamp_text, '%d.%m.%Y %H:%M:%S'))
+        age = now - time.mktime(time.strptime(f"{date_text} {time_text}", '%d.%m.%Y %H:%M:%S'))
 
         if line[0] == "Signatures":
             parsed['signature_age'] = age

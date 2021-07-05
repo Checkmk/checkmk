@@ -20,15 +20,3 @@ knownConditionTrueFalse
 unassignedVariable
 uninitDerivedMemberVar
 unusedVariable
-// Quick hacks to unblock CI with cppcheck 2.4.1: should be resonsidered ASAP
-// Motivation: cppcheck can't find some includes when compiling files in test and livestatus dirs
-// 1. bad version number - probably missing include file
-preprocessorErrorDirective:*/gtest-port.h
-// 2. again, bad version number - probably missing include file
-preprocessorErrorDirective:*/httplib.h
-// 3. again, bad version number - probably missing include file
-preprocessorErrorDirective:*/microcore.pb.h
-// 4. Can't find include.Either error in cppcheck or error in iwyu generating compile-commands.json
-missingInclude:test/*
-// 5. Can't find include.Either error in cppcheck or error in iwyu generating compile-commands.json
-missingInclude:livestatus/*

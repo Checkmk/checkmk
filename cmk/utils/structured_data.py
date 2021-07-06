@@ -55,7 +55,7 @@ SDAttributes = Dict[SDKey, SDValue]
 SDTable = List[SDAttributes]
 
 # TODO Cleanup int: May be an indexed node
-SDNodeName = Union[str, int]
+SDNodeName = str
 SDPath = List[SDNodeName]
 
 SDNodePath = Tuple[SDNodeName, ...]
@@ -345,7 +345,7 @@ class StructuredDataNode:
     def _add_indexed_nodes(self, key, value):
         for idx, entry in enumerate(value):
             idx_attributes: SDAttributes = {}
-            node = self.setdefault_node([key, idx])
+            node = self.setdefault_node([key, str(idx)])
             for idx_key, idx_entry in entry.items():
                 if isinstance(idx_entry, list):
                     node.setdefault_node([idx_key]).add_table(idx_entry)
@@ -393,7 +393,7 @@ class StructuredDataNode:
         for idx, entry in enumerate(self.table.data):
             for k, v in entry.items():
                 if isinstance(v, list):
-                    self.setdefault_node([idx, k]).add_table(v)
+                    self.setdefault_node([str(idx), k]).add_table(v)
                     remove_table = True
 
         if remove_table:
@@ -892,12 +892,4 @@ def _parse_tree_path(tree_path: Optional[SDRawPath]) -> SDPath:
 
 
 def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
-    parsed_path: SDPath = []
-    for part in raw_path.split("."):
-        if not part:
-            continue
-        try:
-            parsed_path.append(int(part))
-        except ValueError:
-            parsed_path.append(part)
-    return parsed_path
+    return [part for part in raw_path.split(".") if part]

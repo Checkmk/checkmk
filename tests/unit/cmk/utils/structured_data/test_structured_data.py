@@ -860,9 +860,9 @@ def test_real_copy(tree):
 @pytest.mark.parametrize("tree_start,tree_edges", [
     (tree_old_addresses, [
         (tree_old_arrays, ["hardware", "networking"], [
-            ("get_attributes", ["hardware", "memory", "arrays", 0]),
-            ("get_table", ["hardware", "memory", "arrays", 0, "devices"]),
-            ("get_table", ["hardware", "memory", "arrays", 1, "others"]),
+            ("get_attributes", ["hardware", "memory", "arrays", "0"]),
+            ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
+            ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
         ]),
         (tree_new_memory, ["hardware", "networking"], [
             ("get_attributes", ["hardware", "memory"]),
@@ -1018,7 +1018,7 @@ def test_real_building_tree():
     assert level1_nested_list_att is not None and level1_nested_list_att.is_empty()
 
     assert isinstance(level1_nested_list_con, StructuredDataNode)
-    assert list(level1_nested_list_con._nodes) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(level1_nested_list_con._nodes) == ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))

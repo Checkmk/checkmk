@@ -16,7 +16,7 @@ from cmk.gui.inventory import parse_tree_path
     (".hardware.cpu.", (["hardware", "cpu"], None)),
     (".hardware.cpu.model", (["hardware", "cpu"], ["model"])),
     (".software.packages:", (["software", "packages"], [])),
-    (".software.packages:17.name", (["software", "packages", 17], ["name"])),
+    (".software.packages:17.name", (["software", "packages", "17"], ["name"])),
 ])
 def test_parse_tree_path(raw_path, expected_path):
     assert parse_tree_path(raw_path) == expected_path

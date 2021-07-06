@@ -10,7 +10,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple
 from pathlib import Path
 
 import dicttoxml  # type: ignore[import]
@@ -51,7 +51,7 @@ from cmk.gui.valuespec import ValueSpec, TextInput
 # => Should be unified one day.
 
 RawInventoryPath = str
-InventoryPath = List[Union[str, int]]
+InventoryPath = List[str]
 # TODO Cleanup
 AttributesKeys = List[str]
 # TODO: Can we be more specific on the return value type?
@@ -82,7 +82,7 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
     # .hardware.                 (dict) => path = ["hardware"],                 key = None
     # .hardware.cpu.model        (leaf) => path = ["hardware", "cpu"],          key = "model"
     # .hardware.cpu.             (dict) => path = ["hardware", "cpu"],          key = None
-    # .software.packages:17.name (leaf) => path = ["software", "packages", 17], key = "name"
+    # .software.packages:17.name (leaf) => path = ["software", "packages", "17"], key = "name"
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
     if not raw_path:
         return [], None
@@ -100,22 +100,9 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
         path = raw_path.strip(".").split(".")
         attribute_keys = [path.pop(-1)]
 
-    parsed_path: InventoryPath = []
-    for part in path:
-        if ":" in part:
-            # Nested tables, see also lib/structured_data.py
-            parts = part.split(":")
-        else:
-            parts = [part]
-
-        for part_ in parts:
-            if not part_:
-                continue
-            try:
-                parsed_path.append(int(part_))
-            except ValueError:
-                parsed_path.append(part_)
-    return parsed_path, attribute_keys
+    # ":": Nested tables, see also lib/structured_data.py
+    return ([p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
+            attribute_keys)
 
 
 def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataNode]:

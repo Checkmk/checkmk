@@ -181,8 +181,8 @@ def _parse_perfentry(entry: str) -> Perfdata:
         value,
         levels_upper=optional_tuple(levels[0], levels[1]),
         levels_lower=optional_tuple(levels[2], levels[3]),
-        boundaries=(float(raw[3]) if len(raw) >= 4 else None,
-                    float(raw[4]) if len(raw) >= 5 else None),
+        boundaries=(_try_convert_to_float(raw[3]) if len(raw) >= 4 else None,
+                    _try_convert_to_float(raw[4]) if len(raw) >= 5 else None),
     )
 
 

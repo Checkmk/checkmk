@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 
 import shutil
 import pytest
@@ -1039,6 +1039,149 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
     assert delta_result.delta.is_equal(new_delta_tree)
 
 
+# Test filters
+
+
+class ExpectedFilterResults(NamedTuple):
+    nodes: bool
+    restricted_nodes: bool
+    attributes: bool
+    restricted_attributes: bool
+    columns: bool
+    restricted_columns: bool
+
+
+@pytest.mark.parametrize(
+    "entry, expected_path, expected_filter_results",
+    [
+        # Tuple format
+        ((["path", "to", "node"], None), ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ((["path", "to", "node"], []), ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=False,
+             restricted_nodes=False,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ((["path", "to", "node"], ["key"]), ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=False,
+             restricted_nodes=False,
+             attributes=True,
+             restricted_attributes=False,
+             columns=True,
+             restricted_columns=False,
+         )),
+        # Dict format
+        ({
+            "visible_raw_path": "path.to.node",
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "nodes": ("choices", ["node"]),
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=False,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "attributes": ("choices", ["key"]),
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=True,
+             restricted_attributes=False,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "columns": ("choices", ["key"]),
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=False,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "nodes": "nothing"
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=False,
+             restricted_nodes=False,
+             attributes=True,
+             restricted_attributes=True,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "attributes": "nothing",
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=False,
+             restricted_attributes=False,
+             columns=True,
+             restricted_columns=True,
+         )),
+        ({
+            "visible_raw_path": "path.to.node",
+            "columns": "nothing",
+        }, ["path", "to", "node"],
+         ExpectedFilterResults(
+             nodes=True,
+             restricted_nodes=True,
+             attributes=True,
+             restricted_attributes=True,
+             columns=False,
+             restricted_columns=False,
+         )),
+    ])
+def test_make_filter(entry, expected_path, expected_filter_results):
+    f = make_filter(entry)
+
+    assert f.path == expected_path
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+
+    assert f.filter_attributes("key") is expected_filter_results.attributes
+    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
+
+    assert f.filter_columns("key") is expected_filter_results.columns
+    assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+
 # Test helper
 
 
@@ -1046,5 +1189,5 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
     ("", []),
     ("path.to.node_1", ["path", "to", "node_1"]),
 ])
-def test__parse_visible_tree_path(raw_path, expected_path):
+def test_parse_visible_tree_path(raw_path, expected_path):
     assert parse_visible_raw_path(raw_path) == expected_path

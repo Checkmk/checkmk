@@ -20,10 +20,8 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
-    Dictionary,
     CascadingDropdown,
     ListChoice,
-    ListOfStrings,
     ListOf,
 )
 from cmk.gui.breadcrumb import Breadcrumb
@@ -45,7 +43,7 @@ from cmk.gui.watolib.groups import (
     load_contact_group_information,
     GroupType,
 )
-from cmk.gui.inventory import vs_inventory_path
+from cmk.gui.inventory import vs_inventory_path_and_keys
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -481,8 +479,10 @@ class ModeEditContactgroup(ABCModeEditGroup):
     def _determine_additional_group_data(self):
         super(ModeEditContactgroup, self)._determine_additional_group_data()
 
-        permitted_inventory_paths = self._vs_inventory_paths().from_html_vars('inventory_paths')
-        self._vs_inventory_paths().validate_value(permitted_inventory_paths, 'inventory_paths')
+        permitted_inventory_paths = self._vs_inventory_paths_and_keys().from_html_vars(
+            'inventory_paths')
+        self._vs_inventory_paths_and_keys().validate_value(permitted_inventory_paths,
+                                                           'inventory_paths')
         if permitted_inventory_paths:
             self.group['inventory_paths'] = permitted_inventory_paths
 
@@ -496,36 +496,21 @@ class ModeEditContactgroup(ABCModeEditGroup):
 
         forms.header(_("Permissions"))
         forms.section(_("Permitted HW/SW inventory paths"))
-        self._vs_inventory_paths().render_input('inventory_paths',
-                                                self.group.get('inventory_paths'))
+        self._vs_inventory_paths_and_keys().render_input('inventory_paths',
+                                                         self.group.get('inventory_paths'))
 
         if self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
 
-    def _vs_inventory_paths(self):
+    def _vs_inventory_paths_and_keys(self):
         return CascadingDropdown(
             choices=[
                 ("allow_all", _("Allowed to see the whole tree")),
                 ("forbid_all", _("Forbid to see the whole tree")),
-                ("paths", _("Allowed to see the following entries"),
-                 ListOf(
-                     Dictionary(
-                         elements=[
-                             ("path", vs_inventory_path()),
-                             ("attributes",
-                              ListOfStrings(
-                                  orientation="horizontal",
-                                  title=_("Attributes"),
-                                  size=15,
-                                  allow_empty=True,
-                              )),
-                         ],
-                         optional_keys=["attributes"],
-                     ),
-                     allow_empty=False,
-                 )),
+                ("paths", _("Allowed to see parts of the tree"),
+                 ListOf(vs_inventory_path_and_keys())),
             ],
             default_value="allow_all",
         )

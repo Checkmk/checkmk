@@ -58,12 +58,14 @@ from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory  
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.groups  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.logged_in import SuperUserContext  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.groups  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
@@ -176,6 +178,7 @@ class UpdateConfig:
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
+            (self._transform_groups, "Rewriting host, service or contact groups"),
         ]
 
     def _initialize_base_environment(self):
@@ -935,6 +938,67 @@ class UpdateConfig:
                 self._logger.debug("Rename discovered host labels file from '%s' to '%s'", old_path,
                                    new_path)
                 old_path.rename(new_path)
+
+    def _transform_groups(self) -> None:
+        group_information = cmk.gui.groups.load_group_information()
+
+        # Add host or service group transformations here if needed
+        self._transform_contact_groups(group_information.get("contact", {}))
+
+        cmk.gui.watolib.groups.save_group_information(group_information)
+
+    def _transform_contact_groups(self, contact_groups: Dict) -> None:
+        # Changed since Checkmk 2.1: see Werk 12390
+        # Old entries of inventory paths of multisite contact groups had the following form:
+        # {
+        #     "group_name_0": {
+        #         "inventory_paths": "allow_all"
+        #     },
+        #     "group_name_1": {
+        #         "inventory_paths": "forbid_all"
+        #     },
+        #     "group_name_2": {
+        #         "inventory_paths": ("paths", [
+        #             {
+        #                 "path": "path.to.node_0",
+        #             },
+        #             {
+        #                 "path": "path.to.node_1",
+        #                 "attributes": [],
+        #             },
+        #             {
+        #                 "path": "path.to.node_2",
+        #                 "attributes": ["some", "keys"],
+        #             },
+        #         ])
+        #     }
+        # }
+        for settings in contact_groups.values():
+            inventory_paths = settings.get("inventory_paths")
+            if inventory_paths and isinstance(inventory_paths, tuple):
+                settings["inventory_paths"] = (inventory_paths[0], [
+                    self._transform_inventory_path_and_keys(entry) for entry in inventory_paths[1]
+                ])
+
+    def _transform_inventory_path_and_keys(self, params: Dict) -> Dict:
+        if "path" not in params:
+            return params
+
+        params["visible_raw_path"] = params.pop("path")
+
+        attributes_keys = params.pop("attributes", None)
+        if attributes_keys is None:
+            return params
+
+        if attributes_keys == []:
+            params["nodes"] = "nothing"
+            return params
+
+        params["attributes"] = ("choices", attributes_keys)
+        params["columns"] = ("choices", attributes_keys)
+        params["nodes"] = "nothing"
+
+        return params
 
 
 def _set_show_mode(users, user_id):

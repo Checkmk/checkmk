@@ -410,3 +410,76 @@ def test__rename_discovered_host_label_files_do_not_overwrite(monkeypatch):
 
     assert old_path.exists()
     assert new_path.exists()
+
+
+@pytest.mark.parametrize("contact_groups, expected_contact_groups", [
+    ({}, {}),
+    ({
+        "group_name": {
+            "alias": "Everything",
+            "a": "setting"
+        }
+    }, {
+        "group_name": {
+            "alias": "Everything",
+            "a": "setting"
+        }
+    }),
+    ({
+        "group_name_0": {
+            "alias": "Everything 0",
+            "inventory_paths": "allow_all"
+        },
+        "group_name_1": {
+            "alias": "Everything 1",
+            "inventory_paths": "forbid_all"
+        },
+        "group_name_2": {
+            "alias": "Everything 2",
+            "inventory_paths": ("paths", [
+                {
+                    "path": "path.to.node_0",
+                },
+                {
+                    "path": "path.to.node_1",
+                    "attributes": [],
+                },
+                {
+                    "path": "path.to.node_2",
+                    "attributes": ["some", "keys"],
+                },
+            ])
+        }
+    }, {
+        "group_name_0": {
+            "alias": "Everything 0",
+            "inventory_paths": "allow_all"
+        },
+        "group_name_1": {
+            "alias": "Everything 1",
+            "inventory_paths": "forbid_all"
+        },
+        "group_name_2": {
+            "alias": "Everything 2",
+            "inventory_paths": ("paths", [
+                {
+                    "visible_raw_path": "path.to.node_0",
+                },
+                {
+                    "visible_raw_path": "path.to.node_1",
+                    "nodes": "nothing",
+                },
+                {
+                    "visible_raw_path": "path.to.node_2",
+                    "attributes": ("choices", ["some", "keys"]),
+                    "columns": ("choices", ["some", "keys"]),
+                    "nodes": "nothing",
+                },
+            ])
+        }
+    }),
+])
+def test__transform_contact_groups(monkeypatch, contact_groups, expected_contact_groups):
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+    uc._transform_contact_groups(contact_groups)
+    assert contact_groups == expected_contact_groups

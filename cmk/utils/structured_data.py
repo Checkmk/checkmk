@@ -148,19 +148,39 @@ def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:
     return lambda key: key in choices
 
 
-def make_filter(allowed_path: Tuple[SDPath, Optional[SDKeys]]) -> SDFilter:
-    path, keys = allowed_path
+def make_filter(entry: Union[Tuple[SDPath, Optional[SDKeys]], Dict]) -> SDFilter:
+    if isinstance(entry, tuple):
+        path, keys = entry
+        return SDFilter(
+            path=path,
+            filter_nodes=_use_all,
+            filter_attributes=_use_all,
+            filter_columns=_use_all,
+        ) if keys is None else SDFilter(
+            path=path,
+            filter_nodes=_use_nothing,
+            filter_attributes=_make_choices_filter(keys) if keys else _use_all,
+            filter_columns=_make_choices_filter(keys) if keys else _use_all,
+        )
+
     return SDFilter(
-        path=path,
-        filter_nodes=_use_all,
-        filter_attributes=_use_all,
-        filter_columns=_use_all,
-    ) if keys is None else SDFilter(
-        path=path,
-        filter_nodes=_use_nothing,
-        filter_attributes=_make_choices_filter(keys) if keys else _use_all,
-        filter_columns=_make_choices_filter(keys) if keys else _use_all,
+        path=parse_visible_raw_path(entry["visible_raw_path"]),
+        filter_attributes=_make_filter_from_choice(entry.get("attributes")),
+        filter_columns=_make_filter_from_choice(entry.get("columns")),
+        filter_nodes=_make_filter_from_choice(entry.get("nodes")),
     )
+
+
+def _make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> SDFilterFunc:
+    # choice is of the form:
+    #   - ('choices', ['some', 'keys'])
+    #   - 'nothing'
+    #   - None means _use_all
+    if isinstance(choice, tuple):
+        return _make_choices_filter(choice[-1])
+    if choice == "nothing":
+        return _use_nothing
+    return _use_all
 
 
 #.
@@ -489,8 +509,7 @@ class StructuredDataNode:
             filtered_node.add_table(node.table.get_filtered_data(f.filter_columns))
 
             for edge, sub_node in node._nodes.items():
-                # TODO Typing: For nodes there are only _use_all or _use_nothing used.
-                # These indexed node (type int) will be cleaned up one day.
+                # From GUI::permitted_paths: We always get a list of strs.
                 if f.filter_nodes(str(edge)):
                     filtered_node.add_node(edge, sub_node)
 

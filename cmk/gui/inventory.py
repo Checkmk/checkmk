@@ -26,7 +26,6 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     load_tree_from,
     make_filter,
-    parse_visible_raw_path,
 )
 from cmk.utils.exceptions import (
     MKException,
@@ -46,11 +45,17 @@ from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
 )
-from cmk.gui.valuespec import ValueSpec, TextInput
+from cmk.gui.valuespec import (
+    ValueSpec,
+    TextInput,
+    Dictionary,
+    CascadingDropdown,
+    ListOfStrings,
+)
 
 # TODO Cleanup variation:
 #   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views
-#   - cmk.utils.inventory.py::parse_visible_raw_path
+#   - cmk.utils.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
@@ -265,17 +270,51 @@ def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
     return invpath[:last_sep + 1]
 
 
-def vs_inventory_path() -> ValueSpec:
+def vs_inventory_path_and_keys() -> ValueSpec:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
     # 'Contact groups::Permitted HW/SW inventory paths'.
-    return TextInput(
-        title=_("Path to attributes or tables"),
-        size=60,
-        allow_empty=False,
-        help=_("Via <tt>Display options > Show internal tree paths</tt>"
-               " on the HW/SW Inventory page of a host you can make the"
-               " internal tree paths visible which can be inserted here."),
+    def vs_choices(title):
+        return CascadingDropdown(
+            title=title,
+            choices=[
+                ("nothing", _("Restrict all")),
+                ("choices", _("Restrict the following keys"),
+                 ListOfStrings(
+                     orientation="horizontal",
+                     size=15,
+                     allow_empty=True,
+                 )),
+            ],
+            default_value="nothing",
+        )
+
+    # Naming, see also https://docs.checkmk.com/latest/de/inventory.html
+    # attributes == single values
+    # table == table
+    # nodes == categories
+    return Dictionary(
+        elements=[
+            ("visible_raw_path",
+             TextInput(
+                 title=_("Path to categories"),
+                 size=60,
+                 allow_empty=False,
+                 help=_(
+                     "Via <tt>Display options > Show internal tree paths</tt>"
+                     " on the HW/SW Inventory page of a host the internal tree paths leading"
+                     " to subcategories, the keys of singles values and table column names"
+                     " become visible. See"
+                     " <a href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</a>."
+                     " for more details about the HW/SW Inventory system."),
+             )),
+            ("attributes", vs_choices(_("Restrict single values"))),
+            ("columns", vs_choices(_("Restrict table columns"))),
+            ("nodes", vs_choices(_("Restrict subcategories"))),
+        ],
+        optional_keys=["attributes", "columns", "nodes"],
+        help=_("If single values, table columns or subcategories are not restricted,"
+               " then all entries are added respectively."),
     )
 
 
@@ -343,10 +382,8 @@ def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[Structur
         return None
 
     if permitted_paths := _get_permitted_inventory_paths():
-        return struct_tree.get_filtered_node([
-            make_filter((parse_visible_raw_path(entry["path"]), entry.get("attributes")))
-            for entry in permitted_paths
-        ])
+        return struct_tree.get_filtered_node(
+            [make_filter(entry) for entry in permitted_paths if entry])
 
     return struct_tree
 

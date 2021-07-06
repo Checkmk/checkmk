@@ -247,23 +247,33 @@ class Dashlet(metaclass=abc.ABCMeta):
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
-        self._context: Optional[Dict] = self._get_context()
+        self._context: Optional[VisualContext] = self._get_context()
 
     def infos(self) -> List[str]:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
-    def _get_context(self) -> Optional[Dict]:
+    def _get_context(self) -> Optional[VisualContext]:
         if not self.has_context():
             return None
+        # TODO: reverse globaly single spec
+        def unsingle(fident, vals):
+            if isinstance(vals, str):  # Single
+                return {fident: {visuals.get_filter(fident).htmlvars[0]: vals}}
+
+            return fident, vals
+
+        from itertools import starmap
+        dc = dict(starmap(unsingle, self._dashlet_spec["context"].items()))
 
         return visuals.get_merged_context(
             self._dashboard["context"],
-            self._dashlet_spec["context"],
+            dc,
+            #self._dashlet_spec["context"],
         )
 
     @property
-    def context(self) -> Dict:
+    def context(self) -> VisualContext:
         if self._context is None:
             raise Exception("Missing context")
         return self._context

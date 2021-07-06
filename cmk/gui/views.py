@@ -135,10 +135,11 @@ from cmk.gui.type_defs import (
     PainterSpec,
     Row,
     Rows,
-    ViewSpec,
-    Visual,
     ViewName,
     ViewProcessTracking,
+    ViewSpec,
+    Visual,
+    VisualContext,
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -304,7 +305,7 @@ class PermissionSectionViews(PermissionSection):
 
 class View:
     """Manages processing of a single view, e.g. during rendering"""
-    def __init__(self, view_name: str, view_spec: ViewSpec, context: Dict) -> None:
+    def __init__(self, view_name: str, view_spec: ViewSpec, context: VisualContext) -> None:
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
@@ -510,7 +511,7 @@ class View:
              |
              + service views
         """
-        host_name = self.context["host"]
+        host_name = self.context["host"]["host"]
         breadcrumb = make_host_breadcrumb(host_name)
 
         if self.name == "host":
@@ -530,7 +531,7 @@ class View:
                 ))
             return breadcrumb
 
-        breadcrumb = make_service_breadcrumb(host_name, self.context["service"])
+        breadcrumb = make_service_breadcrumb(host_name, self.context["service"]["service"])
 
         if self.name == "service":
             # In case we are on the service home page, we have the final breadcrumb
@@ -545,7 +546,7 @@ class View:
                     [
                         ("view_name", self.name),
                         ("host", host_name),
-                        ("service", self.context["service"]),
+                        ("service", self.context["service"]["service"]),
                     ],
                 ),
             ))
@@ -2829,7 +2830,7 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     if not user.may("wato.hosts") and not user.may("wato.seeall"):
         return []
 
-    host_name = request.get_ascii_input_mandatory("host")
+    host_name = view.context["host"]  # old str: single_info host
 
     return [
         PageMenuTopic(

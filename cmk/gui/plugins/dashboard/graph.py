@@ -15,9 +15,8 @@ from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.metrics import (
     get_graph_templates,
@@ -25,6 +24,8 @@ from cmk.gui.metrics import (
     metric_info,
     translated_metrics_from_row,
 )
+from cmk.gui.visuals import get_singlecontext_vars
+from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
@@ -240,10 +241,7 @@ class GraphDashlet(Dashlet):
             self._init_exception = exc
 
     def _init_graph(self):
-        context = visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
-            self._dashlet_spec["context"])
-        self._dashlet_spec["_graph_identification"] = self.graph_identification(context)
+        self._dashlet_spec["_graph_identification"] = self.graph_identification(self.context)
 
         try:
             graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
@@ -257,12 +255,7 @@ class GraphDashlet(Dashlet):
         self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
-    def _resolve_site(host):
-        # When the site is available via URL context, use it. Otherwise it is needed
-        # to check all sites for the requested host
-        if request.has_var('site'):
-            return request.var('site')
-
+    def _resolve_site(host: str):
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:
@@ -271,15 +264,16 @@ class GraphDashlet(Dashlet):
                 raise MKUserError("host", _("The host could not be found on any active site."))
 
     def graph_identification(self, context: VisualContext) -> GraphIdentifier:
-        host = context.get("host")
+        single_context = get_singlecontext_vars(context, self.single_infos())
+        host = single_context.get("host")
         if not host:
             raise MKUserError('host', _('Missing needed host parameter.'))
 
-        service = context.get("service")
+        service = single_context.get("service")
         if not service:
             service = "_HOST_"
 
-        site = self._resolve_site(host)
+        site = get_only_sites_from_context(context) or self._resolve_site(host)
 
         # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
         # handle this here

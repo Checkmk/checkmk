@@ -479,17 +479,9 @@ filter_registry = FilterRegistry()
 def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
     """Gather possible existing "only sites" information from context
 
-      We need to deal with
+      We need to deal with all possible site filters (sites, site and siteopt).
 
-      a) all possible site filters (sites, site and siteopt).
-      b) with single and multiple contexts
-
-      Single contexts are structured like this:
-
-      {"site": "sitename"}
-      {"sites": "sitename|second"}
-
-      Multiple contexts are structured like this:
+      VisualContext is structured like this:
 
       {"site": {"site": "sitename"}}
       {"sites": {"sites": "sitename|second"}}
@@ -503,22 +495,14 @@ def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]
       """
 
     if "sites" in context and "site" not in context:
-        only_sites = context["sites"]
-        if isinstance(only_sites, dict):
-            only_sites = only_sites["sites"]
+        only_sites = context["sites"]["sites"]
         only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
         return only_sites_list if only_sites_list else None
 
     for var in ["site", "siteopt"]:
         if var in context:
-            value = context[var]
-            if isinstance(value, dict):
-                site_name = value.get("site")
-                if site_name:
-                    return [SiteId(site_name)]
-                return None
-            return [SiteId(value)]
-
+            if site_name := context[var].get("site"):
+                return [SiteId(site_name)]
     return None
 
 

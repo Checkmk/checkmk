@@ -1255,14 +1255,12 @@ def get_link_filter_names(
     single_infos: SingleInfos,
     info_keys: List[InfoName],
     link_filters: Dict[FilterName, FilterName],
-) -> List[Tuple[FilterName, FilterName]]:
-    names: List[Tuple[FilterName, FilterName]] = []
+) -> Iterator[Tuple[FilterName, FilterName]]:
     for info_key in single_infos:
         if info_key not in info_keys:
             for key in info_params(info_key):
                 if key in link_filters:
-                    names.append((key, link_filters[key]))
-    return names
+                    yield key, link_filters[key]
 
 
 def filters_of_visual(visual: Visual,
@@ -1382,13 +1380,7 @@ def context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> Itera
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
-                              single_infos: Optional[SingleInfos] = None) -> VisualContext:
-    if single_infos is None:
-        single_infos = []
-
-    single_info_keys = set(get_single_info_keys(single_infos))
-
+def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None) -> VisualContext:
     context: VisualContext = {}
     for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
@@ -1402,10 +1394,6 @@ def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None,
             filter_value = request.get_str_input_mandatory(varname)
             if not filter_value:
                 continue
-
-            if varname in single_info_keys:
-                context[filter_name] = filter_value
-                break
 
             this_filter_vars[varname] = filter_value
 
@@ -1814,8 +1802,15 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
 
 
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> Set[FilterName]:
-    single_info_keys = get_single_info_keys(single_infos)
-    return set(single_info_keys).difference(context)
+    return missing_context_filters(get_single_info_keys(single_infos), context)
+
+
+def missing_context_filters(require_filters: Set[FilterName],
+                            context: VisualContext) -> Set[FilterName]:
+    set_filters = (filter_name for filter_name, filter_context in context.items()
+                   if any(filter_context.values()))
+
+    return require_filters.difference(set_filters)
 
 
 def visual_title(what: VisualTypeName,
@@ -1847,18 +1842,16 @@ def visual_title(what: VisualTypeName,
 def _add_context_title(context: VisualContext, single_infos: List[str], title: str) -> str:
     def filter_heading(
         filter_name: FilterName,
-        filter_vars: Union[str, FilterHTTPVariables],
+        filter_vars: FilterHTTPVariables,
     ) -> Optional[str]:
         try:
             filt = get_filter(filter_name)
         except KeyError:
             return ""  # silently ignore not existing filters
 
-        if isinstance(filter_vars, str):
-            filter_vars = {filt.htmlvars[0]: filter_vars}
         return filt.heading_info(filter_vars)
 
-    extra_titles = list(get_singlecontext_vars(context, single_infos).values())
+    extra_titles = list(filter(None, get_singlecontext_vars(context, single_infos).values()))
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not single_infos:
@@ -1889,20 +1882,21 @@ def info_params(info_key: InfoName) -> List[FilterName]:
     return [key for key, _vs in visual_info_registry[info_key]().single_spec]
 
 
-def get_single_info_keys(single_infos: SingleInfos) -> List[FilterName]:
+def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
     keys: Set[FilterName] = set()
     for info_key in single_infos:
         keys.update(info_params(info_key))
-    return list(keys)
+    return keys
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
-    return {
-        key: val  #
-        for key in get_single_info_keys(single_infos)
-        for val in [context.get(key)]
-        if isinstance(val, str)
-    }
+    def var_value(filter_name: str) -> str:
+        if val := context.get(filter_name):
+            if filt := filter_registry.get(filter_name):
+                return val.get(filt.htmlvars[0], "")
+        return ""
+
+    return {key: var_value(key) for key in get_single_info_keys(single_infos)}
 
 
 def get_singlecontext_html_vars(context: VisualContext,

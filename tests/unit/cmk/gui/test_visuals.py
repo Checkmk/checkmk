@@ -3757,47 +3757,47 @@ def test_get_context_uri_vars(request_context, visual, expected_vars):
     assert sorted(context_vars) == sorted(expected_vars)
 
 
-@pytest.mark.parametrize("infos,single_infos,uri_vars,expected_context", [
+@pytest.mark.parametrize("infos,uri_vars,expected_context", [
     # No single context, no filter
-    (["host"], [], [("abc", "dingeling")], {}),
+    (["host"], [("abc", "dingeling")], {}),
     # Single host context
-    (["host"], ["host"], [("host", "aaa")], {"host": "aaa"}),
+    (["host"], [("host", "aaa")], {"host": {"host": "aaa"}}),
     # Single host context with site hint
     # -> add site and siteopt (Why? Was like this in 1.6...)
-    (["host"], ["host"], [("host", "aaa"),("site", "abc")], {"host": "aaa", "site": {"site": "abc"},
+    (["host"], [("host", "aaa"),("site", "abc")], {"host": {"host": "aaa"}, "site": {"site": "abc"},
         "siteopt": {"site": "abc"}}),
     # Single host context -> not set
-    (["host"], ["host"], [], {}),
+    (["host"], [], {}),
     # Single host context -> empty set
-    (["host"], ["host"], [("host", "")], {}),
+    (["host"], [("host", "")], {}),
     # Single host context with non-ascii char
-    (["host"], ["host"], [("host", "äbc")], {"host": u"äbc"}),
+    (["host"], [("host", "äbc")], {"host": {"host": "äbc"}}),
     # Single host context, multiple services
-    (["host", "service"], ["host"], [("host", "aaa"), ("service_regex", "äbc")], {"host": "aaa",
+    (["host", "service"], [("host", "aaa"), ("service_regex", "äbc")], {"host": {"host": "aaa"},
         'serviceregex': {'service_regex': 'äbc'}}),
     # multiple services
-    (["service", "host"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service", "host"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'}, 'host': {'host': 'aaa'},}),
     # multiple services, ignore filters of unrelated infos
-    (["service"], [], [("host", "aaa"), ("service_regex", "äbc")], {
+    (["service"], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'},}),
 ])
-def test_get_context_from_uri_vars(request_context, infos, single_infos, uri_vars,
+def test_get_context_from_uri_vars(request_context, infos, uri_vars,
         expected_context):
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    context = visuals.get_context_from_uri_vars(infos, single_infos)
+    context = visuals.get_context_from_uri_vars(infos)
     assert context == expected_context
 
 
 @pytest.mark.parametrize("uri_vars,visual,expected_context", [
     # Single host context, set via URL, with some service filter, set via context
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"service_regex":
-        {"serviceregex": "abc"}},}, {"host": "aaa", "service_regex": {"serviceregex": "abc"},}),
+        {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
     # Single host context, set via context and URL
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": ["host"], "context": {"host":
-        "from_context",}}, {"host": "from_context"}),
+        {"host": "from_context"},}}, {"host": {"host": "from_context"}}),
     # No single context with some host & service filter
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {"service_regex":
         {"serviceregex": "abc"}},}, {"host": {"host": "aaa"}, "service_regex": {"serviceregex": "abc"},}),
@@ -3809,14 +3809,14 @@ def test_get_merged_context(request_context, uri_vars, visual, expected_context)
     for key, val in uri_vars:
         request.set_var(key, val)
 
-    url_context = visuals.get_context_from_uri_vars(visual["infos"], visual["single_infos"])
+    url_context = visuals.get_context_from_uri_vars(visual["infos"])
     context = visuals.get_merged_context(url_context, visual["context"])
 
     assert context == expected_context
 
 
 def test_get_missing_single_infos_has_context():
-    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": {"host": "abc"}}) == set()
 
 
 def test_get_missing_single_infos_missing_context():

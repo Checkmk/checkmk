@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from contextlib import contextmanager
 from dataclasses import dataclass
 import json
 import time
@@ -574,9 +575,8 @@ def draw_dashboard(name: DashboardName) -> None:
         )
 
         # Now after the dashlet content has been calculated render the whole dashlet
-        dashlet_container_begin(dashlet)
-        draw_dashlet(dashlet, content, dashlet_title)
-        dashlet_container_end()
+        with dashlet_container(dashlet):
+            draw_dashlet(dashlet, content, dashlet_title)
 
     # Display the dialog during initial rendering when required context information is missing.
     if missing_single_infos or missing_mandatory_context_filters:
@@ -662,16 +662,17 @@ def _get_dashlet_coords(dashlets: List[Dashlet]) -> List[Dict[str, int]]:
     return [get_dashlet_dimensions(dashlet) for dashlet in dashlets]
 
 
-def dashlet_container_begin(dashlet: Dashlet) -> None:
+@contextmanager
+def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
     classes = ['dashlet', dashlet.type_name()]
     if dashlet.is_resizable():
         classes.append('resizable')
 
     html.open_div(id_="dashlet_%d" % dashlet.dashlet_id, class_=classes)
-
-
-def dashlet_container_end() -> None:
-    html.close_div()
+    try:
+        yield
+    finally:
+        html.close_div()
 
 
 def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
@@ -692,7 +693,7 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
                         ", ".join(sorted(missing_infos)))))
 
         title = dashlet.render_title_html()
-        content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
+        content = _render_dashlet_content(board, dashlet, is_update=is_update, mtime=board["mtime"])
 
     except Exception as e:
         content = render_dashlet_exception_content(dashlet, e)
@@ -702,11 +703,6 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
 
 def _render_dashlet_content(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
                             mtime: int) -> str:
-
-    return _update_or_show(board, dashlet, is_update, mtime)
-
-
-def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int) -> str:
     with output_funnel.plugged():
         if is_update:
             dashlet.update()
@@ -1466,8 +1462,7 @@ def ajax_dashlet() -> None:
     try:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, board, ident, dashlet_spec)
-
-        content: HTMLInput = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
+        _title, content = _render_dashlet(board, dashlet, is_update=True, mtime=mtime)
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, board, dashlet_spec, ident)

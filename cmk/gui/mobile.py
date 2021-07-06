@@ -206,8 +206,7 @@ def page_index() -> None:
 
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.get_merged_context(
-                visuals.get_context_from_uri_vars(datasource.infos,
-                                                  single_infos=view_spec["single_infos"]),
+                visuals.get_context_from_uri_vars(datasource.infos),
                 view_spec["context"],
             )
 
@@ -261,10 +260,8 @@ def page_view() -> None:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
     datasource = data_source_registry[view_spec["datasource"]]()
-    context = visuals.get_merged_context(
-        view_spec["context"],
-        visuals.get_context_from_uri_vars(datasource.infos, single_infos=view_spec["single_infos"]),
-    )
+    context = visuals.get_merged_context(view_spec["context"],
+                                         visuals.get_context_from_uri_vars(datasource.infos))
 
     view = views.View(view_name, view_spec, context)
     view.row_limit = views.get_limit()

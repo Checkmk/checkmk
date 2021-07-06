@@ -13,32 +13,25 @@ from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 
 @pytest.mark.parametrize("context,result", [
     pytest.param(
-        {"site": "sitename"},
+        {"site": {
+            "site": "sitename"
+        }},
         [SiteId("sitename")],
-        id="Single context site enforced",
+        id="Site enforced",
     ),
     pytest.param(
-        {
-            "siteopt": {
-                "site": ""
-            },
-        },
+        {"siteopt": {
+            "site": ""
+        }},
         None,
-        id="Multiple contexts no site selected",
+        id="No site selected",
     ),
     pytest.param(
-        {"sites": "first|second"},
+        {"sites": {
+            "sites": "first|second"
+        }},
         [SiteId("first"), SiteId("second")],
-        id="Single context Multiple sites selected",
-    ),
-    pytest.param(
-        {
-            "sites": {
-                "sites": "first|second"
-            },
-        },
-        [SiteId("first"), SiteId("second")],
-        id="Multiple contexts Multiple sites selected",
+        id="Multiple sites selected",
     ),
 ])
 def test_get_only_sites_from_context(context, result):

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.plugins.views import RowTableLivestatus
 from cmk.gui.views import View
+from cmk.gui.type_defs import VisualContext
 
 
 def test_row_table_object(mock_livestatus, request_context):
@@ -27,13 +28,17 @@ def test_row_table_object(mock_livestatus, request_context):
         "datasource": "hosts",
         "painters": [],
     }
-    context = {
-        'host': 'heute',
-        'service': None,
+    context: VisualContext = {
+        'host': {
+            "host": 'heute'
+        },
+        'service': {},
     }
     view = View(view_name, view_spec, context)
     rt = RowTableLivestatus("hosts")
 
+    # @Christoph: Test geht kaputt wenn headers="Filter: host_name = heute"
+    # der host_ prefix, passend angepasst generiert eine extra query?
     with live(expect_status_query=True):
         rt.query(
             view=view,

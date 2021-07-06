@@ -24,8 +24,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_default_config_from_plugins():
-    assert config.default_config == {}
-    config._initialize_with_default_config()
+    default_config = config._get_default_config()
 
     expected = [
         'roles',
@@ -186,7 +185,7 @@ def test_default_config_from_plugins():
             'current_customer',
         ]
 
-    assert list(config.default_config.keys()) == expected
+    assert list(default_config.keys()) == expected
 
 
 def test_load_config():
@@ -1044,7 +1043,7 @@ def test_permission_sorting(do_sort, result):
         }),
     ])
 def test_migrate_old_site_config(site, result):
-    assert config.migrate_old_site_config({"mysite": site}) == {"mysite": result}
+    assert config.prepare_raw_site_config({"mysite": site}) == {"mysite": result}
 
 
 @pytest.mark.usefixtures("load_config")

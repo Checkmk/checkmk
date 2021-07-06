@@ -22,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 @pytest.fixture(autouse=True)
 def initialize_default_config():
-    config._initialize_with_default_config()
+    config.__dict__.update(config._get_default_config())
 
 
 def test_ui_theme_registration():

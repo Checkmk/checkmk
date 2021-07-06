@@ -276,7 +276,7 @@ class SiteManagement:
         if not raw_sites:
             return config.default_single_site_configuration()
 
-        sites = config.migrate_old_site_config(raw_sites)
+        sites = config.prepare_raw_site_config(raw_sites)
         for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])

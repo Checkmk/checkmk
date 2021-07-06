@@ -146,11 +146,11 @@ def initialize() -> None:
     cmk.gui.i18n.set_user_localizations(user_localizations)
 
 
-def _load_config_file(path: str) -> None:
+def _load_config_file_to(path: str, raw_config: Dict[str, Any]) -> None:
     """Load the given GUI configuration file"""
     try:
         with Path(path).open("rb") as f:
-            exec(f.read(), globals(), globals())
+            exec(f.read(), {}, raw_config)
     except IOError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
@@ -165,22 +165,20 @@ def _load_config_file(path: str) -> None:
 # plugins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config() -> None:
-    global sites
-
     # Set default values for all user-changable configuration settings
-    _initialize_with_default_config()
+    raw_config = _get_default_config()
 
     # Initialize sites with default site configuration. Need to do it here to
     # override possibly deleted sites
-    sites = default_single_site_configuration()
+    raw_config["sites"] = default_single_site_configuration()
 
     # Load assorted experimental parameters if any
     experimental_config = cmk.utils.paths.make_experimental_config_file()
     if experimental_config.exists():
-        _load_config_file(str(experimental_config))
+        _load_config_file_to(str(experimental_config), raw_config)
 
     # First load main file
-    _load_config_file(cmk.utils.paths.default_config_dir + "/multisite.mk")
+    _load_config_file_to(cmk.utils.paths.default_config_dir + "/multisite.mk", raw_config)
 
     # Load also recursively all files below multisite.d
     conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
@@ -193,27 +191,29 @@ def load_config() -> None:
 
     filelist.sort()
     for p in filelist:
-        _load_config_file(p)
+        _load_config_file_to(p, raw_config)
 
-    if sites:
-        sites = migrate_old_site_config(sites)
-    else:
-        sites = default_single_site_configuration()
+    raw_config["sites"] = prepare_raw_site_config(raw_config["sites"])
 
-    _prepare_tag_config()
+    _prepare_tag_config(raw_config)
+
+    # TODO: Keep this until all call sites are refactored to use the ConfigContext
+    # object from cmk.gui.globals, which will be introduced soon.
+    globals().update(raw_config)
+
     execute_post_config_load_hooks()
 
 
-def _prepare_tag_config() -> None:
-    global tags
-
+def _prepare_tag_config(raw_config: Dict[str, Any]) -> None:
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
     # the wato_host_tags and wato_aux_tags to the new structure
-    tag_config = wato_tags
-    if not any(tag_config.values()) and (wato_host_tags or wato_aux_tags):
-        tag_config = cmk.utils.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
+    tag_config = raw_config["wato_tags"]
+    if not any(tag_config.values()) and (raw_config["wato_host_tags"] or
+                                         raw_config["wato_aux_tags"]):
+        tag_config = cmk.utils.tags.transform_pre_16_tags(raw_config["wato_host_tags"],
+                                                          raw_config["wato_aux_tags"])
 
-    tags = cmk.utils.tags.get_effective_tag_config(tag_config)
+    raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(tag_config)
 
 
 def execute_post_config_load_hooks() -> None:
@@ -228,7 +228,7 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
     _post_config_load_hooks.append(func)
 
 
-def _initialize_with_default_config() -> None:
+def _get_default_config() -> Dict[str, Any]:
     vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
@@ -240,14 +240,10 @@ def _initialize_with_default_config() -> None:
 
     _load_default_config(_legacy_plugin_vars)
 
-    _apply_default_config()
-
-
-def _apply_default_config() -> None:
-    for k, v in default_config.items():
-        if isinstance(v, (dict, list)):
-            v = copy.deepcopy(v)
-        globals()[k] = v
+    return {
+        k: copy.deepcopy(v) if isinstance(v, (dict, list)) else v
+        for k, v in default_config.items()
+    }
 
 
 def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
@@ -504,13 +500,16 @@ def save_user_file(name: str, data: Any, user_id: Optional[UserId]) -> None:
     store.save_object_to_file(path, data)
 
 
-def migrate_old_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
+def prepare_raw_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
     if not site_config:
         # Prevent problem when user has deleted all sites from his
         # configuration and sites is {}. We assume a default single site
         # configuration in that case.
         return default_single_site_configuration()
+    return _migrate_old_site_config(site_config)
 
+
+def _migrate_old_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
     for site_id, site_cfg in site_config.items():
         # Until 1.6 "replication" could be not present or
         # set to "" instead of None

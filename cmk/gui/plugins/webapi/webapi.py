@@ -1000,7 +1000,7 @@ class APICallSites(APICallCollection):
 
         site_mgmt.validate_configuration(request["site_id"], request["site_config"], all_sites)
 
-        sites = config.migrate_old_site_config({request["site_id"]: request["site_config"]})
+        sites = config.prepare_raw_site_config({request["site_id"]: request["site_config"]})
 
         all_sites.update(sites)
         site_mgmt.save_sites(all_sites)
@@ -1015,7 +1015,7 @@ class APICallSites(APICallCollection):
         for site_id, site_config in request["sites"].items():
             site_mgmt.validate_configuration(site_id, site_config, request["sites"])
 
-        site_mgmt.save_sites(config.migrate_old_site_config(request["sites"]))
+        site_mgmt.save_sites(config.prepare_raw_site_config(request["sites"]))
 
     def _delete(self, request):
         site_mgmt = watolib.SiteManagementFactory().factory()

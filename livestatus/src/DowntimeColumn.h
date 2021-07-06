@@ -26,10 +26,6 @@
 class ColumnOffsets;
 class RowRenderer;
 
-#ifdef CMC
-class Object;
-#endif
-
 class DowntimeRenderer {
     using function_type = std::function<std::vector<DowntimeData>(Row)>;
 

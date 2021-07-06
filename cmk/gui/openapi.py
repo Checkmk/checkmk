@@ -19,6 +19,7 @@ from cmk.utils.site import omd_site
 # This import needs to be here, because the decorators populate the
 # ENDPOINT_REGISTRY. If this didn't happen, the SPEC would be incomplete.
 import cmk.gui.plugins.openapi  # pylint: disable=unused-import
+from cmk.gui import watolib
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -34,7 +35,15 @@ if not version.is_raw_edition():
 
 def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
     endpoint: Endpoint
+
     methods = ["get", "put", "post", "delete"]
+
+    # NOTE
+    # This needs to be called on the very first request to create some important configuration
+    # files with default values for them to be considered in the OpenAPI schema. If this wouldn't
+    # be called, the schema would for example lack certain default tag groups.
+    watolib.init_wato_datastructures(with_wato_lock=True)
+
     for endpoint in sorted(
         ENDPOINT_REGISTRY, key=lambda e: (e.func.__module__, methods.index(e.method))
     ):

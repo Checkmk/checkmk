@@ -52,7 +52,6 @@ import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
-from cmk.utils.store import mkdir
 from cmk.utils.paths import mkbackup_lock_dir
 
 import omdlib
@@ -3867,9 +3866,8 @@ def hash_password(password: str) -> str:
 
 def ensure_mkbackup_lock_dir_rights() -> None:
     try:
-        mkdir(mkbackup_lock_dir)
+        mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
         shutil.chown(mkbackup_lock_dir, group="omd")
-        os.chmod(mkbackup_lock_dir, 0o0770)
     except PermissionError:
         logger.log(
             VERBOSE, "Unable to create %s needed for mkbackup. "

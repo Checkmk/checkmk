@@ -26,6 +26,7 @@ import * as sla from "sla";
 import * as bi from "bi";
 import * as transfer from "transfer";
 import * as backup from "backup";
+import * as background_job from "background_job";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
 import * as sidebar from "sidebar";
@@ -137,6 +138,7 @@ export const cmk_export = {
         bi: bi,
         transfer: transfer,
         backup: backup,
+        background_job: background_job,
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,

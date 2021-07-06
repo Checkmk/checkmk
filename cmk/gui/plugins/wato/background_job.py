@@ -6,12 +6,15 @@
 
 from typing import Optional, Type, Iterator
 import traceback
+import json
 
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, output_funnel
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -136,7 +139,7 @@ class ModeBackgroundJobDetails(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        back_url = self._back_url()
+        back_url = self.back_url()
         # Small hack to not have a "up" and "back" link both pointing to the parent mode
         if back_url and "mode=background_jobs_overview" not in back_url:
             yield PageMenuEntry(
@@ -147,35 +150,56 @@ class ModeBackgroundJobDetails(WatoMode):
                 is_suggested=True,
             )
 
-    def _back_url(self):
+    def back_url(self):
         return request.get_url_input("back_url", deflt="")
 
     def page(self):
-        job_id = request.var("job_id")
+        html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
+        html.div("", id_="status_container")
+        html.javascript("cmk.background_job.start('ajax_background_job_details.py', %s)" %
+                        json.dumps(request.get_ascii_input_mandatory("job_id")))
 
+
+@page_registry.register_page("ajax_background_job_details")
+class ModeAjaxCycleThemes(AjaxPage):
+    """AJAX handler for supporting the background job state update"""
+    def handle_page(self) -> None:
+        self.action()
+        super().handle_page()
+
+    def page(self) -> AjaxPageResult:
+        with output_funnel.plugged():
+            api_request = request.get_request()
+            job_snapshot = self._show_details_page(api_request["job_id"])
+            content = output_funnel.drain()
+
+        return {
+            "status_container_content": content,
+            "is_finished": job_snapshot and not job_snapshot.is_active(),
+        }
+
+    def _show_details_page(self, job_id: str) -> Optional[GUIBackgroundStatusSnapshot]:
         job = gui_background_job.GUIBackgroundJob(job_id)
         if not job.exists():
             html.show_message(_("Background job info is not available"))
-            return
+            return None
 
         try:
-            # Race condition, the job might get deleted during snapshot generation
             job_snapshot = job.get_status_snapshot()
         except Exception:
             html.show_message(_("Background job info is not available"))
             logger.error(traceback.format_exc())
-            return
+            return None
 
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot)
-        if job_snapshot.is_active():
-            html.immediate_browser_redirect(1, "")
+        return job_snapshot
 
-    def action(self) -> ActionResult:
-        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
+    def action(self) -> None:
+        job_details_page = ModeBackgroundJobDetails()
+        action_handler = gui_background_job.ActionHandler(job_details_page.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
-            if self._back_url():
-                raise redirect(self._back_url())
-            return redirect(mode_url("background_jobs_overview"))
-        return None
+            if job_details_page.back_url():
+                raise redirect(job_details_page.back_url())
+            raise redirect(mode_url("background_jobs_overview"))

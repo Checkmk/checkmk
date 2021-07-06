@@ -23,6 +23,7 @@ def test_registered_pages():
         'ajax_add_visual',
         'ajax_autocomplete_labels',
         'ajax_backup_job_state',
+        'ajax_background_job_details',
         'ajax_dashlet_pos',
         'ajax_delete_user_notification',
         'ajax_dict_host_tag_condition_get_choice',

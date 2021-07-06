@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 from typing import Type
 from six import ensure_str
 
@@ -206,7 +207,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         # instantiated in various places.
         raise NotImplementedError()
 
-    def get_status_snapshot(self):
+    def get_status_snapshot(self) -> GUIBackgroundStatusSnapshot:
         return GUIBackgroundStatusSnapshot(self)
 
     def acknowledge(self, user_id):
@@ -454,8 +455,6 @@ class JobRenderer:
         html.close_tr()
 
         html.close_table()
-        html.javascript(
-            "var log = document.getElementById('progress_log'); log.scrollTop = log.scrollHeight;")
 
     @classmethod
     def _get_extra_info(cls, job_status) -> str:

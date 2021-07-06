@@ -24,6 +24,7 @@ from typing import (
     NamedTuple,
     Literal,
     Counter as TCounter,
+    Sequence,
 )
 from pathlib import Path
 from collections import Counter
@@ -90,7 +91,24 @@ class DDeltaResult(NamedTuple):
     delta: SDAttributes
 
 
-AllowedPaths = List[Tuple[SDPath, Optional[List[str]]]]
+SDFilterFunc = Callable[[SDKey], bool]
+
+
+class SDFilter(NamedTuple):
+    path: SDPath
+    filter_nodes: SDFilterFunc
+    filter_attributes: SDFilterFunc
+    filter_columns: SDFilterFunc
+
+
+#   .--IO------------------------------------------------------------------.
+#   |                              ___ ___                                 |
+#   |                             |_ _/ _ \                                |
+#   |                              | | | | |                               |
+#   |                              | | |_| |                               |
+#   |                             |___\___/                                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def save_tree_to(
@@ -119,6 +137,40 @@ def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
     return StructuredDataNode()
 
 
+#.
+#   .--filters-------------------------------------------------------------.
+#   |                       __ _ _ _                                       |
+#   |                      / _(_) | |_ ___ _ __ ___                        |
+#   |                     | |_| | | __/ _ \ '__/ __|                       |
+#   |                     |  _| | | ||  __/ |  \__ \                       |
+#   |                     |_| |_|_|\__\___|_|  |___/                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+_use_all = lambda key: True
+_use_nothing = lambda key: False
+
+
+def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:
+    return lambda key: key in choices
+
+
+def make_filter(allowed_path: Tuple[SDPath, Optional[SDKeys]]) -> SDFilter:
+    path, keys = allowed_path
+    return SDFilter(
+        path=path,
+        filter_nodes=_use_all,
+        filter_attributes=_use_all,
+        filter_columns=_use_all,
+    ) if keys is None else SDFilter(
+        path=path,
+        filter_nodes=_use_nothing,
+        filter_attributes=_make_choices_filter(keys) if keys else _use_all,
+        filter_columns=_make_choices_filter(keys) if keys else _use_all,
+    )
+
+
+#.
 #   .--Structured DataNode-------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
@@ -429,24 +481,25 @@ class StructuredDataNode:
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_node(
-        self,
-        allowed_paths: Optional[AllowedPaths],
-    ) -> "StructuredDataNode":
-        if allowed_paths is None:
-            return self
-
+    def get_filtered_node(self, filters: List[SDFilter]) -> "StructuredDataNode":
         filtered = StructuredDataNode()
-        for path, keys in allowed_paths:
+        for f in filters:
             # First check if node exists
-            node = self._get_node(path)
+            node = self._get_node(f.path)
             if node is None:
                 continue
 
-            filtered_node = filtered.setdefault_node(path)
-            filtered_node.add_attributes(
-                (node.attributes.get_filtered_data(keys) if keys else node.attributes.data))
-            filtered_node.add_table(node.table.get_filtered_data(keys) if keys else node.table.data)
+            filtered_node = filtered.setdefault_node(f.path)
+
+            filtered_node.add_attributes(node.attributes.get_filtered_data(f.filter_attributes))
+
+            filtered_node.add_table(node.table.get_filtered_data(f.filter_columns))
+
+            for edge, sub_node in node._nodes.items():
+                # TODO Typing: For nodes there are only _use_all or _use_nothing used.
+                # These indexed node (type int) will be cleaned up one day.
+                if f.filter_nodes(str(edge)):
+                    filtered_node.add_node(edge, sub_node)
 
         return filtered
 
@@ -633,9 +686,10 @@ class Table:
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_data(self, keys: SDKeys) -> SDTable:
+    def get_filtered_data(self, filter_func: SDFilterFunc) -> SDTable:
         return [
-            filtered_row for row in self.data if (filtered_row := _get_filtered_dict(row, keys))
+            filtered_row for row in self.data
+            if (filtered_row := _get_filtered_dict(row, filter_func))
         ]
 
     #   ---web------------------------------------------------------------------
@@ -717,8 +771,8 @@ class Attributes:
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_data(self, keys: SDKeys) -> SDAttributes:
-        return _get_filtered_dict(self.data, keys)
+    def get_filtered_data(self, filter_func: SDFilterFunc) -> SDAttributes:
+        return _get_filtered_dict(self.data, filter_func)
 
     #   ---web------------------------------------------------------------------
 
@@ -795,12 +849,8 @@ def _compare_dict_keys(*, old_dict: Dict, new_dict: Dict) -> ComparedDictKeys:
     )
 
 
-def _get_filtered_dict(entries: Dict, keys: SDKeys) -> Dict:
-    filtered: Dict = {}
-    for k, v in entries.items():
-        if k in keys:
-            filtered.setdefault(k, v)
-    return filtered
+def _get_filtered_dict(dict_: Dict, filter_func: SDFilterFunc) -> Dict:
+    return {k: v for k, v in dict_.items() if filter_func(k)}
 
 
 def _new_delta_tree_node(value: SDValue) -> Tuple[None, SDValue]:
@@ -838,9 +888,12 @@ def _parse_tree_path(tree_path: Optional[SDRawPath]) -> SDPath:
     if tree_path.endswith(":") or tree_path.endswith("."):
         tree_path = tree_path[:-1]
 
-    # TODO merge with cmk.gui.inventory::_parse_visible_raw_inventory_path
+    return parse_visible_raw_path(tree_path)
+
+
+def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
     parsed_path: SDPath = []
-    for part in tree_path.split("."):
+    for part in raw_path.split("."):
         if not part:
             continue
         try:

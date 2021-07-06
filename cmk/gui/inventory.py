@@ -18,7 +18,12 @@ import dicttoxml  # type: ignore[import]
 import livestatus
 
 import cmk.utils.paths
-from cmk.utils.structured_data import StructuredDataNode, load_tree_from
+from cmk.utils.structured_data import (
+    StructuredDataNode,
+    load_tree_from,
+    make_filter,
+    parse_visible_raw_path,
+)
 from cmk.utils.exceptions import (
     MKException,
     MKGeneralException,
@@ -41,7 +46,8 @@ from cmk.gui.valuespec import ValueSpec, TextInput
 
 # TODO Cleanup variation:
 #   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views
-#   - _parse_visible_raw_inventory_path parses visible, internal tree paths for contact groups etc.
+#   - cmk.utils.inventory.py::parse_visible_raw_path
+#     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
 RawInventoryPath = str
@@ -288,18 +294,6 @@ def vs_inventory_path() -> ValueSpec:
     )
 
 
-def _parse_visible_raw_inventory_path(raw_path: str) -> InventoryPath:
-    parsed: InventoryPath = []
-    for part in raw_path.split("."):
-        if not part:
-            continue
-        try:
-            parsed.append(int(part))
-        except ValueError:
-            parsed.append(part)
-    return parsed
-
-
 #.
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
@@ -362,7 +356,14 @@ def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
 def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[StructuredDataNode]:
     if struct_tree is None:
         return None
-    return struct_tree.get_filtered_node(_get_permitted_inventory_paths())
+
+    if permitted_paths := _get_permitted_inventory_paths():
+        return struct_tree.get_filtered_node([
+            make_filter((parse_visible_raw_path(entry["path"]), entry.get("attributes")))
+            for entry in permitted_paths
+        ])
+
+    return struct_tree
 
 
 def _get_permitted_inventory_paths():
@@ -396,9 +397,7 @@ def _get_permitted_inventory_paths():
             forbid_whole_tree = True
             continue
 
-        for entry in inventory_paths[1]:
-            permitted_paths.append(
-                (_parse_visible_raw_inventory_path(entry["path"]), entry.get("attributes")))
+        permitted_paths.extend(inventory_paths[1])
 
     if forbid_whole_tree and not permitted_paths:
         g.permitted_inventory_paths = []
@@ -481,10 +480,8 @@ def inventory_of_host(host_name: HostName, api_request):
         return {}
 
     if "paths" in api_request:
-        parsed_paths = []
-        for path in api_request["paths"]:
-            parsed_paths.append(parse_tree_path(path))
-        merged_tree = merged_tree.get_filtered_node(parsed_paths)
+        merged_tree = merged_tree.get_filtered_node(
+            [make_filter(parse_tree_path(path)) for path in api_request["paths"]])
 
     assert merged_tree is not None
     return merged_tree.get_raw_tree()

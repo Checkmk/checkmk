@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.inventory import parse_tree_path, _parse_visible_raw_inventory_path
+from cmk.gui.inventory import parse_tree_path
 
 
 @pytest.mark.parametrize("raw_path, expected_path", [
@@ -20,11 +20,3 @@ from cmk.gui.inventory import parse_tree_path, _parse_visible_raw_inventory_path
 ])
 def test_parse_tree_path(raw_path, expected_path):
     assert parse_tree_path(raw_path) == expected_path
-
-
-@pytest.mark.parametrize("raw_path, expected_path", [
-    ("", []),
-    ("path.to.node_1", ["path", "to", "node_1"]),
-])
-def test__parse_visible_tree_path(raw_path, expected_path):
-    assert _parse_visible_raw_inventory_path(raw_path) == expected_path

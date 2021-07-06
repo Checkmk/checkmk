@@ -20,7 +20,14 @@ from cmk.utils.structured_data import (
     Table,
     load_tree_from,
     save_tree_to,
+    make_filter,
+    parse_visible_raw_path,
 )
+
+
+def _make_filters(allowed_paths):
+    return [make_filter(entry) for entry in allowed_paths]
+
 
 # Test basic methods of StructuredDataNode, Table, Attributes
 
@@ -491,21 +498,21 @@ def test_has_edge():
 
 def test_filtering_node_no_paths():
     filled_root = _create_filled_tree()
-    assert filled_root.get_filtered_node(None).is_equal(filled_root)
     assert filled_root.get_filtered_node([]).is_empty()
 
 
 def test_filtering_node_wrong_node():
     filled_root = _create_filled_tree()
-    filtered = filled_root.get_filtered_node([(["path", "to", "nta", "ta"], None)])
+    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
+    filtered = filled_root.get_filtered_node(filters)
     assert filtered.get_node(["path", "to", "nta", "na"]) is None
     assert filtered.get_node(["path", "to", "nta", "nt"]) is None
 
 
 def test_filtering_node_paths_no_keys():
     filled_root = _create_filled_tree()
-    filtered_node = filled_root.get_filtered_node([(["path", "to", "nta", "ta"], None)
-                                                  ]).get_node(["path", "to", "nta", "ta"])
+    filters = _make_filters([(["path", "to", "nta", "ta"], None)])
+    filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -526,8 +533,8 @@ def test_filtering_node_paths_no_keys():
 
 def test_filtering_node_paths_and_keys():
     filled_root = _create_filled_tree()
-    filtered_node = filled_root.get_filtered_node([(["path", "to", "nta", "ta"], ["ta0"])
-                                                  ]).get_node(["path", "to", "nta", "ta"])
+    filters = _make_filters([(["path", "to", "nta", "ta"], ["ta0"])])
+    filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
@@ -542,6 +549,41 @@ def test_filtering_node_paths_and_keys():
             "ta0": "TA 10",
         },
     ]
+
+
+def test_filtering_node_mixed():
+    filled_root = _create_filled_tree()
+    another_node1 = filled_root.setdefault_node(["path", "to", "another", "node1"])
+    another_node1.add_attributes({"ak11": "Another value 11", "ak12": "Another value 12"})
+
+    another_node2 = filled_root.setdefault_node(["path", "to", "another", "node2"])
+    another_node2.add_table([
+        {
+            "ak21": "Another value 211",
+            "ak22": "Another value 212",
+        },
+        {
+            "ak21": "Another value 221",
+            "ak22": "Another value 222",
+        },
+    ])
+
+    filters = _make_filters([
+        (["path", "to", "another"], None),
+        (["path", "to", "nta", "ta"], ["ta0"]),
+    ])
+    filtered_node = filled_root.get_filtered_node(filters)
+
+    # TODO 'get_raw_tree' only contains 8 entries because:
+    # At the moment it's not possible to display attributes and table
+    # below same node.
+    assert filtered_node.count_entries() == 9
+
+    assert filtered_node.get_node(["path", "to", "nta", "nt"]) is None
+    assert filtered_node.get_node(["path", "to", "nta", "na"]) is None
+
+    assert filtered_node.get_node(["path", "to", "another", "node1"]) is not None
+    assert filtered_node.get_node(["path", "to", "another", "node2"]) is not None
 
 
 # Tests with real host data
@@ -879,7 +921,7 @@ def test_real_merge_with_table(tree_inv, tree_status):
             [["hardware", "system"], ["software", "applications"]]),
     ])
 def test_real_filtered_tree(tree, paths, unavail):
-    filtered = tree.get_filtered_node(paths)
+    filtered = tree.get_filtered_node(_make_filters(paths))
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
     for path in unavail:
@@ -887,30 +929,44 @@ def test_real_filtered_tree(tree, paths, unavail):
 
 
 @pytest.mark.parametrize("tree,paths,amount_if_entries", [
-    (tree_new_interfaces, [(['networking'], None)], 3178),
-    (tree_new_interfaces, [(['networking'], [])], None),
     (tree_new_interfaces, [
-        (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports'])
+        (['networking'], None),
+    ], 3178),
+    (tree_new_interfaces, [
+        (['networking'], []),
     ], None),
-    (tree_new_interfaces, [(['networking', 'interfaces'], None)], 3178),
-    (tree_new_interfaces, [(['networking', 'interfaces'], [])], 3178),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status'])], 326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'FOOBAR'])], 326),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status'])], 652),
-    (tree_new_interfaces, [(['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR'])
-                          ], 652),
+    (tree_new_interfaces, [
+        (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports']),
+    ], None),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], None),
+    ], 3178),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], []),
+    ], 3178),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], ['admin_status']),
+    ], 326),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], ['admin_status', 'FOOBAR']),
+    ], 326),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], ['admin_status', 'oper_status']),
+    ], 652),
+    (tree_new_interfaces, [
+        (['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR']),
+    ], 652),
 ])
 def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
     the_paths = list(paths)
-    filtered = tree.get_filtered_node(paths)
+    filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
     assert filtered.has_edge('networking')
     assert not filtered.has_edge('hardware')
     assert not filtered.has_edge('software')
 
-    interfaces = filtered.get_table(['networking', 'interfaces'])
-    if interfaces is not None:
-        assert bool(interfaces)
+    if amount_if_entries is not None:
+        interfaces = filtered.get_table(['networking', 'interfaces'])
         assert interfaces.count_entries() == amount_if_entries
 
 
@@ -981,3 +1037,14 @@ def test_delta_structured_data_tree_serialization(zipped_trees):
     new_delta_tree = StructuredDataNode().create_tree_from_raw_tree(delta_raw_tree)
 
     assert delta_result.delta.is_equal(new_delta_tree)
+
+
+# Test helper
+
+
+@pytest.mark.parametrize("raw_path, expected_path", [
+    ("", []),
+    ("path.to.node_1", ["path", "to", "node_1"]),
+])
+def test__parse_visible_tree_path(raw_path, expected_path):
+    assert parse_visible_raw_path(raw_path) == expected_path

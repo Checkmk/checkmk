@@ -60,10 +60,12 @@ def _verify_user(environ) -> RFC7662:
             automation_user = automation_auth(user_id, secret)
             if automation_user:
                 verified.append(automation_user)
-
-            gui_user = gui_user_auth(user_id, secret)
-            if gui_user:
-                verified.append(gui_user)
+            else:
+                # GUI user and Automation users are mutually exclusive. Checking only once is less
+                # work for the system.
+                gui_user = gui_user_auth(user_id, secret)
+                if gui_user:
+                    verified.append(gui_user)
         elif auth_type == 'Basic':
             # We store this for sanity checking below, once we get a REMOTE_USER key.
             # If we don't get a REMOTE_USER key, this value will be ignored.

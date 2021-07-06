@@ -139,6 +139,14 @@ def _parse_perfentry(entry: str) -> Perfdata:
     Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(3.0, -inf), boundaries=(1.0, 9.0))
     >>> _parse_perfentry("a=5;7;2:8;1;9")
     Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(1.0, 9.0))
+    >>> _parse_perfentry("a=5;;;;")
+    Perfdata(name='a', value=5.0, levels_upper=None, levels_lower=None, boundaries=(None, None))
+    >>> _parse_perfentry("a=5;7;2:8;;")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(None, None))
+    >>> _parse_perfentry("a=5;7;2:8;0;")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(0.0, None))
+    >>> _parse_perfentry("a=5;7;2:8;;20")
+    Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(None, 20.0))
     '''
     entry = entry.rstrip(";")
     name, raw_list = entry.split('=', 1)
@@ -181,8 +189,10 @@ def _parse_perfentry(entry: str) -> Perfdata:
         value,
         levels_upper=optional_tuple(levels[0], levels[1]),
         levels_lower=optional_tuple(levels[2], levels[3]),
-        boundaries=(float(raw[3]) if len(raw) >= 4 else None,
-                    float(raw[4]) if len(raw) >= 5 else None),
+        boundaries=(
+            _try_convert_to_float(raw[3]) if len(raw) >= 4 else None,
+            _try_convert_to_float(raw[4]) if len(raw) >= 5 else None,
+        ),
     )
 
 

@@ -4,18 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, List
+from typing import Any, List, Optional
 
 from cmk.utils.site import omd_site
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 # TODO: typing of connection when livestatus.py is on pypi
+from livestatus import SiteId
 
 
 def send_command(
     connection,
     command: LivestatusCommand,
     params: List[Any],
+    site_id: Optional[SiteId] = None,
 ):
     """Send a command to livestatus.
 
@@ -29,6 +31,9 @@ def send_command(
 
         params:
             A list of anything.
+
+        site_id:
+            The site name
 
     Examples:
 
@@ -55,4 +60,7 @@ def send_command(
         if not isinstance(param, (int, str)):
             raise ValueError(f"Unknown type of parameter {pos}: {type(param)}")
         cmd += f";{param}"
-    connection.command(f"[{current_time}] {cmd}", sitename=omd_site())
+
+    if not site_id:
+        site_id = omd_site()
+    connection.command(f"[{current_time}] {cmd}", sitename=site_id)

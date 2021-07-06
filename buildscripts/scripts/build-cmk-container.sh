@@ -67,6 +67,12 @@ PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
 
 trap "rm -rf \"$TMP_PATH\"" SIGTERM SIGHUP SIGINT
 
+
+if [ -n "$NEXUS_USERNAME" ] ; then
+    log "Log into artifacts.lan.tribe29.com:4000"
+    docker login "artifacts.lan.tribe29.com:4000" -u "${NEXUS_USERNAME}" -p "${NEXUS_PASSWORD}"
+fi
+
 log "Unpack source tar to $TMP_PATH"
 tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
 

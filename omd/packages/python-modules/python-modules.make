@@ -58,7 +58,7 @@ PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
 PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-6.2.2.tar.gz # needed by reportlab (pillow>=2.4.0)
-PYTHON_MODULES_LIST += reportlab-3.5.9.tar.gz # needed by reporting
+PYTHON_MODULES_LIST += reportlab-3.5.18.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 PYTHON_MODULES_LIST += npyscreen-4.10.5.tar.gz # needed for mkbench

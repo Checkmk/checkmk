@@ -54,5 +54,5 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
     ]),
 ])
 def test_check_kaskpersky_av_client(section, results):
-    test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
+    test_params = dict(signature_age=(2.0, 3.0), fullscan_age=(2.0, 3.0))
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

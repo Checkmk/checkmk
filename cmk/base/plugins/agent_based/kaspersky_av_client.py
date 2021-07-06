@@ -5,15 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import TypedDict, Generator, Dict, Tuple
 
 from .agent_based_api.v1 import register, Service, State, Result, render
+from .agent_based_api.v1.type_defs import StringTable
 
 
-def parse_kaspersky_av_client(string_table):
+class Section(TypedDict, total=False):
+    signature_age: float
+    fullscan_age: float
+    fullscan_failed: bool
+
+
+def parse_kaspersky_av_client(string_table: StringTable) -> Section:
     return _parse_kaspersky_av_client(string_table, now=time.time())
 
 
-def _parse_kaspersky_av_client(string_table, now):
+def _parse_kaspersky_av_client(string_table: StringTable, now: float) -> Section:
     """
     # Set up timezone to make doctests reproducable.
     >>> import os
@@ -22,7 +30,7 @@ def _parse_kaspersky_av_client(string_table, now):
     >>> _parse_kaspersky_av_client([["Fullscan", "01.01.1970", "00:00:00"]], now=1)
     {'fullscan_age': 1.0}
     """
-    parsed = {}
+    parsed: Section = {}
 
     for line in string_table:
         if line[1] == 'Missing':
@@ -54,12 +62,13 @@ register.agent_section(
 )
 
 
-def discover_kaspersky_av_client(section):
+def discover_kaspersky_av_client(section: Section) -> Generator[Service, None, None]:
     if section:
         yield Service()
 
 
-def check_kaspersky_av_client(params, section):
+def check_kaspersky_av_client(params: Dict[str, Tuple[float, float]],
+                              section: Section) -> Generator[Result, None, None]:
     """
     >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
     >>> test_section = dict(fullscan_age=1, signature_age=1)
@@ -75,7 +84,7 @@ def check_kaspersky_av_client(params, section):
         age = section.get(key)
         if age is None:
             yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
-        else:
+        elif isinstance(age, int):  # needed to make mypy happy
             warn, crit = params[key]
             if age >= crit:
                 state = State.CRIT

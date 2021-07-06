@@ -32,20 +32,22 @@ def test_parse_kaspersky_av_client(string_table, now, expected_section):
     (dict(fullscan_age=2, signature_age=2), [
         Result(
             state=State.WARN,
-            summary='Last update of signatures 2 seconds ago (warn/crit at 2 seconds/3 seconds)'),
+            summary=
+            'Last update of signatures: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
         Result(state=State.WARN,
-               summary='Last fullscan 2 seconds ago (warn/crit at 2 seconds/3 seconds)'),
+               summary='Last fullscan: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
     ]),
     (dict(fullscan_age=3, signature_age=3), [
         Result(
             state=State.CRIT,
-            summary='Last update of signatures 3 seconds ago (warn/crit at 2 seconds/3 seconds)'),
+            summary=
+            'Last update of signatures: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
         Result(state=State.CRIT,
-               summary='Last fullscan 3 seconds ago (warn/crit at 2 seconds/3 seconds)'),
+               summary='Last fullscan: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
     ]),
     (dict(fullscan_failed=True, fullscan_age=1, signature_age=1), [
-        Result(state=State.OK, summary='Last update of signatures 1 second ago'),
-        Result(state=State.OK, summary='Last fullscan 1 second ago'),
+        Result(state=State.OK, summary='Last update of signatures: 1 second ago'),
+        Result(state=State.OK, summary='Last fullscan: 1 second ago'),
         Result(state=State.CRIT, summary='Last fullscan failed'),
     ]),
     (dict(), [

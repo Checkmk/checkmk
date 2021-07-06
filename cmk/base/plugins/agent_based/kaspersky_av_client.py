@@ -7,7 +7,7 @@
 import time
 from typing import TypedDict, Generator, Dict, Tuple
 
-from .agent_based_api.v1 import register, Service, State, Result, render
+from .agent_based_api.v1 import register, Service, State, Result, render, check_levels
 from .agent_based_api.v1.type_defs import StringTable
 
 
@@ -74,8 +74,8 @@ def check_kaspersky_av_client(params: Dict[str, Tuple[float, float]],
     >>> test_section = dict(fullscan_age=1, signature_age=1)
     >>> for result in check_kaspersky_av_client(test_params, test_section):
     ...     result
-    Result(state=<State.OK: 0>, summary='Last update of signatures 1 second ago')
-    Result(state=<State.OK: 0>, summary='Last fullscan 1 second ago')
+    Result(state=<State.OK: 0>, summary='Last update of signatures: 1 second ago')
+    Result(state=<State.OK: 0>, summary='Last fullscan: 1 second ago')
     """
     for key, what in [
         ("signature_age", "Last update of signatures"),
@@ -85,19 +85,10 @@ def check_kaspersky_av_client(params: Dict[str, Tuple[float, float]],
         if age is None:
             yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
         elif isinstance(age, int):  # needed to make mypy happy
-            warn, crit = params[key]
-            if age >= crit:
-                state = State.CRIT
-            elif age >= warn:
-                state = State.WARN
-            else:
-                state = State.OK
-
-            infotext = "%s %s ago" % (what, render.timespan(age))
-            if state in (State.CRIT, State.WARN):
-                infotext += " (warn/crit at %s/%s)" % (render.timespan(warn), render.timespan(crit))
-
-            yield Result(state=state, summary=infotext)
+            yield from check_levels(value=age,
+                                    levels_upper=params[key],
+                                    label=what,
+                                    render_func=lambda v: f"{render.timespan(v)} ago")
 
     if section.get("fullscan_failed"):
         yield Result(state=State.CRIT, summary="Last fullscan failed")

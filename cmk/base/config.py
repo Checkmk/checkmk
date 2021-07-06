@@ -3921,13 +3921,24 @@ class CEEConfigCache(ConfigCache):
             cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=cmc_check_timeout)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
-    def graphite_metrics_of_service(self, hostname: HostName,
-                                    description: ServiceName) -> Optional[List[str]]:
-        return self.get_service_ruleset_value(
+    def graphite_metrics_of_service(
+        self,
+        hostname: HostName,
+        description: Optional[ServiceName],
+        *,
+        default: Sequence[str],
+    ) -> Sequence[str]:
+        if description is None:
+            return default
+
+        value = self.get_service_ruleset_value(
             hostname,
             description,
             cmc_graphite_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
             deflt=None)
+        if value is None:
+            return default
+        return value
 
     def matched_agent_config_entries(
             self, hostname: Union[HostName,

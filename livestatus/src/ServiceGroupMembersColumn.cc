@@ -18,7 +18,8 @@
 
 #include "Host.h"
 #include "LogEntry.h"
-#include "Service.h"
+#include "Object.h"
+#include "ObjectGroup.h"
 #include "State.h"
 #else
 #include "MonitoringCore.h"
@@ -82,8 +83,8 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
     std::vector<Member> members;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (const auto *p = columnData<Host::services_t>(row)) {
-        for (const auto &svc : *p) {
+    if (const auto *p = columnData<ObjectGroup::values_type>(row)) {
+        for (const auto *svc : *p) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 members.emplace_back(
                     svc->host()->name(), svc->name(),

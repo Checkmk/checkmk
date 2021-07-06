@@ -7,17 +7,22 @@
 functionality is the locked file opening realized with the File() context
 manager."""
 
-import ast
 import enum
 from contextlib import nullcontext
 import logging
 import pprint
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
+
+from cmk.utils.store._file import (
+    BytesSerializer,
+    TextSerializer,
+    DimSerializer as _DimSerializer,
+    ObjectStore,
+)
 
 from cmk.utils.store._locks import (
     MKConfigLockTimeout,
@@ -162,44 +167,32 @@ def save_to_mk_file(path: Union[Path, str],
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Union[Path, str], *, default: Any, lock: bool = False) -> Any:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
-        content = _load_bytes_from_file(path).decode("utf-8")
-
-    return ast.literal_eval(content) if content else default
+        return ObjectStore(Path(path), serializer=_DimSerializer()).read_obj(default=default)
 
 
 def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
-        return _load_bytes_from_file(path).decode("utf-8") or default
+        return ObjectStore(Path(path), serializer=TextSerializer()).read_obj(default=default)
 
 
 def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: bool = False) -> bytes:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
-        return _load_bytes_from_file(path) or default
-
-
-def _load_bytes_from_file(path: Union[Path, str]) -> bytes:
-    if not isinstance(path, Path):
-        path = Path(path)
-
-    try:
-
-        try:
-            return path.read_bytes()
-        except FileNotFoundError:
-            return b''
-
-    except (MKTerminate, MKTimeout):
-        raise
-    except Exception as e:
-        # TODO: How to handle debug mode or logging?
-        raise MKGeneralException(_("Cannot read file \"%s\": %s") % (path, e))
+        return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
-    formatted_data = pprint.pformat(data) if pretty else repr(data)
-    save_text_to_file(path, "%s\n" % formatted_data)
+    serializer = _DimSerializer(pretty=pretty)
+    # Normally the file is already locked (when data has been loaded before with lock=True),
+    # but lock it just to be sure we have the lock on the file.
+    #
+    # NOTE:
+    #  * this creates the file with 0 bytes in case it is missing
+    #  * this will leave the file behind unlocked, regardless of it being locked before or
+    #    not!
+    with locked(path):
+        ObjectStore(Path(path), serializer=serializer).write_obj(data)
 
 
 def save_text_to_file(path: Union[Path, str], content: str, mode: int = 0o660) -> None:
@@ -213,7 +206,7 @@ def save_text_to_file(path: Union[Path, str], content: str, mode: int = 0o660) -
     #  * this will leave the file behind unlocked, regardless of it being locked before or
     #    not!
     with locked(path):
-        _save_data_to_file(path, content.encode("utf-8"), mode)
+        ObjectStore(Path(path), serializer=TextSerializer()).write_obj(content, mode=mode)
 
 
 def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660) -> None:
@@ -227,61 +220,7 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
     #  * this will leave the file behind unlocked, regardless of it being locked before or
     #    not!
     with locked(path):
-        _save_data_to_file(path, content, mode)
-
-
-# Saving assumes a locked destination file (usually done by loading code)
-# Then the new file is written to a temporary file and moved to the target path
-def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660) -> None:
-    if not isinstance(path, Path):
-        path = Path(path)
-
-    tmp_path = None
-    try:
-        with tempfile.NamedTemporaryFile("wb",
-                                         dir=str(path.parent),
-                                         prefix=".%s.new" % path.name,
-                                         delete=False) as tmp:
-
-            tmp_path = Path(tmp.name)
-            tmp_path.chmod(mode)
-            tmp.write(content)
-
-            # The goal of the fsync would be to ensure that there is a consistent file after a
-            # crash. Without the fsync it may happen that the file renamed below is just an empty
-            # file. That may lead into unexpected situations during loading.
-            #
-            # Don't do a fsync here because this may run into IO performance issues. Even when
-            # we can specify the fsync on a fd, the disk cache may be flushed completely because
-            # the disk does not know anything about fds, only about blocks.
-            #
-            # For Checkmk 1.4 we can not introduce a good solution for this, because the changes
-            # would affect too many parts of Checkmk with possible new issues. For the moment we
-            # stick with the IO behaviour of previous Checkmk versions.
-            #
-            # In the future we'll find a solution to deal better with OS crash recovery situations.
-            # for example like this:
-            #
-            # TODO(lm): The consistency of the file will can be ensured using copies of the
-            # original file which are made before replacing it with the new one. After first
-            # successful loading of the just written fille the possibly existing copies of this
-            # file are deleted.
-            # We can archieve this by calling os.link() before the os.rename() below. Then we need
-            # to define in which situations we want to check out the backup open(s) and in which
-            # cases we can savely delete them.
-            #tmp.flush()
-            #os.fsync(tmp.fileno())
-
-        tmp_path.rename(path)
-
-    except (MKTerminate, MKTimeout):
-        raise
-    except Exception as e:
-        if tmp_path:
-            tmp_path.unlink(missing_ok=True)
-
-        # TODO: How to handle debug mode or logging?
-        raise MKGeneralException(_("Cannot write configuration file \"%s\": %s") % (path, e))
+        ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content, mode=mode)
 
 
 class RawStorageLoader:

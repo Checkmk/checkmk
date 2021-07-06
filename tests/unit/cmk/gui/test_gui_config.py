@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import json
-
+from pathlib import Path
 import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
@@ -18,7 +18,6 @@ import cmk.gui.config as config
 import cmk.gui.permissions as permissions
 from cmk.gui.globals import user
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
-from cmk.gui.watolib.utils import may_edit_ruleset
 
 from testlib import is_enterprise_repo, is_managed_repo
 
@@ -190,6 +189,17 @@ def test_default_config_from_plugins():
         ]
 
     assert list(cmk.gui.config.default_config.keys()) == expected
+
+
+def test_load_config():
+    assert cmk.gui.config.quicksearch_dropdown_limit == 80
+    cmk.gui.config.load_config()
+    assert cmk.gui.config.quicksearch_dropdown_limit == 80
+
+    with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
+        f.write("quicksearch_dropdown_limit = 1337\n")
+    cmk.gui.config.load_config()
+    assert cmk.gui.config.quicksearch_dropdown_limit == 1337
 
 
 def test_sorted_sites(mocker):

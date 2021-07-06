@@ -4,13 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<kaspersky_av_client>>>
-# Signatures 08.05.2015 01:23:00
-# Fullscan 08.05.2015 05:43:16 0
-
-# <<<kaspersky_av_client>>>
-# Signatures 13.12.2016 11:55:00
-
 import time
 
 from .agent_based_api.v1 import register, Service, State, Result, render
@@ -26,8 +19,8 @@ def _parse_kaspersky_av_client(string_table, now):
     >>> import os
     >>> os.environ["TZ"] = "0"
 
-    >>> _parse_kaspersky_av_client([["Signatures", "01.01.1970"]], now=0)
-    {'signature_age': 0.0}
+    >>> _parse_kaspersky_av_client([["Fullscan", "01.01.1970", "00:00:00"]], now=1)
+    {'fullscan_age': 1.0}
     """
     parsed = {}
 
@@ -67,6 +60,14 @@ def discover_kaspersky_av_client(section):
 
 
 def check_kaspersky_av_client(params, section):
+    """
+    >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
+    >>> test_section = dict(fullscan_age=1, signature_age=1)
+    >>> for result in check_kaspersky_av_client(test_params, test_section):
+    ...     result
+    Result(state=<State.OK: 0>, summary='Last update of signatures 1 second ago')
+    Result(state=<State.OK: 0>, summary='Last fullscan 1 second ago')
+    """
     for key, what in [
         ("signature_age", "Last update of signatures"),
         ("fullscan_age", "Last fullscan"),

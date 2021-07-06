@@ -3868,6 +3868,7 @@ def ensure_mkbackup_lock_dir_rights() -> None:
     try:
         mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
         shutil.chown(mkbackup_lock_dir, group="omd")
+        mkbackup_lock_dir.chmod(0o0770)
     except PermissionError:
         logger.log(
             VERBOSE, "Unable to create %s needed for mkbackup. "

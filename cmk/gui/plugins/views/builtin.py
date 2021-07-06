@@ -598,7 +598,7 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [],
         'title': _('Downtimes of service'),
-        'topic': "history",
+        'topic': "monitoring",
     },
     'host': {
         'browser_reload': 30,

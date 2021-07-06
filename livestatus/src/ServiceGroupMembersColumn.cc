@@ -20,6 +20,7 @@
 
 #include "Host.h"
 #include "LogEntry.h"
+#include "ObjectGroup.h"
 #include "Service.h"
 #include "State.h"
 #endif
@@ -104,10 +105,10 @@ std::vector<ServiceGroupMembersColumn::Entry>
 ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
-    if (const auto *p = columnData<Host::services_t>(row)) {
-        for (const auto &svc : *p) {
+    if (const auto *p = columnData<ObjectGroup<Service>::values_type>(row)) {
+        for (const auto *svc : *p) {
             if (is_authorized_for_svc(mc_->serviceAuthorization(), auth_user,
-                                      svc.get())) {
+                                      svc)) {
                 entries.emplace_back(
                     svc->host()->name(), svc->name(),
                     static_cast<ServiceState>(svc->state()->_current_state),

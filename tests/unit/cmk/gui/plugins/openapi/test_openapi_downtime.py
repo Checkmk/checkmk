@@ -51,11 +51,13 @@ def test_openapi_schedule_hostgroup_downtime(
     ])
     live.expect_query('GET hostgroups\nColumns: members\nFilter: name = windows')
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
+        'GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2')
+    live.expect_query(
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     live.expect_query(
-        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
+        'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
     )
     with live:
@@ -83,6 +85,7 @@ def test_openapi_schedule_host_downtime(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
+    live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
@@ -158,6 +161,7 @@ def test_openapi_schedule_service_downtime(
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
+    live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
@@ -433,6 +437,7 @@ def test_openapi_create_host_downtime_with_query(
     ])
 
     live.expect_query(['GET hosts', 'Columns: name', 'Filter: name ~ heute'])
+    live.expect_query(['GET hosts', 'Columns: name', 'Filter: name = heute'])
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',

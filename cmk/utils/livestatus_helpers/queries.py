@@ -3,6 +3,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Tuple, Type, cast
 
 from cmk.utils.livestatus_helpers import tables
@@ -721,3 +722,13 @@ def _parse_line(
     _, column_name, op, *value = filter_string.split(None, 3)
     column = _get_column(table, column_name)
     return column.op(op, value)
+
+
+@contextmanager
+def detailed_connection(connection):
+    prev = connection.prepend_site
+    connection.set_prepend_site(True)
+    try:
+        yield connection
+    finally:
+        connection.set_prepend_site(prev)

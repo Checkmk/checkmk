@@ -39,7 +39,8 @@ from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.utils.livestatus_helpers.expressions import And, Or
-from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.queries import Query, detailed_connection
+from cmk.utils.livestatus_helpers.tables import Hosts
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
     Endpoint,
@@ -95,7 +96,7 @@ def create_host_related_downtime(params):
     if downtime_type == 'host':
         downtime_commands.schedule_host_downtime(
             live,
-            host_name=body['host_name'],
+            host_entry=body['host_name'],
             start_time=body['start_time'],
             end_time=body['end_time'],
             recur=body['recur'],
@@ -159,8 +160,13 @@ def create_service_related_downtime(params):
     downtime_type: DowntimeType = body['downtime_type']
 
     if downtime_type == 'service':
+        host_name = body['host_name']
+        with detailed_connection(live) as conn:
+            site_id = Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=",
+                                                                            host_name)).value(conn)
         downtime_commands.schedule_service_downtime(
             live,
+            site_id,
             host_name=body['host_name'],
             service_description=body['service_descriptions'],
             start_time=body['start_time'],

@@ -1300,6 +1300,12 @@ metric_info["disk_drain_rate"] = {
     "color": "31/b",
 }
 
+metric_info["memory_used"] = {
+    "color": "46/a",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {

@@ -6,7 +6,7 @@
 
 from collections import namedtuple
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Dict, Union
 
 from .utils import sap_hana
 from .agent_based_api.v1 import (
@@ -16,6 +16,7 @@ from .agent_based_api.v1 import (
     Service,
     Result,
     State as state,
+    IgnoreResultsError,
 )
 
 from .agent_based_api.v1.type_defs import (
@@ -30,11 +31,11 @@ SAP_HANA_MAYBE = namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
+        inst: Dict[str, Union[int, SAP_HANA_MAYBE]] = {}
         for line in lines:
             if len(line) < 7:
                 continue
 
-            inst = section.setdefault(sid_instance, {})
             for index, key, in [
                 (0, "enforced"),
                 (1, "permanent"),
@@ -53,6 +54,8 @@ def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
                 except ValueError:
                     pass
             inst["expiration_date"] = line[6]
+
+        section.setdefault(sid_instance, inst)
     return section
 
 
@@ -79,8 +82,8 @@ def check_sap_hana_license(item: str, params: Mapping[str, Any],
                            section: sap_hana.ParsedSection) -> CheckResult:
 
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     enforced = data['enforced']
     if enforced.bool:
@@ -103,10 +106,6 @@ def check_sap_hana_license(item: str, params: Mapping[str, Any],
     expiration_date = data["expiration_date"]
     if expiration_date != "?":
         yield Result(state=state.WARN, summary='Expiration date: %s' % expiration_date)
-
-    # It ONE physical device and at least two nodes.
-    # Thus we only need to check the first one.
-    return
 
 
 def _check_product_usage(size, limit, params):

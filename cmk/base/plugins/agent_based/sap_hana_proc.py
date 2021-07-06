@@ -7,7 +7,7 @@
 from typing import Any, Mapping
 
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State
+from .agent_based_api.v1 import register, Service, Result, State, IgnoreResultsError
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
@@ -53,7 +53,7 @@ def check_sap_hana_proc(item: str, params: Mapping[str, Any],
                         section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
     if data is None:
-        return
+        raise IgnoreResultsError("Login into database failed.")
 
     yield Result(state=State.OK, summary="Port: %s, PID: %s" % (data["port"], data["pid"]))
 
@@ -76,6 +76,7 @@ register.check_plugin(
     service_name="SAP HANA Process %s",
     discovery_function=discovery_sap_hana_proc,
     check_function=check_sap_hana_proc,
+    check_ruleset_name="sap_hana_proc",
     check_default_parameters={},
     cluster_check_function=sap_hana.get_cluster_check_with_params(check_sap_hana_proc),
 )

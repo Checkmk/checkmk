@@ -13,6 +13,7 @@ from .agent_based_api.v1 import (
     Result,
     State,
     get_value_store,
+    IgnoreResultsError,
 )
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -65,7 +66,7 @@ def check_sap_hana_diskusage(item: str, params: Mapping[str, Any],
                              section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
     if not data:
-        return
+        raise IgnoreResultsError("Login into database failed.")
 
     state_name = data["state_name"]
     if state_name == "OK":

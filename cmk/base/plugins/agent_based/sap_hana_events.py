@@ -7,7 +7,7 @@
 from typing import Final
 
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State, Metric
+from .agent_based_api.v1 import register, Service, Result, State, Metric, IgnoreResultsError
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
@@ -34,8 +34,7 @@ def parse_sap_hana_events(string_table: StringTable) -> sap_hana.ParsedSection:
                 inst_data[line[0]] = int(line[1])
             except ValueError:
                 pass
-        if inst_data:
-            section.setdefault(sid_instance, inst_data)
+        section.setdefault(sid_instance, inst_data)
     return section
 
 
@@ -52,8 +51,8 @@ def discovery_sap_hana_events(section: sap_hana.ParsedSection) -> DiscoveryResul
 
 def check_sap_hana_events(item: str, section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     for event_key, event_count in data.items():
         event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(

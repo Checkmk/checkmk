@@ -65,14 +65,6 @@ def test_inventory_sap_hana_db_status(info, expected_result):
         ],
         [Result(state=State.CRIT, summary="DB status failed: * -10104: Invalid value for KEY")],
     ),
-    (
-        "HXE 99",
-        [
-            ["[[HXE 98]]"],
-            ["OK"],
-        ],
-        [],
-    ),
 ])
 def test_check_sap_hana_db_status(item, info, expected_result):
     section_name = SectionName("sap_hana_db_status")

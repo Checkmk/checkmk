@@ -8,7 +8,7 @@ from typing import Any, Mapping
 
 from .utils import sap_hana
 from .utils.memory import check_element
-from .agent_based_api.v1 import register, Service
+from .agent_based_api.v1 import register, Service, IgnoreResultsError
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
@@ -30,8 +30,7 @@ def parse_sap_hana_memrate(string_table: StringTable) -> sap_hana.ParsedSection:
                     inst_data[key] = int(line[index])
                 except ValueError:
                     pass
-        if inst_data:
-            section.setdefault(sid_instance, inst_data)
+        section.setdefault(sid_instance, inst_data)
     return section
 
 
@@ -49,8 +48,8 @@ def discovery_sap_hana_memrate(section: sap_hana.ParsedSection) -> DiscoveryResu
 def check_sap_hana_memrate(item: str, params: Mapping[str, Any],
                            section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     yield from check_element(
         "Usage",

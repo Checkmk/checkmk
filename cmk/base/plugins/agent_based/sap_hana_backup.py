@@ -15,6 +15,7 @@ from .agent_based_api.v1 import (
     Service,
     Result,
     State as state,
+    IgnoreResultsError,
 )
 
 
@@ -61,8 +62,8 @@ def check_sap_hana_backup(item, params, section):
     now = time.time()
 
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     state_name = data['state_name']
     if state_name == 'failed':

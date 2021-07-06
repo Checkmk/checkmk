@@ -7,7 +7,7 @@
 from typing import Any, Mapping, Final
 
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State
+from .agent_based_api.v1 import register, Service, Result, State, IgnoreResultsError
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
@@ -37,8 +37,7 @@ def parse_sap_hana_replication_status(string_table: StringTable) -> sap_hana.Par
                 inst["mode"] = line[1]
             elif line[0] == "systemReplicationStatus:":
                 inst["sys_repl_status"] = line[1]
-        if inst:
-            section.setdefault(sid_instance, inst)
+        section.setdefault(sid_instance, inst)
 
     return section
 
@@ -59,8 +58,8 @@ def discovery_sap_hana_replication_status(section: sap_hana.ParsedSection) -> Di
 def check_sap_hana_replication_status(item: str, params: Mapping[str, Any],
                                       section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     sys_repl_status = data["sys_repl_status"]
     state, state_readable, param_key = SAP_HANA_REPL_STATUS_MAP.get(

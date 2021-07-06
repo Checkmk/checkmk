@@ -20,6 +20,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    ManualCheckParameterRulespec,
+    RulespecGroupEnforcedServicesApplications,
 )
 
 
@@ -142,4 +144,13 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_hana_memory,
         title=lambda: _("SAP HANA Memory"),
+    ))
+
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="sap_hana_proc",
+        group=RulespecGroupEnforcedServicesApplications,
+        item_spec=lambda: TextInput(title=_("The instance name")),
+        match_type="dict",
+        title=lambda: _("SAP HANA Process"),
     ))

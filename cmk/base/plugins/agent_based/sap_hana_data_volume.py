@@ -16,6 +16,7 @@ from .agent_based_api.v1 import (
     Result,
     State as state,
     get_value_store,
+    IgnoreResultsError,
 )
 
 from .agent_based_api.v1.type_defs import (
@@ -69,8 +70,8 @@ def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> Discovery
 def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
                                section: sap_hana.ParsedSection) -> CheckResult:
     item_data = section.get(item)
-    if item_data is None:
-        return
+    if not item_data:
+        raise IgnoreResultsError("Login into database failed.")
     size = item_data['size']
     used = item_data['used']
     avail = size - used
@@ -88,10 +89,6 @@ def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
     path = item_data.get('path')
     if path:
         yield Result(state=state.OK, summary='Path: %s' % path)
-
-    # It ONE physical device and at least two nodes.
-    # Thus we only need to check the first one.
-    return
 
 
 def cluster_check_sap_hana_data_volume(item, params, section):

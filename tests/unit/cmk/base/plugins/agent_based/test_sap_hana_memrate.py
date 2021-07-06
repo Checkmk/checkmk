@@ -30,7 +30,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
             ["[[HXE 90 SYSTEMDB]]"],
             ["5115896693", "7297159168", "mem_rate"],
         ],
-        {},
+        {
+            "HXE 90 SYSTEMDB": {}
+        },
     ),
     ([
         ["[[HXE 90 SYSTEMDB]]"],

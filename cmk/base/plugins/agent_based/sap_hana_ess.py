@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, Metric, State
+from .agent_based_api.v1 import register, Service, Result, Metric, State, IgnoreResultsError
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
@@ -30,8 +30,7 @@ def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:
                     pass
             else:
                 inst_data[key] = line[1]
-        if inst_data:
-            section.setdefault(sid_instance, inst_data)
+        section.setdefault(sid_instance, inst_data)
     return section
 
 
@@ -48,8 +47,8 @@ def discovery_sap_hana_ess(section: sap_hana.ParsedSection) -> DiscoveryResult:
 
 def check_sap_hana_ess(item: str, section: sap_hana.ParsedSection) -> CheckResult:
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     active_state_name = data["active"]
     if active_state_name == "unknown":

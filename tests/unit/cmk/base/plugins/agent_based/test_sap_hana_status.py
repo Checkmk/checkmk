@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric, IgnoreResultsError
 import cmk.base.plugins.agent_based.sap_hana_status as sap_hana_status
 
 ITEM = "H90 33"
@@ -59,6 +59,11 @@ SECTION_WARNING = {
         'instance': 'H90 33',
         'version': '1.00.122.22.1543461992 (fa/hana1sp12)'
     }
+}), ([
+    ['[[H62 10]]'],
+], {
+    'Status H62 10': {},
+    'Version H62 10': {}
 })])
 def test_sap_hana_status_parse(string_table_row, expected_parsed_data):
     assert sap_hana_status.parse_sap_hana_status(string_table_row) == expected_parsed_data
@@ -86,6 +91,12 @@ def test_sap_hana_status_check(check_type, results, section):
     yielded_results = list(
         sap_hana_status.check_sap_hana_status("%s %s" % (check_type, ITEM), section))
     assert yielded_results == [results]
+
+
+@pytest.mark.parametrize("section, item", [({"Status H62 10": {}}, "Status H62 10")])
+def test_sap_hana_status_check_stale(section, item):
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_status.check_sap_hana_status(item, section))
 
 
 def test_sap_hana_status_cluster_check():

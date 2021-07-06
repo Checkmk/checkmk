@@ -11,6 +11,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State as state,
     Result,
     Metric,
+    IgnoreResultsError,
 )
 import cmk.base.plugins.agent_based.sap_hana_license as sap_hana_license
 
@@ -131,3 +132,13 @@ def test_sap_hana_license_discovery():
 def test_sap_hana_license_check(cur_item, result):
     yielded_results = list(sap_hana_license.check_sap_hana_license(cur_item, {}, SECTION))
     assert yielded_results == result
+
+
+@pytest.mark.parametrize("item, section", [
+    ("Y04 10", {
+        'Y04 10': {}
+    }),
+])
+def test_sap_hana_license_check_stale(item, section):
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_license.check_sap_hana_license(item, {}, section))

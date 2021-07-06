@@ -8,7 +8,7 @@ import pytest
 
 from cmk.base.api.agent_based import register
 from cmk.utils.type_defs import SectionName, CheckPluginName
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric, IgnoreResultsError
 
 
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
@@ -104,3 +104,23 @@ def test_check_sap_hana_events(item, info, expected_result):
     plugin = register.get_check_plugin(plugin_name)
     if plugin:
         assert list(plugin.check_function(item, section)) == expected_result
+
+
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.parametrize("item, info", [
+    (
+        "HXE 90 SYSTEMDB",
+        [
+            ["[[HXE 90 SYSTEMDB]]"],
+        ],
+    ),
+])
+def test_check_sap_hana_events_stale(item, info):
+    section_name = SectionName("sap_hana_events")
+    section = register.get_section_plugin(section_name).parse_function(info)
+
+    plugin_name = CheckPluginName("sap_hana_events")
+    plugin = register.get_check_plugin(plugin_name)
+    if plugin:
+        with pytest.raises(IgnoreResultsError):
+            list(plugin.check_function(item, section))

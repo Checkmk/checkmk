@@ -12,7 +12,7 @@ from freezegun import freeze_time
 from cmk.base.api.agent_based import register
 from cmk.utils.type_defs import SectionName, CheckPluginName
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric, IgnoreResultsError
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 LAST_TIME_EPOCH = (datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") -
@@ -192,3 +192,23 @@ def test_check_sap_hana_diskusage(value_store_patch, item, info, expected_result
     plugin = register.get_check_plugin(plugin_name)
     if plugin:
         assert list(plugin.check_function(item, {}, section)) == expected_result
+
+
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.parametrize("item, info", [
+    (
+        "HXE 90 HXE - Log",
+        [
+            ["[[HXE 90 HXE]]"],
+        ],
+    ),
+])
+def test_check_sap_hana_diskusage_stale(item, info):
+    section_name = SectionName("sap_hana_diskusage")
+    section = register.get_section_plugin(section_name).parse_function(info)
+
+    plugin_name = CheckPluginName("sap_hana_diskusage")
+    plugin = register.get_check_plugin(plugin_name)
+    if plugin:
+        with pytest.raises(IgnoreResultsError):
+            list(plugin.check_function(item, {}, section))

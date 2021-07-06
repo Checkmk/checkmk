@@ -13,6 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State as state,
     Result,
     Metric,
+    IgnoreResultsError,
 )
 import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
@@ -199,3 +200,11 @@ def test_sap_hana_data_volume_check(value_store_patch, item, params, expected_re
     yielded_results = list(
         sap_hana_data_volume.check_sap_hana_data_volume(item, params, PARSED_SECTION))
     assert yielded_results == expected_results
+
+
+@pytest.mark.parametrize("item, section", [
+    ("H62 10 - DATA 20", {}),
+])
+def test_sap_hana_data_volume_check_stale(item, section):
+    with pytest.raises(IgnoreResultsError):
+        list(sap_hana_data_volume.check_sap_hana_data_volume(item, {}, section))

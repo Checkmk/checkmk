@@ -62,6 +62,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
+        MYPY_ADDOPTS: "--no-color-output"
       COMMAND: 'make --quiet test-mypy-docker'
       TEXT_ON_SKIP: 'No Python files changed'
 
@@ -77,7 +78,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
       DIR: 'tests'
       ENV_VARS:
-        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml"
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
 

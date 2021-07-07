@@ -75,6 +75,9 @@ class BICompiledLeaf(ABCBICompiledNode):
         self.host_name = host_name
         self.service_description = service_description
 
+    def _get_comparable_name(self) -> str:
+        return ":".join([self.site_id or "", self.host_name, self.service_description or ""])
+
     def parse_schema(self, schema_config: Dict) -> None:
         self.site_id = schema_config["site_id"]
         self.host_name = schema_config["host_name"]
@@ -258,6 +261,9 @@ class BICompiledRule(ABCBICompiledNode):
             len([x for x in self.nodes if x.type() == "remaining"]),
         )
 
+    def _get_comparable_name(self) -> str:
+        return self.properties.title
+
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
                             services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
@@ -394,6 +400,9 @@ class BIRemainingResult(ABCBICompiledNode):
         super().__init__()
         self.host_names = host_names
 
+    def _get_comparable_name(self) -> str:
+        return ""
+
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
                             services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
@@ -406,6 +415,7 @@ class BIRemainingResult(ABCBICompiledNode):
                     BICompiledLeaf(host_name=host_name,
                                    service_description=service_description,
                                    site_id=site_id))
+        postprocessed_nodes.sort()
         return postprocessed_nodes
 
     def required_elements(self) -> Set[RequiredBIElement]:

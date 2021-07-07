@@ -407,6 +407,13 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def type(cls) -> str:
         raise NotImplementedError()
 
+    def __lt__(self, other: "ABCBICompiledNode"):
+        return self._get_comparable_name() < other._get_comparable_name()
+
+    @abc.abstractmethod
+    def _get_comparable_name(self) -> str:
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
         raise NotImplementedError()

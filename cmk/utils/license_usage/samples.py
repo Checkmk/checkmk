@@ -81,6 +81,9 @@ def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
         sample.setdefault("num_hosts_excluded", 0)
         sample.setdefault("num_services_excluded", 0)
 
+    # Restrict platform string to 50 chars due to the restriction of the license DB field.
+    sample["platform"] = sample["platform"][:50]
+
     migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
     sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)
     return LicenseUsageSample(**sample)

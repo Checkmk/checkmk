@@ -30,6 +30,7 @@ import threading
 import time
 import traceback
 from contextlib import contextmanager, ExitStack
+from semver import VersionInfo  # type: ignore[import]
 from typing import Any, Callable, Dict, Iterator, IO, List, NamedTuple, NoReturn, Optional, Tuple, Generator
 
 from six import ensure_str
@@ -166,14 +167,15 @@ def verify_compatible_cma_version() -> None:
     if not is_cma():
         return
 
+    minimal_cma_version = VersionInfo(major=1, minor=4, patch=12)
     with open("/usr/share/cma/version") as f:
-        parts = tuple(map(int, f.read().strip().split(".")))
+        current_cma_version = VersionInfo.parse(f.read().strip())
 
-    if parts[0] == 1 and parts[1] == 4 and parts[2] < 12:
+    if current_cma_version < minimal_cma_version:
         raise MKGeneralException(
-            "The Checkmk backup of your version (1.6.0p21 or newer) "
-            "is not compatible with your Checkmk Appliance firmware. Please update your "
-            "appliance to 1.4.12 or newer to make the backup work again.")
+            f"The Checkmk backup of your version ({VERSION}) "
+            f"is not compatible with your Checkmk Appliance firmware ({current_cma_version}). Please update your "
+            f"appliance to {minimal_cma_version} or newer to make the backup work again.")
 
 
 def global_lock_file_path() -> Path:

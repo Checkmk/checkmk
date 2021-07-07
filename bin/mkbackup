@@ -1178,9 +1178,6 @@ def do_system_backup(opts):
     log("Performing system data backup (system-data%s)" % archive_suffix())
     do_system_data_backup(opts)
 
-    def exclude_sites(opts):
-        return "without-sites" in opts or g_job_config.get("without_sites", False)
-
     # Now run the site backup for all sites
     if not exclude_sites(opts):
         for site_id in existing_sites():
@@ -1248,6 +1245,10 @@ def is_inactive_cluster_backup(info):
 def existing_sites():
     return sorted(
         [s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))])
+
+
+def exclude_sites(opts):
+    return "without-sites" in opts or g_job_config.get("without_sites", False)
 
 
 def backup_files_to_tarfile(fobj, base_path, exclude_patterns=None):
@@ -1616,9 +1617,6 @@ def do_system_restore(opts, info):
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
     do_system_data_restore(opts, info)
     log("Finished system data restore")
-
-    def exclude_sites(opts):
-        return "without-sites" in opts or g_job_config.get("without_sites", False)
 
     if exclude_sites(opts):
         log("Skipping site restore (disabled)")

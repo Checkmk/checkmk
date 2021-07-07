@@ -1616,7 +1616,7 @@ class OverridableContainer(Overridable, Container):
         page_type_name = request.get_ascii_input_mandatory("page_type")
         page_name = request.get_ascii_input_mandatory("page_name")
         element_type = request.get_ascii_input_mandatory("element_type")
-        create_info = json.loads(request.get_ascii_input_mandatory("create_info"))
+        create_info = json.loads(request.get_unicode_input_mandatory("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

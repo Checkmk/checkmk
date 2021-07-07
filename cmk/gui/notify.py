@@ -19,7 +19,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.default_permissions import PermissionSectionGeneral
@@ -53,7 +53,7 @@ from cmk.gui.utils.urls import makeuri
 
 def get_gui_messages(user_id=None):
     if user_id is None:
-        user_id = config.user.id
+        user_id = user.id
     path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
     messages = store.load_object_from_file(path, default=[])
 
@@ -82,7 +82,7 @@ def delete_gui_message(msg_id):
 
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
-        user_id = config.user.id
+        user_id = user.id
     path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, messages)
@@ -122,7 +122,7 @@ permission_registry.register(
 
 @cmk.gui.pages.register("notify")
 def page_notify():
-    if not config.user.may("general.notify"):
+    if not user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
     title = _('Notify users')
@@ -303,9 +303,9 @@ def _process_notify_message(msg):
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s notifications to the following users:") % method
             table_rows = HTML()
-            for user, exception in method_errors:
+            for user_id, exception in method_errors:
                 table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user)) + html.render_td(exception))
+                    html.render_td(html.render_tt(user_id)) + html.render_td(exception))
             error_message += html.render_table(table_rows) + html.render_br()
         html.show_error(error_message)
 
@@ -330,21 +330,21 @@ def notify_gui_msg(user_id, msg):
 
 def notify_mail(user_id, msg):
     users = userdb.load_users(lock=False)
-    user = users.get(user_id)
+    user_spec = users.get(user_id)
 
-    if not user:
+    if not user_spec:
         raise MKInternalError(_('This user does not exist.'))
 
-    if not user.get('email'):
+    if not user_spec.get('email'):
         raise MKInternalError(_('This user has no mail address configured.'))
 
-    recipient_name = user.get('alias')
+    recipient_name = user_spec.get('alias')
     if not recipient_name:
         recipient_name = user_id
 
-    if config.user.id is None:
+    if user.id is None:
         raise Exception("no user ID")
-    sender_name = users[config.user.id].get('alias')
+    sender_name = users[user.id].get('alias')
     if not sender_name:
         sender_name = user_id
 
@@ -368,7 +368,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
+    command = ["mail", "-s", ensure_str(subject), ensure_str(user_spec['email'])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

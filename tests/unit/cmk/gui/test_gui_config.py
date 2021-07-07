@@ -18,7 +18,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import theme
+from cmk.gui.globals import user
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_sorted_sites(mocker):
-    mocker.patch.object(config.user,
+    mocker.patch.object(user,
                         "authorized_sites",
                         return_value={
                             'site1': {
@@ -1293,6 +1293,6 @@ def test_is_ntop_configured_and_reason(
             ntop_connection,
         )
         if custom_user:
-            config.user._set_attribute("ntop_alias", custom_user)
+            user._set_attribute("ntop_alias", custom_user)
         assert config.is_ntop_configured() == answer
         assert config.get_ntop_misconfiguration_reason() == reason

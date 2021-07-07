@@ -20,6 +20,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
+from cmk.gui.globals import user
 import cmk.gui.config as config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.i18n import _
@@ -127,7 +128,7 @@ def site_neutral_path(path):
 
 def may_edit_ruleset(varname: str) -> bool:
     if varname == "ignored_services":
-        return config.user.may("wato.services") or config.user.may("wato.rulesets")
+        return user.may("wato.services") or user.may("wato.rulesets")
     if varname in [
             "custom_checks",
             "datasource_programs",
@@ -136,12 +137,10 @@ def may_edit_ruleset(varname: str) -> bool:
             "agent_config:runas",
             "agent_config:only_from",
     ]:
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.add_or_modify_executables")
+        return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
     if varname == "agent_config:custom_files":
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.agent_deploy_custom_files")
-    return config.user.may("wato.rulesets")
+        return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
+    return user.may("wato.rulesets")
 
 
 def is_pre_17_remote_site(site_status: SiteStatus) -> bool:

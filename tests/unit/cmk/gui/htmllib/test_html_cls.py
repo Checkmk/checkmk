@@ -6,7 +6,7 @@
 
 import traceback
 
-from cmk.gui.globals import html, user_errors, output_funnel
+from cmk.gui.globals import html, user_errors, output_funnel, user
 from cmk.gui.utils.html import HTML
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKUserError
@@ -41,13 +41,13 @@ def test_render_help_text(register_builtin_html):
 
 def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):
     monkeypatch.setattr(config.LoggedInUser, "show_help", property(lambda s: True))
-    assert config.user.show_help is True
+    assert user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))
 
 
 def test_add_manual_link(register_builtin_html):
-    assert config.user.language is None
+    assert user.language is None
     assert compare_html(
         html.render_help(u"[introduction_docker|docker]"),
         HTML(
@@ -56,7 +56,7 @@ def test_add_manual_link(register_builtin_html):
 
 
 def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
-    monkeypatch.setattr(config.user, "language", lambda: "de")
+    monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[introduction_docker|docker]"),
         HTML(
@@ -65,7 +65,7 @@ def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
 
 
 def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
-    monkeypatch.setattr(config.user, "language", lambda: "de")
+    monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[graphing#rrds|RRDs]"),
         HTML(

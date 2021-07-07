@@ -26,7 +26,7 @@ import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import request, response
+from cmk.gui.globals import request, response, user
 from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
@@ -150,7 +150,7 @@ def _get_api_call():
 
 
 def _check_permissions(api_call):
-    if not config.user.get_attribute("automation_secret"):
+    if not user.get_attribute("automation_secret"):
         raise MKAuthException("The WATO API is only available for automation users")
 
     if not config.wato_enabled:
@@ -158,7 +158,7 @@ def _check_permissions(api_call):
 
     for permission in ["wato.use", "wato.api_allowed"] + \
                       api_call.get("required_permissions", []):
-        config.user.need_permission(permission)
+        user.need_permission(permission)
 
 
 def _get_request(api_call):

@@ -7,8 +7,9 @@
 import abc
 import copy
 from typing import Type, List, Any, Dict, Union
+
+from cmk.gui.globals import user
 import cmk.gui.watolib as watolib
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 
 from cmk.gui.valuespec import (
@@ -522,11 +523,11 @@ def may_use_rules_in_pack(bi_pack):
 
 
 def is_contact_for_pack(bi_pack):
-    if config.user.may("wato.bi_admin"):
+    if user.may("wato.bi_admin"):
         return True  # meaning I am admin
 
-    assert config.user.id is not None
-    contact_groups = userdb.contactgroups_of_user(config.user.id)
+    assert user.id is not None
+    contact_groups = userdb.contactgroups_of_user(user.id)
     if contact_groups is None:
         return True
 

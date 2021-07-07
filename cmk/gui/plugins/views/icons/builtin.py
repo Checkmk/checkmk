@@ -44,7 +44,7 @@ import cmk.gui.bi as bi
 import cmk.gui.config as config
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import g, html, request, response
+from cmk.gui.globals import g, html, request, response, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -195,7 +195,7 @@ class RescheduleIcon(Icon):
 
         if (row[what + "_active_checks_enabled"] == 1 or
                 row[what + '_check_command'].startswith('check_mk-')) \
-                and config.user.may('action.reschedule'):
+                and user.may('action.reschedule'):
 
             servicedesc = ''
             wait_svc = ''
@@ -254,8 +254,7 @@ class RuleEditorIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow services have no parameters
 
-        if config.wato_enabled and config.user.may(
-                "wato.rulesets") and config.multisite_draw_ruleicon:
+        if config.wato_enabled and user.may("wato.rulesets") and config.multisite_draw_ruleicon:
             urlvars = [
                 ("mode", "object_parameters"),
                 ("host", row["host_name"]),
@@ -297,7 +296,7 @@ class ManpageIcon(Icon):
         return ['check_command']
 
     def render(self, what, row, tags, custom_vars):
-        if what == "service" and config.wato_enabled and config.user.may("wato.use"):
+        if what == "service" and config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
             if command.startswith("check_mk-mgmt_"):
                 check_type = command[14:]
@@ -984,7 +983,7 @@ class AggregationsIcon(Icon):
         if bi.is_part_of_aggregation(row["host_name"], row.get("service_description")):
             view_name = "aggr_%s" % what
 
-            if not config.user.may("view.%s" % view_name):
+            if not user.may("view.%s" % view_name):
                 return
 
             urivars = [
@@ -1022,7 +1021,7 @@ class StarsIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if 'stars' not in g:
-            g.stars = config.user.stars.copy()
+            g.stars = user.stars.copy()
         stars = g.stars
 
         if what == "host":
@@ -1118,7 +1117,7 @@ class CrashdumpsIcon(Icon):
                 and row["service_state"] == 3 \
                 and "check failed - please submit a crash report!" in row["service_plugin_output"]:
 
-            if not config.user.may("general.see_crash_reports"):
+            if not user.may("general.see_crash_reports"):
                 return 'crash', _(
                     "This check crashed. Please inform a Check_MK user that is allowed "
                     "to view and submit crash reports to the development team.")

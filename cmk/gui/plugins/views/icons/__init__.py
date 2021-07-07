@@ -13,7 +13,7 @@ from cmk.utils.type_defs import TagID
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.type_defs import Row, ColumnName
 from cmk.gui.utils.escaping import escape_html
@@ -109,7 +109,7 @@ def _process_icons(
         if icon.type() == "custom_icon" and icon_id not in user_icon_ids:
             continue
 
-        if not config.user.may("icons_and_actions.%s" % icon_id):
+        if not user.may("icons_and_actions.%s" % icon_id):
             continue
 
         try:

@@ -29,7 +29,7 @@ import cmk.gui.utils
 import cmk.gui.view_utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, g, request, theme, output_funnel
+from cmk.gui.globals import html, g, request, theme, output_funnel, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -211,12 +211,12 @@ def ajax_set_assumption() -> None:
     service = request.get_unicode_input("service")
     state = request.var("state")
     if state == 'none':
-        del config.user.bi_assumptions[_get_state_assumption_key(site, host, service)]
+        del user.bi_assumptions[_get_state_assumption_key(site, host, service)]
     elif state is not None:
-        config.user.bi_assumptions[_get_state_assumption_key(site, host, service)] = int(state)
+        user.bi_assumptions[_get_state_assumption_key(site, host, service)] = int(state)
     else:
         raise Exception("ajax_set_assumption: state is None")
-    config.user.save_bi_assumptions()
+    user.save_bi_assumptions()
 
 
 @cmk.gui.pages.register("bi_save_treestate")
@@ -225,12 +225,12 @@ def ajax_save_treestate():
     current_ex_level_str, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level_str)
 
-    if config.user.bi_expansion_level != current_ex_level:
-        config.user.set_tree_states('bi', {})
-    config.user.set_tree_state('bi', path, request.var("state") == "open")
-    config.user.save_tree_states()
+    if user.bi_expansion_level != current_ex_level:
+        user.set_tree_states('bi', {})
+    user.set_tree_state('bi', path, request.var("state") == "open")
+    user.save_tree_states()
 
-    config.user.bi_expansion_level = current_ex_level
+    user.bi_expansion_level = current_ex_level
 
 
 @cmk.gui.pages.register("bi_render_tree")
@@ -242,7 +242,7 @@ def ajax_render_tree():
 
     rows = []
     bi_manager = BIManager()
-    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     aggregation_id = request.get_str_input_mandatory("aggregation_id")
     bi_aggregation_filter = BIAggregationFilter([], [], [aggregation_id],
                                                 [aggr_title] if aggr_title is not None else [],
@@ -264,7 +264,7 @@ def ajax_render_tree():
 
     renderer = renderer_cls(rows[0],
                             omit_root=omit_root,
-                            expansion_level=config.user.bi_expansion_level,
+                            expansion_level=user.bi_expansion_level,
                             only_problems=only_problems,
                             lazy=False)
     html.write_html(renderer.render())
@@ -273,11 +273,11 @@ def ajax_render_tree():
 def render_tree_json(row):
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
-    treestate = config.user.get_tree_states('bi')
-    if expansion_level != config.user.bi_expansion_level:
+    treestate = user.get_tree_states('bi')
+    if expansion_level != user.bi_expansion_level:
         treestate = {}
-        config.user.set_tree_states('bi', treestate)
-        config.user.save_tree_states()
+        user.set_tree_states('bi', treestate)
+        user.save_tree_states()
 
     def render_node_json(tree, show_host):
         is_leaf = len(tree) == 3
@@ -369,11 +369,11 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
         self._load_tree_state()
 
     def _load_tree_state(self):
-        self._treestate = config.user.get_tree_states('bi')
-        if self._expansion_level != config.user.bi_expansion_level:
+        self._treestate = user.get_tree_states('bi')
+        if self._expansion_level != user.bi_expansion_level:
             self._treestate = {}
-            config.user.set_tree_states('bi', self._treestate)
-            config.user.save_tree_states()
+            user.set_tree_states('bi', self._treestate)
+            user.save_tree_states()
 
     @abc.abstractmethod
     def css_class(self):
@@ -497,7 +497,7 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _assume_icon(self, site, host, service):
-        ass = config.user.bi_assumptions.get(_get_state_assumption_key(site, host, service))
+        ass = user.bi_assumptions.get(_get_state_assumption_key(site, host, service))
         current_state = str(ass).lower()
 
         html.icon_button(
@@ -855,7 +855,7 @@ def compute_bi_aggregation_filter(all_active_filters):
 def table(view, columns, query, only_sites, limit, all_active_filters):
     bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
     bi_manager = BIManager()
-    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
@@ -904,7 +904,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
 
     rows = []
     bi_manager = BIManager()
-    bi_manager.status_fetcher.set_assumed_states(config.user.bi_assumptions)
+    bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     bi_manager.status_fetcher.update_states_filtered(filter_code, only_sites, limit, host_columns,

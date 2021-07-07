@@ -13,7 +13,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -126,7 +126,7 @@ class ModeManageReadOnly(WatoMode):
                                    help=_("Users listed here are still allowed to modify things."),
                                    movable=False,
                                    add_label=_("Add user"),
-                                   default_value=[config.user.id],
+                                   default_value=[user.id],
                                )),
                               ("message", TextAreaUnicode(
                                   title=_("Message"),

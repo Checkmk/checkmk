@@ -8,10 +8,9 @@ import abc
 from typing import Iterable, NamedTuple, Optional, Type
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri_contextless
-import cmk.gui.config as config
 import cmk.utils.plugin_registry
 
 
@@ -65,7 +64,7 @@ class MenuItem:
         else:
             permission = self.permission
 
-        return config.user.may(permission) or config.user.may("wato.seeall")
+        return user.may(permission) or user.may("wato.seeall")
 
     def get_url(self):
         mode_or_url = self.mode_or_url

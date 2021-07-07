@@ -24,7 +24,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request
+from cmk.gui.globals import html, transactions, request, user
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -141,7 +141,7 @@ class ModeBulkImport(WatoMode):
 
     def _file_path(self) -> Path:
         file_id = request.get_unicode_input_mandatory("file_id",
-                                                      "%s-%d" % (config.user.id, int(time.time())))
+                                                      "%s-%d" % (user.id, int(time.time())))
         return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -155,7 +155,7 @@ class ModeBulkImport(WatoMode):
         upload_info = self._vs_upload().from_html_vars("_upload")
         self._vs_upload().validate_value(upload_info, "_upload")
 
-        file_id = "%s-%d" % (config.user.id, int(time.time()))
+        file_id = "%s-%d" % (user.id, int(time.time()))
 
         store.save_text_to_file(self._file_path(), upload_info["file"])
 
@@ -259,7 +259,7 @@ class ModeBulkImport(WatoMode):
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             folder_path = watolib.Folder.current().path()
-            config.user.set_rowselection(
+            user.set_rowselection(
                 weblib.selection_id(),
                 'wato-folder-/' + folder_path,
                 selected,

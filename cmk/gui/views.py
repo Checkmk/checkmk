@@ -44,7 +44,7 @@ from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import (display_options, g, html, transactions, user_errors, output_funnel,
-                             request, response)
+                             request, response, user)
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.i18n import _, _u
@@ -659,8 +659,7 @@ class GUIViewRenderer(ABCViewRenderer):
             elif show_checkboxes and html.do_actions():
                 rows = _filter_selected_rows(
                     view_spec, rows,
-                    config.user.get_rowselection(weblib.selection_id(),
-                                                 'view-' + view_spec['name']))
+                    user.get_rowselection(weblib.selection_id(), 'view-' + view_spec['name']))
 
             if html.do_actions() and transactions.transaction_valid(
             ):  # submit button pressed, no reload
@@ -674,7 +673,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
-        elif row_count > 0 and config.user.may("general.act") \
+        elif row_count > 0 and user.may("general.act") \
                 and html.do_actions() and transactions.transaction_valid():
 
             # There are one shot actions which only want to affect one row, filter the rows
@@ -717,8 +716,7 @@ class GUIViewRenderer(ABCViewRenderer):
             if show_checkboxes:
                 selected = _filter_selected_rows(
                     view_spec, rows,
-                    config.user.get_rowselection(weblib.selection_id(),
-                                                 'view-' + view_spec['name']))
+                    user.get_rowselection(weblib.selection_id(), 'view-' + view_spec['name']))
                 row_info = "%d/%s" % (len(selected), row_info)
             html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
@@ -880,7 +878,7 @@ class GUIViewRenderer(ABCViewRenderer):
         return _get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
-        if not config.user.may("general.csv_export"):
+        if not user.may("general.csv_export"):
             return
 
         yield PageMenuEntry(
@@ -899,7 +897,7 @@ class GUIViewRenderer(ABCViewRenderer):
         if not config.reporting_available():
             return
 
-        if not config.user.may("general.instant_reports"):
+        if not user.may("general.instant_reports"):
             return
 
         yield PageMenuEntry(
@@ -975,13 +973,13 @@ class GUIViewRenderer(ABCViewRenderer):
             is_enabled=checkboxes_toggleable,
         )
 
-        if display_options.enabled(display_options.E) and config.user.may("general.edit_views"):
+        if display_options.enabled(display_options.E) and user.may("general.edit_views"):
             url_vars: HTTPVariables = [
                 ("back", request.requested_url),
                 ("load_name", self.view.name),
             ]
 
-            if self.view.spec["owner"] != config.user.id:
+            if self.view.spec["owner"] != user.id:
                 url_vars.append(("owner", self.view.spec["owner"]))
 
             url = makeuri_contextless(request, url_vars, filename="edit_view.py")
@@ -1836,7 +1834,7 @@ def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -
          ", Duration fetching rows: %s, Duration filtering rows: %s, Duration rendering view: %s"
          ", Rendering page exceeds %ss: %s"),
         view.name,
-        config.user.id,
+        user.id,
         view.row_limit,
         # as in get_limit()
         request.var("limit", "soft"),
@@ -2412,9 +2410,9 @@ def get_want_checkboxes() -> bool:
 def get_limit() -> Optional[int]:
     """How many data rows may the user query?"""
     limitvar = request.var("limit", "soft")
-    if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
+    if limitvar == "hard" and user.may("general.ignore_soft_limit"):
         return config.hard_query_limit
-    if limitvar == "none" and config.user.may("general.ignore_hard_limit"):
+    if limitvar == "none" and user.may("general.ignore_hard_limit"):
         return None
     return config.soft_query_limit
 
@@ -2773,7 +2771,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
 
 
 def _show_current_view_availability_context_button(view: View) -> bool:
-    if not config.user.may("general.see_availability"):
+    if not user.may("general.see_availability"):
         return False
 
     if "aggr" in view.datasource.infos:
@@ -2858,10 +2856,10 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     if not config.wato_enabled:
         return []
 
-    if not config.user.may("wato.use"):
+    if not user.may("wato.use"):
         return []
 
-    if not config.user.may("wato.hosts") and not config.user.may("wato.seeall"):
+    if not user.may("wato.hosts") and not user.may("wato.seeall"):
         return []
 
     host_name = request.get_ascii_input_mandatory("host")
@@ -2911,7 +2909,7 @@ def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
                 )),
         )
 
-    if config.user.may('wato.rulesets'):
+    if user.may('wato.rulesets'):
         yield PageMenuEntry(
             title=_("Effective parameters"),
             icon_name="rulesets",
@@ -3093,7 +3091,7 @@ def _should_show_command_form(datasource: ABCDataSource,
     """
     if not ignore_display_option and display_options.disabled(display_options.C):
         return False
-    if not config.user.may("general.act"):
+    if not user.may("general.act"):
         return False
 
     # What commands are available depends on the Livestatus table we
@@ -3104,7 +3102,7 @@ def _should_show_command_form(datasource: ABCDataSource,
     what = datasource.infos[0]
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission.name):
+        if what in command.tables and user.may(command.permission.name):
             return True
 
     return False
@@ -3115,7 +3113,7 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
 
     for command_class in command_registry.values():
         command = command_class()
-        if info_name in command.tables and config.user.may(command.permission.name):
+        if info_name in command.tables and user.may(command.permission.name):
             # Some special commands can be shown on special views using this option.  It is
             # currently only used by custom commands, not shipped with Checkmk.
             if command.only_view and request.var('view_name') != command.only_view:
@@ -3161,7 +3159,7 @@ def core_command(
     # confirmation dialog.
     for cmd_class in command_registry.values():
         cmd = cmd_class()
-        if config.user.may(cmd.permission.name):
+        if user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
             confirm_options = cmd.user_confirm_options(total_rows, cmdtag)
             if result:
@@ -3184,7 +3182,7 @@ def core_command(
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) -> bool:
-    if not config.user.may("general.act"):
+    if not user.may("general.act"):
         html.show_error(
             _("You are not allowed to perform actions. "
               "If you think this is an error, please ask "
@@ -3394,7 +3392,7 @@ class PageRescheduleCheck(AjaxPage):
         return self._do_reschedule(api_request)
 
     def _do_reschedule(self, api_request: Dict[str, Any]) -> AjaxPageResult:
-        if not config.user.may("action.reschedule"):
+        if not user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 
         site = api_request.get("site")

@@ -62,7 +62,7 @@ import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, request as _request
+from cmk.gui.globals import g, request as _request, user
 from cmk.gui.log import logger
 from cmk.gui.exceptions import (
     MKGeneralException,
@@ -431,7 +431,7 @@ class ActivateChanges:
                    if self._is_foreign(change) and self._affects_all_sites(change))
 
     def _is_foreign(self, change):
-        return change["user_id"] and change["user_id"] != config.user.id
+        return change["user_id"] and change["user_id"] != user.id
 
     def _affects_all_sites(self, change):
         return not set(change["affected_sites"]).symmetric_difference(set(
@@ -783,7 +783,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _check_snapshot_creation_permissions(self, site_id):
         if self._site_has_foreign_changes(site_id) and not self._activate_foreign:
-            if not config.user.may("wato.activateforeign"):
+            if not user.may("wato.activateforeign"):
                 raise MKUserError(
                     None,
                     _("There are some changes made by your colleagues that you can not "
@@ -2330,7 +2330,7 @@ def activate_changes_start(
     changes.load()
 
     if changes.has_foreign_changes():
-        if not config.user.may("wato.activateforeign"):
+        if not user.may("wato.activateforeign"):
             raise MKAuthException(_("You are not allowed to activate changes of other users."))
         if not force_foreign_changes:
             raise MKAuthException(

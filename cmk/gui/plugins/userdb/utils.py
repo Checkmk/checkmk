@@ -14,7 +14,7 @@ from livestatus import SiteId
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
 
-from cmk.gui.globals import g
+from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 import cmk.gui.config as config
 from cmk.utils.type_defs import UserId
@@ -32,8 +32,8 @@ CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
 def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
-    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
-    return user.load_file("cached_profile", None)
+    usr = config.LoggedInUser(user_id) if user_id != user.id else config.user
+    return usr.load_file("cached_profile", None)
 
 
 def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
@@ -116,8 +116,8 @@ def new_user_template(connection_id: str) -> UserSpec:
     return new_user
 
 
-def add_internal_attributes(user: UserSpec) -> UserSpec:
-    return user.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
+def add_internal_attributes(usr: UserSpec) -> UserSpec:
+    return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
 #   .--Connections---------------------------------------------------------.

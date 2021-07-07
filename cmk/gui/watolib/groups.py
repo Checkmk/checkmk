@@ -13,12 +13,11 @@ import cmk.utils.store as store
 import cmk.utils.paths
 from cmk.utils.type_defs import timeperiod_spec_alias
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g, request
+from cmk.gui.globals import html, g, request, user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.html import HTML
@@ -159,7 +158,7 @@ def _check_modify_group_permissions(group_type: GroupType) -> None:
     if perms is None:
         raise Exception("invalid group type %r" % (group_type,))
     for permission in perms:
-        config.user.need_permission(permission)
+        user.need_permission(permission)
 
 
 def _set_group(all_groups, group_type: GroupType, name, extra_info):
@@ -257,10 +256,10 @@ def _find_usages_of_contact_group_in_users(name):
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
-    for userid, user in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
-        cgs = user.get("contactgroups", [])
+    for userid, user_spec in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
+        cgs = user_spec.get("contactgroups", [])
         if name in cgs:
-            used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
+            used_in.append(('%s: %s' % (_('User'), user_spec.get('alias', userid)),
                             folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
     return used_in
 

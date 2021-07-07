@@ -19,13 +19,12 @@ from dataclasses import dataclass, field
 from typing import List, Iterator, Optional, Dict, Union, Tuple
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, output_funnel
+from cmk.gui.globals import html, request, output_funnel, user
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_with_query
-from cmk.gui.config import user
 import cmk.gui.utils.escaping as escaping
 
 

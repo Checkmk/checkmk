@@ -11,7 +11,7 @@ from typing import Iterator, Optional, Type, overload, Tuple
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
 from cmk.gui.valuespec import (
@@ -324,7 +324,7 @@ class ModeEditHost(ABCHostMode):
             return redirect(mode_url("folder", folder=folder.path()))
 
         if request.var("_update_dns_cache") and self._should_use_dns_cache():
-            config.user.need_permission("wato.update_dns_cache")
+            user.need_permission("wato.update_dns_cache")
             num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
                                                                     "update-dns-cache", [])
             infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
@@ -406,7 +406,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 watolib.folder_preserving_link([("mode", "diag_host"), ("host", host.name())])),
         )
 
-    if mode_name != "object_parameters" and config.user.may('wato.rulesets'):
+    if mode_name != "object_parameters" and user.may('wato.rulesets'):
         yield PageMenuEntry(
             title=_("Effective parameters"),
             icon_name="rulesets",
@@ -415,8 +415,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                                                 ("host", host.name())])),
         )
 
-    if mode_name == "object_parameters" or mode_name == "edit_host" and config.user.may(
-            'wato.rulesets'):
+    if mode_name == "object_parameters" or mode_name == "edit_host" and user.may('wato.rulesets'):
         yield PageMenuEntry(
             title=_("Rules"),
             icon_name="rulesets",
@@ -436,7 +435,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
 
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
 
-    if config.user.may('wato.rulesets') and host.is_cluster():
+    if user.may('wato.rulesets') and host.is_cluster():
         yield PageMenuEntry(
             title=_("Clustered services"),
             icon_name="rulesets",
@@ -445,7 +444,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                                                 ("varname", "clustered_services")])),
         )
 
-    if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
+    if watolib.has_agent_bakery() and user.may('wato.download_agents'):
         yield PageMenuEntry(
             title=_("Monitoring agent"),
             icon_name="agents",
@@ -454,7 +453,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
         )
 
     if mode_name == "edit_host" and not host.locked():
-        if config.user.may("wato.rename_hosts"):
+        if user.may("wato.rename_hosts"):
             yield PageMenuEntry(
                 title=_("Rename"),
                 icon_name="rename_host",
@@ -463,7 +462,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                                                     ("host", host.name())])),
             )
 
-        if config.user.may("wato.manage_hosts") and config.user.may("wato.clone_hosts"):
+        if user.may("wato.manage_hosts") and user.may("wato.clone_hosts"):
             yield PageMenuEntry(
                 title=_("Clone"),
                 icon_name="insert",
@@ -480,7 +479,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
                 )),
         )
 
-        if config.user.may("wato.auditlog"):
+        if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
@@ -516,7 +515,7 @@ class CreateHostMode(ABCHostMode):
             return self._init_new_host_object()
         if not watolib.Folder.current().has_host(clonename):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        if not config.user.may("wato.clone_hosts"):
+        if not user.may("wato.clone_hosts"):
             raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
         host = watolib.Folder.current().host(clonename)
         self._verify_host_type(host)

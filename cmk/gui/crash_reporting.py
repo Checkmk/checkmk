@@ -25,7 +25,7 @@ import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, response, transactions, user_errors
+from cmk.gui.globals import html, request, response, transactions, user_errors, user
 from cmk.gui.htmllib import HTML
 import cmk.gui.userdb as userdb
 from cmk.gui.log import logger
@@ -77,7 +77,7 @@ def _show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_sil
     """Create a crash dump from a GUI exception and display a message to the user"""
 
     if show_crash_link is None:
-        show_crash_link = config.user.may("general.see_crash_reports")
+        show_crash_link = user.may("general.see_crash_reports")
 
     title = _("Internal error")
     message = u"%s: %s<br>\n<br>\n" % (title, crash.crash_info["exc_value"])
@@ -129,7 +129,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
                 key: "***" if value in ["password", "_password"] else value
                 for key, value in request.itervars()
             },
-            "username": config.user.id,
+            "username": user.id,
             "user_agent": request.user_agent.string,
             "referer": request.referer,
             "is_mobile": is_mobile(request, response),
@@ -185,7 +185,7 @@ class PageCrash(ABCCrashReportPage):
 
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
-        if not config.user.may("general.see_crash_reports"):
+        if not user.may("general.see_crash_reports"):
             html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _("An internal error occurred while processing your request. "
@@ -385,12 +385,12 @@ class PageCrash(ABCCrashReportPage):
 
     def _add_gui_user_infos_to_details(self, details):
         users = userdb.load_users()
-        if config.user.id is None:
+        if user.id is None:
             details.update({"name": None, "mail": None})
             return
-        user = users.get(config.user.id, {})
-        details.setdefault("name", user.get("alias"))
-        details.setdefault("mail", user.get("mail"))
+        user_spec = users.get(user.id, {})
+        details.setdefault("name", user_spec.get("alias"))
+        details.setdefault("mail", user_spec.get("mail"))
 
     def _show_crash_report(self, info):
         html.h3(_("Crash Report"), class_="table")
@@ -665,7 +665,7 @@ def _show_output_box(title, content):
 @cmk.gui.pages.page_registry.register_page("download_crash_report")
 class PageDownloadCrashReport(ABCCrashReportPage):
     def page(self):
-        config.user.need_permission("general.see_crash_reports")
+        user.need_permission("general.see_crash_reports")
 
         filename = "Checkmk_Crash_%s_%s_%s.tar.gz" % \
             (urlencode(self._site_id), urlencode(self._crash_id), time.strftime("%Y-%m-%d_%H-%M-%S"))

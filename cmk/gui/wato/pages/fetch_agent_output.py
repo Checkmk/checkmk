@@ -17,7 +17,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
 
-from cmk.gui.globals import html, request, transactions, response
+from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.utils.escaping import escape_attribute
@@ -80,7 +80,7 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
         self._from_vars()
 
     def _from_vars(self) -> None:
-        config.user.need_permission("wato.download_agent_output")
+        user.need_permission("wato.download_agent_output")
 
         host_name = request.var("host")
         if not host_name:
@@ -185,7 +185,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
 class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
     def get_request(self) -> FetchAgentOutputRequest:
-        config.user.need_permission("wato.download_agent_output")
+        user.need_permission("wato.download_agent_output")
 
         ascii_input = request.get_ascii_input("request")
         if ascii_input is None:

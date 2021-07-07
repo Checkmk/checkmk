@@ -16,7 +16,7 @@ import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _u, _, _l, ungettext
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user
 from cmk.gui.type_defs import Choices, Row
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
@@ -473,7 +473,7 @@ class CommandFakeCheckResult(Command):
                 pluginoutput = request.get_unicode_input_mandatory("_fake_output").strip()
                 if not pluginoutput:
                     pluginoutput = _("Manually set to %s by %s") % (
-                        escaping.escape_attribute(statename), config.user.id)
+                        escaping.escape_attribute(statename), user.id)
                 perfdata = request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
@@ -568,7 +568,7 @@ class CommandCustomNotification(Command):
                 cmdtag,
                 spec,
                 broadcast + forced,
-                config.user.id,
+                user.id,
                 livestatus.lqencode(comment),
             )
             title = _("<b>send a custom notification</b> regarding")
@@ -711,7 +711,7 @@ class CommandAcknowledge(Command):
 
             def make_command_ack(spec, cmdtag):
                 return "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % (
-                    spec, sticky, sendnot, perscomm, config.user.id) + (
+                    spec, sticky, sendnot, perscomm, user.id) + (
                         ";%s" % livestatus.lqencode(non_empty_comment)) + expire_text
 
             if "aggr_tree" in row:  # BI mode
@@ -809,7 +809,7 @@ class CommandAddComment(Command):
             if not comment:
                 raise MKUserError("_comment", _("You need to supply a comment."))
             command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                      (spec, config.user.id) + (";%s" % livestatus.lqencode(comment))
+                      (spec, user.id) + (";%s" % livestatus.lqencode(comment))
             title = _("<b>add a comment to</b>")
             return command, title
         return None
@@ -937,7 +937,7 @@ class CommandScheduleDowntimes(Command):
         html.open_div(class_="group")
         for time_range in config.user_downtime_timeranges:
             html.button("_downrange__%s" % time_range['end'], _u(time_range['title']))
-        if what != "aggr" and config.user.may("action.remove_all_downtimes"):
+        if what != "aggr" and user.may("action.remove_all_downtimes"):
             html.write_text(" &nbsp; - &nbsp;")
             html.button("_down_remove", _("Remove all"))
         html.close_div()
@@ -1033,7 +1033,7 @@ class CommandScheduleDowntimes(Command):
         return [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs], title
 
     def _remove_downtime_details(self, cmdtag, row):
-        if not config.user.may("action.remove_all_downtimes"):
+        if not user.may("action.remove_all_downtimes"):
             return
         if request.var("_on_hosts"):
             raise MKUserError(
@@ -1470,9 +1470,9 @@ class CommandFavorites(Command):
         # object type for the command
         assert isinstance(command, str)
         _unused, star, spec = command.split(";", 2)
-        stars = config.user.stars
+        stars = user.stars
         if star == "0" and spec in stars:
             stars.remove(spec)
         elif star == "1":
             stars.add(spec)
-        config.user.save_stars()
+        user.save_stars()

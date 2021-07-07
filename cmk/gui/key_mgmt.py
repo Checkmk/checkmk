@@ -16,7 +16,7 @@ import cmk.utils.store as store
 from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, response
+from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.valuespec import (
     Dictionary,
     Password,
@@ -174,7 +174,7 @@ class PageKeyManagement:
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
-                    if key["owner"] != config.user.id:
+                    if key["owner"] != user.id:
                         message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
                                     ) % key["owner"]
 
@@ -246,7 +246,7 @@ class PageEditKey:
             "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
                                                   passphrase.encode("utf-8")).decode("ascii"),
             "alias": alias,
-            "owner": config.user.id,
+            "owner": user.id,
             "date": time.time(),
         }
 
@@ -365,7 +365,7 @@ class PageUploadKey:
             "certificate": cert_pem,
             "private_key": key_pem,
             "alias": value["alias"],
-            "owner": config.user.id,
+            "owner": user.id,
             "date": created,
         }
 
@@ -493,7 +493,7 @@ class PageDownloadKey:
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
     cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
-    cert.get_subject().CN = config.user.id or "### Check_MK ###"
+    cert.get_subject().CN = user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.

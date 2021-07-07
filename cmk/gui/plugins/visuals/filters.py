@@ -22,7 +22,7 @@ import cmk.gui.mkeventd as mkeventd
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, user_errors, request, response
+from cmk.gui.globals import html, user_errors, request, response, user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.valuespec import (
     DualListChoice,
@@ -2280,7 +2280,7 @@ class FilterStarred(FilterTristate):
         else:
             aand, oor, eq = "Or", "And", "!="
 
-        stars = config.user.stars
+        stars = user.stars
         filters = u""
         count = 0
         if self.what == "host":

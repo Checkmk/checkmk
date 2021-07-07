@@ -42,7 +42,7 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions, output_funnel
+from cmk.gui.globals import html, request, transactions, output_funnel, user
 from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -386,7 +386,7 @@ class ModeBIPacks(ABCBIMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         bi_config_entries = []
-        if config.user.may("wato.bi_admin"):
+        if user.may("wato.bi_admin"):
             bi_config_entries.append(
                 PageMenuEntry(
                     title=_("Add BI pack"),
@@ -459,7 +459,7 @@ class ModeBIPacks(ABCBIMode):
         if not request.has_var("_delete"):
             return redirect(self.mode_url())
 
-        config.user.need_permission("wato.bi_admin")
+        user.need_permission("wato.bi_admin")
 
         pack_id = request.get_str_input_mandatory("_delete")
         pack = self._bi_packs.get_pack(pack_id)
@@ -484,7 +484,7 @@ class ModeBIPacks(ABCBIMode):
 
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                if config.user.may("wato.bi_admin"):
+                if user.may("wato.bi_admin"):
                     target_mode = "bi_edit_pack"
                     edit_url = makeuri_contextless(
                         request,

@@ -6,9 +6,8 @@
 
 from typing import Dict, Optional, List, TypedDict
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-
+from cmk.gui.globals import user
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.plugins.wato import ConfigDomainCore
 from cmk.gui.watolib.groups import load_contact_group_information
@@ -30,8 +29,8 @@ def contact_group_choices(only_own=False):
     contact_groups = load_contact_group_information()
 
     if only_own:
-        assert config.user.id is not None
-        user_groups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_groups = userdb.contactgroups_of_user(user.id)
     else:
         user_groups = []
 

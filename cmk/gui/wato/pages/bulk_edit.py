@@ -12,9 +12,8 @@ from typing import Type, Optional
 
 from six import ensure_binary
 
-from cmk.gui.globals import html, transactions, request
+from cmk.gui.globals import html, transactions, request, user
 from cmk.gui.i18n import _
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -59,7 +58,7 @@ class ModeBulkEdit(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        config.user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.edit_hosts")
 
         changed_attributes = watolib.collect_attributes("bulk", new=False)
         host_names = get_hostnames_from_checkboxes()
@@ -139,7 +138,7 @@ class ModeBulkCleanup(WatoMode):
         if not transactions.check_transaction():
             return None
 
-        config.user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.edit_hosts")
         to_clean = self._bulk_collect_cleaned_attributes()
         if "contactgroups" in to_clean:
             self._folder.need_permission("write")

@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -68,8 +68,8 @@ def load_plugins(force):
 
 
 def acknowledge_failed_notifications(timestamp):
-    g_acknowledgement_time[config.user.id] = timestamp
-    config.user.acknowledged_notifications = int(g_acknowledgement_time[config.user.id])
+    g_acknowledgement_time[user.id] = timestamp
+    user.acknowledged_notifications = int(g_acknowledgement_time[user.id])
     set_modified_time()
 
 
@@ -79,23 +79,23 @@ def set_modified_time():
 
 
 def acknowledged_time():
-    if g_acknowledgement_time.get(config.user.id) is None or\
-            config.user.file_modified("acknowledged_notifications") > g_modified_time:
-        g_acknowledgement_time[config.user.id] = config.user.acknowledged_notifications
+    if g_acknowledgement_time.get(user.id) is None or\
+            user.file_modified("acknowledged_notifications") > g_modified_time:
+        g_acknowledgement_time[user.id] = user.acknowledged_notifications
         set_modified_time()
-        if g_acknowledgement_time[config.user.id] == 0:
+        if g_acknowledgement_time[user.id] == 0:
             # when this timestamp is first initialized, save the current timestamp as the acknowledge
             # date. This should considerably reduce the number of log files that have to be searched
             # when retrieving the list
             acknowledge_failed_notifications(time.time())
 
-    return g_acknowledgement_time[config.user.id]
+    return g_acknowledgement_time[user.id]
 
 
 def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
     may_see_notifications =\
-        config.user.may("general.see_failed_notifications") or\
-        config.user.may("general.see_failed_notifications_24h")
+        user.may("general.see_failed_notifications") or\
+        user.may("general.see_failed_notifications_24h")
 
     if not may_see_notifications:
         return [0]
@@ -120,7 +120,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         query.append("Filter: time >= %d" % after)
 
     if may_see_notifications:
-        if config.user.may("general.see_failed_notifications"):
+        if user.may("general.see_failed_notifications"):
             horizon = config.failed_notification_horizon
         else:
             horizon = 86400
@@ -210,7 +210,7 @@ def page_clear():
     if request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
 
-        if config.user.authorized_login_sites():
+        if user.authorized_login_sites():
             watolib.init_wato_datastructures(with_wato_lock=True)
 
             title = _('Replicate user profile')

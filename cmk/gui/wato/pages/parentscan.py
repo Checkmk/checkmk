@@ -15,7 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.globals import html, transactions, request
+from cmk.gui.globals import html, transactions, request, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
@@ -295,7 +295,7 @@ class ModeParentScan(WatoMode):
     def action(self) -> ActionResult:
         try:
             transactions.check_transaction()
-            config.user.save_file("parentscan", dict(self._settings._asdict()))
+            user.save_file("parentscan", dict(self._settings._asdict()))
 
             self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
             self._job.start()
@@ -384,7 +384,7 @@ class ModeParentScan(WatoMode):
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = ParentScanSettings(**config.user.load_file(
+        self._settings = ParentScanSettings(**user.load_file(
             "parentscan", {
                 "where": "subfolder",
                 "alias": _("Created by parent scan"),

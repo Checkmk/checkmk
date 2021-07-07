@@ -25,6 +25,7 @@ class TransactionManager:
         self._new_transids: List[str] = []
         self._ignore_transids = False
         self._current_transid: Optional[str] = None
+        self._user = user
 
     def ignore(self) -> None:
         """Makes the GUI skip all transaction validation steps"""

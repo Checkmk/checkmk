@@ -21,7 +21,7 @@ from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuTopic, TopicMenuItem
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -48,7 +48,7 @@ def render_wato(mini):
     if not config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
-    if not config.user.may("wato.use"):
+    if not user.may("wato.use"):
         html.write_text(_("You are not allowed to use the setup."))
         return False
 
@@ -347,8 +347,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         #
         # Render link target selection
         #
-        selected_topic, selected_target = config.user.load_file("foldertree",
-                                                                (_('Hosts'), 'allhosts'))
+        selected_topic, selected_target = user.load_file("foldertree", (_('Hosts'), 'allhosts'))
 
         # Apply some view specific filters
         views_to_show = [(name, view)

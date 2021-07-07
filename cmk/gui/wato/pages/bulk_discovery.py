@@ -15,7 +15,7 @@ import cmk.gui.forms as forms
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request
+from cmk.gui.globals import html, transactions, request, user
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
@@ -100,7 +100,7 @@ class ModeBulkDiscovery(WatoMode):
                                           save_title=_("Start"))
 
     def action(self) -> ActionResult:
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
@@ -120,7 +120,7 @@ class ModeBulkDiscovery(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     def page(self):
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():

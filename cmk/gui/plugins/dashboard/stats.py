@@ -10,11 +10,10 @@ from livestatus import MKLivestatusNotFoundError
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-import cmk.gui.config as config
 
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.i18n import _
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.plugins.dashboard import (ABCFigureDashlet, dashlet_registry)
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -351,7 +350,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
     def _stats_query(cls) -> str:
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
-        if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+        if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
             ec_filters = "\n".join([
                 "Filter: event_contact_groups != ",
                 "Filter: host_name != ",

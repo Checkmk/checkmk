@@ -10,7 +10,6 @@ from typing import Optional, Type
 
 from cmk.utils.regex import regex
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
@@ -18,7 +17,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -110,7 +109,7 @@ class ModeBulkRenameHost(WatoMode):
     def __init__(self):
         super(ModeBulkRenameHost, self).__init__()
 
-        if not config.user.may("wato.rename_hosts"):
+        if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))
 
     def title(self):
@@ -387,7 +386,7 @@ class ModeRenameHost(WatoMode):
         if not watolib.Folder.current().has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
-        if not config.user.may("wato.rename_hosts"):
+        if not user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
         self._host = watolib.Folder.current().host(host_name)

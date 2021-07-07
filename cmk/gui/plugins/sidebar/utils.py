@@ -17,7 +17,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import Choices, Icon
 from cmk.gui.type_defs import RoleName, PermissionName, Visual
@@ -300,7 +300,7 @@ def footnotelinks(links: List[Tuple[str, str]]) -> None:
 
 
 def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
-    sites = config.user.load_file("sidebar_sites", {})
+    sites = user.load_file("sidebar_sites", {})
     available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")
     if site == "":

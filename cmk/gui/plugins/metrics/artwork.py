@@ -12,9 +12,8 @@ from itertools import zip_longest
 
 import cmk.utils.render
 
-from cmk.gui import config
 from cmk.gui.i18n import _
-from cmk.gui.globals import request, theme
+from cmk.gui.globals import request, theme, user
 from cmk.gui.plugins.metrics import unit_info
 
 from cmk.gui.plugins.metrics import timeseries
@@ -85,7 +84,7 @@ def _graph_colors(theme_id):
 def add_default_render_options(graph_render_options, render_unthemed=False):
     options = get_default_graph_render_options()
     options.update(graph_render_options)
-    options.setdefault("size", config.user.load_file("graph_size", (70, 16)))
+    options.setdefault("size", user.load_file("graph_size", (70, 16)))
 
     # Update the graph colors that are set to "default" with the theme specific colors.
     # When rendering to PDF the theme colors must not be applied, but the regular colors
@@ -978,7 +977,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
 
 
 def load_graph_pin():
-    return config.user.load_file("graph_pin", None)
+    return user.load_file("graph_pin", None)
 
 
 def save_graph_pin() -> None:
@@ -986,4 +985,4 @@ def save_graph_pin() -> None:
         pin_timestamp = request.get_integer_input("pin")
     except ValueError:
         pin_timestamp = None
-    config.user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)
+    user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)

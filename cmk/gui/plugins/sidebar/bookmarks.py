@@ -9,10 +9,9 @@ import urllib.parse
 
 import cmk.utils.store as store
 
-import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 
@@ -175,37 +174,37 @@ class BookmarkList(pagetypes.Overridable):
         attrs = {
             "title": u"My Bookmarks",
             "public": False,
-            "owner": config.user.id,
+            "owner": user.id,
             "name": "my_bookmarks",
             "description": u"Your personal bookmarks",
             "default_topic": u"My Bookmarks",
             "bookmarks": [],
         }
 
-        cls.add_instance((config.user.id, "my_bookmarks"), cls(attrs))
+        cls.add_instance((user.id, "my_bookmarks"), cls(attrs))
 
     @classmethod
     def load_legacy_bookmarks(cls):
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if cls.has_instance((config.user.id, "my_bookmarks")):
+        if cls.has_instance((user.id, "my_bookmarks")):
             return
 
         # Also don't load them when the user has at least one bookmark list
         for user_id, _name in cls.instances_dict():
-            if user_id == config.user.id:
+            if user_id == user.id:
                 return
 
         cls.add_default_bookmark_list()
-        bookmark_list = cls.instance((config.user.id, "my_bookmarks"))
+        bookmark_list = cls.instance((user.id, "my_bookmarks"))
 
         for title, url in cls._do_load_legacy_bookmarks():
             bookmark_list.add_bookmark(title, url)
 
     @classmethod
     def _do_load_legacy_bookmarks(cls):
-        if config.user.confdir is None:
+        if user.confdir is None:
             raise Exception("user confdir is None")
-        path = config.user.confdir + "/bookmarks.mk"
+        path = user.confdir + "/bookmarks.mk"
         return store.load_object_from_file(path, default=[])
 
     @classmethod
@@ -301,10 +300,10 @@ class Bookmarks(SidebarSnapin):
     def _add_bookmark(self, title, url):
         BookmarkList.load()
 
-        if not BookmarkList.has_instance((config.user.id, "my_bookmarks")):
+        if not BookmarkList.has_instance((user.id, "my_bookmarks")):
             BookmarkList.add_default_bookmark_list()
 
-        bookmarks = BookmarkList.instance((config.user.id, "my_bookmarks"))
+        bookmarks = BookmarkList.instance((user.id, "my_bookmarks"))
         bookmarks.add_bookmark(title, self._try_shorten_url(url))
         bookmarks.save_user_instances()
 

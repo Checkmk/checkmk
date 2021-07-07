@@ -17,7 +17,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -446,7 +446,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
 def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
                                  host_name: Optional[HostName] = None,
                                  int_filename: Optional[str] = None) -> Iterator[PageMenuEntry]:
-    if not config.user.may("general.act") or (host_name and not may_see(site, host_name)):
+    if not user.may("general.act") or (host_name and not may_see(site, host_name)):
         return
 
     if int_filename:
@@ -502,7 +502,7 @@ def do_log_ack(site, host_name, file_name):
     ack_msg = _get_ack_msg(host_name, file_name)
     ack = request.var('_ack')
 
-    if not config.user.may("general.act"):
+    if not user.may("general.act"):
         html.h1(_('Permission denied'), class_=["error"])
         html.div(_('You are not allowed to acknowledge %s') % ack_msg, class_=["error"])
         html.footer()
@@ -785,7 +785,7 @@ def all_logs():
 
 
 def may_see(site, host_name):
-    if config.user.may("general.see_all"):
+    if user.may("general.see_all"):
         return True
 
     host_found = False

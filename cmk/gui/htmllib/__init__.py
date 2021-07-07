@@ -46,7 +46,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.globals import transactions, user_errors, theme
+from cmk.gui.globals import transactions, user_errors, theme, user
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.utils as utils
@@ -997,11 +997,11 @@ class html(ABCHTMLGenerator):
         help_text = self.resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
-        style = "display:%s;" % ("block" if config.user.show_help else "none")
+        style = "display:%s;" % ("block" if user.show_help else "none")
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def resolve_help_text_macros(self, text: str) -> str:
-        if config.user.language == "de":
+        if user.language == "de":
             cmk_base_url = "https://docs.checkmk.com/master/de"
         else:
             cmk_base_url = "https://docs.checkmk.com/master/en"
@@ -1208,7 +1208,7 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuRenderer().show(
                 page_menu,
-                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True),
+                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
             )
 
         self.close_div()  # top_heading
@@ -2034,7 +2034,7 @@ class html(ABCHTMLGenerator):
                     dom_levels_up: int,
                     additional_js: str = "",
                     with_text: bool = False) -> None:
-        if config.user.show_mode == "enforce_show_more":
+        if user.show_mode == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",

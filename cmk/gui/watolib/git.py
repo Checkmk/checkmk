@@ -14,8 +14,7 @@ from six import ensure_str
 
 import cmk.utils
 
-import cmk.gui.config as config
-from cmk.gui.globals import g
+from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
@@ -31,7 +30,7 @@ def _git_messages():
 
 
 def do_git_commit():
-    author = "%s <%s>" % (config.user.id, config.user.email)
+    author = "%s <%s>" % (user.id, user.email)
     git_dir = cmk.utils.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         logger.debug("GIT: Initializing")

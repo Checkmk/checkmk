@@ -82,7 +82,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions, g, output_funnel
+from cmk.gui.globals import html, request, transactions, g, output_funnel, user
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
     PageMenuDropdown,
@@ -239,7 +239,7 @@ _user_visuals_cache = UserVisualsCache()
 
 def save(what, visuals, user_id=None):
     if user_id is None:
-        user_id = config.user.id
+        user_id = user.id
 
     uservisuals = {}
     for (owner_id, name), visual in visuals.items():
@@ -299,9 +299,9 @@ def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
     visuals: Dict[Any, Any] = {}
 
     subdirs = os.listdir(config.config_dir)
-    for user in subdirs:
+    for user_id in subdirs:
         try:
-            dirpath = config.config_dir + "/" + user
+            dirpath = config.config_dir + "/" + user_id
             if not os.path.isdir(dirpath):
                 continue
 
@@ -315,14 +315,14 @@ def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
             if not os.path.exists(path):
                 continue
 
-            if not userdb.user_exists(UserId(user)):
+            if not userdb.user_exists(UserId(user_id)):
                 continue
 
             user_visuals = _user_visuals_cache.get(path)
             if user_visuals is None:
                 modification_timestamp = os.stat(path).st_mtime
                 user_visuals = load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path,
-                                                      user)
+                                                      user_id)
                 _user_visuals_cache.add(path, modification_timestamp, user_visuals)
 
             visuals.update(user_visuals)
@@ -333,10 +333,10 @@ def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
     return visuals
 
 
-def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
+def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user_id):
     user_visuals = {}
     for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
-        visual["owner"] = user
+        visual["owner"] = user_id
         visual["name"] = name
 
         if skip_func and skip_func(visual):
@@ -375,9 +375,9 @@ def declare_visual_permission(what, name, visual):
 # Load all users visuals just in order to declare permissions of custom visuals
 def declare_custom_permissions(what):
     subdirs = os.listdir(config.config_dir)
-    for user in subdirs:
+    for user_id in subdirs:
         try:
-            dirpath = config.config_dir + "/" + user
+            dirpath = config.config_dir + "/" + user_id
             if os.path.isdir(dirpath):
                 path = "%s/%s.mk" % (dirpath, what)
                 if not os.path.exists(path):
@@ -394,7 +394,6 @@ def declare_custom_permissions(what):
 # (which could be retrieved with get_visual)
 def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
                                            Visual]) -> Dict[VisualName, Visual]:
-    user = config.user.id
     visuals = {}
     permprefix = what[:-1]
 
@@ -403,18 +402,18 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
             return True
 
         if isinstance(visual["public"], tuple) and visual["public"][0] == "contact_groups":
-            user_groups = set([] if user is None else userdb.contactgroups_of_user(user))
+            user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
             return bool(user_groups.intersection(visual["public"][1]))
         return False
 
     def restricted_visual(visualname: VisualName):
         permname = "%s.%s" % (permprefix, visualname)
-        return permname in permission_registry and not config.user.may(permname)
+        return permname in permission_registry and not user.may(permname)
 
     # 1. user's own visuals, if allowed to edit visuals
-    if config.user.may("general.edit_" + what):
+    if user.may("general.edit_" + what):
         for (u, n), visual in all_visuals.items():
-            if u == user:
+            if u == user.id:
                 visuals[n] = visual
 
     # 2. visuals of special users allowed to globally override builtin visuals
@@ -426,13 +425,13 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
 
     # 3. Builtin visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == '' and n not in visuals and config.user.may("%s.%s" % (permprefix, n)):
+        if u == '' and n not in visuals and user.may("%s.%s" % (permprefix, n)):
             visuals[n] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for builtin visuals. Also the permission "general.see_user_visuals" is
     #    necessary.
-    if config.user.may("general.see_user_" + what):
+    if user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
             # Is there a builtin visual with the same name? If yes, honor permissions.
             if n not in visuals and published_to_user(visual) and config.user_may(
@@ -450,8 +449,8 @@ def get_permissioned_visual(
     all_visuals: Dict[Tuple[UserId, str], T],
 ) -> T:
     if (owner is not None and  # Var is set from edit page and can be empty string for builtin
-            owner != config.user.id and  # user has top priority, thus only change if other user
-            config.user.may("general.edit_foreign_%ss" % what)):
+            owner != user.id and  # user has top priority, thus only change if other user
+            user.may("general.edit_foreign_%ss" % what)):
         if visual := all_visuals.get((UserId(owner), item)):
             return visual
         # We don't raise on not found immediately and let it trickle down to default permitted
@@ -496,7 +495,7 @@ def page_list(what,
         custom_columns = []
 
     what_s = what[:-1]
-    if not config.user.may("general.edit_" + what):
+    if not user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
     breadcrumb = visual_page_breadcrumb(what, title, "list")
@@ -535,11 +534,11 @@ def page_list(what,
     # Deletion of visuals
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
-        if config.user.may('general.delete_foreign_%s' % what):
-            user_id_str = request.get_unicode_input('_user_id', config.user.id)
+        if user.may('general.delete_foreign_%s' % what):
+            user_id_str = request.get_unicode_input('_user_id', user.id)
             user_id = None if user_id_str is None else UserId(user_id_str)
         else:
-            user_id = config.user.id
+            user_id = user.id
 
         try:
             if check_deletable_handler:
@@ -580,10 +579,9 @@ def page_list(what,
                 html.icon_button(clone_url, buttontext, "clone")
 
                 # Delete
-                if owner and (owner == config.user.id or
-                              config.user.may('general.delete_foreign_%s' % what)):
+                if owner and (owner == user.id or user.may('general.delete_foreign_%s' % what)):
                     add_vars: HTTPVariables = [('_delete', visual_name)]
-                    if owner != config.user.id:
+                    if owner != user.id:
                         add_vars.append(('_user_id', owner))
                     html.icon_button(
                         make_confirm_link(
@@ -592,13 +590,12 @@ def page_list(what,
                         ), _("Delete!"), "delete")
 
                 # Edit
-                if owner == config.user.id or (owner != "" and
-                                               config.user.may("general.edit_foreign_%s" % what)):
+                if owner == user.id or (owner != "" and user.may("general.edit_foreign_%s" % what)):
                     edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
                     ]
-                    if owner != config.user.id:
+                    if owner != user.id:
                         edit_vars.append(("owner", owner))
                     edit_url = makeuri_contextless(
                         request,
@@ -647,7 +644,7 @@ def page_list(what,
 
 
 def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
-    if owner == config.user.id or config.user.may("general.edit_foreign_%s" % what):
+    if owner == user.id or user.may("general.edit_foreign_%s" % what):
         return True
 
     # Is this the highest priority visual that the user has available?
@@ -663,16 +660,16 @@ def _partition_visuals(visuals: Dict[Tuple[UserId, str], Dict],
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
-        if owner == "" and not config.user.may("%s.%s" % (what[:-1], visual_name)):
+        if owner == "" and not user.may("%s.%s" % (what[:-1], visual_name)):
             continue  # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
         if visual["public"] and owner == "":
             builtin_visuals.append((owner, visual_name, visual))
-        elif owner == config.user.id:
+        elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
         elif (visual["public"] and owner != '' and config.user_may(owner, "general.publish_%s" % what)) or \
-                config.user.may("general.edit_foreign_%s" % what):
+                user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 
     return [
@@ -946,7 +943,7 @@ def page_edit_visual(
         sub_pages = []
 
     visual_type = visual_type_registry[what]()
-    if not config.user.may("general.edit_" + what):
+    if not user.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type.plural_title)
     visual: Dict[str, Any] = {
         'link_from': {},
@@ -955,7 +952,7 @@ def page_edit_visual(
     mode = request.get_str_input_mandatory("mode", "edit")
     visualname = request.get_str_input_mandatory("load_name", "")
     oldname = visualname
-    owner_user_id = config.user.id
+    owner_user_id = user.id
 
     def _get_visual(owner_id, mode):
         if visual := all_visuals.get((owner_id, visualname)):
@@ -965,7 +962,7 @@ def page_edit_visual(
         raise MKUserError(mode, _('The %s does not exist.') % visual_type.title)
 
     if visualname:
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
+        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
         visual = _get_visual(owner_id, mode)
 
         if mode == "edit" and owner_id != "":  # editing builtins requires copy
@@ -1037,8 +1034,8 @@ def page_edit_visual(
              totext="",
          )),
     ]
-    if config.user.may("general.publish_" + what):
-        with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
+    if user.may("general.publish_" + what):
+        with_foreign_groups = user.may("general.publish_" + what + "_to_foreign_groups")
         visibility_elements.append(('public',
                                     pagetypes.PublishTo(
                                         type_title=visual_type.title,
@@ -1091,7 +1088,7 @@ def page_edit_visual(
             for key, _value in visibility_elements:
                 visual[key] = general_properties['visibility'].get(key, False)
 
-            if not config.user.may("general.publish_" + what):
+            if not user.may("general.publish_" + what):
                 visual['public'] = False
 
             if create_handler:
@@ -1545,8 +1542,8 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
         filter_list_selected_id = filter_list_id + "_selected"
 
-        show_more = config.user.get_tree_state("more_buttons", filter_list_id,
-                                               isopen=False) or config.user.show_more_mode
+        show_more = user.get_tree_state("more_buttons", filter_list_id,
+                                        isopen=False) or user.show_more_mode
         html.open_div(id_=filter_list_id,
                       class_=["popup_filter_list", ("more" if show_more else "less")])
         html.more_button(filter_list_id, 1)

@@ -12,7 +12,7 @@ from typing import NamedTuple, List, Optional, Union
 import cmk.gui.config as config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html, request, response, output_funnel
+from cmk.gui.globals import html, request, response, output_funnel, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.main_menu import (
@@ -67,14 +67,14 @@ class MainMenuRenderer:
             html.div("",
                      id_="popup_shadow",
                      onclick="cmk.popup_menu.close_popup()",
-                     class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
+                     class_="min" if user.get_attribute("nav_hide_icons_title") else None)
             html.close_li()
 
     def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
         content = html.render_icon(menu_item.icon) + \
                     html.render_icon(active_icon, class_="active")
 
-        if not config.user.get_attribute("nav_hide_icons_title"):
+        if not user.get_attribute("nav_hide_icons_title"):
             content += html.render_div(menu_item.title)
 
         return content
@@ -101,7 +101,7 @@ class MainMenuRenderer:
                           class_=[
                               "popup_menu",
                               "main_menu_popup",
-                              "min" if config.user.get_attribute("nav_hide_icons_title") else None,
+                              "min" if user.get_attribute("nav_hide_icons_title") else None,
                           ])
             MegaMenuRenderer().show(menu)
             html.close_div()
@@ -164,7 +164,7 @@ class MegaMenuRenderer:
     def show(self, menu: MegaMenu) -> None:
         more_id = "main_menu_" + menu.name
 
-        show_more = config.user.get_show_more_setting(more_id)
+        show_more = user.get_show_more_setting(more_id)
         html.open_div(id_=more_id, class_=["main_menu", "more" if show_more else "less"])
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
@@ -216,7 +216,7 @@ class MegaMenuRenderer:
                     onclick="cmk.popup_menu.mega_menu_show_all_topics('%s')" % topic_id)
         html.icon(icon="collapse_arrow", title=_("Show all %s topics") % menu_id)
         html.close_a()
-        if not config.user.get_attribute("icons_per_item") and topic.icon:
+        if not user.get_attribute("icons_per_item") and topic.icon:
             html.icon(topic.icon)
         html.span(topic.title)
         html.close_h2()
@@ -227,7 +227,7 @@ class MegaMenuRenderer:
             self._show_item(item)
         html.open_li(class_="show_all_items")
         html.open_a(href="", onclick="cmk.popup_menu.mega_menu_show_all_items('%s')" % topic_id)
-        if config.user.get_attribute("icons_per_item"):
+        if user.get_attribute("icons_per_item"):
             html.icon("trans")
         html.write_text(_("Show all"))
         html.close_a()
@@ -241,7 +241,7 @@ class MegaMenuRenderer:
             target=item.target,
             onclick="cmk.popup_menu.close_popup()",
         )
-        if config.user.get_attribute("icons_per_item"):
+        if user.get_attribute("icons_per_item"):
             html.icon(item.icon or "dash")
         self._show_item_title(item)
         html.close_a()

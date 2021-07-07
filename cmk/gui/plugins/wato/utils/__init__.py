@@ -38,7 +38,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g, transactions, request
+from cmk.gui.globals import html, g, transactions, request, user
 from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -1441,7 +1441,7 @@ def configure_attributes(new,
     hide_attributes = []
     show_more_mode: bool = False
 
-    show_more_mode = config.user.show_mode != "default_show_less"
+    show_more_mode = user.show_mode != "default_show_less"
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
@@ -1709,7 +1709,7 @@ def configure_attributes(new,
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,
-        "user_roles": config.user.role_ids,
+        "user_roles": user.role_ids,
         "hide_attributes": hide_attributes,
     }
     html.javascript("cmk.wato.prepare_edit_dialog(%s);"
@@ -2301,8 +2301,8 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
                                   deflt: bool = False) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = config.user.get_rowselection(weblib.selection_id(),
-                                            'wato-folder-/' + watolib.Folder.current().path())
+    selected = user.get_rowselection(weblib.selection_id(),
+                                     'wato-folder-/' + watolib.Folder.current().path())
     search_text = request.var("search")
 
     selected_host_names: List[str] = []

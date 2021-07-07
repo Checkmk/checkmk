@@ -20,7 +20,7 @@ import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.i18n import _, _l, ungettext
 
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.htmllib import HTML
 from cmk.gui.utils.urls import urlencode_vars
@@ -79,7 +79,7 @@ class RowTableEC(RowTableLivestatus):
 
         _ec_filter_host_information_of_not_permitted_hosts(rows)
 
-        if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+        if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
             # user is not allowed to see all events returned by the core
             rows = [r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != ""]
 
@@ -105,10 +105,10 @@ class RowTableEC(RowTableLivestatus):
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
 def _ec_filter_host_information_of_not_permitted_hosts(rows):
-    if config.user.may("mkeventd.seeall"):
+    if user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
-    user_groups = set(config.user.contact_groups)
+    user_groups = set(user.contact_groups)
 
     def is_contact(row):
         return bool(user_groups.intersection(row["host_contact_groups"]))
@@ -638,7 +638,7 @@ class PainterEventRuleId(Painter):
 
     def render(self, row, cell):
         rule_id = row["event_rule_id"]
-        if config.user.may("mkeventd.edit"):
+        if user.may("mkeventd.edit"):
             urlvars = urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
         return "", rule_id
@@ -717,7 +717,7 @@ def render_event_phase_icons(row):
 
 
 def render_delete_event_icons(row):
-    if not config.user.may("mkeventd.delete"):
+    if not user.may("mkeventd.delete"):
         return ''
     urlvars: HTTPVariables = []
 
@@ -1062,14 +1062,14 @@ class CommandECUpdateEvent(ECCommand):
 
     def render(self, what):
         html.open_table(border="0", cellpadding="0", cellspacing="3")
-        if config.user.may("mkeventd.update_comment"):
+        if user.may("mkeventd.update_comment"):
             html.open_tr()
             html.td(_("Change comment:"))
             html.open_td()
             html.text_input('_mkeventd_comment', size=50)
             html.close_td()
             html.close_tr()
-        if config.user.may("mkeventd.update_contact"):
+        if user.may("mkeventd.update_contact"):
             html.open_tr()
             html.td(_("Change contact:"))
             html.open_td()
@@ -1088,18 +1088,18 @@ class CommandECUpdateEvent(ECCommand):
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
         if request.var('_mkeventd_update'):
-            if config.user.may("mkeventd.update_comment"):
+            if user.may("mkeventd.update_comment"):
                 comment = request.get_unicode_input_mandatory("_mkeventd_comment").strip().replace(
                     ";", ",")
             else:
                 comment = ""
-            if config.user.may("mkeventd.update_contact"):
+            if user.may("mkeventd.update_contact"):
                 contact = request.get_unicode_input_mandatory("_mkeventd_contact").strip().replace(
                     ":", ",")
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or
+            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], user.id, ack and 1 or
                                               0, comment, contact), _("update")
         return None
 
@@ -1144,8 +1144,7 @@ class CommandECChangeState(ECCommand):
                 num_rows: int) -> CommandActionResult:
         if request.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
-                                             state), _("change the state")
+            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], user.id, state), _("change the state")
         return None
 
 
@@ -1190,7 +1189,7 @@ class CommandECCustomAction(ECCommand):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
                 title = _("execute the action \"%s\"") % title
-                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), title
+                return "ACTION;%s;%s;%s" % (row["event_id"], user.id, action_id), title
         return None
 
 
@@ -1230,7 +1229,7 @@ class CommandECArchiveEvent(ECCommand):
     def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
                 num_rows: int) -> CommandActionResult:
         if request.var("_delete_event"):
-            command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
+            command = "DELETE;%s;%s" % (row["event_id"], user.id)
             title = _("<b>archive</b>")
             return command, title
         return None
@@ -1285,7 +1284,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
             if tag and row.get('%s_check_command' % tag, "").startswith('check_mk_active-mkevents'):
                 data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
                                           "Filter: host_name = %s" % row['host_name'])
-                commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
+                commands = ["DELETE;%s;%s" % (entry[0], user.id) for entry in data]
 
             return commands, "<b>archive all events</b> of"
         return None

@@ -11,7 +11,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, response
+from cmk.gui.globals import html, request, response, user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML, foldable_container
 from cmk.gui.utils.urls import makeuri_contextless
@@ -37,7 +37,7 @@ class VirtualHostTree(SidebarSnapin):
         }
 
     def _load_user_settings(self):
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        tree_conf = user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
         if isinstance(tree_conf, int):
             tree_conf = {"tree": tree_conf, "cwd": {}}  # convert from old style
 
@@ -52,10 +52,7 @@ class VirtualHostTree(SidebarSnapin):
         self._current_tree_path = self._cwds.get(self._current_tree_id, [])
 
     def _save_user_settings(self):
-        config.user.save_file("virtual_host_tree", {
-            "tree": self._current_tree_id,
-            "cwd": self._cwds
-        })
+        user.save_file("virtual_host_tree", {"tree": self._current_tree_id, "cwd": self._cwds})
 
     @classmethod
     def title(cls):

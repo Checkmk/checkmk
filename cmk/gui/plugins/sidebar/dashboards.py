@@ -8,6 +8,7 @@ from typing import List
 
 import cmk.gui.config as config
 import cmk.gui.dashboard as dashboard
+from cmk.gui.globals import user
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.plugins.sidebar import (
@@ -37,7 +38,7 @@ class Dashboards(SidebarSnapin):
         show_topic_menu(treename="dashboards", menu=self._get_dashboard_menu_items())
 
         links = []
-        if config.user.may("general.edit_dashboards"):
+        if user.may("general.edit_dashboards"):
             if config.debug:
                 links.append((_("Export"), "export_dashboards.py"))
             links.append((_("Edit"), "edit_dashboards.py"))

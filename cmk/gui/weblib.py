@@ -6,11 +6,10 @@
 
 import re
 
-import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.pages
 from cmk.gui.i18n import _
-from cmk.gui.globals import response, request
+from cmk.gui.globals import response, request, user
 
 from cmk.gui.exceptions import MKUserError
 
@@ -20,8 +19,8 @@ def ajax_tree_openclose() -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_unicode_input_mandatory("name")
 
-    config.user.set_tree_state(tree, name, request.get_str_input("state"))
-    config.user.save_tree_states()
+    user.set_tree_state(tree, name, request.get_str_input("state"))
+    user.save_tree_states()
     response.set_data('OK')  # Write out something to make debugging easier
 
 
@@ -40,7 +39,7 @@ def ajax_tree_openclose() -> None:
 def init_selection() -> None:
     """Generate the initial selection_id"""
     selection_id()
-    config.user.cleanup_old_selections()
+    user.cleanup_old_selections()
 
 
 def selection_id() -> str:
@@ -68,4 +67,4 @@ def ajax_set_rowselection() -> None:
         raise MKUserError(None, _('Invalid action'))
 
     rows = request.get_str_input_mandatory('rows', '').split(',')
-    config.user.set_rowselection(selection_id(), ident, rows, action)
+    user.set_rowselection(selection_id(), ident, rows, action)

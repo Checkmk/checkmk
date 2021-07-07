@@ -14,6 +14,7 @@ from marshmallow import fields as _fields, ValidationError, utils
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib, valuespec as valuespec, sites, config
+from cmk.gui.globals import user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_group_information
 from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
@@ -1149,7 +1150,7 @@ class PasswordOwner(String):
         """
         super()._validate(value)
         permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
-        if config.user.may("wato.edit_all_passwords"):
+        if user.may("wato.edit_all_passwords"):
             permitted_owners.append("admin")
 
         if value not in permitted_owners:

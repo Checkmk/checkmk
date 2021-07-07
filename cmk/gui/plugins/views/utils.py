@@ -51,7 +51,7 @@ from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
-from cmk.gui.globals import g, html, request, response, display_options, theme
+from cmk.gui.globals import g, html, request, response, display_options, theme, user
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
@@ -148,10 +148,10 @@ class PainterOptions:
         # Mandatory options for all views (if permitted)
         if display_options.enabled(display_options.O):
             if display_options.enabled(
-                    display_options.R) and config.user.may("general.view_option_refresh"):
+                    display_options.R) and user.may("general.view_option_refresh"):
                 options.add("refresh")
 
-            if config.user.may("general.view_option_columns"):
+            if user.may("general.view_option_columns"):
                 options.add("num_columns")
 
         # TODO: Improve sorting. Add a sort index?
@@ -165,16 +165,16 @@ class PainterOptions:
             return
 
         # Options are stored per view. Get all options for all views
-        vo = config.user.load_file("viewoptions", {})
+        vo = user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
     def _is_anonymous_view(self, view_name: Optional[str]) -> bool:
         return view_name is None
 
     def save_to_config(self, view_name: str) -> None:
-        vo = config.user.load_file("viewoptions", {}, lock=True)
+        vo = user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
-        config.user.save_file("viewoptions", vo)
+        user.save_file("viewoptions", vo)
 
     def update_from_url(self, view: 'View') -> None:
         self._load_used_options(view)
@@ -260,7 +260,7 @@ class PainterOptions:
         return self._options
 
     def painter_options_permitted(self) -> bool:
-        return config.user.may("general.painter_options")
+        return user.may("general.painter_options")
 
     def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
@@ -1578,7 +1578,7 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
     macros = {
         "HOSTNAME": row['host_name'],
         "HOSTADDRESS": row['host_address'],
-        "USER_ID": config.user.id,
+        "USER_ID": user.id,
     }
     if what == 'service':
         macros.update({

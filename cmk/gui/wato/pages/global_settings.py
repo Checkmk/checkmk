@@ -34,7 +34,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -247,7 +247,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def _may_edit_configvar(self, varname):
         if varname in ["actions"]:
-            return config.user.may("wato.add_or_modify_executables")
+            return user.may("wato.add_or_modify_executables")
         return True
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

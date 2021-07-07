@@ -88,7 +88,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
 )
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.permissions import (
@@ -1118,7 +1118,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         raise MKUserError(None, _("The requested rule pack does not exist."))
 
     def _show_event_simulator(self):
-        event = config.user.load_file("simulated_event", {})
+        event = user.load_file("simulated_event", {})
         html.begin_form("simulator")
         self._vs_mkeventd_event().render_input("event", event)
         forms.end()
@@ -1140,7 +1140,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         vs = self._vs_mkeventd_event()
         event = vs.from_html_vars("event")
         vs.validate_value(event, "event")
-        config.user.save_file("simulated_event", event)
+        user.save_file("simulated_event", event)
 
         if request.var("_simulate"):
             return True
@@ -1265,7 +1265,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return menu
 
     def _page_menu_topics_rules(self) -> Iterator[PageMenuTopic]:
-        if not config.user.may("mkeventd.edit"):
+        if not user.may("mkeventd.edit"):
             return
 
         yield PageMenuTopic(
@@ -1288,7 +1288,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         )
 
     def _page_menu_topics_mkeventd(self) -> Iterator[PageMenuTopic]:
-        if not config.user.may("mkeventd.edit"):
+        if not user.may("mkeventd.edit"):
             return
 
         yield PageMenuTopic(
@@ -1711,7 +1711,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return menu
 
     def _page_menu_topics_rules(self) -> Iterator[PageMenuTopic]:
-        if not config.user.may("mkeventd.edit"):
+        if not user.may("mkeventd.edit"):
             return
 
         yield PageMenuTopic(
@@ -2332,7 +2332,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         )
 
     def action(self) -> ActionResult:
-        if not config.user.may("mkeventd.switchmode"):
+        if not user.may("mkeventd.switchmode"):
             return None
 
         if request.has_var("_switch_sync"):
@@ -2389,7 +2389,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
 
         html.close_ul()
 
-        if config.user.may("mkeventd.switchmode"):
+        if user.may("mkeventd.switchmode"):
             html.begin_form("switch")
             html.add_confirm_on_submit("switch",
                                        _("Do you really want to switch the event daemon mode?"))
@@ -2968,13 +2968,13 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
             )),
         )
 
-    if config.user.may("mkeventd.config") and config.user.may("wato.rulesets"):
+    if user.may("mkeventd.config") and user.may("wato.rulesets"):
         yield _page_menu_entry_rulesets()
 
     if mode_name != "mkeventd_status":
         yield _page_menu_entry_status()
 
-    if mode_name != "mkeventd_config" and config.user.may("mkeventd.config"):
+    if mode_name != "mkeventd_config" and user.may("mkeventd.config"):
         yield _page_menu_entry_settings()
 
     if mode_name != "mkeventd_mibs":

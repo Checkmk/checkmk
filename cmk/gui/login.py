@@ -29,7 +29,7 @@ import cmk.gui.mobile
 from cmk.gui.http import Request
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.i18n import _
-from cmk.gui.globals import (html, local, request, response, transactions, user_errors, theme)
+from cmk.gui.globals import (html, local, request, response, transactions, user_errors, theme, user)
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 
@@ -361,10 +361,10 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user.
     """
-    user = req.remote_user
-    if user is not None:
+    user_id = req.remote_user
+    if user_id is not None:
         set_auth_type("web_server")
-        return UserId(ensure_str(user))
+        return UserId(ensure_str(user_id))
     return None
 
 
@@ -589,12 +589,12 @@ class LoginPage(Page):
 @page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
-        assert config.user.id is not None
+        assert user.id is not None
 
         _invalidate_auth_session()
 
-        session_id = _get_session_id_from_cookie(config.user.id, revalidate_cookie=True)
-        userdb.on_logout(config.user.id, session_id)
+        session_id = _get_session_id_from_cookie(user.id, revalidate_cookie=True)
+        userdb.on_logout(user.id, session_id)
 
         if auth_type == 'cookie':
             raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')

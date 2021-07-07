@@ -20,7 +20,7 @@ from cmk.utils.translations import translate_hostname
 
 from cmk.gui.log import logger
 from cmk.gui import config, userdb
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
@@ -61,7 +61,7 @@ def execute_network_scan_job() -> None:
     # config.set_user_by_id() has not been executed yet. So there is no user context
     # available. Use the run_as attribute from the job config and revert
     # the previous state after completion.
-    old_user = config.user.id
+    old_user = user.id
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(

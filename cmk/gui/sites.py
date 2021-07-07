@@ -23,7 +23,7 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, request
+from cmk.gui.globals import g, request, user as global_user
 from cmk.gui.config import LoggedInUser
 from cmk.gui.log import logger
 
@@ -146,7 +146,7 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         return
 
     if user is None:
-        user = config.user
+        user = global_user
 
     if force_authuser is None:
         request_force_authuser = request.get_unicode_input("force_authuser")

@@ -30,7 +30,7 @@ import cmk.gui.config as config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, output_funnel, response
+from cmk.gui.globals import html, request, transactions, output_funnel, response, user
 from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
 from cmk.gui.utils.escaping import escape_html_permissive
 
@@ -338,7 +338,7 @@ class Table:
         return
 
     def _show_action_row(self) -> bool:
-        if self.options["sortable"] and self._get_sort_column(config.user.tableoptions[self.id]):
+        if self.options["sortable"] and self._get_sort_column(user.tableoptions[self.id]):
             return True
 
         return False
@@ -354,7 +354,7 @@ class Table:
         if not actions_enabled:
             return rows, False, None
 
-        table_opts = config.user.tableoptions.setdefault(table_id, {})
+        table_opts = user.tableoptions.setdefault(table_id, {})
 
         # Handle the initial visibility of the actions
         actions_visible = table_opts.get('actions_visible', False)
@@ -385,7 +385,7 @@ class Table:
                 rows = _sort_rows(rows, sort_col, sort_reverse)
 
         if actions_enabled:
-            config.user.save_tableoptions()
+            user.save_tableoptions()
 
         return rows, actions_visible, search_term
 
@@ -646,7 +646,7 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
 
 
 def init_rowselect(selection_key: str) -> None:
-    selected = config.user.get_rowselection(weblib.selection_id(), selection_key)
+    selected = user.get_rowselection(weblib.selection_id(), selection_key)
     selection_properties = {
         "page_id": selection_key,
         "selection_id": weblib.selection_id(),

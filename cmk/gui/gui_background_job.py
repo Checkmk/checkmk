@@ -14,11 +14,10 @@ import cmk.utils.render
 
 import cmk.gui.i18n
 import cmk.gui.sites as sites
-import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import g, html, request, timeout_manager, transactions
+from cmk.gui.globals import g, html, request, timeout_manager, transactions, user
 from cmk.gui.utils.html import HTML
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.permissions import (
@@ -136,18 +135,18 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         return self.get_status().get("deletable", True)
 
     def is_visible(self):
-        if config.user.may("background_jobs.see_foreign_jobs"):
+        if user.may("background_jobs.see_foreign_jobs"):
             return True
-        return config.user.id == self.get_status().get("user")
+        return user.id == self.get_status().get("user")
 
     def may_stop(self):
         if not self.is_stoppable():
             return False
 
-        if not config.user.may("background_jobs.stop_jobs"):
+        if not user.may("background_jobs.stop_jobs"):
             return False
 
-        if self.is_foreign() and not config.user.may("background_jobs.stop_foreign_jobs"):
+        if self.is_foreign() and not user.may("background_jobs.stop_foreign_jobs"):
             return False
 
         if not self.is_active():
@@ -162,16 +161,16 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
         if not self.is_stoppable() and self.is_active():
             return False
 
-        if not config.user.may("background_jobs.delete_jobs"):
+        if not user.may("background_jobs.delete_jobs"):
             return False
 
-        if self.is_foreign() and not config.user.may("background_jobs.delete_foreign_jobs"):
+        if self.is_foreign() and not user.may("background_jobs.delete_foreign_jobs"):
             return False
 
         return True
 
     def is_foreign(self):
-        return self.get_status().get("user") != config.user.id
+        return self.get_status().get("user") != user.id
 
     # FIXME: There is some arcane metaprogramming Kung Fu going on in
     # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
@@ -194,7 +193,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
 
     def __init__(self, job_id, **kwargs):
         logger = log.logger.getChild("background-job")
-        kwargs["user"] = config.user.id
+        kwargs["user"] = user.id
         kwargs["logfile_path"] = "~/var/log/web.log"
         # Deletable is currently a GUI only feature, not known in background_job
         self._deletable = kwargs.get("deletable", True)
@@ -643,7 +642,7 @@ class ActionHandler:
             return
 
         self._did_acknowledge_job = True
-        job.acknowledge(config.user.id)
+        job.acknowledge(user.id)
 
     def stop_job(self):
         job_id = request.var(self.stop_job_var)

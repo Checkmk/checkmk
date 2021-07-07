@@ -28,7 +28,7 @@ import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -411,7 +411,7 @@ class ModeAnalyzeConfig(WatoMode):
     def _acknowledge_test(self, test_id, site_id, status_id):
         self._acks = self._load_acknowledgements(lock=True)
         self._acks[(test_id, site_id, status_id)] = {
-            "user_id": config.user.id,
+            "user_id": user.id,
             "time": time.time(),
         }
         self._save_acknowledgements(self._acks)

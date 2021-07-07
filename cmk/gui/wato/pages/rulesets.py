@@ -51,7 +51,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, output_funnel
+from cmk.gui.globals import html, request, transactions, output_funnel, user
 from cmk.gui.valuespec import (
     FixedValue,
     Transform,
@@ -228,7 +228,7 @@ class ABCRulesetMode(WatoMode):
                 for ruleset in group_rulesets:
                     float_cls = None
                     if not config.wato_hide_help_in_lists:
-                        float_cls = "nofloat" if config.user.show_help else "float"
+                        float_cls = "nofloat" if user.show_help else "float"
                     html.open_div(class_=["ruleset", float_cls],
                                   title=strip_tags(ruleset.help() or ''))
                     html.open_div(class_="text")
@@ -481,7 +481,7 @@ class ModeRulesetGroup(ABCRulesetMode):
         return menu
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
-        if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
+        if user.may("wato.hosts") or user.may("wato.seeall"):
             current_folder = Folder.current()
             yield PageMenuEntry(
                 title=_("Hosts in folder: %s") % current_folder.title(),
@@ -759,7 +759,7 @@ class ModeEditRuleset(WatoMode):
                                                     ("host", self._hostname)])),
             )
 
-            if config.user.may('wato.rulesets'):
+            if user.may('wato.rulesets'):
                 yield PageMenuEntry(
                     title=_("Parameters"),
                     icon_name="rulesets",
@@ -1444,7 +1444,7 @@ class ABCEditRuleMode(WatoMode):
             item=make_form_submit_link("rule_editor", "_export_rule"),
         )
 
-        if config.user.may("wato.auditlog"):
+        if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",

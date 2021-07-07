@@ -23,7 +23,7 @@ from cmk.utils.object_diff import make_object_diff
 
 import cmk.gui.utils
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui import config
 from cmk.gui.utils import escaping
 from cmk.gui.config import SiteId
@@ -234,7 +234,7 @@ def _log_entry(action: str, message: Union[HTML, str], object_ref: Optional[Obje
     entry = AuditLogStore.Entry(
         time=int(time.time()),
         object_ref=object_ref,
-        user_id=str(user_id or config.user.id or "-"),
+        user_id=str(user_id or user.id or "-"),
         action=action,
         text=message,
         diff_text=diff_text,
@@ -276,7 +276,7 @@ def add_change(action_name: str,
     log_audit(action=action_name,
               message=text,
               object_ref=object_ref,
-              user_id=config.user.id if add_user else UserId(''),
+              user_id=user.id if add_user else UserId(''),
               diff_text=diff_text)
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
@@ -342,7 +342,7 @@ class ActivateChangesWriter:
             "action_name": action_name,
             "text": "%s" % text,
             "object": object_ref,
-            "user_id": config.user.id if add_user else None,
+            "user_id": user.id if add_user else None,
             "domains": [d.ident() for d in domains],
             "time": time.time(),
             "need_sync": need_sync,

@@ -15,7 +15,8 @@ You can find an introduction to the acknowledgement of problems in the
 # TODO: List acknowledgments
 from urllib.parse import unquote
 
-from cmk.gui import config, sites, http
+from cmk.gui.globals import user
+from cmk.gui import sites, http
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -78,7 +79,7 @@ def set_acknowledgement_on_hosts(params):
             sticky=sticky,
             notify=notify,
             persistent=persistent,
-            user=config.user.ident,
+            user=user.ident,
             comment=comment,
         )
     elif acknowledge_type == 'hostgroup':
@@ -90,7 +91,7 @@ def set_acknowledgement_on_hosts(params):
                 sticky=sticky,
                 notify=notify,
                 persistent=persistent,
-                user=config.user.ident,
+                user=user.ident,
                 comment=comment,
             )
         except ValueError:
@@ -114,7 +115,7 @@ def set_acknowledgement_on_hosts(params):
                 sticky=sticky,
                 notify=notify,
                 persistent=persistent,
-                user=config.user.ident,
+                user=user.ident,
                 comment=comment,
             )
     else:
@@ -172,7 +173,7 @@ def set_acknowledgement_on_services(params):
             sticky=sticky,
             notify=notify,
             persistent=persistent,
-            user=config.user.ident,
+            user=user.ident,
             comment=comment,
         )
     elif acknowledge_type == 'servicegroup':
@@ -184,7 +185,7 @@ def set_acknowledgement_on_services(params):
                 sticky=sticky,
                 notify=notify,
                 persistent=persistent,
-                user=config.user.ident,
+                user=user.ident,
                 comment=comment,
             )
         except ValueError:
@@ -215,7 +216,7 @@ def set_acknowledgement_on_services(params):
                 sticky=sticky,
                 notify=notify,
                 persistent=persistent,
-                user=config.user.ident,
+                user=user.ident,
                 comment=comment,
             )
     else:

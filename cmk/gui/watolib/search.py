@@ -34,10 +34,10 @@ from cmk.utils.redis import get_redis_client
 
 import cmk.gui.config as config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
-from cmk.gui.config import user, UserContext
+from cmk.gui.config import UserContext
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import g, request, RequestContext
+from cmk.gui.globals import g, request, RequestContext, user
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response

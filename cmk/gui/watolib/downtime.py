@@ -3,7 +3,8 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import cmk.gui.config as config
+
+from cmk.gui.globals import user
 import livestatus
 
 
@@ -39,5 +40,5 @@ class DowntimeSchedule:
             self.end_time,
             self.mode,
             self.delayed_duration,
-            config.user.id,
+            user.id,
         )) + livestatus.lqencode(self.comment)

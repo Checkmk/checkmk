@@ -14,7 +14,7 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, theme
+from cmk.gui.globals import html, theme, user
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.views import (
@@ -218,7 +218,7 @@ class GroupedBoxesLayout(Layout):
         # Don't make rows selectable when no commands can be fired
         # Ignore "C" display option here. Otherwise the rows will not be selectable
         # after view reload.
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))
@@ -262,7 +262,7 @@ class GroupedBoxesLayout(Layout):
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
-    is_open = config.user.get_tree_state("grouped_rows", index, False)
+    is_open = user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
         class_=["data", "grouped_row_header", "closed" if not is_open else '',
                 "%s0" % trclass])
@@ -517,7 +517,7 @@ class LayoutTiled(Layout):
             html.close_tr()
 
         html.close_table()
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))
@@ -682,7 +682,7 @@ class LayoutTable(Layout):
                 html.td('', class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
-        if not config.user.may("general.act"):
+        if not user.may("general.act"):
             return
 
         init_rowselect(_get_view_name(view))

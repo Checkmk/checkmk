@@ -28,7 +28,7 @@ from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request, response, transactions, user_errors, theme
+from cmk.gui.globals import html, request, response, transactions, user_errors, theme, user
 from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
@@ -55,8 +55,8 @@ def _get_current_theme_titel() -> str:
 
 
 def _get_sidebar_position() -> str:
-    assert config.user.id is not None
-    sidebar_position = userdb.load_custom_attr(config.user.id, 'ui_sidebar_position', lambda x: None
+    assert user.id is not None
+    sidebar_position = userdb.load_custom_attr(user.id, 'ui_sidebar_position', lambda x: None
                                                if x == "None" else "left")
 
     return sidebar_position or "right"
@@ -116,7 +116,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
         ),
     ]
 
-    if rulebased_notifications_enabled() and config.user.may('general.edit_notifications'):
+    if rulebased_notifications_enabled() and user.may('general.edit_notifications'):
         items.insert(
             1,
             TopicMenuItem(
@@ -150,7 +150,7 @@ mega_menu_registry.register(
              icon="main_user",
              sort_index=20,
              topics=_user_menu_topics,
-             info_line=lambda: f"{config.user.id} ({config.user.baserole_id})"))
+             info_line=lambda: f"{user.id} ({user.baserole_id})"))
 
 
 @page_registry.register_page("ajax_ui_theme")
@@ -198,8 +198,8 @@ class ModeAjaxSetStartURL(AjaxPage):
 
 
 def _set_user_attribute(key: str, value: Optional[str]):
-    assert config.user.id is not None
-    user_id = config.user.id
+    assert user.id is not None
+    user_id = user.id
 
     if value is None:
         userdb.remove_custom_attr(user_id, key)
@@ -208,7 +208,7 @@ def _set_user_attribute(key: str, value: Optional[str]):
 
 
 def user_profile_async_replication_page(back_url: str) -> None:
-    sites = list(config.user.authorized_login_sites().keys())
+    sites = list(user.authorized_login_sites().keys())
     user_profile_async_replication_dialog(sites=sites, back_url=back_url)
 
     html.footer()
@@ -286,10 +286,10 @@ class ABCUserProfilePage(Page):
 
     @staticmethod
     def _verify_requirements(permission: str) -> None:
-        if not config.user.id:
+        if not user.id:
             raise MKUserError(None, _('Not logged in.'))
 
-        if not config.user.may(permission):
+        if not user.may(permission):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not config.wato_enabled:
@@ -329,11 +329,10 @@ class UserProfileReplicate(Page):
     def __init__(self) -> None:
         super().__init__()
 
-        if not config.user.id:
+        if not user.id:
             raise MKUserError(None, _('Not logged in.'))
 
-        if (not config.user.may("general.change_password") and
-                not config.user.may("general.edit_profile")):
+        if (not user.may("general.change_password") and not user.may("general.edit_profile")):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not config.wato_enabled:
@@ -372,10 +371,10 @@ class UserChangePasswordPage(ABCUserProfilePage):
         super().__init__("general.change_password")
 
     def _action(self) -> None:
-        assert config.user.id is not None
+        assert user.id is not None
 
         users = userdb.load_users(lock=True)
-        user = users[config.user.id]
+        user_spec = users[user.id]
 
         cur_password = request.get_str_input_mandatory('cur_password')
         password = request.get_str_input_mandatory('password')
@@ -391,47 +390,47 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.check_credentials(config.user.id, cur_password) is False:
+        if userdb.check_credentials(user.id, cur_password) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
             raise MKUserError("password2", _("The both new passwords do not match."))
 
         watolib.verify_password_policy(password)
-        user['password'] = hash_password(password)
-        user['last_pw_change'] = int(time.time())
+        user_spec['password'] = hash_password(password)
+        user_spec['last_pw_change'] = int(time.time())
 
         # In case the user was enforced to change it's password, remove the flag
         try:
-            del user['enforce_pw_change']
+            del user_spec['enforce_pw_change']
         except KeyError:
             pass
 
         # Increase serial to invalidate old authentication cookies
-        if 'serial' not in user:
-            user['serial'] = 1
+        if 'serial' not in user_spec:
+            user_spec['serial'] = 1
         else:
-            user['serial'] += 1
+            user_spec['serial'] += 1
 
         userdb.save_users(users)
 
         flash(_("Successfully changed password."))
 
         # Set the new cookie to prevent logout for the current user
-        login.update_auth_cookie(config.user.id)
+        login.update_auth_cookie(user.id)
 
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         origtarget = request.get_str_input_mandatory('_origtarget', 'user_change_pw.py')
-        if config.user.authorized_login_sites():
+        if user.authorized_login_sites():
             raise redirect(
                 makeuri_contextless(request, [("back", origtarget)],
                                     filename="user_profile_replicate.py"))
         raise redirect(origtarget)
 
     def _show_form(self) -> None:
-        assert config.user.id is not None
+        assert user.id is not None
 
         users = userdb.load_users()
 
@@ -442,13 +441,13 @@ class UserChangePasswordPage(ABCUserProfilePage):
         elif change_reason == 'enforced':
             html.p(_('You are required to change your password before proceeding.'))
 
-        user = users.get(config.user.id)
-        if user is None:
+        user_spec = users.get(user.id)
+        if user_spec is None:
             html.show_warning(_("Sorry, your user account does not exist."))
             html.footer()
             return
 
-        locked_attributes = userdb.locked_attributes(user.get('connector'))
+        locked_attributes = userdb.locked_attributes(user_spec.get('connector'))
         if "password" in locked_attributes:
             raise MKUserError(
                 "cur_password",
@@ -485,43 +484,43 @@ class UserProfile(ABCUserProfilePage):
         super().__init__("general.edit_profile")
 
     def _action(self) -> None:
-        assert config.user.id is not None
+        assert user.id is not None
 
         users = userdb.load_users(lock=True)
-        user = users[config.user.id]
+        user_spec = users[user.id]
 
         language = request.get_ascii_input_mandatory('language', "")
         # Set the users language if requested to set it explicitly
         if language != "_default_":
-            user['language'] = language
-            config.user.language = language
+            user_spec['language'] = language
+            user.language = language
             set_language_cookie(request, response, language)
 
         else:
-            if 'language' in user:
-                del user['language']
-            config.user.reset_language()
+            if 'language' in user_spec:
+                del user_spec['language']
+            user.reset_language()
 
         # load the new language
-        cmk.gui.i18n.localize(config.user.language)
+        cmk.gui.i18n.localize(user.language)
 
-        if config.user.may('general.edit_notifications') and user.get("notifications_enabled"):
+        if user.may('general.edit_notifications') and user_spec.get("notifications_enabled"):
             value = forms.get_input(watolib.get_vs_flexible_notifications(), "notification_method")
-            user["notification_method"] = value
+            user_spec["notification_method"] = value
 
         # Custom attributes
-        if config.user.may('general.edit_user_attributes'):
+        if user.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
                 if not attr.user_editable():
                     continue
 
-                if attr.permission() and not config.user.may(attr.permission()):
+                if attr.permission() and not user.may(attr.permission()):
                     continue
 
                 vs = attr.valuespec()
                 value = vs.from_html_vars('ua_' + name)
                 vs.validate_value(value, "ua_" + name)
-                user[name] = value
+                user_spec[name] = value
 
         userdb.save_users(users)
 
@@ -530,7 +529,7 @@ class UserProfile(ABCUserProfilePage):
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
-        if config.user.authorized_login_sites():
+        if user.authorized_login_sites():
             back_url = "user_profile_replicate.py?back=user_profile.py"
         else:
             back_url = "user_profile.py"
@@ -542,12 +541,12 @@ class UserProfile(ABCUserProfilePage):
         raise FinalizeRequest(code=200)
 
     def _show_form(self) -> None:
-        assert config.user.id is not None
+        assert user.id is not None
 
         users = userdb.load_users()
 
-        user = users.get(config.user.id)
-        if user is None:
+        user_spec = users.get(user.id)
+        if user_spec is None:
             html.show_warning(_("Sorry, your user account does not exist."))
             html.footer()
             return
@@ -558,26 +557,26 @@ class UserProfile(ABCUserProfilePage):
         forms.header(_("Personal settings"))
 
         forms.section(_("Name"), simple=True)
-        html.write_text(user.get("alias", config.user.id))
+        html.write_text(user_spec.get("alias", user.id))
 
-        select_language(user)
+        select_language(user_spec)
 
         # Let the user configure how he wants to be notified
         rulebased_notifications = rulebased_notifications_enabled()
-        if (not rulebased_notifications and config.user.may('general.edit_notifications') and
-                user.get("notifications_enabled")):
+        if (not rulebased_notifications and user.may('general.edit_notifications') and
+                user_spec.get("notifications_enabled")):
             forms.section(_("Notifications"))
             html.help(
                 _("Here you can configure how you want to be notified about host and service problems and "
                   "other monitoring events."))
-            watolib.get_vs_flexible_notifications().render_input("notification_method",
-                                                                 user.get("notification_method"))
+            watolib.get_vs_flexible_notifications().render_input(
+                "notification_method", user_spec.get("notification_method"))
 
-        if config.user.may('general.edit_user_attributes'):
+        if user.may('general.edit_user_attributes'):
             custom_user_attr_topics = get_user_attributes_by_topic()
             _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
             forms.header(_("User interface settings"))
-            _show_custom_user_attr(user, custom_user_attr_topics.get("interface", []))
+            _show_custom_user_attr(user_spec, custom_user_attr_topics.get("interface", []))
 
         forms.end()
         html.close_div()
@@ -586,13 +585,13 @@ class UserProfile(ABCUserProfilePage):
         html.footer()
 
 
-def _show_custom_user_attr(user, custom_attr):
+def _show_custom_user_attr(user_spec, custom_attr):
     for name, attr in custom_attr:
         if attr.user_editable():
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
-            value = user.get(name, vs.default_value())
-            if not attr.permission() or config.user.may(attr.permission()):
+            value = user_spec.get(name, vs.default_value())
+            if not attr.permission() or user.may(attr.permission()):
                 vs.render_input("ua_" + name, value)
                 html.help(_u(vs.help()))
             else:
@@ -618,8 +617,8 @@ class ModeAjaxProfileReplication(AjaxPage):
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 
         site = config.site(site_id)
-        assert config.user.id is not None
-        result = self._synchronize_profile(site_id, site, config.user.id)
+        assert user.id is not None
+        result = self._synchronize_profile(site_id, site, user.id)
 
         if result is not True:
             assert result is not False
@@ -671,8 +670,8 @@ def _page_menu_entries_related(page_name: str) -> Iterator[PageMenuEntry]:
             item=make_simple_link("user_profile.py"),
         )
 
-    if page_name != "user_notifications_p" and rulebased_notifications_enabled(
-    ) and config.user.may('general.edit_notifications'):
+    if page_name != "user_notifications_p" and rulebased_notifications_enabled() and user.may(
+            'general.edit_notifications'):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",

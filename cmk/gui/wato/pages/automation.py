@@ -20,7 +20,7 @@ import cmk.gui.userdb as userdb
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.log import logger
-from cmk.gui.globals import response, request
+from cmk.gui.globals import response, request, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
 
@@ -40,7 +40,7 @@ class ModeAutomationLogin(AjaxPage):
         self._handle_exc(self.page)
 
     def page(self):
-        if not config.user.may("wato.automation"):
+        if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
         response.set_content_type("text/plain")

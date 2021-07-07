@@ -29,7 +29,7 @@ from cmk.utils.diagnostics import (
 import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, response
+from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKUserError,
@@ -408,7 +408,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
 @page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
-        if not config.user.may("wato.diagnostics"):
+        if not user.may("wato.diagnostics"):
             raise MKAuthException(
                 _("Sorry, you lack the permission for downloading diagnostics dumps."))
 

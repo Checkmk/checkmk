@@ -23,11 +23,10 @@ import cmk.utils.werks
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, theme, output_funnel
+from cmk.gui.globals import html, request, transactions, theme, output_funnel, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
     ListChoice,
@@ -361,7 +360,7 @@ def load_werks():
 
 
 def may_acknowledge():
-    return config.user.may("general.acknowledge_werks")
+    return user.may("general.acknowledge_werks")
 
 
 def acknowledge_werk(werk):
@@ -370,7 +369,7 @@ def acknowledge_werk(werk):
 
 def acknowledge_werks(werks, check_permission=True):
     if check_permission:
-        config.user.need_permission("general.acknowledge_werks")
+        user.need_permission("general.acknowledge_werks")
 
     ack_ids = load_acknowledgements()
     for werk in werks:

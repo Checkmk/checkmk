@@ -11,11 +11,10 @@ from six import ensure_binary, ensure_str
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, theme
+from cmk.gui.globals import html, request, transactions, user_errors, theme, user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import (foldable_container_id, foldable_container_onclick,
                                                 foldable_container_img_id)
-import cmk.gui.config as config
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -120,18 +119,18 @@ def header(
 
     id_ = ensure_str(base64.b64encode(ensure_binary(title)))
     treename = html.form_name or "nform"
-    isopen = config.user.get_tree_state(treename, id_, isopen)
+    isopen = user.get_tree_state(treename, id_, isopen)
     container_id = foldable_container_id(treename, id_)
 
-    html.open_table(id_=table_id if table_id else None,
-                    class_=[
-                        "nform",
-                        "narrow" if narrow else None,
-                        css if css else None,
-                        "open" if isopen else "closed",
-                        "more" if config.user.get_show_more_setting("foldable_%s" % id_) or
-                        show_more_mode else None,
-                    ])
+    html.open_table(
+        id_=table_id if table_id else None,
+        class_=[
+            "nform",
+            "narrow" if narrow else None,
+            css if css else None,
+            "open" if isopen else "closed",
+            "more" if user.get_show_more_setting("foldable_%s" % id_) or show_more_mode else None,
+        ])
 
     if show_table_head:
         _table_head(

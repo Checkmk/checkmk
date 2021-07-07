@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
-from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors, user
 from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.page_menu import (
     PageMenu,
@@ -560,7 +560,7 @@ class Overridable(Base):
             return self.publish_is_allowed()
 
         if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(config.user.contact_groups).intersection(self._["public"][1]):
+            if set(user.contact_groups).intersection(self._["public"][1]):
                 return self.publish_is_allowed()
 
         return False
@@ -573,10 +573,10 @@ class Overridable(Base):
         return not self.owner()
 
     def is_mine(self):
-        return self.owner() == config.user.id
+        return self.owner() == user.id
 
     def is_mine_and_may_have_own(self):
-        return self.is_mine() and config.user.may("general.edit_" + self.type_name())
+        return self.is_mine() and user.may("general.edit_" + self.type_name())
 
     def _can_be_linked(self):
         """Whether or not the thing can be linked to"""
@@ -605,10 +605,10 @@ class Overridable(Base):
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self):
         perm_name = "%s.%s" % (self.type_name(), self.name())
-        if perm_name in permission_registry and not config.user.may(perm_name):
+        if perm_name in permission_registry and not user.may(perm_name):
             return False
 
-        # if self.owner() == "" and not config.user.may(perm_name):
+        # if self.owner() == "" and not user.may(perm_name):
         #    return False
 
         return True
@@ -616,7 +616,7 @@ class Overridable(Base):
 
         # TODO: Permissions
         # ## visual = visuals[(owner, visual_name)]
-        # ## if owner == config.user.id or \
+        # ## if owner == user.id or \
         # ##    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
         # ##     custom.append((owner, visual_name, visual))
         # ## elif visual["public"] and owner == "":
@@ -634,16 +634,16 @@ class Overridable(Base):
     def may_delete(self):
         if self.is_builtin():
             return False
-        if self.is_mine() and config.user.may(self._delete_permission()):
+        if self.is_mine() and user.may(self._delete_permission()):
             return True
-        return config.user.may('general.delete_foreign_%s' % self.type_name())
+        return user.may('general.delete_foreign_%s' % self.type_name())
 
     def may_edit(self):
         if self.is_builtin():
             return False
-        if self.is_mine() and config.user.may("general.edit_%s" % self.type_name()):
+        if self.is_mine() and user.may("general.edit_%s" % self.type_name()):
             return True
-        return config.user.may('general.edit_foreign_%s' % self.type_name())
+        return user.may('general.edit_foreign_%s' % self.type_name())
 
     def edit_url(self):
         http_vars: HTTPVariables = [("load_name", self.name())]
@@ -779,7 +779,7 @@ class Overridable(Base):
 
     @classmethod
     def has_overriding_permission(cls, how):
-        return config.user.may("general.%s_%s" % (how, cls.type_name()))
+        return user.may("general.%s_%s" % (how, cls.type_name()))
 
     @classmethod
     def need_overriding_permission(cls, how):
@@ -889,22 +889,23 @@ class Overridable(Base):
 
         # Now scan users subdirs for files "user_$type_name.mk"
         for user_dir in os.listdir(config.config_dir):
-            user = UserId(ensure_str(user_dir))
+            user_id = UserId(ensure_str(user_dir))
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user), cls.type_name())
+                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user_id),
+                                              cls.type_name())
                 if not os.path.exists(path):
                     continue
 
-                if not userdb.user_exists(user):
+                if not userdb.user_exists(user_id):
                     continue
 
                 user_pages = store.load_object_from_file(path, default={})
                 for name, page_dict in user_pages.items():
-                    page_dict["owner"] = user
+                    page_dict["owner"] = user_id
                     page_dict["name"] = name
                     page_dict = cls._transform_old_spec(page_dict)
 
-                    cls.add_instance((user, name), cls(page_dict))
+                    cls.add_instance((user_id, name), cls(page_dict))
 
             except SyntaxError as e:
                 raise MKGeneralException(
@@ -927,7 +928,7 @@ class Overridable(Base):
     @classmethod
     def save_user_instances(cls, owner: _Optional[UserId] = None) -> None:
         if not owner:
-            owner = config.user.id
+            owner = user.id
 
         save_dict = {}
         for page in cls.instances():
@@ -943,7 +944,7 @@ class Overridable(Base):
     def clone(self):
         page_dict = {}
         page_dict.update(self._)
-        page_dict["owner"] = config.user.id
+        page_dict["owner"] = user.id
         new_page = self.__class__(page_dict)
         self.add_page(new_page)
         return new_page
@@ -1035,7 +1036,7 @@ class Overridable(Base):
         # Deletion
         delname = request.var("_delete")
         if delname and transactions.check_transaction():
-            owner = UserId(request.get_unicode_input_mandatory('_owner', config.user.id))
+            owner = UserId(request.get_unicode_input_mandatory('_owner', user.id))
             pagetype_title = cls.phrase("title")
 
             try:
@@ -1202,7 +1203,7 @@ class Overridable(Base):
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
         mode = request.get_ascii_input_mandatory('mode', 'edit')
-        owner_id = UserId(request.get_unicode_input_mandatory("owner", config.user.id))
+        owner_id = UserId(request.get_unicode_input_mandatory("owner", user.id))
         title = cls.phrase(mode)
         if mode == "create":
             page_name = ""
@@ -1223,9 +1224,9 @@ class Overridable(Base):
             else:  # clone
                 page_dict = copy.deepcopy(page_dict)
                 page_dict["name"] += "_clone"
-                assert config.user.id is not None
-                page_dict["owner"] = str(config.user.id)
-                owner_id = config.user.id
+                assert user.id is not None
+                page_dict["owner"] = str(user.id)
+                owner_id = user.id
 
         breadcrumb = cls.breadcrumb(title, mode)
         page_menu = make_edit_form_page_menu(
@@ -1274,7 +1275,7 @@ class Overridable(Base):
                 page_dict.update(new_page_dict)
             else:
                 page_dict = new_page_dict
-                page_dict['owner'] = str(config.user.id)  # because is not in vs elements
+                page_dict['owner'] = str(user.id)  # because is not in vs elements
 
             new_page = cls(page_dict)
 
@@ -1526,7 +1527,7 @@ class ContactGroupChoice(DualListChoice):
         contact_group_choices = sites.all_groups("contact")
         return [(group_id, alias)
                 for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups]
+                if self._with_foreign_groups or group_id in user.contact_groups]
 
 
 #.

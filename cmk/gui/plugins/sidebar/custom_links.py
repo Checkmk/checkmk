@@ -8,7 +8,7 @@ import cmk.utils.paths
 import cmk.gui.config as config
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.plugins.sidebar import (
@@ -35,7 +35,7 @@ class CustomLinks(SidebarSnapin):
                  "<tt>custom_links</tt> in <tt>multisite.mk</tt>")
 
     def show(self):
-        links = config.custom_links.get(config.user.baserole_id)
+        links = config.custom_links.get(user.baserole_id)
         if not links:
             html.write_text((_(
                 "Please edit <tt>%s</tt> in order to configure which links are shown in this snapin."

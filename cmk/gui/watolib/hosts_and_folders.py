@@ -31,7 +31,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import g, html, request, transactions
+from cmk.gui.globals import g, html, request, transactions, user
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.utils import (
@@ -1108,8 +1108,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             host = self.hosts()[hostname]
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = host.attributes()
-            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname],
-                                                      created_by=config.user.id)
+            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname], created_by=user.id)
 
             tag_groups = host.tag_groups()
             if tag_groups:
@@ -1681,15 +1680,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
 
     def _user_needs_permission(self, how: str) -> None:
-        if how == "write" and config.user.may("wato.all_folders"):
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and config.user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
         permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
-        assert config.user.id is not None
-        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_contactgroups = userdb.contactgroups_of_user(user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:
@@ -1880,12 +1879,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             Created Folder instance.
         """
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
         must_be_in_contactgroups(attributes.get("contactgroups"))
 
-        attributes = update_metadata(attributes, created_by=config.user.id)
+        attributes = update_metadata(attributes, created_by=user.id)
 
         # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
@@ -1905,7 +1904,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def delete_subfolder(self, name):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
 
@@ -1935,7 +1934,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def move_subfolder_to(self, subfolder, target_folder):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
         target_folder.need_permission("write")
@@ -2035,7 +2034,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return cgconf
 
     def prepare_create_hosts(self):
-        config.user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
@@ -2069,7 +2068,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # MKAuthException, MKUserError
         must_be_in_contactgroups(attributes.get("contactgroups"))
         validate_host_uniqueness("host", name)
-        _attributes = update_metadata(attributes, created_by=config.user.id)
+        _attributes = update_metadata(attributes, created_by=user.id)
 
     def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
         host = Host(self, host_name, attributes, cluster_nodes)
@@ -2085,7 +2084,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
@@ -2144,9 +2143,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
-        config.user.need_permission("wato.edit_hosts")
-        config.user.need_permission("wato.move_hosts")
+        user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.move_hosts")
         self.need_permission("write")
         self.need_unlocked_hosts()
         target_folder.need_permission("write")
@@ -2180,8 +2179,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def rename_host(self, oldname, newname):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
-        config.user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
         host.need_permission("write")
@@ -2661,18 +2660,18 @@ class CREHost(WithPermissions, WithAttributes):
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how: str) -> None:
-        if how == "write" and config.user.may("wato.all_folders"):
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and config.user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
         if how == "write":
-            config.user.need_permission("wato.edit_hosts")
+            user.need_permission("wato.edit_hosts")
 
         permitted_groups, _host_contact_groups, _use_for_services = self.groups()
-        assert config.user.id is not None
-        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_contactgroups = userdb.contactgroups_of_user(user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:
@@ -2869,7 +2868,7 @@ def make_folder_audit_log_object(attributes):
 # This is needed when the user assigns contact groups to
 # objects. He may only assign such groups he is member himself.
 def must_be_in_contactgroups(cgspec):
-    if config.user.may("wato.all_folders"):
+    if user.may("wato.all_folders"):
         return
 
     # No contact groups specified
@@ -2879,10 +2878,10 @@ def must_be_in_contactgroups(cgspec):
     cgconf = convert_cgroups_from_tuple(cgspec)
     cgs = cgconf["groups"]
     users = userdb.load_users()
-    if config.user.id not in users:
+    if user.id not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user.id]["contactgroups"]
+        user_cgs = users[user.id]["contactgroups"]
     for c in cgs:
         if c not in user_cgs:
             raise MKAuthException(

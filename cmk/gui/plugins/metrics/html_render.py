@@ -16,7 +16,7 @@ import cmk.utils.render
 
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, theme, output_funnel
+from cmk.gui.globals import html, theme, output_funnel, user
 from cmk.gui.globals import request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
@@ -505,7 +505,7 @@ def render_ajax_graph(context):
         render_opt_x, render_opt_y = context["render_options"]["size"]
         size_x = max(min_resize_width, float(resize_x_var) / html_size_per_ex + render_opt_x)
         size_y = max(min_resize_height, float(resize_y_var) / html_size_per_ex + render_opt_y)
-        config.user.save_file("graph_size", (size_x, size_y))
+        user.save_file("graph_size", (size_x, size_y))
         size = (size_x, size_y)
 
     range_from_var = request.var("range_from")
@@ -550,13 +550,13 @@ def render_ajax_graph(context):
 
 
 def load_user_graph_data_range():
-    return config.user.load_file("graph_range", {
+    return user.load_file("graph_range", {
         "time_range": (time.time() - 86400, time.time()),
     })
 
 
 def save_user_graph_data_range(graph_data_range):
-    config.user.save_file("graph_range", graph_data_range)
+    user.save_file("graph_range", graph_data_range)
 
 
 def forget_manual_vertical_zoom():

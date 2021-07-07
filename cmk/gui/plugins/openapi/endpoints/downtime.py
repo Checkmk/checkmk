@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#, user!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -34,7 +34,8 @@ import json
 import datetime as dt
 from typing import Literal
 
-from cmk.gui import config, sites
+from cmk.gui import sites
+from cmk.gui.globals import user
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
@@ -102,7 +103,7 @@ def create_host_related_downtime(params):
             end_time=body['end_time'],
             recur=body['recur'],
             duration=body['duration'],
-            user_id=config.user.ident,
+            user_id=user.ident,
             comment=body.get('comment', f"Downtime for host {body['host_name']!r}"),
         )
     elif downtime_type == 'hostgroup':
@@ -113,7 +114,7 @@ def create_host_related_downtime(params):
             end_time=body['end_time'],
             recur=body['recur'],
             duration=body['duration'],
-            user_id=config.user.ident,
+            user_id=user.ident,
             comment=body.get('comment', f"Downtime for hostgroup {body['hostgroup_name']!r}"),
         )
 
@@ -126,7 +127,7 @@ def create_host_related_downtime(params):
                 end_time=body['end_time'],
                 recur=body['recur'],
                 duration=body['duration'],
-                user_id=config.user.ident,
+                user_id=user.ident,
                 comment=body.get('comment', ''),
             )
         except QueryException:
@@ -169,7 +170,7 @@ def create_service_related_downtime(params):
             end_time=body['end_time'],
             recur=body['recur'],
             duration=body['duration'],
-            user_id=config.user.ident,
+            user_id=user.ident,
             comment=body.get(
                 'comment',
                 f"Downtime for services {', '.join(body['service_descriptions'])!r}@{body['host_name']!r}"
@@ -183,7 +184,7 @@ def create_service_related_downtime(params):
             end_time=body['end_time'],
             recur=body['recur'],
             duration=body['duration'],
-            user_id=config.user.ident,
+            user_id=user.ident,
             comment=body.get('comment', f"Downtime for servicegroup {body['servicegroup_name']!r}"),
         )
     elif downtime_type == 'service_by_query':
@@ -195,7 +196,7 @@ def create_service_related_downtime(params):
                 end_time=body['end_time'],
                 recur=body['recur'],
                 duration=body['duration'],
-                user_id=config.user.ident,
+                user_id=user.ident,
                 comment=body.get('comment', ''),
             )
         except QueryException:

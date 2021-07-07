@@ -33,7 +33,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.valuespec import (
     UserID,
     EmailAddress,
@@ -177,7 +177,7 @@ class ModeUsers(WatoMode):
                 )
 
     def _page_menu_entries_notify_users(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("general.notify"):
+        if user.may("general.notify"):
             yield PageMenuEntry(
                 title=_("Notify users"),
                 icon_name="notifications",
@@ -185,7 +185,7 @@ class ModeUsers(WatoMode):
             )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("wato.custom_attributes"):
+        if user.may("wato.custom_attributes"):
             yield PageMenuEntry(
                 title=_("Custom attributes"),
                 icon_name="custom_attr",
@@ -246,10 +246,10 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
         for varname, _value in request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
-                user = base64.b64decode(
+                user_id = base64.b64decode(
                     varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
-                if user in users:
-                    selected_users.append(user)
+                if user_id in users:
+                    selected_users.append(user_id)
 
         if selected_users:
             delete_users(selected_users)
@@ -269,7 +269,7 @@ class ModeUsers(WatoMode):
         elif self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED \
              and not self._job_snapshot.acknowledged_by():
             # Just finished, auto-acknowledge
-            userdb.UserSyncBackgroundJob().acknowledge(config.user.id)
+            userdb.UserSyncBackgroundJob().acknowledge(user.id)
             #html.show_message(_("User synchronization successful"))
 
         elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
@@ -318,7 +318,7 @@ class ModeUsers(WatoMode):
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - config.user_online_maxage
-            for uid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
+            for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
                 table.row()
 
                 # Checkboxes
@@ -332,10 +332,10 @@ class ModeUsers(WatoMode):
                     sortable=False,
                     css="checkbox")
 
-                if uid != config.user.id:
+                if uid != user.id:
                     html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
 
-                user_connection_id = cleanup_connection_id(user.get('connector'))
+                user_connection_id = cleanup_connection_id(user_spec.get('connector'))
                 connection = get_connection(user_connection_id)
 
                 # Buttons
@@ -365,9 +365,8 @@ class ModeUsers(WatoMode):
                 table.cell(_("ID"), uid)
 
                 # Online/Offline
-                if config.user.may("wato.show_last_user_activity"):
-                    last_seen = userdb.get_last_activity(uid, user)
-                    user.get('last_seen', 0)
+                if user.may("wato.show_last_user_activity"):
+                    last_seen = userdb.get_last_activity(uid, user_spec)
                     if last_seen >= online_threshold:
                         title = _('Online')
                         img_txt = 'online'
@@ -390,7 +389,7 @@ class ModeUsers(WatoMode):
                         html.write_text(_("Never logged in"))
 
                 if cmk_version.is_managed_edition():
-                    table.cell(_("Customer"), managed.get_customer_name(user))
+                    table.cell(_("Customer"), managed.get_customer_name(user_spec))
 
                 # Connection
                 if connection:
@@ -404,46 +403,46 @@ class ModeUsers(WatoMode):
                     locked_attributes = []
 
                 # Authentication
-                if "automation_secret" in user:
+                if "automation_secret" in user_spec:
                     auth_method: Union[str, HTML] = _("Automation")
-                elif user.get("password") or 'password' in locked_attributes:
+                elif user_spec.get("password") or 'password' in locked_attributes:
                     auth_method = _("Password")
                 else:
                     auth_method = html.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"))
-                if user.get("locked", False):
+                if user_spec.get("locked", False):
                     html.icon('user_locked', _('The login is currently locked'))
 
-                if "disable_notifications" in user and isinstance(user["disable_notifications"],
-                                                                  bool):
-                    disable_notifications_opts = {"disable": user["disable_notifications"]}
+                if "disable_notifications" in user_spec and isinstance(
+                        user_spec["disable_notifications"], bool):
+                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}
                 else:
-                    disable_notifications_opts = user.get("disable_notifications", {})
+                    disable_notifications_opts = user_spec.get("disable_notifications", {})
 
                 if disable_notifications_opts.get("disable", False):
                     html.icon('notif_disabled', _('Notifications are disabled'))
 
                 # Full name / Alias
-                table.cell(_("Alias"), user.get("alias", ""))
+                table.cell(_("Alias"), user_spec.get("alias", ""))
 
                 # Email
-                table.cell(_("Email"), user.get("email", ""))
+                table.cell(_("Email"), user_spec.get("email", ""))
 
                 # Roles
                 table.cell(_("Roles"))
-                if user.get("roles", []):
+                if user_spec.get("roles", []):
                     role_links = [(watolib.folder_preserving_link([("mode", "edit_role"),
                                                                    ("edit", role)]),
-                                   roles[role].get("alias")) for role in user["roles"]]
+                                   roles[role].get("alias")) for role in user_spec["roles"]]
                     html.write_html(
                         HTML(", ").join(
                             html.render_a(alias, href=link) for (link, alias) in role_links))
 
                 # contact groups
                 table.cell(_("Contact groups"))
-                cgs = user.get("contactgroups", [])
+                cgs = user_spec.get("contactgroups", [])
                 if cgs:
                     cg_aliases = [
                         contact_groups[c]['alias'] if c in contact_groups else c for c in cgs
@@ -460,7 +459,7 @@ class ModeUsers(WatoMode):
                     html.i(_("none"))
 
                 #table.cell(_("Sites"))
-                #html.write_text(vs_authorized_sites().value_to_text(user.get("authorized_sites",
+                #html.write_text(vs_authorized_sites().value_to_text(user_spec.get("authorized_sites",
                 #                                                vs_authorized_sites().default_value())))
 
                 # notifications
@@ -468,13 +467,13 @@ class ModeUsers(WatoMode):
                     table.cell(_("Notifications"))
                     if not cgs:
                         html.i(_("not a contact"))
-                    elif not user.get("notifications_enabled", True):
+                    elif not user_spec.get("notifications_enabled", True):
                         html.write_text(_("disabled"))
-                    elif user.get("host_notification_options", "") == "" and \
-                         user.get("service_notification_options", "") == "":
+                    elif user_spec.get("host_notification_options", "") == "" and \
+                         user_spec.get("service_notification_options", "") == "":
                         html.write_text(_("all events disabled"))
                     else:
-                        tp = user.get("notification_period", "24X7")
+                        tp = user_spec.get("notification_period", "24X7")
                         tp_code = HTML()
                         if tp not in timeperiods:
                             tp_code = escape_html_permissive(tp + _(" (invalid)"))
@@ -492,7 +491,7 @@ class ModeUsers(WatoMode):
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
                     table.cell(_u(vs.title()))
-                    html.write_text(vs.value_to_text(user.get(name, vs.default_value())))
+                    html.write_text(vs.value_to_text(user_spec.get(name, vs.default_value())))
 
         html.hidden_fields()
         html.end_form()
@@ -612,7 +611,7 @@ class ModeEditUser(WatoMode):
                                                     ("user", self._user_id)])),
             )
 
-        if config.user.may("wato.auditlog") and not self._is_new_user:
+        if user.may("wato.auditlog") and not self._is_new_user:
             assert self._user_id is not None
             yield PageMenuEntry(
                 title=_("Audit log"),
@@ -1174,12 +1173,12 @@ class ModeEditUser(WatoMode):
             html.help(_u(vs.help()))
 
 
-def select_language(user):
+def select_language(user_spec):
     languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
     if not languages:
         return
 
-    current_language = user.get("language")
+    current_language = user_spec.get("language")
     if current_language is None:
         current_language = "_default_"
 

@@ -24,6 +24,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.config as config
+from cmk.gui.globals import user
 from cmk.gui.log import logger
 from cmk.gui.watolib.changes import log_audit
 from cmk.gui.exceptions import MKGeneralException
@@ -47,12 +48,12 @@ def create_snapshot(comment):
                                                            time.localtime(time.time()))
 
     data: Dict[str, Any] = {}
-    data["comment"] = _("Activated changes by %s.") % config.user.id
+    data["comment"] = _("Activated changes by %s.") % user.id
 
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
-    data["created_by"] = config.user.id
+    data["created_by"] = user.id
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 

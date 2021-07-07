@@ -11,12 +11,11 @@ from typing import List, Optional, Type
 from six import ensure_str
 
 import cmk.gui.pages
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors, request
+from cmk.gui.globals import html, transactions, user_errors, request, user
 from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
@@ -355,7 +354,7 @@ class ModeAjaxDiagHost(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        if not config.user.may('wato.diag_host'):
+        if not user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
         if not transactions.check_transaction():

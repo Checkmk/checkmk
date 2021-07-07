@@ -30,7 +30,7 @@ import cmk.gui.watolib.activate_changes
 from cmk.gui.watolib.search import build_index_background
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request, display_options, transactions
+from cmk.gui.globals import html, request, display_options, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
@@ -100,7 +100,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("wato.sites"):
+        if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("Sites"),
                 icon_name="sites",
@@ -110,7 +110,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 )),
             )
 
-        if config.user.may("wato.auditlog"):
+        if user.may("wato.auditlog"):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name="auditlog",
@@ -154,10 +154,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return True
 
     def _may_activate_changes(self) -> bool:
-        if not config.user.may("wato.activate"):
+        if not user.may("wato.activate"):
             return False
 
-        if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+        if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
             return False
 
         return True
@@ -270,14 +270,14 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return _("Currently there are %d changes to activate.") % changes
 
     def _activation_form(self):
-        if not config.user.may("wato.activate"):
+        if not user.may("wato.activate"):
             html.show_warning(_("You are not permitted to activate configuration changes."))
             return
 
         if not self._changes:
             return
 
-        if not config.user.may("wato.activateforeign") \
+        if not user.may("wato.activateforeign") \
            and self._has_foreign_changes_on_any_site():
             html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
             return
@@ -296,7 +296,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.help(valuespec.help())
 
         if self.has_foreign_changes():
-            if config.user.may("wato.activateforeign"):
+            if user.may("wato.activateforeign"):
                 html.show_warning(
                     _("There are some changes made by your colleagues that you will "
                       "activate if you proceed. You need to enable the checkbox above "
@@ -327,7 +327,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 css = []
                 if self._is_foreign(change):
                     css.append("foreign")
-                if not config.user.may("wato.activateforeign"):
+                if not user.may("wato.activateforeign"):
                     css.append("not_permitted")
 
                 table.row(css=" ".join(css))
@@ -366,7 +366,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 is_online = self._site_is_online(status)
                 is_logged_in = self._site_is_logged_in(site_id, site)
                 has_foreign = self._site_has_foreign_changes(site_id)
-                can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
+                can_activate_all = not has_foreign or user.may("wato.activateforeign")
 
                 # Disable actions for offline sites and not logged in sites
                 if not is_online or not is_logged_in:
@@ -385,7 +385,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")
 
-                if config.user.may("wato.sites"):
+                if user.may("wato.sites"):
                     edit_url = watolib.folder_preserving_link([("mode", "edit_site"),
                                                                ("site", site_id)])
                     html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
@@ -558,7 +558,7 @@ def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary
                  allow_empty=is_optional,
              )))
 
-    if has_foreign_changes and config.user.may("wato.activateforeign"):
+    if has_foreign_changes and user.may("wato.activateforeign"):
         elements.append(("foreign",
                          Checkbox(
                              title=_("Activate foreign changes"),
@@ -581,7 +581,7 @@ class ModeAjaxStartActivation(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        config.user.need_permission("wato.activate")
+        user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
 
@@ -629,7 +629,7 @@ class ModeAjaxActivationState(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        config.user.need_permission("wato.activate")
+        user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
 

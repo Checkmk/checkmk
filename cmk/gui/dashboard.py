@@ -48,7 +48,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, transactions, output_funnel, response
+from cmk.gui.globals import html, request, transactions, output_funnel, response, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -137,7 +137,7 @@ class VisualTypeDashboards(VisualType):
         return "dashboard.py"
 
     def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
-        if not config.user.may("general.edit_dashboards"):
+        if not user.may("general.edit_dashboards"):
             return
 
         if add_type in ["availability", "graph_collection"]:
@@ -152,7 +152,7 @@ class VisualTypeDashboards(VisualType):
             )
 
     def add_visual_handler(self, target_visual_name, add_type, context, parameters):
-        if not config.user.may("general.edit_dashboards"):
+        if not user.may("general.edit_dashboards"):
             # Exceptions do not work here.
             return
 
@@ -483,7 +483,7 @@ def _get_default_dashboard_name() -> str:
     """
     if cmk_version.is_raw_edition():
         return "main"  # problems = main in raw edition
-    return "main" if config.user.may("general.see_all") else "problems"
+    return "main" if user.may("general.see_all") else "problems"
 
 
 def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, DashboardConfig],
@@ -495,7 +495,7 @@ def _load_dashboard_with_cloning(permitted_dashboards: Dict[DashboardName, Dashb
                                             permitted_dashboards, all_dashboards)
     if edit and board['owner'] == "":
         # Trying to edit a builtin dashboard results in doing a copy
-        active_user = config.user.id
+        active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)
         board['owner'] = active_user
@@ -514,7 +514,7 @@ def draw_dashboard(name: DashboardName) -> None:
     if request.var('edit') == '1':
         mode = 'edit'
 
-    if mode == 'edit' and not config.user.may("general.edit_dashboards"):
+    if mode == 'edit' and not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = _load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == 'edit')
@@ -859,7 +859,7 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
                 icon_name="dashboard",
                 item=make_simple_link("edit_dashboards.py"),
             )
-        ] if config.user.may("general.edit_dashboards") else [],
+        ] if user.may("general.edit_dashboards") else [],
     )
 
 
@@ -904,7 +904,7 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
 
 def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
                             mode: str) -> Iterator[PageMenuEntry]:
-    if not config.user.may("general.edit_dashboards"):
+    if not user.may("general.edit_dashboards"):
         return
 
     if board['owner'] == "":
@@ -918,7 +918,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         )
         return
 
-    if board['owner'] != config.user.id:
+    if board['owner'] != user.id:
         return
 
     edit_text = _("Leave layout mode")
@@ -1508,7 +1508,7 @@ def page_edit_dashboards() -> None:
 
 
 def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: DashboardConfig) -> None:
-    if dashboard["owner"] == config.user.id:
+    if dashboard["owner"] == user.id:
         html.icon_button(
             makeuri_contextless(
                 request,
@@ -1765,7 +1765,7 @@ def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 @page_registry.register_page("edit_dashlet")
 class EditDashletPage(Page):
     def __init__(self) -> None:
-        if not config.user.may("general.edit_dashboards"):
+        if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
         self._board = request.get_str_input_mandatory('name')
@@ -1944,7 +1944,7 @@ def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) ->
 
 @cmk.gui.pages.register("clone_dashlet")
 def page_clone_dashlet() -> None:
-    if not config.user.may("general.edit_dashboards"):
+    if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = request.var('name')
@@ -1976,7 +1976,7 @@ def page_clone_dashlet() -> None:
 
 @cmk.gui.pages.register("delete_dashlet")
 def page_delete_dashlet() -> None:
-    if not config.user.may("general.edit_dashboards"):
+    if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = request.var('name')
@@ -2016,7 +2016,7 @@ def page_delete_dashlet() -> None:
 
 
 def check_ajax_update() -> Tuple[DashletConfig, DashboardConfig]:
-    if not config.user.may("general.edit_dashboards"):
+    if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
     board = request.get_str_input_mandatory('name')

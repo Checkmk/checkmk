@@ -82,7 +82,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, theme, output_funnel, request
+from cmk.gui.globals import html, theme, output_funnel, request, user
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.pages import AjaxPage, page_registry
@@ -4866,7 +4866,7 @@ class Dictionary(ValueSpec):
                     isopen=self._form_isopen,
                     narrow=self._form_narrow,
                     show_more_toggle=self._section_has_show_more(section_elements),
-                    show_more_mode=config.user.show_mode != "default_show_less",
+                    show_more_mode=user.show_mode != "default_show_less",
                     help_text=self.help(),
                 )
             self.render_input_form_header(varprefix, value, header, section_elements, css=css)
@@ -5971,7 +5971,7 @@ class IconSelector(ValueSpec):
                       onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" %
                       json.dumps(varprefix))
 
-        if config.user.may('wato.icons'):
+        if user.may('wato.icons'):
             back_param = '&back=' + urlencode(
                 request.get_url_input('back')) if request.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
@@ -6367,7 +6367,7 @@ class RuleComment(TextAreaUnicode):
 
         super().render_input(varprefix, value)
 
-        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), config.user.id)
+        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), user.id)
 
         html.nbsp()
         html.icon_button(None,

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
-from cmk.gui.globals import request, response, display_options
+from cmk.gui.globals import request, response, display_options, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
@@ -27,8 +27,8 @@ class WatoIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
-            return config.user.may("wato.use") and \
-                (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+            return user.may("wato.use") and \
+                (user.may("wato.seeall") or user.may("wato.hosts"))
 
         if not may_see_hosts() or is_mobile(request, response):
             return None
@@ -107,7 +107,7 @@ class DownloadSnmpWalkIcon(Icon):
 
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and config.user.may("wato.download_agent_output") \
+       and user.may("wato.download_agent_output") \
        and not row["host_check_type"] == 2:  # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do

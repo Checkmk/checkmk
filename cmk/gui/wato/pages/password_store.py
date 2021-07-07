@@ -6,9 +6,8 @@
 
 from typing import List, Optional, Type
 
-import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.valuespec import ValueSpec, DictionaryEntry
 from cmk.gui.valuespec import (
     FixedValue,
@@ -130,7 +129,7 @@ class ModeEditPassword(SimpleEditMode):
         )
 
     def _vs_individual_elements(self):
-        if config.user.may("wato.edit_all_passwords"):
+        if user.may("wato.edit_all_passwords"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,

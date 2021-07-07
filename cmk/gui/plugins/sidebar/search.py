@@ -28,7 +28,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, output_funnel
+from cmk.gui.globals import html, request, output_funnel, user
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import (
@@ -1395,7 +1395,7 @@ class MenuSearchResultsRenderer:
         html.icon(icon="collapse_arrow", title=_("Show all topics"))
         html.close_a()
 
-        if not config.user.get_attribute("icons_per_item"):
+        if not user.get_attribute("icons_per_item"):
             html.icon(icons[0])
         else:
             html.icon(icons[1])

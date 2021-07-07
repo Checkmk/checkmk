@@ -14,7 +14,7 @@ import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, display_options
+from cmk.gui.globals import html, request, display_options, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -315,7 +315,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
         title = views.view_title(self.view.spec, self.view.context)
         navbar = [("data", _("Results"), "grid", 'results_button'),
                   ("filter", _("Filter"), "search", '')]
-        if config.user.may("general.act"):
+        if user.may("general.act"):
             navbar.append(("commands", _("Commands"), "gear", ''))
 
         # Should we show a page with context links?
@@ -333,7 +333,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
 
         elif page == "commands":
             # Page: Commands
-            if config.user.may("general.act"):
+            if user.may("general.act"):
                 jqm_page_header(_("Commands"), left_button=home, id_="commands")
                 show_commands = True
                 if request.has_var("_do_actions"):
@@ -421,7 +421,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
     html.open_div(**{"data-role": "collapsible-set"})
     for command_class in command_registry.values():
         command = command_class()
-        if what in command.tables and config.user.may(command.permission.name):
+        if what in command.tables and user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
             html.h3(command.title)
             html.open_p()

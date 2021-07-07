@@ -18,7 +18,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     HTTPRedirect,
 )
-from cmk.gui.globals import request, response, g, theme
+from cmk.gui.globals import request, response, g, theme, user
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -41,7 +41,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to
             # show the correct message for the current user.
-            g.may_see_crash_reports = config.user.may("general.see_crash_reports")
+            g.may_see_crash_reports = user.may("general.see_crash_reports")
 
             # This may raise an exception with error messages, which will then be displayed to the user.
             _ensure_general_access()
@@ -53,8 +53,8 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
-            assert config.user.id is not None
-            theme.set(cmk.gui.userdb.load_custom_attr(config.user.id, 'ui_theme', lambda x: x))
+            assert user.id is not None
+            theme.set(cmk.gui.userdb.load_custom_attr(user.id, 'ui_theme', lambda x: x))
 
             func()
 
@@ -76,16 +76,16 @@ def fail_silently() -> bool:
 
 
 def _ensure_general_access() -> None:
-    if config.user.may("general.use"):
+    if user.may("general.use"):
         return
 
     reason = [
         _("You are not authorized to use the Check_MK GUI. Sorry. "
-          "You are logged in as <b>%s</b>.") % config.user.id
+          "You are logged in as <b>%s</b>.") % user.id
     ]
 
-    if config.user.role_ids:
-        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(config.user.role_ids))
+    if user.role_ids:
+        reason.append(_("Your roles are <b>%s</b>.") % ", ".join(user.role_ids))
     else:
         reason.append(_("<b>You do not have any roles.</b>"))
 
@@ -141,7 +141,7 @@ def load_all_plugins() -> None:
 
 def _localize_request() -> None:
     previous_language = cmk.gui.i18n.get_current_language()
-    user_language = request.get_ascii_input("lang", config.user.language)
+    user_language = request.get_ascii_input("lang", user.language)
 
     set_language_cookie(request, response, user_language)
     cmk.gui.i18n.localize(user_language)

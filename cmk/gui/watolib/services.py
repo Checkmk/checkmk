@@ -13,6 +13,7 @@ from hashlib import sha256
 from typing import Tuple, List, NamedTuple, Set, Dict, Any
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.gui.globals import user
 from cmk.gui.sites import states, SiteStatus
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.utils.type_defs import SetAutochecksTable
@@ -156,17 +157,17 @@ class Discovery:
 
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
-                    config.user.need_permission("wato.service_discovery_to_undecided")
+                    user.need_permission("wato.service_discovery_to_undecided")
                 elif table_target in [
                         DiscoveryState.MONITORED,
                         DiscoveryState.CLUSTERED_NEW,
                         DiscoveryState.CLUSTERED_OLD,
                 ]:
-                    config.user.need_permission("wato.service_discovery_to_undecided")
+                    user.need_permission("wato.service_discovery_to_undecided")
                 elif table_target == DiscoveryState.IGNORED:
-                    config.user.need_permission("wato.service_discovery_to_ignored")
+                    user.need_permission("wato.service_discovery_to_ignored")
                 elif table_target == DiscoveryState.REMOVED:
-                    config.user.need_permission("wato.service_discovery_to_removed")
+                    user.need_permission("wato.service_discovery_to_removed")
 
                 apply_changes = True
 

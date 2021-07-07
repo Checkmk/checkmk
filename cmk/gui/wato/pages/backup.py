@@ -13,7 +13,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
 from cmk.gui.i18n import _
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 from cmk.gui.valuespec import Checkbox
 from cmk.gui.pages import page_registry, AjaxPage
 
@@ -184,7 +184,7 @@ class ModeAjaxBackupJobState(AjaxPage):
         self._handle_exc(self.page)
 
     def page(self):
-        config.user.need_permission("wato.backups")
+        user.need_permission("wato.backups")
         if request.var("job") == "restore":
             page: backup.PageAbstractBackupJobState = backup.PageBackupRestoreState()
         else:

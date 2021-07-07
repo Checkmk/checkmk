@@ -41,7 +41,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request as request, response
+from cmk.gui.globals import g, html, request as request, response, user
 from cmk.gui.exceptions import (
     MKAuthException,
     MKUserError,
@@ -359,7 +359,7 @@ def _get_permitted_inventory_paths():
     if 'permitted_inventory_paths' in g:
         return g.permitted_inventory_paths
 
-    user_groups = [] if config.user.id is None else userdb.contactgroups_of_user(config.user.id)
+    user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
 
     if not user_groups:
         g.permitted_inventory_paths = None
@@ -473,12 +473,12 @@ def inventory_of_host(host_name: HostName, api_request):
 
 
 def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) -> None:
-    if config.user.may("general.see_all"):
+    if user.may("general.see_all"):
         return
 
     query = "GET hosts\nFilter: host_name = %s\nStats: state >= 0%s" % (
         livestatus.lqencode(host_name),
-        "\nAuthUser: %s" % livestatus.lqencode(config.user.id) if config.user.id else "",
+        "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
     )
 
     if site:

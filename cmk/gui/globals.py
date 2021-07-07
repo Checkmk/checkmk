@@ -178,6 +178,9 @@ class RequestContext:
         self.transactions = TransactionManager(req, self._user)
         self.user_errors = UserErrors()
 
+        # TODO: This needs to be a helper of LoggedInUser
+        self.transactions = TransactionManager(req, self.user)
+
         self._prepend_url_filter = _PrependURLFilter()
         self._web_log_handler: Optional[logging.Handler] = None
 

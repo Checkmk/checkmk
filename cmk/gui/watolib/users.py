@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.globals import user
 from cmk.gui.type_defs import UserId
 import cmk.gui.userdb as userdb
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
@@ -39,7 +40,7 @@ import cmk.gui.watolib.global_settings as global_settings
 
 
 def delete_users(users_to_delete):
-    if config.user.id in users_to_delete:
+    if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
     all_users = userdb.load_users(lock=True)
@@ -138,7 +139,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
 
     # Locking
     locked = user_attrs.get("locked")
-    if user_id == config.user.id and locked:
+    if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
     # Authentication: Password or Secret
@@ -419,7 +420,7 @@ def notification_script_choices():
     choices = []
     for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
         notificaton_plugin_name, _notification_plugin_title = choice
-        if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
+        if user.may("notification_plugin.%s" % notificaton_plugin_name):
             choices.append(choice)
     return choices
 

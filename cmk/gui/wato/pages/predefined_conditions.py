@@ -7,11 +7,10 @@
 
 from typing import List, Optional, Type
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
     FixedValue,
@@ -183,7 +182,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         )
 
     def _vs_individual_elements(self):
-        if config.user.may("wato.edit_all_predefined_conditions"):
+        if user.may("wato.edit_all_predefined_conditions"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
@@ -292,8 +291,8 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         contact_groups = load_contact_group_information()
 
         if only_own:
-            assert config.user.id is not None
-            user_groups = userdb.contactgroups_of_user(config.user.id)
+            assert user.id is not None
+            user_groups = userdb.contactgroups_of_user(user.id)
         else:
             user_groups = []
 

@@ -65,7 +65,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redire
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.globals import html, request, transactions, user_errors, user
 from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb
@@ -782,7 +782,7 @@ class ModeDistributedMonitoring(WatoMode):
 class ModeAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
     def page(self):
-        config.user.need_permission("wato.sites")
+        user.need_permission("wato.sites")
 
         site_states = {}
 

@@ -13,7 +13,7 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, user
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextInput
 from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 from cmk.gui.utils.urls import makeuri_contextless
@@ -146,7 +146,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
 
-        show_stales = self.parameters()["show_stale"] and config.user.may(
+        show_stales = self.parameters()["show_stale"] and user.may(
             "general.see_stales_in_tactical_overview")
         has_stale_objects = bool([r for r in rows if r.what != "events" and r.stats[-1]])
 
@@ -215,7 +215,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         for row_config in self.parameters()["rows"]:
             what, context = row_config["query"]
 
-            if what == "events" and not config.user.may("mkeventd.see_in_tactical_overview"):
+            if what == "events" and not user.may("mkeventd.see_in_tactical_overview"):
                 continue
 
             stats = self._get_stats(what, context)
@@ -373,7 +373,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     def _get_event_stats_query(self, context_filters):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
-        if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+        if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
             ec_filters = (  #
                 "Filter: event_contact_groups != \n"
                 "Filter: host_name != \n"
@@ -479,7 +479,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "in the Tactical Overview. The %s sites are %s.", len(site_ids))
         tooltip = tooltip_template % (site_status, ', '.join(site_ids))
 
-        if config.user.may("wato.sites"):
+        if user.may("wato.sites"):
             url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
             html.icon_button(url, tooltip, "sites", target="main")
             html.a(message, target="main", href=url)

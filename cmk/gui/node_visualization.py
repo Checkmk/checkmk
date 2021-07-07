@@ -18,7 +18,7 @@ from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
 from cmk.utils.type_defs import HostName
 
 from cmk.gui import sites
-from cmk.gui.globals import html, theme, request
+from cmk.gui.globals import html, theme, request, user
 from cmk.gui.i18n import _
 import cmk.gui.bi as bi
 
@@ -110,7 +110,7 @@ class ParentChildTopologyPage(Page):
 
     def page(self) -> PageResult:
         """ Determines the hosts to be shown """
-        config.user.need_permission("general.parent_child_topology")
+        user.need_permission("general.parent_child_topology")
 
         topology_settings = TopologySettings()
         if request.var("filled_in"):

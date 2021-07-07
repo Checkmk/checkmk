@@ -18,7 +18,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
 from cmk.gui.plugins.views.utils import transform_painter_spec
@@ -2476,7 +2476,7 @@ def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, p
         monkeypatch.setitem(html.request._vars, "limit", limit)
 
     mocker.patch.object(config, "roles", {"nobody": {"permissions": permissions}})
-    mocker.patch.object(config.user, "role_ids", ["nobody"])
+    mocker.patch.object(user, "role_ids", ["nobody"])
     assert cmk.gui.views.get_limit() == result
 
 

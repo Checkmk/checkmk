@@ -14,7 +14,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, display_options, transactions, user_errors, request
+from cmk.gui.globals import html, display_options, transactions, user_errors, request, user
 from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -105,7 +105,7 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
             raise
 
     # Check general permission for this mode
-    if mode_permissions is not None and not config.user.may("wato.seeall"):
+    if mode_permissions is not None and not user.may("wato.seeall"):
         _ensure_mode_permissions(mode_permissions)
 
     mode = mode_class()
@@ -113,11 +113,11 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:
-            config.user.need_permission("wato.edit")
+            user.need_permission("wato.edit")
 
             # Even if the user has seen this mode because auf "seeall",
             # he needs an explicit access permission for doing changes:
-            if config.user.may("wato.seeall"):
+            if user.may("wato.seeall"):
                 if mode_permissions:
                     _ensure_mode_permissions(mode_permissions)
 
@@ -190,7 +190,7 @@ def _get_mode_permission_and_class(
             _("Deprecated WATO module: Implemented as function. "
               "This needs to be refactored as WatoMode child class."))
 
-    if mode_permissions is not None and not config.user.may("wato.use"):
+    if mode_permissions is not None and not user.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
     return mode_permissions, mode_class
@@ -200,7 +200,7 @@ def _ensure_mode_permissions(mode_permissions: List[PermissionName]) -> None:
     for pname in mode_permissions:
         if '.' not in pname:
             pname = "wato." + pname
-        config.user.need_permission(pname)
+        user.need_permission(pname)
 
 
 def _show_read_only_warning() -> None:

@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
 import cmk.gui.inventory as inventory
+from cmk.gui.globals import user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views import url_to_visual
@@ -29,7 +29,7 @@ class InventoryIcon(Icon):
         if (what == "host" or row.get("service_check_command", "").startswith("check_mk_active-cmk_inv!")) \
                 and inventory.has_inventory(row["host_name"]):
 
-            if not config.user.may("view.inv_host"):
+            if not user.may("view.inv_host"):
                 return
 
             return 'inventory', _("Show Hardware/Software Inventory of this host"), url_to_visual(

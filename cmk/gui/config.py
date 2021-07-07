@@ -25,17 +25,14 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
 
-# TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
-# this is a bit difficult due to our beloved circular imports. :-/ Or should we
-# do this the other way round? Anyway, we will know when the cycle has been
-# broken...
-from cmk.gui.globals import local, user
+from cmk.gui.globals import local, user, request
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKConfigError, MKAuthException
 import cmk.gui.permissions as permissions
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 import cmk.gui.plugins.config
 
@@ -908,6 +905,7 @@ def _set_user(_user: LoggedInUser) -> None:
     local.user will set the current RequestContext to _user and it will be accessible via
     cmk.gui.globals.user directly. This is imported here."""
     local.user = _user
+    local.transactions = TransactionManager(request, user)
 
 
 @contextlib.contextmanager

@@ -23,7 +23,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -366,8 +366,7 @@ class ABCNotificationsMode(ABCEventsMode):
     def _actions_allowed(self, rule):
         # In case a notification plugin does not exist anymore the permission is completely missing.
         permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
-        return (permission_name not in permissions.permission_registry or
-                config.user.may(permission_name))
+        return permission_name not in permissions.permission_registry or user.may(permission_name)
 
     def _rule_links(self, rule, nr, profilemode, userid):
         anavar = request.var("analyse", "")
@@ -438,7 +437,7 @@ class ModeNotifications(ABCNotificationsMode):
 
     def __init__(self):
         super().__init__()
-        options = config.user.load_file("notification_display_options", {})
+        options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
         self._show_backlog = options.get("show_backlog", False)
         self._show_bulks = options.get("show_bulks", False)
@@ -556,7 +555,7 @@ class ModeNotifications(ABCNotificationsMode):
         return load_notification_rules()
 
     def _save_notification_display_options(self):
-        config.user.save_file(
+        user.save_file(
             "notification_display_options", {
                 "show_user_rules": self._show_user_rules,
                 "show_backlog": self._show_backlog,
@@ -600,8 +599,8 @@ class ModeNotifications(ABCNotificationsMode):
         if current_settings.get("notification_fallback_email"):
             return True
 
-        for user in userdb.load_users(lock=False).values():
-            if user.get("fallback_contact", False):
+        for user_spec in userdb.load_users(lock=False).values():
+            if user_spec.get("fallback_contact", False):
                 return True
 
         return False
@@ -804,11 +803,11 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
             lock=transactions.is_transaction() or request.has_var("_move"))
 
         try:
-            user = self._users[self._user_id()]
+            user_spec = self._users[self._user_id()]
         except KeyError:
             raise MKUserError(None, _('The requested user does not exist'))
 
-        self._rules = user.setdefault("notification_rules", [])
+        self._rules = user_spec.setdefault("notification_rules", [])
 
     @abc.abstractmethod
     def _user_id(self):
@@ -880,7 +879,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, user: str) -> str:  # pylint: disable=arguments-differ
+    def mode_url(cls, *, user: str) -> str:  # pylint: disable=arguments-differ,redefined-outer-name
         ...
 
     @overload
@@ -959,7 +958,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
     def __init__(self):
         super().__init__()
-        config.user.need_permission("general.edit_notifications")
+        user.need_permission("general.edit_notifications")
 
     def main_menu(self):
         return mega_menu_registry.menu_user()
@@ -994,7 +993,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         )
 
     def _user_id(self):
-        return config.user.id
+        return user.id
 
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():
@@ -1468,8 +1467,8 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
             raise MKUserError(
                 None, _("The user you are trying to edit "
                         "notification rules for does not exist."))
-        user = self._users[self._user_id()]
-        return user.setdefault("notification_rules", [])
+        user_spec = self._users[self._user_id()]
+        return user_spec.setdefault("notification_rules", [])
 
     def _save_rules(self, rules: List[NotificationRule]) -> None:
         userdb.save_users(self._users)
@@ -1531,10 +1530,10 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
 
     def __init__(self):
         super().__init__()
-        config.user.need_permission("general.edit_notifications")
+        user.need_permission("general.edit_notifications")
 
     def _user_id(self):
-        return config.user.id
+        return user.id
 
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():

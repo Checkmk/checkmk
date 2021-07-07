@@ -6,12 +6,11 @@
 import time
 
 import cmk.utils.tags
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, user
 from cmk.gui.utils.urls import urlencode_vars
 
 from cmk.gui.htmllib import HTML
@@ -369,7 +368,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return "network_scan"
 
     def may_edit(self):
-        return config.user.may("wato.manage_hosts")
+        return user.may("wato.manage_hosts")
 
     def topic(self):
         return HostAttributeTopicNetworkScan
@@ -471,7 +470,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                         "choosen user. This user needs the permission to add new hosts "
                         "to this folder."),
                  choices=self._get_all_user_ids,
-                 default_value=lambda: config.user.id,
+                 default_value=lambda: user.id,
              )),
             ("translate_names", HostnameTranslation(title=_("Translate Hostnames"),)),
         ]
@@ -969,7 +968,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                                 default_value="unknown",
                             ),
                         ],
-                        default_value=lambda: config.user.id,
+                        default_value=lambda: user.id,
                     ),
                 ),
             ],

@@ -15,6 +15,7 @@ if not cmk_version.is_raw_edition():
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
 else:
     reporting = None  # type: ignore[assignment]
+from cmk.gui.globals import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.plugins.sidebar import (
@@ -47,7 +48,7 @@ class Views(SidebarSnapin):
         show_topic_menu(treename="views", menu=get_view_menu_items())
 
         links = []
-        if config.user.may("general.edit_views"):
+        if user.may("general.edit_views"):
             if config.debug:
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))

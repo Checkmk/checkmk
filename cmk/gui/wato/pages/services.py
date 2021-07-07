@@ -26,7 +26,7 @@ from cmk.gui.background_job import JobStatusStates
 from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, transactions, request, output_funnel
+from cmk.gui.globals import html, transactions, request, output_funnel, user
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -105,16 +105,16 @@ class ModeDiscovery(WatoMode):
         self._host.need_permission("read")
 
         action = DiscoveryAction.NONE
-        if config.user.may("wato.services"):
-            show_checkboxes = config.user.discovery_checkboxes
+        if user.may("wato.services"):
+            show_checkboxes = user.discovery_checkboxes
             if request.var("_scan") == "1":
                 action = DiscoveryAction.REFRESH
         else:
             show_checkboxes = False
 
-        show_parameters = config.user.parameter_column
-        show_discovered_labels = config.user.discovery_show_discovered_labels
-        show_plugin_names = config.user.discovery_show_plugin_names
+        show_parameters = user.parameter_column
+        show_discovered_labels = user.discovery_show_discovered_labels
+        show_plugin_names = user.discovery_show_plugin_names
 
         self._options = DiscoveryOptions(
             action=action,
@@ -167,7 +167,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         return "service-discovery-job"
 
     def get_request(self) -> StartDiscoveryRequest:
-        config.user.need_permission("wato.hosts")
+        user.need_permission("wato.hosts")
 
         host_name = request.get_ascii_input("host_name")
         if host_name is None:
@@ -219,7 +219,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        config.user.need_permission("wato.hosts")
+        user.need_permission("wato.hosts")
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
         html.request.del_var("request")  # Do not add this to URLs constructed later
@@ -306,8 +306,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         page_menu = service_page_menu(self._get_discovery_breadcrumb(), self._host, self._options)
         with output_funnel.plugged():
             PageMenuRenderer().show(
-                page_menu,
-                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True))
+                page_menu, hide_suggestions=not user.get_tree_state("suggestions", "all", True))
             return output_funnel.drain()
 
     def _get_discovery_breadcrumb(self) -> Breadcrumb:
@@ -387,14 +386,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         options = DiscoveryOptions(**api_request["discovery_options"])
 
         # Refuse action requests in case the user is not permitted
-        if options.action != DiscoveryAction.NONE and not config.user.may("wato.services"):
+        if options.action != DiscoveryAction.NONE and not user.may("wato.services"):
             options = options._replace(action=DiscoveryAction.NONE)
 
         if options.action != DiscoveryAction.TABULA_RASA and not \
-            (config.user.may("wato.service_discovery_to_undecided") and
-             config.user.may("wato.service_discovery_to_monitored") and
-             config.user.may("wato.service_discovery_to_ignored") and
-             config.user.may("wato.service_discovery_to_removed")):
+            (user.may("wato.service_discovery_to_undecided") and
+             user.may("wato.service_discovery_to_monitored") and
+             user.may("wato.service_discovery_to_ignored") and
+             user.may("wato.service_discovery_to_removed")):
             options = options._replace(action=DiscoveryAction.NONE)
 
         return options
@@ -421,25 +420,25 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                                                      self._options))
 
     def _update_persisted_discovery_options(self):
-        show_checkboxes = config.user.discovery_checkboxes
+        show_checkboxes = user.discovery_checkboxes
         if show_checkboxes != self._options.show_checkboxes:
-            config.user.discovery_checkboxes = self._options.show_checkboxes
+            user.discovery_checkboxes = self._options.show_checkboxes
 
-        show_parameters = config.user.parameter_column
+        show_parameters = user.parameter_column
         if show_parameters != self._options.show_parameters:
-            config.user.parameter_column = self._options.show_parameters
+            user.parameter_column = self._options.show_parameters
 
-        show_discovered_labels = config.user.discovery_show_discovered_labels
+        show_discovered_labels = user.discovery_show_discovered_labels
         if show_discovered_labels != self._options.show_discovered_labels:
-            config.user.discovery_show_discovered_labels = self._options.show_discovered_labels
+            user.discovery_show_discovered_labels = self._options.show_discovered_labels
 
-        show_plugin_names = config.user.discovery_show_plugin_names
+        show_plugin_names = user.discovery_show_plugin_names
         if show_plugin_names != self._options.show_plugin_names:
-            config.user.discovery_show_plugin_names = self._options.show_plugin_names
+            user.discovery_show_plugin_names = self._options.show_plugin_names
 
     def _handle_action(self, discovery_result: DiscoveryResult,
                        api_request: dict) -> DiscoveryResult:
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         if self._options.action in [
                 DiscoveryAction.UPDATE_HOST_LABELS,
@@ -690,7 +689,7 @@ class DiscoveryPageRenderer:
         if not discovery_result:
             return
 
-        if not config.user.may("wato.services"):
+        if not user.may("wato.services"):
             return
 
         undecided_services = 0
@@ -751,7 +750,7 @@ class DiscoveryPageRenderer:
         )
 
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
-        if not config.user.may("wato.services"):
+        if not user.may("wato.services"):
             return
 
         fixall = 0
@@ -769,14 +768,14 @@ class DiscoveryPageRenderer:
         disable_page_menu_entry("stop")
         enable_page_menu_entry("refresh")
 
-        if (fixall >= 1 and config.user.may("wato.service_discovery_to_monitored") and
-                config.user.may("wato.service_discovery_to_removed")):
+        if (fixall >= 1 and user.may("wato.service_discovery_to_monitored") and
+                user.may("wato.service_discovery_to_removed")):
             enable_page_menu_entry("fix_all")
 
-        if (already_has_services and config.user.may("wato.service_discovery_to_undecided") and
-                config.user.may("wato.service_discovery_to_monitored") and
-                config.user.may("wato.service_discovery_to_ignored") and
-                config.user.may("wato.service_discovery_to_removed")):
+        if (already_has_services and user.may("wato.service_discovery_to_undecided") and
+                user.may("wato.service_discovery_to_monitored") and
+                user.may("wato.service_discovery_to_ignored") and
+                user.may("wato.service_discovery_to_removed")):
             enable_page_menu_entry("tabula_rasa")
 
         if discovery_result.host_labels:
@@ -789,31 +788,31 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry("show_plugin_names")
 
     def _toggle_bulk_action_page_menu_entries(self, discovery_result, table_source):
-        if not config.user.may("wato.services"):
+        if not user.may("wato.services"):
             return
 
         if table_source == DiscoveryState.MONITORED:
-            if config.user.may("wato.service_discovery_to_undecided"):
+            if user.may("wato.service_discovery_to_undecided"):
                 self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
-            if config.user.may("wato.service_discovery_to_ignored"):
+            if user.may("wato.service_discovery_to_ignored"):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.IGNORED:
-            if config.user.may("wato.service_discovery_to_monitored"):
+            if user.may("wato.service_discovery_to_monitored"):
                 self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if config.user.may("wato.service_discovery_to_undecided"):
+            if user.may("wato.service_discovery_to_undecided"):
                 self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
 
         elif table_source == DiscoveryState.VANISHED:
-            if config.user.may("wato.service_discovery_to_removed"):
+            if user.may("wato.service_discovery_to_removed"):
                 self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
-            if config.user.may("wato.service_discovery_to_ignored"):
+            if user.may("wato.service_discovery_to_ignored"):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.UNDECIDED:
-            if config.user.may("wato.service_discovery_to_monitored"):
+            if user.may("wato.service_discovery_to_monitored"):
                 self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if config.user.may("wato.service_discovery_to_ignored"):
+            if user.may("wato.service_discovery_to_ignored"):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
@@ -929,7 +928,7 @@ class DiscoveryPageRenderer:
 
     def _show_bulk_checkbox(self, table, discovery_result, api_request, check_type, item,
                             show_bulk_actions):
-        if not self._options.show_checkboxes or not config.user.may("wato.services"):
+        if not self._options.show_checkboxes or not user.may("wato.services"):
             return
 
         if not show_bulk_actions:
@@ -954,7 +953,7 @@ class DiscoveryPageRenderer:
 
     def _show_actions(self, table, discovery_result, check):
         table.cell(css="buttons")
-        if not config.user.may("wato.services"):
+        if not user.may("wato.services"):
             html.empty_icon()
             html.empty_icon()
             html.empty_icon()
@@ -971,23 +970,23 @@ class DiscoveryPageRenderer:
 
         num_buttons = 0
         if table_source == DiscoveryState.MONITORED:
-            if config.user.may("wato.service_discovery_to_undecided"):
+            if user.may("wato.service_discovery_to_undecided"):
                 self._icon_button(table_source, checkbox_name, DiscoveryState.UNDECIDED,
                                   "undecided", button_classes)
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
-               and config.user.may("wato.service_discovery_to_ignored"):
+               and user.may("wato.service_discovery_to_ignored"):
                 self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
                                   button_classes)
                 num_buttons += 1
 
         elif table_source == DiscoveryState.IGNORED:
             if may_edit_ruleset("ignored_services"):
-                if config.user.may("wato.service_discovery_to_monitored"):
+                if user.may("wato.service_discovery_to_monitored"):
                     self._icon_button(table_source, checkbox_name, DiscoveryState.MONITORED,
                                       "monitored", button_classes)
                     num_buttons += 1
-                if config.user.may("wato.service_discovery_to_ignored"):
+                if user.may("wato.service_discovery_to_ignored"):
                     self._icon_button(table_source, checkbox_name, DiscoveryState.UNDECIDED,
                                       "undecided", button_classes)
                     num_buttons += 1
@@ -995,22 +994,22 @@ class DiscoveryPageRenderer:
                 num_buttons += 1
 
         elif table_source == DiscoveryState.VANISHED:
-            if config.user.may("wato.service_discovery_to_removed"):
+            if user.may("wato.service_discovery_to_removed"):
                 self._icon_button_removed(table_source, checkbox_name, button_classes)
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
-               and config.user.may("wato.service_discovery_to_ignored"):
+               and user.may("wato.service_discovery_to_ignored"):
                 self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
                                   button_classes)
                 num_buttons += 1
 
         elif table_source == DiscoveryState.UNDECIDED:
-            if config.user.may("wato.service_discovery_to_monitored"):
+            if user.may("wato.service_discovery_to_monitored"):
                 self._icon_button(table_source, checkbox_name, DiscoveryState.MONITORED,
                                   "monitored", button_classes)
                 num_buttons += 1
             if may_edit_ruleset("ignored_services") \
-               and config.user.may("wato.service_discovery_to_ignored"):
+               and user.may("wato.service_discovery_to_ignored"):
                 self._icon_button(table_source, checkbox_name, DiscoveryState.IGNORED, "disabled",
                                   button_classes)
                 num_buttons += 1
@@ -1021,7 +1020,7 @@ class DiscoveryPageRenderer:
 
         if table_source not in [DiscoveryState.UNDECIDED,
                                 DiscoveryState.IGNORED] \
-           and config.user.may('wato.rulesets'):
+           and user.may('wato.rulesets'):
             self._rulesets_button(descr)
             self._check_parameters_button(table_source, check_type, checkgroup, item, descr)
             num_buttons += 2
@@ -1363,7 +1362,7 @@ def _page_menu_host_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
                 watolib.folder_preserving_link([("mode", "diag_host"), ("host", host.name())])),
         )
 
-    if config.user.may('wato.rulesets'):
+    if user.may('wato.rulesets'):
         yield PageMenuEntry(
             title=_("Effective parameters"),
             icon_name="rulesets",
@@ -1374,7 +1373,7 @@ def _page_menu_host_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
 
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
 
-    if config.user.may("wato.auditlog"):
+    if user.may("wato.auditlog"):
         yield PageMenuEntry(
             title=_("Audit log"),
             icon_name="auditlog",
@@ -1383,7 +1382,7 @@ def _page_menu_host_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
-    if not config.user.may('wato.rulesets'):
+    if not user.may('wato.rulesets'):
         return
 
     if host.is_cluster():

@@ -11,7 +11,6 @@ from typing import List, Iterator
 
 import cmk.utils.render as render
 
-import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
 from cmk.gui.htmllib import HTML
@@ -37,6 +36,7 @@ from cmk.gui.globals import (
     transactions,
     response,
     output_funnel,
+    user,
 )
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
@@ -120,7 +120,7 @@ class ModeAuditLog(WatoMode):
         return menu
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
-        if config.user.may("wato.sites"):
+        if user.may("wato.sites"):
             yield PageMenuEntry(
                 title=_("View changes"),
                 icon_name="activate",
@@ -131,13 +131,13 @@ class ModeAuditLog(WatoMode):
         if not self._log_exists():
             return
 
-        if not config.user.may("wato.auditlog"):
+        if not user.may("wato.auditlog"):
             return
 
-        if not config.user.may("wato.edit"):
+        if not user.may("wato.edit"):
             return
 
-        if config.user.may("wato.clear_auditlog"):
+        if user.may("wato.clear_auditlog"):
             yield PageMenuEntry(
                 title=_("Clear log"),
                 icon_name="delete",
@@ -152,13 +152,13 @@ class ModeAuditLog(WatoMode):
         if not self._log_exists():
             return
 
-        if not config.user.may("wato.auditlog"):
+        if not user.may("wato.auditlog"):
             return
 
-        if not config.user.may("wato.edit"):
+        if not user.may("wato.edit"):
             return
 
-        if not config.user.may("general.csv_export"):
+        if not user.may("general.csv_export"):
             return
 
         yield PageMenuEntry(
@@ -213,9 +213,9 @@ class ModeAuditLog(WatoMode):
 
     def action(self) -> ActionResult:
         if request.var("_action") == "clear":
-            config.user.need_permission("wato.auditlog")
-            config.user.need_permission("wato.clear_auditlog")
-            config.user.need_permission("wato.edit")
+            user.need_permission("wato.auditlog")
+            user.need_permission("wato.clear_auditlog")
+            user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
         return None
 
@@ -225,7 +225,7 @@ class ModeAuditLog(WatoMode):
         audit = self._parse_audit_log()
 
         if request.var("_action") == "csv":
-            config.user.need_permission("wato.auditlog")
+            user.need_permission("wato.auditlog")
             return self._export_audit_log(audit)
 
         if not audit:
@@ -283,8 +283,8 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("Time"),
                            html.render_nobr(render.date_and_time(float(entry.time))),
                            css="narrow")
-                user = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
-                table.cell(_("User"), user, css="nobreak narrow")
+                user_txt = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
+                table.cell(_("User"), user_txt, css="nobreak narrow")
 
                 table.cell(_("Object type"),
                            entry.object_ref.object_type.name if entry.object_ref else "",

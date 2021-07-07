@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui import config
+from cmk.gui.globals import user
 from cmk.gui.plugins.views.utils import (
     SorterSpec,
     replace_action_url_macros,
@@ -61,7 +61,7 @@ def test_replace_action_url_macros(
     result,
 ):
     monkeypatch.setattr(
-        config.user,
+        user,
         "id",
         "user",
     )

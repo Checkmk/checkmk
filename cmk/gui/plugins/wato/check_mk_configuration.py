@@ -16,7 +16,7 @@ import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.globals import request
+from cmk.gui.globals import request, user
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -3094,7 +3094,7 @@ def _host_check_commands_host_check_command_choices() -> List[CascadingDropdownC
          )),
     ]
 
-    if config.user.may('wato.add_or_modify_executables'):
+    if user.may('wato.add_or_modify_executables'):
         choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
 
     return choices

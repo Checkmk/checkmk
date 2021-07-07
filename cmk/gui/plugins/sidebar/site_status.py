@@ -7,7 +7,7 @@
 import json
 
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, response
+from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -94,7 +94,7 @@ class SiteStatus(SidebarSnapin):
     def _ajax_switch_site(self):
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
-        if not config.user.may("sidesnap.sitestatus"):
+        if not user.may("sidesnap.sitestatus"):
             return
 
         if not transactions.check_transaction():
@@ -108,8 +108,8 @@ class SiteStatus(SidebarSnapin):
                     continue
 
                 if onoff == "on":
-                    config.user.enable_site(sitename)
+                    user.enable_site(sitename)
                 else:
-                    config.user.disable_site(sitename)
+                    user.disable_site(sitename)
 
-            config.user.save_site_config()
+            user.save_site_config()

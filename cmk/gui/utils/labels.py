@@ -21,8 +21,7 @@ from livestatus import (
     quote_dict,
     SiteId,
 )
-from cmk.gui.config import user
-from cmk.gui.globals import g
+from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 from cmk.utils.redis import (
     get_redis_client,

@@ -9,8 +9,7 @@ import json
 from contextlib import contextmanager
 from typing import Union, Optional, Iterator
 
-from cmk.gui.globals import html, theme
-from cmk.gui import config
+from cmk.gui.globals import html, theme, user
 from cmk.gui.utils.html import HTML
 
 from ._tag_rendering import HTMLContent
@@ -38,7 +37,7 @@ def foldable_container(
     title_target: Optional[str] = None,
     padding: int = 15,
 ) -> Iterator[bool]:
-    isopen = config.user.get_tree_state(treename, id_, isopen)
+    isopen = user.get_tree_state(treename, id_, isopen)
     onclick = foldable_container_onclick(treename, id_, fetch_url)
     img_id = foldable_container_img_id(treename, id_)
     container_id = foldable_container_id(treename, id_)

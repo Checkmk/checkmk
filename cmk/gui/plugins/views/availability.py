@@ -39,7 +39,7 @@ from cmk.gui.table import table_element, Table
 
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, response, output_funnel
+from cmk.gui.globals import html, request, transactions, user_errors, response, output_funnel, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
 from cmk.gui.utils.escaping import escape_html_permissive
@@ -110,7 +110,7 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.
-    avoptions.update(config.user.load_file("avoptions", {}))
+    avoptions.update(user.load_file("avoptions", {}))
 
     form_name = request.get_ascii_input("filled_in")
     if form_name == "avoptions_display":
@@ -139,14 +139,14 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
         avoptions["logrow_limit"] = 0
 
     if html.form_submitted():
-        config.user.save_file("avoptions", avoptions)
+        user.save_file("avoptions", avoptions)
 
     return avoptions
 
 
 def _handle_availability_option_reset() -> None:
     if request.var("_reset"):
-        config.user.save_file("avoptions", {})
+        user.save_file("avoptions", {})
         request.del_vars("avo_")
         request.del_var("avoptions")
 
@@ -216,7 +216,7 @@ def _show_availability_options_controls() -> None:
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
 def show_availability_page(view: View, filterheaders: FilterHeaders) -> None:
-    config.user.need_permission("general.see_availability")
+    user.need_permission("general.see_availability")
 
     # We make reports about hosts, services or BI aggregates
     what: AVObjectType
@@ -304,7 +304,7 @@ def show_availability_page(view: View, filterheaders: FilterHeaders) -> None:
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
-    if html.output_format == "csv_export" and config.user.may("general.csv_export"):
+    if html.output_format == "csv_export" and user.may("general.csv_export"):
         _output_csv(what, av_mode, av_data, avoptions)
         return
 
@@ -471,7 +471,7 @@ def _page_menu_entries_av_mode(what: AVObjectType, av_mode: AVMode, av_object: A
 
 
 def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
-    if not config.user.may("general.csv_export"):
+    if not user.may("general.csv_export"):
         return
 
     yield PageMenuEntry(
@@ -485,7 +485,7 @@ def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
     if not config.reporting_available():
         return
 
-    if not config.user.may("general.reporting") or not config.user.may("general.instant_reports"):
+    if not user.may("general.reporting") or not user.may("general.instant_reports"):
         return
 
     yield PageMenuEntry(
@@ -782,7 +782,7 @@ def _get_bi_availability(avoptions, aggr_rows, timewarp):
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
-    config.user.need_permission("general.see_availability")
+    user.need_permission("general.see_availability")
 
     av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
 
@@ -877,12 +877,11 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                     "aggr_group": request.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(
-                    row,
-                    omit_root=False,
-                    expansion_level=config.user.bi_expansion_level,
-                    only_problems=False,
-                    lazy=False)
+                renderer = bi.FoldableTreeRendererTree(row,
+                                                       omit_root=False,
+                                                       expansion_level=user.bi_expansion_level,
+                                                       only_problems=False,
+                                                       lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with output_funnel.plugged():
@@ -951,7 +950,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
                                   makeuri(request, [("_unset_logrow_limit", "1")]))
             html.show_warning(text)
 
-        if html.output_format == "csv_export" and config.user.may("general.csv_export"):
+        if html.output_format == "csv_export" and user.may("general.csv_export"):
             _output_csv("bi", av_mode, av_data, avoptions)
             return
 
@@ -1128,7 +1127,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
             del value["site"]
             del value["host"]
             value["date"] = time.time()
-            value["author"] = config.user.id
+            value["author"] = user.id
             availability.update_annotations(site_host_svc, value, replace_existing=annotation)
             request.del_var("filled_in")
             return False

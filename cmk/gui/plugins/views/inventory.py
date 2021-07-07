@@ -18,14 +18,21 @@ from livestatus import SiteId, LivestatusResponse, OnlySites
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
-from cmk.utils.structured_data import StructuredDataNode, Table, Attributes
+from cmk.utils.structured_data import (
+    SDRawPath,
+    SDPath,
+    SDKeys,
+    StructuredDataNode,
+    Table,
+    Attributes,
+)
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
-from cmk.gui.inventory import RawInventoryPath, InventoryPath, InventoryData, InventoryDeltaData
+from cmk.gui.inventory import InventoryData, InventoryDeltaData
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, user_errors, output_funnel
@@ -81,7 +88,7 @@ PaintFunction = Callable[[Any], PaintResult]
 
 
 def paint_host_inventory_tree(row: Row,
-                              invpath: RawInventoryPath = ".",
+                              invpath: SDRawPath = ".",
                               column: str = "host_inventory") -> CellSpec:
     hostname = row.get("host_name")
     assert isinstance(hostname, str)
@@ -128,7 +135,7 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
 
 def _paint_host_inventory_tree_children(
     struct_tree: StructuredDataNode,
-    parsed_path: InventoryPath,
+    parsed_path: SDPath,
     tree_renderer: NodeRenderer,
 ) -> CellSpec:
     node = struct_tree.get_node(parsed_path) if parsed_path else struct_tree
@@ -143,10 +150,10 @@ def _paint_host_inventory_tree_children(
 
 def _paint_host_inventory_tree_value(
     struct_tree: StructuredDataNode,
-    parsed_path: InventoryPath,
+    parsed_path: SDPath,
     tree_renderer: NodeRenderer,
-    invpath: RawInventoryPath,
-    attribute_keys: inventory.AttributesKeys,
+    invpath: SDRawPath,
+    attribute_keys: SDKeys,
 ) -> CellSpec:
     child: Optional[Union[Table, Attributes]]
     if attribute_keys == []:
@@ -201,7 +208,7 @@ def _inv_filter_info():
 
 
 def _declare_inv_column(
-    invpath: RawInventoryPath,
+    invpath: SDRawPath,
     datatype: str,
     title: str,
     short: Optional[str] = None,
@@ -668,7 +675,7 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_display_hint(invpath: RawInventoryPath) -> InventoryHintSpec:
+def _inv_display_hint(invpath: SDRawPath) -> InventoryHintSpec:
     """Generic access function to display hints
     Don't use other methods to access the hints!"""
     hint_id = _find_display_hint_id(invpath)
@@ -677,7 +684,7 @@ def _inv_display_hint(invpath: RawInventoryPath) -> InventoryHintSpec:
     return _convert_display_hint(inventory_displayhints.get(hint_id, {}))
 
 
-def _find_display_hint_id(invpath: RawInventoryPath) -> Optional[str]:
+def _find_display_hint_id(invpath: SDRawPath) -> Optional[str]:
     """Looks up the display hint for the given inventory path.
 
     It returns either the ID of the display hint matching the given invpath
@@ -742,7 +749,7 @@ def _convert_display_hint(hint: InventoryHintSpec) -> InventoryHintSpec:
 
 
 def _inv_titleinfo(
-    invpath: RawInventoryPath,
+    invpath: SDRawPath,
     key: Optional[str] = None,
 ) -> Tuple[Optional[str], str]:
     hint = _inv_display_hint(invpath)
@@ -757,7 +764,7 @@ def _inv_titleinfo(
     return icon, title
 
 
-def _inv_titleinfo_long(invpath: RawInventoryPath) -> str:
+def _inv_titleinfo_long(invpath: SDRawPath) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     _icon, last_title = _inv_titleinfo(invpath)
     parent = inventory.parent_path(invpath)
@@ -799,7 +806,7 @@ def declare_inventory_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _inv_find_subtable_columns(invpath: RawInventoryPath) -> List[str]:
+def _inv_find_subtable_columns(invpath: SDRawPath) -> List[str]:
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -838,7 +845,7 @@ def _decorate_sort_func(f):
     return wrapper
 
 
-def _declare_invtable_column(infoname: str, invpath: RawInventoryPath, topic: str, name: str,
+def _declare_invtable_column(infoname: str, invpath: SDRawPath, topic: str, name: str,
                              column: str) -> None:
     sub_invpath = invpath + "*." + name
     hint = inventory_displayhints.get(sub_invpath, {})
@@ -889,7 +896,7 @@ def _declare_invtable_column(infoname: str, invpath: RawInventoryPath, topic: st
 
 
 class RowTableInventory(ABCRowTable):
-    def __init__(self, info_name: str, inventory_path: RawInventoryPath) -> None:
+    def __init__(self, info_name: str, inventory_path: SDRawPath) -> None:
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
@@ -933,7 +940,7 @@ class ABCDataSourceInventory(ABCDataSource):
 # One master function that does all
 def declare_invtable_view(
     infoname: str,
-    invpath: RawInventoryPath,
+    invpath: SDRawPath,
     title_singular: str,
     title_plural: str,
 ) -> None:
@@ -973,7 +980,7 @@ def declare_invtable_view(
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
-        sources: List[Tuple[str, RawInventoryPath]],
+        sources: List[Tuple[str, SDRawPath]],
         match_by: List[str],
         errors: List[str],
     ) -> None:
@@ -1105,7 +1112,7 @@ def _declare_views(
     title_plural: str,
     painters: List[Tuple[str, str, str]],
     filters: List[FilterName],
-    invpaths: List[RawInventoryPath],
+    invpaths: List[SDRawPath],
 ) -> None:
     is_show_more = True
     if len(invpaths) == 1:
@@ -1756,7 +1763,7 @@ class NodeRenderer:
         self,
         site_id: SiteId,
         hostname: HostName,
-        invpath: RawInventoryPath,
+        invpath: SDRawPath,
         tree_id: str = "",
         show_internal_tree_paths: bool = False,
     ) -> None:
@@ -1803,7 +1810,7 @@ class NodeRenderer:
             if is_open:
                 node.show(self)
 
-    def _replace_placeholders(self, raw_title: str, invpath: RawInventoryPath) -> str:
+    def _replace_placeholders(self, raw_title: str, invpath: SDRawPath) -> str:
         hint_id = _find_display_hint_id(invpath)
         if hint_id is None:
             return raw_title
@@ -1877,7 +1884,7 @@ class NodeRenderer:
     def _show_table_data(
         self,
         titles: List[Tuple[str, str]],
-        invpath: RawInventoryPath,
+        invpath: SDRawPath,
         data: List[Dict],
     ) -> None:
         # TODO: Use table.open_table() below.
@@ -1944,7 +1951,7 @@ class NodeRenderer:
 
     #   ---helper---------------------------------------------------------------
 
-    def _get_raw_path(self, path: Optional[InventoryPath]) -> str:
+    def _get_raw_path(self, path: Optional[SDPath]) -> str:
         raw_path = ".".join(map(str, path)) if path else self._invpath
         return raw_path.strip(".")
 

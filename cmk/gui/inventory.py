@@ -19,6 +19,9 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import (
+    SDRawPath,
+    SDPath,
+    SDKeys,
     StructuredDataNode,
     load_tree_from,
     make_filter,
@@ -50,17 +53,12 @@ from cmk.gui.valuespec import ValueSpec, TextInput
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
-RawInventoryPath = str
-InventoryPath = List[str]
-# TODO Cleanup
-AttributesKeys = List[str]
 # TODO: Can we be more specific on the return value type?
 InventoryData = Any
 InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
 
 
-def get_inventory_data(inventory_tree: StructuredDataNode,
-                       tree_path: RawInventoryPath) -> InventoryData:
+def get_inventory_data(inventory_tree: StructuredDataNode, tree_path: SDRawPath) -> InventoryData:
     invdata = None
     parsed_path, attribute_keys = parse_tree_path(tree_path)
     if attribute_keys == []:
@@ -76,7 +74,7 @@ def get_inventory_data(inventory_tree: StructuredDataNode,
     return invdata
 
 
-def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional[AttributesKeys]]:
+def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
     # raw_path may look like:
     # .                          (ROOT) => path = []                            key = None
     # .hardware.                 (dict) => path = ["hardware"],                 key = None
@@ -88,7 +86,7 @@ def parse_tree_path(raw_path: RawInventoryPath) -> Tuple[InventoryPath, Optional
         return [], None
 
     path: List[str]
-    attribute_keys: Optional[AttributesKeys]
+    attribute_keys: Optional[SDKeys]
 
     if raw_path.endswith(":"):
         path = raw_path[:-1].strip(".").split(".")
@@ -255,7 +253,7 @@ def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> 
         "%s/%s" % (hostname, timestamp)).relative_to(cmk.utils.paths.omd_root)
 
 
-def parent_path(invpath: RawInventoryPath) -> Optional[RawInventoryPath]:
+def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
     """Gets the parent path by dropping the last component"""
     if invpath == ".":
         return None  # No parent

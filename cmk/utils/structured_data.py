@@ -43,26 +43,18 @@ from cmk.utils.exceptions import MKGeneralException
 SDRawPath = str
 SDRawTree = Dict
 
+SDEdge = str
+SDPath = List[SDEdge]
+
 SDKey = str
 SDKeys = List[SDKey]
-# SDValue needs only to support __eq__
-SDValue = Any
-
+SDValue = Any  # needs only to support __eq__
 SDAttributes = Dict[SDKey, SDValue]
-
-#SDTableRowIdent = str
-#SDTable = Dict[SDTableRowIdent, SDAttributes]
 SDTable = List[SDAttributes]
-
-# TODO Cleanup int: May be an indexed node
-SDNodeName = str
-SDPath = List[SDNodeName]
-
-SDNodePath = Tuple[SDNodeName, ...]
-SDNodes = Dict[SDNodeName, "StructuredDataNode"]
+SDNodePath = Tuple[SDEdge, ...]
+SDNodes = Dict[SDEdge, "StructuredDataNode"]
 
 SDEncodeAs = Callable
-
 SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
 
 
@@ -265,7 +257,7 @@ class StructuredDataNode:
         node.set_path(self.path + (edge,))
         return node.setdefault_node(path[1:])
 
-    def add_node(self, edge: SDNodeName, node: "StructuredDataNode") -> "StructuredDataNode":
+    def add_node(self, edge: SDEdge, node: "StructuredDataNode") -> "StructuredDataNode":
         the_node = self._nodes.setdefault(edge, StructuredDataNode())
         the_node.set_path(self.path + (edge,))
         the_node.merge_with(node)
@@ -277,7 +269,7 @@ class StructuredDataNode:
     def add_table(self, table: SDTable) -> None:
         self.table.add_table(table)
 
-    def has_edge(self, edge: SDNodeName) -> bool:
+    def has_edge(self, edge: SDEdge) -> bool:
         return bool(self._nodes.get(edge))
 
     def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:

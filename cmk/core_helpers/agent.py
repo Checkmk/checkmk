@@ -111,7 +111,7 @@ class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled | self.agent_disabled,
+            disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
@@ -125,7 +125,7 @@ class NoCacheFactory(FileCacheFactory[AgentRawData]):
             self.hostname,
             base_path=self.base_path,
             max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            disabled=self.disabled | self.agent_disabled,
+            disabled=self.disabled,
             use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )

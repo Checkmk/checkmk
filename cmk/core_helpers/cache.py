@@ -378,8 +378,6 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     #
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False
-
-    agent_disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
     # It's used to 'transport' caching opt between modules, eg:

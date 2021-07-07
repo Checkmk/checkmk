@@ -203,6 +203,11 @@ def clear_config_caches_ip_lookup(monkeypatch):
     _runtime_cache.clear()
 
 
+@pytest.fixture(autouse=True, scope="function")
+def clear_ip_lookup_cache_file(monkeypatch):
+    ip_lookup.IPLookupCache.PATH.unlink(missing_ok=True)
+
+
 class TestIPLookupCacheSerialzer:
     def test_simple_cache(self):
         s = ip_lookup.IPLookupCacheSerializer()
@@ -215,8 +220,6 @@ class TestIPLookupCache:
         assert isinstance(repr(ip_lookup.IPLookupCache({})), str)
 
     def test_load_invalid_syntax(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "invalid"
-
         with ip_lookup.IPLookupCache.PATH.open(mode="w", encoding="utf-8") as f:
             f.write(u"{...")
 
@@ -225,17 +228,15 @@ class TestIPLookupCache:
         assert not cache
 
     def test_update_empty_file(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "empty"
         cache_id = "host1", socket.AF_INET
         ip_lookup_cache = ip_lookup.IPLookupCache({})
         ip_lookup_cache[cache_id] = "127.0.0.1"
 
-        ip_lookup_cache = ip_lookup.IPLookupCache({})
-        ip_lookup_cache.load_persisted()
-        assert ip_lookup_cache[cache_id] == "127.0.0.1"
+        new_cache_instance = ip_lookup.IPLookupCache({})
+        new_cache_instance.load_persisted()
+        assert new_cache_instance[cache_id] == "127.0.0.1"
 
     def test_update_existing_file(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "update_file"
         cache_id1 = "host1", socket.AF_INET
         cache_id2 = "host2", socket.AF_INET
 
@@ -243,13 +244,12 @@ class TestIPLookupCache:
         ip_lookup_cache[cache_id1] = "127.0.0.1"
         ip_lookup_cache[cache_id2] = "127.0.0.2"
 
-        cache = ip_lookup.IPLookupCache({})
-        cache.load_persisted()
-        assert cache[cache_id1] == "127.0.0.1"
-        assert cache[cache_id2] == "127.0.0.2"
+        new_cache_instance = ip_lookup.IPLookupCache({})
+        new_cache_instance.load_persisted()
+        assert new_cache_instance[cache_id1] == "127.0.0.1"
+        assert new_cache_instance[cache_id2] == "127.0.0.2"
 
     def test_update_existing_entry(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "update_file"
         cache_id1 = "host1", socket.AF_INET
         cache_id2 = "host2", socket.AF_INET
 
@@ -267,18 +267,21 @@ class TestIPLookupCache:
         assert new_cache_instance[cache_id2] == "2"
 
     def test_update_without_persistence(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "notwritten"
         cache_id1 = "host1", socket.AF_INET
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
-        ip_lookup_cache.persist_on_update = False
-        ip_lookup_cache[cache_id1] = "127.0.0.1"
+        ip_lookup_cache[cache_id1] = "0.0.0.0"
+
+        with ip_lookup_cache.persisting_disabled():
+            ip_lookup_cache[cache_id1] = "127.0.0.1"
 
         assert ip_lookup_cache[cache_id1] == "127.0.0.1"
-        assert not ip_lookup.IPLookupCache.PATH.exists()
+
+        new_cache_instance = ip_lookup.IPLookupCache({})
+        new_cache_instance.load_persisted()
+        assert new_cache_instance[cache_id1] == "0.0.0.0"
 
     def test_load_legacy(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "legacy"
         cache_id1 = "host1", socket.AF_INET
         cache_id2 = "host2", socket.AF_INET
 
@@ -291,8 +294,6 @@ class TestIPLookupCache:
         assert cache[cache_id2] == "127.0.0.2"
 
     def test_clear(self, tmp_path):
-        ip_lookup.IPLookupCache.PATH = tmp_path / "clear"
-
         ip_lookup.IPLookupCache({("host1", socket.AF_INET): "127.0.0.1"}).save_persisted()
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
@@ -301,7 +302,11 @@ class TestIPLookupCache:
 
         ip_lookup_cache.clear()
 
-        assert len(ip_lookup_cache) == 0
+        assert not ip_lookup_cache
+
+        ip_lookup_cache = ip_lookup.IPLookupCache({})
+        ip_lookup_cache.load_persisted()
+        assert not ip_lookup_cache
 
 
 def test_update_dns_cache(monkeypatch):

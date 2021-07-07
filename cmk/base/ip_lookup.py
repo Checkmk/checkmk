@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import contextmanager
 from pathlib import Path
 import socket
 from typing import (
     Any,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -246,8 +248,17 @@ class IPLookupCache:
 
     def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
         self._cache = cache
-        self.persist_on_update = True
+        self._persist_on_update = True
         self._store = store.ObjectStore(self.PATH, serializer=IPLookupCacheSerializer())
+
+    @contextmanager
+    def persisting_disabled(self) -> Iterator[None]:
+        old_persist_flag = self._persist_on_update
+        self._persist_on_update = False
+        try:
+            yield
+        finally:
+            self._persist_on_update = old_persist_flag
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._cache)
@@ -296,7 +307,7 @@ class IPLookupCache:
         The cache can only be cleaned up with the "Update DNS cache" option in WATO
         or the "cmk --update-dns-cache" call that both call update_dns_cache().
         """
-        if not self.persist_on_update:
+        if not self._persist_on_update:
             self._cache[cache_id] = ipa
             return
 
@@ -311,7 +322,7 @@ class IPLookupCache:
     def clear(self) -> None:
         """Clear the persisted AND in memory cache"""
         self._cache.clear()
-        self._store.write_obj(self._cache)
+        self.save_persisted()
 
 
 def _get_ip_lookup_cache() -> IPLookupCache:
@@ -339,42 +350,43 @@ def update_dns_cache(
     failed = []
 
     ip_lookup_cache = _get_ip_lookup_cache()
-    ip_lookup_cache.persist_on_update = False
 
-    console.verbose("Cleaning up existing DNS cache...\n")
-    ip_lookup_cache.clear()
+    with ip_lookup_cache.persisting_disabled():
 
-    console.verbose("Updating DNS cache...\n")
-    for host_config, family in _annotate_family(host_configs):
-        console.verbose(f"{host_config.hostname} ({family})...")
-        try:
-            ip = lookup_ip_address(
-                host_name=host_config.hostname,
-                family=family,
-                configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET else
-                                       configured_ipv4_addresses).get(host_config.hostname),
-                simulation_mode=simulation_mode,
-                is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
-                override_dns=override_dns,
-                is_dyndns_host=host_config.is_dyndns_host,
-                is_no_ip_host=host_config.is_no_ip_host,
-                force_file_cache_renewal=True,  # it's cleared anyway
-            )
-            console.verbose(f"{ip}\n")
+        console.verbose("Cleaning up existing DNS cache...\n")
+        ip_lookup_cache.clear()
 
-        except (MKTerminate, MKTimeout):
-            # We should be more specific with the exception handler below, then we
-            # could drop this special handling here
-            raise
+        console.verbose("Updating DNS cache...\n")
+        for host_config, family in _annotate_family(host_configs):
+            console.verbose(f"{host_config.hostname} ({family})...")
+            try:
+                ip = lookup_ip_address(
+                    host_name=host_config.hostname,
+                    family=family,
+                    configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET
+                                           else configured_ipv4_addresses).get(
+                                               host_config.hostname),
+                    simulation_mode=simulation_mode,
+                    is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
+                    override_dns=override_dns,
+                    is_dyndns_host=host_config.is_dyndns_host,
+                    is_no_ip_host=host_config.is_no_ip_host,
+                    force_file_cache_renewal=True,  # it's cleared anyway
+                )
+                console.verbose(f"{ip}\n")
 
-        except Exception as e:
-            failed.append(host_config.hostname)
-            console.verbose("lookup failed: %s\n" % e)
-            if cmk.utils.debug.enabled():
+            except (MKTerminate, MKTimeout):
+                # We should be more specific with the exception handler below, then we
+                # could drop this special handling here
                 raise
-            continue
 
-    ip_lookup_cache.persist_on_update = True
+            except Exception as e:
+                failed.append(host_config.hostname)
+                console.verbose("lookup failed: %s\n" % e)
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
+
     ip_lookup_cache.save_persisted()
 
     return len(ip_lookup_cache), failed

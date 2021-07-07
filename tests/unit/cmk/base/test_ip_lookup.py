@@ -176,6 +176,23 @@ def test_cached_dns_lookup_raises_once(monkeypatch):
     ) is None
 
 
+def test_filecache_beats_failing_lookup(monkeypatch):
+
+    config_ipcache = _empty()
+    persisted_cache = {("test_host", socket.AF_INET): "3.1.4.1"}
+
+    patch_config_cache(monkeypatch, config_ipcache)
+    patch_persisted_cache(monkeypatch, persisted_cache)
+    patch_actual_lookup(monkeypatch, {})
+
+    assert ip_lookup.cached_dns_lookup(
+        "test_host",
+        family=socket.AF_INET,
+        force_file_cache_renewal=True,
+    ) == "3.1.4.1"
+    assert persisted_cache[("test_host", socket.AF_INET)]
+
+
 # TODO: Can be removed when this is not executed through a symlink anymore.
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")

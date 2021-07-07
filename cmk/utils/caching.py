@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from functools import lru_cache, wraps
+from functools import wraps, lru_cache
 
 
 # Used as decorator wrapper for functools.lru_cache in order to bind the cache to an instance method

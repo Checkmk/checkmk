@@ -42,11 +42,6 @@ node (NODE) {
                   buildscripts/scripts/stages.yml
            """);
         def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
-
-        println(">>> stage configuration")
-        sh("cat ${RESULTS}/stages.json");
-        println("<<< stage configuration")
-
         stage_info.STAGES.each { item ->
             test_gerrit_helper.create_stage(item);
         }

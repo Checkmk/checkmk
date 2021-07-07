@@ -587,7 +587,7 @@ FilterTableTest = namedtuple("FilterTableTest", [
 ])
 
 
-def get_inventory_data_patch(inventory, path):
+def get_inventory_table_patch(inventory, path):
     return inventory[path]
 
 
@@ -1056,7 +1056,8 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)
+    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_table", get_inventory_table_patch)
+    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", get_inventory_table_patch)
 
     # Needed for FilterAggrServiceUsed test
     def is_part_of_aggregation_patch(host, service):

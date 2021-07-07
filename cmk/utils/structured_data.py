@@ -48,6 +48,7 @@ SDPath = List[SDEdge]
 
 SDKey = str
 SDKeys = List[SDKey]
+# TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 SDAttributes = Dict[SDKey, SDValue]
 SDTable = List[SDAttributes]

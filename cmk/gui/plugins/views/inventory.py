@@ -8,7 +8,18 @@ from __future__ import annotations
 
 import time
 import abc
-from typing import Dict, List, Tuple, Union, Callable, Any, Optional, Set, Iterable, TYPE_CHECKING
+from typing import (
+    Dict,
+    List,
+    Tuple,
+    Union,
+    Callable,
+    Any,
+    Optional,
+    Set,
+    Iterable,
+    TYPE_CHECKING,
+)
 from functools import partial
 
 from six import ensure_str
@@ -22,6 +33,7 @@ from cmk.utils.structured_data import (
     SDRawPath,
     SDPath,
     SDKeys,
+    SDTable,
     StructuredDataNode,
     Table,
     Attributes,
@@ -32,7 +44,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
-from cmk.gui.inventory import InventoryData, InventoryDeltaData
+from cmk.gui.inventory import InventoryDeltaData
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, user_errors, output_funnel
@@ -299,8 +311,8 @@ def _cmp_inventory_node(a: Dict[str, StructuredDataNode], b: Dict[str, Structure
     # (1)  1 if val_a > val_b
     # (2)  0 if val_a == val_b
     # (3) -1 if val_a < val_b
-    val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
-    val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
+    val_a = inventory.get_inventory_attribute(a["host_inventory"], invpath)
+    val_b = inventory.get_inventory_attribute(b["host_inventory"], invpath)
 
     if val_a is None:
         # as (2) or (3)
@@ -310,7 +322,17 @@ def _cmp_inventory_node(a: Dict[str, StructuredDataNode], b: Dict[str, Structure
         # as (2) or (1)
         return 0 if val_a is None else 1
 
-    return (val_a > val_b) - (val_a < val_b)
+    if isinstance(val_a, float) and isinstance(val_b, float):
+        return (val_a > val_b) - (val_a < val_b)
+
+    if isinstance(val_a, int) and isinstance(val_b, int):
+        return (val_a > val_b) - (val_a < val_b)
+
+    if isinstance(val_a, str) and isinstance(val_b, str):
+        return (val_a > val_b) - (val_a < val_b)
+
+    raise TypeError("Unsupported operand types for > and < (%s and %s)" %
+                    (type(val_a), type(val_b)))
 
 
 @painter_option_registry.register
@@ -900,7 +922,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> InventoryData:
+    def _get_inv_data(self, hostrow: Row) -> SDTable:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -914,12 +936,13 @@ class RowTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        invdata = inventory.get_inventory_data(merged_tree, self._inventory_path)
-        if invdata is None:
+        table = inventory.get_inventory_table(merged_tree, self._inventory_path)
+        if table is None:
             return []
-        return invdata
+        return table
 
-    def _prepare_rows(self, inv_data: InventoryData) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: SDTable) -> Iterable[Row]:
+        # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
         for entry in inv_data:
@@ -977,6 +1000,9 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath])
 
 
+MultiSDTable = Tuple[str, SDTable]
+
+
 class RowMultiTableInventory(ABCRowTable):
     def __init__(
         self,
@@ -989,7 +1015,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> List[InventoryData]:
+    def _get_inv_data(self, hostrow: Row) -> List[MultiSDTable]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1003,15 +1029,14 @@ class RowMultiTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        multi_inv_data: List[InventoryData] = []
+        multi_table: List[MultiSDTable] = []
         for info_name, inventory_path in self._sources:
-            inv_data = inventory.get_inventory_data(merged_tree, inventory_path)
-            if inv_data is None:
-                continue
-            multi_inv_data.append((info_name, inv_data))
-        return multi_inv_data
+            table = inventory.get_inventory_table(merged_tree, inventory_path)
+            if table is not None:
+                multi_table.append((info_name, table))
+        return multi_table
 
-    def _prepare_rows(self, inv_data: List[InventoryData]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: List[MultiSDTable]) -> Iterable[Row]:
         joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:

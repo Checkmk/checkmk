@@ -10,7 +10,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from pathlib import Path
 
 import dicttoxml  # type: ignore[import]
@@ -22,6 +22,7 @@ from cmk.utils.structured_data import (
     SDRawPath,
     SDPath,
     SDKeys,
+    SDTable,
     StructuredDataNode,
     load_tree_from,
     make_filter,
@@ -53,25 +54,24 @@ from cmk.gui.valuespec import ValueSpec, TextInput
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 
-# TODO: Can we be more specific on the return value type?
-InventoryData = Any
+InventoryValue = Union[None, str, int, float]
 InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
 
 
-def get_inventory_data(inventory_tree: StructuredDataNode, tree_path: SDRawPath) -> InventoryData:
-    invdata = None
-    parsed_path, attribute_keys = parse_tree_path(tree_path)
-    if attribute_keys == []:
-        table = inventory_tree.get_table(parsed_path)
-        if table is not None:
-            invdata = table.data
-    elif attribute_keys:
-        attributes = inventory_tree.get_attributes(parsed_path)
-        if attributes is not None:
-            # In paint_host_inventory_tree we parse invpath and get
-            # a path and attribute_keys which may be either None, [], or ["KEY"].
-            invdata = attributes.data.get(attribute_keys[-1])
-    return invdata
+def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[SDTable]:
+    parsed_path, attribute_keys = parse_tree_path(raw_path)
+    if attribute_keys != []:
+        return None
+    table = tree.get_table(parsed_path)
+    return None if table is None else table.data
+
+
+def get_inventory_attribute(tree: StructuredDataNode, raw_path: SDRawPath) -> InventoryValue:
+    parsed_path, attribute_keys = parse_tree_path(raw_path)
+    if not attribute_keys:
+        return None
+    attributes = tree.get_attributes(parsed_path)
+    return None if attributes is None else attributes.data.get(attribute_keys[-1])
 
 
 def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:

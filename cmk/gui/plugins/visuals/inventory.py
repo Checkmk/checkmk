@@ -393,7 +393,7 @@ class FilterInvText(Filter):
 
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
             if invdata is None:
                 invdata = ""
             if regex.search(invdata):
@@ -458,7 +458,7 @@ class FilterInvFloat(Filter):
 
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
             if lower is not None and invdata < lower:
                 continue
             if upper is not None and invdata > upper:
@@ -492,7 +492,7 @@ class FilterInvBool(FilterTristate):
         wanted_value = tri == 1
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
             if wanted_value == invdata:
                 newrows.append(row)
         return newrows

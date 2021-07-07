@@ -2049,7 +2049,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'k8s_stateful_set_replicas',
         'k8s_storage_classes',
         'kaspersky_av_kesl_updates',
-        'kaspersky_av_updates',
         'keepalived',
         'kemp_loadmaster_ha',
         'kemp_loadmaster_realserver',

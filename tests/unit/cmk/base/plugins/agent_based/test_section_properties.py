@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
@@ -169,7 +167,6 @@ def test_section_parse_function_does_something(fix_register):
         'k8s_pods_cpu',
         'k8s_pods_fs',
         'k8s_pods_memory',
-        'kaspersky_av_updates',
         'logins',
         'lvm_vgs',
         'mailman_lists',

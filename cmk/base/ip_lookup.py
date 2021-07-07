@@ -15,7 +15,6 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
-    Union,
 )
 
 import cmk.utils.debug
@@ -62,19 +61,6 @@ def fallback_ip_for(family: socket.AddressFamily) -> HostAddress:
         socket.AF_INET: "0.0.0.0",
         socket.AF_INET6: "::",
     }.get(family, "::")
-
-
-def deserialize_cache_id(
-        serialized: Union[str, Tuple[str, int]]) -> Tuple[HostName, socket.AddressFamily]:
-    if isinstance(serialized, str):  # old pre IPv6 style
-        return HostName(serialized), socket.AF_INET
-    # 4 and 6 are legacy values.
-    return HostName(serialized[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
-
-
-def serialize_cache_id(cache_id: Tuple[HostName, socket.AddressFamily]) -> Tuple[str, int]:
-    # 4, 6 for legacy.
-    return str(cache_id[0]), {socket.AF_INET: 4, socket.AF_INET6: 6}[cache_id[1]]
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -231,14 +217,37 @@ def _actual_dns_lookup(
             f"Failed to lookup {family_str} address of {host_name} via DNS: {e}")
 
 
+class IPLookupCacheSerializer:
+    def __init__(self) -> None:
+        self._dim_serializer = store.DimSerializer()
+
+    def serialize(self, data: Mapping[IPLookupCacheId, HostName]) -> bytes:
+        return self._dim_serializer.serialize({(str(hn), {
+            socket.AF_INET: 4,
+            socket.AF_INET6: 6
+        }[f]): v for (hn, f), v in data.items()})
+
+    def deserialize(self, raw: bytes) -> Mapping[IPLookupCacheId, HostName]:
+        loaded_object = self._dim_serializer.deserialize(raw)
+        assert isinstance(loaded_object, dict)
+
+        return {
+            (HostName(k), socket.AF_INET)  # old pre IPv6 style
+            if isinstance(k, str) else (HostName(k[0]), {
+                4: socket.AF_INET,
+                6: socket.AF_INET6
+            }[k[1]]): str(v) for k, v in loaded_object.items()
+        }
+
+
 class IPLookupCache:
 
     PATH = Path(cmk.utils.paths.var_dir, "ipaddresses.cache")
 
     def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
-        super().__init__()
         self._cache = cache
         self.persist_on_update = True
+        self._store = store.ObjectStore(self.PATH, serializer=IPLookupCacheSerializer())
 
     def __repr__(self) -> str:
         return "%s(%r)" % (type(self).__name__, self._cache)
@@ -257,7 +266,7 @@ class IPLookupCache:
 
     def load_persisted(self) -> None:
         try:
-            self._cache.update(self._load_cache(path=self.PATH, lock=False))
+            self._cache.update(self._store.read_obj(default={}))
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
@@ -267,12 +276,6 @@ class IPLookupCache:
             if cmk.utils.debug.enabled():
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
-
-    @staticmethod
-    def _load_cache(*, path: Path, lock: bool) -> Mapping[IPLookupCacheId, str]:
-        loaded_object = store.load_object_from_file(path, default={}, lock=lock)
-        assert isinstance(loaded_object, dict)
-        return {deserialize_cache_id(k): str(v) for k, v in loaded_object.items()}
 
     def __setitem__(self, cache_id: IPLookupCacheId, ipa: HostAddress) -> None:
         """Updates the cache with a new / changed entry
@@ -297,24 +300,18 @@ class IPLookupCache:
             self._cache[cache_id] = ipa
             return
 
-        try:
-            self._cache.update(self._load_cache(path=self.PATH, lock=True))
+        with self._store.locked():
+            self._cache.update(self._store.read_obj(default={}))
             self._cache[cache_id] = ipa
             self.save_persisted()
-        finally:
-            store.release_lock(self.PATH)
 
     def save_persisted(self) -> None:
-        store.save_object_to_file(
-            self.PATH,
-            {serialize_cache_id(k): v for k, v in self._cache.items()},
-            pretty=False,
-        )
+        self._store.write_obj(self._cache)
 
     def clear(self) -> None:
         """Clear the persisted AND in memory cache"""
-        self.PATH.unlink(missing_ok=True)
         self._cache.clear()
+        self._store.write_obj(self._cache)
 
 
 def _get_ip_lookup_cache() -> IPLookupCache:

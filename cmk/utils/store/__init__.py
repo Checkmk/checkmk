@@ -20,7 +20,7 @@ from cmk.utils.i18n import _
 from cmk.utils.store._file import (
     BytesSerializer,
     TextSerializer,
-    DimSerializer as _DimSerializer,
+    DimSerializer,
     ObjectStore,
 )
 
@@ -167,7 +167,7 @@ def save_to_mk_file(path: Union[Path, str],
 # TODO: Consolidate with load_mk_file?
 def load_object_from_file(path: Union[Path, str], *, default: Any, lock: bool = False) -> Any:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
-        return ObjectStore(Path(path), serializer=_DimSerializer()).read_obj(default=default)
+        return ObjectStore(Path(path), serializer=DimSerializer()).read_obj(default=default)
 
 
 def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
@@ -183,7 +183,7 @@ def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: boo
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
-    serializer = _DimSerializer(pretty=pretty)
+    serializer = DimSerializer(pretty=pretty)
     # Normally the file is already locked (when data has been loaded before with lock=True),
     # but lock it just to be sure we have the lock on the file.
     #

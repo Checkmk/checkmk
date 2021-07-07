@@ -83,7 +83,6 @@ def _patch_data_source(mocker, **kwargs):
         "use_outdated": False,
         "max_age": config.max_cachefile_age(),
         "disabled": False,
-        "snmp_disabled": False,
         "use_only_cache": False,
         "use_outdated_persisted_sections": False,
         "on_error": "raise",
@@ -95,8 +94,8 @@ def _patch_data_source(mocker, **kwargs):
 
         file_cache = self._make_file_cache()
 
-        assert file_cache.disabled == (True if isinstance(file_cache, NoCache) else (
-            defaults["disabled"] or defaults["snmp_disabled"]) if isinstance(self, SNMPSource) else
+        assert file_cache.disabled == (True if isinstance(
+            file_cache, NoCache) else defaults["disabled"] if isinstance(self, SNMPSource) else
                                        defaults["disabled"]), repr(file_cache)
 
         assert file_cache.use_outdated == defaults["use_outdated"]
@@ -368,7 +367,6 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@noscan",
             {
-                "snmp_disabled": False,
                 "disabled": False,
                 "use_only_chache": True,  # TCP
                 "max_age": config.max_cachefile_age(),
@@ -378,7 +376,6 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
         (
             "@scan",
             {
-                "snmp_disabled": True,
                 "disabled": False,  # TCP
                 "use_only_chache": True,  # TCP
                 "max_age": config.max_cachefile_age(),
@@ -441,10 +438,8 @@ def test_automation_discovery_caching(raise_errors, scan, mocker):
     kwargs.update(raise_errors[1])
     # The next options come from the call to `_set_cache_opts_of_checkers()`
     # in `AutomationDiscovery`.
-    use_cached_snmp_data = scan != "@scan"
     kwargs.update(
         use_outdated=True,
-        snmp_disabled=not use_cached_snmp_data,
         max_age=config.max_cachefile_age(),
     )
 

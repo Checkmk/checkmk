@@ -40,6 +40,9 @@ VARIABLES:
     - NAME: CHANGED_CPPCHECK_SUPPRESSIONS_FILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.cppcheck-suppressions' - || true"
 
+    - NAME: CHANGED_CLANG_TIDY_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.clang-tidy' - || true"
+
       # Gather the list of changed JavaScript and CSS files in raw and enterprise edition
     - NAME: CHANGED_JS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
@@ -135,7 +138,7 @@ STAGES:
       TEXT_ON_SKIP: 'No core files changed'
 
     - NAME: 'Clang Tidy Livestatus (livestatus-tidy.txt)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -144,7 +147,7 @@ STAGES:
       TEXT_ON_SKIP: 'No core files changed'
 
     - NAME: 'Clang Tidy core (core-tidy.txt)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"

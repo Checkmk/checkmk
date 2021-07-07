@@ -37,6 +37,9 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_CPPCHECK_SUPPRESSIONS_FILE
+      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.cppcheck-suppressions' - || true"
+
       # Gather the list of changed JavaScript and CSS files in raw and enterprise edition
     - NAME: CHANGED_JS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true"
@@ -116,7 +119,7 @@ STAGES:
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
 
     - NAME: 'Cppcheck Livestatus (cppcheck-neb.xml)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CPPCHECK_SUPPRESSIONS_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -124,7 +127,7 @@ STAGES:
       TEXT_ON_SKIP: 'No core files changed'
 
     - NAME: 'Cppcheck core (cppcheck-cmc.xml)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CPPCHECK_SUPPRESSIONS_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"

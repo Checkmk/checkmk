@@ -176,8 +176,9 @@ def cluster_check_omd_status(
     Result(state=<State.OK: 0>, summary='running')
     """
     # TODO(frans)(question): shouldn't it be better to look for =="running" ?
-    any_running = any(
-        section[item]["overall"] != "stopped" for section in section_omd_status.values())
+    any_running = any(section[item]["overall"] != "stopped"
+                      for section in section_omd_status.values()
+                      if item in section)
 
     for node, section in section_omd_status.items():
         if item not in section:

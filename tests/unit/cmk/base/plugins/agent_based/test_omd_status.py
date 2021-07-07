@@ -90,6 +90,30 @@ def test_check_omd_status(item, section_omd_status, section_omd_info, result):
     }, {
         "monitoring": {}
     }, [Result(state=state.OK, summary='running')]),
+    ("site2", {
+        'hostname1': {},
+        'hostname2': {
+            'site1': {
+                'stopped': [],
+                'existing': [
+                    'mkeventd', 'liveproxyd', 'mknotifyd', 'rrdcached', 'cmc', 'apache', 'dcd',
+                    'crontab'
+                ],
+                'overall': 'running'
+            },
+            'site2': {
+                'stopped': [],
+                'existing': [
+                    'mkeventd', 'liveproxyd', 'mknotifyd', 'rrdcached', 'cmc', 'apache', 'dcd',
+                    'crontab'
+                ],
+                'overall': 'running'
+            }
+        }
+    }, {
+        'hostname1': None,
+        'hostname2': None
+    }, [Result(state=state.OK, summary='running')]),
 ])
 def test_cluster_check_omd_status(item, section_omd_status, section_omd_info, result):
     assert list(cluster_check_omd_status(item, section_omd_status, section_omd_info)) == result

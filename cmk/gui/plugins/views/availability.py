@@ -850,6 +850,15 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         timewarpcode = HTML()
         timewarp = request.get_integer_input("timewarp")
 
+        # The timewarp is used to display an aggregation at a specific timestamp
+        # This rarely works with timestamps bordering the range specified in avoptions["range"],
+        # Most of the time, timewarp timestamps are dynamic (last x-hours), whereas
+        # the timewarp timestamp is an explict timestamp from the previous page rendering
+        # We fix this by restricting the value to the available range
+        if timewarp is not None:
+            from_time, until_time = avoptions["range"][0]
+            timewarp = int(min(until_time, max(from_time, timewarp)))
+
         timeline_containers, av_rawdata, has_reached_logrow_limit = _get_bi_availability(
             avoptions, aggr_rows, timewarp)
         view.process_tracking.amount_rows_after_limit = len(av_rawdata)

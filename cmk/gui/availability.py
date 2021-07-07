@@ -22,6 +22,7 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.prediction import lq_logic
 from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
@@ -44,6 +45,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import request
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.html import HTML
+from cmk.gui.log import logger
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
@@ -2027,12 +2029,12 @@ class TimelineContainer:
         # Computed data
         self.timeline: List[BITimelineEntry] = []
         self.states: AVBITimelineStates = {}
+
         # Can be optional after computation
+        self.node_compute_result: _Optional[NodeComputeResult] = None
         self.timewarp_state: _Optional[BITreeState] = None
         # Can not be optional after computation
         self.tree_time: _Optional[AVTimeStamp] = None
-        # Can not be optional after computation
-        self.tree_state: _Optional[BITreeState] = None
 
 
 def get_bi_leaf_history(
@@ -2144,55 +2146,79 @@ def compute_bi_timelines(
 
     bi_manager = BIManager()
 
-    # Initial phase, this includes all elements
-    from_time, first_phase = phases_list[0]
-    first_phase_keys = set(first_phase.keys())
-    for timeline_container in timeline_containers:
-        timeline_container.states = {}
-        use_elements = timeline_container.host_service_info.intersection(first_phase_keys)
-        update_states(timeline_container.states, use_elements, first_phase)
-
-        # States does now reflect the host/services states at the beginning of the query range.
-        tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
-
-        tree_time = time_range[0]
-        timeline_container.timewarp_state = tree_state if timewarp == int(tree_time) else None
-        timeline_container.tree_state = tree_state
-        timeline_container.tree_time = tree_time
-
-    # Remaining phases, may include some elements
-    for from_time, phase_hst_svc in phases_list[1:]:
+    logger.warning(
+        "Computing timelines for range %r. %d phases and %d timeline containers",
+        tuple(map(lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)), time_range)),
+        len(phases_list), len(timeline_containers))
+    computed_aggregations = 0
+    for from_time, phase_hst_svc in phases_list:
         phase_keys = set(phase_hst_svc.keys())
 
         for timeline_container in timeline_containers:
-            use_elements = timeline_container.host_service_info.intersection(phase_keys)
-            if not use_elements:
+            changed_elements = timeline_container.host_service_info.intersection(phase_keys)
+            if not changed_elements:
                 continue
 
-            update_states(timeline_container.states, use_elements, phase_hst_svc)
-            next_tree_state = _compute_bi_tree_state(timeline_container, bi_manager)
+            update_states(timeline_container.states, changed_elements, phase_hst_svc)
+            result_bundle = _compute_node_result_bundle(timeline_container, bi_manager)
+            computed_aggregations += 1
+            next_node_compute_result = result_bundle.actual_result
 
-            assert timeline_container.tree_time is not None
-            timeline_container.timeline.append(
-                create_bi_timeline_entry(timeline_container.aggr_tree,
-                                         timeline_container.aggr_group,
-                                         timeline_container.tree_time, from_time,
-                                         timeline_container.tree_state))
+            if timeline_container.node_compute_result is not None:
+                assert timeline_container.tree_time is not None
+                timeline_container.timeline.append(
+                    create_bi_timeline_entry(timeline_container.aggr_tree,
+                                             timeline_container.aggr_group,
+                                             timeline_container.tree_time, from_time,
+                                             timeline_container.node_compute_result))
 
-            timeline_container.tree_state = next_tree_state
+            timeline_container.node_compute_result = next_node_compute_result
             timeline_container.tree_time = from_time
             if timewarp == timeline_container.tree_time:
-                timeline_container.timewarp_state = timeline_container.tree_state
+                timeline_container.timewarp_state = _get_timewarp_state(
+                    result_bundle, timeline_container)
 
-    # Each element gets a final timeline_entry - to the end of the interval
-    for timeline_container in timeline_containers:
+    # Create a final timeline entry to the end of the query interval
+    for timeline_container in list(timeline_containers):
+        if timeline_container.node_compute_result is None:
+            # This can only happen if the livestatus row limit was reached
+            # The data is incomplete or entirely missing
+            timeline_containers.remove(timeline_container)
+            continue
+
         assert timeline_container.tree_time is not None
         timeline_container.timeline.append(
             create_bi_timeline_entry(timeline_container.aggr_tree, timeline_container.aggr_group,
                                      timeline_container.tree_time, time_range[1],
-                                     timeline_container.tree_state))
+                                     timeline_container.node_compute_result))
 
+    logger.warning("Timeline generation finished. Computed %d aggregations", computed_aggregations)
     return timeline_containers
+
+
+def _get_timewarp_state(node_compute_result_bundle, timeline_container):
+    if node_compute_result_bundle.instance is None:
+        # This timeline container was unable to find any host/services for the aggregation
+        # Since this timewarp info is rendered through the legacy bi tree renderer,
+        # which requires the legacy data format, we need to fake legacy data
+        # state, assumed_state, node, _subtrees = aggr_treestate
+        return (
+            {
+                "state": -1,
+                "in_downtime": False,
+                "in_service_period": True,
+                "output": _("Not yet monitored"),
+                "acknowledged": False,
+            },
+            None,
+            {
+                "title": _("Unknown aggregation"),
+                "reqhosts": [],
+            },
+            [],  # no subtrees available
+        )
+    return timeline_container.aggr_compiled_aggregation.convert_result_to_legacy_format(
+        node_compute_result_bundle)["aggr_treestate"]
 
 
 def create_bi_timeline_entry(
@@ -2200,19 +2226,19 @@ def create_bi_timeline_entry(
     aggr_group: BIAggregationGroupTitle,
     from_time: AVTimeStamp,
     until_time: AVTimeStamp,
-    tree_state: BITreeState,
+    node_compute_result: NodeComputeResult,
 ) -> BITimelineEntry:
     return {
-        "state": tree_state[0]['state'],
-        "log_output": tree_state[0]['output'],
+        "state": node_compute_result.state,
+        "log_output": node_compute_result.output,
         "from": from_time,
         "until": until_time,
         "site": "",
         "host_name": aggr_group,
         "service_description": tree['title'],
         "in_notification_period": 1,
-        "in_service_period": tree_state[0]['in_service_period'],
-        "in_downtime": tree_state[0]['in_downtime'],
+        "in_service_period": node_compute_result.in_service_period,
+        "in_downtime": node_compute_result.downtime_state > 0,
         "in_host_downtime": 0,
         "host_down": 0,
         "is_flapping": 0,
@@ -2220,10 +2246,9 @@ def create_bi_timeline_entry(
     }
 
 
-def _compute_bi_tree_state(timeline_container: TimelineContainer,
-                           bi_manager: BIManager) -> BITreeState:
+def _compute_node_result_bundle(timeline_container: TimelineContainer,
+                                bi_manager: BIManager) -> NodeResultBundle:
     # Convert our status format into that needed by BI
-    #
     status = timeline_container.states
     services_by_host: Dict[BIHostSpec, Dict[str, BIServiceWithFullState]] = {}
     hosts: Dict[BIHostSpec, AVBITimelineState] = {}
@@ -2259,31 +2284,15 @@ def _compute_bi_tree_state(timeline_container: TimelineContainer,
     results = compiled_aggregation.compute_branches([branch], bi_manager.status_fetcher)
 
     if not results:
-        # The aggregation did not find any hosts or services
-        # It is not the job of the compiled_aggregation to offer a fallback result
-        # for this special availability scenario
-        return _get_not_monitored_result(compiled_aggregation, branch)
+        # The aggregation did not find any hosts or services. Return "Not yet monitored"
+        return NodeResultBundle(
+            NodeComputeResult(-1, 0, False, _("Not yet monitored"), True, {}, {}),
+            None,
+            [],
+            None,
+        )
 
-    legacy_branch = compiled_aggregation.convert_result_to_legacy_format(results[0])
-    return legacy_branch["aggr_treestate"]
-
-
-def _get_not_monitored_result(
-    compiled_aggregation: BICompiledAggregation,
-    branch: BICompiledRule,
-) -> BITreeState:
-    return [
-        {
-            'acknowledged': False,
-            'in_downtime': False,
-            'in_service_period': True,
-            'output': _("Not yet monitored"),
-            'state': None
-        },
-        None,
-        compiled_aggregation.create_aggr_tree(branch),
-        [],
-    ]
+    return results[0]
 
 
 def _compute_status_info(

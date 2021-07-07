@@ -777,9 +777,9 @@ def get_context_specs(visual, info_handler):
     # single infos first, the rest afterwards
     context_specs = [(info_key, visual_spec_single(info_key))
                      for info_key in single_info_keys] + \
-                    [(info_key, visual_spec_multi(info_key, single_info_keys))
+                    [(info_key, visual_spec_multi(info_key))
                      for info_key in multi_info_keys
-                     if visual_spec_multi(info_key, single_info_keys)]
+                     if visual_spec_multi(info_key)]
 
     return sorted(context_specs, key=host_service_lead)
 
@@ -797,9 +797,9 @@ def visual_spec_single(info_key):
     )
 
 
-def visual_spec_multi(info_key, single_info_keys):
+def visual_spec_multi(info_key):
     info = visual_info_registry[info_key]()
-    filter_list = VisualFilterList([info_key], title=info.title, ignore=set(single_info_keys))
+    filter_list = VisualFilterList([info_key], title=info.title)
     filter_names = filter_list.filter_names()
     # Skip infos which have no filters available
     return filter_list if filter_names else None
@@ -1466,7 +1466,7 @@ def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disa
     def _info_filter_choices(infos):
         for info in infos:
             info_title = visual_info_registry[info]().title
-            for key, filter_ in VisualFilterList.get_choices(info, ignore=set()):
+            for key, filter_ in VisualFilterList.get_choices(info):
                 yield (key, f"{info_title}: {filter_.title()}")
 
     return DualListChoice(
@@ -1482,28 +1482,25 @@ class VisualFilterList(ListOfMultiple):
     filter is rendered and the user can provide a default value.
     """
     @classmethod
-    def get_choices(cls, info, ignore):
-        return sorted(cls._get_filter_specs([info], ignore).items(),
+    def get_choices(cls, info):
+        return sorted(cls._get_filter_specs([info]).items(),
                       key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
     @classmethod
-    def _get_filters(cls, infos, ignore):
-        return {
-            fname: fspec._filter for fname, fspec in cls._get_filter_specs(infos, ignore).items()
-        }
+    def _get_filters(cls, infos):
+        return {fname: fspec._filter for fname, fspec in cls._get_filter_specs(infos).items()}
 
     @classmethod
-    def _get_filter_specs(cls, infos, ignore):
+    def _get_filter_specs(cls, infos):
         fspecs: Dict[str, VisualFilter] = {}
         for info in infos:
             for fname, filter_ in filters_allowed_for_info(info).items():
-                if fname not in fspecs and fname not in ignore:
+                if fname not in fspecs:
                     fspecs[fname] = VisualFilter(fname, title=filter_.title)
         return fspecs
 
     def __init__(self, info_list, **kwargs):
-        ignore: Set[str] = kwargs.pop("ignore", set())
-        self._filters = self._get_filters(info_list, ignore)
+        self._filters = self._get_filters(info_list)
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
@@ -1512,15 +1509,14 @@ class VisualFilterList(ListOfMultiple):
 
         grouped: GroupedListOfMultipleChoices = [
             ListOfMultipleChoiceGroup(title=visual_info_registry[info]().title,
-                                      choices=self.get_choices(info, ignore)) for info in info_list
+                                      choices=self.get_choices(info)) for info in info_list
         ]
-        super(VisualFilterList, self).__init__(grouped,
-                                               "ajax_visual_filter_list_get_choice",
-                                               page_request_vars={
-                                                   "infos": info_list,
-                                                   "ignore": list(ignore),
-                                               },
-                                               **kwargs)
+        super().__init__(grouped,
+                         "ajax_visual_filter_list_get_choice",
+                         page_request_vars={
+                             "infos": info_list,
+                         },
+                         **kwargs)
 
     def filter_names(self):
         return self._filters.keys()
@@ -1590,28 +1586,26 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 @page_registry.register_page("ajax_visual_filter_list_get_choice")
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
     def _get_choices(self, api_request):
-        infos, ignore = api_request["infos"], api_request["ignore"]
+        infos = api_request["infos"]
         return [
             ListOfMultipleChoiceGroup(title=visual_info_registry[info]().title,
-                                      choices=VisualFilterList.get_choices(info, ignore))
-            for info in infos
+                                      choices=VisualFilterList.get_choices(info)) for info in infos
         ]
 
 
-def render_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
-                       context: VisualContext, page_name: str, reset_ajax_page: str) -> HTML:
+def render_filter_form(info_list: List[InfoName], context: VisualContext, page_name: str,
+                       reset_ajax_page: str) -> HTML:
     with output_funnel.plugged():
-        show_filter_form(info_list, mandatory_filters, context, page_name, reset_ajax_page)
+        show_filter_form(info_list, context, page_name, reset_ajax_page)
         return HTML(output_funnel.drain())
 
 
-def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[str, ValueSpec]],
-                     context: VisualContext, page_name: str, reset_ajax_page: str) -> None:
+def show_filter_form(info_list: List[InfoName], context: VisualContext, page_name: str,
+                     reset_ajax_page: str) -> None:
     html.show_user_errors()
     html.begin_form("filter", method="GET", add_transid=False)
     varprefix = ""
-    mandatory_filter_names = [f[0] for f in mandatory_filters]
-    vs_filters = VisualFilterListWithAddPopup(info_list=info_list, ignore=mandatory_filter_names)
+    vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
 
     filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
     filter_list_selected_id = filter_list_id + "_selected"
@@ -1619,24 +1613,7 @@ def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[st
                               reset_ajax_page)
 
     html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
-    try:
-        # Configure required single info keys (the ones that are not set by the config)
-        if mandatory_filters:
-            html.h2(_("Mandatory context"))
-            for filter_name, valuespec in mandatory_filters:
-                html.h3(valuespec.title())
-                valuespec.render_input(filter_name, None)
-
-        # Give the user the option to redefine filters configured in the dashboard config
-        # and also give the option to add some additional filters
-        if mandatory_filters:
-            html.h3(_("Additional context"))
-
-        vs_filters.render_input(varprefix, context)
-    except Exception:
-        # TODO: Analyse possible cycle
-        import cmk.gui.crash_reporting as crash_reporting
-        crash_reporting.handle_exception_as_gui_crash_report()
+    vs_filters.render_input(varprefix, context)
     html.close_div()
 
     forms.end()

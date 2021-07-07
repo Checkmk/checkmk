@@ -201,7 +201,6 @@ class ParentChildTopologyPage(Page):
                         item=PageMenuSidePopup(
                             cmk.gui.visuals.render_filter_form(
                                 info_list=["host", "service"],
-                                mandatory_filters=[],
                                 context={f.ident: {} for f in show_filters if f.available()},
                                 page_name=page_name,
                                 reset_ajax_page="ajax_initial_topology_filters")),

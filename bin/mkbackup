@@ -167,7 +167,7 @@ def verify_compatible_cma_version() -> None:
     if not is_cma():
         return
 
-    minimal_cma_version = VersionInfo(major=1, minor=4, patch=12)
+    minimal_cma_version = VersionInfo(major=1, minor=4, patch=16)
     with open("/usr/share/cma/version") as f:
         current_cma_version = VersionInfo.parse(f.read().strip())
 

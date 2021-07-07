@@ -13,10 +13,19 @@
 #Update manual stops:           0
 #Updates failed:                3333
 
+from typing import Dict
+
 from .agent_based_api.v1 import register, Service, State, Result
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+Section = Dict[str, str]
 
 
-def parse_kaspersky_av_updates(string_table):
+def parse_kaspersky_av_updates(string_table: StringTable) -> Section:
+    """
+    >>> parse_kaspersky_av_updates([["Current AV databases state", "    UpToDate"]])
+    {'Current AV databases state': 'UpToDate'}
+    """
     return {line[0]: ":".join(line[1:]).strip() for line in string_table}
 
 
@@ -26,12 +35,12 @@ register.agent_section(
 )
 
 
-def discover_kaspersky_av_updates(section):
+def discover_kaspersky_av_updates(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_kaspersky_av_updates(section):
+def check_kaspersky_av_updates(section: Section) -> CheckResult:
     yield Result(
         state=State.CRIT if section['Current AV databases state'] != 'UpToDate' else State.OK,
         summary=f"Database State: {section['Current AV databases state']}")

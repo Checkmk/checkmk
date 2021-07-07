@@ -40,6 +40,7 @@ from cmk.utils.bi.bi_lib import (
     NodeResultBundle,
 )
 from cmk.utils.bi.bi_rule_interface import BIRuleProperties
+from cmk.utils.caching import instance_method_lru_cache
 
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_node_vis import (
@@ -96,6 +97,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     ) -> List[ABCBICompiledNode]:
         return [self]
 
+    @instance_method_lru_cache()
     def required_elements(self) -> Set[RequiredBIElement]:
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
@@ -276,6 +278,7 @@ class BICompiledRule(ABCBICompiledNode):
     def services_of_host(self, host_name: HostName) -> Set[ServiceName]:
         return {result for node in self.nodes for result in node.services_of_host(host_name)}
 
+    @instance_method_lru_cache()
     def required_elements(self) -> Set[RequiredBIElement]:
         return {result for node in self.nodes for result in node.required_elements()}
 
@@ -418,6 +421,7 @@ class BIRemainingResult(ABCBICompiledNode):
         postprocessed_nodes.sort()
         return postprocessed_nodes
 
+    @instance_method_lru_cache()
     def required_elements(self) -> Set[RequiredBIElement]:
         return set()
 

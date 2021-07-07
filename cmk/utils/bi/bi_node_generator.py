@@ -51,7 +51,7 @@ class BINodeGenerator(ABCBINodeGenerator):
                     filtered_search_results.append(search_result)
             search_results = filtered_search_results
 
-        return list(self.action.execute_search_results(search_results, macros, bi_searcher))
+        return sorted(self.action.execute_search_results(search_results, macros, bi_searcher))
 
     def serialize(self):
         return {

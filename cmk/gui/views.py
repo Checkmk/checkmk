@@ -1729,7 +1729,6 @@ def create_view_from_valuespec(old_view, view):
 
 def show_filter_form(view: View, show_filters: List[Filter]) -> None:
     visuals.show_filter_form(info_list=view.datasource.infos,
-                             mandatory_filters=[],
                              context={f.ident: {} for f in show_filters if f.available()},
                              page_name=view.name,
                              reset_ajax_page="ajax_initial_view_filters")
@@ -1747,8 +1746,7 @@ class ABCAjaxInitialFilters(AjaxPage):
         context = self._get_context(page_name)
         page_request_vars = request.get("page_request_vars")
         assert isinstance(page_request_vars, dict)
-        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"],
-                                                          ignore=page_request_vars["ignore"])
+        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"])
         with html.plugged():
             vs_filters.render_input(varprefix, context)
             return {"filters_html": html.drain()}

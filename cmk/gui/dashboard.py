@@ -524,6 +524,7 @@ def draw_dashboard(name: DashboardName) -> None:
     board_context = visuals.get_merged_context(
         visuals.get_context_from_uri_vars(["host", "service"], board["single_infos"]),
         board["context"])
+    board["context"] = board_context
 
     title = visuals.visual_title('dashboard', board, board_context)
 
@@ -533,8 +534,8 @@ def draw_dashboard(name: DashboardName) -> None:
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
-    missing_mandatory_context_filters = not set(board_context.keys()).issuperset(
-        set(board["mandatory_context_filters"]))
+    missing_mandatory_context_filters = set(board["mandatory_context_filters"]).difference(
+        board["context"])
 
     dashlets = _get_dashlets(name, board)
 
@@ -562,7 +563,6 @@ def draw_dashboard(name: DashboardName) -> None:
             dashlet,
             is_update=False,
             mtime=board["mtime"],
-            missing_mandatory_context_filters=missing_mandatory_context_filters,
         )
 
         # Now after the dashlet content has been calculated render the whole dashlet
@@ -666,13 +666,14 @@ def dashlet_container_end() -> None:
     html.close_div()
 
 
-def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
-                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], HTMLInput]:
+def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
+                    mtime: int) -> Tuple[Union[str, HTML], HTMLInput]:
     content: HTMLInput = ""
     title: Union[str, HTML] = ""
+    missing_infos = set(board['mandatory_context_filters']).difference(board['context'])
+    missing_infos.update(dashlet.missing_single_infos())
     try:
-        missing_single_infos = dashlet.missing_single_infos()
-        if missing_single_infos or missing_mandatory_context_filters:
+        if missing_infos:
             return (
                 _("Filter context missing"),
                 str(
@@ -680,7 +681,7 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                         _("Unable to render this element, "
                           "because we miss some required context information (%s). Please update the "
                           "form on the right to make this element render.") %
-                        ", ".join(sorted(missing_single_infos)))))
+                        ", ".join(sorted(missing_infos)))))
 
         title = dashlet.render_title_html()
         content = _render_dashlet_content(board, dashlet, is_update=False, mtime=board["mtime"])
@@ -771,20 +772,15 @@ def _fallback_dashlet(name: DashboardName,
 
 
 def _get_mandatory_filters(board: DashboardConfig,
-                           unconfigured_single_infos: Set[str]) -> List[Tuple[str, ValueSpec]]:
-    mandatory_filters: List[Tuple[str, ValueSpec]] = []
+                           unconfigured_single_infos: Set[str]) -> Iterable[str]:
 
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        info = visuals.visual_info_registry[info_key]()
-        mandatory_filters += info.single_spec
+        for info, _ in visuals.visual_info_registry[info_key]().single_spec:
+            yield info
 
     # Get required context filters set in the dashboard config
-    if board["mandatory_context_filters"]:
-        for filter_key in board["mandatory_context_filters"]:
-            mandatory_filters.append((filter_key, visuals.VisualFilter(filter_key)))
-
-    return mandatory_filters
+    yield from board["mandatory_context_filters"]
 
 
 def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConfig,
@@ -1004,7 +1000,10 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                              unconfigured_single_infos: Set[str]) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
-    mandatory_filters = _get_mandatory_filters(board, unconfigured_single_infos)
+    mandatory_context: VisualContext = {
+        name: {} for name in _get_mandatory_filters(board, unconfigured_single_infos)
+    }
+    mandatory_context.update(board_context)
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
 
@@ -1016,8 +1015,8 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               title=_("Filter"),
                               icon_name="filter",
                               item=PageMenuSidePopup(
-                                  visuals.render_filter_form(info_list, mandatory_filters,
-                                                             board_context, board["name"],
+                                  visuals.render_filter_form(info_list, mandatory_context,
+                                                             board["name"],
                                                              "ajax_initial_dashboard_filters")),
                               name="filters",
                               is_shortcut=True,
@@ -1037,11 +1036,14 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         if page_name == "topology":
             _view, show_filters = get_topology_view_and_filters()
             return {
-                f.ident: board["context"][f.ident] if f.ident in board["context"] else {}
-                for f in show_filters
-                if f.available()
+                f.ident: board["context"].get(f.ident, {}) for f in show_filters if f.available()
             }
-        return board["context"]
+
+        mandatory_context: VisualContext = {
+            name: {} for name in _get_mandatory_filters(board, set())
+        }
+        mandatory_context.update(board["context"])
+        return mandatory_context
 
 
 @dataclass

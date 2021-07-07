@@ -83,7 +83,6 @@ from cmk.gui.plugins.userdb.utils import (
     user_sync_config,
     load_roles,
     load_connection_config,
-    save_connection_config,
     new_user_template,
     load_cached_profile,
     get_connection,
@@ -1010,64 +1009,6 @@ class LDAPUserConnector(UserConnector):
     #
     # USERDB API METHODS
     #
-
-    # With release 1.2.7i3 we introduced multi ldap server connection capabilities.
-    # We had to change the configuration declaration to reflect the new possibilites.
-    # This function migrates the former configuration to the new one.
-    # TODO This code can be removed the day we decide not to migrate old configs anymore.
-    @classmethod
-    def migrate_config(cls):
-        if config.user_connections:
-            return  # Don't try to migrate anything when there is at least one connection configured
-
-        if cls._needs_config_migration():
-            cls._do_migrate_config()
-
-    # Don't migrate anything when no ldap connection has been configured
-    @classmethod
-    def _needs_config_migration(cls):
-        ldap_connection = getattr(config, 'ldap_connection', {})
-        default_ldap_connection_config = {
-            'type': 'ad',
-            'page_size': 1000,
-        }
-        return ldap_connection and ldap_connection != default_ldap_connection_config
-
-    @classmethod
-    def _do_migrate_config(cls):
-        # Create a default connection out of the old config format
-        connection = {
-            'id': 'default',
-            'type': 'ldap',
-            'description': _('This is the default LDAP connection.'),
-            'disabled': 'ldap' not in getattr(config, 'user_connectors', []),
-            'cache_livetime': getattr(config, 'ldap_cache_livetime', 300),
-            'active_plugins': getattr(config, 'ldap_active_plugins', []) or {
-                'email': {},
-                'alias': {},
-                'auth_expire': {}
-            },
-            'directory_type': getattr(config, 'ldap_connection', {}).get('type', 'ad'),
-            'user_id_umlauts': 'keep',
-            'user_dn': '',
-            'user_scope': 'sub',
-        }
-
-        old_connection_cfg = getattr(config, 'ldap_connection', {})
-        try:
-            del old_connection_cfg['type']
-        except KeyError:
-            pass
-        connection.update(old_connection_cfg)
-
-        for what in ["user", "group"]:
-            for key, val in getattr(config, 'ldap_' + what + 'spec', {}).items():
-                if key in ["dn", "scope", "filter", "filter_group", "member"]:
-                    key = what + "_" + key
-                connection[key] = val
-
-        save_connection_config([connection])
-        config.user_connections.append(connection)
 
     # This function only validates credentials, no locked checking or similar
     def check_credentials(self, user_id, password) -> CheckCredentialsResult:

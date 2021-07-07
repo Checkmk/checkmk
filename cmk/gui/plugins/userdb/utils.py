@@ -338,10 +338,6 @@ class UserConnector(metaclass=abc.ABCMeta):
     # USERDB API METHODS
     #
 
-    @classmethod
-    def migrate_config(cls):
-        pass
-
     @abc.abstractmethod
     def is_enabled(self):
         raise NotImplementedError()
@@ -447,9 +443,6 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[Type[UserConnecto
     Have a look at the base class for details."""
     def plugin_name(self, instance):
         return instance.type()
-
-    def registration_hook(self, instance):
-        instance.migrate_config()
 
 
 user_connector_registry = UserConnectorRegistry()

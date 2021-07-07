@@ -186,9 +186,6 @@ def _file_cached_dns_lookup(
     # the same mechanism that the value store uses.
     """Resolve DNS using a file based cache
 
-    This layer caches *successful* lookups of host name / IP address
-    family combinations, and writes them to a file.
-
     This layer caches *successful* lookups of host name / IP address family combinations, and writes
     them to a file.
 

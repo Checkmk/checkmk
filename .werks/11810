@@ -12,11 +12,14 @@ On standard site installations, locks during mkbackup are now site specific.
 This results in multiple sites being able to be backed-up simultaneously.
 On appliances, a system-wide backup will still lock all sites regarding backup.
 
-Details:
+<b>Version Limitations for Appliances:</b>
+With this werk, the minimal required appliance version will be <tt>1.4.16</tt>.
+
+<b>Technical Details:</b>
 Werk 11868 tried to fix permission issues during mkbackup of different
 sites.
 However directories under <tt>/var/lock/</tt> are volatile and
-therefore the creation and the setting of the rights on the <tt>mkbackup</tt> folder must be performed on every system restart.
+therefore the creation and the setting of the rights on the <tt>mkbackup</tt> folder must be performed on every system (omd) restart.
 Therefore <tt>omd</tt> will now try to ensure that this folder exists
 and has the correct permissions.
 

@@ -1121,8 +1121,8 @@ class FilterNagiosExpression(FilterTristate):
                  title: str,
                  sort_index: int,
                  info: str,
-                 pos: str,
-                 neg: str,
+                 pos: Union[Callable[[], str], str],
+                 neg: Union[Callable[[], str], str],
                  is_show_more: bool = False) -> None:
         super().__init__(ident=ident,
                          title=title,
@@ -1133,8 +1133,11 @@ class FilterNagiosExpression(FilterTristate):
         self.pos = pos
         self.neg = neg
 
-    def filter_code(self, infoname, positive):
-        return self.pos if positive else self.neg
+    def filter_code(self, infoname: str, positive: bool) -> str:
+        code_or_generator = self.pos if positive else self.neg
+        if callable(code_or_generator):
+            return code_or_generator()
+        return code_or_generator
 
 
 filter_registry.register(
@@ -1160,27 +1163,25 @@ filter_registry.register(
         "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"
     ))
 
-# TODO: config. ?!
 filter_registry.register(
     FilterNagiosExpression(
         ident="host_staleness",
         title=_l("Host is stale"),
         sort_index=232,
         info="host",
-        pos="Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
-        neg="Filter: host_staleness < %0.2f\n" % config.staleness_threshold,
+        pos=lambda: "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
+        neg=lambda: "Filter: host_staleness < %0.2f\n" % config.staleness_threshold,
         is_show_more=True,
     ))
 
-# TODO: config. ?!
 filter_registry.register(
     FilterNagiosExpression(
         ident="service_staleness",
         title=_l("Service is stale"),
         sort_index=232,
         info="service",
-        pos="Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
-        neg="Filter: service_staleness < %0.2f\n" % config.staleness_threshold,
+        pos=lambda: "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
+        neg=lambda: "Filter: service_staleness < %0.2f\n" % config.staleness_threshold,
         is_show_more=True,
     ))
 

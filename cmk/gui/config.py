@@ -419,10 +419,6 @@ def get_role_permissions() -> Dict[str, List[str]]:
     return role_permissions
 
 
-def base_roles_with_permission(pname: str) -> List[str]:
-    return [r for r in builtin_role_ids if may_with_roles([r], pname)]
-
-
 def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:

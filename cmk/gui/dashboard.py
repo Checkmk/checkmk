@@ -66,7 +66,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.permissions import (permission_registry, declare_permission,
+                                 permission_section_registry, PermissionSection)
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -289,7 +290,11 @@ def load_plugins(force: bool) -> None:
         # permissions. To not confuse the users we make the "main" dashboard in the enterprise
         # editions only visible to the roles that have the "general.see_all" permission.
         if name == "main" and not cmk_version.is_raw_edition():
-            default_permissions = config.base_roles_with_permission("general.see_all")
+            # Please note: This permitts the following roles: ["admin", "guest"]. Even if the user
+            # overrides the permissions of these builtin roles in his configuration , this can not
+            # be respected here. This is because the config of the user is not loaded yet. The user
+            # would have to manually adjust the permissions on the main dashboard on his own.
+            default_permissions = permission_registry["general.see_all"].defaults
         else:
             default_permissions = config.builtin_role_ids
 

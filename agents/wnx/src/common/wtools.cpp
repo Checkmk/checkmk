@@ -1620,7 +1620,7 @@ bool WmiWrapper::impersonate() noexcept {
 // RETURNS RAW OBJECT
 // returns nullptr, WmiStatus
 std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* Enumerator) {
+    IEnumWbemClassObject* Enumerator, uint32_t timeout) {
     if (nullptr == Enumerator) {
         XLOG::l.e("nullptr in Enumerator");
         return {nullptr, WmiStatus::error};
@@ -1628,7 +1628,6 @@ std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
     ULONG returned = 0;
     IWbemClassObject* wmi_object = nullptr;
 
-    auto timeout = cma::cfg::groups::global.getWmiTimeout();
     auto hres = Enumerator->Next(timeout * 1000, 1, &wmi_object,
                                  &returned);  // legacy code
     if (WBEM_S_TIMEDOUT == hres) {
@@ -1668,7 +1667,7 @@ static void FillAccuAndNames(std::wstring& accu,
 std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
     IEnumWbemClassObject* enumerator,
     const std::vector<std::wstring>& existing_names,
-    std::wstring_view separator) noexcept {
+    std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     // preparation
     std::wstring accu;
     auto status_to_return = WmiStatus::ok;
@@ -1679,7 +1678,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::produceTable(
 
     // processing loop
     while (nullptr != enumerator) {
-        auto [wmi_object, status] = WmiGetNextObject(enumerator);
+        auto [wmi_object, status] = WmiGetNextObject(enumerator, wmi_timeout);
         status_to_return = status;  // last status is most important
 
         if (nullptr == wmi_object) break;
@@ -1718,7 +1717,7 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring>& Names,
 // returns "", Status
 std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
     const std::vector<std::wstring>& names, const std::wstring& target,
-    std::wstring_view separator) noexcept {
+    std::wstring_view separator, uint32_t wmi_timeout) noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
@@ -1732,7 +1731,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
     }
     ON_OUT_OF_SCOPE(enumerator->Release());
 
-    return produceTable(enumerator, names, separator);
+    return produceTable(enumerator, names, separator, wmi_timeout);
 }
 
 // special purposes: formatting for PS for example

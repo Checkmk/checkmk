@@ -1034,7 +1034,7 @@ TEST(UpgradeTest, TopLevelApi_Long) {
     EXPECT_TRUE(FindStopDeactivateLegacyAgent());
 }
 
-TEST(UpgradeTest, StopStartStopOhm) {
+TEST(UpgradeTest, StopStartStopOhmIntegration) {
     namespace fs = std::filesystem;
     auto lwa_path = FindLegacyAgent();
     ASSERT_TRUE(!lwa_path.empty())

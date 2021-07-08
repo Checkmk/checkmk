@@ -36,7 +36,7 @@ static std::string ReadFromHandle(HANDLE h) {
     return reinterpret_cast<char*>(buf.data());
 }
 
-TEST(WtoolsRunAs, NoUser) {
+TEST(WtoolsRunAs, NoUser_Integration) {
     using namespace std::chrono_literals;
     using namespace std::string_literals;
     cma::OnStartTest();
@@ -61,7 +61,7 @@ TEST(WtoolsRunAs, NoUser) {
     }
 }
 
-TEST(WtoolsRunAs, TestUser) {
+TEST(WtoolsRunAs, TestUser_Integration) {
     wtools::uc::LdapControl lc;
     auto pwd = GenerateRandomString(12);
     std::wstring user = L"a1";

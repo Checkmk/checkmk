@@ -1266,7 +1266,7 @@ TEST(PluginTest, DuplicatedUnitsRemove) {
     EXPECT_FALSE(um[paths[6]].pattern().empty());
 }
 
-TEST(PluginTest, SyncStartSimulationFuture_Long) {
+TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -1280,9 +1280,9 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
 
     fs::path temp_folder = cma::cfg::GetTempDir();
 
-    CreatePluginInTemp(temp_folder / "a.cmd", 5, "a");
+    CreatePluginInTemp(temp_folder / "a.cmd", 2, "a");
     CreatePluginInTemp(temp_folder / "b.cmd", 0, "b");
-    CreatePluginInTemp(temp_folder / "c.cmd", 3, "c");
+    CreatePluginInTemp(temp_folder / "c.cmd", 1, "c");
     CreatePluginInTemp(temp_folder / "d.cmd", 120, "d");
 
     PathVector vp = {
@@ -1321,14 +1321,14 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
 
             [](cma::PluginEntry* Entry) -> DataBlock {  // lambda
                 if (!Entry) return {};
-                return Entry->getResultsSync(Entry->path().wstring());
+                return Entry->getResultsSync(Entry->path().wstring(), 5);
             },  // lambda end
 
             &entry  // lambda parameter
             ));
         requested_count++;
     }
-    EXPECT_TRUE(requested_count == 4);
+    EXPECT_EQ(requested_count, 4);
 
     DataBlock out;
     int delivered_count = 0;
@@ -1339,7 +1339,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Long) {
             cma::tools::AddVector(out, result);
         }
     }
-    EXPECT_TRUE(delivered_count == 3);
+    EXPECT_EQ(delivered_count, 3);
 
     int found_headers = 0;
     std::string_view str(out.data(), out.size());
@@ -1495,7 +1495,7 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
     EXPECT_TRUE(x.size() == 3);
 }
 
-TEST(PluginTest, AsyncStartSimulation_0) {
+TEST(PluginTest, AsyncStartSimulation_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -1824,7 +1824,7 @@ std::string TestConvertToString(std::vector<char> accu) {
     return str;
 }
 
-TEST(PluginTest, Async0DataPickup) {
+TEST(PluginTest, AsyncDataPickup_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -1943,7 +1943,7 @@ PluginDescVector local_files_async = {{1, "local0.cmd", "local0"},
 PluginDescVector local_files_sync = {{1, "local0_s.cmd", "local0_s"},
                                      {1, "local1_s.cmd", "local1_s"}};
 
-TEST(PluginTest, AsyncLocal) {
+TEST(PluginTest, AsyncLocal_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;
@@ -2048,7 +2048,7 @@ TEST(PluginTest, AsyncLocal) {
     }
 }  // namespace cma
 
-TEST(PluginTest, SyncLocal) {
+TEST(PluginTest, SyncLocal_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;

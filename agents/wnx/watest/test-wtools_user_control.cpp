@@ -62,6 +62,13 @@ NTSTATUS PrintDomainName() {
 TEST(WtoolsUserControl, Base) {
     LdapControl lc;
     ASSERT_TRUE(lc.name() == nullptr);
+    ASSERT_EQ(
+        lc.getSpecialUserRegistryPath(),
+        LR"(SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList)");
+}
+
+TEST(WtoolsUserControl, DISABLED_Base) {
+    LdapControl lc;
     auto ret = lc.chooseDomain(L"SERG-DELL", L"SERG-DELL");
     if (ret == Status::no_domain_service) {
         XLOG::SendStringToStdio("No Domain Controller - no testing\n",
@@ -78,8 +85,8 @@ TEST(WtoolsUserControl, AddDeleteUser) {
     lc.userDel(u);
     ON_OUT_OF_SCOPE(lc.userDel(u));
     EXPECT_EQ(Status::absent, lc.userDel(u));
-    EXPECT_EQ(Status::success, lc.userAdd(u, L"xufdrgebd_1"));
-    EXPECT_EQ(Status::exists, lc.userAdd(u, L"xufdrgebd_1"));
+    EXPECT_EQ(Status::success, lc.userAdd(u, L"Xufdrgebd 1"));
+    EXPECT_EQ(Status::exists, lc.userAdd(u, L"Xufdrgebd 1"));
     EXPECT_EQ(Status::success, lc.userDel(u));
     EXPECT_EQ(Status::absent, lc.userDel(u));
 }
@@ -88,7 +95,7 @@ TEST(WtoolsUserControl, AddDeleteUserToUsers) {
     LdapControl lc;
     std::wstring_view g = L"Users";
     std::wstring_view u = L"x_user_name";
-    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"Aaaasxwxwwxwecfwecwe 1"));
     EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
     EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));
     EXPECT_EQ(Status::absent, lc.localGroupDelMembers(g, u));
@@ -154,7 +161,7 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
 
     ASSERT_EQ(Status::success, lc.localGroupAdd(g, c));
     EXPECT_EQ(Status::error, lc.localGroupAddMembers(g, u));
-    ASSERT_EQ(Status::success, lc.userAdd(u, L"aaaaasxwxwwxwecfwecwe"));
+    ASSERT_EQ(Status::success, lc.userAdd(u, L"Aaaaasxwxwwxwecfwecwe 1"));
     EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
 
     EXPECT_EQ(Status::success, lc.localGroupDelMembers(g, u));

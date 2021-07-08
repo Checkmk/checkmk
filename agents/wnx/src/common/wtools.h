@@ -964,7 +964,7 @@ IEnumWbemClassObject* WmiExecQuery(IWbemServices* Services,
 enum class WmiStatus { ok, timeout, error, fail_open, fail_connect, bad_param };
 
 std::tuple<IWbemClassObject*, WmiStatus> WmiGetNextObject(
-    IEnumWbemClassObject* enumerator);
+    IEnumWbemClassObject* enumerator, uint32_t timeout);
 
 // in exception column we have
 enum class StatusColumn { ok, timeout };
@@ -998,14 +998,14 @@ public:
     // on error returns empty string and timeout status
     static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject* enumerator,
-        const std::vector<std::wstring>& names,
-        std::wstring_view separator) noexcept;
+        const std::vector<std::wstring>& names, std::wstring_view separator,
+        uint32_t wmi_timeout) noexcept;
 
     // work horse to ask certain names from the target
     // on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring>& names, const std::wstring& target,
-        std::wstring_view separator) noexcept;
+        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
     // special purposes: formatting for PS for example
     // on error returns nullptr

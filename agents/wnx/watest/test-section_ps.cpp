@@ -32,6 +32,7 @@ const std::vector<std::string_view> g_special_processes{
     {"vmmem"sv},
     {"Secure System"sv},
     {"init"sv},
+    {"fish"sv},
     {"bash"sv}};
 
 }  // namespace

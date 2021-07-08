@@ -431,7 +431,7 @@ class LoginPage(Page):
     def page(self) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(request.var("lang", config.get_language()))
+        cmk.gui.i18n.localize(request.var("lang", config.default_language))
 
         self._do_login()
 

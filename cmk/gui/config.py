@@ -306,10 +306,6 @@ def all_nonfunction_vars(var_dict: Dict[str, Any]) -> Set[str]:
     }
 
 
-def get_language() -> Optional[str]:
-    return default_language
-
-
 def get_ntop_connection() -> Optional[Dict]:
     # Use this function if you *really* want to try accessing the ntop connection settings
     try:

@@ -87,7 +87,7 @@ class LoggedInUser:
 
     @property
     def language(self) -> Optional[str]:
-        return self.get_attribute("language", config.get_language())
+        return self.get_attribute("language", config.default_language)
 
     @language.setter
     def language(self, value: Optional[str]) -> None:

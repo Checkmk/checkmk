@@ -237,7 +237,7 @@ def test_mode_discover_marked_hosts(mocker):
     # assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker):
     _patch_data_source(mocker, max_age=MaxAge(checking=0, discovery=0, inventory=120))
@@ -245,7 +245,7 @@ def test_mode_check_discovery_default(mocker):
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_cached(mocker):
     _patch_data_source(

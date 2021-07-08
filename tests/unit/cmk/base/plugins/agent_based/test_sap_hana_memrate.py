@@ -6,12 +6,10 @@
 
 import pytest
 
-from cmk.base.api.agent_based import register
 from cmk.utils.type_defs import SectionName, CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("info, expected_result", [
     (
         [
@@ -43,31 +41,23 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
         }
     }),
 ])
-def test_parse_sap_hana_memrate(info, expected_result):
-    section_name = SectionName("sap_hana_memrate")
-    section_plugin = register.get_section_plugin(section_name)
-    result = section_plugin.parse_function(info)
-    assert result == expected_result
+def test_parse_sap_hana_memrate(fix_register, info, expected_result):
+    section_plugin = fix_register.agent_sections[SectionName("sap_hana_memrate")]
+    assert section_plugin.parse_function(info) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("info, expected_result", [
     ([
         ["[[HXE 90 SYSTEMDB]]"],
         ["mem_rate", "5115896693", "7297159168"],
     ], [Service(item="HXE 90 SYSTEMDB")]),
 ])
-def test_inventory_sap_hana_memrate(info, expected_result):
-    section_name = SectionName("sap_hana_memrate")
-    section = register.get_section_plugin(section_name).parse_function(info)
-
-    plugin_name = CheckPluginName("sap_hana_memrate")
-    plugin = register.get_check_plugin(plugin_name)
-    if plugin:
-        assert list(plugin.discovery_function(section)) == expected_result
+def test_inventory_sap_hana_memrate(fix_register, info, expected_result):
+    section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
+    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
+    assert list(plugin.discovery_function(section)) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("item, info, expected_result", [
     (
         "HXE 90 SYSTEMDB",
@@ -81,11 +71,7 @@ def test_inventory_sap_hana_memrate(info, expected_result):
         ],
     ),
 ])
-def test_check_sap_hana_memrate(item, info, expected_result):
-    section_name = SectionName("sap_hana_memrate")
-    section = register.get_section_plugin(section_name).parse_function(info)
-
-    plugin_name = CheckPluginName("sap_hana_memrate")
-    plugin = register.get_check_plugin(plugin_name)
-    if plugin:
-        assert list(plugin.check_function(item, {}, section)) == expected_result
+def test_check_sap_hana_memrate(fix_register, item, info, expected_result):
+    section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
+    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
+    assert list(plugin.check_function(item, {}, section)) == expected_result

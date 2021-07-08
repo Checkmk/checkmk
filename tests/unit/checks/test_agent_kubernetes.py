@@ -72,7 +72,7 @@ pytestmark = pytest.mark.checks
         ],
     ),
 ])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_parse_arguments(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_kubernetes')
@@ -129,7 +129,7 @@ def test_parse_arguments(params, expected_args):
         "https://a-host-name",
     ),
 ])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_client_configuration_host(params: Dict[str, Any], host: str) -> None:
     # black box test: wato config and corresponding url that is used by the special agent to query k8s
     agent = SpecialAgent('agent_kubernetes')

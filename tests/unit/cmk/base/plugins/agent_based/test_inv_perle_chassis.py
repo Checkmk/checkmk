@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
@@ -26,8 +25,6 @@ EXPECTED = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_perle_chassis():
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('perle_chassis'))
-    assert plugin
+def test_inv_perle_chassis(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('perle_chassis')]
     assert list(plugin.inventory_function(INFO)) == EXPECTED

@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 AGENT_OUTPUT = [
@@ -33,11 +32,8 @@ AGENT_OUTPUT_WITH_OCI_ERROR = AGENT_OUTPUT + [[
 
 
 @pytest.mark.parametrize("info", [AGENT_OUTPUT, AGENT_OUTPUT_WITH_OCI_ERROR])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_container_network(info):
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('docker_container_network'))
-    assert plugin
+def test_inv_docker_container_network(fix_register, info):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_container_network')]
     assert list(plugin.inventory_function(info)) == [
         TableRow(
             path=['software', 'applications', 'docker', 'container', 'networks'],

@@ -7,11 +7,9 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     'parsed, expected',
     [
@@ -136,7 +134,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
                      status_columns={}),
         ]),
     ])
-def test_inv_docker_node_info(parsed, expected):
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('docker_node_info'))
-    assert plugin
+def test_inv_docker_node_info(fix_register, parsed, expected):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_node_info')]
     assert list(plugin.inventory_function(parsed)) == expected

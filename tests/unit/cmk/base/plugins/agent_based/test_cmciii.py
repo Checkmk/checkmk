@@ -6,8 +6,6 @@
 
 import pytest
 
-from testlib import Check
-
 from cmk.utils.type_defs import CheckPluginName, SectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -96,7 +94,7 @@ def _leakage_info(status, position):
     ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('status, position, expected', [
     (
         'OK',
@@ -189,6 +187,7 @@ def _lcp_sensor():
     ]  # yapf: disable
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('plugin,expected', [
     (
         'cmciii_temp_in_out',
@@ -210,6 +209,7 @@ def test_cmciii_lcp_discovery(plugin, expected):
     assert run_discovery('cmciii', plugin, _lcp_sensor(), params={}) == expected
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('item, expected', [
     (
         'Air LCP In Bottom',
@@ -402,6 +402,7 @@ def test_phase_sensors():
     ]
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('item, expected', [
     (
         'Master_PDU Phase 1',
@@ -462,6 +463,7 @@ def test_cmciii_status_discovery(variable):
     ]
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('variable, status, expected', [
     ('External release', 'OK', [Result(state=State.OK, summary='Status: OK')]),
     ('Air flow', 'Too Low', [Result(state=State.CRIT, summary='Status: Too Low')]),
@@ -490,12 +492,14 @@ def _access_info():
     ]  # yapf: disable
 
 
+@pytest.mark.usefixtures("fix_register")
 def test_cmciii_access_discovery():
     assert run_discovery('cmciii', 'cmciii_access', _access_info(), {}) == [
         Service(item='Tuer_GN-31-F Access', parameters={'_item_key': 'Tuer_GN-31-F Access'})
     ]
 
 
+@pytest.mark.usefixtures("fix_register")
 def test_cmciii_access_check():
     assert run_check(
         'cmciii',
@@ -736,6 +740,7 @@ def _generictest_cmciii():
     ]  # yapf: disable
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('plugin,params,expected', [
     (
         'cmciii',
@@ -812,6 +817,7 @@ def test_genericdataset_cmciii_discovery(plugin, params, expected):
     assert run_discovery('cmciii', plugin, _generictest_cmciii(), params) == expected
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('plugin, params, items', [
     (
         'cmciii',
@@ -1046,6 +1052,7 @@ def _generictest_cmciii_input_regression():
              [u'4.5', u'Input.Category', u'14', u'', u'0', u'0', u'0']]]  # yapf: disable
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('plugin,params,expected', [
     (
         'cmciii',
@@ -1092,6 +1099,7 @@ def test_genericdataset_cmciii_input_regression_discovery(plugin, params, expect
     ) == expected
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize('plugin,params,items', [
     (
         'cmciii',

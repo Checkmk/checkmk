@@ -7,11 +7,9 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize(
     'info, params, inventory_data',
     [
@@ -132,7 +130,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
     ],
 )
-def test_inv_oracle_systemparameter(info, params, inventory_data):
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('lnx_sysctl'))
-    assert plugin
+def test_inv_oracle_systemparameter(fix_register, info, params, inventory_data):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('lnx_sysctl')]
     assert list(plugin.inventory_function(params, info)) == inventory_data

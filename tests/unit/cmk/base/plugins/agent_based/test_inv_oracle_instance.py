@@ -7,11 +7,9 @@
 import pytest
 
 from cmk.utils.type_defs import SectionName, InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize('line, expected_data', [
     ([], []),
     ([
@@ -309,18 +307,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ],
     ),
 ])
-def test_inv_oracle_instance(line, expected_data):
-    section = agent_based_register.get_section_plugin(SectionName('oracle_instance'))
-    assert section
+def test_inv_oracle_instance(fix_register, line, expected_data):
+    section = fix_register.agent_sections[SectionName('oracle_instance')]
     parsed = section.parse_function([line])
-
-    inv_plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('oracle_instance'))
-    assert inv_plugin
+    inv_plugin = fix_register.inventory_plugins[InventoryPluginName('oracle_instance')]
     assert list(inv_plugin.inventory_function(parsed)) == expected_data
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_oracle_instance_multiline():
+def test_inv_oracle_instance_multiline(fix_register):
     lines = [
         [
             'SID',
@@ -372,9 +366,9 @@ def test_inv_oracle_instance_multiline():
         ],
     ]
 
-    section = agent_based_register.get_section_plugin(SectionName('oracle_instance'))
+    section = fix_register.agent_sections[SectionName('oracle_instance')]
     parsed = section.parse_function(lines)  # type: ignore[arg-type]
-    inv_plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('oracle_instance'))
+    inv_plugin = fix_register.inventory_plugins[InventoryPluginName('oracle_instance')]
 
     expected_data = [
         TableRow(

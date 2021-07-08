@@ -36,7 +36,7 @@ def test_config(monkeypatch):
     return ts.apply(monkeypatch)
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -137,7 +137,7 @@ def test_parse_autochecks_file_not_existing():
     assert autochecks.parse_autochecks_file("host", config.service_description) == []
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [

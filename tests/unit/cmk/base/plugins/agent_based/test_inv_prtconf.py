@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
@@ -171,8 +170,6 @@ EXPECTED = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_prtconf():
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('prtconf'))
-    assert plugin
+def test_inv_prtconf(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('prtconf')]
     assert list(plugin.inventory_function(INFO)) == EXPECTED

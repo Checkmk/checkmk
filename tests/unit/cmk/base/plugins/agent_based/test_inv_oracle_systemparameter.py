@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
@@ -36,9 +35,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
     ]),
 ])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_oracle_systemparameter(info, expected):
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('oracle_systemparameter'))
-    assert plugin
+def test_inv_oracle_systemparameter(fix_register, info, expected):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('oracle_systemparameter')]
     assert list(plugin.inventory_function(info)) == expected

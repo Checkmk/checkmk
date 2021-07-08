@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
@@ -15,12 +14,9 @@ AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersio
 {"NodeName": "klappben"}"""
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_container_node_name():
+def test_inv_docker_container_node_name(fix_register):
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('docker_container_node_name'))
-    assert plugin
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_container_node_name')]
     assert list(plugin.inventory_function(info)) == [
         Attributes(path=['software', 'applications', 'docker', 'container'],
                    inventory_attributes={'node_name': 'klappben'},
@@ -28,10 +24,7 @@ def test_inv_docker_container_node_name():
     ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_container_node_name_legacy_agent_output():
-    plugin = agent_based_register.get_inventory_plugin(
-        InventoryPluginName('docker_container_node_name'))
-    assert plugin
+def test_inv_docker_container_node_name_legacy_agent_output(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_container_node_name')]
     with pytest.raises(AgentOutputMalformatted):
         list(plugin.inventory_function([['node_name']]))

@@ -7,11 +7,9 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize('info, inventory_data', [
     (
         [
@@ -38,7 +36,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ],
     ),
 ])
-def test_inv_lnx_block_devices(info, inventory_data):
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('lnx_block_devices'))
-    assert plugin
+def test_inv_lnx_block_devices(fix_register, info, inventory_data):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('lnx_block_devices')]
     assert list(plugin.inventory_function(info)) == inventory_data

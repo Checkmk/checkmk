@@ -14,7 +14,6 @@ import pytest
 # No stub file
 from testlib.base import Scenario
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -27,7 +26,7 @@ from cmk.base.check_utils import Service
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [
@@ -198,7 +197,7 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
     assert check_table.get_check_table(hostname) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("hostname, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
@@ -243,7 +242,7 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 
 
 # verify static check outcome, including timespecific params
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "hostname,expected_result",
     [

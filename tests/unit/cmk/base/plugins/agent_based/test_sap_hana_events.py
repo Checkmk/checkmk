@@ -6,12 +6,10 @@
 
 import pytest
 
-from cmk.base.api.agent_based import register
 from cmk.utils.type_defs import SectionName, CheckPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric, IgnoreResultsError
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("info, expected_result", [
     ([
         ["[[HXE 90 SYSTEMDB]]"],
@@ -36,14 +34,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
         },
     }),
 ])
-def test_parse_sap_hana_events(info, expected_result):
-    section_name = SectionName("sap_hana_events")
-    section_plugin = register.get_section_plugin(section_name)
-    result = section_plugin.parse_function(info)
-    assert result == expected_result
+def test_parse_sap_hana_events(fix_register, info, expected_result):
+    section_plugin = fix_register.agent_sections[SectionName("sap_hana_events")]
+    assert section_plugin.parse_function(info) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("info, expected_result", [
     (
         [
@@ -55,17 +50,12 @@ def test_parse_sap_hana_events(info, expected_result):
         [Service(item="HXE 90 SYSTEMDB")],
     ),
 ])
-def test_inventory_sap_hana_events(info, expected_result):
-    section_name = SectionName("sap_hana_events")
-    section = register.get_section_plugin(section_name).parse_function(info)
-
-    plugin_name = CheckPluginName("sap_hana_events")
-    plugin = register.get_check_plugin(plugin_name)
-    if plugin:
-        assert list(plugin.discovery_function(section)) == expected_result
+def test_inventory_sap_hana_events(fix_register, info, expected_result):
+    section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
+    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
+    assert list(plugin.discovery_function(section)) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("item, info, expected_result", [
     (
         "HXE 90 SYSTEMDB",
@@ -96,17 +86,12 @@ def test_inventory_sap_hana_events(info, expected_result):
         ],
     ),
 ])
-def test_check_sap_hana_events(item, info, expected_result):
-    section_name = SectionName("sap_hana_events")
-    section = register.get_section_plugin(section_name).parse_function(info)
-
-    plugin_name = CheckPluginName("sap_hana_events")
-    plugin = register.get_check_plugin(plugin_name)
-    if plugin:
-        assert list(plugin.check_function(item, section)) == expected_result
+def test_check_sap_hana_events(fix_register, item, info, expected_result):
+    section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
+    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
+    assert list(plugin.check_function(item, section)) == expected_result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("item, info", [
     (
         "HXE 90 SYSTEMDB",
@@ -115,12 +100,8 @@ def test_check_sap_hana_events(item, info, expected_result):
         ],
     ),
 ])
-def test_check_sap_hana_events_stale(item, info):
-    section_name = SectionName("sap_hana_events")
-    section = register.get_section_plugin(section_name).parse_function(info)
-
-    plugin_name = CheckPluginName("sap_hana_events")
-    plugin = register.get_check_plugin(plugin_name)
-    if plugin:
-        with pytest.raises(IgnoreResultsError):
-            list(plugin.check_function(item, section))
+def test_check_sap_hana_events_stale(fix_register, item, info):
+    section = fix_register.agent_sections[SectionName("sap_hana_events")].parse_function(info)
+    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_events")]
+    with pytest.raises(IgnoreResultsError):
+        list(plugin.check_function(item, section))

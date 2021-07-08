@@ -218,11 +218,6 @@ def fix_register_fixture():
 
 
 @pytest.fixture(scope="session")
-def load_all_agent_based_plugins(fix_register):
-    pass
-
-
-@pytest.fixture(scope="session")
 def fix_plugin_legacy(fix_register):
     yield FixPluginLegacy(fix_register)
 

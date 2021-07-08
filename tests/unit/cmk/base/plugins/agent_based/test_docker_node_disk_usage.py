@@ -20,7 +20,7 @@ AGENT_OUTPUT = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_check_docker_node_disk_usage():
     check = Check("docker_node_disk_usage")
     result = list(check.run_check('volumes', {}, check.run_parse(AGENT_OUTPUT)))

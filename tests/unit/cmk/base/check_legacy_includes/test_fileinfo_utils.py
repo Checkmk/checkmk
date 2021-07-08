@@ -294,7 +294,7 @@ def test__filename_matches(filename, reftime, inclusion, exclusion, expected_res
          '[my_folder/filename456] Age: 3.1 y, Size: 348 B'),
     ]),
 ])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
     fileinfo_groups_check = Check('fileinfo.groups')
 

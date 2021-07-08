@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 AGENT_OUTPUT = (
@@ -52,11 +51,9 @@ AGENT_OUTPUT_NULL_LABELS_ST = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_node_images():
+def test_inv_docker_node_images(fix_register):
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('docker_node_images'))
-    assert plugin
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_node_images')]
     assert list(plugin.inventory_function(parsed)) == [
         TableRow(
             path=['software', 'applications', 'docker', 'containers'],
@@ -87,10 +84,8 @@ def test_inv_docker_node_images():
     ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_docker_node_images_labels_null():
-    plugin = agent_based_register.get_inventory_plugin(InventoryPluginName('docker_node_images'))
-    assert plugin
+def test_inv_docker_node_images_labels_null(fix_register):
+    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_node_images')]
     assert list(plugin.inventory_function(AGENT_OUTPUT_NULL_LABELS_ST)) == [
         TableRow(path=['software', 'applications', 'docker', 'images'],
                  key_columns={'id': '666620a54926'},

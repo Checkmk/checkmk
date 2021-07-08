@@ -1129,7 +1129,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),
@@ -1481,7 +1481,7 @@ def test_labels_of_service(monkeypatch):
     }
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     ts = Scenario().add_host("test-host")
 
@@ -1542,7 +1542,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", ["icon1", "icon2"]),

@@ -33,7 +33,7 @@ def make_scenario(hostname, tags):
     return ts
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("hostname, tags, sources", [
     ("agent-host", {}, [TCPSource, PiggybackSource]),
     (

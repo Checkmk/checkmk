@@ -9,7 +9,6 @@ import pytest
 from testlib import set_timezone
 
 from cmk.utils.type_defs import InventoryPluginName
-from cmk.base.api.agent_based import register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 INFO = [
@@ -69,10 +68,8 @@ RESULT = [
 ]
 
 
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
-def test_inv_solaris_pkginfo() -> None:
-    plugin = register.get_inventory_plugin(InventoryPluginName('solaris_pkginfo'))
-    assert plugin
+def test_inv_solaris_pkginfo(fix_register) -> None:
+    plugin = fix_register.inventory_plugins[InventoryPluginName('solaris_pkginfo')]
     with set_timezone("ETC-2"):
         result = list(plugin.inventory_function(INFO))
     assert result == RESULT

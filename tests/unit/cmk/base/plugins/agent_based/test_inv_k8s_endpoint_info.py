@@ -142,6 +142,5 @@ RESULT1 = [
     (DATA0, RESULT0),
     (DATA1, RESULT1),
 ])
-@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_inv_k8s_endpoint_info(data: StringTable, result: InventoryResult):
     assert list(inventory_k8s_endpoints(parse_k8s_endpoint_info(data))) == result

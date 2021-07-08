@@ -37,7 +37,7 @@ import cmk.gui.plugins.sidebar.search
 from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.log import logger
-from cmk.gui.config import LoggedInUser
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (

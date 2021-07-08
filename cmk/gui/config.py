@@ -4,16 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import contextlib
 import sys
 import errno
 import os
 import copy
 import json
 from types import ModuleType
-from typing import Set, Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Set, Any, Callable, Dict, List, Optional, Tuple, Union
 from pathlib import Path
-import time
 
 from six import ensure_str
 
@@ -25,14 +23,13 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import local, user, request
+from cmk.gui.globals import user
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
-from cmk.gui.exceptions import MKConfigError, MKAuthException
+from cmk.gui.exceptions import MKConfigError
 import cmk.gui.permissions as permissions
-from cmk.gui.utils.transaction_manager import TransactionManager
 
 import cmk.gui.plugins.config
 
@@ -145,7 +142,6 @@ aggregation_functions: Dict[str, Callable] = {}
 
 
 def initialize() -> None:
-    clear_user_login()
     load_config()
     log.set_log_levels(log_levels)
     cmk.gui.i18n.set_user_localizations(user_localizations)
@@ -418,16 +414,16 @@ def get_role_permissions() -> Dict[str, List[str]]:
             if role_id not in role_permissions:
                 role_permissions[role_id] = []
 
-            if _may_with_roles([role_id], perm.name):
+            if may_with_roles([role_id], perm.name):
                 role_permissions[role_id].append(perm.name)
     return role_permissions
 
 
 def base_roles_with_permission(pname: str) -> List[str]:
-    return [r for r in builtin_role_ids if _may_with_roles([r], pname)]
+    return [r for r in builtin_role_ids if may_with_roles([r], pname)]
 
 
-def _may_with_roles(some_role_ids: List[str], pname: str) -> bool:
+def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
@@ -452,38 +448,6 @@ def _may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     return False
 
 
-#.
-#   .--User Login----------------------------------------------------------.
-#   |           _   _                 _                _                   |
-#   |          | | | |___  ___ _ __  | |    ___   __ _(_)_ __              |
-#   |          | | | / __|/ _ \ '__| | |   / _ \ / _` | | '_ \             |
-#   |          | |_| \__ \  __/ |    | |__| (_) | (_| | | | | |            |
-#   |           \___/|___/\___|_|    |_____\___/ \__, |_|_| |_|            |
-#   |                                            |___/                     |
-#   +----------------------------------------------------------------------+
-#   | Managing the currently logged in user                                |
-#   '----------------------------------------------------------------------'
-# TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
-
-
-def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
-    base_roles = set()
-    for r in role_ids:
-        if r in builtin_role_ids:
-            base_roles.add(r)
-        else:
-            base_roles.add(roles[r]["basedon"])
-    return list(base_roles)
-
-
-def _most_permissive_baserole_id(baserole_ids: List[str]) -> str:
-    if "admin" in baserole_ids:
-        return "admin"
-    if "user" in baserole_ids:
-        return "user"
-    return "guest"
-
-
 def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
@@ -495,429 +459,6 @@ def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
             "wato.users": True,  # ... with access to user management
         }
     return {}
-
-
-def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
-    if user_id is None:
-        return None
-
-    confdir = config_dir + "/" + ensure_str(user_id)
-    store.mkdir(confdir)
-    return confdir
-
-
-# This objects intention is currently only to handle the currently logged in user after authentication.
-# But maybe this can be used for managing all user objects in future.
-# TODO: Cleanup accesses to module global vars and functions
-class LoggedInUser:
-    def __init__(self, user_id: Optional[str]) -> None:
-        self.id = UserId(user_id) if user_id else None
-
-        self.confdir = _confdir_for_user_id(self.id)
-        self.role_ids = self._gather_roles(self.id)
-        baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
-        self.baserole_id = _most_permissive_baserole_id(baserole_ids)
-        self._attributes = self._load_attributes(self.id, self.role_ids)
-        self.alias = self._attributes.get("alias", self.id)
-        self.email = self._attributes.get("email", self.id)
-
-        self._permissions = _initial_permission_cache(self.id)
-        self._siteconf = self.load_file("siteconfig", {})
-        self._button_counts: Dict[str, float] = {}
-        self._stars: Set[str] = set()
-        self._tree_states: Dict = {}
-        self._bi_assumptions: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int] = {}
-        self._tableoptions: Dict[str, Dict[str, Any]] = {}
-
-    @property
-    def ident(self) -> UserId:
-        """Return the user-id as a string, or crash.
-
-        Returns:
-            The user_id as a string.
-
-        Raises:
-            ValueError: whenever there is no user_id.
-
-        """
-        if self.id is None:
-            raise AttributeError("No user_id on this instance.")
-        return self.id
-
-    def _gather_roles(self, user_id: Optional[UserId]) -> List[str]:
-        return roles_of_user(user_id)
-
-    def _load_attributes(self, user_id: Optional[UserId], role_ids: List[str]) -> Any:
-        attributes = self.load_file("cached_profile", None)
-        if attributes is None:
-            attributes = multisite_users.get(user_id, {
-                "roles": role_ids,
-            })
-        return attributes
-
-    def get_attribute(self, key: str, deflt: Any = None) -> Any:
-        return self._attributes.get(key, deflt)
-
-    def _set_attribute(self, key: str, value: Any) -> None:
-        self._attributes[key] = value
-
-    def _unset_attribute(self, key: str) -> None:
-        try:
-            del self._attributes[key]
-        except KeyError:
-            pass
-
-    @property
-    def language(self) -> Optional[str]:
-        return self.get_attribute("language", get_language())
-
-    @language.setter
-    def language(self, value: Optional[str]) -> None:
-        self._set_attribute("language", value)
-
-    def reset_language(self) -> None:
-        self._unset_attribute("language")
-
-    @property
-    def show_mode(self) -> str:
-        return self.get_attribute("show_mode") or show_mode
-
-    @property
-    def show_more_mode(self) -> bool:
-        return "show_more" in self.show_mode
-
-    @property
-    def customer_id(self) -> Optional[str]:
-        return self.get_attribute("customer")
-
-    @property
-    def contact_groups(self) -> List:
-        return self.get_attribute("contactgroups", [])
-
-    @property
-    def start_url(self) -> Optional[str]:
-        return self.load_file("start_url", None)
-
-    @property
-    def show_help(self) -> bool:
-        return self.load_file("help", False)
-
-    @show_help.setter
-    def show_help(self, value: bool) -> None:
-        self.save_file("help", value)
-
-    @property
-    def acknowledged_notifications(self) -> int:
-        return self.load_file("acknowledged_notifications", 0)
-
-    @acknowledged_notifications.setter
-    def acknowledged_notifications(self, value: int) -> None:
-        self.save_file("acknowledged_notifications", value)
-
-    @property
-    def discovery_checkboxes(self) -> bool:
-        return self.load_file("discovery_checkboxes", False)
-
-    @discovery_checkboxes.setter
-    def discovery_checkboxes(self, value: bool) -> None:
-        self.save_file("discovery_checkboxes", value)
-
-    @property
-    def parameter_column(self) -> bool:
-        return self.load_file("parameter_column", False)
-
-    @parameter_column.setter
-    def parameter_column(self, value: bool) -> None:
-        self.save_file("parameter_column", value)
-
-    @property
-    def discovery_show_discovered_labels(self) -> bool:
-        return self.load_file("discovery_show_discovered_labels", False)
-
-    @discovery_show_discovered_labels.setter
-    def discovery_show_discovered_labels(self, value: bool) -> None:
-        self.save_file("discovery_show_discovered_labels", value)
-
-    @property
-    def discovery_show_plugin_names(self) -> bool:
-        return self.load_file("discovery_show_plugin_names", False)
-
-    @discovery_show_plugin_names.setter
-    def discovery_show_plugin_names(self, value: bool) -> None:
-        self.save_file("discovery_show_plugin_names", value)
-
-    @property
-    def wato_folders_show_tags(self) -> bool:
-        return self.load_file("wato_folders_show_tags", False)
-
-    @wato_folders_show_tags.setter
-    def wato_folders_show_tags(self, value: bool) -> None:
-        self.save_file("wato_folders_show_tags", value)
-
-    @property
-    def wato_folders_show_labels(self) -> bool:
-        return self.load_file("wato_folders_show_labels", False)
-
-    @wato_folders_show_labels.setter
-    def wato_folders_show_labels(self, value: bool) -> None:
-        self.save_file("wato_folders_show_labels", value)
-
-    @property
-    def bi_expansion_level(self) -> int:
-        return self.load_file("bi_treestate", (None,))[0]
-
-    @bi_expansion_level.setter
-    def bi_expansion_level(self, value: int) -> None:
-        self.save_file("bi_treestate", (value,))
-
-    @property
-    def stars(self) -> Set[str]:
-        if not self._stars:
-            self._stars = set(self.load_file("favorites", []))
-        return self._stars
-
-    def save_stars(self) -> None:
-        self.save_file("favorites", list(self._stars))
-
-    @property
-    def tree_states(self) -> Dict:
-        if not self._tree_states:
-            self._tree_states = self.load_file("treestates", {})
-        return self._tree_states
-
-    def get_tree_states(self, tree):
-        return self.tree_states.get(tree, {})
-
-    def get_tree_state(self, treename: str, id_: str, isopen: bool) -> bool:
-        # try to get persisted state of tree
-        tree_state = self.get_tree_states(treename)
-
-        if id_ in tree_state:
-            isopen = tree_state[id_] == "on"
-        return isopen
-
-    def set_tree_state(self, tree, key, val):
-        if tree not in self.tree_states:
-            self.tree_states[tree] = {}
-
-        self.tree_states[tree][key] = val
-
-    def set_tree_states(self, tree, val):
-        self.tree_states[tree] = val
-
-    def save_tree_states(self) -> None:
-        self.save_file("treestates", self._tree_states)
-
-    def get_show_more_setting(self, more_id: str) -> bool:
-        if self.show_mode == "enforce_show_more":
-            return True
-
-        return self.get_tree_state(
-            treename="more_buttons",
-            id_=more_id,
-            isopen=self.show_mode == "default_show_more",
-        )
-
-    @property
-    def bi_assumptions(self):
-        if not self._bi_assumptions:
-            self._bi_assumptions = self.load_file("bi_assumptions", {})
-        return self._bi_assumptions
-
-    def save_bi_assumptions(self):
-        self.save_file("bi_assumptions", self._bi_assumptions)
-
-    @property
-    def tableoptions(self) -> Dict[str, Dict[str, Any]]:
-        if not self._tableoptions:
-            self._tableoptions = self.load_file("tableoptions", {})
-        return self._tableoptions
-
-    def save_tableoptions(self) -> None:
-        self.save_file("tableoptions", self._tableoptions)
-
-    def get_rowselection(self, selection_id: str, identifier: str) -> List[str]:
-        vo = self.load_file("rowselection/%s" % selection_id, {})
-        return vo.get(identifier, [])
-
-    def set_rowselection(self, selection_id: str, identifier: str, rows: List[str],
-                         action: str) -> None:
-        vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
-
-        if action == 'set':
-            vo[identifier] = rows
-
-        elif action == 'add':
-            vo[identifier] = list(set(vo.get(identifier, [])).union(rows))
-
-        elif action == 'del':
-            vo[identifier] = list(set(vo.get(identifier, [])) - set(rows))
-
-        elif action == 'unset':
-            del vo[identifier]
-
-        self.save_file("rowselection/%s" % selection_id, vo)
-
-    def cleanup_old_selections(self) -> None:
-        # Delete all selection files older than the defined livetime.
-        if self.confdir is None:
-            return
-
-        path = self.confdir + '/rowselection'
-        try:
-            for f in os.listdir(path):
-                if f[1] != '.' and f.endswith('.mk'):
-                    p = path + '/' + f
-                    if time.time() - os.stat(p).st_mtime > selection_livetime:
-                        os.unlink(p)
-        except OSError:
-            pass  # no directory -> no cleanup
-
-    def get_sidebar_configuration(self, default: Dict[str, Any]) -> Dict[str, Any]:
-        return self.load_file("sidebar", default)
-
-    def set_sidebar_configuration(self, configuration: Dict[str, Any]) -> None:
-        self.save_file("sidebar", configuration)
-
-    def is_site_disabled(self, site_id: SiteId) -> bool:
-        return self._siteconf.get(site_id, {}).get("disabled", False)
-
-    def disable_site(self, site_id: SiteId) -> None:
-        self._siteconf.setdefault(site_id, {})["disabled"] = True
-
-    def enable_site(self, site_id: SiteId) -> None:
-        self._siteconf.setdefault(site_id, {}).pop("disabled", None)
-
-    def save_site_config(self) -> None:
-        self.save_file("siteconfig", self._siteconf)
-
-    def transids(self, lock: bool = False) -> List[str]:
-        return self.load_file("transids", [], lock=lock)
-
-    def save_transids(self, transids: List[str]) -> None:
-        if self.id:
-            self.save_file("transids", transids)
-
-    def authorized_sites(self,
-                         unfiltered_sites: Optional[SiteConfigurations] = None
-                        ) -> SiteConfigurations:
-        if unfiltered_sites is None:
-            unfiltered_sites = allsites()
-
-        authorized_sites = self.get_attribute("authorized_sites")
-        if authorized_sites is None:
-            return dict(unfiltered_sites)
-
-        return {
-            site_id: s  #
-            for site_id, s in unfiltered_sites.items()
-            if site_id in authorized_sites
-        }
-
-    def authorized_login_sites(self) -> SiteConfigurations:
-        login_site_ids = get_login_slave_sites()
-        return self.authorized_sites(
-            {site_id: s for site_id, s in allsites().items() if site_id in login_site_ids})
-
-    def may(self, pname: str) -> bool:
-        if pname in self._permissions:
-            return self._permissions[pname]
-        he_may = _may_with_roles(self.role_ids, pname)
-        self._permissions[pname] = he_may
-        return he_may
-
-    def need_permission(self, pname: str) -> None:
-        if not self.may(pname):
-            perm = permissions.permission_registry[pname]
-            raise MKAuthException(
-                _("We are sorry, but you lack the permission "
-                  "for this operation. If you do not like this "
-                  "then please ask your administrator to provide you with "
-                  "the following permission: '<b>%s</b>'.") % perm.title)
-
-    def load_file(self, name: str, deflt: Any, lock: bool = False) -> Any:
-        if self.confdir is None:
-            return deflt
-
-        path = self.confdir + "/" + name + ".mk"
-
-        # The user files we load with this function are mostly some kind of persisted states.  In
-        # case a file is corrupted for some reason we rather start over with the default instead of
-        # failing at some random places.
-        try:
-            return store.load_object_from_file(path, default=deflt, lock=lock)
-        except (ValueError, SyntaxError):
-            return deflt
-
-    def save_file(self, name: str, content: Any) -> None:
-        save_user_file(name, content, self.id)
-
-    def file_modified(self, name: str) -> float:
-        if self.confdir is None:
-            return 0
-
-        try:
-            return os.stat(self.confdir + "/" + name + ".mk").st_mtime
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                return 0
-            raise
-
-
-# Login a user that has all permissions. This is needed for making
-# Livestatus queries from unauthentiated page handlers
-# TODO: Can we somehow get rid of this?
-class LoggedInSuperUser(LoggedInUser):
-    def __init__(self) -> None:
-        super(LoggedInSuperUser, self).__init__(None)
-        self.alias = "Superuser for unauthenticated pages"
-        self.email = "admin"
-
-    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
-        return ["admin"]
-
-
-class LoggedInNobody(LoggedInUser):
-    def __init__(self) -> None:
-        super(LoggedInNobody, self).__init__(None)
-        self.alias = "Unauthenticated user"
-        self.email = "nobody"
-
-    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
-        return []
-
-
-def clear_user_login() -> None:
-    _set_user(LoggedInNobody())
-
-
-def set_user_by_id(user_id: UserId) -> None:
-    _set_user(LoggedInUser(user_id))
-
-
-def set_super_user() -> None:
-    _set_user(LoggedInSuperUser())
-
-
-def _set_user(_user: LoggedInUser) -> None:
-    """Set the currently logged in user (thread safe).
-
-    local.user will set the current RequestContext to _user and it will be accessible via
-    cmk.gui.globals.user directly. This is imported here."""
-    local.user = _user
-    local.transactions = TransactionManager(request, user)
-
-
-@contextlib.contextmanager
-def UserContext(user_id: UserId) -> Iterator[None]:
-    """Managing authenticated user context
-
-    After the user has been authenticated, initialize the global user object."""
-    try:
-        set_user_by_id(user_id)
-        yield
-    finally:
-        clear_user_login()
 
 
 #.
@@ -965,7 +506,7 @@ def alias_of_user(user_id: Optional[UserId]) -> Optional[UserId]:
 
 
 def user_may(user_id: Optional[UserId], pname: str) -> bool:
-    return _may_with_roles(roles_of_user(user_id), pname)
+    return may_with_roles(roles_of_user(user_id), pname)
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)

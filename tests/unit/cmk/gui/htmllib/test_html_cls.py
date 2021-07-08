@@ -8,7 +8,7 @@ import traceback
 
 from cmk.gui.globals import html, user_errors, output_funnel, user
 from cmk.gui.utils.html import HTML
-import cmk.gui.config as config
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.exceptions import MKUserError
 
 from testlib import compare_html
@@ -40,7 +40,7 @@ def test_render_help_text(register_builtin_html):
 
 
 def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):
-    monkeypatch.setattr(config.LoggedInUser, "show_help", property(lambda s: True))
+    monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))

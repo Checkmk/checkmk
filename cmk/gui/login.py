@@ -39,6 +39,7 @@ from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.logged_in import UserContext
 
 auth_logger = logger.getChild("auth")
 
@@ -69,7 +70,7 @@ def authenticate(req: Request) -> Iterator[bool]:
 @contextlib.contextmanager
 def UserSessionContext(user_id: UserId) -> Iterator[None]:
     """Managing context of authenticated user session with cleanup before logout."""
-    with config.UserContext(user_id):
+    with UserContext(user_id):
         try:
             yield
         finally:

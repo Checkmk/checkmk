@@ -15,10 +15,10 @@ import cmk.utils.store as store
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.config as config
 from cmk.gui.globals import response
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.utils.logged_in import set_super_user
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
 from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
@@ -73,7 +73,7 @@ def page_run_cron() -> None:
         # the code free from special cases (if no user logged in, then...).
         # The jobs need to be run in privileged mode in general. Some jobs, like the network
         # scan, switch the user context to a specific other user during execution.
-        config.set_super_user()
+        set_super_user()
 
         logger.debug("Starting cron jobs")
 

@@ -18,6 +18,7 @@ from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 import cmk.gui.config as config
 from cmk.utils.type_defs import UserId
+from cmk.gui.utils.logged_in import LoggedInUser
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -32,7 +33,7 @@ CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
 def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
-    usr = config.LoggedInUser(user_id) if user_id != user.id else config.user
+    usr = LoggedInUser(user_id) if user_id != user.id else config.user
     return usr.load_file("cached_profile", None)
 
 

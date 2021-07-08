@@ -24,7 +24,8 @@ from cmk.gui.utils.user_errors import UserErrors
 # Cyclical import
 
 if TYPE_CHECKING:
-    from cmk.gui import htmllib, http, config, userdb
+    from cmk.gui import htmllib, http, userdb
+    from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.timeout_manager import TimeoutManager
     from cmk.gui.utils.theme import Theme
     from cmk.gui.display_options import DisplayOptions
@@ -173,23 +174,21 @@ class RequestContext:
         self.output_funnel = funnel
 
         # TODO: cyclical import with config -> globals -> config -> ...
-        from cmk.gui.config import LoggedInNobody
-        self._user: config.LoggedInUser = LoggedInNobody()
+        from cmk.gui.utils.logged_in import LoggedInNobody
+        self._user: LoggedInUser = LoggedInNobody()
+        # TODO: This needs to be a helper of LoggedInUser
         self.transactions = TransactionManager(req, self._user)
         self.user_errors = UserErrors()
-
-        # TODO: This needs to be a helper of LoggedInUser
-        self.transactions = TransactionManager(req, self.user)
 
         self._prepend_url_filter = _PrependURLFilter()
         self._web_log_handler: Optional[logging.Handler] = None
 
     @property
-    def user(self) -> config.LoggedInUser:
+    def user(self) -> LoggedInUser:
         return self._user
 
     @user.setter
-    def user(self, user_obj: config.LoggedInUser) -> None:
+    def user(self, user_obj: LoggedInUser) -> None:
         self._user = user_obj
         self.transactions = TransactionManager(request, user_obj)
 
@@ -237,7 +236,7 @@ def request_local_attr(name=None):
 # tools in general.
 
 local: RequestContext = request_local_attr()  # None as name will get the whole object.
-user: config.LoggedInUser = request_local_attr('user')
+user: LoggedInUser = request_local_attr('user')
 request: http.Request = request_local_attr('request')
 response: http.Response = request_local_attr('response')
 output_funnel: OutputFunnel = request_local_attr('output_funnel')

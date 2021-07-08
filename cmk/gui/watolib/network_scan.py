@@ -23,6 +23,7 @@ from cmk.gui import config, userdb
 from cmk.gui.globals import request, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.utils.logged_in import set_user_by_id
 
 from cmk.gui.watolib import init_wato_datastructures
 from cmk.gui.watolib.automations import do_remote_automation
@@ -58,7 +59,7 @@ def execute_network_scan_job() -> None:
         return  # Nothing to do.
 
     # We need to have the context of the user. The jobs are executed when
-    # config.set_user_by_id() has not been executed yet. So there is no user context
+    # set_user_by_id() has not been executed yet. So there is no user context
     # available. Use the run_as attribute from the job config and revert
     # the previous state after completion.
     old_user = user.id
@@ -67,7 +68,7 @@ def execute_network_scan_job() -> None:
         raise MKGeneralException(
             _("The user %s used by the network "
               "scan of the folder %s does not exist.") % (run_as, folder.title()))
-    config.set_user_by_id(folder.attribute("network_scan")["run_as"])
+    set_user_by_id(folder.attribute("network_scan")["run_as"])
 
     result: NetworkScanResult = {
         "start": time.time(),
@@ -109,7 +110,7 @@ def execute_network_scan_job() -> None:
     _save_network_scan_result(folder, result)
 
     if old_user:
-        config.set_user_by_id(old_user)
+        set_user_by_id(old_user)
 
 
 def _find_folder_to_scan() -> Optional['CREFolder']:

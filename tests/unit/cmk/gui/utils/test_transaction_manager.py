@@ -11,8 +11,8 @@ import time
 import pytest
 
 import cmk.gui.http as http
-from cmk.gui.config import LoggedInUser
 from cmk.gui.globals import transactions
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.transaction_manager import TransactionManager
 
 

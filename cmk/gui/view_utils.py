@@ -18,6 +18,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, theme
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.logged_in import LoggedInUser
 
 CSSClass = Optional[str]
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
@@ -28,7 +29,6 @@ CellSpec = Tuple[CSSClass, CellContent]
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
-    from cmk.gui.config import LoggedInUser
 
 
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
@@ -109,7 +109,7 @@ def row_limit_exceeded(row_count: int, limit: Optional[int]) -> bool:
     return limit is not None and row_count >= limit + 1
 
 
-def query_limit_exceeded_warn(limit: Optional[int], user_config: 'LoggedInUser') -> None:
+def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -> None:
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML(_("Your query produced more than %d results. ") % limit)
 

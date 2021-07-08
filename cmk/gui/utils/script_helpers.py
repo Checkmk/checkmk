@@ -18,11 +18,9 @@ from typing import (
 
 from werkzeug.test import create_environ
 
-from cmk.gui.config import (
-    load_config,
-    set_super_user,
-)
+from cmk.gui.config import load_config
 from cmk.gui.display_options import DisplayOptions
+from cmk.gui.utils.logged_in import set_super_user
 from cmk.gui.utils.theme import Theme
 from cmk.gui.globals import (
     AppContext,

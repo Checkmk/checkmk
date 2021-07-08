@@ -34,7 +34,6 @@ from cmk.utils.redis import get_redis_client
 
 import cmk.gui.config as config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
-from cmk.gui.config import UserContext
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import g, request, RequestContext, user
@@ -47,6 +46,7 @@ from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
+from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 if TYPE_CHECKING:

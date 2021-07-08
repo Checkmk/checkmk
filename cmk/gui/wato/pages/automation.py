@@ -23,6 +23,7 @@ from cmk.gui.log import logger
 from cmk.gui.globals import response, request, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.utils.logged_in import set_super_user
 
 
 @page_registry.register_page("automation_login")
@@ -73,7 +74,7 @@ class ModeAutomation(AjaxPage):
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
-        config.set_super_user()
+        set_super_user()
 
     def _from_vars(self):
         self._authenticate()

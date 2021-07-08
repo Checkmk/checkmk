@@ -60,6 +60,7 @@ from cmk.gui.plugins.userdb.utils import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.logged_in import LoggedInUser
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -162,7 +163,7 @@ def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
     except ImportError:
         return True
 
-    user = config.LoggedInUser(user_id)
+    user = LoggedInUser(user_id)
     if managed.is_global(user.customer_id):
         return True
 

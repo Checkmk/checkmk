@@ -24,7 +24,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, request, user as global_user
-from cmk.gui.config import LoggedInUser
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.log import logger
 
 #   .--API-----------------------------------------------------------------.

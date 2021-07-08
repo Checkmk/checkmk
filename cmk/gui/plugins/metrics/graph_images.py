@@ -23,6 +23,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
+from cmk.gui.utils.logged_in import set_super_user
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import response, request
@@ -50,7 +51,7 @@ def ajax_graph_images_for_notifications():
         raise MKUnauthenticatedException(
             _("You are not allowed to access this page (%s).") % request.remote_ip)
 
-    config.set_super_user()
+    set_super_user()
 
     try:
         host_name = request.var("host")

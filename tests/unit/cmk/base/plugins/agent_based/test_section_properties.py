@@ -169,7 +169,6 @@ def test_section_parse_function_does_something(fix_register):
         'k8s_pods_cpu',
         'k8s_pods_fs',
         'k8s_pods_memory',
-        'kaspersky_av_quarantine',
         'kaspersky_av_updates',
         'logins',
         'lvm_vgs',

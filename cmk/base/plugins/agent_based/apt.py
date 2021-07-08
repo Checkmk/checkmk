@@ -33,6 +33,13 @@ def _data_is_valid(string_table: StringTable) -> bool:
     if first_line[0] == NOTHING_PENDING_FOR_INSTALLATION:
         return True
 
+    # Newer versions of apt display something like
+    # 3 esm-infra security updates
+    # 10 standard security updates
+    # 1 standard security update
+    if "security update" in first_line[0]:
+        first_line = string_table[1]
+
     parts = first_line[0].split()
     if len(parts) < 3:
         return False

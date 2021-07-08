@@ -11,10 +11,19 @@
 #         Size: 0
 #         Last added: unknown
 
+from typing import Dict
+
 from .agent_based_api.v1 import register, Service, Result, Metric, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+Section = Dict[str, str]
 
 
-def parse_kaspersky_av_quarantine(string_table):
+def parse_kaspersky_av_quarantine(string_table: StringTable) -> Section:
+    """
+    >>> parse_kaspersky_av_quarantine([["Objects", " 1"]])
+    {'Objects': ' 1'}
+    """
     return {l[0]: ' '.join(l[1:]) for l in string_table}
 
 
@@ -24,12 +33,16 @@ register.agent_section(
 )
 
 
-def discover_kaspersky_av_quarantine(section):
+def discover_kaspersky_av_quarantine(section: Section) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_kaspersky_av_quarantine(section):
+def check_kaspersky_av_quarantine(section: Section) -> CheckResult:
+    """
+    >>> list(check_kaspersky_av_quarantine({"Objects": " 0"}))
+    [Result(state=<State.OK: 0>, summary='No objects in Quarantine'), Metric('Objects', 0.0)]
+    """
     objects = int(section['Objects'])
     if objects > 0:
         yield Result(

@@ -20,6 +20,15 @@ _SECTION_UPDATES_AV = [
 ]
 _SECTION_NO_UPDATES = [["No updates pending for installation"]]
 _SECTION_BROKEN = [["not found"]]
+_SECTION_SEC_UPDATES = [
+    ["Inst linux-libc-dev [4.9.130-2] (4.9.228-1 Debian:9.13/oldstable [amd64]) []"],
+    [
+        "Inst libapt-pkg5.0 [1.4.8] (1.4.10 Debian:9.13/oldstable, Debian-Security:9/oldstable [amd64])"
+    ],
+    [
+        "Inst libexpat1 [2.2.0-2+deb9u1] (2.2.0-2+deb9u3 Debian:9.13/oldstable, Debian-Security:9/oldstable [amd64])"
+    ],
+]
 
 
 @pytest.mark.parametrize(
@@ -39,6 +48,11 @@ _SECTION_BROKEN = [["not found"]]
             _SECTION_BROKEN,
             False,
             id="broken_section",
+        ),
+        pytest.param(
+            _SECTION_SEC_UPDATES,
+            True,
+            id="security_upates_line",
         ),
     ],
 )
@@ -70,6 +84,15 @@ def test_data_is_valid(
             _SECTION_BROKEN,
             None,
             id="broken_section",
+        ),
+        pytest.param(
+            _SECTION_SEC_UPDATES,
+            Section(
+                ["linux-libc-dev"],
+                [],
+                ["libapt-pkg5.0", "libexpat1"],
+            ),
+            id="security_upates_line",
         ),
     ],
 )

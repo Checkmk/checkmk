@@ -42,6 +42,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
@@ -51,7 +52,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def _get_current_theme_titel() -> str:
-    return [titel for theme_id, titel in config.theme_choices() if theme_id == theme.get()][0]
+    return [titel for theme_id, titel in theme.theme_choices if theme_id == theme.get()][0]
 
 
 def _get_sidebar_position() -> str:
@@ -157,7 +158,7 @@ mega_menu_registry.register(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
     def page(self) -> AjaxPageResult:
-        themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
+        themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
         try:
             theme_index = themes.index(current_theme)

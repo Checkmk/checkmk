@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-
 import pytest
 
 import cmk.gui.config as config
 from cmk.gui.valuespec import (
     DropdownChoice,)
 
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.plugins.wato.check_mk_configuration import (ConfigVariableGroupUserInterface,
                                                          _transform_automatic_rediscover_parameters)
 
@@ -33,7 +32,7 @@ def test_ui_theme_registration():
 
     valuespec = var.valuespec()
     assert isinstance(valuespec, DropdownChoice)
-    assert valuespec.choices() == config.theme_choices()
+    assert valuespec.choices() == theme_choices()
 
 
 def test_ui_theme_default_value(register_builtin_html):

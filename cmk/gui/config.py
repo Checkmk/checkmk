@@ -8,7 +8,6 @@ import sys
 import errno
 import os
 import copy
-import json
 from types import ModuleType
 from typing import Set, Any, Callable, Dict, List, Optional, Tuple, Union
 from pathlib import Path
@@ -822,36 +821,6 @@ def load_plugins(force: bool) -> None:
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
     for br in builtin_role_ids:
         roles.setdefault(br, {})
-
-
-def theme_choices() -> List[Tuple[str, str]]:
-    themes = {}
-
-    for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
-        if not base_dir.exists():
-            continue
-
-        theme_base_dir = base_dir / "htdocs" / "themes"
-        if not theme_base_dir.exists():
-            continue
-
-        for theme_dir in theme_base_dir.iterdir():
-            meta_file = theme_dir / "theme.json"
-            if not meta_file.exists():
-                continue
-
-            try:
-                theme_meta = json.loads(meta_file.open(encoding="utf-8").read())
-            except ValueError:
-                # Ignore broken meta files and show the directory name as title
-                theme_meta = {
-                    "title": theme_dir.name,
-                }
-
-            assert isinstance(theme_meta["title"], str)
-            themes[theme_dir.name] = theme_meta["title"]
-
-    return sorted(themes.items())
 
 
 def show_mode_choices() -> List[Tuple[Optional[str], str]]:

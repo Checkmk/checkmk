@@ -6,13 +6,12 @@
 
 # pylint: disable=redefined-outer-name
 
-import json
 from pathlib import Path
 import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
-import cmk.utils.paths
 import cmk.utils.version as cmk_version
+import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
@@ -25,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_default_config_from_plugins():
-    assert cmk.gui.config.default_config == {}
+    assert config.default_config == {}
     config._initialize_with_default_config()
 
     expected = [
@@ -188,18 +187,18 @@ def test_default_config_from_plugins():
             'current_customer',
         ]
 
-    assert list(cmk.gui.config.default_config.keys()) == expected
+    assert list(config.default_config.keys()) == expected
 
 
 def test_load_config():
-    assert cmk.gui.config.quicksearch_dropdown_limit == 80
-    cmk.gui.config.load_config()
-    assert cmk.gui.config.quicksearch_dropdown_limit == 80
+    assert config.quicksearch_dropdown_limit == 80
+    config.load_config()
+    assert config.quicksearch_dropdown_limit == 80
 
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("quicksearch_dropdown_limit = 1337\n")
-    cmk.gui.config.load_config()
-    assert cmk.gui.config.quicksearch_dropdown_limit == 1337
+    config.load_config()
+    assert config.quicksearch_dropdown_limit == 1337
 
 
 @pytest.fixture()
@@ -212,18 +211,18 @@ def local_config_plugin():
 
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin():
-    cmk.gui.config.load_config()
+    config.load_config()
     # Mypy will not understand this, because it's coming dynamically from a plugin.
-    assert cmk.gui.config.ding == 'dong'  # type: ignore[attr-defined]
+    assert config.ding == 'dong'  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_allows_local_plugin_setting():
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
-    cmk.gui.config.load_config()
+    config.load_config()
     # Mypy will not understand this, because it's coming dynamically from a plugin.
-    assert cmk.gui.config.ding == 'ding'  # type: ignore[attr-defined]
+    assert config.ding == 'ding'  # type: ignore[attr-defined]
 
 
 def test_sorted_sites(mocker):
@@ -1047,74 +1046,6 @@ def test_permission_sorting(do_sort, result):
     ])
 def test_migrate_old_site_config(site, result):
     assert config.migrate_old_site_config({"mysite": site}) == {"mysite": result}
-
-
-@pytest.fixture()
-def theme_dirs(tmp_path, monkeypatch):
-    theme_path = tmp_path / "htdocs" / "themes"
-    theme_path.mkdir(parents=True)
-
-    local_theme_path = tmp_path / "local" / "htdocs" / "themes"
-    local_theme_path.mkdir(parents=True)
-
-    monkeypatch.setattr(cmk.utils.paths, "web_dir", str(tmp_path))
-    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", tmp_path / "local")
-
-    return theme_path, local_theme_path
-
-
-@pytest.fixture()
-def my_theme(theme_dirs):
-    theme_path = theme_dirs[0]
-    my_dir = theme_path / "my_theme"
-    my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        str(json.dumps({"title": "Määh Theme :-)"})))
-    return my_dir
-
-
-def test_theme_choices_empty(theme_dirs):
-    assert config.theme_choices() == []
-
-
-def test_theme_choices_normal(my_theme):
-    assert config.theme_choices() == [("my_theme", u"Määh Theme :-)")]
-
-
-def test_theme_choices_local_theme(theme_dirs, my_theme):
-    local_theme_path = theme_dirs[1]
-
-    my_dir = local_theme_path / "my_improved_theme"
-    my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        str(json.dumps({"title": "Määh Bettr Theme :-D"})))
-
-    assert config.theme_choices() == sorted([
-        ("my_theme", u"Määh Theme :-)"),
-        ("my_improved_theme", u"Määh Bettr Theme :-D"),
-    ])
-
-
-def test_theme_choices_override(theme_dirs, my_theme):
-    local_theme_path = theme_dirs[1]
-
-    my_dir = local_theme_path / "my_theme"
-    my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w",
-                                 encoding="utf-8").write(str(json.dumps({"title": "Fixed theme"})))
-
-    assert config.theme_choices() == sorted([
-        ("my_theme", u"Fixed theme"),
-    ])
-
-
-def test_theme_broken_meta(my_theme):
-    (my_theme / "theme.json").open(mode="w",
-                                   encoding="utf-8").write(str("{\"titlewrong\": xyz\"bla\"}"))
-
-    assert config.theme_choices() == sorted([
-        ("my_theme", u"my_theme"),
-    ])
 
 
 @pytest.mark.usefixtures("load_config")

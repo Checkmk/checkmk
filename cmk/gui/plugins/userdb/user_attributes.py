@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.config import theme_choices, show_mode_choices
+from cmk.gui.utils.theme import theme_choices
+from cmk.gui.config import show_mode_choices
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,

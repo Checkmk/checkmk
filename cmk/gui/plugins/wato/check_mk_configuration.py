@@ -14,6 +14,7 @@ from cmk.utils.tags import TagGroup
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request, user
@@ -132,7 +133,7 @@ class ConfigVariableUITheme(ConfigVariable):
         return DropdownChoice(
             title=_("User interface theme"),
             help=_("Change the default user interface theme of your Checkmk installation"),
-            choices=config.theme_choices(),
+            choices=theme_choices(),
         )
 
 

@@ -208,7 +208,7 @@ class CheckmkApp:
                 theme=theme,
         ), patch_json(json):
             config.initialize()
-            theme.from_config(config.ui_theme, config.theme_choices())
+            theme.from_config(config.ui_theme)
             return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ, start_response):

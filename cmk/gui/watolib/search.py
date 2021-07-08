@@ -346,7 +346,7 @@ class IndexSearcher:
         _response = Response()
         _funnel = OutputFunnel(_response)
         _theme = Theme()
-        _theme.from_config(config.ui_theme, config.theme_choices())
+        _theme.from_config(config.ui_theme)
         with RequestContext(
                 req=_request,
                 resp=_response,

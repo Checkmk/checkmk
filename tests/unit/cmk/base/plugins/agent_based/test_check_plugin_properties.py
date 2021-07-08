@@ -109,7 +109,6 @@ def test_no_plugins_with_trivial_sections(fix_register):
             "k8s_pod_info",
             "k8s_selector",
             "k8s_service_info",
-            "kaspersky_av_tasks",
             "lnx_block_devices",
             "lnx_cpuinfo",
             "lnx_distro",

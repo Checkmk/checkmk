@@ -6,18 +6,31 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.kaspersky_av_tasks import check_kaspersky_av_tasks
+from cmk.base.plugins.agent_based.kaspersky_av_tasks import check_kaspersky_av_tasks, parse_kaspersky_av_tasks
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
 
 
-@pytest.mark.parametrize(
-    "item,section,results",
-    [("System:EventManager", [["Name:", "System:AVS"], ["State:", "NotStarted"],
-                              ["Name:", "System:EventManager"], ["State:", "Started"]
-                             ], [Result(state=State.OK, summary='Current state is Started')]),
-     ("System:EventManager", [["Name:", "System:EventManager"], ["State:", "NotStarted"]
-                             ], [Result(state=State.CRIT, summary="Current state is NotStarted")]),
-     ("System:EventManager", [],
-      [Result(state=State.UNKNOWN, summary="Task not found in agent output")])])
+@pytest.mark.parametrize("string_table,expected_result", [([["UnnamedValue:", "Value"]], dict())])
+def test_parse_kaspersky_av_tasks(string_table, expected_result):
+    assert parse_kaspersky_av_tasks(string_table) == expected_result
+
+
+@pytest.mark.parametrize("item,section,results",
+                         [("System:EventManager", {
+                             "UnmonitoredTask": {
+                                 "State": "NotStarted"
+                             },
+                             "System:EventManager": {
+                                 "State": "Started"
+                             }
+                         }, [Result(state=State.OK, summary='Current state is Started')]),
+                          ("System:EventManager", {
+                              "System:EventManager": {
+                                  "State": "NotStarted"
+                              }
+                          }, [Result(state=State.CRIT, summary="Current state is NotStarted")]),
+                          ("System:EventManager", {},
+                           [Result(state=State.UNKNOWN, summary="Task not found in agent output")])]
+                        )
 def test_check_kaspersky_av_client(item, section, results):
     assert list(check_kaspersky_av_tasks(item, section)) == results

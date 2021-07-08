@@ -28,46 +28,66 @@
 #         State: Started
 #
 
+from collections import defaultdict
+from typing import Dict
+
 from .agent_based_api.v1 import register, Service, State, Result
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
+Section = Dict[str, Dict[str, str]]
 
-def discover_kaspersky_av_tasks(section: StringTable) -> DiscoveryResult:
+
+def parse_kaspersky_av_tasks(string_table: StringTable) -> Section:
     """
-    >>> list(discover_kaspersky_av_tasks([
-    ...     ["Name:", "System:EventManager"],
-    ...     ["Name:", "Real-time protection"],
-    ...     ["Name:", "System:AVS"],
-    ... ]))
+    >>> parse_kaspersky_av_tasks([
+    ...     ["Name:", "Name0"], ["Value:", "Value0"],
+    ...     ["Name:", "Name1"], ["Value:", "Value1"]
+    ... ])
+    {'Name0': {'Value': 'Value0'}, 'Name1': {'Value': 'Value1'}}
+    """
+    parsed: Section = defaultdict(dict)
+    current_name = None
+    for line in string_table:
+        if line[0] == "Name:":
+            current_name = line[1]
+        elif current_name is not None:
+            parsed[current_name][line[0].strip(":")] = line[1]
+    return dict(parsed)
+
+
+register.agent_section(
+    name="kaspersky_av_tasks",
+    parse_function=parse_kaspersky_av_tasks,
+)
+
+
+def discover_kaspersky_av_tasks(section: Section) -> DiscoveryResult:
+    """
+    >>> list(discover_kaspersky_av_tasks({
+    ...     "System:EventManager": dict(),
+    ...     "Real-time protection": dict(),
+    ...     "System:AVS": dict(),
+    ... }))
     [Service(item='System:EventManager'), Service(item='Real-time protection')]
     """
-    jobs = ['Real-time protection', 'System:EventManager']
-    for line in [x for x in section if x[0].startswith("Name")]:
-        job = " ".join(line[1:])
-        if job in jobs:
-            yield Service(item=job)
+    yield from (Service(item=item)
+                for item in section.keys()
+                if item in {'Real-time protection', 'System:EventManager'})
 
 
-def check_kaspersky_av_tasks(item: str, section: StringTable) -> CheckResult:
+def check_kaspersky_av_tasks(item: str, section: Section) -> CheckResult:
     """
-    >>> list(check_kaspersky_av_tasks("System:EventManager", [
-    ...     ["Name:", "System:EventManager"],
-    ...     ["State:", "Started"],
-    ... ]))
+    >>> list(check_kaspersky_av_tasks(
+    ...     "System:EventManager", {"System:EventManager": {"State": "Started"}}))
     [Result(state=<State.OK: 0>, summary='Current state is Started')]
     """
-    found = False
-    for line in section:
-        if found:
-            if line[0].startswith('State'):
-                state = State.OK
-                if line[1] != "Started":
-                    state = State.CRIT
-                yield Result(state=state, summary="Current state is " + line[1])
-                return
-        if line[0].startswith('Name') and " ".join(line[1:]) == item:
-            found = True
-    yield Result(state=State.UNKNOWN, summary="Task not found in agent output")
+    if item not in section:
+        yield Result(state=State.UNKNOWN, summary="Task not found in agent output")
+        return
+
+    state = section[item].get("State")
+    yield Result(state=State.OK if state == "Started" else State.CRIT,
+                 summary=f"Current state is {state}")
 
 
 register.check_plugin(

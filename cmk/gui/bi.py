@@ -6,10 +6,10 @@
 
 import abc
 from contextlib import contextmanager
-from typing import Any, List, Optional, Set, Tuple, Type, Union
+from typing import Any, List, Optional, Set, Tuple, Type, Union, Iterable
 from pathlib import Path
 
-from livestatus import SiteId, LivestatusResponse, LivestatusOutputFormat
+from livestatus import SiteId, LivestatusResponse, LivestatusOutputFormat, OnlySites
 
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.bi.bi_packs import BIAggregationPacks
@@ -39,7 +39,8 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
+from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
+from cmk.gui.type_defs import VisualContext, ColumnName
 
 
 @permission_section_registry.register
@@ -806,7 +807,7 @@ class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
     _mirror = True
 
 
-def compute_bi_aggregation_filter(all_active_filters):
+def compute_bi_aggregation_filter(context: VisualContext, all_active_filters: Iterable[Filter]):
     only_hosts = []
     only_group = []
     only_service = []
@@ -814,27 +815,28 @@ def compute_bi_aggregation_filter(all_active_filters):
     group_prefix = []
 
     for active_filter in all_active_filters:
+        conf = context.get(active_filter.ident, {})
+        # backwards compatible single_info, mostly to make mypy happy for VisualContext
+        if isinstance(conf, str):
+            conf = {active_filter.htmlvars[0]: conf}
+
         if active_filter.ident == "aggr_hosts":
-            host_match = active_filter.value()
-            if (host_name := host_match.get("aggr_host_host", "")) != "":
+            if (host_name := conf.get("aggr_host_host", "")) != "":
                 only_hosts = [host_name]
         elif active_filter.ident == "aggr_group":
-            aggr_group = active_filter.selected_group({})
-            if aggr_group:
+            if aggr_group := conf.get(active_filter.htmlvars[0]):
                 only_group = [aggr_group]
         elif active_filter.ident == "aggr_service":
-            if service_spec := active_filter.service_spec():
-                # service_spec: site_id, host, service
-                # Since no data has been fetched yet, the site is also unknown
-                if service_spec[2]:
-                    only_service = [(service_spec[1], service_spec[2])]
+            service_spec = tuple(conf.get(var, "") for var in active_filter.htmlvars)
+            # service_spec: site_id, host, service
+            # Since no data has been fetched yet, the site is also unknown
+            if all(service_spec):
+                only_service = [(service_spec[1], service_spec[2])]
         elif active_filter.ident == "aggr_name":
-            aggr_name = active_filter.value().get("aggr_name")
-            if aggr_name:
+            if aggr_name := conf.get("aggr_name"):
                 only_aggr_name = [aggr_name]
         elif active_filter.ident == "aggr_group_tree":
-            group_name = active_filter.value().get("aggr_group_tree")
-            if group_name:
+            if group_name := conf.get("aggr_group_tree"):
                 group_prefix = [group_name]
 
     # BIAggregationFilter
@@ -854,8 +856,15 @@ def compute_bi_aggregation_filter(all_active_filters):
     )
 
 
-def table(view, columns, query, only_sites, limit, all_active_filters):
-    bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
+def table(
+    context: VisualContext,
+    columns: List[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: Optional[int],
+    all_active_filters: Iterable[Filter],
+):
+    bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
@@ -904,7 +913,7 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
     rows = []
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    bi_aggregation_filter = compute_bi_aggregation_filter(all_active_filters)
+    bi_aggregation_filter = compute_bi_aggregation_filter(view.context, all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     bi_manager.status_fetcher.update_states_filtered(filterheaders, only_sites, limit, host_columns,
                                                      bygroup, required_aggregations)

@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Type
+from __future__ import annotations
+from typing import Optional, Type, TYPE_CHECKING, List, Union, Tuple
 
+from livestatus import OnlySites
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.utils.escaping as escaping
@@ -29,7 +31,15 @@ from cmk.gui.plugins.views import (
     Row,
 )
 
+from cmk.gui.type_defs import (
+    ColumnName,
+    Rows,
+)
+
 from cmk.gui.utils.urls import makeuri, urlencode_vars
+if TYPE_CHECKING:
+    from cmk.gui.views import View
+    from cmk.gui.plugins.visuals.utils import Filter
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -67,8 +77,16 @@ class DataSourceBIAggregations(ABCDataSource):
 
 
 class RowTableBIAggregations(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return bi.table(view, columns, headers, only_sites, limit, all_active_filters)
+    def query(
+        self,
+        view: View,
+        columns: List[ColumnName],
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
+        return bi.table(view.context, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register

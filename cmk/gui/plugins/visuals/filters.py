@@ -2388,13 +2388,10 @@ class FilterAggrGroup(Filter):
         groups: Choices = [(group, group) for group in bi.get_aggregation_group_trees()]
         html.dropdown(htmlvar, empty_choices + groups, deflt=value.get(htmlvar, ""))
 
-    def selected_group(self, value: FilterHTTPVariables) -> str:
-        return value.get(self.htmlvars[0], "")
-
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         assert not isinstance(value, str)
-        if group := self.selected_group(value):
+        if group := value.get(self.htmlvars[0], ""):
             return [row for row in rows if row[self.column] == group]
         return rows
 
@@ -2598,12 +2595,6 @@ class FilterAggrService(Filter):
 
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
-
-    def service_spec(self):
-        if request.has_var(self.htmlvars[2]):
-            return (request.get_unicode_input(self.htmlvars[0]),
-                    request.get_unicode_input(self.htmlvars[1]),
-                    request.get_unicode_input(self.htmlvars[2]))
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {

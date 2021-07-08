@@ -494,12 +494,6 @@ def roles_of_user(user_id: Optional[UserId]) -> List[str]:
     return []
 
 
-def alias_of_user(user_id: Optional[UserId]) -> Optional[UserId]:
-    if user_id in multisite_users:
-        return multisite_users[user_id].get("alias", user_id)
-    return user_id
-
-
 def user_may(user_id: Optional[UserId], pname: str) -> bool:
     return may_with_roles(roles_of_user(user_id), pname)
 
@@ -758,10 +752,6 @@ def site_attribute_default_value() -> Optional[SiteId]:
     if site_id in authorized_site_ids:
         return site_id
     return None
-
-
-def site_attribute_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
 
 
 def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:

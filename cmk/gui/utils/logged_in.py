@@ -430,11 +430,12 @@ def UserContext(user_id: UserId) -> Iterator[None]:
     """Managing authenticated user context
 
     After the user has been authenticated, initialize the global user object."""
+    old_user = local.user
     try:
         set_user_by_id(user_id)
         yield
     finally:
-        clear_user_login()
+        local.user = old_user
 
 
 def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:

@@ -23,6 +23,33 @@ def test_user_context(with_user):
     assert global_user.id is None
 
 
+def test_user_context_with_exception(with_user):
+    user_id = with_user[0]
+    assert global_user.id is None
+    with pytest.raises(MKAuthException):
+        with UserContext(user_id):
+            assert global_user.id == user_id
+            raise MKAuthException()
+
+    assert global_user.id is None
+
+
+def test_user_context_nested(with_user, with_admin):
+    first_user_id = with_user[0]
+    second_user_id = with_admin[0]
+
+    assert global_user.id is None
+    with UserContext(first_user_id):
+        assert global_user.id == first_user_id
+
+        with UserContext(second_user_id):
+            assert global_user.id == second_user_id
+
+        assert global_user.id == first_user_id
+
+    assert global_user.id is None
+
+
 @pytest.mark.parametrize(
     "user, alias, email, role_ids, baserole_id",
     [

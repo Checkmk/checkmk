@@ -4,8 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Tuple
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (TextUnicode, Integer, MonitoredHostname, MonitoredServiceDescription)
+from cmk.gui.valuespec import (
+    TextUnicode,
+    Integer,
+    MonitoredHostname,
+    MonitoredServiceDescription,
+    ValueSpec,
+)
 
 from cmk.gui.plugins.visuals import (
     VisualInfo,
@@ -28,7 +35,7 @@ class VisualInfoHost(VisualInfo):
         return _("Hosts")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [('host', MonitoredHostname(title=_('Hostname'), strict="True"))]
 
     @property
@@ -55,7 +62,7 @@ class VisualInfoService(VisualInfo):
         return _("Services")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [('service',
                  MonitoredServiceDescription(title=_('Service Description'), strict="True"))]
 
@@ -83,7 +90,7 @@ class VisualInfoHostgroup(VisualInfo):
         return _("Host Groups")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [('hostgroup', TextUnicode(title=_('Host Group Name'),))]
 
     @property
@@ -110,7 +117,7 @@ class VisualInfoServicegroup(VisualInfo):
         return _("Service Groups")
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('servicegroup', TextUnicode(title=_('Service Group Name'),)),
         ]
@@ -139,8 +146,8 @@ class VisualInfoLog(VisualInfo):
         return _('Log Entries')
 
     @property
-    def single_spec(self):
-        return
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return []
 
 
 @visual_info_registry.register
@@ -158,7 +165,7 @@ class VisualInfoComment(VisualInfo):
         return _('Comments')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('comment_id', Integer(title=_('Comment ID'),)),
         ]
@@ -179,7 +186,7 @@ class VisualInfoDowntime(VisualInfo):
         return _('Downtimes')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('downtime_id', Integer(title=_('Downtime ID'),)),
         ]
@@ -200,7 +207,7 @@ class VisualInfoContact(VisualInfo):
         return _('Contacts')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('log_contact_name', TextUnicode(title=_('Contact Name'),)),
         ]
@@ -221,7 +228,7 @@ class VisualInfoCommand(VisualInfo):
         return _('Commands')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('command_name', TextUnicode(title=_('Command Name'),)),
         ]
@@ -242,7 +249,7 @@ class VisualInfoBIAggregation(VisualInfo):
         return _('BI Aggregations')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('aggr_name', TextUnicode(title=_('Aggregation Name'),)),
         ]
@@ -267,7 +274,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return _('BI Aggregation Groups')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('aggr_group', TextUnicode(title=_('Aggregation group'),)),
         ]
@@ -292,8 +299,8 @@ class VisualInfoDiscovery(VisualInfo):
         return _('Discovery Outputs')
 
     @property
-    def single_spec(self):
-        return None
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+        return []
 
 
 @visual_info_registry.register
@@ -311,7 +318,7 @@ class VisualInfoEvent(VisualInfo):
         return _('Event Console Events')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('event_id', Integer(title=_('Event ID'),)),
         ]
@@ -332,7 +339,7 @@ class VisualInfoEventHistory(VisualInfo):
         return _('Historic Event Console Events')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('event_id', Integer(title=_('Event ID'),)),
             ('history_line', Integer(title=_('History Line Number'),)),
@@ -354,7 +361,7 @@ class VisualInfoCrash(VisualInfo):
         return _('Crash reports')
 
     @property
-    def single_spec(self):
+    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
         return [
             ('crash_id', TextUnicode(title=_('Crash ID'),)),
         ]

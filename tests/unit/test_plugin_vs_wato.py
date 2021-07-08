@@ -283,6 +283,7 @@ class ErrorReporter:
         ('discovery', 'inventory_solaris_services_rules'),
         ('discovery', 'oracle_performance_discovery'),
         ('discovery', 'sap_value_groups'),
+        ('discovery', 'filesystem_groups'),  # TODO: Can be removed as soon as SUP-695 is done
         ('inventory', 'active_checks:cmk_inv'),
         ('inventory', 'inv_exports:software_csv'),
         ('inventory', 'inv_parameters:inv_if'),

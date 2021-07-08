@@ -316,7 +316,7 @@ def _check_inodes(
 def df_discovery(params, mplist):
     group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
     for groups in params:
-        for group in groups:
+        for group in groups.get("groups", []):
             grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))
             grouping_entry[0].extend(group['patterns_include'])
             grouping_entry[1].extend(group['patterns_exclude'])

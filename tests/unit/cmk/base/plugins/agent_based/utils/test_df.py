@@ -14,11 +14,13 @@ from cmk.base.plugins.agent_based.utils import df
         [('SUMMARY', {}), ('ceph_bar', {}), ('ceph_foo', {})],
     ),
     (
-        [[{
-            'group_name': 'Foo',
-            'patterns_exclude': ['SUMM'],
-            'patterns_include': ['ceph*']
-        }]],
+        [{
+            "groups": [{
+                'group_name': 'Foo',
+                'patterns_exclude': ['SUMM'],
+                'patterns_include': ['ceph*']
+            }]
+        }],
         [('SUMMARY', {}), ('Foo', {
             'patterns': (['ceph*'], ['SUMM'])
         })],

@@ -709,11 +709,13 @@ info_df_groups = [
         # groups
         (
             {},
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [{
+                "groups": [{
+                    'group_name': 'my-group',
+                    'patterns_include': ['/', '/foo'],
+                    'patterns_exclude': ['/bar']
+                }]
+            }],
             [
                 (
                     'my-group',
@@ -744,11 +746,13 @@ info_df_groups = [
             {
                 "item_appearance": "volume_name_and_mountpoint",
             },
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [{
+                "groups": [{
+                    'group_name': 'my-group',
+                    'patterns_include': ['/', '/foo'],
+                    'patterns_exclude': ['/bar']
+                }]
+            }],
             [
                 (
                     'my-group',
@@ -780,11 +784,13 @@ info_df_groups = [
                 "item_appearance": "volume_name_and_mountpoint",
             },
             # groups do not apply
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
-                'patterns_exclude': ['/dev/sda3 /bar']
-            }]],
+            [{
+                "groups": [{
+                    'group_name': 'my-group',
+                    'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
+                    'patterns_exclude': ['/dev/sda3 /bar']
+                }]
+            }],
             [
                 (
                     '/dev/sda1 /',
@@ -821,11 +827,13 @@ info_df_groups = [
                 "item_appearance": "volume_name_and_mountpoint",
                 "grouping_behaviour": "volume_name_and_mountpoint",
             },
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
-                'patterns_exclude': ['/dev/sda3 /bar']
-            }]],
+            [{
+                "groups": [{
+                    'group_name': 'my-group',
+                    'patterns_include': ['/dev/sda1 /', '/dev/sda2 /foo'],
+                    'patterns_exclude': ['/dev/sda3 /bar']
+                }]
+            }],
             [
                 (
                     'my-group',
@@ -858,11 +866,13 @@ info_df_groups = [
                 "grouping_behaviour": "volume_name_and_mountpoint",
             },
             # groups do not apply
-            [[{
-                'group_name': 'my-group',
-                'patterns_include': ['/', '/foo'],
-                'patterns_exclude': ['/bar']
-            }]],
+            [{
+                "groups": [{
+                    'group_name': 'my-group',
+                    'patterns_include': ['/', '/foo'],
+                    'patterns_exclude': ['/bar']
+                }]
+            }],
             [
                 (
                     '/dev/sda1 /',

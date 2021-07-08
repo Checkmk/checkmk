@@ -10,6 +10,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.check_parameters.filesystem import (
     _validate_discovery_filesystem_params,
     _transform_discovery_filesystem_params,
+    _transform_filesystem_groups,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
     _transform_discovered_filesystem_params,)
@@ -122,3 +123,41 @@ def test__transform_discovery_filesystem_params(params, result):
 ])
 def test__transform_discovered_filesystem_params(params, result):
     assert _transform_discovered_filesystem_params(params) == result
+
+
+@pytest.mark.parametrize(
+    'params, result',
+    [([("OLD-OLD-group_name", "include_pattern_1"), ("OLD-OLD-group_name", "include_pattern_2")], {
+        'groups': [{
+            'group_name': 'OLD-OLD-group_name',
+            'patterns_include': ['include_pattern_1', 'include_pattern_2'],
+            'patterns_exclude': []
+        }]
+    }),
+     ([{
+         "group_name": "OLD",
+         "patterns_include": ["FOO", "BAR"],
+         "patterns_exclude": ["NOT", "INCLUDE"]
+     }], {
+         'groups': [{
+             'group_name': 'OLD',
+             'patterns_include': ['FOO', 'BAR'],
+             'patterns_exclude': ['NOT', 'INCLUDE']
+         }]
+     }),
+     ({
+         'groups': [{
+             'group_name': 'NEW',
+             'patterns_include': ['FOO', 'BAR'],
+             'patterns_exclude': ['NOT', 'INCLUDE']
+         }]
+     }, {
+         'groups': [{
+             'group_name': 'NEW',
+             'patterns_include': ['FOO', 'BAR'],
+             'patterns_exclude': ['NOT', 'INCLUDE']
+         }]
+     })],
+)
+def test__transform_filesystem_groups(params, result):
+    assert _transform_filesystem_groups(params) == result

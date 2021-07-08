@@ -9,23 +9,15 @@ import os
 import shutil
 
 import pytest
-from cmk.gui.utils.script_helpers import application_and_request_context
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui.watolib.search import MatchItem
 from cmk.gui.watolib.utils import has_agent_bakery
 
 
-@pytest.fixture(name="mocked_user")
-def fixture_mocked_user(monkeypatch):
-    # Write/Read operations always require a valid user
-    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
-
-
 @pytest.fixture(autouse=True)
-def test_env(mocked_user, load_config, load_plugins):
+def test_env(with_admin_login, load_config, load_plugins):
     # Ensure we have clean folder/host caches
     hosts_and_folders.Folder.invalidate_caches()
 
@@ -121,29 +113,25 @@ def test_host_is_ping_host(attributes, result):
     "alias": "testalias",
     "parents": ["ding", "dong"],
 }])
-def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
+def test_write_and_read_host_attributes(tmp_path, attributes):
     folder_path = str(tmp_path)
-    # Write/Read operations always require a valid user
-    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
-
     # Used to write the data
     write_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
 
     # Used to read the previously written data
     read_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
 
-    with application_and_request_context():
-        # Write data
-        # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
-        write_data_folder.create_hosts([("testhost", attributes, [])])
-        write_folder_hosts = write_data_folder.hosts()
-        assert len(write_folder_hosts) == 1
+    # Write data
+    # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
+    write_data_folder.create_hosts([("testhost", attributes, [])])
+    write_folder_hosts = write_data_folder.hosts()
+    assert len(write_folder_hosts) == 1
 
-        # Read data back
-        read_folder_hosts = read_data_folder.hosts()
-        assert len(read_folder_hosts) == 1
-        for _, host in read_folder_hosts.items():
-            assert host.attributes() == attributes
+    # Read data back
+    read_folder_hosts = read_data_folder.hosts()
+    assert len(read_folder_hosts) == 1
+    for _, host in read_folder_hosts.items():
+        assert host.attributes() == attributes
 
 
 @contextlib.contextmanager

@@ -522,14 +522,12 @@ checkgroup_parameters['local'] = [
 
 """),
 ])
-def test_ruleset_to_config_sub_folder(register_builtin_html, monkeypatch, load_config, wato_use_git,
-                                      expected_result):
+def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
     ruleset = rulesets.Ruleset("checkgroup_parameters:local",
                                ruleset_matcher.get_tag_to_group_map(config.tags))
 
-    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
     hosts_and_folders.Folder.create_missing_folders("abc")
     folder = hosts_and_folders.Folder.folder("abc")
 

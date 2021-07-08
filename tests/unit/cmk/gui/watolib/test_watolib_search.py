@@ -14,8 +14,9 @@ from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
+from cmk.gui.globals import user
 from cmk.gui.type_defs import SearchResult
-from cmk.gui.watolib import hosts_and_folders, search
+from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (
@@ -314,7 +315,7 @@ class TestURLChecker:
         created_host_url: str,
     ) -> None:
         monkeypatch.setattr(
-            hosts_and_folders.config.user,
+            user,
             "may",
             lambda pname: False,
         )

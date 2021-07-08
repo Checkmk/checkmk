@@ -28,33 +28,35 @@
 #         State: Started
 #
 
+from .agent_based_api.v1 import register, Service, State, Result
 
-def inventory_kaspersky_av_tasks(info):
-    inventory = []
+
+def discover_kaspersky_av_tasks(section):
     jobs = ['Real-time protection', 'System:EventManager']
-    for line in [x for x in info if x[0].startswith("Name")]:
+    for line in [x for x in section if x[0].startswith("Name")]:
         job = " ".join(line[1:])
         if job in jobs:
-            inventory.append((job, None))
-    return inventory
+            yield Service(item=job)
 
 
-def check_kaspersky_av_tasks(item, _no_params, info):
+def check_kaspersky_av_tasks(item, section):
     found = False
-    for line in info:
+    for line in section:
         if found:
             if line[0].startswith('State'):
-                state = 0
+                state = State.OK
                 if line[1] != "Started":
-                    state = 2
-                return state, "Current state is " + line[1]
+                    state = State.CRIT
+                yield Result(state=state, summary="Current state is " + line[1])
+                return
         if line[0].startswith('Name') and " ".join(line[1:]) == item:
             found = True
-    return 3, "Task not found in agent output"
+    yield Result(state=State.UNKNOWN, summary="Task not found in agent output")
 
 
-check_info["kaspersky_av_tasks"] = {
-    "check_function": check_kaspersky_av_tasks,
-    "inventory_function": inventory_kaspersky_av_tasks,
-    "service_description": "AV Task %s",
-}
+register.check_plugin(
+    name="kaspersky_av_tasks",
+    service_name="AV Task %s",
+    discovery_function=discover_kaspersky_av_tasks,
+    check_function=check_kaspersky_av_tasks,
+)

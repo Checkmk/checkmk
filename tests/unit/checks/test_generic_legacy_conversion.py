@@ -2050,7 +2050,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'k8s_storage_classes',
         'kaspersky_av_kesl_updates',
         'kaspersky_av_quarantine',
-        'kaspersky_av_tasks',
         'kaspersky_av_updates',
         'keepalived',
         'kemp_loadmaster_ha',

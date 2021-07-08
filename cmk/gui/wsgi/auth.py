@@ -11,7 +11,7 @@ from typing import Optional
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
-from cmk.gui.utils.logged_in import clear_user_login, set_user_by_id
+from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import set_auth_type, verify_automation_secret
 from cmk.gui.wsgi.type_defs import AuthType, RFC7662
@@ -55,9 +55,8 @@ def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
 @contextlib.contextmanager
 def set_user_context(user_id: UserId, token_info: RFC7662):
     if user_id and token_info and user_id == token_info.get('sub'):
-        set_user_by_id(user_id)
-        set_auth_type(token_info['scope'])
-        yield
-        clear_user_login()
+        with UserContext(user_id):
+            set_auth_type(token_info['scope'])
+            yield
     else:
         raise MKAuthException("Unauthorized by verify_user")

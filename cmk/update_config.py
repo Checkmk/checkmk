@@ -63,6 +63,7 @@ import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.logged_in import SuperUserContext  # pylint: disable=cmk-module-layer-violation
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 
@@ -135,7 +136,7 @@ class UpdateConfig:
     def run(self) -> bool:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
-        with application_and_request_context():
+        with application_and_request_context(), SuperUserContext():
             self._initialize_gui_environment()
             self._initialize_base_environment()
 

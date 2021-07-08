@@ -20,7 +20,6 @@ from werkzeug.test import create_environ
 
 from cmk.gui.config import load_config
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.utils.logged_in import set_super_user
 from cmk.gui.utils.theme import Theme
 from cmk.gui.globals import (
     AppContext,
@@ -73,4 +72,3 @@ def application_and_request_context(environ: Optional[Mapping[str, Any]] = None)
 def initialize_gui_environment() -> None:
     load_config()
     load_all_plugins()
-    set_super_user()

@@ -18,7 +18,7 @@ import cmk.gui.pages
 from cmk.gui.globals import response
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.logged_in import set_super_user
+from cmk.gui.utils.logged_in import SuperUserContext
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
 from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
@@ -67,14 +67,12 @@ def page_run_cron() -> None:
     with lock_file.open("wb"):
         pass  # touches the file
 
-    with store.locked(lock_file):
-        # The cron page is accessed unauthenticated. After leaving the page_run_cron area
-        # into the job functions we always want to have a user context initialized to keep
-        # the code free from special cases (if no user logged in, then...).
-        # The jobs need to be run in privileged mode in general. Some jobs, like the network
-        # scan, switch the user context to a specific other user during execution.
-        set_super_user()
-
+    # The cron page is accessed unauthenticated. After leaving the page_run_cron area
+    # into the job functions we always want to have a user context initialized to keep
+    # the code free from special cases (if no user logged in, then...).
+    # The jobs need to be run in privileged mode in general. Some jobs, like the network
+    # scan, switch the user context to a specific other user during execution.
+    with store.locked(lock_file), SuperUserContext():
         logger.debug("Starting cron jobs")
 
         for cron_job in multisite_cronjobs:

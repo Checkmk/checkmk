@@ -9,7 +9,7 @@ import os
 import errno
 import contextlib
 import time
-from typing import Optional, Dict, Union, Tuple, Any, Set, Iterator, List
+from typing import Optional, Dict, Union, Tuple, Any, Set, Iterator, List, ContextManager
 
 from livestatus import SiteConfigurations, SiteId
 from cmk.utils.type_defs import UserId
@@ -405,34 +405,22 @@ class LoggedInNobody(LoggedInUser):
         return []
 
 
-def clear_user_login() -> None:
-    _set_user(LoggedInNobody())
+def UserContext(user_id: UserId) -> ContextManager[None]:
+    return _UserContext(LoggedInUser(user_id))
 
 
-def set_user_by_id(user_id: UserId) -> None:
-    _set_user(LoggedInUser(user_id))
-
-
-def set_super_user() -> None:
-    _set_user(LoggedInSuperUser())
-
-
-def _set_user(_user: LoggedInUser) -> None:
-    """Set the currently logged in user (thread safe).
-
-    local.user will set the current RequestContext to _user and it will be accessible via
-    cmk.gui.globals.user directly. This is imported here."""
-    local.user = _user
+def SuperUserContext() -> ContextManager[None]:
+    return _UserContext(LoggedInSuperUser())
 
 
 @contextlib.contextmanager
-def UserContext(user_id: UserId) -> Iterator[None]:
+def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
     """Managing authenticated user context
 
     After the user has been authenticated, initialize the global user object."""
     old_user = local.user
     try:
-        set_user_by_id(user_id)
+        local.user = user_obj
         yield
     finally:
         local.user = old_user

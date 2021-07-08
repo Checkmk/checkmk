@@ -23,7 +23,7 @@ from cmk.gui.log import logger
 from cmk.gui.globals import response, request, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
-from cmk.gui.utils.logged_in import set_super_user
+from cmk.gui.utils.logged_in import SuperUserContext
 
 
 @page_registry.register_page("automation_login")
@@ -67,15 +67,6 @@ class ModeAutomation(AjaxPage):
     This page is accessible without regular login. The request is authenticated using the given
     login secret that has previously been exchanged during "site login" (see above).
     """
-    def __init__(self):
-        super(ModeAutomation, self).__init__()
-
-        # The automation page is accessed unauthenticated. After leaving the index.py area
-        # into the page handler we always want to have a user context initialized to keep
-        # the code free from special cases (if no user logged in, then...). So fake the
-        # logged in user here.
-        set_super_user()
-
     def _from_vars(self):
         self._authenticate()
         self._command = request.get_str_input_mandatory("command")
@@ -92,7 +83,12 @@ class ModeAutomation(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self._handle_exc(self.page)
+        # The automation page is accessed unauthenticated. After leaving the index.py area
+        # into the page handler we always want to have a user context initialized to keep
+        # the code free from special cases (if no user logged in, then...). So fake the
+        # logged in user here.
+        with SuperUserContext():
+            self._handle_exc(self.page)
 
     def page(self):
         # To prevent mixups in written files we use the same lock here as for

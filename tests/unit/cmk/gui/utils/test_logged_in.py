@@ -9,7 +9,8 @@ from pathlib import Path
 
 from cmk.gui.globals import user as global_user
 import cmk.gui.config as config
-from cmk.gui.utils.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext
+from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext,
+                                     SuperUserContext)
 from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.watolib.utils import may_edit_ruleset
@@ -20,6 +21,13 @@ def test_user_context(with_user):
     assert global_user.id is None
     with UserContext(user_id):
         assert global_user.id == user_id
+    assert global_user.id is None
+
+
+def test_super_user_context(register_builtin_html):
+    assert global_user.id is None
+    with SuperUserContext():
+        assert global_user.role_ids == ["admin"]
     assert global_user.id is None
 
 

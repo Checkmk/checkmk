@@ -20,10 +20,10 @@ from cmk.utils.translations import translate_hostname
 
 from cmk.gui.log import logger
 from cmk.gui import config, userdb
-from cmk.gui.globals import request, user
+from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.logged_in import set_user_by_id
+from cmk.gui.utils.logged_in import UserContext
 
 from cmk.gui.watolib import init_wato_datastructures
 from cmk.gui.watolib.automations import do_remote_automation
@@ -58,59 +58,51 @@ def execute_network_scan_job() -> None:
     if not folder:
         return  # Nothing to do.
 
-    # We need to have the context of the user. The jobs are executed when
-    # set_user_by_id() has not been executed yet. So there is no user context
-    # available. Use the run_as attribute from the job config and revert
-    # the previous state after completion.
-    old_user = user.id
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
             _("The user %s used by the network "
               "scan of the folder %s does not exist.") % (run_as, folder.title()))
-    set_user_by_id(folder.attribute("network_scan")["run_as"])
 
-    result: NetworkScanResult = {
-        "start": time.time(),
-        "end": True,  # means currently running
-        "state": None,
-        "output": "The scan is currently running.",
-    }
+    with UserContext(run_as):
+        result: NetworkScanResult = {
+            "start": time.time(),
+            "end": True,  # means currently running
+            "state": None,
+            "output": "The scan is currently running.",
+        }
 
-    # Mark the scan in progress: Is important in case the request takes longer than
-    # the interval of the cron job (1 minute). Otherwise the scan might be started
-    # a second time before the first one finished.
-    _save_network_scan_result(folder, result)
+        # Mark the scan in progress: Is important in case the request takes longer than
+        # the interval of the cron job (1 minute). Otherwise the scan might be started
+        # a second time before the first one finished.
+        _save_network_scan_result(folder, result)
 
-    try:
-        if config.site_is_local(folder.site_id()):
-            found = _do_network_scan(folder)
-        else:
-            found = do_remote_automation(config.site(folder.site_id()), "network-scan",
-                                         [("folder", folder.path())])
+        try:
+            if config.site_is_local(folder.site_id()):
+                found = _do_network_scan(folder)
+            else:
+                found = do_remote_automation(config.site(folder.site_id()), "network-scan",
+                                             [("folder", folder.path())])
 
-        if not isinstance(found, list):
-            raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
+            if not isinstance(found, list):
+                raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
-        _add_scanned_hosts_to_folder(folder, found)
+            _add_scanned_hosts_to_folder(folder, found)
 
-        result.update({
-            "state": True,
-            "output": _("The network scan found %d new hosts.") % len(found),
-        })
-    except Exception as e:
-        result.update({
-            "state": False,
-            "output": _("An exception occured: %s") % e,
-        })
-        logger.error("Exception in network scan:\n%s", traceback.format_exc())
+            result.update({
+                "state": True,
+                "output": _("The network scan found %d new hosts.") % len(found),
+            })
+        except Exception as e:
+            result.update({
+                "state": False,
+                "output": _("An exception occured: %s") % e,
+            })
+            logger.error("Exception in network scan:\n%s", traceback.format_exc())
 
-    result["end"] = time.time()
+        result["end"] = time.time()
 
-    _save_network_scan_result(folder, result)
-
-    if old_user:
-        set_user_by_id(old_user)
+        _save_network_scan_result(folder, result)
 
 
 def _find_folder_to_scan() -> Optional['CREFolder']:

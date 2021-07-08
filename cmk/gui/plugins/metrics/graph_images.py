@@ -23,7 +23,7 @@ from cmk.gui.exceptions import (
     MKUnauthenticatedException,
     MKUserError,
 )
-from cmk.gui.utils.logged_in import set_super_user
+from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import response, request
@@ -45,14 +45,15 @@ from cmk.gui.plugins.metrics import html_render
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 @cmk.gui.pages.register("noauth:ajax_graph_images")
 def ajax_graph_images_for_notifications():
-    graphs = []
-
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
             _("You are not allowed to access this page (%s).") % request.remote_ip)
 
-    set_super_user()
+    with SuperUserContext():
+        _answer_graph_image_request()
 
+
+def _answer_graph_image_request() -> None:
     try:
         host_name = request.var("host")
         if not host_name:
@@ -96,6 +97,7 @@ def ajax_graph_images_for_notifications():
             graph_identification, destination=html_render.GraphDestinations.notification)
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
+        graphs = []
         for graph_recipe in graph_recipes[:num_graphs]:
             graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
                                                           graph_render_options)

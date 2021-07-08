@@ -23,12 +23,24 @@
 #Application update state:                   No application updates available
 
 import time
+from typing import Dict
 
 from .agent_based_api.v1 import register, render, Service, Result, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+Section = Dict[str, str]
 
 
-def parse_kaspersky_av_kesl_updates(string_table):
-    return dict(string_table)
+def parse_kaspersky_av_kesl_updates(string_table: StringTable) -> Section:
+    """
+    >>> parse_kaspersky_av_kesl_updates([
+    ...     ["Anti-virus databases loaded", "Yes"],
+    ...     ["Last release date of databases", "1970-01-01 00:00:00"],
+    ...     ["Anti-virus database recores", "1"],
+    ... ])
+    {'Anti-virus databases loaded': 'Yes', 'Last release date of databases': '1970-01-01 00:00:00', 'Anti-virus database recores': '1'}
+    """
+    return {line[0]: "|".join(line[1:]) for line in string_table}
 
 
 register.agent_section(
@@ -37,11 +49,27 @@ register.agent_section(
 )
 
 
-def discover_kaspersky_av_kesl_updates(section):
-    yield Service()
+def discover_kaspersky_av_kesl_updates(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_kaspersky_av_kesl_updates(section):
+def check_kaspersky_av_kesl_updates(section: Section) -> CheckResult:
+    """
+    # set fixed timezone for reproducable tests
+    >>> import os
+    >>> os.environ["TZ"] = "0"
+
+    >>> for result in check_kaspersky_av_kesl_updates({
+    ...     'Anti-virus databases loaded': 'Yes',
+    ...     'Last release date of databases': '1970-01-01 00:00:00',
+    ...     'Anti-virus database records': '1',
+    ... }):
+    ...     print(result)
+    Result(state=<State.OK: 0>, summary='Databases loaded: True')
+    Result(state=<State.OK: 0>, summary='Database date: Jan 01 1970 00:00:00')
+    Result(state=<State.OK: 0>, summary='Database records: 1')
+    """
     loaded = section['Anti-virus databases loaded'] == 'Yes'
     yield Result(state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}")
     db_release_date = time.mktime(

@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
-import os
+from pathlib import Path
 import socket
 from typing import (
     Any,
@@ -233,6 +232,9 @@ def _actual_dns_lookup(
 
 
 class IPLookupCache:
+
+    PATH = Path(cmk.utils.paths.var_dir, "ipaddresses.cache")
+
     def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
         super().__init__()
         self._cache = cache
@@ -255,7 +257,7 @@ class IPLookupCache:
 
     def load_persisted(self) -> None:
         try:
-            self._cache.update(_load_ip_lookup_cache(lock=False))
+            self._cache.update(self._load_cache(path=self.PATH, lock=False))
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
@@ -265,6 +267,12 @@ class IPLookupCache:
             if cmk.utils.debug.enabled():
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
+
+    @staticmethod
+    def _load_cache(*, path: Path, lock: bool) -> Mapping[IPLookupCacheId, str]:
+        loaded_object = store.load_object_from_file(path, default={}, lock=lock)
+        assert isinstance(loaded_object, dict)
+        return {deserialize_cache_id(k): str(v) for k, v in loaded_object.items()}
 
     def __setitem__(self, cache_id: IPLookupCacheId, ipa: HostAddress) -> None:
         """Updates the cache with a new / changed entry
@@ -290,27 +298,22 @@ class IPLookupCache:
             return
 
         try:
-            self._cache.update(_load_ip_lookup_cache(lock=True))
+            self._cache.update(self._load_cache(path=self.PATH, lock=True))
             self._cache[cache_id] = ipa
             self.save_persisted()
         finally:
-            store.release_lock(_cache_path())
+            store.release_lock(self.PATH)
 
     def save_persisted(self) -> None:
         store.save_object_to_file(
-            _cache_path(),
+            self.PATH,
             {serialize_cache_id(k): v for k, v in self._cache.items()},
             pretty=False,
         )
 
     def clear(self) -> None:
         """Clear the persisted AND in memory cache"""
-        try:
-            os.unlink(_cache_path())
-        except OSError as e:
-            if e.errno != errno.ENOENT:
-                raise
-
+        self.PATH.unlink(missing_ok=True)
         self._cache.clear()
 
 
@@ -323,16 +326,6 @@ def _get_ip_lookup_cache() -> IPLookupCache:
     cache = IPLookupCache(_config_cache.get("ip_lookup"))
     cache.load_persisted()
     return cache
-
-
-def _load_ip_lookup_cache(lock: bool) -> Mapping[IPLookupCacheId, HostAddress]:
-    loaded_object = store.load_object_from_file(_cache_path(), default={}, lock=lock)
-    assert isinstance(loaded_object, dict)
-    return {deserialize_cache_id(k): HostAddress(v) for k, v in loaded_object.items()}
-
-
-def _cache_path() -> str:
-    return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
 def update_dns_cache(

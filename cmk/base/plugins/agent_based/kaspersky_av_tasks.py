@@ -29,9 +29,18 @@
 #
 
 from .agent_based_api.v1 import register, Service, State, Result
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
-def discover_kaspersky_av_tasks(section):
+def discover_kaspersky_av_tasks(section: StringTable) -> DiscoveryResult:
+    """
+    >>> list(discover_kaspersky_av_tasks([
+    ...     ["Name:", "System:EventManager"],
+    ...     ["Name:", "Real-time protection"],
+    ...     ["Name:", "System:AVS"],
+    ... ]))
+    [Service(item='System:EventManager'), Service(item='Real-time protection')]
+    """
     jobs = ['Real-time protection', 'System:EventManager']
     for line in [x for x in section if x[0].startswith("Name")]:
         job = " ".join(line[1:])
@@ -39,7 +48,14 @@ def discover_kaspersky_av_tasks(section):
             yield Service(item=job)
 
 
-def check_kaspersky_av_tasks(item, section):
+def check_kaspersky_av_tasks(item: str, section: StringTable) -> CheckResult:
+    """
+    >>> list(check_kaspersky_av_tasks("System:EventManager", [
+    ...     ["Name:", "System:EventManager"],
+    ...     ["State:", "Started"],
+    ... ]))
+    [Result(state=<State.OK: 0>, summary='Current state is Started')]
+    """
     found = False
     for line in section:
         if found:

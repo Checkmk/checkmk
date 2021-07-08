@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest
+
+from cmk.base.plugins.agent_based.kaspersky_av_tasks import check_kaspersky_av_tasks
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
+
+
+@pytest.mark.parametrize(
+    "item,section,results",
+    [("System:EventManager", [["Name:", "System:AVS"], ["State:", "NotStarted"],
+                              ["Name:", "System:EventManager"], ["State:", "Started"]
+                             ], [Result(state=State.OK, summary='Current state is Started')]),
+     ("System:EventManager", [["Name:", "System:EventManager"], ["State:", "NotStarted"]
+                             ], [Result(state=State.CRIT, summary="Current state is NotStarted")]),
+     ("System:EventManager", [],
+      [Result(state=State.UNKNOWN, summary="Task not found in agent output")])])
+def test_check_kaspersky_av_client(item, section, results):
+    assert list(check_kaspersky_av_tasks(item, section)) == results

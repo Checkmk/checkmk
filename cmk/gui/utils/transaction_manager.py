@@ -4,20 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
 import time
 import random
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
-import cmk.gui.config as config
 from cmk.gui.http import Request
+
+if TYPE_CHECKING:
+    from cmk.gui.config import LoggedInUser
 
 
 class TransactionManager:
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
-    def __init__(self, request: Request) -> None:
-        super(TransactionManager, self).__init__()
+    def __init__(self, request: Request, user: LoggedInUser) -> None:
         self._request = request
+        self._user = user
 
         self._new_transids: List[str] = []
         self._ignore_transids = False
@@ -55,14 +58,14 @@ class TransactionManager:
         if not self._new_transids:
             return
 
-        valid_ids = config.user.transids(lock=True)
+        valid_ids = self._user.transids(lock=True)
         cleared_ids = []
         now = time.time()
         for valid_id in valid_ids:
             timestamp = valid_id.split("/")[0]
             if now - int(timestamp) < 86400:  # one day
                 cleared_ids.append(valid_id)
-        config.user.save_transids((cleared_ids[-20:] + self._new_transids))
+        self._user.save_transids((cleared_ids[-20:] + self._new_transids))
 
     def transaction_valid(self) -> bool:
         """Checks if the current transaction is valid
@@ -95,7 +98,7 @@ class TransactionManager:
             return False
 
         # Now check, if this transid is a valid one
-        return transid in config.user.transids(lock=False)
+        return transid in self._user.transids(lock=False)
 
     def is_transaction(self) -> bool:
         """Checks, if the current page is a transation, i.e. something that is secured by
@@ -122,9 +125,9 @@ class TransactionManager:
 
     def _invalidate(self, used_id: str) -> None:
         """Remove the used transid from the list of valid ones"""
-        valid_ids = config.user.transids(lock=True)
+        valid_ids = self._user.transids(lock=True)
         try:
             valid_ids.remove(used_id)
         except ValueError:
             return
-        config.user.save_transids(valid_ids)
+        self._user.save_transids(valid_ids)

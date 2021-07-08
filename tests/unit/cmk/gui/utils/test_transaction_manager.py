@@ -6,11 +6,12 @@
 
 # pylint: disable=redefined-outer-name
 
+from typing import List
 import time
 import pytest
 
-import cmk.gui.config as config
 import cmk.gui.http as http
+from cmk.gui.config import LoggedInUser
 from cmk.gui.globals import transactions
 from cmk.gui.utils.transaction_manager import TransactionManager
 
@@ -18,7 +19,7 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 @pytest.fixture()
 def tm():
     request = http.Request({"wsgi.input": "", "SCRIPT_NAME": ""})
-    return TransactionManager(request)
+    return TransactionManager(request, MockLoggedInUser())
 
 
 def test_request_context_integration(register_builtin_html):
@@ -34,14 +35,15 @@ def test_transaction_new_id(tm):
     assert tm._new_transids == [trans_id]
 
 
-class MockLoggedInUser:
-    def __init__(self, ids):
-        self._ids = ids
+class MockLoggedInUser(LoggedInUser):
+    def __init__(self):
+        super().__init__(None)
+        self._ids = []
 
     def transids(self, lock=False):
         return self._ids
 
-    def save_transids(self, ids):
+    def save_transids(self, transids: List[str]) -> None:
         pass
 
 
@@ -72,9 +74,7 @@ def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_exis
         assert tm._request.var("_transid") == transid
 
     if is_existing:
-        mocker.patch.object(config, "user", MockLoggedInUser([transid]))
-    else:
-        mocker.patch.object(config, "user", MockLoggedInUser([]))
+        tm._user._ids = [transid]
 
     assert tm.transaction_valid() == result
 
@@ -92,8 +92,7 @@ def test_check_transaction_invalid(tm, monkeypatch):
 def test_check_transaction_valid(tm, monkeypatch, mocker):
     valid_transid = "%d/abc" % time.time()
     tm._request.set_var("_transid", valid_transid)
-
-    mocker.patch.object(config, "user", MockLoggedInUser([valid_transid]))
+    tm._user._ids = [valid_transid]
 
     invalidate = mocker.patch.object(tm, "_invalidate")
     assert tm.check_transaction() is True

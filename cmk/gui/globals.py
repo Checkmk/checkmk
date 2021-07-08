@@ -172,15 +172,23 @@ class RequestContext:
         self.response = resp
         self.output_funnel = funnel
 
-        self.transactions = TransactionManager(req)
-
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.config import LoggedInNobody
-        self.user: config.LoggedInUser = LoggedInNobody()
+        self._user: config.LoggedInUser = LoggedInNobody()
+        self.transactions = TransactionManager(req, self._user)
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = _PrependURLFilter()
         self._web_log_handler: Optional[logging.Handler] = None
+
+    @property
+    def user(self) -> config.LoggedInUser:
+        return self._user
+
+    @user.setter
+    def user(self, user_obj: config.LoggedInUser) -> None:
+        self._user = user_obj
+        self.transactions = TransactionManager(request, user_obj)
 
     def __enter__(self):
         _request_ctx_stack.push(self)

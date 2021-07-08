@@ -21,7 +21,7 @@ import cmk.gui.login as login
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
@@ -514,7 +514,8 @@ class UserProfile(ABCUserProfilePage):
                 if not attr.user_editable():
                     continue
 
-                if attr.permission() and not user.may(attr.permission()):
+                perm_name = attr.permission()
+                if perm_name and not user.may(perm_name):
                     continue
 
                 vs = attr.valuespec()
@@ -545,7 +546,7 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        user_spec = users.get(user.id)
+        user_spec: Optional[UserSpec] = users.get(user.id)
         if user_spec is None:
             html.show_warning(_("Sorry, your user account does not exist."))
             html.footer()
@@ -574,7 +575,7 @@ class UserProfile(ABCUserProfilePage):
 
         if user.may('general.edit_user_attributes'):
             custom_user_attr_topics = get_user_attributes_by_topic()
-            _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
+            _show_custom_user_attr(user_spec, custom_user_attr_topics.get("personal", []))
             forms.header(_("User interface settings"))
             _show_custom_user_attr(user_spec, custom_user_attr_topics.get("interface", []))
 
@@ -585,7 +586,7 @@ class UserProfile(ABCUserProfilePage):
         html.footer()
 
 
-def _show_custom_user_attr(user_spec, custom_attr):
+def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:
     for name, attr in custom_attr:
         if attr.user_editable():
             vs = attr.valuespec()

@@ -13,18 +13,18 @@ from livestatus import SiteId
 
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import UserId
 
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 import cmk.gui.config as config
-from cmk.utils.type_defs import UserId
 from cmk.gui.utils.logged_in import LoggedInUser
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
 USER_SCHEME_SERIAL = 0
 
-UserSpec = Dict[str, Any]  # TODO: Improve this type
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
@@ -465,12 +465,12 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[UserAttribut
 user_attribute_registry = UserAttributeRegistry()
 
 
-def get_user_attributes():
+def get_user_attributes() -> List[Tuple[str, UserAttribute]]:
     return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
 
 
-def get_user_attributes_by_topic():
-    topics: Dict = {}
+def get_user_attributes_by_topic() -> Dict[str, List[Tuple[str, UserAttribute]]]:
+    topics: Dict[str, List[Tuple[str, UserAttribute]]] = {}
     for name, attr_class in user_attribute_registry.items():
         topic = attr_class().topic()
         topics.setdefault(topic, []).append((name, attr_class()))

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type, overload, Union
+from typing import Iterator, Optional, Type, overload, Union, List, Tuple
 import base64
 import traceback
 import time
@@ -29,6 +29,7 @@ from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
     get_connection,
+    UserAttribute,
 )
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
@@ -69,7 +70,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     mode_url,
 )
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, UserSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
 from cmk.gui.utils.escaping import escape_html_permissive
 
@@ -1158,7 +1159,7 @@ class ModeEditUser(WatoMode):
             ],
         )
 
-    def _show_custom_user_attributes(self, custom_attr):
+    def _show_custom_user_attributes(self, custom_attr: List[Tuple[str, UserAttribute]]) -> None:
         for name, attr in custom_attr:
             vs = attr.valuespec()
             forms.section(_u(vs.title()))
@@ -1173,7 +1174,7 @@ class ModeEditUser(WatoMode):
             html.help(_u(vs.help()))
 
 
-def select_language(user_spec):
+def select_language(user_spec: UserSpec) -> None:
     languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
     if not languages:
         return

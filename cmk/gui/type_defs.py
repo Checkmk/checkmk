@@ -37,6 +37,7 @@ ChoiceGroup = NamedTuple("ChoiceGroup", [
     ("choices", Choices),
 ])
 GroupedChoices = List[ChoiceGroup]
+UserSpec = Dict[str, Any]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str

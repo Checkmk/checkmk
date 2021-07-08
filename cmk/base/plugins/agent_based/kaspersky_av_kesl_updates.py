@@ -22,23 +22,38 @@
 #Anti-Cryptor:                               Available and stopped
 #Application update state:                   No application updates available
 
+import time
 
-def inventory_kaspersky_av_kesl_updates(info):
-    return [(None, None)]
+from .agent_based_api.v1 import register, render, Service, Result, State
 
 
-def check_kaspersky_av_kesl_updates(item, _no_params, parsed):
-    loaded = parsed['Anti-virus databases loaded'] == 'Yes'
-    yield 0 if loaded else 2, "Databased loaded: %s" % loaded
+def parse_kaspersky_av_kesl_updates(string_table):
+    return dict(string_table)
+
+
+register.agent_section(
+    name="kaspersky_av_kesl_updates",
+    parse_function=parse_kaspersky_av_kesl_updates,
+)
+
+
+def discover_kaspersky_av_kesl_updates(section):
+    yield Service()
+
+
+def check_kaspersky_av_kesl_updates(section):
+    loaded = section['Anti-virus databases loaded'] == 'Yes'
+    yield Result(state=State.OK if loaded else State.CRIT, summary=f"Databases loaded: {loaded}")
     db_release_date = time.mktime(
-        time.strptime(parsed['Last release date of databases'], "%Y-%m-%d %H:%M:%S"))
-    yield 0, "Database date: %s" % get_timestamp_human_readable(db_release_date)
-    yield 0, "Database record: %s" % parsed['Anti-virus database records']
+        time.strptime(section['Last release date of databases'], "%Y-%m-%d %H:%M:%S"))
+    yield Result(state=State.OK, summary=f"Database date: {render.datetime(db_release_date)}")
+    yield Result(state=State.OK,
+                 summary=f"Database records: {section['Anti-virus database records']}")
 
 
-check_info["kaspersky_av_kesl_updates"] = {
-    "check_function": check_kaspersky_av_kesl_updates,
-    "parse_function": dict,
-    "inventory_function": inventory_kaspersky_av_kesl_updates,
-    "service_description": "AV Update Status",
-}
+register.check_plugin(
+    name="kaspersky_av_kesl_updates",
+    service_name="AV Update Status",
+    discovery_function=discover_kaspersky_av_kesl_updates,
+    check_function=check_kaspersky_av_kesl_updates,
+)

@@ -111,7 +111,7 @@ def create_cluster_host(params):
           method='post',
           convert_response=True,
           request_schema=request_schemas.BulkCreateHost,
-          response_schema=response_schemas.DomainObjectCollection)
+          response_schema=response_schemas.HostConfigCollection)
 def bulk_create_hosts(params):
     """Bulk create hosts"""
     body = params['body']
@@ -150,7 +150,7 @@ def bulk_create_hosts(params):
           '.../collection',
           method='get',
           convert_response=True,
-          response_schema=response_schemas.DomainObjectCollection)
+          response_schema=response_schemas.HostConfigCollection)
 def list_hosts(param):
     """Show all hosts"""
     return host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
@@ -253,7 +253,7 @@ def update_host(params):
           method='put',
           request_schema=request_schemas.BulkUpdateHost,
           convert_response=True,
-          response_schema=response_schemas.DomainObjectCollection)
+          response_schema=response_schemas.HostConfigCollection)
 def bulk_update_hosts(params):
     """Bulk update hosts
 

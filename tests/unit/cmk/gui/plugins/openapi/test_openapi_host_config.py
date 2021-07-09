@@ -88,6 +88,8 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         status=200,
         content_type='application/json',
     )
+    assert isinstance(resp.json['extensions']['attributes']['meta_data']['created_at'], str)
+    assert isinstance(resp.json['extensions']['attributes']['meta_data']['updated_at'], str)
 
     resp = wsgi_app.follow_link(
         resp,
@@ -111,7 +113,7 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         content_type='application/json',
     )
     got_attributes = resp.json['extensions']['attributes']
-    assert attributes.items() <= got_attributes.items()
+    assert list(attributes.items()) <= list(got_attributes.items())
 
     resp = wsgi_app.follow_link(
         resp,

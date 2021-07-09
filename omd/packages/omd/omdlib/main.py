@@ -53,6 +53,7 @@ import omdlib
 import omdlib.certs
 import omdlib.backup
 
+from cmk.utils.paths import mkbackup_lock_dir
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
 #   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
@@ -4608,6 +4609,31 @@ def hash_password(password):
     return sha256_crypt.hash(password)
 
 
+def ensure_mkbackup_lock_dir_rights():
+    # Some details regarding this nested try/except blocks:
+    # * On /run/lock/ the sticky bit is set, which means only the *creator* of a folder in this directory is
+    #   allowed to change the meta data of a created folder
+    # * We need to ensure that the folder exists *and* that it has the needed permissions. We have 3 cases:
+    #   1) The directory does not yet exist. Here we can create it and change the needed permissions
+    #   2) The directory does already exist. Here we do not need to do anything else and we hope for the
+    #       creating process to have set the needed rights
+    #   3) The directory does not exist and we cannot create it. This is a real issue so give the user a hint.
+    try:
+        lock_dir_as_path = Path(mkbackup_lock_dir)
+        lock_dir_as_path.mkdir(mode=0o0770, exist_ok=True)
+        try:
+            os.chown(mkbackup_lock_dir, -1, grp.getgrnam("omd").gr_gid)
+            lock_dir_as_path.chmod(0o0770)
+        except OSError:
+            pass
+    except IOError:
+        sys.stdout.write("Unable to create %s needed for mkbackup. "
+                         "This may be due to the fact that your SITE "
+                         "User isn't allowed to create the backup directory. "
+                         "You could resolve this issue by running 'sudo omd start' as root "
+                         "(and not as SITE user)." % mkbackup_lock_dir)
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -4638,6 +4664,7 @@ g_orig_wd = "/"
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
+    ensure_mkbackup_lock_dir_rights()
     global g_orig_wd
 
     site = RootContext()

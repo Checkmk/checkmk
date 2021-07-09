@@ -118,11 +118,7 @@ def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
     merge these trees and returns the filtered tree"""
     hostname = row.get("host_name")
     inventory_tree = _load_structured_data_tree("inventory", hostname)
-    status_data_tree = _create_tree_from_raw_tree(row.get("host_structured_status"))
-    # If no data from livestatus could be fetched (CRE) try to load from cache
-    # or status dir
-    if status_data_tree is None:
-        status_data_tree = _load_structured_data_tree("status_data", hostname)
+    status_data_tree = _load_status_data_tree(hostname, row)
 
     merged_tree = _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree)
     return _filter_tree(merged_tree)
@@ -220,8 +216,7 @@ def get_history_deltas(
 
         if cached_data:
             new, changed, removed, delta_tree_data = cached_data
-            delta_tree = StructuredDataNode()
-            delta_tree.create_tree_from_raw_tree(delta_tree_data)
+            delta_tree = StructuredDataNode.deserialize(delta_tree_data)
             delta_history.append((timestamp, (new, changed, removed, delta_tree)))
             previous_timestamp = timestamp
             continue
@@ -236,7 +231,7 @@ def get_history_deltas(
             if new or changed or removed:
                 store.save_file(
                     cached_delta_path,
-                    repr((new, changed, removed, delta_tree.get_raw_tree())),
+                    repr((new, changed, removed, delta_tree.serialize())),
                 )
                 delta_history.append((timestamp, delta_data))
         except LoadStructuredDataError:
@@ -358,11 +353,13 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
     return inventory_tree
 
 
-def _create_tree_from_raw_tree(raw_tree: Optional[bytes]) -> Optional[StructuredDataNode]:
-    if raw_tree:
-        return StructuredDataNode().create_tree_from_raw_tree(
-            ast.literal_eval(raw_tree.decode("utf-8")))
-    return None
+def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[StructuredDataNode]:
+    # If no data from livestatus could be fetched (CRE) try to load from cache
+    # or status dir
+    raw_status_data_tree = row.get("host_structured_status")
+    if raw_status_data_tree is None:
+        return _load_structured_data_tree("status_data", hostname)
+    return StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
 
 
 def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
@@ -506,7 +503,7 @@ def inventory_of_host(host_name: HostName, api_request):
             [make_filter(parse_tree_path(path)) for path in api_request["paths"]])
 
     assert merged_tree is not None
-    return merged_tree.get_raw_tree()
+    return merged_tree.serialize()
 
 
 def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) -> None:

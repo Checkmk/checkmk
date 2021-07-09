@@ -393,7 +393,6 @@ def _save_inventory_tree(
         return None
 
     old_tree = load_tree_from(filepath)
-    old_tree.normalize_nodes()
     if old_tree.is_equal(inventory_tree):
         console.verbose("Inventory was unchanged\n")
         return None
@@ -430,7 +429,7 @@ def _run_inventory_export_hooks(host_config: config.HostConfig,
                         (tty.blue, tty.bold, hookname, tty.normal))
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
-            func(host_config.hostname, params, inventory_tree.get_raw_tree())
+            func(host_config.hostname, params, inventory_tree.serialize())
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise

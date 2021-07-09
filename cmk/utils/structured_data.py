@@ -51,7 +51,9 @@ SDKeys = List[SDKey]
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 SDAttributes = Dict[SDKey, SDValue]
+# TODO SDTAble and LegacyTable are the same for now, but SDTable will change in the future
 SDTable = List[SDAttributes]
+LegacyTable = List[SDAttributes]
 SDNodePath = Tuple[SDEdge, ...]
 SDNodes = Dict[SDEdge, "StructuredDataNode"]
 
@@ -111,7 +113,7 @@ def save_tree_to(
     pretty: bool = False,
 ) -> None:
     filepath = "%s/%s" % (path, filename)
-    output = tree.get_raw_tree()
+    output = tree.serialize()
     store.save_object_to_file(filepath, output, pretty=pretty)
 
     buf = io.BytesIO()
@@ -126,7 +128,7 @@ def save_tree_to(
 def load_tree_from(filepath: Union[Path, str]) -> "StructuredDataNode":
     raw_tree = store.load_object_from_file(filepath, default=None)
     if raw_tree:
-        return StructuredDataNode().create_tree_from_raw_tree(raw_tree)
+        return StructuredDataNode.deserialize(raw_tree)
     return StructuredDataNode()
 
 
@@ -206,6 +208,8 @@ class StructuredDataNode:
         self.attributes = Attributes()
         self.table = Table()
         self._nodes: SDNodes = {}
+
+        self._legacy_table: LegacyTable = []
 
     def set_path(self, path: SDNodePath) -> None:
         self.path = path
@@ -313,7 +317,7 @@ class StructuredDataNode:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.get_raw_tree()))
+        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.serialize()))
 
     #   ---building tree from (legacy) plugins----------------------------------
 
@@ -321,63 +325,65 @@ class StructuredDataNode:
         return self.setdefault_node(_parse_tree_path(tree_path)).attributes.data
 
     def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self.setdefault_node(_parse_tree_path(tree_path)).table.data
+        return self.setdefault_node(_parse_tree_path(tree_path))._legacy_table
 
     #   ---de/serializing-------------------------------------------------------
 
-    def create_tree_from_raw_tree(self, raw_tree: SDRawTree) -> "StructuredDataNode":
+    @classmethod
+    def deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
+        node = cls()
         raw_attributes: SDAttributes = {}
+
         for key, value in raw_tree.items():
             if isinstance(value, dict):
-                self.setdefault_node([key]).create_tree_from_raw_tree(value)
-                continue
+                if not value:
+                    continue
+                node.add_node(key, cls.deserialize(value))
 
-            if isinstance(value, list):
-                if self._is_table(value):
-                    self.setdefault_node([key]).add_table(value)
+            elif isinstance(value, list):
+                if not value:
+                    continue
+
+                if node._is_table(value):
+                    node.setdefault_node([key]).add_table(Table.deserialize(value))
                 else:
-                    self._add_indexed_nodes(key, value)
-                continue
+                    indexed_node = node.setdefault_node([key])
+                    for idx, entry in enumerate(value):
+                        indexed_node.add_node(str(idx), cls.deserialize(entry))
 
-            raw_attributes.setdefault(key, value)
-        self.add_attributes(raw_attributes)
-        return self
+            else:
+                raw_attributes.setdefault(key, value)
 
-    def _is_table(self, entries: List) -> bool:
-        for entry in entries:
-            # Skipping invalid entries such as
-            # {u'KEY': [LIST OF STRINGS], ...}
-            try:
-                for v in entry.values():
-                    if isinstance(v, list):
-                        return False
-            except AttributeError:
-                return False
-        return True
+        node.add_attributes(Attributes.deserialize(raw_attributes))
+        return node
 
-    def _add_indexed_nodes(self, key, value):
-        for idx, entry in enumerate(value):
-            idx_attributes: SDAttributes = {}
-            node = self.setdefault_node([key, str(idx)])
-            for idx_key, idx_entry in entry.items():
-                if isinstance(idx_entry, list):
-                    node.setdefault_node([idx_key]).add_table(idx_entry)
-                else:
-                    idx_attributes.setdefault(idx_key, idx_entry)
-            node.add_attributes(idx_attributes)
+    @staticmethod
+    def _is_table(entries: List) -> bool:
+        # Either we get:
+        #   [
+        #       {"column1": "value 11", "column2": "value 12",...},
+        #       {"column1": "value 11", "column2": "value 12",...},
+        #       ...
+        #   ]
+        # Or:
+        #   [
+        #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
+        #       ...
+        #   ]
+        return all(not isinstance(v, (list, dict)) for row in entries for v in row.values())
 
-    def get_raw_tree(self) -> Union[Dict, List]:
-        if self._has_indexed_nodes():
-            return [self._nodes[k].get_raw_tree() for k in sorted(self._nodes)]
+    def serialize(self) -> Union[Dict, List]:
+        if any(self._is_indexed_node(edge) for edge in self._nodes):
+            return [self._nodes[k].serialize() for k in sorted(self._nodes)]
 
         if not self.table.is_empty():
-            return self.table.get_raw_tree()
+            return self.table.serialize()
 
         tree: Dict = {}
-        tree.update(self.attributes.get_raw_tree())
+        tree.update(self.attributes.serialize())
 
         for edge, node in self._nodes.items():
-            node_raw_tree = node.get_raw_tree()
+            node_raw_tree = node.serialize()
             if isinstance(node_raw_tree, list):
                 tree.setdefault(edge, node_raw_tree)
                 continue
@@ -385,33 +391,39 @@ class StructuredDataNode:
             tree.setdefault(edge, {}).update(node_raw_tree)
         return tree
 
-    def _has_indexed_nodes(self) -> bool:
-        for key in self._nodes:
-            if isinstance(key, int):
-                return True
-        return False
+    @staticmethod
+    def _is_indexed_node(edge: Union[int, SDEdge]) -> bool:
+        try:
+            int(edge)
+        except ValueError:
+            return False
+        return True
 
     def normalize_nodes(self):
         """
-        After the execution of plugins there may remain empty
-        nodes which will be removed within this method.
-        Moreover we have to deal with nested tables, eg.
+        After the execution of inventory we have to deal with nested tables, eg.
         at paths like "hardware.memory.arrays:*.devices:" where
         we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
         In this case we have to convert this
         'list-composed-of-dicts-containing-lists' structure into
-        numerated nodes ('arrays') containing real tables ('devices').
+        indexed nodes ('arrays') containing real tables ('devices').
         """
-        remove_table = False
-        for idx, entry in enumerate(self.table.data):
+        my_table: SDTable = []
+        for idx, entry in enumerate(self._legacy_table):
+            add_to_my_table = True
             for k, v in entry.items():
                 if isinstance(v, list):
-                    self.setdefault_node([str(idx), k]).add_table(v)
-                    remove_table = True
+                    self.setdefault_node([str(idx), k]).add_table(Table.deserialize(v))
+                    add_to_my_table = False
 
-        if remove_table:
-            self.table = Table()
-            self.table.set_path(self.path)
+            if add_to_my_table:
+                my_table.append(entry)
+
+        self.table.add_table(Table.deserialize(my_table))
+
+        # normalize_nodes is executed after all plugins: clear legacy_table
+        # in order to avoid duplicate rows if executed multiple times (should not happen).
+        self._legacy_table = []
 
         for node in self._nodes.values():
             node.normalize_nodes()
@@ -601,12 +613,21 @@ class Table:
     #   ---table methods--------------------------------------------------------
 
     def add_table(self, table: SDTable) -> None:
-        self.data.extend(table)
+        for row in table:
+            self.add_row(row)
+
+    def add_row(self, row: SDAttributes) -> None:
+        if row:
+            self.data.append(row)
 
     #   ---de/serializing-------------------------------------------------------
 
-    def get_raw_tree(self) -> SDTable:
+    def serialize(self) -> SDTable:
         return self.data
+
+    @classmethod
+    def deserialize(cls, raw_table: SDTable) -> "SDTable":
+        return raw_table
 
     #   ---delta----------------------------------------------------------------
 
@@ -755,8 +776,12 @@ class Attributes:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def get_raw_tree(self) -> SDAttributes:
+    def serialize(self) -> SDAttributes:
         return self.data
+
+    @classmethod
+    def deserialize(cls, raw_attributes: SDAttributes) -> "SDAttributes":
+        return raw_attributes
 
     #   ---delta----------------------------------------------------------------
 

@@ -823,7 +823,7 @@ def _service_row():
         'host_in_check_period': 1,
         'host_in_notification_period': 1,
         'host_in_service_period': 1,
-        'host_inventory': StructuredDataNode().create_tree_from_raw_tree({
+        'host_inventory': StructuredDataNode.deserialize({
             'hardware': {
                 'memory': {
                     'total_ram_usable': 33283784704,

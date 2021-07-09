@@ -970,8 +970,8 @@ class html(ABCHTMLGenerator):
         self.show_message(
             self.render_sup("*") + escaping.escape_html_permissive(
                 _("These texts may be localized depending on the users' "
-                  "language. You can configure the localizations %s.") %
-                self.render_a("in the global settings", href=url)))
+                  "language. You can configure the localizations "
+                  "<a href='%s'>in the global settings</a>.") % url))
 
     def help(self, text: Union[None, HTML, str]) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.

@@ -48,6 +48,7 @@ import traceback
 import json
 from tarfile import TarFile, ReadError
 from hashlib import md5
+from contextlib import contextmanager
 
 from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
@@ -58,6 +59,7 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKTerminate, MKGeneralException
+from cmk.utils.paths import mkbackup_lock_dir
 
 VERSION = "1.4.0i1"
 
@@ -159,60 +161,57 @@ def verify_compatible_cma_version():
     with open("/usr/share/cma/version") as f:
         parts = map(int, f.read().strip().split("."))
 
-    if parts[0] == 1 and parts[1] == 4 and parts[2] < 12:
+    minimal_cma_version = (1, 4, 16)
+    if parts[0] == minimal_cma_version[0] and parts[1] == minimal_cma_version[
+            1] and parts[2] < minimal_cma_version[2]:
         raise MKGeneralException(
             "The Checkmk backup of your version (1.6.0p21 or newer) "
             "is not compatible with your Checkmk Appliance firmware. Please update your "
-            "appliance to 1.4.12 or newer to make the backup work again.")
-
-
-g_backup_lock_f = None
+            "appliance to %s or newer to make the backup work again." %
+            ".".join(map(str, minimal_cma_version)))
 
 
 def global_lock_file_path():
-    return "/var/lock/mkbackup/mkbackup.lock"
+    return "%s/%s" % (mkbackup_lock_dir, "mkbackup.lock")
 
 
-def acquire_backup_lock():
-    """Ensure only one "mkbackup" instance can run on each system at a time.
+def local_lock_file_path(site_name):
+    return "%s/mkbackup-%s.lock" % (mkbackup_lock_dir, site_name)
 
-    Note:
-        Please note that with 1.6.0p21 we have changed the path from
-        /tmp/mkbackup.lock to /var/lock/mkbackup/mkbackup.lock. We had to move
-        the lock file to a dedicated subdirectory without sticky bit to make it
-        possible to write and lock files from different sites. The move from
-        /tmp to /var/lock was just to have the lock file in a more specific
-        place. See also:
 
-        https://forum.checkmk.com/t/backup-schlagt-fehl/21630/7
-        https://unix.stackexchange.com/a/503169
-    """
-    global g_backup_lock_f
-    lock_file_path = global_lock_file_path()
-    lock_file_dir = os.path.dirname(lock_file_path)
+def get_needed_lock_files(opts):
+    if not is_root():
+        site_id = current_site_id()
+        assert site_id
+        return [local_lock_file_path(site_id)]
 
-    # First ensure the base path exists and has correct permissions
-    makedirs(lock_file_dir, group="omd", mode=0770)
+    lock_files = [global_lock_file_path()]
+    if not exclude_sites(opts):
+        for site in existing_sites():
+            lock_files.append(local_lock_file_path(site))
+    return lock_files
 
-    # Then create the file (but ensure that the target file always has the
-    # correct permissions.  The current lock implementation assumes the file is
+
+def acquire_single_lock(lock_file_path):
+    # Create the file (but ensure that the target file always has the
+    # correct permissions). The current lock implementation assumes the file is
     # kept after the process frees the lock (terminates). The pure existence of
     # the lock file is not locking anything. We work with fcntl.flock to realize
     # the locking.
     if not os.path.exists(lock_file_path):
         try:
-            g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+",
-                                                          dir=lock_file_dir,
-                                                          delete=False)
-            set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0660)
-            os.rename(g_backup_lock_f.name, lock_file_path)
-        except (IOError, OSError), e:
+            backup_lock_f = tempfile.NamedTemporaryFile(mode="a+",
+                                                        dir=mkbackup_lock_dir,
+                                                        delete=False)
+            set_permissions(backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
+            os.rename(backup_lock_f.name, lock_file_path)
+        except (IOError, OSError) as e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" % (lock_file_path, e))
     else:
-        g_backup_lock_f = file(lock_file_path, "a")
+        backup_lock_f = file(lock_file_path, "a")
 
     try:
-        fcntl.flock(g_backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(backup_lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError, e:
         raise MKGeneralException("Failed to get the exclusive backup lock. "
                                  "Another backup/restore seems to be running.")
@@ -223,8 +222,39 @@ def acquire_backup_lock():
     except AttributeError:
         cloexec_flag = 1
 
-    fd = g_backup_lock_f.fileno()
+    fd = backup_lock_f.fileno()
     fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
+    return backup_lock_f
+
+
+@contextmanager
+def acquire_backup_lock(opts):
+    """Ensure only one "mkbackup" instance can run on each system at a time.
+    We are using multiple locks:
+    * one lock per site, which gets restored / backup
+    * one global lock, in case mkbackup is executed as root in order to perform a system backup / restore
+
+    Note:
+        Please note that with 1.6.0p21 we have changed the path from
+        /tmp/mkbackup.lock to /run/lock/mkbackup/mkbackup.lock. We had to move
+        the lock file to a dedicated subdirectory without sticky bit to make it
+        possible to write and lock files from different sites. The move from
+        /tmp to /run/lock was just to have the lock file in a more specific
+        place. See also:
+
+        https://forum.checkmk.com/t/backup-schlagt-fehl/21630/7
+        https://unix.stackexchange.com/a/503169
+    """
+    needed_locks = get_needed_lock_files(opts)
+
+    # First ensure the base path exists and has correct permissions
+    makedirs(mkbackup_lock_dir, group="omd", mode=0770)
+
+    flocks = []
+    for lock_path in needed_locks:
+        flocks.append(acquire_single_lock(lock_path))
+
+    yield flocks
 
 
 def set_permissions(path, uid, gid, mode):
@@ -575,54 +605,54 @@ g_backup_id = None
 
 def mode_backup(local_job_id, opts):
     verify_compatible_cma_version()
-    acquire_backup_lock()
-    load_job(local_job_id)
-    target_ident = g_job_config["target"]
-    verify_target_is_ready(target_ident)
+    with acquire_backup_lock(opts):
+        load_job(local_job_id)
+        target_ident = g_job_config["target"]
+        verify_target_is_ready(target_ident)
 
-    init_new_run()
-    save_next_run()
+        init_new_run()
+        save_next_run()
 
-    if "background" in opts:
-        daemon.daemonize()
-        save_state({"pid": os.getpid()})
+        if "background" in opts:
+            daemon.daemonize()
+            save_state({"pid": os.getpid()})
 
-    start_logging()
-    log("--- Starting backup (%s to %s) ---" % (g_job_id, target_ident))
+        start_logging()
+        log("--- Starting backup (%s to %s) ---" % (g_job_id, target_ident))
 
-    success = False
-    try:
-        cleanup_previous_incomplete_backup()
+        success = False
+        try:
+            cleanup_previous_incomplete_backup()
 
-        save_state({
-            "state": "running",
-        })
+            save_state({
+                "state": "running",
+            })
 
-        do_backup(opts)
-        success = True
+            do_backup(opts)
+            success = True
 
-    except KeyboardInterrupt:
-        raise
-
-    except MKGeneralException, e:
-        sys.stderr.write("%s\n" % e)
-        if opt_debug:
+        except KeyboardInterrupt:
             raise
 
-    except:
-        if not opt_debug:
-            sys.stderr.write("An exception occured:\n")
-            sys.stderr.write(traceback.format_exc())
-        else:
-            raise
+        except MKGeneralException, e:
+            sys.stderr.write("%s\n" % e)
+            if opt_debug:
+                raise
 
-    finally:
-        stop_logging()
-        save_state({
-            "state": "finished",
-            "finished": time.time(),
-            "success": success,
-        })
+        except:
+            if not opt_debug:
+                sys.stderr.write("An exception occured:\n")
+                sys.stderr.write(traceback.format_exc())
+            else:
+                raise
+
+        finally:
+            stop_logging()
+            save_state({
+                "state": "finished",
+                "finished": time.time(),
+                "success": success,
+            })
 
 
 def do_backup(opts):
@@ -1450,61 +1480,61 @@ def add_output(s):
 
 def mode_restore(target_id, backup_id, opts):
     verify_compatible_cma_version()
-    acquire_backup_lock()
+    with acquire_backup_lock(opts):
 
-    global g_target_id, g_backup_id
-    g_target_id, g_backup_id = target_id, backup_id
+        global g_target_id, g_backup_id
+        g_target_id, g_backup_id = target_id, backup_id
 
-    verify_target_is_ready(target_id)
-    verify_backup_exists()
+        verify_target_is_ready(target_id)
+        verify_backup_exists()
 
-    info = load_backup_info(backup_info_path())
-    global g_job_config
-    g_job_config = info["config"]
+        info = load_backup_info(backup_info_path())
+        global g_job_config
+        g_job_config = info["config"]
 
-    if "no-verify" not in opts:
-        verify_backup_consistency(info)
+        if "no-verify" not in opts:
+            verify_backup_consistency(info)
 
-    init_new_run()
+        init_new_run()
 
-    if "background" in opts:
-        daemon.daemonize()
-        save_state({"pid": os.getpid()})
+        if "background" in opts:
+            daemon.daemonize()
+            save_state({"pid": os.getpid()})
 
-    start_logging()
-    log("--- Starting restore (%s) ---" % g_backup_id)
+        start_logging()
+        log("--- Starting restore (%s) ---" % g_backup_id)
 
-    success = False
-    try:
-        save_state({
-            "state": "running",
-        })
+        success = False
+        try:
+            save_state({
+                "state": "running",
+            })
 
-        do_restore(opts, info)
-        success = True
+            do_restore(opts, info)
+            success = True
 
-    except KeyboardInterrupt:
-        raise
-
-    except MKGeneralException, e:
-        sys.stderr.write("%s\n" % e)
-        if opt_debug:
+        except KeyboardInterrupt:
             raise
 
-    except:
-        if not opt_debug:
-            sys.stderr.write("An exception occured:\n")
-            sys.stderr.write(traceback.format_exc())
-        else:
-            raise
+        except MKGeneralException, e:
+            sys.stderr.write("%s\n" % e)
+            if opt_debug:
+                raise
 
-    finally:
-        stop_logging()
-        save_state({
-            "state": "finished",
-            "finished": time.time(),
-            "success": success,
-        })
+        except:
+            if not opt_debug:
+                sys.stderr.write("An exception occured:\n")
+                sys.stderr.write(traceback.format_exc())
+            else:
+                raise
+
+        finally:
+            stop_logging()
+            save_state({
+                "state": "finished",
+                "finished": time.time(),
+                "success": success,
+            })
 
 
 def do_restore(opts, info):

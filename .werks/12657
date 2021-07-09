@@ -1,0 +1,11 @@
+Title: Fixed slow page rendering in rule analysis mode
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1625818663
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p8
+
+The rule analysis mode with 'traffic lights' was quite slow for rulesets with lots of rules.

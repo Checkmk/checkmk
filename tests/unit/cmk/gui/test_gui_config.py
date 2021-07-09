@@ -202,6 +202,30 @@ def test_load_config():
     assert cmk.gui.config.quicksearch_dropdown_limit == 1337
 
 
+@pytest.fixture()
+def local_config_plugin():
+    config_plugin = cmk.utils.paths.local_web_dir / "plugins" / "config" / "test.py"
+    config_plugin.parent.mkdir(parents=True)
+    with config_plugin.open("w") as f:
+        f.write("ding = 'dong'\n")
+
+
+@pytest.mark.usefixtures("local_config_plugin")
+def test_load_config_respects_local_plugin():
+    cmk.gui.config.load_config()
+    # Mypy will not understand this, because it's coming dynamically from a plugin.
+    assert cmk.gui.config.ding == 'dong'  # type: ignore[attr-defined]
+
+
+@pytest.mark.usefixtures("local_config_plugin")
+def test_load_config_allows_local_plugin_setting():
+    with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
+        f.write("ding = 'ding'\n")
+    cmk.gui.config.load_config()
+    # Mypy will not understand this, because it's coming dynamically from a plugin.
+    assert cmk.gui.config.ding == 'ding'  # type: ignore[attr-defined]
+
+
 def test_sorted_sites(mocker):
     mocker.patch.object(user,
                         "authorized_sites",

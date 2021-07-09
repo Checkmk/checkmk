@@ -49,8 +49,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // Win32 variant, it keeps us entertained with swapped parameters and a
     // different return value, yay! Signature:
     //    errno_t localtime_s(struct tm* _tm, const time_t *time)
-    // We have to de-confuse cppcheck:
-    // cppcheck-suppress uninitvar
     localtime_s(&ret, &t);
 #else
     // POSIX.1-2008 variant, available under MinGW64 only under obscure
@@ -59,8 +57,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     //                           struct tm *restrict result);
     localtime_r(&t, &ret);
 #endif
-    // Reason: see Win32 section above
-    // cppcheck-suppress uninitvar
     return ret;
 }
 

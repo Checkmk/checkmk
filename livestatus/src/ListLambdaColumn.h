@@ -148,9 +148,7 @@ private:
 
 class ListColumn::Constant : public ListColumn {
 public:
-    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
-             // cppcheck-suppress passedByValue
              value_type x)
         : ListColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;

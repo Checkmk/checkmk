@@ -42,8 +42,6 @@ namespace {
 
 class LogRow {
 public:
-    // cppcheck confuses "command" and "Command" below! o_O
-    // cppcheck-suppress uninitMemberVar
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
            const Command *command_)
         : entry{entry_}, hst{hst_}, svc{svc_}, ctc{ctc_}, command{command_} {};

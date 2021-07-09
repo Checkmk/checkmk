@@ -256,10 +256,6 @@ void Query::parseStatsNegateLine(char *line) {
 }
 
 namespace {
-// NOTE: The suppressions below are necessary because cppcheck doesn't seem to
-// understand default member initialization yet. :-/
-
-// cppcheck-suppress noConstructor
 class SumAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += value; }
@@ -269,7 +265,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class MinAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -288,7 +283,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class MaxAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -307,7 +301,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class AvgAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -322,7 +315,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class StdAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -342,7 +334,6 @@ private:
     double sum_of_squares_{0};
 };
 
-// cppcheck-suppress noConstructor
 class SumInvAggregation : public Aggregation {
 public:
     void update(double value) override { sum_ += 1.0 / value; }
@@ -352,7 +343,6 @@ private:
     double sum_{0};
 };
 
-// cppcheck-suppress noConstructor
 class AvgInvAggregation : public Aggregation {
 public:
     void update(double value) override {
@@ -593,7 +583,6 @@ bool Query::process() {
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
     // TODO(sp) The construct below is horrible, refactor this!
-    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);

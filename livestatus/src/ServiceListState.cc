@@ -20,10 +20,8 @@ int32_t ServiceListState::operator()(const value_type &svcs,
 
 // static
 int32_t ServiceListState::getValueFromServices(
-    ServiceAuthorization service_auth, Type logictype,
-    // False positive: cppcheck wants const svcs but it already is!
-    // cppcheck-suppress constParameter
-    const value_type &svcs, const contact *auth_user) {
+    ServiceAuthorization service_auth, Type logictype, const value_type &svcs,
+    const contact *auth_user) {
     int32_t result = 0;
 #ifdef CMC
     for (const auto &svc : svcs) {

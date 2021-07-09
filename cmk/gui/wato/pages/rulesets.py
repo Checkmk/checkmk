@@ -51,7 +51,7 @@ import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, output_funnel, user
+from cmk.gui.globals import g, html, request, transactions, output_funnel, user
 from cmk.gui.valuespec import (
     FixedValue,
     Transform,
@@ -998,7 +998,12 @@ class ModeEditRuleset(WatoMode):
         if site_id not in remote_sites:
             return
 
+        # Labels should only get synced once per request
+        cache_id = "%s:%s" % (site_id, self._hostname)
+        if cache_id in g.get("host_label_sync", {}):
+            return
         execute_host_label_sync(self._hostname, site_id)
+        g.setdefault("host_label_sync", {})[cache_id] = True
 
     def _action_url(self, action, folder, rule_id):
         vars_ = [

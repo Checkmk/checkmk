@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -10,6 +10,7 @@ information about VMs and nodes:
 - disk usage
 - node info
 - mem usage
+- time of snapshots
 - not yet: replication Status VMs & Container, Gesamtstatus + piggybacked
 - not yet: backup summary
 - not yet: snapshot_status
@@ -216,7 +217,7 @@ class BackupTask:
 
         result: Dict[str, Dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]
         current_vmid = ""
-        current_dataset: Dict[str, Any] = {}  #   mutable Mapping[str, Any]
+        current_dataset: Dict[str, Any] = {}  # mutable Mapping[str, Any]
         errors = []
 
         def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Optional[Sequence[str]]:
@@ -461,6 +462,16 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     "subscription": {},
                     # for now just get basic task data - we'll read the logs later
                     "tasks": [],
+                    "qemu": [{
+                        "{vmid}": {
+                            "snapshot": [],
+                        }
+                    }],
+                    "lxc": [{
+                        "{vmid}": {
+                            "snapshot": [],
+                        }
+                    }],
                     "version": {},
                 },
             }],
@@ -489,6 +500,15 @@ def agent_proxmox_ve_main(args: Args) -> None:
         # add data of actually logged VMs
         "logged_vmids": logged_backup_data,
     }
+
+    snapshot_data = {}
+
+    for node in data["nodes"]:
+        # only lxc and qemu can have snapshots
+        for vm in node.get("lxc", []) + node.get("qemu", []):
+            snapshot_data[vm["vmid"]] = {
+                "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
+            }
 
     LOGGER.info("all VMs:          %r", backup_data["vmids"])
     LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
@@ -551,6 +571,8 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     # todo: info about erroneous backups
                     "last_backup": logged_backup_data.get(vmid),
                 })
+            with SectionWriter("proxmox_ve_vm_snapshot_age") as writer:
+                writer.append_json(snapshot_data.get(vmid, {}))
 
 
 class ProxmoxVeSession:
@@ -704,7 +726,7 @@ class ProxmoxVeAPI:
             next_path = list(path) + ([] if element_name is None else [element_name])
             subtree = extract_request_subtree(requested_structure)
             variable = extract_variable(subtree)
-            response = self._session.get_api_element("/".join(next_path))
+            response = self._session.get_api_element("/".join(map(str, next_path)))
 
             if isinstance(response, Sequence):
                 # Handle subtree stubs like [{'name': 'log'}, {'name': 'options'}, ...]

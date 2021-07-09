@@ -631,7 +631,7 @@ get_sections(){
     echo "$tenant_name"
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_sap_hana_proc "$hostname")" "$credentials"
 
-    echo "<<<fileinfo:sep(59)>>>"
+    echo "<<<sap_hana_fileinfo:sep(59)>>>"
     date +%s
     mk_hdbsql "$sid" "$instance" "$instance_user" "$db" "$(query_fileinfo "$sid" "$instance" "$db" "$hostname")" "$credentials"
 

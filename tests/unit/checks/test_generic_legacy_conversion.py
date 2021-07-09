@@ -2437,6 +2437,8 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'sap.value_groups',
         'sap_hana_connect',
         'sap_hana_ess_migration',
+        'sap_hana_fileinfo',
+        'sap_hana_fileinfo.groups',
         'sap_hana_filesystem',
         'sap_hana_full_backup',
         'sap_hana_mem',

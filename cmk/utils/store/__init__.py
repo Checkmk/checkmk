@@ -10,6 +10,7 @@ manager."""
 import ast
 import enum
 import errno
+from contextlib import nullcontext
 import logging
 import os
 import pprint
@@ -35,6 +36,7 @@ from cmk.utils.store._locks import (
     have_lock,
     release_all_locks,
     cleanup_locks,
+    leave_locked_unless_exception as _leave_locked_unless_exception,
 )
 
 logger = logging.getLogger("cmk.store")
@@ -162,49 +164,37 @@ def save_to_mk_file(path: Union[Path, str],
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_object_from_file(
-    path: Union[Path, str],
-    *,
-    default: Any,
-    lock: bool = False,
-) -> Any:
-    content = _load_bytes_from_file(path, lock=lock).decode("utf-8")
+def load_object_from_file(path: Union[Path, str], *, default: Any, lock: bool = False) -> Any:
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
+        content = _load_bytes_from_file(path).decode("utf-8")
+
     return ast.literal_eval(content) if content else default
 
 
 def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
-    return _load_bytes_from_file(path, lock=lock).decode("utf-8") or default
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
+        return _load_bytes_from_file(path).decode("utf-8") or default
 
 
 def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: bool = False) -> bytes:
-    return _load_bytes_from_file(path, lock=lock) or default
+    with _leave_locked_unless_exception(path) if lock else nullcontext():
+        return _load_bytes_from_file(path) or default
 
 
-def _load_bytes_from_file(
-    path: Union[Path, str],
-    lock: bool = False,
-) -> bytes:
+def _load_bytes_from_file(path: Union[Path, str]) -> bytes:
     if not isinstance(path, Path):
         path = Path(path)
 
-    if lock:
-        aquire_lock(path)
-
     try:
+
         try:
             return path.read_bytes()
         except FileNotFoundError:
             return b''
 
     except (MKTerminate, MKTimeout):
-        if lock:
-            release_lock(path)
         raise
-
     except Exception as e:
-        if lock:
-            release_lock(path)
-
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot read file \"%s\": %s") % (path, e))
 

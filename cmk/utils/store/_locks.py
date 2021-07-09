@@ -253,11 +253,26 @@ def release_all_locks() -> None:
 
 
 @contextmanager
+def leave_locked_unless_exception(path: Union[str, Path]) -> Iterator[None]:
+    """Contextmanager to lock a file, and release the lock if an exception occurs.
+
+    If no exception occurs, the file is left behind locked.
+    Clearly this hellish maneuver should be removed from the code base.
+    In order to make this happen, every lock shall itself only be used as a context-manager.
+    """
+    try:
+        aquire_lock(path)
+        yield
+    except Exception:
+        release_lock(path)
+
+
+@contextmanager
 def cleanup_locks() -> Iterator[None]:
     """Context-manager to release all memorized locks at the end of the block.
 
-    This is a hack which should be removed. In order to make this happen, every lock shall
-    itself only be used as a context-manager.
+    This is a hack which should be removed.
+    In order to make this happen, every lock shall itself only be used as a context-manager.
     """
     try:
         yield

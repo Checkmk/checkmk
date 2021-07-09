@@ -212,18 +212,7 @@ def _load_bytes_from_file(
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
-    if pretty:
-        try:
-            formatted_data = pprint.pformat(data)
-        except UnicodeDecodeError:
-            # When writing a dict with unicode keys and normal strings with garbled
-            # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
-            # example:
-            #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
-            # Catch the exception and use repr() instead
-            formatted_data = repr(data)
-    else:
-        formatted_data = repr(data)
+    formatted_data = pprint.pformat(data) if pretty else repr(data)
     save_file(path, "%s\n" % formatted_data)
 
 

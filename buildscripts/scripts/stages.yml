@@ -37,9 +37,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_CPPCHECK_SUPPRESSIONS_FILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.cppcheck-suppressions' - || true"
-
     - NAME: CHANGED_CLANG_TIDY_FILE
       SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.clang-tidy' - || true"
 
@@ -121,22 +118,6 @@ STAGES:
 
     - NAME: 'NEB/CMC Compile (neb-cmc-compile.txt)'
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
-
-    - NAME: 'Cppcheck Livestatus (cppcheck-neb.xml)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CPPCHECK_SUPPRESSIONS_FILE,CHANGED_CORE_FILES
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-      COMMAND: "make test-cppcheck-livestatus-docker"
-      TEXT_ON_SKIP: 'No core files changed'
-
-    - NAME: 'Cppcheck core (cppcheck-cmc.xml)'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CPPCHECK_SUPPRESSIONS_FILE,CHANGED_CORE_FILES
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-      COMMAND: "make test-cppcheck-core-docker"
-      TEXT_ON_SKIP: 'No core files changed'
 
     - NAME: 'Clang Tidy Livestatus (livestatus-tidy.txt)'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES

@@ -58,11 +58,9 @@ node (NODE) {
                 pattern: "results/pylint.txt"))
             def MYPY = scanForIssues(tool: myPy(
                 pattern: "results/mypy.xml"))
-            def CPPCHECK = scanForIssues(tool: cppCheck(
-                pattern: 'results/cppcheck-*.xml'))
 
             publishIssues(
-                issues:[CLANG,GCC,PYLINT,MYPY,CPPCHECK],
+                issues:[CLANG,GCC,PYLINT,MYPY],
                 trendChartType: 'TOOLS_ONLY',
                 qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]])
             xunit([Custom(

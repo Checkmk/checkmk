@@ -113,7 +113,7 @@ def create_cluster_host(params):
     method="post",
     convert_response=True,
     request_schema=request_schemas.BulkCreateHost,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def bulk_create_hosts(params):
     """Bulk create hosts"""
@@ -154,7 +154,7 @@ def bulk_create_hosts(params):
     ".../collection",
     method="get",
     convert_response=True,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def list_hosts(param):
     """Show all hosts"""
@@ -262,9 +262,9 @@ def update_host(params):
     constructors.domain_type_action_href("host_config", "bulk-update"),
     "cmk/bulk_update",
     method="put",
-    convert_response=True,
     request_schema=request_schemas.BulkUpdateHost,
-    response_schema=response_schemas.DomainObjectCollection,
+    convert_response=True,
+    response_schema=response_schemas.HostConfigCollection,
 )
 def bulk_update_hosts(params):
     """Bulk update hosts

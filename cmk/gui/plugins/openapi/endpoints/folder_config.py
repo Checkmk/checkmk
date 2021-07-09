@@ -101,7 +101,7 @@ def create(params):
     ".../collection",
     method="get",
     path_params=[PATH_FOLDER_FIELD],
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostConfigCollection,
     convert_response=True,
 )
 def hosts_of_folder(params):

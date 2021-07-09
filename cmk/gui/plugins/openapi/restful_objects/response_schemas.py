@@ -505,6 +505,17 @@ class DomainObjectCollection(Linkable):
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
 
 
+class HostConfigCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "host_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(HostConfigSchema()),
+        description="A list of host objects.",
+    )
+
+
 class FolderCollection(DomainObjectCollection):
     domainType = fields.Constant(
         "folder_config",

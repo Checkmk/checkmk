@@ -102,6 +102,8 @@ def test_openapi_hosts(
         status=200,
         content_type="application/json",
     )
+    assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
+    assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
     resp = wsgi_app.follow_link(
         resp,
@@ -125,7 +127,7 @@ def test_openapi_hosts(
         content_type="application/json",
     )
     got_attributes = resp.json["extensions"]["attributes"]
-    assert attributes.items() <= got_attributes.items()  # pylint: disable=dict-items-not-iterating
+    assert list(attributes.items()) <= list(got_attributes.items())
 
     resp = wsgi_app.follow_link(
         resp,
@@ -145,15 +147,15 @@ def test_openapi_hosts(
         headers={"If-Match": resp.headers["ETag"]},
         content_type="application/json",
     )
-    assert (
-        resp.json["extensions"]["attributes"].items() >= {"ipaddress": "127.0.0.1"}.items()
-    )  # pylint: disable=dict-items-not-iterating
+    assert list(resp.json["extensions"]["attributes"].items()) >= list(
+        {"ipaddress": "127.0.0.1"}.items()
+    )
 
     # make sure changes are written to disk:
     resp = wsgi_app.follow_link(resp, "self", status=200)
-    assert (
-        resp.json["extensions"]["attributes"].items() >= {"ipaddress": "127.0.0.1"}.items()
-    )  # pylint: disable=dict-items-not-iterating
+    assert list(resp.json["extensions"]["attributes"].items()) >= list(
+        {"ipaddress": "127.0.0.1"}.items()
+    )
 
     # also try to update with wrong attribute
     wsgi_app.follow_link(

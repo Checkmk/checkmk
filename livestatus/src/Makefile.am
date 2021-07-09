@@ -4,8 +4,6 @@
 
 CLANG_VERSION ?= 10
 
-CPPCHECK ?= cppcheck
-CPPCHECK_NEB_RESULT ?= cppcheck-result.xml
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2020.16
 IWYU_TOOL ?= $(abs_top_srcdir)/scripts/iwyu_tool
@@ -31,7 +29,7 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
 GOOGLETEST_VERSION := googletest-f3ef7e173f
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick
+.PHONY: unit-test tidy iwyu documentation documentation-quick
 
 AM_CPPFLAGS = \
     -I.. \
@@ -277,15 +275,6 @@ iwyu: compile_commands.json
 	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
-# NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
-cppcheck: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --error-exitcode=2
-
-# We need to mangle the result a bit to make Jenkins' Cppcheck plugin happy
-cppcheck-xml: compile_commands.json
-	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
-	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
-
 documentation: compile_commands.json doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
@@ -304,4 +293,4 @@ install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
-	rm -rf *~ compile_commands.json $(CPPCHECK_NEB_RESULT) test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)
+	rm -rf *~ compile_commands.json test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

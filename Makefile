@@ -20,7 +20,6 @@ CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_VERSION      := 10
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
-export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
@@ -77,7 +76,7 @@ LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
+        clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
         documentation-quick format format-c format-python format-shell format-js \
         GTAGS headers help install iwyu mrproper mrclean optimize-images packages \
         setup setversion tidy version am--refresh skel openapi openapi-doc
@@ -536,20 +535,6 @@ endif
 analyze: config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
-
-# GCC-like output on stderr intended for human consumption.
-cppcheck: config.h
-	$(MAKE) -C livestatus/src cppcheck
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src cppcheck
-endif
-
-# XML output into file intended for machine processing.
-cppcheck-xml: config.h
-	$(MAKE) -C livestatus/src cppcheck-xml
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src cppcheck-xml
-endif
 
 format: format-python format-c format-shell format-js format-css
 

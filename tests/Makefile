@@ -39,7 +39,7 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
 	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
 	test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
-	test-cppcheck-livestatus test-cppcheck-core test-cppcheck-docker test-tidy-livestatus \
+	test-tidy-livestatus \
 	test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
@@ -80,9 +80,6 @@ help:
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh		           - Run shell unit tests"
 	@echo "test-unit-sh-docker	           - Run shell unit tests in docker"
-	@echo "test-cppcheck-livestatus            - Run cppcheck for livestatus"
-	@echo "test-cppcheck-core                  - Run cppcheck for the core"
-	@echo "test-cppcheck-docker                - Run both cppcheck in docker"
 	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
 	@echo "test-tidy-core                      - Run clang tidy for core"
 	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
@@ -271,15 +268,6 @@ test-unit-sh-docker:
 
 %-core-docker:
 	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
-
-test-cppcheck-livestatus:
-	cd ../livestatus/src && make CPPCHECK_NEB_RESULT=$(RESULTS)/cppcheck-neb.xml $(CPPCHECK)
-
-test-cppcheck-core:
-	cd ../enterprise/core/src && make CPPCHECK_CMC_RESULT=$(RESULTS)/cppcheck-cmc.xml $(CPPCHECK)
-
-test-cppcheck-docker:
-	../scripts/run-in-docker.sh make -C .. cppcheck-xml
 
 test-tidy-livestatus:
 	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)

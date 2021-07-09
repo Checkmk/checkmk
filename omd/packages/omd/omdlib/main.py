@@ -53,6 +53,7 @@ import omdlib
 import omdlib.certs
 import omdlib.backup
 
+from cmk.utils.paths import mkbackup_lock_dir
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
 #   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
@@ -4608,6 +4609,20 @@ def hash_password(password):
     return sha256_crypt.hash(password)
 
 
+def ensure_mkbackup_lock_dir_rights():
+    try:
+        lock_dir_as_path = Path(mkbackup_lock_dir)
+        lock_dir_as_path.mkdir(mode=0o0770, exist_ok=True)
+        os.chown(mkbackup_lock_dir, -1, grp.getgrnam("omd").gr_gid)
+        lock_dir_as_path.chmod(0o0770)
+    except IOError:
+        sys.stdout.write("Unable to create %s needed for mkbackup. "
+                         "This may be due to the fact that your SITE "
+                         "User isn't allowed to create the backup directory. "
+                         "You could resolve this issue by running 'sudo omd start' as root "
+                         "(and not as SITE user)." % mkbackup_lock_dir)
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -4638,6 +4653,7 @@ g_orig_wd = "/"
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main():
+    ensure_mkbackup_lock_dir_rights()
     global g_orig_wd
 
     site = RootContext()

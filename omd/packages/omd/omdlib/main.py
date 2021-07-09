@@ -4615,7 +4615,7 @@ def ensure_mkbackup_lock_dir_rights():
         lock_dir_as_path.mkdir(mode=0o0770, exist_ok=True)
         os.chown(mkbackup_lock_dir, -1, grp.getgrnam("omd").gr_gid)
         lock_dir_as_path.chmod(0o0770)
-    except IOError:
+    except:
         sys.stdout.write("Unable to create %s needed for mkbackup. "
                          "This may be due to the fact that your SITE "
                          "User isn't allowed to create the backup directory. "

@@ -109,6 +109,7 @@ def create_cluster_host(params):
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-create'),
           'cmk/bulk_create',
           method='post',
+          convert_response=True,
           request_schema=request_schemas.BulkCreateHost,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_create_hosts(params):
@@ -148,6 +149,7 @@ def bulk_create_hosts(params):
 @Endpoint(constructors.collection_href('host_config'),
           '.../collection',
           method='get',
+          convert_response=True,
           response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
     """Show all hosts"""
@@ -182,6 +184,7 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
               ),
           }],
           etag='both',
+          convert_response=True,
           request_schema=request_schemas.UpdateNodes,
           response_schema=response_schemas.ObjectProperty)
 def update_nodes(params):
@@ -249,6 +252,7 @@ def update_host(params):
           'cmk/bulk_update',
           method='put',
           request_schema=request_schemas.BulkUpdateHost,
+          convert_response=True,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_update_hosts(params):
     """Bulk update hosts

@@ -219,18 +219,42 @@ def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False)
 def save_text_to_file(path: Union[Path, str], content: str, mode: int = 0o660) -> None:
     if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
-    _save_data_to_file(path, content.encode("utf-8"), mode)
+    # Normally the file is already locked (when data has been loaded before with lock=True),
+    # but lock it just to be sure we have the lock on the file.
+    #
+    # NOTE:
+    #  * this creates the file with 0 bytes in case it is missing
+    #  * this will leave the file behind unlocked, regardless of it being locked before or
+    #    not!
+    with locked(path):
+        _save_data_to_file(path, content.encode("utf-8"), mode)
 
 
 def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660) -> None:
     if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
-    _save_data_to_file(path, content, mode)
+    # Normally the file is already locked (when data has been loaded before with lock=True),
+    # but lock it just to be sure we have the lock on the file.
+    #
+    # NOTE:
+    #  * this creates the file with 0 bytes in case it is missing
+    #  * this will leave the file behind unlocked, regardless of it being locked before or
+    #    not!
+    with locked(path):
+        _save_data_to_file(path, content, mode)
 
 
 def save_file(path: Union[Path, str], content: AnyStr, mode: int = 0o660) -> None:
-    # Just to be sure: ensure_binary
-    _save_data_to_file(path, ensure_binary(content), mode=mode)
+    # Normally the file is already locked (when data has been loaded before with lock=True),
+    # but lock it just to be sure we have the lock on the file.
+    #
+    # NOTE:
+    #  * this creates the file with 0 bytes in case it is missing
+    #  * this will leave the file behind unlocked, regardless of it being locked before or
+    #    not!
+    with locked(path):
+        # Just to be sure: ensure_binary
+        _save_data_to_file(path, ensure_binary(content), mode=mode)
 
 
 # Saving assumes a locked destination file (usually done by loading code)
@@ -241,19 +265,13 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
 
     tmp_path = None
     try:
-        # Normally the file is already locked (when data has been loaded before with lock=True),
-        # but lock it just to be sure we have the lock on the file.
-        #
-        # Please note that this already creates the file with 0 bytes (in case it is missing).
-        aquire_lock(path)
-
         with tempfile.NamedTemporaryFile("wb",
                                          dir=str(path.parent),
                                          prefix=".%s.new" % path.name,
                                          delete=False) as tmp:
 
-            tmp_path = tmp.name
-            os.chmod(tmp_path, mode)
+            tmp_path = Path(tmp.name)
+            tmp_path.chmod(mode)
             tmp.write(content)
 
             # The goal of the fsync would be to ensure that there is a consistent file after a
@@ -281,24 +299,16 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
             #tmp.flush()
             #os.fsync(tmp.fileno())
 
-        os.rename(tmp_path, str(path))
+        tmp_path.rename(path)
 
     except (MKTerminate, MKTimeout):
         raise
     except Exception as e:
-        # In case an exception happens during saving cleanup the tempfile created for writing
-        try:
-            if tmp_path:
-                os.unlink(tmp_path)
-        except IOError as e2:
-            if e2.errno != errno.ENOENT:  # No such file or directory
-                raise
+        if tmp_path:
+            tmp_path.unlink(missing_ok=True)
 
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot write configuration file \"%s\": %s") % (path, e))
-
-    finally:
-        release_lock(path)
 
 
 class RawStorageLoader:

@@ -12,6 +12,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    MutableMapping,
     Optional,
     Protocol,
     Tuple,
@@ -57,7 +58,7 @@ class _HostConfigLike(Protocol):
         ...
 
 
-def fallback_ip_for(family: socket.AddressFamily) -> str:
+def fallback_ip_for(family: socket.AddressFamily) -> HostAddress:
     return {
         socket.AF_INET: "0.0.0.0",
         socket.AF_INET6: "::",
@@ -139,7 +140,7 @@ def cached_dns_lookup(
     *,
     family: socket.AddressFamily,
     force_file_cache_renewal: bool,
-) -> Optional[str]:
+) -> Optional[HostAddress]:
     """Cached DNS lookup in *two* caching layers
 
     1) outer layer (this function):
@@ -232,7 +233,7 @@ def _actual_dns_lookup(
 
 
 class IPLookupCache:
-    def __init__(self, cache: cmk.utils.caching.DictCache) -> None:
+    def __init__(self, cache: MutableMapping[IPLookupCacheId, HostAddress]) -> None:
         super().__init__()
         self._cache = cache
         self.persist_on_update = True
@@ -243,13 +244,13 @@ class IPLookupCache:
     def __eq__(self, other: Any) -> bool:
         return other == self._cache
 
-    def __getitem__(self, key: Any) -> Any:
+    def __getitem__(self, key: IPLookupCacheId) -> HostAddress:
         return self._cache[key]
 
     def __len__(self) -> int:
         return len(self._cache)
 
-    def get(self, key: Any) -> Optional[Any]:
+    def get(self, key: IPLookupCacheId) -> Optional[HostAddress]:
         return self._cache.get(key)
 
     def load_persisted(self) -> None:
@@ -265,7 +266,7 @@ class IPLookupCache:
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
-    def __setitem__(self, cache_id: IPLookupCacheId, ipa: str) -> None:
+    def __setitem__(self, cache_id: IPLookupCacheId, ipa: HostAddress) -> None:
         """Updates the cache with a new / changed entry
 
         When self.persist_on_update update is disabled, this simply updates the in-memory
@@ -324,11 +325,10 @@ def _get_ip_lookup_cache() -> IPLookupCache:
     return cache
 
 
-# TODO: value type should at least be HostAddress (actually a subtype)
-def _load_ip_lookup_cache(lock: bool) -> Mapping[IPLookupCacheId, str]:
+def _load_ip_lookup_cache(lock: bool) -> Mapping[IPLookupCacheId, HostAddress]:
     loaded_object = store.load_object_from_file(_cache_path(), default={}, lock=lock)
     assert isinstance(loaded_object, dict)
-    return {deserialize_cache_id(k): str(v) for k, v in loaded_object.items()}
+    return {deserialize_cache_id(k): HostAddress(v) for k, v in loaded_object.items()}
 
 
 def _cache_path() -> str:

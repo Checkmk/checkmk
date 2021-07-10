@@ -215,103 +215,90 @@ def _cache_file():
         p.unlink()
 
 
-def test_repr():
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    assert isinstance(repr(ip_lookup_cache), str)
+class TestIPLookupCache:
+    def test_repr(self):
+        assert isinstance(repr(ip_lookup.IPLookupCache({})), str)
 
+    def test_load_not_existing(self):
+        ip_lookup_cache = ip_lookup.IPLookupCache({})
+        ip_lookup_cache.load_persisted()
+        assert ip_lookup_cache == {}
 
-def test_get_ip_lookup_cache_not_existing(_cache_file):
-    if _cache_file.exists():
-        _cache_file.unlink()
+    def test_load_invalid_syntax(self, _cache_file):
+        with _cache_file.open(mode="w", encoding="utf-8") as f:
+            f.write(u"{...")
 
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        ip_lookup_cache = ip_lookup.IPLookupCache({})
+        ip_lookup_cache.load_persisted()
+        assert ip_lookup_cache == {}
 
-    assert ip_lookup_cache == {}
+    def test_load_existing(self, _cache_file):
+        cache_id1 = "host1", socket.AF_INET
+        with _cache_file.open(mode="w", encoding="utf-8") as f:
+            f.write(u"%r" % {ip_lookup.serialize_cache_id(cache_id1): "1"})
 
+        ip_lookup_cache = ip_lookup.IPLookupCache({})
+        ip_lookup_cache.load_persisted()
+        assert ip_lookup_cache == {cache_id1: "1"}
 
-def test_get_ip_lookup_cache_invalid_syntax(_cache_file):
-    with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"{...")
+    def test_update_empty_file(self, _cache_file):
+        cache_id = "host1", socket.AF_INET
+        ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        ip_lookup_cache[cache_id] = "127.0.0.1"
 
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        cache = ip_lookup._load_ip_lookup_cache(lock=False)
+        assert cache[cache_id] == "127.0.0.1"
 
-    assert ip_lookup_cache == {}
+    def test_update_existing_file(self, _cache_file):
+        cache_id1 = "host1", socket.AF_INET
+        cache_id2 = "host2", socket.AF_INET
 
+        ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        ip_lookup_cache[cache_id1] = "127.0.0.1"
+        ip_lookup_cache[cache_id2] = "127.0.0.2"
 
-def test_get_ip_lookup_cache_existing(_cache_file):
-    cache_id1 = "host1", socket.AF_INET
-    with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {ip_lookup.serialize_cache_id(cache_id1): "1"})
+        cache = ip_lookup._load_ip_lookup_cache(lock=False)
+        assert cache[cache_id1] == "127.0.0.1"
+        assert cache[cache_id2] == "127.0.0.2"
 
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+    def test_update_existing_entry(self, _cache_file):
+        cache_id1 = "host1", socket.AF_INET
+        cache_id2 = "host2", socket.AF_INET
 
-    assert ip_lookup_cache == {cache_id1: "1"}
+        with _cache_file.open(mode="w", encoding="utf-8") as f:
+            f.write(
+                u"%r" % {
+                    ip_lookup.serialize_cache_id(cache_id1): "1",
+                    ip_lookup.serialize_cache_id(cache_id2): "2",
+                })
 
+        ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        ip_lookup_cache[cache_id1] = "127.0.0.1"
 
-def test_update_ip_lookup_cache_empty_file(_cache_file):
-    cache_id = "host1", socket.AF_INET
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache[cache_id] = "127.0.0.1"
+        cache = ip_lookup._load_ip_lookup_cache(lock=False)
+        assert cache[cache_id1] == "127.0.0.1"
+        assert cache[cache_id2] == "2"
 
-    cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[cache_id] == "127.0.0.1"
+    def test_update_without_persistence(self, _cache_file):
+        cache_id1 = "host1", socket.AF_INET
 
-    cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[cache_id] == "127.0.0.1"
+        ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+        ip_lookup_cache.persist_on_update = False
+        ip_lookup_cache[cache_id1] = "127.0.0.1"
 
+        assert ip_lookup_cache[cache_id1] == "127.0.0.1"
+        assert not _cache_file.exists()
 
-def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
-    cache_id1 = "host1", socket.AF_INET
-    cache_id2 = "host2", socket.AF_INET
+    def test_load_legacy(self, _cache_file):
+        cache_id1 = "host1", socket.AF_INET
+        cache_id2 = "host2", socket.AF_INET
 
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache[cache_id1] = "127.0.0.1"
-    ip_lookup_cache[cache_id2] = "127.0.0.2"
+        with _cache_file.open("w", encoding="utf-8") as f:
+            f.write(u"%r" % {"host1": "127.0.0.1", "host2": "127.0.0.2"})
 
-    cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[cache_id1] == "127.0.0.1"
-    assert cache[cache_id2] == "127.0.0.2"
-
-
-def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
-    cache_id1 = "host1", socket.AF_INET
-    cache_id2 = "host2", socket.AF_INET
-
-    with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {
-            ip_lookup.serialize_cache_id(cache_id1): "1",
-            ip_lookup.serialize_cache_id(cache_id2): "2",
-        })
-
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache[cache_id1] = "127.0.0.1"
-
-    cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[cache_id1] == "127.0.0.1"
-    assert cache[cache_id2] == "2"
-
-
-def test_ip_lookup_cache_update_without_persistence(_cache_file):
-    cache_id1 = "host1", socket.AF_INET
-
-    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    ip_lookup_cache.persist_on_update = False
-    ip_lookup_cache[cache_id1] = "127.0.0.1"
-
-    assert ip_lookup_cache[cache_id1] == "127.0.0.1"
-    assert not _cache_file.exists()
-
-
-def test_load_legacy_lookup_cache(_cache_file):
-    cache_id1 = "host1", socket.AF_INET
-    cache_id2 = "host2", socket.AF_INET
-
-    with _cache_file.open("w", encoding="utf-8") as f:
-        f.write(u"%r" % {"host1": "127.0.0.1", "host2": "127.0.0.2"})
-
-    cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[cache_id1] == "127.0.0.1"
-    assert cache[cache_id2] == "127.0.0.2"
+        cache = ip_lookup._load_ip_lookup_cache(lock=False)
+        assert cache[cache_id1] == "127.0.0.1"
+        assert cache[cache_id2] == "127.0.0.2"
 
 
 def test_update_dns_cache(monkeypatch, _cache_file):

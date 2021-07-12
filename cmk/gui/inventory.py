@@ -357,7 +357,7 @@ def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[S
     # If no data from livestatus could be fetched (CRE) try to load from cache
     # or status dir
     raw_status_data_tree = row.get("host_structured_status")
-    if raw_status_data_tree is None:
+    if not raw_status_data_tree:
         return _load_structured_data_tree("status_data", hostname)
     return StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
 

@@ -43,7 +43,6 @@ def handle_check_mk_check_result(
         def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
             exit_spec = host_config.exit_code_spec()
-
             try:
                 status, output_text = _combine_texts(check_func(hostname, *args, **kwargs))
 
@@ -58,7 +57,7 @@ def handle_check_mk_check_result(
                 output_text = f"{e}\n"
 
             except MKGeneralException as e:
-                status = max(status, exit_spec.get("exception", 3))
+                status = exit_spec.get("exception", 3)
                 output_text = f"{e}\n"
 
             except Exception:

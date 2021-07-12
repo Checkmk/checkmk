@@ -486,12 +486,15 @@ class ModeCheckManPage(WatoMode):
         )
 
     def page(self):
+
+        header = self._manpage["header"]
+
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()
         html.th(_("Title"))
         html.open_td()
-        html.b(self._manpage["header"]["title"])
+        html.b(header["title"])
         html.close_td()
         html.close_tr()
 
@@ -504,7 +507,7 @@ class ModeCheckManPage(WatoMode):
 
         html.open_tr()
         html.th(_("Description"))
-        html.td(self._manpage_text(self._manpage["header"]["description"]))
+        html.td(self._manpage_text(header["description"]))
         html.close_tr()
 
         if self._manpage["type"] == "check_mk":
@@ -513,11 +516,18 @@ class ModeCheckManPage(WatoMode):
             html.td(HTML(self._manpage["service_description"].replace("%s", "&#9744;")))
             html.close_tr()
 
+            discovery = header.get("discovery") or header.get("inventory")
+            if discovery:
+                html.open_tr()
+                html.th(_("Discovery"))
+                html.td(self._manpage_text(discovery))
+                html.close_tr()
+
             check_ruleset_name = self._manpage.get("check_ruleset_name")
             if check_ruleset_name is not None:
                 self._show_ruleset("checkgroup_parameters:%s" % check_ruleset_name)
 
-            cluster = self._manpage["header"].get("cluster")
+            cluster = header.get("cluster")
             if cluster:
                 html.open_tr()
                 html.th(_("Cluster behaviour"))

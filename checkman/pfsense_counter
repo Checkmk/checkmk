@@ -9,6 +9,6 @@ description:
  fragmented packets, short packets, normalized packets and
  packets dropped due to memory limitations.
 
-inventory:
+discovery:
  One service is created for each pfSense device.
 

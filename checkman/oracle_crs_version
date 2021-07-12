@@ -10,5 +10,5 @@ description:
 
  This check is always OK or stale when no data is found from agent.
 
-inventory:
+discovery:
  One service is created for each host

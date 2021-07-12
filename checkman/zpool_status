@@ -11,5 +11,5 @@ description:
  If the extend state information from zpool status indicates any CRC or
  other errors, the check will go to WARNING.
 
-inventory:
+discovery:
  One service is created for each host if there are any pools.

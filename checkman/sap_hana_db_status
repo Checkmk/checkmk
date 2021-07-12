@@ -15,7 +15,7 @@ description:
 item:
  The sid instance name and database name
 
-inventory:
+discovery:
  One service is created for each instance.
 
 cluster:

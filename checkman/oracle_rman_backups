@@ -17,5 +17,5 @@ item:
  name of the pmon_... process) concatenated with the name
  of the job separated by a single dot.
 
-inventory:
+discovery:
  No service is created.

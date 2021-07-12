@@ -15,7 +15,7 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each instance for each session connected
  to the MySQL daemon.
 

@@ -9,5 +9,5 @@ description:
  and {running}, the result will be {OK}. In all other cases
  it is {critical}.
 
-inventory:
+discovery:
  One service is created for each Riverbed Steelhead appliance.

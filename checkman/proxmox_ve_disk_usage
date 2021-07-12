@@ -7,5 +7,5 @@ description:
  This check is OK when disk usage is below a configurable set of levels or if no levels have
  been set. It shows the available and used disk space.
 
-inventory:
+discovery:
  One service per system is created.

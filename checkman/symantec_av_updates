@@ -8,5 +8,5 @@ description:
  The default level for Warning is 3 and for Critical 5 Days. The levels must be specified in seconds.
  You just need to install the plugin {symantec_av} into the {plugins} directory of your agent.
 
-inventory:
+discovery:
  One service is created for each system.

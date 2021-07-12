@@ -17,5 +17,5 @@ description:
 item:
  The type, the system label and the index of the PDU seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each AUX device.

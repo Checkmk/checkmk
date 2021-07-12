@@ -12,6 +12,6 @@ description:
 item:
  The name of the Raid Volume like reported in the MIB
 
-inventory:
+discovery:
  One service is created.
 

@@ -20,7 +20,7 @@ description:
 item:
  The team name of the bonding interface.
 
-inventory:
+discovery:
  One service is created for every bonding interface found in state
  up or degraded.
 

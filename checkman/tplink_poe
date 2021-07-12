@@ -10,5 +10,5 @@ description:
 item:
  Index of the interface
 
-inventory:
+discovery:
  One service is created for each PoE-capable ethernet port.

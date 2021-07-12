@@ -14,6 +14,6 @@ description:
 item:
  One of the two statement {{Operations}} or {{Replica Operations}}.
 
-inventory:
+discovery:
  One service is created for the {Operations} and another one for
  {Replica Operations} (if applicable).

@@ -35,5 +35,5 @@ description:
 
  - Cisco UCS C460 M4 Rack Server
 
-inventory:
+discovery:
  One service is created.

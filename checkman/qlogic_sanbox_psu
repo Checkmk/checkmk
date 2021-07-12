@@ -13,5 +13,5 @@ item:
  The ID of the sensor taken from SNMP. It contains 3 numbers separated by
  dots, e. g. 129.45.1
 
-inventory:
+discovery:
  One service is created for each power supply found by SNMP.

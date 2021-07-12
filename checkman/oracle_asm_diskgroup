@@ -38,7 +38,7 @@ item:
  See also check manpage for {df}. All configurations are usable for Oracle ASM
  Disk Groups as well.
 
-inventory:
+discovery:
  One service is created for each Disk Group.
 
 cluster:

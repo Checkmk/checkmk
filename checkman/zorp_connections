@@ -9,6 +9,6 @@ description:
  It returns OK/WARN/CRIT in respect to configurable WARN/CRIT values for the total number of
  connections.
 
-inventory:
+discovery:
  One service is created
 

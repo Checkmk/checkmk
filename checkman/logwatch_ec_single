@@ -12,7 +12,7 @@ description:
 item:
  The forwarded logs
 
-inventory:
+discovery:
  One service {"Log Forwarding"} is created on each host when the following options are set:
  {logwatch_forward_to_ec} is {True}, {separate_checks} is {True}
 

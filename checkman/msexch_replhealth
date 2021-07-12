@@ -18,7 +18,7 @@ description:
  Test-ReplicationHealth cmdlet for the item is {passed}.  It is {WARN}
  otherwise.
 
-inventory:
+discovery:
  One service is created for each health check.
 
 item:

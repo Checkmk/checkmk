@@ -11,5 +11,5 @@ description:
  the test was 'aborted' and CRIT is reported in case of
  'failed' or 'load failure'.
 
-inventory:
+discovery:
  One service is created.

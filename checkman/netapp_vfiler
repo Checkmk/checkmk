@@ -7,7 +7,7 @@ description:
  This check monitors the status of any vFiler instances on a NetAPP filer.
  It alerts the user if one of them is not in status "running" (will be in critical state)
 
-inventory:
+discovery:
  One service is created for each vFiler.
 
 item:

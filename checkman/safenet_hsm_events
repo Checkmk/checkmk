@@ -8,5 +8,5 @@ description:
  It checks critical and noncritical events both in terms of a rate
  as well as total number since last reset.
 
-inventory:
+discovery:
  One service is created for each device.

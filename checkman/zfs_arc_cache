@@ -10,6 +10,6 @@ description:
 
  This check is only for reporting and always returns {OK}.
 
-inventory:
+discovery:
  One service is created on every machine delivering information
  at least about zfs cache hits and misses.

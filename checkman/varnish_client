@@ -10,5 +10,5 @@ description:
  No default levels are set. Upepr levels can be set for
  "clients dropped" and "client requests".
 
-inventory:
+discovery:
  One service is created.

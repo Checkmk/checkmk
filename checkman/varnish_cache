@@ -9,5 +9,5 @@ description:
 
  No default levels are set. Upper levels can be set for "cache misses".
 
-inventory:
+discovery:
  One service is created.

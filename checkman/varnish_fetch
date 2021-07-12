@@ -12,5 +12,5 @@ description:
  "fetch had bad headers", "fetch EOF", "fetch failed" and
  "fetch zero length".
 
-inventory:
+discovery:
  One service is created.

@@ -24,7 +24,7 @@ description:
 item:
  The mount point of the filesystem.
 
-inventory:
+discovery:
  One service is created for each filesystem which is not of the type {tmpfs}.
  The inventory uses the current mount options as check parameter.
  Note: the agent sends only filesystems which have a device below

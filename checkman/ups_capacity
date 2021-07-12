@@ -16,5 +16,5 @@ description:
  as well as the levels for both metrics, will only be
  shown/applied if the device is on battery.
 
-inventory:
+discovery:
  One service is created for each UPS.

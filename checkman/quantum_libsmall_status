@@ -9,5 +9,5 @@ description:
  Power, Cooling, Control, Connectivity, Robotics, Media, Drive and Operator action request.
  Operator action request goes critical if flagged and OK otherwise.
 
-inventory:
+discovery:
  One service is created for each small Quantum tape library.

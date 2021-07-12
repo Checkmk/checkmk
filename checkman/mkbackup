@@ -11,5 +11,5 @@ description:
 item:
  The ID of the job
 
-inventory:
+discovery:
  One service is created for each backup job.

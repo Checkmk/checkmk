@@ -15,5 +15,5 @@ description:
  The check displays information about the model, firmware, serial number
  and connected devices.
 
-inventory:
+discovery:
  One service is created on each device.

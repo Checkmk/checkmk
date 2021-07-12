@@ -14,7 +14,7 @@ description:
  The check is {OK} when the {ContentIndexState} parameter is {Healthy}. It
  is {WARN} otherwise.
 
-inventory:
+discovery:
  One service is created for each database on the Mailbox Server.
 
 item:

@@ -7,7 +7,7 @@ description:
  This check monitors a persistent volume in a kubernetes cluster.
  The check returns {OK} if a volume is bound otherwise {CRIT}.
 
-inventory:
+discovery:
  One service is created for each persistent volume.
 
 item:

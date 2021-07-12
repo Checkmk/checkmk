@@ -15,6 +15,6 @@ description:
 item:
  The name of the manager.
 
-inventory:
+discovery:
  One service is created for each manager.
 

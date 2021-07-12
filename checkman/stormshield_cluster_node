@@ -13,5 +13,5 @@ description:
 item:
  The index of the cluster node
 
-inventory:
+discovery:
  One service is created which holds information about the other member.

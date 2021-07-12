@@ -10,5 +10,5 @@ description:
  the unit runs on battery backup power the status
  {WARN} is returned.
 
-inventory:
+discovery:
  One service is created for each device.

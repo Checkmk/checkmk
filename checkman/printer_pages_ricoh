@@ -8,5 +8,5 @@ description:
  and the count of color prints.
  The status is always OK.
 
-inventory:
+discovery:
  One service is created for each printer.

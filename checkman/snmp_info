@@ -7,5 +7,5 @@ description:
  This check retrieves the values {sysDescr}, {sysContact}, {sysName} and
  {sysLocation} and displays them. It is alwas OK.
 
-inventory:
+discovery:
  One service is created for each SNMP host.

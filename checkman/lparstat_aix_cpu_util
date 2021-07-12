@@ -13,6 +13,6 @@ description:
  On shared partitions the physical CPU consumption as well as the entitlement
  is displayed.
 
-inventory:
+discovery:
  One service is created on each LPAR.
 

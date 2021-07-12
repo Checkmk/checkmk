@@ -17,7 +17,7 @@ description:
  CPU "utiliziation" (which measures the current usage of the CPU
  in percent).
 
-inventory:
+discovery:
  One service is created for each host
  if the agent output contains a {statgrab_load} section.
 

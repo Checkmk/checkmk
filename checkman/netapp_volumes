@@ -13,7 +13,7 @@ description:
 item:
  Name of the volume as defined in the system
 
-inventory:
+discovery:
  One service is created for each {local} volumes.
 
 

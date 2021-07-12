@@ -13,5 +13,5 @@ description:
 item:
  The mountpoint of the filesystem
 
-inventory:
+discovery:
  One service is created for each filesystem with enabled quotas.

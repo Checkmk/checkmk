@@ -10,6 +10,6 @@ description:
 item:
  The name of the group.
 
-inventory:
+discovery:
  One service is created for each available sensor.
 

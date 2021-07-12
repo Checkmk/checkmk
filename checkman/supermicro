@@ -11,5 +11,5 @@ description:
 
  Status {OK}, {WARN} and {CRIT} are taken directly from the device.
 
-inventory:
+discovery:
  One service is created on supported devices.

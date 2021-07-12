@@ -15,7 +15,7 @@ description:
  When the refclock state is "not available" CRIT is raised and a WARN state is issued
  if the refclock state is "not synchronized".
 
-inventory:
+discovery:
  One service is created for each non-gps refclock.
 
 item:

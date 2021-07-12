@@ -17,7 +17,7 @@ description:
 item:
  The MSSQL instance name and the tablespace name separated by a space.
 
-inventory:
+discovery:
  One service is created for each tablespace.
 
 cluster:

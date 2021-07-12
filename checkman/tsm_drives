@@ -14,5 +14,5 @@ description:
 item:
  The name of the instance (optional), the library name and the drive name each seperated with {{/}}
 
-inventory:
+discovery:
  One service is created for each tape drive reported by TSM.

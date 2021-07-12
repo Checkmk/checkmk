@@ -10,5 +10,5 @@ description:
  There are no default levels. Upper levels can be set for
  "expired objects" and "LRU nuked objects".
 
-inventory:
+discovery:
  One service is created.

@@ -19,5 +19,5 @@ item:
  A combination of the enclosure and the slot number, separated by a slash, for
  example {"0/4"} for enclosure {0} and slot {4}.
 
-inventory:
+discovery:
  One service is created for each disk.

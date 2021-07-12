@@ -42,5 +42,5 @@ description:
 item:
  Name of the database followed by {{.}} followed by the name of the collection
 
-inventory:
+discovery:
  One service is created for each collection named 'MongoDB Cluster: <database name>.<collection_name>'.

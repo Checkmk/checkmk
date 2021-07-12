@@ -25,7 +25,7 @@ description:
 item:
  The mount point.
 
-inventory:
+discovery:
   One service is created for each NFS mounts.
   This is done by scanning {/proc/mounts}. The file {/etc/fstab} is irrelevant.
 

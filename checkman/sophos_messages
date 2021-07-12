@@ -10,5 +10,5 @@ description:
 item:
  The name of the messagetype (i.e. {{Legit}}, {{Blocked}}, etc.).
 
-inventory:
+discovery:
  One service is created for each messagetype.

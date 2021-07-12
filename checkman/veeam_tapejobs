@@ -16,7 +16,7 @@ description:
  While the tapejob is running, the status is determined by the levels set on
  maximum acceptable time the job is supposed to take.
 
-inventory:
+discovery:
  One service is created for each tape job created by the Veeam tool.
 
 item:

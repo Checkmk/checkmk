@@ -7,5 +7,5 @@ description:
  This check measures the uptime of the appliance. The behaviour of this
  check is similar to the regular uptime check.
 
-inventory:
+discovery:
  One service is created.

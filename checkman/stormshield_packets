@@ -13,6 +13,6 @@ description:
 item:
  The description of the package
 
-inventory:
+discovery:
  One service is created for each interface
  if it is an ethernet or ipsec interface.

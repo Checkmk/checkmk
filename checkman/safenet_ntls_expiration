@@ -6,5 +6,5 @@ distribution: check_mk
 description:
  This check displays the NTLS server certificate's expiration date. It is always OK.
 
-inventory:
+discovery:
  One service is created for each device.

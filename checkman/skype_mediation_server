@@ -18,6 +18,6 @@ description:
 
  Thresholds can be configured for all these counters except the failure index.
 
-inventory:
+discovery:
  One service is created.
 

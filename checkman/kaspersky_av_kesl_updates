@@ -9,6 +9,6 @@ description:
 
  This check works with KESL.
 
-inventory:
+discovery:
  One service is created for each system.
 

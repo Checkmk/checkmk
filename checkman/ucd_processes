@@ -13,5 +13,5 @@ description:
 item:
  The index and type of processes.
 
-inventory:
+discovery:
  One service is created for each process type.

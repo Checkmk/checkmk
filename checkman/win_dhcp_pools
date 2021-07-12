@@ -18,6 +18,6 @@ description:
 item:
  The name of the DHCP pool as configured on the DHCP server.
 
-inventory:
+discovery:
  One service is created for each DHCP pool on the DHCP server.
 

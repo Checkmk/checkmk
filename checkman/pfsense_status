@@ -7,5 +7,5 @@ description:
  This check monitors the running status of pfSense firewalls.
  A status of "Running" is interpreted as OK, "Not runnning" as CRIT
 
-inventory:
+discovery:
  One service is created for each device.

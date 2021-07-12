@@ -13,6 +13,6 @@ description:
 
  The check can be configured via the corresponding WATO rule {Windows License}
 
-inventory:
+discovery:
  One service named {Windows License} is created.
 

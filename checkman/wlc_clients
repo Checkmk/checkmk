@@ -16,5 +16,5 @@ description:
 item:
  Name of the SSID or "Summary" for the overall number of clients
 
-inventory:
+discovery:
  One service is created for each wifi network and one summary service is created.

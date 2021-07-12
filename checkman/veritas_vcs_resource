@@ -31,7 +31,7 @@ description:
 item:
  The resource name.
 
-inventory:
+discovery:
  One service is created for each resource.
 
 cluster:

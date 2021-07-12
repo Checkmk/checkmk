@@ -10,5 +10,5 @@ description:
 item:
  The ID of the VRRP instance
 
-inventory:
+discovery:
  One service is created for each VRRP.

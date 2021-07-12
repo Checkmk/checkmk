@@ -11,6 +11,6 @@ description:
  other ones.
  The check state is configurable.
 
-inventory:
+discovery:
  One summary service is created.
 

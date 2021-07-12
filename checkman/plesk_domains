@@ -16,6 +16,6 @@ description:
  {plesk_domains} on the host wich runs Plesk in the
  directory {/usr/lib/check_mk_agent/plugins}.
 
-inventory:
+discovery:
  One service is created for each system.
 

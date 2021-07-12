@@ -9,5 +9,5 @@ description:
  state. Depending on the Prometheus version, additional information such as the
  storage retention time may be shown.
 
-inventory:
+discovery:
  One service is created for the host

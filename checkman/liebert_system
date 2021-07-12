@@ -10,5 +10,5 @@ description:
 item:
  The item will be the system model number
 
-inventory:
+discovery:
  One service is created for each system.

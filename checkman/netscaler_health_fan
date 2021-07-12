@@ -13,6 +13,6 @@ description:
 item:
  The Name of the fan according to the {sysHealthname} in the {nsSysHealthTable}
 
-inventory:
+discovery:
  One service is created for each fan found on the appliance.
 

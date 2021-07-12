@@ -17,5 +17,5 @@ description:
  - secondary members losing connectivity to the primary for more than the configured timeout (10 seconds by default).
 
 
-inventory:
+discovery:
  One service is created named 'MongoDB Primary Election'.

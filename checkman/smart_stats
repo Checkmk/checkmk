@@ -19,7 +19,7 @@ description:
 item:
  Name of the disk
 
-inventory:
+discovery:
  One service is created if there is at least one supported value
  available for a HDD.
 

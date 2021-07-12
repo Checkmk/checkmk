@@ -11,5 +11,5 @@ description:
 item:
  The name of the quota
 
-inventory:
+discovery:
  One service is created for each quota.

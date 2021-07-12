@@ -12,7 +12,7 @@ description:
 item:
  Name of the bundle
 
-inventory:
+discovery:
  One service is for each unique skuid.
 
 

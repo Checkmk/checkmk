@@ -13,6 +13,6 @@ description:
 
  Please refer to the manpage of {ups_capacity} for configuration examples.
 
-inventory:
+discovery:
  One service is created.
 

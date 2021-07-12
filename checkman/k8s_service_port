@@ -7,7 +7,7 @@ description:
  This check monitors the ports of a Kubernetes service.
  Levels for expected values can be set via WATO.
 
-inventory:
+discovery:
  One service is created for each port.
 
 item:

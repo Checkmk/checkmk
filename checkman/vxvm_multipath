@@ -17,6 +17,6 @@ description:
 item:
  Name of the multipath device ({access name})
 
-inventory:
+discovery:
  One service is created for each multipathed LUN.
 

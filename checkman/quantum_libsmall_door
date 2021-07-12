@@ -7,5 +7,5 @@ description:
  This check monitors the main door of small Quantum tape libraries.
  An open door triggers a critical status.
 
-inventory:
+discovery:
  One service is created for each small Quantum tape library.

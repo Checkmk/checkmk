@@ -15,7 +15,7 @@ description:
 item:
  Name of the database
 
-inventory:
+discovery:
  One service is created for each instance.
 
 cluster:

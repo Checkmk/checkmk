@@ -7,5 +7,5 @@ description:
  This check outputs the version information of the filer.
  It is always {OK}.
 
-inventory:
+discovery:
  One service is created.

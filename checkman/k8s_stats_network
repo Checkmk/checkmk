@@ -10,5 +10,5 @@ description:
 item:
  The network interface that is monitored
 
-inventory:
+discovery:
  One service is created for each network interface.

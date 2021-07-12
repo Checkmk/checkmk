@@ -7,7 +7,7 @@ description:
  This check monitors a storage class of a kubernetes cluster.
  The check returns always returns {OK}.
 
-inventory:
+discovery:
  One service is created for each storage class.
 
 item:

@@ -134,7 +134,7 @@ description:
 
  The check is always in the state OK.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

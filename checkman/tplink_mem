@@ -8,5 +8,5 @@ description:
 
  Warning and critical levels can be configured in WATO.
 
-inventory:
+discovery:
  One service is created.

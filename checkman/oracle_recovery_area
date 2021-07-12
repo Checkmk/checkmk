@@ -11,5 +11,5 @@ description:
 item:
  The ORACLE_SID
 
-inventory:
+discovery:
  One service is created for each database.

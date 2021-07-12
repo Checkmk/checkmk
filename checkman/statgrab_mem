@@ -21,6 +21,6 @@ description:
  Make sure you have the statgrab binary available on the monitored
  machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
 
-inventory:
+discovery:
  One service is created on every machine with statgrab.
 

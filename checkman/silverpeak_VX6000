@@ -10,5 +10,5 @@ description:
 item:
  The fixed statement {Alarmstates}.
 
-inventory:
+discovery:
  One service is created. It collects all active alarms.

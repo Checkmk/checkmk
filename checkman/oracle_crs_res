@@ -29,5 +29,5 @@ description:
 item:
  Name of Resource
 
-inventory:
+discovery:
  One service is created for each resource.

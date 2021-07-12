@@ -13,5 +13,5 @@ description:
  solaris platform to platform (i.e. huge differences between e.g. M series and T
  series systems). Please have a look at the documentation of prtdiag for your system.
 
-inventory:
+discovery:
  One service is created.

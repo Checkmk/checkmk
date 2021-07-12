@@ -15,5 +15,5 @@ item:
  The ID of the sensor taken from SNMP. It contains 3 numbers separated by
  dots, e. g. 129.45.3
 
-inventory:
+discovery:
  One service is created for each temperature sensor found by SNMP.

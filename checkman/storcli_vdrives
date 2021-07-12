@@ -12,5 +12,5 @@ description:
 item:
  The controller number and the ID of the virtual drive.
 
-inventory:
+discovery:
  One service is created for each found virtual drive on each controller.

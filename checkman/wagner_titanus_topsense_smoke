@@ -8,7 +8,7 @@ description:
 
  The check returns {CRIT} if the level is above 5.000000 %, {WARN} if the level is blow 5.000000 % and above 3.000000 %, {OK} otherwise.
 
-inventory:
+discovery:
  Two services are created.
  One service for every smoke detector.
 

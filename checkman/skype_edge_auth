@@ -9,6 +9,6 @@ description:
 
  The threshold for this can be configured.
 
-inventory:
+discovery:
  One service is created.
 

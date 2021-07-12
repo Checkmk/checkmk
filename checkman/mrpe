@@ -28,6 +28,6 @@ item:
  The service description of the check as configured in {mrpe.cfg}
  on the target host.
 
-inventory:
+discovery:
  One service is created for each plugins configured in {mrpe.cfg}.
 

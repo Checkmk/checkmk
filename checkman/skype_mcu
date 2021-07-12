@@ -18,6 +18,6 @@ description:
  heavy load or at capacity and it will be {crit} if the MCU is not
  available at all.
 
-inventory:
+discovery:
  One service is created.
 

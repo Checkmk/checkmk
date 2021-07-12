@@ -20,5 +20,5 @@ description:
 item:
  The name of the raid volume.
 
-inventory:
+discovery:
  One service is created for each volume.

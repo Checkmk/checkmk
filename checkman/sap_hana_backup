@@ -21,7 +21,7 @@ description:
 item:
  The sid instance name and backup type seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each instance and backup type.
 
 cluster:

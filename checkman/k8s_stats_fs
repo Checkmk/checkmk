@@ -8,5 +8,5 @@ description:
 item:
  The logical disk partition filesystem.
 
-inventory:
+discovery:
  One service is created for each filesystem.

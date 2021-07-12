@@ -13,5 +13,5 @@ description:
 item:
  {{Actor}} plus the ID of the device
 
-inventory:
+discovery:
  One service is created for each actor.

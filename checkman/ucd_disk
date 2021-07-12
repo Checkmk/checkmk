@@ -14,5 +14,5 @@ description:
 item:
  The mount point of the disk.
 
-inventory:
+discovery:
  One service is created for each mount point.

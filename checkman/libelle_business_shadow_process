@@ -10,5 +10,5 @@ description:
  It returns {OK} if one of them is found and has status {RUN}.
  {CRIT} is returned otherwise.
 
-inventory:
+discovery:
  One service is created for each device.

@@ -13,5 +13,5 @@ item:
  "Sensor X" where X=1-16 is the ID of the connected
  sensor.
 
-inventory:
+discovery:
  One service is created for each switch sensor.

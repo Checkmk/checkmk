@@ -9,5 +9,5 @@ description:
  Replication lag is a delay between an operation on the primary and the application of that operation
  from the oplog to the secondary.
 
-inventory:
+discovery:
  One service is created named 'MongoDB Replication Lag'.

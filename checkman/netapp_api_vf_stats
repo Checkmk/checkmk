@@ -17,5 +17,5 @@ description:
 item:
  Name of the vFiler.
 
-inventory:
+discovery:
  One service is created for each vFiler.

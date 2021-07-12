@@ -10,7 +10,7 @@ description:
 
  Warning and critical levels can be configured for the check.
 
-inventory:
+discovery:
  One service is created for each detected CPU.
 
 item:

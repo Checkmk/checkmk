@@ -11,6 +11,6 @@ description:
  Only if you set levels explicitly, it returns {WARN} or {CRIT} if
  the value is outside the given ranges.
 
-inventory:
+discovery:
  One service is created for each host called Outlet Count.
 

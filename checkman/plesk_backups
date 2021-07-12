@@ -17,6 +17,6 @@ description:
 item:
   The domain name of the domain backuped.
 
-inventory:
+discovery:
  One service is created for each plesk domain.
 

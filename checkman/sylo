@@ -14,5 +14,5 @@ description:
  the fill state of the silo and the throughput - means the amount of processed
  logs as rates.
 
-inventory:
+discovery:
  One service is created on each host which provides the section in the check_mk agent.

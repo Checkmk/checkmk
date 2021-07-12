@@ -17,6 +17,6 @@ description:
 item:
  The name of the bonding interface, etc {bond0}.
 
-inventory:
+discovery:
  One service is created for each {active} bonding interface.
 

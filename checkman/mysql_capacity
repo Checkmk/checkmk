@@ -24,7 +24,7 @@ description:
 item:
  Name of the instance and name of the database seperated by a colon ({{:}})
 
-inventory:
+discovery:
  One service is created for each database.
  Internal MySQL databases are ignored.
 

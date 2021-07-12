@@ -22,5 +22,5 @@ description:
 item:
  The name of the module
 
-inventory:
+discovery:
  One service is created for each module.

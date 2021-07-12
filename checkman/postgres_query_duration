@@ -12,7 +12,7 @@ description:
 item:
  Name of the category and the name of the database
 
-inventory:
+discovery:
  One service is created for each database.
 
 cluster:

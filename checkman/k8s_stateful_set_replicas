@@ -10,6 +10,6 @@ description:
 
  The check returns {OK} if every replica is ready, {WARN} otherwise.
 
-inventory:
+discovery:
  One service is created.
 

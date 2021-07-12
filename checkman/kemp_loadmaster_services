@@ -10,7 +10,7 @@ description:
  {WARN} if the service is in state 'sorry', {CRIT} if in state 'out of Service', 'failed'
  or 'errormsg'. Otherwise it will result in {UNKNOWN}.
 
-inventory:
+discovery:
  One service is created for each service running on the device
 
 item:

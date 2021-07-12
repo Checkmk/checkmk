@@ -21,5 +21,5 @@ parameters(dict):  A dictionary with the following keys:
  {"state_if_stopped"}: int: The monitoring state that should be applied if
  stopped services are found
 
-inventory:
+discovery:
  One summary service is created.

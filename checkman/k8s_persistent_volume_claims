@@ -8,7 +8,7 @@ description:
  The check returns {OK} if a volume is bound otherwise {CRIT}. If no
  phase is given the check returns {UNKNOWN}.
 
-inventory:
+discovery:
  One service is created for each persistent volume claim.
 
 item:

@@ -24,6 +24,6 @@ description:
 item:
  The ID of the disk as reported by OpenHardwareMonitor
 
-inventory:
+discovery:
  One service is created for each available sensor with the sensor type ("Level") if
  the sensor reports {"hdd"}.

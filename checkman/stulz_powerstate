@@ -10,5 +10,5 @@ description:
 item:
  Name of the unit
 
-inventory:
+discovery:
  One service is created for each device.

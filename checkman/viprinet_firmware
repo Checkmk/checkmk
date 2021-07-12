@@ -7,5 +7,5 @@ description:
  This check displays the current firmware version and
  if firmware updates are available
 
-inventory:
+discovery:
  One service is created.

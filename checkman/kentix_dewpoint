@@ -13,5 +13,5 @@ description:
 item:
  One of the two statement {{LAN}} or {{Rack}}
 
-inventory:
+discovery:
  One service is created.

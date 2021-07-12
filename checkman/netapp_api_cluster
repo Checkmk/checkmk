@@ -9,7 +9,7 @@ description:
  It will return WARNING smaller issues (e.g. only one interconnect failure) and CRITICAL on anything that
  has immediate impact (e.g. being in takeover already)
 
-inventory:
+discovery:
  One service is created for each Cluster.
 
 item:

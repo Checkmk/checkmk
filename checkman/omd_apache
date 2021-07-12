@@ -17,5 +17,5 @@ description:
 item:
  The name of the site.
 
-inventory:
+discovery:
  One service is created for each site.

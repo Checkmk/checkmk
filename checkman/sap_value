@@ -17,7 +17,7 @@ item:
  A combination of the SAP system ID and, space separated, the path of the
  node to process the information of.
 
-inventory:
+discovery:
  By default no services are created. You can use the inventory option
  {inventory_sap_values}. This is a hostlist which contains dictionaries
  as parameters.

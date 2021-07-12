@@ -18,7 +18,7 @@ description:
 item:
  The kernel counter
 
-inventory:
+discovery:
  One service is created for {"Major Page Faults"}, {"Context Switches"}
  and {"Process Creations"} per default on each host.
  You can override this list globally by setting {inventory_kernel_counters}

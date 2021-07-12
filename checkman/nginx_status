@@ -45,7 +45,7 @@ description:
  {/etc/check_mk/nginx_status.cfg} and configure your servers in that file.
  You find an example of that file in your agent directory ({share/check_mk/agents}).
 
-inventory:
+discovery:
  One service is created for each web server.
 
 item:

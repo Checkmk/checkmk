@@ -13,6 +13,6 @@ description:
 item:
  The name of the bonding interface
 
-inventory:
+discovery:
  One service is created for each {active} bonding interface.
 

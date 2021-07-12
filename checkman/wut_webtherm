@@ -10,6 +10,6 @@ description:
 item:
  The ID of the sensor
 
-inventory:
+discovery:
  One service is created for each available temperature sensor.
 

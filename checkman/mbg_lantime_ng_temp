@@ -7,7 +7,7 @@ description:
  This check shows the temperature in degree Celsius of Meinberg LANTIME clocks supporting the
  new MBG-LANTIME-NG-MIB.
 
-inventory:
+discovery:
  One service is created for each device.
 
 item:

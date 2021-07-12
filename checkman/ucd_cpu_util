@@ -14,7 +14,7 @@ description:
  This daemon is mainly found on Linux and is used by some
  hardware appliances (such as Riverbed Steelhead).
 
-inventory:
+discovery:
  One service is created for each host if the agent supports the UCD-MIB.
  Currently the SNMP scan function will only consider hosts
  with the text {linux} in their system description. You can

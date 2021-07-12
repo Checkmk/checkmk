@@ -37,6 +37,6 @@ description:
  {Do not impose levels} the check status is always {OK} independent of a
  possible RAM corruption.
 
-inventory:
+discovery:
  One service is created for each Linux host.
 

@@ -8,5 +8,5 @@ description:
 
  The oplog is a special capped collection that keeps a rolling record of all operations that modify the data stored in databases.
 
-inventory:
+discovery:
  One service is created named 'MongoDB Replication Info'.

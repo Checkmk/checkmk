@@ -15,6 +15,6 @@ description:
 item:
  The name of the queue
 
-inventory:
+discovery:
  One service is created for each queue.
 

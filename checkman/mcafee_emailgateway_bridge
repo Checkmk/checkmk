@@ -11,5 +11,5 @@ description:
  The check is OK if the bridge is UP, otherwise CRIT.
  Upper levels can be set for TCP/UDP/ICMP traffic.
 
-inventory:
+discovery:
  One service is created.

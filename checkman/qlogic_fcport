@@ -23,7 +23,7 @@ item:
  The Port ID taken from SNMP. It contains 2 numbers separated by a dot,
  e. g. 1.1
 
-inventory:
+discovery:
  One service is created for each FC Port found by SNMP in AdminStatus "online" or
  "testing" and Operational Status "online" or "testing".
 

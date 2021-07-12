@@ -11,5 +11,5 @@ description:
  The check returns {OK} if the used CPU is below 90%. Below 95% {WARN}
  is returned and otherwise {CRIT}. Custom levels can be defined in WATO.
 
-inventory:
+discovery:
  One service is created.

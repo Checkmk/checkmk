@@ -14,7 +14,7 @@ description:
  The original check has been created by Benjamin Odenthal and provided on Checkmk exchange and
  improved, integrated and documented by Lars Michelsen.
 
-inventory:
+discovery:
  One service is created for each HDD on all devices reported by smartctl
  which support the temperature value.
 

@@ -11,5 +11,5 @@ description:
 item:
  Name of the job
 
-inventory:
+discovery:
  One service is created for each task.

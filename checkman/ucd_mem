@@ -13,5 +13,5 @@ description:
  "Main memory usage of simple devices". Note that the check counts buffered
  and cached memory as free memory, as one should for Linux systems.
 
-inventory:
+discovery:
  One service is created.

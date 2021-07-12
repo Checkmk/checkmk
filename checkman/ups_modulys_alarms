@@ -18,6 +18,6 @@ description:
 
  {Unproblematic alarms}: 'UPS test in progress', 'In economic mode', 'In standby mode'
 
-inventory:
+discovery:
  One service is created.
 

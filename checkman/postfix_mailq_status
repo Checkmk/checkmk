@@ -11,5 +11,5 @@ description:
 item:
  The name of the queue if multi instance is configured.
 
-inventory:
+discovery:
  One service is created for each instance.

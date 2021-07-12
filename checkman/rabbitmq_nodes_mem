@@ -12,5 +12,5 @@ description:
 item:
  The name of the node.
 
-inventory:
+discovery:
  One service for each node {"RabbitMQ Node my_node"} is created.

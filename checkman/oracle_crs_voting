@@ -13,5 +13,5 @@ description:
 
  Services goues stale when cssd is not running.
 
-inventory:
+discovery:
  One service is created for each host

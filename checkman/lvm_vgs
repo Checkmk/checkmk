@@ -13,5 +13,5 @@ description:
 item:
  Name of the volume group
 
-inventory:
+discovery:
  One service is created for each volume group.

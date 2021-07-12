@@ -13,5 +13,5 @@ description:
 item:
  The ID of a service set
 
-inventory:
+discovery:
  One service is created for each service set.

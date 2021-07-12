@@ -12,6 +12,6 @@ description:
 item:
  Name of the printer
 
-inventory:
+discovery:
  One service is created for each supply unit with a unique name.
 

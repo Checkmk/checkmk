@@ -21,7 +21,7 @@ description:
 item:
  Name of the diskgroup
 
-inventory:
+discovery:
  One service is created for each volume in the volume manager.
 
  Layered volumes {v2} are included. If you do not need data on

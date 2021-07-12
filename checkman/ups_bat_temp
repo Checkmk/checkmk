@@ -9,6 +9,6 @@ description:
 item:
  The identifier of the UPS device
 
-inventory:
+discovery:
  One service is created for each sensor.
 

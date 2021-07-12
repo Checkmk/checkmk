@@ -22,7 +22,7 @@ description:
 item:
  One of the two statements {{VACUUM}} or {{ANALYSE}} plus the name of the database
 
-inventory:
+discovery:
  Two services are created for each database.
  One service for {{VACUUM}} and one for {{ANALYZE}}.
 

@@ -12,5 +12,5 @@ description:
 item:
  The sensor identifier.
 
-inventory:
+discovery:
  One service is created for each sensor.

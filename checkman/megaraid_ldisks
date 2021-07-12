@@ -20,5 +20,5 @@ description:
 item:
  The number of the adapter and the logical disk, separated by a slash, e.g. {"0/0"}.
 
-inventory:
+discovery:
  One service is created for each logical disk.

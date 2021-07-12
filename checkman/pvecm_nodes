@@ -16,5 +16,5 @@ description:
 item:
  The name of the node
 
-inventory:
+discovery:
  One service is created for each node.

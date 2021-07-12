@@ -8,5 +8,5 @@ description:
  The states can be mapped to the desired monitoring status via the
  rule "Quantum Storage Status".
 
-inventory:
+discovery:
  One service is created.

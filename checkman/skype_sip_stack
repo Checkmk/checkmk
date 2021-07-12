@@ -35,6 +35,6 @@ description:
 
  Thresholds can be configured for all these counters.
 
-inventory:
+discovery:
  One service is created.
 

@@ -8,7 +8,7 @@ description:
  If a component is not healthy the check returns {CRIT} otherwise {OK}.
  If the status of a component is unknown the check returns {UNKNOWN}.
 
-inventory:
+discovery:
  One service is created for each component.
 
 item:

@@ -10,7 +10,7 @@ description:
  more than 50% of paths left operative.
  Anything less than 50% of working paths will turn into a {CRIT} state.
 
-inventory:
+discovery:
  One service is created if there's a number of paths returned from the
  API. In our tests this was only if the system had actual storage assigned.
 

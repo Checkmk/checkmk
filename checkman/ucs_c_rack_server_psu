@@ -42,7 +42,7 @@ description:
  - {UNKNOWN} in ccase the monitored operability status is one of:
    unknown
 
-inventory:
+discovery:
  One service is created for each PSU of the rack server.
 
 item:

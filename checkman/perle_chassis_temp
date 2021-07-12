@@ -12,5 +12,5 @@ description:
 item:
  The fixed statement {{chassis}}
 
-inventory:
+discovery:
  One service is created.

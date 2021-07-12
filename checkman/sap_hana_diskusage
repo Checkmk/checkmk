@@ -20,7 +20,7 @@ description:
 item:
  The sid instance name and the disk type seperated by a {{-}}
 
-inventory:
+discovery:
  One service is created for each instance and disk type.
 
 cluster:

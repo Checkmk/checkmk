@@ -9,6 +9,6 @@ description:
 item:
  One of the two statements: {{System}}, {{CPU}}
 
-inventory:
+discovery:
  One service is created.
 

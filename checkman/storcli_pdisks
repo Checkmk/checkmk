@@ -12,5 +12,5 @@ description:
 item:
  The controller number, the enclosure ID, and the slot number followed by the device ID (seperated by a {{-}}).
 
-inventory:
+discovery:
  One service is created for each found disk on each controller.

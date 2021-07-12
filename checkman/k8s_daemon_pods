@@ -10,5 +10,5 @@ description:
  The check returns {OK} if the desired number of nodes has been
  scheduled and every node is available, otherwise it returns {WARN}.
 
-inventory:
+discovery:
  One service is created.

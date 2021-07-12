@@ -13,7 +13,7 @@ description:
  For this check the agent plugin mk_sshd_config needs to be
  installed.
 
-inventory:
+discovery:
  One service is created for each system is created
  if the agent output has a section {<<<sshd_config>>>}.
 

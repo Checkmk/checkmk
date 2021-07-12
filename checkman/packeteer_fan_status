@@ -9,5 +9,5 @@ description:
 item:
  Number of the fan
 
-inventory:
+discovery:
  One service is created for each fan.

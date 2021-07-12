@@ -9,5 +9,5 @@ description:
 
  This check is informational only and returns always {OK}.
 
-inventory:
+discovery:
  One service is created for each device.

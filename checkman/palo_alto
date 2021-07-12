@@ -7,5 +7,5 @@ description:
  Displays the current firmware version, HA mode, local HA state
  and peer HA state. This check is purely informative and always OK.
 
-inventory:
+discovery:
  One service is created for each Palo Alto firewall.

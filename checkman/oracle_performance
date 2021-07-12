@@ -12,5 +12,5 @@ description:
 item:
  The SID identifier.
 
-inventory:
+discovery:
  One service is created for each SID.

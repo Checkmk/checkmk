@@ -8,5 +8,5 @@ description:
  it allows to monitor the rate of operation requests, the rate of operation errors
  and the number of errors since the last reset.
 
-inventory:
+discovery:
  One service is created for each device.

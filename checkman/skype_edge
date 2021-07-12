@@ -19,7 +19,7 @@ description:
 
  Thresholds can be configured for each of these counters.
 
-inventory:
+discovery:
  Four services are created.
  One for each combination of public/private and IPv4/IPv6.
 

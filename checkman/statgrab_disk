@@ -16,6 +16,6 @@ item:
  {read} for Disk IO read and
  {write} for Disk IO write
 
-inventory:
+discovery:
  Two services are created on every machine with statgrab:
  One for Disk IO read and one for Disk IO write

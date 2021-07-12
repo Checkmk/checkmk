@@ -8,6 +8,6 @@ description:
  shutdown as well as the general health state of the battery.
  Note: It is currently unclear whether the time until shutdown is reliably reported by the device.
 
-inventory:
+discovery:
  One service is created.
 

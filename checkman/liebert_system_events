@@ -8,5 +8,5 @@ description:
  one event is not "inactive event", the state will change to {CRIT} and the
  event will displayed in the service output.
 
-inventory:
+discovery:
  One service is created.

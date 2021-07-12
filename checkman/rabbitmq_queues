@@ -15,5 +15,5 @@ description:
 item:
  The name of the queue.
 
-inventory:
+discovery:
  One service for each queue {"RabbitMQ Queue my_queue"} is created.

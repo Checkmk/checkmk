@@ -16,5 +16,5 @@ description:
 item:
  The index of the slot
 
-inventory:
+discovery:
  One service is created for each module.

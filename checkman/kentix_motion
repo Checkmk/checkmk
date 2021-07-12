@@ -13,5 +13,5 @@ description:
 item:
  Index of the sensor
 
-inventory:
+discovery:
  One service is created.

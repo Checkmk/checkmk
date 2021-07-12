@@ -9,6 +9,6 @@ description:
  It will report {warn} or {crit} if too many inbound or outbound streams fail
  to be established.
 
-inventory:
+discovery:
  One service is created.
 

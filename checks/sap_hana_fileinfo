@@ -9,11 +9,11 @@ from cmk.base.check_legacy_includes.fileinfo import *  # pylint: disable=wildcar
 
 def check_sap_hana_fileinfo(item, params, parsed):
 
-    reftime = parsed.get('reftime')
+    reftime = parsed.get("reftime")
     if reftime is None:
         return 3, "Missing reference timestamp"
 
-    file_stat = parsed['files'].get(item)
+    file_stat = parsed["files"].get(item)
     if not file_stat:
         raise MKCounterWrapped("Login into database failed.")
 
@@ -21,12 +21,12 @@ def check_sap_hana_fileinfo(item, params, parsed):
 
 
 def check_sap_hana_fileinfo_groups(item, params, parsed):
-    reftime = parsed.get('reftime')
+    reftime = parsed.get("reftime")
     if reftime is None:
         yield 3, "Missing reference timestamp"
         return
 
-    if not parsed['files']:
+    if not parsed["files"]:
         raise MKCounterWrapped("Login into database failed.")
 
     yield from check_fileinfo_groups_data(item, params, parsed, reftime)
@@ -41,7 +41,7 @@ check_info["sap_hana_fileinfo"] = {
     "group": "fileinfo",
 }
 
-check_info['sap_hana_fileinfo.groups'] = {
+check_info["sap_hana_fileinfo.groups"] = {
     "check_function": check_sap_hana_fileinfo_groups,
     "inventory_function": inventory_fileinfo_groups,
     "service_description": "File group %s",

@@ -154,7 +154,7 @@ PYTHON_MODULES_LIST += oauthlib-2.1.0.tar.gz
 PYTHON_MODULES_LIST += requests-oauthlib-1.0.0.tar.gz
 PYTHON_MODULES_LIST += configparser-3.5.1.tar.gz
 # Added for the GUI
-PYTHON_MODULES_LIST += Werkzeug-0.14.1.tar.gz
+PYTHON_MODULES_LIST += Werkzeug-0.15.3.tar.gz
 PYTHON_MODULES_LIST += passlib-1.7.1.tar.gz
 # Added for AWS special agent
 PYTHON_MODULES_LIST += docutils-0.14.tar.gz

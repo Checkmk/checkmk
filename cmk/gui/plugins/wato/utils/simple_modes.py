@@ -33,8 +33,9 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless

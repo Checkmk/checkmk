@@ -22,7 +22,6 @@ from cmk.gui.plugins.wato.utils import (
     ACResultWARN,
     ACTest,
     ACTestCategories,
-    ActionResult,
     add_change,
     add_replication_paths,
     BinaryHostRulespec,
@@ -151,6 +150,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
     WatoModule,
 )
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # .
@@ -163,6 +163,7 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
+
 # .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -174,5 +175,3 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 #   '----------------------------------------------------------------------'
 
 load_plugins(__file__, __package__)
-
-import cmk.gui.plugins.wato.check_parameters

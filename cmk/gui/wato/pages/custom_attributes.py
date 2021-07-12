@@ -33,7 +33,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     make_confirm_link,
     mode_registry,
@@ -42,7 +41,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,

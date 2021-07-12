@@ -44,9 +44,10 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,

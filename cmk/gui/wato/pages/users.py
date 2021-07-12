@@ -43,7 +43,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
 from cmk.gui.plugins.wato import (
-    ActionResult,
     flash,
     make_action_link,
     make_confirm_link,
@@ -54,7 +53,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, UserSpec
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may

@@ -44,7 +44,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult,
     mode_registry,
     mode_url,
     redirect,

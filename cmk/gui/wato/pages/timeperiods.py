@@ -34,7 +34,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     make_action_link,
     make_confirm_link,
     mode_registry,
@@ -43,6 +42,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.valuespec import (
     CascadingDropdown,

@@ -73,7 +73,6 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
-    ActionResult,
     add_change,
     config_variable_group_registry,
     config_variable_registry,
@@ -104,7 +103,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.sites import allsites, get_event_console_site_choices
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import (
     make_confirm_link,

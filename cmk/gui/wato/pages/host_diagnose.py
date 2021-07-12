@@ -25,7 +25,8 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato import flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,

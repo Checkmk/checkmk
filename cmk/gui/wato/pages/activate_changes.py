@@ -38,9 +38,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.sites import activation_sites
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode

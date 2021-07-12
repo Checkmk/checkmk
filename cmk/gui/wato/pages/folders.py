@@ -43,10 +43,11 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     mode_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.popups import MethodAjax

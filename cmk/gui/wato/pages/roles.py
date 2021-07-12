@@ -50,7 +50,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     get_search_expression,
     make_action_link,
     make_confirm_link,
@@ -61,7 +60,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 
 
 class RoleManagement:

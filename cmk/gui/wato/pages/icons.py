@@ -18,7 +18,6 @@ from cmk.gui.globals import config, html, request, theme, transactions
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato import (
-    ActionResult,
     make_action_link,
     make_confirm_link,
     mode_registry,
@@ -26,6 +25,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
 )
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
 
 

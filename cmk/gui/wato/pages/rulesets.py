@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     ConfigHostname,
     DictHostTagCondition,
@@ -68,7 +67,7 @@ from cmk.gui.plugins.wato.utils import LabelCondition
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import ActionResult, HTTPVariables
 from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import (

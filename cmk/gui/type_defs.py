@@ -24,6 +24,8 @@ from typing import (
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.exceptions import FinalizeRequest
+
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str
 PermissionName = str
@@ -256,6 +258,9 @@ class RenderableRecipe(NamedTuple):
     color: str
     line_type: str
     visible: bool
+
+
+ActionResult = Optional[FinalizeRequest]
 
 
 @dataclass

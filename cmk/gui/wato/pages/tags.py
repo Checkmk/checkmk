@@ -28,7 +28,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato import (
-    ActionResult,
     add_change,
     flash,
     make_action_link,
@@ -41,6 +40,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,

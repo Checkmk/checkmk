@@ -35,6 +35,7 @@ from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 import cmk.gui.forms as forms
 
 # TODO: forbidden import, integrate into bi_config... ?
+# TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.sites
 import cmk.gui.watolib as watolib
@@ -62,7 +63,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato import (
     ABCMainModule,
-    ActionResult,
     add_change,
     ContactGroupSelection,
     main_module_registry,
@@ -77,7 +77,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.sites import wato_slave_sites
 from cmk.gui.table import init_rowselect, table_element
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.urls import (
     make_confirm_link,
     makeactionuri,

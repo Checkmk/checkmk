@@ -161,7 +161,6 @@ def test_default_config_from_plugins():
             'agent_deployment_remote',
             'agent_signature_keys',
             'have_combined_graphs',
-            'influxdb_connections',
             'reporting_use',
             'reporting_rangespec',
             'reporting_filename',

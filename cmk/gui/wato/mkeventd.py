@@ -120,7 +120,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariable,
     ConfigDomainGUI,
     WatoMode,
-    ActionResult,
     mode_registry,
     SNMPCredentials,
     HostnameTranslation,
@@ -144,6 +143,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     flash,
 )
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.plugins.wato.check_mk_configuration import (
     RulespecGroupMonitoringConfigurationVarious,

@@ -53,7 +53,7 @@ from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
     rule_option_elements, SingleLabel, autocompleter_registry,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode, mode_registry, mode_url, redirect,
+    WatoMode, mode_registry, mode_url, redirect,
 )
 from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
     SimpleEditMode, SimpleListMode, SimpleModeType,

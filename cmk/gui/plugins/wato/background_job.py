@@ -25,11 +25,11 @@ from cmk.gui.plugins.wato import (
     ABCMainModule,
     MainModuleTopicMaintenance,
     WatoMode,
-    ActionResult,
     mode_registry,
     redirect,
     mode_url,
 )
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.utils.urls import makeuri_contextless
 

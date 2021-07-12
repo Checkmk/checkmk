@@ -42,7 +42,7 @@ from cmk.utils.type_defs import (
     TaggroupID,
 )
 
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, ActionResult
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -90,7 +90,6 @@ from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     make_action_link,
     make_confirm_link,

@@ -20,6 +20,7 @@ from typing import (
     Union,
 )
 
+from cmk.gui.exceptions import FinalizeRequest
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
@@ -204,3 +205,6 @@ class RenderableRecipe(NamedTuple):
     color: str
     line_type: str
     visible: bool
+
+
+ActionResult = Optional[FinalizeRequest]

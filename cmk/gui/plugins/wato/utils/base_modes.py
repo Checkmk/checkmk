@@ -12,7 +12,7 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import PermissionName, ActionResult
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.type_defs import MegaMenu, HTTPVariables
@@ -21,9 +21,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect
-
-ActionResult = Optional[FinalizeRequest]
+from cmk.gui.exceptions import HTTPRedirect
 
 
 class WatoMode(metaclass=abc.ABCMeta):

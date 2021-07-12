@@ -143,7 +143,6 @@ from cmk.gui.plugins.wato.utils import (
     wato_fileheader,
     register_hook,
     WatoMode,
-    ActionResult,
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,
@@ -162,6 +161,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     valuespec_check_plugin_selection,
 )
+from cmk.gui.type_defs import ActionResult
 
 #.
 #   .--Plugins-------------------------------------------------------------.

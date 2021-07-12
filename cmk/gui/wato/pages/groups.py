@@ -49,12 +49,12 @@ from cmk.gui.watolib.groups import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     make_confirm_link,
     redirect,
     mode_url,
     mode_registry,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):

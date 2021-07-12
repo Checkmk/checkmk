@@ -29,10 +29,10 @@ from cmk.gui.watolib.bulk_discovery import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     get_hostnames_from_checkboxes,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 @mode_registry.register

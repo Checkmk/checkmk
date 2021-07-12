@@ -49,11 +49,11 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     redirect,
     flash,
 )
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview

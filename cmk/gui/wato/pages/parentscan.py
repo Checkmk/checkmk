@@ -24,9 +24,9 @@ from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
-    ActionResult,
     get_hosts_from_checkboxes,
 )
+from cmk.gui.type_defs import ActionResult
 
 ParentScanTask = collections.namedtuple("ParentScanTask", [
     "site_id",

@@ -32,7 +32,8 @@ from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, redirect, mode_url
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request

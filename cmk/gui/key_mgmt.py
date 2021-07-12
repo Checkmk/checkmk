@@ -25,7 +25,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     TextUnicode,
 )
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
+from cmk.gui.exceptions import MKUserError, FinalizeRequest, HTTPRedirect
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
@@ -35,8 +35,8 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
 
 
 class KeypairStore:
@@ -196,7 +196,7 @@ class PageKeyManagement:
 
 
 class PageEditKey:
-    back_mode = "keys"
+    back_mode: str
 
     def __init__(self):
         self._minlen = None
@@ -223,7 +223,14 @@ class PageEditKey:
             html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+            return HTTPRedirect(mode_url(self.back_mode))
         return None
 
     def _create_key(self, value):
@@ -287,7 +294,7 @@ class PageEditKey:
 
 
 class PageUploadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()
@@ -319,7 +326,14 @@ class PageUploadKey:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return redirect(mode_url(self.back_mode))
+            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
+            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
+            #  is obviously a very simple module-layer violation. This whole module should either
+            #    * be moved into cmk.gui.cee.plugins.wato
+            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
+            #  Either way, this is outside my scope right now and shall be fixed.
+            from cmk.gui.plugins.wato.utils.base_modes import mode_url
+            return HTTPRedirect(mode_url(self.back_mode), code=302)
         return None
 
     def _get_uploaded(self, cert_spec, key):
@@ -413,7 +427,7 @@ class PageUploadKey:
 
 
 class PageDownloadKey:
-    back_mode = "keys"
+    back_mode: str
 
     def load(self):
         raise NotImplementedError()

@@ -39,12 +39,12 @@ from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     flash,
     mode_url,
     redirect,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 @mode_registry.register

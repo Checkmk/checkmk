@@ -25,14 +25,13 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, ActionResult
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.globals import html, request, display_options
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     flash,
     redirect,

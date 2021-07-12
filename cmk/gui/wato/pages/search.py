@@ -12,7 +12,8 @@ import cmk.gui.forms as forms
 from cmk.gui.valuespec import TextAscii
 
 from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, redirect
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (

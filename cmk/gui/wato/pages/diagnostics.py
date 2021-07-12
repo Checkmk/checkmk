@@ -64,10 +64,10 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     redirect,
 )
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.pages import page_registry, Page
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless

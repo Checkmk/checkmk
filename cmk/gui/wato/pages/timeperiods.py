@@ -52,13 +52,13 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     make_action_link,
     make_confirm_link,
     mode_url,
     redirect,
 )
+from cmk.gui.type_defs import ActionResult
 
 TimeperiodUsage = _Tuple[str, str]
 

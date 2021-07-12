@@ -52,7 +52,6 @@ from cmk.gui.permissions import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     make_action_link,
     make_confirm_link,
@@ -60,6 +59,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     mode_url,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 class RoleManagement:

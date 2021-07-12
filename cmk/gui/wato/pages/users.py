@@ -62,7 +62,6 @@ from cmk.gui.watolib.changes import make_object_audit_log_url
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     make_confirm_link,
     make_action_link,
@@ -70,6 +69,7 @@ from cmk.gui.plugins.wato import (
     redirect,
     mode_url,
 )
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 

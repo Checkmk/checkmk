@@ -27,7 +27,8 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, redirect
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.utils.flashed_messages import flash
 

@@ -19,7 +19,8 @@ from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.plugins.wato import (WatoMode, ActionResult, mode_registry, flash, redirect, mode_url)
+from cmk.gui.plugins.wato import (WatoMode, mode_registry, flash, redirect, mode_url)
+from cmk.gui.type_defs import ActionResult
 
 
 @mode_registry.register

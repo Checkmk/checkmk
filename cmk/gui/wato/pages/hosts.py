@@ -37,7 +37,8 @@ from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     ConfigHostname,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, redirect, mode_url
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.watolib.hosts_and_folders import CREHost
 from cmk.gui.watolib.changes import make_object_audit_log_url

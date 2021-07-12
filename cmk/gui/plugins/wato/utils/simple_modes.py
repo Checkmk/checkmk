@@ -22,7 +22,8 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
+from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, redirect, mode_url)
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
     Checkbox,

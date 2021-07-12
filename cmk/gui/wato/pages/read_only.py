@@ -32,12 +32,12 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     flash,
     redirect,
     mode_url,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 @mode_registry.register

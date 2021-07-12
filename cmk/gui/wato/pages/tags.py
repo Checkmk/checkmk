@@ -64,7 +64,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     make_action_link,
     make_confirm_link,
@@ -73,6 +72,7 @@ from cmk.gui.plugins.wato import (
     mode_url,
     flash,
 )
+from cmk.gui.type_defs import ActionResult
 
 
 class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):

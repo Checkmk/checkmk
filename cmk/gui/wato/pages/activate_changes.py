@@ -22,7 +22,8 @@ from cmk.gui.table import table_element, init_rowselect
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes

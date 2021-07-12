@@ -38,7 +38,6 @@ from cmk.gui.page_menu import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     add_change,
     make_action_link,
@@ -46,6 +45,7 @@ from cmk.gui.plugins.wato import (
     mode_url,
     redirect,
 )
+from cmk.gui.type_defs import ActionResult
 
 from cmk.gui.utils.urls import makeuri_contextless
 

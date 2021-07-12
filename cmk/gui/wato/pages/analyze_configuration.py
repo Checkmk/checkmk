@@ -38,7 +38,8 @@ from cmk.gui.page_menu import (
     make_simple_link,
 )
 
-from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry
+from cmk.gui.plugins.wato import WatoMode, mode_registry
+from cmk.gui.type_defs import ActionResult
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
 from cmk.gui.watolib.analyze_configuration import (

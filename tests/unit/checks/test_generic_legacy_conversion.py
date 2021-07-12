@@ -2094,8 +2094,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'logins',
         'lparstat_aix',
         'lparstat_aix.cpu_util',
-        'lsi.array',
-        'lsi.disk',
         'lvm_lvs',
         'lvm_vgs',
         'lxc_container_cpu',

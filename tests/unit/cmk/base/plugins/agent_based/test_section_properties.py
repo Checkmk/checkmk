@@ -253,7 +253,6 @@ def test_section_parse_function_does_something(fix_register):
         'j4p_performance',
         'jolokia_metrics',
         'libelle_business_shadow',
-        'lsi',
         'msexch_dag',
         'netapp_api_disk',
         'netctr',

@@ -6,13 +6,10 @@
 
 # pylint: disable=redefined-outer-name
 import ast
-import contextlib
 import json
-import shutil
 import threading
 import urllib.parse
 from http.cookiejar import CookieJar
-from pathlib import Path
 from typing import Any, NamedTuple, Literal, Optional, Dict
 from functools import lru_cache
 
@@ -20,16 +17,14 @@ import pytest
 import webtest  # type: ignore[import]
 from mock import MagicMock
 
-from cmk.gui import watolib
+from testlib.users import create_and_destroy_user
 
 import cmk.utils.log
-import cmk.utils.paths as paths
 
+from cmk.gui import watolib
 import cmk.gui.config as config
 import cmk.gui.login as login
-from cmk.gui.utils import get_random_string
 from cmk.gui.watolib import search, hosts_and_folders
-from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
 import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui.utils.json import patch_json
@@ -84,66 +79,6 @@ def load_plugins(register_builtin_html, monkeypatch, tmp_path):
     modules.load_all_plugins()
 
 
-def _mk_user_obj(username, password, automation=False):
-    # This dramatically improves the performance of the unit tests using this in fixtures
-    precomputed_hashes = {
-        "Ischbinwischtisch": '$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9',
-    }
-
-    if password not in precomputed_hashes:
-        raise ValueError("Add your hash to precomputed_hashes")
-
-    user = {
-        username: {
-            'attributes': {
-                'alias': username,
-                'email': 'admin@example.com',
-                'password': precomputed_hashes[password],
-                'notification_method': 'email',
-                'roles': ['admin'],
-                'serial': 0
-            },
-            'is_new_user': True,
-        }
-    }  # type: dict
-    if automation:
-        user[username]['attributes'].update(automation_secret=password,)
-    return user
-
-
-@contextlib.contextmanager
-def _create_and_destroy_user(automation=False, role="user"):
-    username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
-    password = u'Ischbinwischtisch'
-    edit_users(_mk_user_obj(username, password, automation=automation))
-    config.load_config()
-
-    profile_path = Path(paths.omd_root, "var", "check_mk", "web", username)
-    profile_path.joinpath('cached_profile.mk').write_text(
-        str(
-            repr({
-                'alias': u'Test user',
-                'contactgroups': ['all'],
-                'disable_notifications': {},
-                'email': u'test_user_%s@tribe29.com' % username,
-                'fallback_contact': False,
-                'force_authuser': False,
-                'locked': False,
-                'language': 'de',
-                'pager': '',
-                'roles': [role],
-                'start_url': None,
-                'ui_theme': 'modern-dark',
-            })))
-
-    yield username, password
-
-    delete_users([username])
-
-    # User directories are not deleted by WATO by default. Clean it up here!
-    shutil.rmtree(str(profile_path))
-
-
 @pytest.fixture(scope='function', name="patch_json", autouse=True)
 def fixture_patch_json():
     with patch_json(json):
@@ -152,7 +87,7 @@ def fixture_patch_json():
 
 @pytest.fixture(scope='function')
 def with_user(register_builtin_html, load_config):
-    with _create_and_destroy_user(automation=False) as user:
+    with create_and_destroy_user(automation=False) as user:
         yield user
 
 
@@ -165,7 +100,7 @@ def with_user_login(with_user):
 
 @pytest.fixture(scope='function')
 def with_admin(register_builtin_html, load_config):
-    with _create_and_destroy_user(automation=False, role="admin") as user:
+    with create_and_destroy_user(automation=False, role="admin") as user:
         yield user
 
 
@@ -241,7 +176,7 @@ def inline_background_jobs(mocker):
 
 @pytest.fixture(scope='function')
 def with_automation_user(register_builtin_html, load_config):
-    with _create_and_destroy_user(automation=True) as user:
+    with create_and_destroy_user(automation=True) as user:
         yield user
 
 

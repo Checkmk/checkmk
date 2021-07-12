@@ -24,8 +24,8 @@ INFO = [
         Service(item='286'),
     ]),
     ('lsi_disk', [
-        Service(item='15', parameters={'auto-migration-wrapper-key': 'OPT'}),
-        Service(item='1', parameters={'auto-migration-wrapper-key': 'OPT'}),
+        Service(item='15', parameters={'expected_state': 'OPT'}),
+        Service(item='1', parameters={'expected_state': 'OPT'}),
     ]),
 ])
 def test_lsi_discovery(fix_register, plugin, expected):
@@ -40,15 +40,18 @@ def test_lsi_array(fix_register):
     ]
 
 
-@pytest.mark.parametrize('plugin,item,expected', [
-    ('lsi_disk', '1', [Result(state=State.OK, summary='disk has state OPT')]),
-    ('lsi_disk', '15', [Result(state=State.OK, summary='disk has state OPT')]),
+@pytest.mark.parametrize('plugin,item,params,expected', [
+    ('lsi_disk', '1', {
+        'expected_state': 'OPT'
+    }, [Result(state=State.OK, summary='disk has state OPT')]),
+    ('lsi_disk', '15', {
+        'expected_state': 'OPT'
+    }, [Result(state=State.OK, summary='disk has state OPT')]),
 ])
-def test_lsi_check(fix_register, plugin, item, expected):
+def test_lsi(fix_register, plugin, item, params, expected):
     plugin = fix_register.check_plugins[CheckPluginName(plugin)]
-    assert list(
-        plugin.check_function(
-            item=item,
-            params={'auto-migration-wrapper-key': 'OPT'},
-            section=INFO,
-        )) == expected
+    assert list(plugin.check_function(
+        item=item,
+        params=params,
+        section=INFO,
+    )) == expected

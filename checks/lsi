@@ -19,7 +19,7 @@ def get_discover_lsi(item_type):
 
         if item_type == 'arrays':
             return [(item, {}) for (item, _state) in arrays]
-        return [(item, '"%s"' % state) for (item, state) in disks]
+        return [(item, {"expected_state": state}) for (item, state) in disks]
 
     return discover_lsi
 
@@ -45,7 +45,8 @@ check_info["lsi.array"] = {
 }
 
 
-def check_lsi_disk(item, target_state, info):
+def check_lsi_disk(item, params, info):
+    target_state = params.get("expected_state", "")
     target_id = -1
     for line in info:
         if line[0] == 'TargetID':

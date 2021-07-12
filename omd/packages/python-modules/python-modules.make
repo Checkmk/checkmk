@@ -56,7 +56,6 @@ PYTHON_MODULES_LIST += psycopg2-2.6.2.tar.gz # needed by check_sql
 PYTHON_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
 PYTHON_MODULES_LIST += pycparser-2.19.tar.gz # needed for cffi and azure
 PYTHON_MODULES_LIST += enum34-1.1.6.tar.gz # needed for cffi
-PYTHON_MODULES_LIST += cffi-1.11.5.tar.gz # needed by e.g. Pillow
 PYTHON_MODULES_LIST += Pillow-6.2.2.tar.gz # needed by reportlab (pillow>=2.4.0)
 PYTHON_MODULES_LIST += reportlab-3.5.18.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
@@ -115,12 +114,20 @@ PYTHON_MODULES_LIST += requests-2.20.1.tar.gz
 PYTHON_MODULES_LIST += pbr-5.1.0.tar.gz
 
 PYTHON_MODULES_LIST  += asn1crypto-0.24.0.tar.gz
-PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz
+
+ifneq ($(filter $(DISTRO_CODE),xenial sles12sp3 sles12sp4),)
+    PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz
+    PYTHON_MODULES_LIST  += cffi-1.11.5.tar.gz # needed by e.g. Pillow
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-2.4.1-disable-version-warning.patch
+else
+    PYTHON_MODULES_LIST  += cryptography-3.3.2.tar.gz
+    PYTHON_MODULES_LIST  += cffi-1.12.0.tar.gz # needed by e.g. Pillow
+endif
+
 # Has requests as dependency -> must be built after
 PYTHON_MODULES_LIST += pyOpenSSL-18.0.0.tar.gz
 PYTHON_MODULES_LIST += paramiko-2.4.2.tar.gz
 PYTHON_MODULES_LIST += pyghmi-1.2.14.tar.gz
-PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-2.4.1-disable-version-warning.patch
 
 PYTHON_MODULES_LIST += certifi-2018.10.15.tar.gz
 PYTHON_MODULES_LIST += chardet-3.0.4.tar.gz

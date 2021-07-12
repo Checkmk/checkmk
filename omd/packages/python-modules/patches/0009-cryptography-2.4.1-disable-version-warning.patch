@@ -4,6 +4,6 @@ diff -Nur dest/cryptography-2.4.1.orig/src/cryptography/hazmat/bindings/openssl/
 @@ -171,4 +171,4 @@
  # is per module so this approach will not work.
  Binding.init_static_locks()
- 
+
 -_verify_openssl_version(Binding.lib)
 +#_verify_openssl_version(Binding.lib)

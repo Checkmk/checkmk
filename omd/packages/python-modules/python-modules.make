@@ -61,7 +61,7 @@ PYTHON_MODULES_LIST += reportlab-3.5.18.tar.gz # needed by reporting
 PYTHON_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 PYTHON_MODULES_LIST += npyscreen-4.10.5.tar.gz # needed for mkbench
-PYTHON_MODULES_LIST += psutil-5.4.7.tar.gz # needed for mkbench
+PYTHON_MODULES_LIST += psutil-5.6.6.tar.gz # needed for mkbench
 
 # OpenSSL versions shipped:
 #    0x0090802f (OpenSSL 0.9.8e-rhel5 01 Jul 2008): centos55

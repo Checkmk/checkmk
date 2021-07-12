@@ -294,9 +294,9 @@ def transform_old_visual(visual):
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
-                      skip_func: Optional[Callable[[Dict[Any, Any]],
-                                                   bool]], lock: bool) -> Dict[Any, Any]:
-    visuals: Dict[Any, Any] = {}
+                      skip_func: Optional[Callable[[Dict[Any, Any]], bool]],
+                      lock: bool) -> Dict[Tuple[UserId, str], Dict]:
+    visuals: Dict[Tuple[UserId, str], Dict] = {}
 
     subdirs = os.listdir(config.config_dir)
     for user_id in subdirs:
@@ -334,7 +334,7 @@ def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
 
 
 def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user_id):
-    user_visuals = {}
+    user_visuals: Dict[Tuple[UserId, str], Dict] = {}
     for name, visual in store.load_object_from_file(path, default={}, lock=lock).items():
         visual["owner"] = user_id
         visual["name"] = name
@@ -360,7 +360,7 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user_id
         # Declare custom permissions
         declare_visual_permission(what, name, visual)
 
-        user_visuals[(user, name)] = visual
+        user_visuals[(user_id, name)] = visual
 
     return user_visuals
 

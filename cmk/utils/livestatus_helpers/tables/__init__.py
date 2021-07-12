@@ -9,3 +9,12 @@ from cmk.utils.livestatus_helpers.tables.services import Services
 from cmk.utils.livestatus_helpers.tables.servicegroups import Servicegroups
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.status import Status
+
+__all__ = [
+    'Downtimes',
+    'Hostgroups',
+    'Hosts',
+    'Servicegroups',
+    'Services',
+    'Status',
+]

@@ -439,7 +439,7 @@ def get_rate(
     *,
     raise_overflow: bool = False,
 ) -> float:
-    """Return a rate based based on current value and time and last value and time
+    """Return a rate based on current value and time and last value and time
 
     Args:
 

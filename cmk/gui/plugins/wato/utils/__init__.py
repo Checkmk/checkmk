@@ -538,24 +538,21 @@ def HostGroupChoice(**kwargs):
 
 
 def _sorted_contact_group_choices():
-    cache_id = "sorted_contact_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_contact_group_information())
-    return g.cache_id
+    if "sorted_contact_group_choices" not in g:
+        g.sorted_contact_group_choices = _group_choices(load_contact_group_information())
+    return g.sorted_contact_group_choices
 
 
 def _sorted_service_group_choices():
-    cache_id = "sorted_service_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_service_group_information())
-    return g.cache_id
+    if "sorted_service_group_choices" not in g:
+        g.sorted_service_group_choices = _group_choices(load_service_group_information())
+    return g.sorted_service_group_choices
 
 
 def _sorted_host_group_choices():
-    cache_id = "sorted_host_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_host_group_information())
-    return g.cache_id
+    if "sorted_host_group_choices" not in g:
+        g.sorted_host_group_choices = _group_choices(load_host_group_information())
+    return g.sorted_host_group_choices
 
 
 def _group_choices(group_information):

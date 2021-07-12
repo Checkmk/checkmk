@@ -145,7 +145,6 @@ be found on the documentation of each affected endpoint.
 The endpoints in the category "Monitoring" support arbitrary Livestatus expressions (including And,
 Or combinators) and all columns of some specific tables can be queried.
 
-
 ### Note
 
 You can find an introduction to basic monitoring principles including host and service status in the
@@ -171,15 +170,6 @@ Livestatus column name, `right` is always a value.
 A list of all list of all possible
 [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 can be found in the Checkmk documentation.
-
-### Table definitions
-
-To check what columns are available and what kind of value each column can have, please consult
-these definition files on GitHub.
-
- * [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
- * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
- * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
 ### Example
 
@@ -236,6 +226,13 @@ means the state is OK.
 
     {'op': 'and', 'expr': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
                             {'op': '=', 'left': 'state', 'right': 0}}
+
+# Table definitions
+
+The following Livestatus tables can be queried through the REST-API. Which table is being used
+in a particular endpoint can be seen in the endpoint documentation.
+
+$TABLE_DEFINITIONS
 
 # Authentication
 
@@ -318,6 +315,7 @@ import apispec.utils  # type: ignore[import]
 import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
+from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.plugins.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 
@@ -379,7 +377,9 @@ ReDocSpec = TypedDict(
 
 OPTIONS: ReDocSpec = {
     "info": {
-        "description": apispec.utils.dedent(__doc__).strip(),
+        "description": apispec.utils.dedent(__doc__)
+        .strip()
+        .replace("$TABLE_DEFINITIONS", "\n".join(table_definitions())),
         "license": {
             "name": "GNU General Public License version 2",
             "url": "https://checkmk.com/gpl.html",

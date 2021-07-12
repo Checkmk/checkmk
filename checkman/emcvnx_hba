@@ -16,5 +16,5 @@ item:
  Consists of the SP Name and the SP Port ID as returned by the agent.
  E. g. "SP A Port 0"
 
-inventory:
+discovery:
  One service is created for each HBA listed in the agent output.

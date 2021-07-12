@@ -19,5 +19,5 @@ description:
 item:
  The index of the chassis fan.
 
-inventory:
+discovery:
  One service is created for each chassis fan.

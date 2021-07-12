@@ -14,5 +14,5 @@ description:
  Epoch levels are configurable. Default levels are 1 and 3
  for a timerange of 30 minutes.
 
-inventory:
+discovery:
  One service is created.

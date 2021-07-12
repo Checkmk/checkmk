@@ -14,5 +14,5 @@ description:
 
  The service goes {WARN}/{CRIT} if the CPU utilization exceeds these levels.
 
-inventory:
+discovery:
  One service is created if all required metrics (CPUUtilization) are given.

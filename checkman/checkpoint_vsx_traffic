@@ -12,6 +12,6 @@ description:
 item:
  Number of VSID.
 
-inventory:
+discovery:
  One service {Checkpoint VSID VSID-NR Traffic} is created for each VSID.
 

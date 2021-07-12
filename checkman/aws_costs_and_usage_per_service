@@ -17,5 +17,5 @@ description:
 item:
  Service name
 
-inventory:
+discovery:
  One service is created for each AWS service.

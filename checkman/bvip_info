@@ -6,5 +6,5 @@ distribution: check_mk
 description:
   This Check only reports the Unit Name and the Unit ID from the device.
 
-inventory:
+discovery:
  One service is created.

@@ -6,6 +6,6 @@ distribution: check_mk
 description:
  This check verifies the number of days until the certificate expires.
 
-inventory:
+discovery:
  One service is created for each certificate.
 

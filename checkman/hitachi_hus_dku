@@ -15,7 +15,7 @@ description:
  if some of the components are in the states "moderate" or "service"
  and {CRIT} if some of the components are in the states "acute" or "serious".
 
-inventory:
+discovery:
  One service is created for each DKU chassis.
 
 item:

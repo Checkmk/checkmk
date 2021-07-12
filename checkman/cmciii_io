@@ -15,5 +15,5 @@ description:
 item:
  The internal name of the input or output ports
 
-inventory:
+discovery:
  One service is created for each input and output port.

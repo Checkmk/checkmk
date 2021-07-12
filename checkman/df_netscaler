@@ -11,7 +11,7 @@ description:
  refer to the man page of the {df} check for the detailed description of
  the check and its numerous features.
 
-inventory:
+discovery:
  One service is created for each filesystem except mount points listed
  in {inventory_df_exclude_mountpoints} and filesystems with zero size.
 

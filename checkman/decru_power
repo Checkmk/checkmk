@@ -10,6 +10,6 @@ description:
 item:
  The name of the power supply as defined in the SNMP data.
 
-inventory:
+discovery:
  One service is created for each power supply.
 

@@ -17,6 +17,6 @@ description:
 item:
  {{Drives}}, {{MDisks}} or {{VDisks}} plus the name of the node.
 
-inventory:
+discovery:
  One service is created for the drives, one for MDisks and one for VDisks for each node.
 

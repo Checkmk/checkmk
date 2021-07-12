@@ -22,5 +22,5 @@ description:
 item:
   The matched file.
 
-inventory:
+discovery:
   One service is created for each matched file.

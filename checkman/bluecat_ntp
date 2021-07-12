@@ -9,6 +9,6 @@ description:
  The Levels can be set with WATO.
  Also Checked are the Stratum and the Leap Seconds. Each aberrancy will lead to a {WARNING} state.
 
-inventory:
+discovery:
  One service is created.
 

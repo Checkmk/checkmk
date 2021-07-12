@@ -17,7 +17,7 @@ description:
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
-inventory:
+discovery:
  One service is created for each available (without the first, see description) temperature sensor
  if the port of the sensor is not -1 or 1.
 

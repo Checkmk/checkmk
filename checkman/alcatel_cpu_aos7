@@ -22,5 +22,5 @@ description:
 
  The check uses the ALCATEL-IND1-HEALTH-MIB.
 
-inventory:
+discovery:
  One service is created

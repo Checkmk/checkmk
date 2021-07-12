@@ -21,7 +21,7 @@ description:
 item:
  The name of the fqdd variable for the device
 
-inventory:
+discovery:
  One service is created for each PCI device.
 
 

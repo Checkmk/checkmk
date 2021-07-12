@@ -20,5 +20,5 @@ description:
 item:
  Number of the manager
 
-inventory:
+discovery:
  One service is created for each manager boards with the state "present".

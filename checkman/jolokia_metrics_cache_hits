@@ -13,6 +13,6 @@ item:
  The name of the application server instance as configured by the agent followed
  by the cache
 
-inventory:
+discovery:
  One service is created for each cache.
 

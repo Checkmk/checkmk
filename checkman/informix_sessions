@@ -12,5 +12,5 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each instance.

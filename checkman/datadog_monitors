@@ -18,7 +18,7 @@ description:
  the Datadog API. By default, all monitors collected by the special agent
  are discovered.
 
-inventory:
+discovery:
  One service is created per monitor.
 
 item:

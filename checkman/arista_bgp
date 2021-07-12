@@ -12,6 +12,6 @@ description:
 item:
  One service is created for each IP (TODO: what is the semantic of the IP in OID?) address
 
-inventory:
+discovery:
  One service identified
 

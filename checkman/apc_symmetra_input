@@ -13,5 +13,5 @@ description:
 item:
  The current phase containing the device state, voltage and current.
 
-inventory:
+discovery:
  One service is created.

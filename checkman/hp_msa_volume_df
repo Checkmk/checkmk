@@ -12,5 +12,5 @@ description:
 item:
  The volume identifier.
 
-inventory:
+discovery:
  One service is created for each volume.

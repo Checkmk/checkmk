@@ -15,5 +15,5 @@ description:
  through the Cisco Prime API by providing the respective URL and connection
  credentials.
 
-inventory:
+discovery:
  One service per system is created.

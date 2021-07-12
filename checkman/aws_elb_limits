@@ -25,5 +25,5 @@ description:
  If limits are enabled all load balancers are fetched regardless of
  possibly configured restriction to names or tags.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

@@ -16,6 +16,6 @@ description:
 item:
  The fan designation
 
-inventory:
+discovery:
  One service is created for each fan.
 

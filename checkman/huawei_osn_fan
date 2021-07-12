@@ -9,5 +9,5 @@ description:
 item:
  The fan board slot ID.
 
-inventory:
+discovery:
  One service is created for each fan.

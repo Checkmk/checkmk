@@ -8,7 +8,7 @@ description:
  Levels can be configured using the WATO rule
  "CPU utilization of Devices with Modules".
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

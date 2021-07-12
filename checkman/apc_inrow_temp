@@ -15,6 +15,6 @@ description:
 item:
  The current mode of the check (i.e. RackInlet, Supply Air, Return Air, Entering Fluid, Leaving Fluid).
 
-inventory:
+discovery:
  One service is created for each temperature sensor:
  Entering/Leaving Fluid, Supply/Return Air, Rack Inlet

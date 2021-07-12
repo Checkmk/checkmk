@@ -18,7 +18,7 @@ description:
  enterprise ID 3717 as well as the ID 3137 which was introduced in a bug in some
  versions of genuscreen.
 
-inventory:
+discovery:
  One service is created for the carp interface
  if the carp interface
 

@@ -27,6 +27,6 @@ description:
 item:
  The WLAN accesspoint name.
 
-inventory:
+discovery:
  One service is created for each provisioned access point.
 

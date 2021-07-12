@@ -17,5 +17,5 @@ description:
 item:
  Name of the Mtree
 
-inventory:
+discovery:
  One service is created for each cwMTreesensor found on the device.

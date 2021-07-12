@@ -21,6 +21,6 @@ description:
 item:
  The name of the location variable configured for the power unit
 
-inventory:
+discovery:
  One service is created for each power unit.
 

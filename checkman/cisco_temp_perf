@@ -14,5 +14,5 @@ description:
  In addition to {cisco_temp} this check determines performance
  data.
 
-inventory:
+discovery:
  One service is created for each sensor if the sensor is not in state {5} (not present).

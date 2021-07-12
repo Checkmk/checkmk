@@ -17,5 +17,5 @@ description:
 
  - {UNKNOWN} otherwise
 
-inventory:
+discovery:
  One service is created.

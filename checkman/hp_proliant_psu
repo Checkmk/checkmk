@@ -20,6 +20,6 @@ description:
 item:
  The system chassis number followed by the bay number
 
-inventory:
+discovery:
  One service is created for each present PSU entry.
  Additionally one service is created which sums up the used capacity.

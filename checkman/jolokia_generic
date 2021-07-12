@@ -22,5 +22,5 @@ description:
 item:
  The name of the instance and the MBean value
 
-inventory:
+discovery:
  One service is created for each numeric MBean value sent by the agent.

@@ -14,7 +14,7 @@ description:
 
  It supports devices running the 11 and above releases of the F5 OS.
 
-inventory:
+discovery:
   One service is created for the cluster status
   unless the load balancer config sync is in a status of "unconfigured".
 

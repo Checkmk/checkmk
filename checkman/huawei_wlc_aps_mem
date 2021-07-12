@@ -9,5 +9,5 @@ description:
 item:
  The access-point's SSID.
 
-inventory:
+discovery:
  One service per found access-point is created.

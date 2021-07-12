@@ -9,6 +9,6 @@ description:
  With this check it's possible to set thresholds for this value. In order
  to work the {citrix_serverload.ps1} plugin is needed.
 
-inventory:
+discovery:
  One service is created.
 

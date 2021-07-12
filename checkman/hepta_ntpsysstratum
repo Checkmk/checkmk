@@ -11,7 +11,7 @@ description:
  The check will raise {CRITICAL} if the reported state is "Invalid Stratum", {WARNING} if
  the reported state is "Stratum is using secondary reference (via NTP).
 
-inventory:
+discovery:
  One service is created.
 
 item:

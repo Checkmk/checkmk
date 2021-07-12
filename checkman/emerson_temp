@@ -14,6 +14,6 @@ description:
 item:
  The index of the sensors found during inventory numbered starting from 0.
 
-inventory:
+discovery:
  One service is created for each sensor.
 

@@ -30,6 +30,6 @@ description:
 item:
  Configured name of the file group
 
-inventory:
+discovery:
  One service is created for each fileinfo group.
 

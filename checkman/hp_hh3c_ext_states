@@ -16,5 +16,5 @@ description:
 item:
  The module name from ENTITY-MIB.
 
-inventory:
+discovery:
  One service is created for each module.

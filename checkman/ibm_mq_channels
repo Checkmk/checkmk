@@ -18,5 +18,5 @@ description:
 item:
  The name of the channel, prefixed by the queue manager name.
 
-inventory:
+discovery:
  One service is created for each queue manager.

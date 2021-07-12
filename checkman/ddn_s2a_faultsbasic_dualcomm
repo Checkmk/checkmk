@@ -7,5 +7,5 @@ description:
  This check monitors whether dual communication is established.
  Any other state is treated as WARN.
 
-inventory:
+discovery:
  One service is created for each device.

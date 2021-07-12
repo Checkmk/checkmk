@@ -12,5 +12,5 @@ description:
 item:
  Name of the Source NAT (network address translation)
 
-inventory:
+discovery:
  One service is created for each source NAT.

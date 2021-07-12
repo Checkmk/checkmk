@@ -15,6 +15,6 @@ description:
 item:
  The name of the application server instance as configured by the agent.
 
-inventory:
+discovery:
  One service is created for each thread pool sent by the Jolokia agent.
 

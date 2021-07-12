@@ -10,6 +10,6 @@ description:
 item:
  The index of the power module as provided by the device.
 
-inventory:
+discovery:
  One service is created for each power module.
 

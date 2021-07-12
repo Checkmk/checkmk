@@ -15,5 +15,5 @@ description:
 item:
  The {{Drive Array Logical Drive Index}} followed by the {{Logical Drive OS Name}}.
 
-inventory:
+discovery:
  One service is created for each logical device.

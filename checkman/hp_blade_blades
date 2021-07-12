@@ -20,5 +20,5 @@ description:
 item:
  Number of the blade
 
-inventory:
+discovery:
  One service is created for each blade with the state "present".

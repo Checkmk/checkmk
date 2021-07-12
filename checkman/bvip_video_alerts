@@ -10,6 +10,6 @@ description:
 item:
  Identifier for the camera.
 
-inventory:
+discovery:
  One service is created for each camera.
 

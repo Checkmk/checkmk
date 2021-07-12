@@ -16,6 +16,6 @@ description:
 item:
   The name of the fan as returned by SNMP.
 
-inventory:
+discovery:
   One service is created for each fan.
 

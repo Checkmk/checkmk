@@ -11,6 +11,6 @@ description:
 item:
  The DB2 instance name, e.g. db2ilog1
 
-inventory:
+discovery:
  One service is created for each DB2 instance.
 

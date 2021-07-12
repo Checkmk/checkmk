@@ -17,5 +17,5 @@ description:
 item:
  The number of the fan
 
-inventory:
+discovery:
  One service is created for each fan (6 per device) if their status is not "Off".

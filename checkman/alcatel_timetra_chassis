@@ -39,6 +39,6 @@ description:
 item:
  The name of the device.
 
-inventory:
+discovery:
  One service is created for each active device.
 

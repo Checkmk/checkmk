@@ -16,5 +16,5 @@ description:
 item:
  The name of the PDU as set in the PDU
 
-inventory:
+discovery:
  One service is created for each PDU

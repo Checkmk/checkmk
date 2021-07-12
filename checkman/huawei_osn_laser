@@ -11,5 +11,5 @@ description:
 item:
  The location of the laser
 
-inventory:
+discovery:
  One service is created for each laser.

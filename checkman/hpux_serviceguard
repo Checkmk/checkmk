@@ -15,7 +15,7 @@ item:
  state of the node {hgs-sd1-srv1} and {"package:ADBP"} for the
  package {ADBP}.
 
-inventory:
+discovery:
  One service is created for the overall state, for each node
  and for each package.
 

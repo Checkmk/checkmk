@@ -20,5 +20,5 @@ description:
  Also, possibly configured restriction to names or tags are not
  taken into account.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

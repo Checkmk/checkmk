@@ -19,6 +19,6 @@ description:
 item:
  The ID of a Volume plus it's label, separated by a space, e. g. 1025 data
 
-inventory:
+discovery:
  One service is created for each volume.
 

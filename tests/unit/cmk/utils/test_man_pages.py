@@ -10,11 +10,8 @@ import pytest
 
 from testlib.utils import cmk_path
 
-import cmk.utils.debug
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName
-
-import cmk.base.api.agent_based.register as agent_based_register
 
 # TODO: Add tests for module internal functions
 
@@ -193,14 +190,9 @@ def _check_man_page_structure(page):
     for key in ['description', 'license', 'title', 'catalog', 'agents', 'distribution']:
         assert key in page["header"]
 
-    if "configuration" in page:
-        assert isinstance(page["configuration"], list)
-
-    if "parameters" in page:
-        assert isinstance(page["parameters"], list)
-
-    if "inventory" in page:
-        assert isinstance(page["inventory"], list)
+    for key in ["configuration", "parameters", "discovery"]:
+        if key in page:
+            assert isinstance(page["inventory"], list)
 
     assert isinstance(page["header"]["agents"], list)
 
@@ -212,7 +204,7 @@ def test_load_man_page_format(all_pages):
     _check_man_page_structure(page)
 
     # Check optional keys
-    for key in ['item', 'inventory']:
+    for key in ['item', 'discovery']:
         assert key in page["header"]
 
 

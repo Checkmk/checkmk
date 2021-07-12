@@ -15,5 +15,5 @@ description:
 item:
  The remote BGP peer's FSM state.
 
-inventory:
+discovery:
  One service is created for each BGP connection reported by SNMP.

@@ -14,7 +14,7 @@ item:
  within each host.  Changing the description will make Nagios think that it
  is another service.
 
-inventory:
+discovery:
  One service is created for each task if one entry matches.
  Each entry found on target host processes is tried to be matched.
  The match configuration is done via {inv_domino_tasks_rules}.

@@ -15,6 +15,6 @@ description:
 item:
  Logical disk number as reported by omreport
 
-inventory:
+discovery:
  One service is created for each virtual disk.
 

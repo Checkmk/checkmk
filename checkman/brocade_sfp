@@ -16,7 +16,7 @@ item:
  in the check item (and thus the service description). This can be turned
  off.
 
-inventory:
+discovery:
   One service is created for each operational port. What this exactly means
   can be configured (see CONFIGURATION VARIABLES).
 

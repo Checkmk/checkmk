@@ -11,5 +11,5 @@ description:
 item:
  Name of the system
 
-inventory:
+discovery:
  One service is created.

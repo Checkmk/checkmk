@@ -16,6 +16,6 @@ item:
  The label of the virtual volume followed by the label of the physical volume
  the virtual volume belongs to.
 
-inventory:
+discovery:
  One service is created for each virtual volume.
 

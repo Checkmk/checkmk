@@ -16,6 +16,6 @@ item:
  The name of the application server instance followed by the statement {{Memory Pool}}
  and the name of the memory pool.
 
-inventory:
+discovery:
  One service is created for each Jolokia instance sent by the agent.
 

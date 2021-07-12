@@ -15,7 +15,7 @@ description:
 
  Alternatively, limits can be configured via a rule.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.
 
 item:

@@ -7,5 +7,5 @@ description:
  This check monitors whether a (the) media tray is present and
  comminicating with the monitoring unit.
 
-inventory:
+discovery:
  One service is created for each blade center if a media tray is present.

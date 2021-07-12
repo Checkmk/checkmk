@@ -16,7 +16,7 @@ description:
  unknown will be treated as UNKNOWN, offline as CRIT, forced offline as CRIT,
  standby as OK and active as OK.
 
-inventory:
+discovery:
  One service is created.
 
 cluster:

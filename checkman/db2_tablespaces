@@ -12,6 +12,6 @@ item:
  The instance name, the database name and the tablespace name combined
  like this db2wps8:WPSCOMT8.USERSPACE1
 
-inventory:
+discovery:
  One service is created for each tablespace.
 

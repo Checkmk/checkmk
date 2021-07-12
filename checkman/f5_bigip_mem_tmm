@@ -13,5 +13,5 @@ description:
 item:
  One of the two statements: {{total}} or {{TMM}}
 
-inventory:
+discovery:
  One service is created for the target host.

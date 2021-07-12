@@ -69,6 +69,6 @@ description:
 item:
  Name of the virtual machine
 
-inventory:
+discovery:
  One service is created for each system.
 

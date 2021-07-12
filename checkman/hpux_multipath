@@ -15,7 +15,7 @@ description:
 item:
  The WWID of the LUN.
 
-inventory:
+discovery:
  One service is created for each LUN that has at least
  two paths which are not {UNOPEN}. LUNs with all paths
  in state {UNOPEN} will be ignored. Also LUNs with only

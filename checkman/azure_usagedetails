@@ -17,7 +17,7 @@ description:
 item:
  The name of the Azure service type or 'Summary'.
 
-inventory:
+discovery:
  One service is created for each Azure service type plus an additional summary
  service is on both the host running the agent and every
  host corresponding to a monitored resource group.

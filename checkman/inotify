@@ -16,5 +16,5 @@ description:
 item:
  {{file}} or {{folder}} plus the path to it
 
-inventory:
+discovery:
  One service is created for each explictely specified file and folder in the mk_inotify.cfg.

@@ -11,6 +11,6 @@ description:
 item:
  The ID of the disk bay.
 
-inventory:
+discovery:
  One service is created for each disk in an EMC Isilon Storage.
 

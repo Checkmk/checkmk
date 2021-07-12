@@ -12,5 +12,5 @@ description:
 
  This check uses the MG-SNMP-STS-MIB.
 
-inventory:
+discovery:
  One service is created

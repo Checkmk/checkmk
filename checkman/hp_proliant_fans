@@ -15,5 +15,5 @@ description:
 item:
  The index of the fan followed by th label of the fan in brackets
 
-inventory:
+discovery:
  One service is created for each FAN sensor.

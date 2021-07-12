@@ -15,6 +15,6 @@ description:
 item:
  The ID of the module
 
-inventory:
+discovery:
  One service is created for each module
 

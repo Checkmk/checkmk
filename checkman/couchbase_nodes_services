@@ -8,7 +8,7 @@ description:
  It goes to a CRIT state if the reported services differ from
  the services at discovery and is OK otherwise.
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

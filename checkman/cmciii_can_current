@@ -15,5 +15,5 @@ description:
 item:
  The unit number and the internal name of the canbus port
 
-inventory:
+discovery:
  One service is created for each canbus port.

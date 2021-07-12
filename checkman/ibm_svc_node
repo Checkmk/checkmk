@@ -19,5 +19,5 @@ description:
 item:
  The name of the IO Group.
 
-inventory:
+discovery:
  One service is created for each IO Group.

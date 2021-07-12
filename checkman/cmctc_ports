@@ -11,5 +11,5 @@ description:
 item:
  The port number and description of the attached device.
 
-inventory:
+discovery:
  One service is created for each detected device.

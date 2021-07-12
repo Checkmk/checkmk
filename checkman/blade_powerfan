@@ -13,6 +13,6 @@ description:
 item:
  Index number of the fan (as string)
 
-inventory:
+discovery:
  One service is created for each detected fan.
 

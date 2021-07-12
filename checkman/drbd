@@ -15,7 +15,7 @@ description:
 item:
  The name of the DRBD device e.g. {drbd0}
 
-inventory:
+discovery:
  One service is created for each configured DRBD device.
  All devices with the connection state "Unconfigured" are skipped.
 

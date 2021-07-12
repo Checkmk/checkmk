@@ -15,5 +15,5 @@ description:
 item:
  The display name of the node
 
-inventory:
+discovery:
  One service is created for each node ({"Jenkins Node"}).

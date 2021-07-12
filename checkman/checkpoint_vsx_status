@@ -12,6 +12,6 @@ description:
 item:
  Number of VSID.
 
-inventory:
+discovery:
  One service {VS VSID-NAME VSID-NR Status} is created for each VSID.
 

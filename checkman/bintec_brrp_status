@@ -12,5 +12,5 @@ description:
 item:
  The ID of the BRRP connection from SNMP.
 
-inventory:
+discovery:
  One service is created for each BRRP connection.

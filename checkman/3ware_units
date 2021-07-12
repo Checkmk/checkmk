@@ -17,5 +17,5 @@ description:
 item:
  The unit number of the adapter, e.g. {"u0"}.
 
-inventory:
+discovery:
  One service is created for each logical unit.

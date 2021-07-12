@@ -9,5 +9,5 @@ description:
 item:
  The stack switch number.
 
-inventory:
+discovery:
  One service is created for each switch.

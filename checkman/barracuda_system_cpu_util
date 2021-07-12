@@ -8,5 +8,5 @@ description:
 
  Upper levels are configurable. Default levels are set to 80, 90 percent.
 
-inventory:
+discovery:
  One service is created.

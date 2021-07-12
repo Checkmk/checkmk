@@ -15,6 +15,6 @@ description:
  or "blocking state" signals a problem (or any not-yet-observed state),
  {OK} otherwise.
 
-inventory:
+discovery:
  One service is created.
 

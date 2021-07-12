@@ -11,7 +11,7 @@ description:
  genuas regular enterprise ID 3717 as well as the ID 3137 which was
  introduced in a bug in some versions of genuscreen.
 
-inventory:
+discovery:
  One service is created for the state of the carp interface
  if
 

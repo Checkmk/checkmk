@@ -36,7 +36,7 @@ description:
 item:
  The name of the aggregate or volume on the NetAPP filer.
 
-inventory:
+discovery:
  One service is created for each filesystem
  the agent reports except mount points listed in
  {inventory_df_exclude_mountpoints} and filesystem types

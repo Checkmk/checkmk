@@ -19,5 +19,5 @@ description:
 item:
  Number of the PSU
 
-inventory:
+discovery:
  One service is created for each PSU with the state "present".

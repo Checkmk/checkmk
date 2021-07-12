@@ -13,5 +13,5 @@ description:
 item:
  The handle name.
 
-inventory:
+discovery:
  One service is created for each handle.

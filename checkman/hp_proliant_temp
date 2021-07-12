@@ -18,5 +18,5 @@ item:
  Index of the temperature sensor followed by the location of the
  sensor in brackets
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

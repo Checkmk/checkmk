@@ -54,5 +54,5 @@ description:
  If limits are enabled account attributes of RDS resource are
  additionally fetched.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

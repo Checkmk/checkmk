@@ -23,6 +23,6 @@ description:
 
  Levels are configurable for surge queue length and spillover.
 
-inventory:
+discovery:
  One service is created if all required metrics (SurgeQueueLength,
  SpilloverCount) are given.

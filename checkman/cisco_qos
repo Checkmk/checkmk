@@ -18,6 +18,6 @@ item:
  A string: A combination of the interface name as set in IF-MIB::ifDescr and the
  name of the QoS class as given in CISCO-CLASS-BASED-QOS-MIB::cbQosCMName.
 
-inventory:
+discovery:
  One service is created for each combination of IF-MIB::ifDescr and CISCO-CLASS-BASED-QOS-MIB::cbQosCMName.
 

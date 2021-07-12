@@ -10,6 +10,6 @@ description:
 item:
  The item is the sensor description of the sensor.
 
-inventory:
+discovery:
  One service is created for each available temperature sensor.
 

@@ -12,6 +12,6 @@ description:
 
  The check uses the ALCATEL-IND1-TIMETRA-CHASSIS-MIB.
 
-inventory:
+discovery:
  One service is created
 

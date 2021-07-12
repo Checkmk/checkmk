@@ -22,6 +22,6 @@ item:
  The index of the RLUN in the SNMP table (integer). The first RLUN usually
  has index {1}.
 
-inventory:
+discovery:
  One service is created for each present RLUN.
 

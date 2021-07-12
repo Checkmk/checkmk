@@ -12,7 +12,7 @@ description:
  state "notUp". Returns {CRIT} on state "dormant" or "dead" and
  {UNKN} on every other state.
 
-inventory:
+discovery:
  One service is created for each PNode in the HNAS system.
 
 item:

@@ -7,5 +7,5 @@ description:
  This check displays the DHCP statistics of Infoblox devices which
  support the IB-DHCPONE MIB.
 
-inventory:
+discovery:
  One service is created.

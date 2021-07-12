@@ -13,5 +13,5 @@ description:
 item:
  The alarm identifier.
 
-inventory:
+discovery:
  One service is created for each activated alarm identifier.

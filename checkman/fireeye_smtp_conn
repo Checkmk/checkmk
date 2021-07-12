@@ -10,6 +10,6 @@ description:
  The check goes WARN or CRIT if the number of
  SMTP connections exceeds configurable values.
 
-inventory:
+discovery:
  One service is created.
 

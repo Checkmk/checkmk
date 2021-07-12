@@ -10,6 +10,6 @@ description:
  for this to work. The check allows to set upper levels on active, inactive and total
  sessions. Defaults are not set.
 
-inventory:
+discovery:
  One service is created for each controller.
 

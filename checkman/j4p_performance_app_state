@@ -9,5 +9,5 @@ description:
 item:
  The name of the instance and the name of the application
 
-inventory:
+discovery:
  One service is created for each application.

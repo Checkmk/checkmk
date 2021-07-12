@@ -11,5 +11,5 @@ description:
 
  If the health status not is at 100% the service status goes {CRIT}.
 
-inventory:
+discovery:
  One serivce is created.

@@ -32,5 +32,5 @@ description:
 item:
  Number of the fan based on the order in info entries
 
-inventory:
+discovery:
  One service is created for each fan

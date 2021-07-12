@@ -15,5 +15,5 @@ description:
 item:
  The unit number and the internal name of the access module
 
-inventory:
+discovery:
  One service is created for each module.

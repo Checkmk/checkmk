@@ -13,6 +13,6 @@ description:
  No default levels for {WARN}/{CRIT} are set. These are
  configurable.
 
-inventory:
+discovery:
  One service is created if all required metrics
  (BackendConnectionErrors) are given.

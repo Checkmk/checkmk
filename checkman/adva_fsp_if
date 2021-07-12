@@ -31,6 +31,6 @@ item:
  Either the interface description {ifDescr} if it is non-empty or otherwise
  the interface index {ifIndex}.
 
-inventory:
+discovery:
  One service is created for each interface whose administrative state is "up"
  and whose type is 1, 6 or 56.

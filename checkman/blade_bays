@@ -14,5 +14,5 @@ item:
  of the power domain (1 or 2) and {B} is the name of the bay
  (e.g. {Midplane}).
 
-inventory:
+discovery:
  One service is created for each bay with the state 1 (present and OK).

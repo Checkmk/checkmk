@@ -9,6 +9,6 @@ description:
  to {WARN} or {CRIT} if the CPU utilization exceeds
  configurable levels.
 
-inventory:
+discovery:
  One service is created for each host.
 

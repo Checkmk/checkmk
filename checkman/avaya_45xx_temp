@@ -15,5 +15,5 @@ description:
 item:
  The index of the temperature sensor.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

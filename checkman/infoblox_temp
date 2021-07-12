@@ -18,5 +18,5 @@ description:
 item:
  Type of the device (i.e. {{System}} or {{CPU}}) and the index
 
-inventory:
+discovery:
  One service is created for each sensor.

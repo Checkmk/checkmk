@@ -18,5 +18,5 @@ item:
  The name of the node as configured in the ha.cf configuration file.
 
 
-inventory:
+discovery:
  One service is created for each node of a cluster.

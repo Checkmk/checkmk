@@ -17,5 +17,5 @@ description:
 item:
  Index of the cooling device
 
-inventory:
+discovery:
  One service is created for each fan that is not in the state "other" or "unknown".

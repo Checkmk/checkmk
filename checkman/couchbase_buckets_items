@@ -10,7 +10,7 @@ description:
  to a single bucket.
  Levels can be configured in the WATO rule "Couchbase Items".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

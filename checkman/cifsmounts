@@ -25,7 +25,7 @@ description:
 item:
  The mount point.
 
-inventory:
+discovery:
   One service is created for each CIFS mount.
   This is doneby scanning {/proc/mounts} (linux) or using the mount command (aix).
   The file {/etc/fstab} is irrelevant.

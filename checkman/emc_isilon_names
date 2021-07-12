@@ -7,5 +7,5 @@ description:
  Reports the Cluster and Node Name of EMC Isilon Storage System. This
  Check always returns {OK}.
 
-inventory:
+discovery:
  One service is created for each EMC Isilon System, named Isilon Info.

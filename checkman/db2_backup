@@ -14,6 +14,6 @@ description:
 item:
  The DB2 instance name followed by a : and the database name, e.g. db2ilog1:REST1
 
-inventory:
+discovery:
  One service is created for each database.
 

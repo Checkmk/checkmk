@@ -11,5 +11,5 @@ description:
 item:
  The item is {0} (integer) in all cases because on system can only have one summary status.
 
-inventory:
+discovery:
  One summary service is created for each system.

@@ -15,6 +15,6 @@ description:
 item:
  The Cardname
 
-inventory:
+discovery:
  One service is created for each card.
 

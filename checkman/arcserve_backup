@@ -28,7 +28,7 @@ description:
 item:
  The name of the backup.
 
-inventory:
+discovery:
  One service is created for each backup configured.
 
  Please note: This is independent of the number of hosts backuped in one

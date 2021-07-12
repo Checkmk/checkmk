@@ -9,6 +9,6 @@ description:
  the device is in the state stopping, becoming active, becoming passive.
  The behavior can be changed using WATO.
 
-inventory:
+discovery:
  One service is created if the device is not in standalone mode.
 

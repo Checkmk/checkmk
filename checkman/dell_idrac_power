@@ -11,5 +11,5 @@ description:
 item:
  Index of the power unit
 
-inventory:
+discovery:
  One service is created for each power supply.

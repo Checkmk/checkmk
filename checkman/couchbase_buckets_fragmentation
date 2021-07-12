@@ -9,7 +9,7 @@ description:
  Documents and Views.
  Levels can be configured in the WATO rule "Couchbase Fragmentation".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

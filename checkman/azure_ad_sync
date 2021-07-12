@@ -11,5 +11,5 @@ description:
 item:
  The organization name registered with Azure
 
-inventory:
+discovery:
  One service is created per Azure organization if sync is enabled

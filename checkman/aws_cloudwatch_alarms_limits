@@ -16,5 +16,5 @@ description:
  If limits are enabled all alarms are fetched regardless of
  possibly configured restriction to names.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

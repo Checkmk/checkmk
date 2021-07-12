@@ -8,6 +8,6 @@ description:
  It returns for each VM the status of the Integration Services using pickyback.
  It will automaticly throw an {CRITICAL} state if there any errors.
 
-inventory:
+discovery:
  One service is created for each system.
 

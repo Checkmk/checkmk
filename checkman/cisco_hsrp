@@ -25,7 +25,7 @@ description:
 item:
   The Virtual IP of the failover group.
 
-inventory:
+discovery:
  One service is created per virtual IP.
  The check reads the HSRP MIB.
  If the HSRP state of the group is either active or standby, a service

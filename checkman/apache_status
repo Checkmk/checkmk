@@ -47,7 +47,7 @@ description:
  With the optional item 'page' its posible to change the status page from server-status to a
  name you want
 
-inventory:
+discovery:
  One service is created for each Apache server.
 
 item:

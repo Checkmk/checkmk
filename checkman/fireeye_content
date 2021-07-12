@@ -18,5 +18,5 @@ description:
 
    - {WARN} and {CRIT} according to configured levels in WATO rule {Fireeye Security Content}.
 
-inventory:
+discovery:
  One service is created.

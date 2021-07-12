@@ -15,5 +15,5 @@ description:
 item:
  The fixed statement {{system}}
 
-inventory:
+discovery:
  One service is created for the system.

@@ -14,7 +14,7 @@ description:
  By providing parameters you can configure the warn and crit levels for
  each state type.
 
-inventory:
+discovery:
  One service is created for each ESX Host System.
 
 item:

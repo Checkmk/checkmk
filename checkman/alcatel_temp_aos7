@@ -33,5 +33,5 @@ description:
 item:
  The slot index and the name of the CPU. The slot index is optional
 
-inventory:
+discovery:
  One service is created for each connected board connected to the switch.

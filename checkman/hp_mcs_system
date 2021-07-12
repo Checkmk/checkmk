@@ -14,5 +14,5 @@ description:
 item:
  Name of the product
 
-inventory:
+discovery:
  One service is created for the system health.

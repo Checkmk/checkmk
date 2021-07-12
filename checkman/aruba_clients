@@ -10,5 +10,5 @@ description:
 
  The check uses the WLSX-SYSTEMEXT-MIB
 
-inventory:
+discovery:
  One service is created.

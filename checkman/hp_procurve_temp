@@ -13,5 +13,5 @@ description:
 item:
  The system name of the switch.
 
-inventory:
+discovery:
  One service is created for the system temperature.

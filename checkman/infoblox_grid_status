@@ -9,5 +9,5 @@ description:
 
  The check is OK if the status is online. Otherwise it's CRIT.
 
-inventory:
+discovery:
  One service is created.

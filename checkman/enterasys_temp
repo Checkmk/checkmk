@@ -13,7 +13,7 @@ description:
 item:
  The fixed statement {{Ambient}}
 
-inventory:
+discovery:
  One service is created for each Enterasys Switch in which a temperature
  sensor is found to be active.
 

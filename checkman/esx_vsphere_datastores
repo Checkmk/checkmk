@@ -15,6 +15,6 @@ description:
 item:
  The logical name of the filesystem (not the mountpoint!)
 
-inventory:
+discovery:
  One service is created for each datastore.
 

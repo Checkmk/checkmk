@@ -11,5 +11,5 @@ description:
 item:
  The controller number
 
-inventory:
+discovery:
  One service is created for each controller.

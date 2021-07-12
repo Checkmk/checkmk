@@ -12,5 +12,5 @@ description:
 item:
  The index of the thin provisioning pool.
 
-inventory:
+discovery:
  One service is created for each pool.

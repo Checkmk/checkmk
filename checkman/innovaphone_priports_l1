@@ -13,6 +13,6 @@ description:
 item:
  Table of the Pri (primary rate interface)
 
-inventory:
+discovery:
  One service is created for each port in state {UP}.
 

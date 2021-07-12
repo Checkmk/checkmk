@@ -15,5 +15,5 @@ description:
 item:
  The fixed name {{Disk}}.
 
-inventory:
+discovery:
  One service is created.

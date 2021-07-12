@@ -8,5 +8,5 @@ description:
  committed heap space. Needs the datasource "Check state of Graylog" to be
  configured.
 
-inventory:
+discovery:
  One service is created.

@@ -13,5 +13,5 @@ description:
 item:
  The blade ID
 
-inventory:
+discovery:
  One service is created for each blade which does not report status {not-present}

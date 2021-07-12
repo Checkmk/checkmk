@@ -13,5 +13,5 @@ description:
 item:
  The unit name and the name of the leakage sensor
 
-inventory:
+discovery:
  One service is created for each leakage sensor.

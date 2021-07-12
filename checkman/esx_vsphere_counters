@@ -11,7 +11,7 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  Either one summary service is created for all datastores
  if the configuration is set to {"Summary"} or
  one service is created for each datastore if the configuration

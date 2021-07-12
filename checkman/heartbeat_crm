@@ -17,7 +17,7 @@ description:
  inventory. This has been changed to not nailing down the node. You can change this back
  to the old default by changing your configuration.
 
-inventory:
+discovery:
  One service is created for each node of the cluster
  if {naildown_dc} is set to {True} in {inventory_heartbeat_crm_rules}.
 

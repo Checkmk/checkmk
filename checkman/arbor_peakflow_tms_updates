@@ -13,7 +13,7 @@ description:
 
  This check uses the PEAKFLOW-TMS-MIB.
 
-inventory:
+discovery:
  One service is created one for each type of configuration supported.
 
 item:

@@ -16,5 +16,5 @@ item:
  If a module description is delivered by SNMP, the item is build from the
  module ID plus the description. Otherwise it is just the ID.
 
-inventory:
+discovery:
  One service is created for each NI-MLX or BR-MLX module.

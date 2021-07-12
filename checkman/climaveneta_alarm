@@ -7,6 +7,6 @@ description:
  This check displays all Alarm states on Climaveneta mc01_o4cv devices.
  No configuration is necessary.
 
-inventory:
+discovery:
  One service is created.
 

@@ -7,6 +7,6 @@ description:
  This check shows informations about an elasticsearch cluster.
  Available Informations: Cluster name, Nodes (count), Data nodes (count)
 
-inventory:
+discovery:
  One service is created.
 

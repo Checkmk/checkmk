@@ -8,6 +8,6 @@ description:
  Firewall. Warning and critical levels for the number of connections
  may be configured.
 
-inventory:
+discovery:
  One service is created.
 

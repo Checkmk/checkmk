@@ -10,7 +10,7 @@ description:
  agent is configured via an {.ini}-file. The Linux agent is configured
  via {/etc/xinetd.d/check_mk}.
 
-inventory:
+discovery:
  One check is created per host, if {check_mk_only_from_default} is explicitely
  set in {main.mk} and the agent provides an {OnlyFrom:} header in the section
  {<<<check_mk>>>}.

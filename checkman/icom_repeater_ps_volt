@@ -7,5 +7,5 @@ description:
  This check monitors the power supply voltage of ICOM repeaters. The service
  goes WARN or CRIT when the voltage is outside a defined interval.
 
-inventory:
+discovery:
  One service is created for each device.

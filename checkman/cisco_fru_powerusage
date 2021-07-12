@@ -17,5 +17,5 @@ description:
 item:
  Can be system total or drawn or inline total or drawn.
 
-inventory:
+discovery:
  One service is created for each phase.

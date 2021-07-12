@@ -10,6 +10,6 @@ item:
 description:
  Check CPU utilization of the last 5 minutes in percent on Cisco devices.
 
-inventory:
+discovery:
  One service is created for each CPU.
 

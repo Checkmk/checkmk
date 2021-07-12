@@ -8,5 +8,5 @@ description:
  the Datadog special agent. Its monitoring state is always OK and it is
  not configurable.
 
-inventory:
+discovery:
  One service is created.

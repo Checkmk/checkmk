@@ -11,5 +11,5 @@ description:
 item:
  Name of the interface
 
-inventory:
+discovery:
  One service is created for each interface.

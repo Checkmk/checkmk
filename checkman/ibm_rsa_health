@@ -12,5 +12,5 @@ description:
   Returns {WARN} if the RSA reports a non critical problem and  {CRIT} on
   a system level problem.
 
-inventory:
+discovery:
  One service is created for each RSA.

@@ -11,5 +11,5 @@ description:
 item:
  {{Power Supply}} followed by the index of the power supply and {{Input}}
 
-inventory:
+discovery:
  One service is created for each power supply.

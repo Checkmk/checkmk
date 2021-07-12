@@ -16,6 +16,6 @@ item:
  A string: the name of the interface as in .1.3.6.1.2.1.2.2.1.2 (IF-MIB::ifDescr). The
  OID index is not relevant.
 
-inventory:
+discovery:
  One service is created for each interfaces if it is of the correct type (default is {ethernetCsmacd}).
 

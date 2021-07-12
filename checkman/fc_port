@@ -38,7 +38,7 @@ item:
  port {00} is {1}!). If configured, port names of the device will be part
  of the check item (and thus the service description).
 
-inventory:
+discovery:
   One service is created for all operational ports
   if the administrativ state is not 1 (unknown) or 3 (offline).
   It can be configured (see CONFIGURATION VARIABLES)

@@ -17,6 +17,6 @@ description:
 item:
  The ID of the power supply unit
 
-inventory:
+discovery:
  One service is created for each power supply.
 

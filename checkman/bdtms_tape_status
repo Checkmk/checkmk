@@ -8,6 +8,6 @@ description:
  The status of the check corresponds 1:1 to the status
  returned by the device.
 
-inventory:
+discovery:
  One service is created for each host.
 

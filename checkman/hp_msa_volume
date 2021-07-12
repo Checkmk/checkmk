@@ -15,5 +15,5 @@ description:
 item:
  Name of the volume
 
-inventory:
+discovery:
  One service is created.

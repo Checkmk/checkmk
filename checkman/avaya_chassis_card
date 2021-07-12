@@ -23,5 +23,5 @@ description:
 item:
  The index of the card.
 
-inventory:
+discovery:
  One service is created for each installed card.

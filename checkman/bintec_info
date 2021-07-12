@@ -12,5 +12,5 @@ description:
 
  The check always reports an OK state.
 
-inventory:
+discovery:
  One service is created for each SNMP host.

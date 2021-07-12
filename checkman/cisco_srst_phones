@@ -8,5 +8,5 @@ description:
  the Cisco Unified SRST feature.
  The status is always OK.
 
-inventory:
+discovery:
  One service is created for each device.

@@ -10,5 +10,5 @@ description:
 
  To make this check work the agent plugin {{mk_docker.py}} has to be installed.
 
-inventory:
+discovery:
  One service is created.

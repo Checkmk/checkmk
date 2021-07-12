@@ -16,5 +16,5 @@ description:
 
  - unknown or unavailable: UNKNOWN
 
-inventory:
+discovery:
  One service is created.

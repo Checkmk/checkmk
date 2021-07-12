@@ -13,6 +13,6 @@ item:
 perfdata:
  None
 
-inventory:
+discovery:
  One service is created for each available digital sensor.
 

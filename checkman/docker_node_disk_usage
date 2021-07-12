@@ -16,5 +16,5 @@ description:
 item:
  Type of the docker node
 
-inventory:
+discovery:
  One service is created for each type (i.e. containers, images, volumen, build cache).

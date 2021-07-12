@@ -25,7 +25,7 @@ item:
  Either the name of the location variable configured for the temperature sensor, or
  the chassis index and sensor index seperated by a dash.
 
-inventory:
+discovery:
  One service is created for each temperature sensor
  if the state setting is not {unknown}.
 

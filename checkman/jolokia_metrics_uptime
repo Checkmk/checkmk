@@ -18,7 +18,7 @@ description:
 item:
  The name of the instance
 
-inventory:
+discovery:
  One service is created for each application running inside an Jolokia
  instance sent by the agent.
 

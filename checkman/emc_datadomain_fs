@@ -21,7 +21,7 @@ item:
  The name of the filesystem as in {fileSystemResourceName} of the Data Domain
  MIB.
 
-inventory:
+discovery:
  One service is created for each fixed disk if the description
  of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
 

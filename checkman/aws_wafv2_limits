@@ -33,5 +33,5 @@ description:
  Note that if limits are enabled, all Web ACLs are fetched, regardless
  of possibly configured restrictions to names or tags.
 
-inventory:
+discovery:
  One service is created per monitored AWS region.

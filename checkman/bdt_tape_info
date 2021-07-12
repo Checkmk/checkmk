@@ -8,6 +8,6 @@ description:
  name and description of the device as well as the vendor and SNMP
  agent version. The check always returns the status {OK}.
 
-inventory:
+discovery:
  One service is created for each host.
 

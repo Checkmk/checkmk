@@ -21,7 +21,7 @@ description:
 item:
  The name of the location variable configured for the memory module
 
-inventory:
+discovery:
  One service is created for each memory module of the device.
 
 

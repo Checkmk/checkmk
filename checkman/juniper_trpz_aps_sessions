@@ -18,7 +18,7 @@ description:
 item:
  Status of the access point
 
-inventory:
+discovery:
  One service is created for each access point.
 
 cluster:

@@ -20,5 +20,5 @@ description:
 item:
  The port identifier of the disk, e.g. {p0} or {p1}.
 
-inventory:
+discovery:
  One service is created for each logical unit which doesn't have the status NOT-PRESENT.

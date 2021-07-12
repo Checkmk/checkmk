@@ -13,7 +13,7 @@ description:
  check is always {OK}, but you can set levels for the used
  percentage.
 
-inventory:
+discovery:
  All hpux_tunable checks are combined in one service.
  One {hpux_tunable} service is created for each supported tunable.
 

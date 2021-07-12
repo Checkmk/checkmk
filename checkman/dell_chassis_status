@@ -18,5 +18,5 @@ description:
  of the server: drsProductURL, drsProductChassisLocation, drsProductChassisName
  drsSystemServiceTag, drsProductChassisDataCenter, drsFirmwareVersion
 
-inventory:
+discovery:
  One service is created.

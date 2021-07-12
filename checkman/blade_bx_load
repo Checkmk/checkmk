@@ -8,6 +8,6 @@ description:
   BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are
   reported.
 
-inventory:
+discovery:
   One service is created for each blade enclosure.
 

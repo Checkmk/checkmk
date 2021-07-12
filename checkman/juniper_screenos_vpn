@@ -10,6 +10,6 @@ description:
 item:
  Name of the VPN tunnel
 
-inventory:
+discovery:
  One service is created for each VPN tunnel.
 

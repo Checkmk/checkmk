@@ -13,7 +13,7 @@ description:
  {voltCritLimitHigh} ,{voltNonCritLimitHigh}) to calculate the state of
  the service.
 
-inventory:
+discovery:
  One service is created for each voltage measurement channel.
 
 item:

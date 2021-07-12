@@ -19,7 +19,7 @@ description:
 item:
  The identifier of the job defined by the first argument to {mk-job}.
 
-inventory:
+discovery:
  One service is created for each job.
 
 cluster:

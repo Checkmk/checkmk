@@ -10,5 +10,5 @@ description:
 item:
  The name of the board
 
-inventory:
+discovery:
  One service is created for each board.

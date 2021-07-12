@@ -12,5 +12,5 @@ description:
 item:
  The name of the changer device
 
-inventory:
+discovery:
  One service is created for each device.

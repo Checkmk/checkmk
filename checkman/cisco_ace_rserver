@@ -21,6 +21,6 @@ item:
  The name of the real server, or, if this is not configured on the device,
  the IP-address of the real server.
 
-inventory:
+discovery:
  One service is created for each real server.
 

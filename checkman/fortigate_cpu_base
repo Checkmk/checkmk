@@ -10,6 +10,6 @@ description:
  Upper default levels are 80.0, 90.0 percent. These levels
  are configurable.
 
-inventory:
+discovery:
  One service is created.
 

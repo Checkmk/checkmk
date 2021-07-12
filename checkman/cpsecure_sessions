@@ -11,6 +11,6 @@ description:
 item:
  Name of the protocol, in upper case letters, for example {"SMTP"}.
 
-inventory:
+discovery:
  One service is created for each {enabled} protocol.
 

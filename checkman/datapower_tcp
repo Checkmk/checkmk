@@ -12,5 +12,5 @@ description:
  Moreover the check is configurable via WATO. For the possible states you
  can set upper warn and crit levels. No default levels are set.
 
-inventory:
+discovery:
  One service is created if there is at least one TCP connection.

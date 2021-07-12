@@ -23,5 +23,5 @@ description:
 item:
  The name of the controller, e.g. {c5} or {c0}.
 
-inventory:
+discovery:
  One service is created for each controller.

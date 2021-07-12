@@ -12,5 +12,5 @@ description:
  monitored host and the agent plugin {agents/plugins/dmi_sysinfo} needs to be
  installed on the system to be monitored.
 
-inventory:
+discovery:
  One service is created for each host.

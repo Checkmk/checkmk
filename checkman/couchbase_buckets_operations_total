@@ -9,5 +9,5 @@ description:
  on all buckets.
  Levels can be configured in the WATO rule "Couchbase Total Bucket Operations".
 
-inventory:
+discovery:
  One service is created.

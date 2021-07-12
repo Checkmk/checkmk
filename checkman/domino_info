@@ -16,5 +16,5 @@ description:
 
  No configuration and no limits can be set in this check.
 
-inventory:
+discovery:
  One service is created for each record.

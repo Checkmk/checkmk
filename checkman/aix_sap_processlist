@@ -21,6 +21,6 @@ description:
 item:
  The description and instance number of each process.
 
-inventory:
+discovery:
  One service is created for each discovered process on each instance.
 

@@ -9,6 +9,6 @@ description:
  Levels for warning and critical can be set either in percent
  or in absolute levels.
 
-inventory:
+discovery:
  One service is created for used and total flash memory.
 

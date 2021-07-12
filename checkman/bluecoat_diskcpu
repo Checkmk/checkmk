@@ -15,5 +15,5 @@ item:
 
   The item {CPU} represents the CPU utilization.
 
-inventory:
+discovery:
  One service is created for each for each appliance (machine): {Disk} and {CPU}

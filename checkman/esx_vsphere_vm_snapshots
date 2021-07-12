@@ -8,7 +8,7 @@ description:
  snapshots, the currently running snapshot and the age of the latest snapshot
  as well as the oldest snapshot.
 
-inventory:
+discovery:
  One service is created for each Virtual Machine
  if there is snapshot information available.
 

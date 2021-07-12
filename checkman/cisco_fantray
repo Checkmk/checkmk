@@ -12,6 +12,6 @@ description:
 item:
  The ID of the sensor as provided by the snmp agent of the device.
 
-inventory:
+discovery:
  One service is created for each sensor.
 

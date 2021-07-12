@@ -12,5 +12,5 @@ description:
  No default levels are set.
  These are configurable.
 
-inventory:
+discovery:
  One service is created if all required metrics (Latency) are given.

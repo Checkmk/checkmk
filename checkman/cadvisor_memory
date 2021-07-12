@@ -14,5 +14,5 @@ description:
  generation of cAdvisor related memory services, the user needs to enable
  the cAdvisor option under the Prometheus Datasource Programs ruleset.
 
-inventory:
+discovery:
  One service is created for each memory unit.

@@ -15,6 +15,6 @@ item:
  followed by the name of the application.
  I.e. webservices webservices
 
-inventory:
+discovery:
  One service is created for each selvet running inside a weblogic
  instance sent by the agent.

@@ -15,5 +15,5 @@ description:
 item:
  The disk name.
 
-inventory:
+discovery:
  One service is created for each disk.

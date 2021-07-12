@@ -21,6 +21,6 @@ description:
  The check also queries the air humidity level, but currently
  does not allow setting a level on this.
 
-inventory:
+discovery:
  One service is created.
 

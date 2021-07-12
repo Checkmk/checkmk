@@ -9,5 +9,5 @@ description:
 item:
  {{CPU}} followed by the index of the CPU
 
-inventory:
+discovery:
  One service is created for each CPU.

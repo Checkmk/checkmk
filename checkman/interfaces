@@ -28,7 +28,7 @@ item:
  description {ifDescr} and its alias, which is the same as the description for this
  check.
 
-inventory:
+discovery:
  One service is created for each interface that fulfills configurable conditions
  (rule "Network interface and switch port discovery").
  By default, these are interfaces which are currently found {up} and are of type 6, 32,

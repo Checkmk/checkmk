@@ -12,7 +12,7 @@ description:
  If the device is synchronized via Radio with low precision, the state will be WARN.
  If the device synchronization is invalid or it is in mode Crystal, the state will be CRIT.
 
-inventory:
+discovery:
  One service is created.
 
 item:

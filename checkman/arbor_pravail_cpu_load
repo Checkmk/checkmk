@@ -13,6 +13,6 @@ description:
 
  This check uses the PRAVAIL-MIB.
 
-inventory:
+discovery:
  One service is created.
 

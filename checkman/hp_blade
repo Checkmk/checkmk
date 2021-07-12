@@ -11,5 +11,5 @@ description:
  On windows systems, some versions of the Proliant tools seem to report
  a status of "Other" which triggers an UNKNOWN status.
 
-inventory:
+discovery:
  One service is created fir each enclosure.

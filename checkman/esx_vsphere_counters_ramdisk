@@ -17,6 +17,6 @@ description:
 item:
  Mountpoint or grouped mountpoints
 
-inventory:
+discovery:
  One service is created for each ramdisk from the counters reported by
  the vsphere special agent.

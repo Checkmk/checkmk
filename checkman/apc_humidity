@@ -19,6 +19,6 @@ description:
 item:
  The item is the sensor description of the sensor as string.
 
-inventory:
+discovery:
  One service is created for each available humidity sensor.
 

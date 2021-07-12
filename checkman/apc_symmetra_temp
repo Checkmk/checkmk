@@ -16,5 +16,5 @@ description:
 item:
  Name of the temperature sensor
 
-inventory:
+discovery:
  One service is created.

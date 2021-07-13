@@ -366,16 +366,17 @@ def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[S
     return StructuredDataNode.deserialize(ast.literal_eval(raw_status_data_tree.decode("utf-8")))
 
 
-def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
-    if inventory_tree is None and status_data_tree is None:
-        return
-
+def _merge_inventory_and_status_data_tree(
+    inventory_tree: Optional[StructuredDataNode],
+    status_data_tree: Optional[StructuredDataNode],
+) -> Optional[StructuredDataNode]:
     if inventory_tree is None:
-        inventory_tree = StructuredDataNode()
+        return status_data_tree
 
-    if status_data_tree is not None:
-        inventory_tree.merge_with(status_data_tree)
-    return inventory_tree
+    if status_data_tree is None:
+        return inventory_tree
+
+    return inventory_tree.merge_with(status_data_tree)
 
 
 def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[StructuredDataNode]:

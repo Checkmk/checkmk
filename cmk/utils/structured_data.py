@@ -277,20 +277,27 @@ class StructuredDataNode:
             self.table.count_entries(),
         ] + [node.count_entries() for node in self._nodes.values()])
 
-    def merge_with(self, other: object) -> None:
+    def merge_with(self, other: object) -> "StructuredDataNode":
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        self.attributes.merge_with(other.attributes)
-        self.table.merge_with(other.table)
+        node = StructuredDataNode(path=self.path)
+
+        node.add_attributes(self.attributes.merge_with(other.attributes))
+        node.add_table(self.table.merge_with(other.table))
 
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
-        for key in compared_keys.both:
-            self._nodes[key].merge_with(other._nodes[key])
-
         for key in compared_keys.only_old:
-            self.add_node(key, other._nodes[key])
+            node.add_node(key, other._nodes[key])
+
+        for key in compared_keys.both:
+            node.add_node(key, self._nodes[key].merge_with(other._nodes[key]))
+
+        for key in compared_keys.only_new:
+            node.add_node(key, self._nodes[key])
+
+        return node
 
     #   ---node methods---------------------------------------------------------
 
@@ -303,8 +310,14 @@ class StructuredDataNode:
         return node.setdefault_node(path[1:])
 
     def add_node(self, edge: SDEdge, node: "StructuredDataNode") -> "StructuredDataNode":
-        the_node = self._nodes.setdefault(edge, StructuredDataNode(path=self.path + (edge,)))
-        the_node.merge_with(node)
+        the_node = self.setdefault_node([edge])
+
+        the_node.add_attributes(node.attributes)
+        the_node.add_table(node.table)
+
+        for sub_edge, sub_node in node._nodes.items():
+            the_node.add_node(sub_edge, sub_node)
+
         return the_node
 
     def add_attributes(self, attributes: "Attributes") -> None:
@@ -596,9 +609,11 @@ class Table:
     def count_entries(self) -> int:
         return sum(map(len, self.rows))
 
-    def merge_with(self, other: object) -> None:
+    def merge_with(self, other: object) -> "Table":
         if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+
+        table = Table(path=self.path)
 
         other_keys = other._get_table_keys()
         my_keys = self._get_table_keys()
@@ -607,20 +622,22 @@ class Table:
         # In case there is no intersection, append all other rows without
         # merging with own rows
         if not intersect_keys:
-            self.add_rows(other.rows)
-            return
+            table.add_rows(other.rows)
+            return table
 
         # Try to match rows of both trees based on the keys that are found in
         # both. Matching rows are updated. Others are appended.
         other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.rows}
 
+        table.add_rows(self.rows)
         for entry in self.rows:
             key = self._prepare_key(entry, intersect_keys)
             if key in other_num:
                 entry.update(other_num[key])
                 del other_num[key]
 
-        self.add_rows(list(other_num.values()))
+        table.add_rows(list(other_num.values()))
+        return table
 
     def _get_table_keys(self) -> Set[SDKey]:
         return {key for row in self.rows for key in row}
@@ -789,11 +806,15 @@ class Attributes:
     def count_entries(self) -> int:
         return len(self.pairs)
 
-    def merge_with(self, other: object) -> None:
+    def merge_with(self, other: object) -> "Attributes":
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        self.pairs.update(other.pairs)
+        attributes = Attributes(path=self.path)
+        attributes.add_pairs(self.pairs)
+        attributes.add_pairs(other.pairs)
+
+        return attributes
 
     #   ---attributes methods---------------------------------------------------
 

@@ -877,13 +877,13 @@ def test_real_get_children(tree, len_children):
 ])
 def test_real_merge_with_get_children(tree_start, tree_edges):
     for tree, edges, sub_children in tree_edges:
-        tree_start.merge_with(tree)
+        the_tree = tree_start.merge_with(tree)
         assert id(tree) == id(tree)
         assert tree.is_equal(tree)
         for edge in edges:
-            assert tree_start.get_node([edge]) is not None
+            assert the_tree.get_node([edge]) is not None
         for m_name, path in sub_children:
-            m = getattr(tree_start, m_name)
+            m = getattr(the_tree, m_name)
             assert m is not None
             assert m(path) is not None
 
@@ -896,9 +896,9 @@ TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
     (TREE_INV, TREE_STATUS),
 ])
 def test_real_merge_with_table(tree_inv, tree_status):
-    tree_inv.merge_with(tree_status)
-    assert 'foobar' in tree_inv.serialize()
-    num = tree_inv.get_table(['foobar'])
+    tree = tree_inv.merge_with(tree_status)
+    assert 'foobar' in tree.serialize()
+    num = tree.get_table(['foobar'])
     assert len(num.rows) == 5
 
 

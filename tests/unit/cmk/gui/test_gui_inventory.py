@@ -39,3 +39,27 @@ def test__load_status_data_tree(monkeypatch, hostname, row, expected_tree):
     status_data_tree = cmk.gui.inventory._load_status_data_tree(hostname, row)
     assert status_data_tree is not None
     assert status_data_tree.is_equal(expected_tree)
+
+
+_InvTree = StructuredDataNode.deserialize({"inv": "node"})
+_StatusDataTree = StructuredDataNode.deserialize({"status": "node"})
+_MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
+
+
+@pytest.mark.parametrize("inventory_tree, status_data_tree, expected_tree", [
+    (_InvTree, None, _InvTree),
+    (None, _StatusDataTree, _StatusDataTree),
+    (_InvTree, _StatusDataTree, _MergedTree),
+])
+def test__merge_inventory_and_status_data_tree(inventory_tree, status_data_tree, expected_tree):
+    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
+        inventory_tree,
+        status_data_tree,
+    )
+    assert merged_tree is not None
+    assert merged_tree.is_equal(expected_tree)
+
+
+def test__merge_inventory_and_status_data_tree_both_None():
+    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(None, None)
+    assert merged_tree is None

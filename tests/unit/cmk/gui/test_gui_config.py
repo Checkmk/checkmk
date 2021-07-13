@@ -7,18 +7,19 @@
 # pylint: disable=redefined-outer-name
 
 from pathlib import Path
+
 import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
+from testlib import is_enterprise_repo, is_managed_repo
+
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
 from cmk.gui.globals import user
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
-
-from testlib import is_enterprise_repo, is_managed_repo
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

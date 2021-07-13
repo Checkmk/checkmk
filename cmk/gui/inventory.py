@@ -348,7 +348,7 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
             "inventory" else Path(cmk.utils.paths.status_data_dir))
 
         try:
-            inventory_tree = tree_store.load(hostname)
+            inventory_tree = tree_store.load(host_name=hostname)
         except Exception as e:
             if config.debug:
                 html.show_warning("%s" % e)

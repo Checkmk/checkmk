@@ -674,7 +674,7 @@ def test_real_get_list():
 
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
 def test_structured_data_StructuredDataTree_load_from(tree_name: HostName):
-    TEST_DATA_STORE.load(tree_name)
+    TEST_DATA_STORE.load(host_name=tree_name)
 
 
 def test_real_save_gzip(tmp_path):
@@ -688,7 +688,7 @@ def test_real_save_gzip(tmp_path):
     }
     tree = StructuredDataNode.deserialize(raw_tree)
     store = StructuredDataStore(tmp_path)
-    store.save(host_name, tree)
+    store.save(host_name=host_name, tree=tree)
 
     assert target.exists()
 
@@ -699,19 +699,21 @@ def test_real_save_gzip(tmp_path):
         f.read()
 
 
-tree_old_addresses_arrays_memory = TEST_DATA_STORE.load("tree_old_addresses_arrays_memory")
-tree_old_addresses = TEST_DATA_STORE.load("tree_old_addresses")
-tree_old_arrays = TEST_DATA_STORE.load("tree_old_arrays")
-tree_old_interfaces = TEST_DATA_STORE.load("tree_old_interfaces")
-tree_old_memory = TEST_DATA_STORE.load("tree_old_memory")
-tree_old_heute = TEST_DATA_STORE.load("tree_old_heute")
+tree_old_addresses_arrays_memory = TEST_DATA_STORE.load(
+    host_name=HostName("tree_old_addresses_arrays_memory"))
+tree_old_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_old_addresses"))
+tree_old_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_old_arrays"))
+tree_old_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_old_interfaces"))
+tree_old_memory = TEST_DATA_STORE.load(host_name=HostName("tree_old_memory"))
+tree_old_heute = TEST_DATA_STORE.load(host_name=HostName("tree_old_heute"))
 
-tree_new_addresses_arrays_memory = TEST_DATA_STORE.load("tree_new_addresses_arrays_memory")
-tree_new_addresses = TEST_DATA_STORE.load("tree_new_addresses")
-tree_new_arrays = TEST_DATA_STORE.load("tree_new_arrays")
-tree_new_interfaces = TEST_DATA_STORE.load("tree_new_interfaces")
-tree_new_memory = TEST_DATA_STORE.load("tree_new_memory")
-tree_new_heute = TEST_DATA_STORE.load("tree_new_heute")
+tree_new_addresses_arrays_memory = TEST_DATA_STORE.load(
+    host_name=HostName("tree_new_addresses_arrays_memory"))
+tree_new_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_new_addresses"))
+tree_new_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_new_arrays"))
+tree_new_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_new_interfaces"))
+tree_new_memory = TEST_DATA_STORE.load(host_name=HostName("tree_new_memory"))
+tree_new_heute = TEST_DATA_STORE.load(host_name=HostName("tree_new_heute"))
 
 # Must have same order as tree_new
 trees_old = [
@@ -755,8 +757,8 @@ def test_real_is_equal(tree_x, tree_y):
 
 
 def test_real_equal_tables():
-    tree_addresses_ordered = TEST_DATA_STORE.load(HostName("tree_addresses_ordered"))
-    tree_addresses_unordered = TEST_DATA_STORE.load(HostName("tree_addresses_unordered"))
+    tree_addresses_ordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_ordered"))
+    tree_addresses_unordered = TEST_DATA_STORE.load(host_name=HostName("tree_addresses_unordered"))
 
     assert tree_addresses_ordered.is_equal(tree_addresses_unordered)
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
@@ -766,8 +768,8 @@ def test_real_equal_tables():
 def test_real_is_equal_save_and_load(tree, tmp_path):
     store = StructuredDataStore(tmp_path)
     try:
-        store.save(HostName("foo"), tree)
-        loaded_tree = store.load(HostName("foo"))
+        store.save(host_name=HostName("foo"), tree=tree)
+        loaded_tree = store.load(host_name=HostName("foo"))
         assert tree.is_equal(loaded_tree)
     finally:
         shutil.rmtree(str(tmp_path))
@@ -900,8 +902,8 @@ def test_real_merge_with_get_children(tree_start, tree_edges):
             assert m(path) is not None
 
 
-TREE_INV = TEST_DATA_STORE.load(HostName("tree_inv"))
-TREE_STATUS = TEST_DATA_STORE.load(HostName("tree_status"))
+TREE_INV = TEST_DATA_STORE.load(host_name=HostName("tree_inv"))
+TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
 
 
 @pytest.mark.parametrize("tree_inv,tree_status", [
@@ -1029,8 +1031,8 @@ def test_real_building_tree():
 def test_delta_structured_data_tree_serialization(zipped_trees):
     old_filename, new_filename = zipped_trees
 
-    old_tree = TEST_DATA_STORE.load(old_filename)
-    new_tree = TEST_DATA_STORE.load(new_filename)
+    old_tree = TEST_DATA_STORE.load(host_name=old_filename)
+    new_tree = TEST_DATA_STORE.load(host_name=new_filename)
     delta_result = old_tree.compare_with(new_tree)
 
     delta_raw_tree = delta_result.delta.serialize()

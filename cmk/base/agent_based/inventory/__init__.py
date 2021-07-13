@@ -302,7 +302,7 @@ def do_inventory_actions_during_checking_for(
 
     if not host_config.do_status_data_inventory:
         # includes cluster case
-        status_data_store.remove_files(host_config.hostname)
+        status_data_store.remove_files(host_name=host_config.hostname)
         return  # nothing to do here
 
     trees = _do_inv_for_realhost(
@@ -312,7 +312,7 @@ def do_inventory_actions_during_checking_for(
         run_plugin_names=EVERYTHING,
     )
     if trees.status_data and not trees.status_data.is_empty():
-        status_data_store.save(host_config.hostname, trees.status_data)
+        status_data_store.save(host_name=host_config.hostname, tree=trees.status_data)
 
 
 def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
@@ -395,14 +395,14 @@ def _save_inventory_tree(
     inventory_tree: StructuredDataNode,
 ) -> Optional[StructuredDataNode]:
 
-    inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
+    inventory_store = StructuredDataStore(cmk.utils.paths.inventory_output_dir)
 
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
-        inventory_store.remove_files(hostname)
+        inventory_store.remove_files(host_name=hostname)
         return None
 
-    old_tree = inventory_store.load(hostname)
+    old_tree = inventory_store.load(host_name=hostname)
     if old_tree.is_equal(inventory_tree):
         console.verbose("Inventory was unchanged\n")
         return None
@@ -411,9 +411,12 @@ def _save_inventory_tree(
         console.verbose("New inventory tree\n")
     else:
         console.verbose("Inventory tree has changed\n")
-        inventory_store.archive(hostname, Path(cmk.utils.paths.inventory_archive_dir))
+        inventory_store.archive(
+            host_name=hostname,
+            archive_dir=cmk.utils.paths.inventory_archive_dir,
+        )
 
-    inventory_store.save(hostname, inventory_tree)
+    inventory_store.save(host_name=hostname, tree=inventory_tree)
     return old_tree
 
 

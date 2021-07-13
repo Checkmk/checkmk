@@ -116,8 +116,8 @@ class StructuredDataStore:
             return StructuredDataNode.deserialize(raw_tree)
         return StructuredDataNode()
 
-    def __init__(self, path: Path) -> None:
-        self._path = path
+    def __init__(self, path: Union[Path, str]) -> None:
+        self._path = Path(path)
 
     def _host_file(self, host_name: HostName) -> Path:
         return self._path / str(host_name)
@@ -125,7 +125,11 @@ class StructuredDataStore:
     def _gz_file(self, host_name: HostName) -> Path:
         return self._path / f"{host_name}.gz"
 
-    def save(self, host_name: HostName, tree: "StructuredDataNode", pretty: bool = False) -> None:
+    def save(self,
+             *,
+             host_name: HostName,
+             tree: "StructuredDataNode",
+             pretty: bool = False) -> None:
 
         self._path.mkdir(parents=True, exist_ok=True)
 
@@ -142,15 +146,15 @@ class StructuredDataStore:
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file(filepath.with_name(".last"), u"")
 
-    def load(self, host_name: HostName) -> "StructuredDataNode":
+    def load(self, *, host_name: HostName) -> "StructuredDataNode":
         return self.load_file(self._host_file(host_name))
 
-    def remove_files(self, host_name: HostName) -> None:
+    def remove_files(self, *, host_name: HostName) -> None:
         self._host_file(host_name).unlink(missing_ok=True)
         self._gz_file(host_name).unlink(missing_ok=True)
 
-    def archive(self, host_name: HostName, archive_dir: Path) -> None:
-        target_dir = archive_dir / str(host_name)
+    def archive(self, *, host_name: HostName, archive_dir: Union[Path, str]) -> None:
+        target_dir = Path(archive_dir, str(host_name))
         target_dir.mkdir(parents=True, exist_ok=True)
 
         filepath = self._host_file(host_name)

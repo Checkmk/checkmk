@@ -420,7 +420,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
         inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
         try:
-            tree = inventory_store.load(checkmk_server_name)
+            tree = inventory_store.load(host_name=checkmk_server_name)
         except FileNotFoundError:
             raise DiagnosticsElementError("No HW/SW inventory tree of '%s' found" %
                                           checkmk_server_name)

@@ -33,7 +33,7 @@ from cmk.utils.structured_data import (
     SDRawPath,
     SDPath,
     SDKeys,
-    SDTable,
+    SDRows,
     StructuredDataNode,
     Table,
     Attributes,
@@ -190,7 +190,7 @@ def _paint_host_inventory_tree_value(
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             # TODO parse instead of validate
             assert isinstance(child, Attributes)
-            tree_renderer.show_attribute(child.data.get(attribute_keys[-1]),
+            tree_renderer.show_attribute(child.pairs.get(attribute_keys[-1]),
                                          _inv_display_hint(invpath))
         code = HTML(output_funnel.drain())
     return "", code
@@ -922,7 +922,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> SDTable:
+    def _get_inv_data(self, hostrow: Row) -> SDRows:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -941,7 +941,7 @@ class RowTableInventory(ABCRowTable):
             return []
         return table
 
-    def _prepare_rows(self, inv_data: SDTable) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: SDRows) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1000,7 +1000,7 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath])
 
 
-MultiSDTable = Tuple[str, SDTable]
+MultiSDRows = Tuple[str, SDRows]
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1015,7 +1015,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> List[MultiSDTable]:
+    def _get_inv_data(self, hostrow: Row) -> List[MultiSDRows]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1029,14 +1029,14 @@ class RowMultiTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        multi_table: List[MultiSDTable] = []
+        multi_table: List[MultiSDRows] = []
         for info_name, inventory_path in self._sources:
             table = inventory.get_inventory_table(merged_tree, inventory_path)
             if table is not None:
                 multi_table.append((info_name, table))
         return multi_table
 
-    def _prepare_rows(self, inv_data: List[MultiSDTable]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: List[MultiSDRows]) -> Iterable[Row]:
         joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
@@ -1863,7 +1863,7 @@ class NodeRenderer:
         invpath = ".%s:" % self._get_raw_path(list(table.path))
         hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
-        data = table.data
+        data = table.rows
 
         # Add titles for those keys
         titles = []
@@ -1958,7 +1958,7 @@ class NodeRenderer:
                 return item[0]
 
         html.open_table()
-        for key, value in sorted(attributes.data.items(), key=sort_func):
+        for key, value in sorted(attributes.pairs.items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
             hint = _inv_display_hint(sub_invpath)

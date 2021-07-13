@@ -30,9 +30,7 @@ from typing import (
 from collections import Counter
 
 from cmk.utils import store
-
 from cmk.utils.type_defs import HostName
-
 from cmk.utils.exceptions import MKGeneralException
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
@@ -52,10 +50,14 @@ SDKey = str
 SDKeys = List[SDKey]
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
-SDAttributes = Dict[SDKey, SDValue]
-# TODO SDTAble and LegacyTable are the same for now, but SDTable will change in the future
-SDTable = List[SDAttributes]
-LegacyTable = List[SDAttributes]
+
+SDPairs = Dict[SDKey, SDValue]
+
+# TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
+SDRow = Dict[SDKey, SDValue]
+SDRows = List[SDPairs]
+LegacyRows = List[SDPairs]
+
 SDNodePath = Tuple[SDEdge, ...]
 SDNodes = Dict[SDEdge, "StructuredDataNode"]
 
@@ -75,7 +77,7 @@ class NDeltaResult(NamedTuple):
 
 class TDeltaResult(NamedTuple):
     counter: SDDeltaCounter
-    delta: SDTable
+    delta: SDRows
 
 
 class ADeltaResult(NamedTuple):
@@ -85,7 +87,7 @@ class ADeltaResult(NamedTuple):
 
 class DDeltaResult(NamedTuple):
     counter: SDDeltaCounter
-    delta: SDAttributes
+    delta: SDPairs
 
 
 SDFilterFunc = Callable[[SDKey], bool]
@@ -242,7 +244,7 @@ class StructuredDataNode:
         self.table = Table(path=path)
         self._nodes: SDNodes = {}
 
-        self._legacy_table: LegacyTable = []
+        self._legacy_rows: LegacyRows = []
 
     def is_empty(self) -> bool:
         if not (self.attributes.is_empty() and self.table.is_empty()):
@@ -305,11 +307,11 @@ class StructuredDataNode:
         the_node.merge_with(node)
         return the_node
 
-    def add_attributes(self, attributes: SDAttributes) -> None:
-        self.attributes.add_attributes(attributes)
+    def add_attributes(self, attributes: "Attributes") -> None:
+        self.attributes.add_pairs(attributes.pairs)
 
-    def add_table(self, table: SDTable) -> None:
-        self.table.add_table(table)
+    def add_table(self, table: "Table") -> None:
+        self.table.add_rows(table.rows)
 
     def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
         return self._get_node(path)
@@ -335,18 +337,18 @@ class StructuredDataNode:
 
     #   ---building tree from (legacy) plugins----------------------------------
 
-    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDAttributes:
-        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.data
+    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDPairs:
+        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.pairs
 
-    def get_list(self, tree_path: Optional[SDRawPath]) -> SDTable:
-        return self.setdefault_node(_parse_tree_path(tree_path))._legacy_table
+    def get_list(self, tree_path: Optional[SDRawPath]) -> LegacyRows:
+        return self.setdefault_node(_parse_tree_path(tree_path))._legacy_rows
 
     #   ---de/serializing-------------------------------------------------------
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
         node = cls()
-        raw_attributes: SDAttributes = {}
+        raw_pairs: SDPairs = {}
 
         for key, value in raw_tree.items():
             if isinstance(value, dict):
@@ -366,9 +368,9 @@ class StructuredDataNode:
                         indexed_node.add_node(str(idx), cls.deserialize(entry))
 
             else:
-                raw_attributes.setdefault(key, value)
+                raw_pairs.setdefault(key, value)
 
-        node.add_attributes(Attributes.deserialize(raw_attributes))
+        node.add_attributes(Attributes.deserialize(raw_pairs))
         return node
 
     @staticmethod
@@ -422,22 +424,22 @@ class StructuredDataNode:
         'list-composed-of-dicts-containing-lists' structure into
         indexed nodes ('arrays') containing real tables ('devices').
         """
-        my_table: SDTable = []
-        for idx, entry in enumerate(self._legacy_table):
-            add_to_my_table = True
+        my_rows: SDRows = []
+        for idx, entry in enumerate(self._legacy_rows):
+            add_to_my_rows = True
             for k, v in entry.items():
                 if isinstance(v, list):
                     self.setdefault_node([str(idx), k]).add_table(Table.deserialize(v))
-                    add_to_my_table = False
+                    add_to_my_rows = False
 
-            if add_to_my_table:
-                my_table.append(entry)
+            if add_to_my_rows:
+                my_rows.append(entry)
 
-        self.table.add_table(Table.deserialize(my_table))
+        self.add_table(Table.deserialize(my_rows))
 
         # normalize_nodes is executed after all plugins: clear legacy_table
         # in order to avoid duplicate rows if executed multiple times (should not happen).
-        self._legacy_table = []
+        self._legacy_rows = []
 
         for node in self._nodes.values():
             node.normalize_nodes()
@@ -454,12 +456,12 @@ class StructuredDataNode:
         # Attributes
         delta_attributes_result = self.attributes.compare_with(other.attributes)
         counter.update(delta_attributes_result.counter)
-        delta_node.add_attributes(delta_attributes_result.delta.data)
+        delta_node.add_attributes(delta_attributes_result.delta)
 
         # Table
         delta_table_result = self.table.compare_with(other.table)
         counter.update(delta_table_result.counter)
-        delta_node.add_table(delta_table_result.delta.data)
+        delta_node.add_table(delta_table_result.delta)
 
         # Nodes
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
@@ -530,9 +532,9 @@ class StructuredDataNode:
 
             filtered_node = filtered.setdefault_node(f.path)
 
-            filtered_node.add_attributes(node.attributes.get_filtered_data(f.filter_attributes))
-
-            filtered_node.add_table(node.table.get_filtered_data(f.filter_columns))
+            filtered_node.add_attributes(
+                node.attributes.get_filtered_attributes(f.filter_attributes))
+            filtered_node.add_table(node.table.get_filtered_table(f.filter_columns))
 
             for edge, sub_node in node._nodes.items():
                 # From GUI::permitted_paths: We always get a list of strs.
@@ -574,25 +576,25 @@ class Table:
         else:
             self.path = tuple()
 
-        self.data: SDTable = []
+        self.rows: SDRows = []
 
     def is_empty(self) -> bool:
-        return self.data == []
+        return self.rows == []
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
         if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        for row in self.data:
-            if row not in other.data:
+        for row in self.rows:
+            if row not in other.rows:
                 return False
-        for row in other.data:
-            if row not in self.data:
+        for row in other.rows:
+            if row not in self.rows:
                 return False
         return True
 
     def count_entries(self) -> int:
-        return sum(map(len, self.data))
+        return sum(map(len, self.rows))
 
     def merge_with(self, other: object) -> None:
         if not isinstance(other, Table):
@@ -605,45 +607,47 @@ class Table:
         # In case there is no intersection, append all other rows without
         # merging with own rows
         if not intersect_keys:
-            self.add_table(other.data)
+            self.add_rows(other.rows)
             return
 
         # Try to match rows of both trees based on the keys that are found in
         # both. Matching rows are updated. Others are appended.
-        other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.data}
+        other_num = {other._prepare_key(entry, intersect_keys): entry for entry in other.rows}
 
-        for entry in self.data:
+        for entry in self.rows:
             key = self._prepare_key(entry, intersect_keys)
             if key in other_num:
                 entry.update(other_num[key])
                 del other_num[key]
 
-        self.add_table(list(other_num.values()))
+        self.add_rows(list(other_num.values()))
 
     def _get_table_keys(self) -> Set[SDKey]:
-        return {key for row in self.data for key in row}
+        return {key for row in self.rows for key in row}
 
     def _prepare_key(self, entry: Dict, keys: Set[SDKey]) -> Tuple[SDKey, ...]:
         return tuple(entry[key] for key in sorted(keys) if key in entry)
 
     #   ---table methods--------------------------------------------------------
 
-    def add_table(self, table: SDTable) -> None:
-        for row in table:
+    def add_rows(self, rows: SDRows) -> None:
+        for row in rows:
             self.add_row(row)
 
-    def add_row(self, row: SDAttributes) -> None:
+    def add_row(self, row: SDRow) -> None:
         if row:
-            self.data.append(row)
+            self.rows.append(row)
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDTable:
-        return self.data
+    def serialize(self) -> SDRows:
+        return self.rows
 
     @classmethod
-    def deserialize(cls, raw_table: SDTable) -> "SDTable":
-        return raw_table
+    def deserialize(cls, raw_rows: SDRows) -> "Table":
+        table = cls()
+        table.add_rows(raw_rows)
+        return table
 
     #   ---delta----------------------------------------------------------------
 
@@ -672,36 +676,36 @@ class Table:
                     keep_identical=keep_identical,
                 )
                 counter.update(delta_rows_result.counter)
-                delta_table.add_table(delta_rows_result.delta)
+                delta_table.add_rows(delta_rows_result.delta)
             else:
                 new_rows.extend(remaining_own_rows)
                 removed_rows.extend(remaining_other_rows)
 
-        delta_table.add_table(
+        delta_table.add_rows(
             [{k: _new_delta_tree_node(v) for k, v in row.items()} for row in new_rows])
-        delta_table.add_table(
+        delta_table.add_rows(
             [{k: _removed_delta_tree_node(v) for k, v in row.items()} for row in removed_rows])
 
         if keep_identical:
-            delta_table.add_table([
+            delta_table.add_rows([
                 {k: _identical_delta_tree_node(v) for k, v in row.items()} for row in identical_rows
             ])
 
         counter.update(new=sum(map(len, new_rows)), removed=sum(map(len, removed_rows)))
         return NDeltaResult(counter=counter, delta=delta_table)
 
-    def _get_categorized_rows(self, other: "Table") -> Tuple[SDTable, SDTable, SDTable]:
+    def _get_categorized_rows(self, other: "Table") -> Tuple[SDRows, SDRows, SDRows]:
         identical_rows = []
         remaining_other_rows = []
         remaining_new_rows = []
-        for row in other.data:
-            if row in self.data:
+        for row in other.rows:
+            if row in self.rows:
                 if row not in identical_rows:
                     identical_rows.append(row)
             else:
                 remaining_other_rows.append(row)
-        for row in self.data:
-            if row in other.data:
+        for row in self.rows:
+            if row in other.rows:
                 if row not in identical_rows:
                     identical_rows.append(row)
             else:
@@ -710,8 +714,8 @@ class Table:
 
     def _compare_remaining_rows_with_same_length(
         self,
-        own_rows: SDTable,
-        other_rows: SDTable,
+        own_rows: SDRows,
+        other_rows: SDRows,
         keep_identical: bool = False,
     ) -> TDeltaResult:
         # In this case we assume that each entry corresponds to the
@@ -730,16 +734,20 @@ class Table:
                 compared_rows.append(delta_dict_result.delta)
         return TDeltaResult(counter=counter, delta=compared_rows)
 
-    def get_encoded_table(self, encode_as: SDEncodeAs) -> SDTable:
-        return [{k: encode_as(v) for k, v in row.items()} for row in self.data]
+    def get_encoded_table(self, encode_as: SDEncodeAs) -> "Table":
+        table = Table(path=self.path)
+        table.add_rows([{k: encode_as(v) for k, v in row.items()} for row in self.rows])
+        return table
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_data(self, filter_func: SDFilterFunc) -> SDTable:
-        return [
-            filtered_row for row in self.data
+    def get_filtered_table(self, filter_func: SDFilterFunc) -> "Table":
+        table = Table(path=self.path)
+        table.add_rows([
+            filtered_row for row in self.rows
             if (filtered_row := _get_filtered_dict(row, filter_func))
-        ]
+        ])
+        return table
 
     #   ---web------------------------------------------------------------------
 
@@ -767,39 +775,41 @@ class Attributes:
         else:
             self.path = tuple()
 
-        self.data: SDAttributes = {}
+        self.pairs: SDPairs = {}
 
     def is_empty(self) -> bool:
-        return self.data == {}
+        return self.pairs == {}
 
     def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        return self.data == other.data
+        return self.pairs == other.pairs
 
     def count_entries(self) -> int:
-        return len(self.data)
+        return len(self.pairs)
 
     def merge_with(self, other: object) -> None:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        self.data.update(other.data)
+        self.pairs.update(other.pairs)
 
     #   ---attributes methods---------------------------------------------------
 
-    def add_attributes(self, attributes: SDAttributes) -> None:
-        self.data.update(attributes)
+    def add_pairs(self, pairs: SDPairs) -> None:
+        self.pairs.update(pairs)
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDAttributes:
-        return self.data
+    def serialize(self) -> SDPairs:
+        return self.pairs
 
     @classmethod
-    def deserialize(cls, raw_attributes: SDAttributes) -> "SDAttributes":
-        return raw_attributes
+    def deserialize(cls, raw_pairs: SDPairs) -> "Attributes":
+        attributes = cls()
+        attributes.add_pairs(raw_pairs)
+        return attributes
 
     #   ---delta----------------------------------------------------------------
 
@@ -808,26 +818,30 @@ class Attributes:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         delta_dict_result = _compare_dicts(
-            old_dict=other.data,
-            new_dict=self.data,
+            old_dict=other.pairs,
+            new_dict=self.pairs,
             keep_identical=keep_identical,
         )
 
         delta_attributes = Attributes(path=self.path)
-        delta_attributes.add_attributes(delta_dict_result.delta)
+        delta_attributes.add_pairs(delta_dict_result.delta)
 
         return ADeltaResult(
             counter=delta_dict_result.counter,
             delta=delta_attributes,
         )
 
-    def get_encoded_attributes(self, encode_as: SDEncodeAs) -> SDAttributes:
-        return {k: encode_as(v) for k, v in self.data.items()}
+    def get_encoded_attributes(self, encode_as: SDEncodeAs) -> "Attributes":
+        attributes = Attributes(path=self.path)
+        attributes.add_pairs({k: encode_as(v) for k, v in self.pairs.items()})
+        return attributes
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_data(self, filter_func: SDFilterFunc) -> SDAttributes:
-        return _get_filtered_dict(self.data, filter_func)
+    def get_filtered_attributes(self, filter_func: SDFilterFunc) -> "Attributes":
+        attributes = Attributes(path=self.path)
+        attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
+        return attributes
 
     #   ---web------------------------------------------------------------------
 

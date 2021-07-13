@@ -1059,6 +1059,7 @@ def test_default_tags():
 @pytest.mark.usefixtures("load_config")
 def test_default_aux_tags():
     assert sorted(config.tags.aux_tag_list.get_tag_ids()) == sorted([
+        'checkmk-agent',
         'ip-v4',
         'ip-v6',
         'ping',

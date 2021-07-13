@@ -171,6 +171,7 @@ tcp_hosts: _List = [
     # Match all those that don't have ping and don't have no-agent set
     (['!ping', '!no-agent'], _ALL_HOSTS),
 ]
+cmk_agent_connection: _Dict = {}
 bulkwalk_hosts: _List = []
 snmpv2c_hosts: _List = []
 snmp_without_sys_descr: _List = []

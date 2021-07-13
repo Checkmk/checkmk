@@ -38,8 +38,8 @@ from cmk.utils import version
 @Endpoint(constructors.collection_href('password'),
           'cmk/create',
           method='post',
-          request_schema=request_schemas.InputPassword,
           etag='output',
+          request_schema=request_schemas.InputPassword,
           response_schema=response_schemas.DomainObject)
 def create_password(params):
     """Create a password"""
@@ -62,8 +62,8 @@ def create_password(params):
           '.../update',
           method='put',
           path_params=[NAME_FIELD],
-          request_schema=request_schemas.UpdatePassword,
           etag='both',
+          request_schema=request_schemas.UpdatePassword,
           response_schema=response_schemas.DomainObject)
 def update_password(params):
     """Update a password"""
@@ -100,7 +100,7 @@ def delete_password(params):
           'cmk/show',
           method='get',
           path_params=[NAME_FIELD],
-          response_schema=response_schemas.ConcretePassword)
+          response_schema=response_schemas.PasswordSchema)
 def show_password(params):
     """Show a password"""
     ident = params['name']

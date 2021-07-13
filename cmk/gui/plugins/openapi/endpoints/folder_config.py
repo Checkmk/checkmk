@@ -70,7 +70,6 @@ PATH_FOLDER_FIELD = {
           'cmk/create',
           method='post',
           etag='output',
-          convert_response=True,
           response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.CreateFolder)
 def create(params):
@@ -97,7 +96,6 @@ def create(params):
     method='get',
     path_params=[PATH_FOLDER_FIELD],
     response_schema=response_schemas.HostConfigCollection,
-    convert_response=True,
 )
 def hosts_of_folder(params):
     """Show all hosts in a folder
@@ -111,7 +109,6 @@ def hosts_of_folder(params):
           method='put',
           path_params=[PATH_FOLDER_FIELD],
           etag='both',
-          convert_response=True,
           response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.UpdateFolder)
 def update(params):
@@ -158,7 +155,6 @@ def update(params):
     method='put',
     response_schema=response_schemas.FolderCollection,
     request_schema=request_schemas.BulkUpdateFolder,
-    convert_response=True,
 )
 def bulk_update(params):
     """Bulk update folders
@@ -233,7 +229,6 @@ def delete(params):
           path_params=[PATH_FOLDER_FIELD],
           response_schema=response_schemas.FolderSchema,
           request_schema=request_schemas.MoveFolder,
-          convert_response=True,
           etag='both')
 def move(params):
     """Move a folder"""
@@ -279,7 +274,6 @@ def move(params):
             missing=False,
         )
     }],
-    convert_response=True,
     response_schema=response_schemas.FolderCollection)
 def list_folders(params):
     """Show all folders"""
@@ -341,7 +335,6 @@ def _folders_collection(
             missing=False,
         )
     }],
-    convert_response=True,
     path_params=[PATH_FOLDER_FIELD],
 )
 def show_folder(params):

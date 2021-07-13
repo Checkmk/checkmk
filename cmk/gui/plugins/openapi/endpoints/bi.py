@@ -75,6 +75,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
           'cmk/get_bi_rule',
           method='get',
           path_params=[BI_RULE_ID],
+          convert_response=False,
           response_schema=BIRuleEndpointSchema)
 def get_bi_rule(params):
     """Show a BI rule"""
@@ -94,6 +95,7 @@ def get_bi_rule(params):
           'cmk/put_bi_rule',
           method='put',
           path_params=[BI_RULE_ID],
+          convert_response=False,
           request_schema=BIRuleEndpointSchema,
           response_schema=BIRuleEndpointSchema)
 def put_bi_rule(params):
@@ -105,6 +107,7 @@ def put_bi_rule(params):
           'cmk/post_bi_rule',
           method='post',
           path_params=[BI_RULE_ID],
+          convert_response=False,
           request_schema=BIRuleEndpointSchema,
           response_schema=BIRuleEndpointSchema)
 def post_bi_rule(params):
@@ -142,6 +145,7 @@ def _update_bi_rule(params, must_exist: bool):
           'cmk/delete_bi_rule',
           method='delete',
           path_params=[BI_RULE_ID],
+          convert_response=False,
           output_empty=True)
 def delete_bi_rule(params):
     """Delete BI rule"""
@@ -175,6 +179,7 @@ class BIAggregationEndpointSchema(BIAggregationSchema):
           'cmk/get_bi_aggregation',
           method='get',
           path_params=[BI_AGGR_ID],
+          convert_response=False,
           response_schema=BIAggregationEndpointSchema)
 def get_bi_aggregation(params):
     """Get a BI aggregation"""
@@ -194,6 +199,7 @@ def get_bi_aggregation(params):
           'cmk/put_bi_aggregation',
           method='put',
           path_params=[BI_AGGR_ID],
+          convert_response=False,
           request_schema=BIAggregationEndpointSchema,
           response_schema=BIAggregationEndpointSchema)
 def put_bi_aggregation(params):
@@ -205,6 +211,7 @@ def put_bi_aggregation(params):
           'cmk/post_bi_aggregation',
           method='post',
           path_params=[BI_AGGR_ID],
+          convert_response=False,
           request_schema=BIAggregationEndpointSchema,
           response_schema=BIAggregationEndpointSchema)
 def post_bi_aggregation(params):
@@ -242,6 +249,7 @@ def _update_bi_aggregation(params, must_exist: bool):
           'cmk/delete_bi_aggregation',
           method='delete',
           path_params=[BI_AGGR_ID],
+          convert_response=False,
           output_empty=True)
 def delete_bi_aggregation(params):
     """Delete a BI aggregation"""
@@ -270,6 +278,7 @@ def delete_bi_aggregation(params):
 @Endpoint(constructors.collection_href("bi_pack"),
           'cmk/get_bi_packs',
           method='get',
+          convert_response=False,
           response_schema=response_schemas.DomainObjectCollection)
 def get_bi_packs(params):
     """Show all BI packs"""
@@ -298,6 +307,7 @@ def get_bi_packs(params):
           'cmk/get_bi_pack',
           method='get',
           path_params=[BI_PACK_ID],
+          convert_response=False,
           response_schema=response_schemas.DomainObject)
 def get_bi_pack(params):
     """Get a BI pack and its rules and aggregations"""
@@ -348,6 +358,7 @@ def get_bi_pack(params):
           'cmk/delete_bi_pack',
           method='delete',
           path_params=[BI_PACK_ID],
+          convert_response=False,
           output_empty=True)
 def delete_bi_pack(params):
     """Delete BI pack"""
@@ -380,6 +391,7 @@ class BIPackEndpointSchema(Schema):
           'cmk/put_bi_pack',
           method='put',
           path_params=[BI_PACK_ID],
+          convert_response=False,
           request_schema=BIPackEndpointSchema,
           response_schema=BIPackEndpointSchema)
 def put_bi_pack(params):
@@ -391,6 +403,7 @@ def put_bi_pack(params):
           'cmk/post_bi_pack',
           method='post',
           path_params=[BI_PACK_ID],
+          convert_response=False,
           request_schema=BIPackEndpointSchema,
           response_schema=BIPackEndpointSchema)
 def post_bi_pack(params):

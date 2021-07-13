@@ -35,6 +35,7 @@ from cmk.core_helpers.cache import MaxAge
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
+from cmk.core_helpers.push_agent import PushAgentFetcher
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
@@ -690,6 +691,32 @@ class TestSNMPSectionMeta:
         assert SectionMeta.deserialize(meta.serialize()) == meta
 
 
+class TestPushAgentFetcher:
+    @pytest.fixture
+    def file_cache(self):
+        return DefaultAgentFileCache(
+            "hostname",
+            base_path=Path(os.devnull),
+            max_age=MaxAge.none(),
+            disabled=True,
+            use_outdated=True,
+            simulation=True,
+        )
+
+    @pytest.fixture
+    def fetcher(self, file_cache):
+        return PushAgentFetcher(file_cache, allowed_age=10, use_only_cache=False)
+
+    def test_repr(self, fetcher):
+        assert isinstance(repr(fetcher), str)
+
+    def test_fetcher_deserialization(self, fetcher):
+        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
+        assert isinstance(other, type(fetcher))
+        assert other.allowed_age == fetcher.allowed_age
+        assert other.use_only_cache == fetcher.use_only_cache
+
+
 class TestTCPFetcher:
     @pytest.fixture
     def file_cache(self):
@@ -834,6 +861,7 @@ _FACTORIES_CLASSES = (
     (FetcherType.PROGRAM, ProgramFetcher),
     (FetcherType.SNMP, SNMPFetcher),
     (FetcherType.TCP, TCPFetcher),
+    (FetcherType.PUSH_AGENT, PushAgentFetcher),
 )
 
 

@@ -25,6 +25,7 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
+from .push_agent import PushAgentSource
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
@@ -172,7 +173,7 @@ class _Builder:
                 template=datasource_program,
             )
 
-        return TCPSource(
+        return PushAgentSource(self.hostname) if self.host_config.push_config() else TCPSource(
             self.hostname,
             self.ipaddress,
             main_data_source=main_data_source,

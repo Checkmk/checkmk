@@ -41,6 +41,7 @@ from typing import Any, Mapping, Type, Union
 
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
+from .push_agent import PushAgentFetcher
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -49,6 +50,7 @@ from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 
 __all__ = [
+    "PushAgentFetcher",
     "Fetcher",
     "FileCache",
     "IPMIFetcher",
@@ -69,6 +71,7 @@ class FetcherType(enum.Enum):
 
     """
     NONE = enum.auto()
+    PUSH_AGENT = enum.auto()
     IPMI = enum.auto()
     PIGGYBACK = enum.auto()
     PROGRAM = enum.auto()
@@ -80,6 +83,7 @@ class FetcherType(enum.Enum):
         # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
             FetcherType.IPMI: IPMIFetcher,
+            FetcherType.PUSH_AGENT: PushAgentFetcher,
             FetcherType.PIGGYBACK: PiggybackFetcher,
             FetcherType.PROGRAM: ProgramFetcher,
             FetcherType.SNMP: SNMPFetcher,
@@ -91,6 +95,7 @@ class FetcherType(enum.Enum):
         cls = type(fetcher) if isinstance(fetcher, Fetcher) else fetcher
         return {
             IPMIFetcher: FetcherType.IPMI,
+            PushAgentFetcher: FetcherType.PUSH_AGENT,
             PiggybackFetcher: FetcherType.PIGGYBACK,
             ProgramFetcher: FetcherType.PROGRAM,
             SNMPFetcher: FetcherType.SNMP,

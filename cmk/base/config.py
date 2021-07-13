@@ -2503,11 +2503,13 @@ class HostConfig:
 
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
-    def push_config(self) -> bool:
-        # This is not yet implemented (clearly).
-        # But we need to start somewhere, so we provide this (dev-only) option to clandestine
-        # configure the push data source:
-        return host_labels.get(self.hostname, {}).get("cmk/dev/push-agent") == "yes"
+    def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
+        mode = cmk_agent_connection.get(self.hostname, "pull-agent")
+        if mode == "pull-agent":
+            return "pull-agent"
+        if mode == "push-agent":
+            return "push-agent"
+        raise NotImplementedError("unknown connection mode: {mode!r}")
 
     def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(

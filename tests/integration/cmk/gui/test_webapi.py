@@ -389,6 +389,7 @@ def test_write_host_tags(web, site):  # noqa: F811 # pylint: disable=redefined-o
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "cmk_agent_connection": {},
         }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
@@ -427,6 +428,7 @@ def test_write_host_labels(web, site):  # noqa: F811 # pylint: disable=redefined
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "cmk_agent_connection": {},
         }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)

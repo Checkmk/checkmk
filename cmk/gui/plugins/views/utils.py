@@ -65,23 +65,24 @@ from cmk.gui.plugins.visuals.utils import (
 )
 
 from cmk.gui.type_defs import (
+    AllViewSpecs,
     ColumnName,
-    LivestatusQuery,
-    SorterName,
+    FilterName,
     HTTPVariables,
-    ViewSpec,
-    PainterSpec,
+    LivestatusQuery,
     PainterName,
+    PainterParameters,
+    PainterSpec,
+    PermittedViewSpecs,
     Row,
     Rows,
-    SorterFunction,
-    AllViewSpecs,
-    PermittedViewSpecs,
-    VisualContext,
-    PainterParameters,
-    Visual,
-    VisualLinkSpec,
     SingleInfos,
+    SorterFunction,
+    SorterName,
+    ViewSpec,
+    Visual,
+    VisualContext,
+    VisualLinkSpec,
     VisualName,
 )
 
@@ -1266,7 +1267,7 @@ def _get_singlecontext_html_vars_from_row(
             pass
 
         try:
-            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row).items())
+            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row))
         except KeyError:
             pass
 
@@ -1284,31 +1285,52 @@ def make_linked_visual_url(visual_type: VisualType, visual: Visual,
                            singlecontext_request_vars: Dict[str, str], mobile: bool) -> str:
     """Compute URLs to link from a view to other dashboards and views"""
     name = visual["name"]
-    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
 
     filename = visual_type.show_url
     if mobile and visual_type.show_url == 'view.py':
         filename = 'mobile_' + visual_type.show_url
 
+    required_vars = [(visual_type.ident_attr, name)]
+    # Adding to this vars the _active flag is a long distance hack to be able to rebuild the
+    # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
+
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.
     if visual_type.multicontext_links:
-        return makeuri(request, [(visual_type.ident_attr, name)], filename=filename)
+        if active_filters := request.get_str_input("_active"):
+            required_vars.append(("_active", active_filters))
+        return makeuri(request, required_vars, filename=filename)
 
+    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
     # For views and dashboards currently the current filter settings
     return makeuri_contextless(
         request,
-        vars_values + [(visual_type.ident_attr, name)],
+        vars_values + required_vars,
         filename=filename,
     )
+
+
+def translate_filters(visual):
+    if datasource_name := visual.get('datasource'):
+        datasource = data_source_registry[datasource_name]()
+        link_filters = datasource.link_filters
+        return lambda x: link_filters.get(x, x)
+    return lambda x: x
 
 
 def get_linked_visual_request_vars(visual: Visual,
                                    singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
     vars_values: HTTPVariables = []
-    for var in visuals.get_single_info_keys(visual["single_infos"]):
+
+    filters = visuals.get_single_info_keys(visual["single_infos"])
+    active_filters: List[FilterName] = []
+
+    for src_filter, dst_filter in zip(filters, map(translate_filters(visual), filters)):
         try:
-            vars_values.append((var, singlecontext_request_vars[var]))
+            src_var = visuals.get_filter(src_filter).htmlvars[0]
+            dst_var = visuals.get_filter(dst_filter).htmlvars[0]
+            vars_values.append((dst_var, singlecontext_request_vars[src_var]))
+            active_filters.append(dst_filter)
         except KeyError:
             # The information needed for a mandatory filter (single context) is not available.
             # Continue without failing: The target site will show up a warning and ask for the
@@ -1326,6 +1348,9 @@ def get_linked_visual_request_vars(visual: Visual,
 
         if add_site_hint and request.var('site'):
             vars_values.append(('site', request.get_ascii_input_mandatory('site')))
+            active_filters.append("site")
+
+    vars_values.append(("_active", ";".join(active_filters)))
 
     return vars_values
 

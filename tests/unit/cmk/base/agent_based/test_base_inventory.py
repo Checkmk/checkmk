@@ -50,3 +50,127 @@ def test__tree_nodes_are_not_equal(old_tree, inv_tree):
 ])
 def test__tree_nodes_are_equal(old_tree, inv_tree):
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+
+
+def test_integrate_attributes():
+    inventory_items: List[Attributes] = [
+        Attributes(
+            path=["a", "b", "c"],
+            inventory_attributes={
+                "foo0": "bar0",
+                "foo1": "bar1",
+            },
+        ),
+    ]
+
+    tree_aggr = inventory.TreeAggregator()
+    tree_aggr.aggregate_results(inventory_items)
+
+    assert tree_aggr.trees.inventory.serialize() == {
+        'Attributes': {},
+        'Nodes': {
+            'a': {
+                'Attributes': {},
+                'Nodes': {
+                    'b': {
+                        'Attributes': {},
+                        'Nodes': {
+                            'c': {
+                                'Attributes': {
+                                    'Pairs': {
+                                        'foo0': 'bar0',
+                                        'foo1': 'bar1'
+                                    }
+                                },
+                                'Nodes': {},
+                                'Table': {}
+                            }
+                        },
+                        'Table': {}
+                    }
+                },
+                'Table': {}
+            }
+        },
+        'Table': {}
+    }
+
+
+def test_integrate_table_row():
+    inventory_items: List[TableRow] = [
+        TableRow(
+            path=["a", "b", "c"],
+            key_columns={"foo": "baz"},
+            inventory_columns={
+                "col1": "baz val1",
+                "col2": "baz val2",
+                "col3": "baz val3",
+            },
+        ),
+        TableRow(
+            path=["a", "b", "c"],
+            key_columns={"foo": "bar"},
+            inventory_columns={
+                "col1": "bar val1",
+                "col2": "bar val2",
+            },
+        ),
+        TableRow(
+            path=["a", "b", "c"],
+            key_columns={"foo": "bar"},
+            inventory_columns={
+                "col1": "new bar val1",
+                "col3": "bar val3",
+            },
+        ),
+    ]
+
+    tree_aggr = inventory.TreeAggregator()
+    tree_aggr.aggregate_results(inventory_items)
+    tree_aggr.trees.inventory.normalize_nodes()
+
+    assert tree_aggr.trees.inventory.serialize() == {
+        'Attributes': {},
+        'Nodes': {
+            'a': {
+                'Attributes': {},
+                'Nodes': {
+                    'b': {
+                        'Attributes': {},
+                        'Nodes': {
+                            'c': {
+                                'Attributes': {},
+                                'Nodes': {},
+                                'Table': {
+                                    'Rows': [
+                                        {
+                                            'col1': 'baz '
+                                                    'val1',
+                                            'col2': 'baz '
+                                                    'val2',
+                                            'col3': 'baz '
+                                                    'val3',
+                                            'foo': 'baz'
+                                        },
+                                        {
+                                            'col1': 'new '
+                                                    'bar '
+                                                    'val1',
+                                            'col2': 'bar '
+                                                    'val2',
+                                            'col3': 'bar '
+                                                    'val3',
+                                            'foo': 'bar'
+                                        },
+                                    ]
+                                }
+                            }
+                        },
+                        'Table': {}
+                    }
+                },
+                'Table': {}
+            }
+        },
+        'Table': {}
+    }

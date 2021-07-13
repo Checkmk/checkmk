@@ -21,6 +21,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     StructuredDataStore,
     Table,
+    _NODES_KEY,
 )
 from cmk.utils.type_defs import HostName
 
@@ -897,9 +898,8 @@ TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
 ])
 def test_real_merge_with_table(tree_inv, tree_status):
     tree = tree_inv.merge_with(tree_status)
-    assert 'foobar' in tree.serialize()
-    num = tree.get_table(['foobar'])
-    assert len(num.rows) == 5
+    assert 'foobar' in tree.serialize()[_NODES_KEY]
+    assert len(tree.get_table(['foobar']).rows) == 5
 
 
 @pytest.mark.parametrize(

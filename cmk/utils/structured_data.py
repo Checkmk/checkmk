@@ -26,6 +26,7 @@ from typing import (
     Literal,
     Counter as TCounter,
     Sequence,
+    Mapping,
 )
 from collections import Counter
 
@@ -41,6 +42,7 @@ from cmk.utils.exceptions import MKGeneralException
 # - count_entries -> __len__?
 
 SDRawPath = str
+# TODO improve this
 SDRawTree = Dict
 
 SDEdge = str
@@ -52,17 +54,27 @@ SDKeys = List[SDKey]
 SDValue = Any  # needs only to support __eq__
 
 SDPairs = Dict[SDKey, SDValue]
+# TODO merge with cmk.base.api.agent_based.inventory_classes.py::AttrDict
+SDPairsFromPlugins = Mapping[SDKey, SDValue]
+LegacyPairs = Dict[SDKey, SDValue]
 
 # TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
+# adapt werk 12389 if inner table structure changes from List[SDRow] to Dict[SDRowIdent, SDRow]
 SDRow = Dict[SDKey, SDValue]
-SDRows = List[SDPairs]
-LegacyRows = List[SDPairs]
+SDRows = List[SDRow]
+LegacyRows = List[SDRow]
 
 SDNodePath = Tuple[SDEdge, ...]
 SDNodes = Dict[SDEdge, "StructuredDataNode"]
 
 SDEncodeAs = Callable
 SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
+
+_PAIRS_KEY = "Pairs"
+_ATTRIBUTES_KEY = "Attributes"
+_ROWS_KEY = "Rows"
+_TABLE_KEY = "Table"
+_NODES_KEY = "Nodes"
 
 
 class SDDeltaResult(NamedTuple):
@@ -360,6 +372,24 @@ class StructuredDataNode:
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
+        if all(key in raw_tree for key in (_ATTRIBUTES_KEY, _TABLE_KEY, _NODES_KEY)):
+            return cls._deserialize(raw_tree)
+        return cls._deserialize_legacy(raw_tree)
+
+    @classmethod
+    def _deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
+        node = cls()
+
+        node.add_attributes(Attributes.deserialize(raw_tree[_ATTRIBUTES_KEY]))
+        node.add_table(Table.deserialize(raw_tree[_TABLE_KEY]))
+
+        for edge, raw_node in raw_tree[_NODES_KEY].items():
+            node.add_node(edge, cls._deserialize(raw_node))
+
+        return node
+
+    @classmethod
+    def _deserialize_legacy(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
         node = cls()
         raw_pairs: SDPairs = {}
 
@@ -367,23 +397,23 @@ class StructuredDataNode:
             if isinstance(value, dict):
                 if not value:
                     continue
-                node.add_node(key, cls.deserialize(value))
+                node.add_node(key, cls._deserialize_legacy(value))
 
             elif isinstance(value, list):
                 if not value:
                     continue
 
                 if node._is_table(value):
-                    node.setdefault_node([key]).add_table(Table.deserialize(value))
+                    node.setdefault_node([key]).add_table(Table._deserialize_legacy(value))
                 else:
                     indexed_node = node.setdefault_node([key])
                     for idx, entry in enumerate(value):
-                        indexed_node.add_node(str(idx), cls.deserialize(entry))
+                        indexed_node.add_node(str(idx), cls._deserialize_legacy(entry))
 
             else:
                 raw_pairs.setdefault(key, value)
 
-        node.add_attributes(Attributes.deserialize(raw_pairs))
+        node.add_attributes(Attributes._deserialize_legacy(raw_pairs))
         return node
 
     @staticmethod
@@ -401,32 +431,12 @@ class StructuredDataNode:
         #   ]
         return all(not isinstance(v, (list, dict)) for row in entries for v in row.values())
 
-    def serialize(self) -> Union[Dict, List]:
-        if any(self._is_indexed_node(edge) for edge in self._nodes):
-            return [self._nodes[k].serialize() for k in sorted(self._nodes)]
-
-        if not self.table.is_empty():
-            return self.table.serialize()
-
-        tree: Dict = {}
-        tree.update(self.attributes.serialize())
-
-        for edge, node in self._nodes.items():
-            node_raw_tree = node.serialize()
-            if isinstance(node_raw_tree, list):
-                tree.setdefault(edge, node_raw_tree)
-                continue
-
-            tree.setdefault(edge, {}).update(node_raw_tree)
-        return tree
-
-    @staticmethod
-    def _is_indexed_node(edge: Union[int, SDEdge]) -> bool:
-        try:
-            int(edge)
-        except ValueError:
-            return False
-        return True
+    def serialize(self) -> SDRawTree:
+        return {
+            _ATTRIBUTES_KEY: self.attributes.serialize(),
+            _TABLE_KEY: self.table.serialize(),
+            _NODES_KEY: {edge: node.serialize() for edge, node in self._nodes.items()},
+        }
 
     def normalize_nodes(self):
         """
@@ -442,13 +452,13 @@ class StructuredDataNode:
             add_to_my_rows = True
             for k, v in entry.items():
                 if isinstance(v, list):
-                    self.setdefault_node([str(idx), k]).add_table(Table.deserialize(v))
+                    self.setdefault_node([str(idx), k]).add_table(Table._deserialize_legacy(v))
                     add_to_my_rows = False
 
             if add_to_my_rows:
                 my_rows.append(entry)
 
-        self.add_table(Table.deserialize(my_rows))
+        self.add_table(Table._deserialize_legacy(my_rows))
 
         # normalize_nodes is executed after all plugins: clear legacy_table
         # in order to avoid duplicate rows if executed multiple times (should not happen).
@@ -657,13 +667,22 @@ class Table:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRows:
-        return self.rows
+    def serialize(self) -> SDRawTree:
+        if self.rows:
+            return {_ROWS_KEY: self.rows}
+        return {}
 
     @classmethod
-    def deserialize(cls, raw_rows: SDRows) -> "Table":
+    def deserialize(cls, raw_rows: SDRawTree) -> "Table":
         table = cls()
-        table.add_rows(raw_rows)
+        if _ROWS_KEY in raw_rows:
+            table.add_rows(raw_rows[_ROWS_KEY])
+        return table
+
+    @classmethod
+    def _deserialize_legacy(cls, legacy_rows: LegacyRows) -> "Table":
+        table = cls()
+        table.add_rows(legacy_rows)
         return table
 
     #   ---delta----------------------------------------------------------------
@@ -823,13 +842,22 @@ class Attributes:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDPairs:
-        return self.pairs
+    def serialize(self) -> SDRawTree:
+        if self.pairs:
+            return {_PAIRS_KEY: self.pairs}
+        return {}
 
     @classmethod
-    def deserialize(cls, raw_pairs: SDPairs) -> "Attributes":
+    def deserialize(cls, raw_pairs: SDRawTree) -> "Attributes":
         attributes = cls()
-        attributes.add_pairs(raw_pairs)
+        if _PAIRS_KEY in raw_pairs:
+            attributes.add_pairs(raw_pairs[_PAIRS_KEY])
+        return attributes
+
+    @classmethod
+    def _deserialize_legacy(cls, legacy_pairs: LegacyPairs) -> "Attributes":
+        attributes = cls()
+        attributes.add_pairs(legacy_pairs)
         return attributes
 
     #   ---delta----------------------------------------------------------------

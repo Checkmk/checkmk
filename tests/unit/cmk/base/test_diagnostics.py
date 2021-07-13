@@ -444,11 +444,11 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
 
     content = json.loads(filepath.open().read())
 
-    assert content["cluster"] == {
+    assert content["Nodes"]["cluster"]["Attributes"]["Pairs"] == {
         'is_cluster': False,
     }
 
-    assert content["sites"] == [
+    assert content["Nodes"]["sites"]["Table"]["Rows"] == [
         {
             'autostart': False,
             'site': 'heute',
@@ -456,7 +456,7 @@ def test_diagnostics_element_checkmk_overview_content(monkeypatch, tmp_path, _fa
         },
     ]
 
-    assert content["versions"] == [
+    assert content["Nodes"]["versions"]["Table"]["Rows"] == [
         {
             'demo': False,
             'edition': 'cee',

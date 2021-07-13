@@ -4620,7 +4620,7 @@ def ensure_mkbackup_lock_dir_rights():
     #   3) The directory does not exist and we cannot create it. This is a real issue so give the user a hint.
     try:
         lock_dir_as_path = Path(mkbackup_lock_dir)
-        lock_dir_as_path.mkdir(mode=0o0770, exist_ok=True)
+        lock_dir_as_path.mkdir(mode=0o0770, exist_ok=True, parents=True)
         try:
             os.chown(mkbackup_lock_dir, -1, grp.getgrnam("omd").gr_gid)
             lock_dir_as_path.chmod(0o0770)

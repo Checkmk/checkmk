@@ -490,12 +490,6 @@ def test_table_compare_with(old_table_data, new_table_data, result):
             delta_result.counter['removed']) == result
 
 
-def test_has_edge():
-    root = _create_empty_tree()
-    assert root.has_edge("path")
-    assert not root.has_edge("REALLY NO EDGE")
-
-
 def test_filtering_node_no_paths():
     filled_root = _create_filled_tree()
     assert filled_root.get_filtered_node([]).is_empty()
@@ -840,11 +834,11 @@ def test_real_compare_with(tree_old, tree_new, result):
                                      "foobar",
                                  ],
                              ])))
-def test_real_has_edge(tree, edges_t, edges_f):
+def test_real_get_node(tree, edges_t, edges_f):
     for edge_t in edges_t:
-        assert tree.has_edge(edge_t)
+        assert tree.get_node([edge_t]) is not None
     for edge_f in edges_f:
-        assert not tree.has_edge(edge_f)
+        assert tree.get_node([edge_f]) is None
 
 
 @pytest.mark.parametrize("tree,len_children", list(zip(
@@ -887,7 +881,7 @@ def test_real_merge_with_get_children(tree_start, tree_edges):
         assert id(tree) == id(tree)
         assert tree.is_equal(tree)
         for edge in edges:
-            assert tree_start.has_edge(edge)
+            assert tree_start.get_node([edge]) is not None
         for m_name, path in sub_children:
             m = getattr(tree_start, m_name)
             assert m is not None
@@ -959,9 +953,9 @@ def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
     the_paths = list(paths)
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
-    assert filtered.has_edge('networking')
-    assert not filtered.has_edge('hardware')
-    assert not filtered.has_edge('software')
+    assert filtered.get_node(['networking']) is not None
+    assert filtered.get_node(['hardware']) is None
+    assert filtered.get_node(['software']) is None
 
     if amount_if_entries is not None:
         interfaces = filtered.get_table(['networking', 'interfaces'])
@@ -993,10 +987,10 @@ def test_real_building_tree():
     plugin_nested_list()
     struct_tree.normalize_nodes()
 
-    assert struct_tree.has_edge("level0_0")
-    assert struct_tree.has_edge("level0_1")
-    assert struct_tree.has_edge("level0_2")
-    assert not struct_tree.has_edge("foobar")
+    assert struct_tree.get_node(["level0_0"]) is not None
+    assert struct_tree.get_node(["level0_1"]) is not None
+    assert struct_tree.get_node(["level0_2"]) is not None
+    assert struct_tree.get_node(["foobar"]) is None
 
     level1_dict = struct_tree.get_attributes(["level0_0", "level1_dict"])
     level1_list = struct_tree.get_table(["level0_1", "level1_list"])

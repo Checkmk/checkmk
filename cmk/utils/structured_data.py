@@ -41,7 +41,6 @@ from cmk.utils.exceptions import MKGeneralException
 # - is_equal -> __eq__/__ne__
 # - merge_with -> __add__
 # - count_entries -> __len__?
-# TODO remove has_edge
 
 SDRawPath = str
 SDRawTree = Dict
@@ -311,9 +310,6 @@ class StructuredDataNode:
 
     def add_table(self, table: SDTable) -> None:
         self.table.add_table(table)
-
-    def has_edge(self, edge: SDEdge) -> bool:
-        return bool(self._nodes.get(edge))
 
     def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
         return self._get_node(path)

@@ -210,9 +210,8 @@ def _check_inventory_tree(
     status = 0
     infotexts = [f"Found {trees.inventory.count_entries()} inventory entries"]
 
-    # Node 'software' is always there because _do_inv_for creates this node for cluster info
-    sw_container = trees.inventory.get_node(['software'])
-    if sw_container is not None and not sw_container.has_edge('packages') and sw_missing:
+    swp_table = trees.inventory.get_table(['software', 'packages'])
+    if swp_table is not None and swp_table.is_empty() and sw_missing:
         infotexts.append("software packages information is missing" + state_markers[sw_missing])
         status = max(status, sw_missing)
 

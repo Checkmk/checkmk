@@ -526,16 +526,6 @@ sap_hana_host_from_landscape() {
 
 }
 
-get_instance_databases(){
-    local sid="$1"
-    local instance="$2"
-    local instance_user="$3"
-    local credentials="$4"
-
-    result=($(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_instance_databases)" "$credentials"))
-    echo "${result[@]}"
-}
-
 set_sap_hana_version () {
     local status="$1"
 
@@ -584,7 +574,6 @@ get_sections(){
     local hostname="$5"
     local credentials=$6
     local tenant_name="[[${sid} ${instance} ${db}]]"
-    local db_status
 
     echo "<<<sap_hana_db_status:sep(59)>>>"
     echo "$tenant_name"
@@ -655,8 +644,7 @@ query_databases() {
     if [ "$SAP_HANA_VERSION" == "1" ];then
             get_sections "$sid" "$instance" "$instance_user" "" "$hostname" "$credentials"
     else
-        local databases=($(get_instance_databases "$sid" "$instance" "$instance_user" "$credentials"))
-        for db in ${databases[*]}; do
+        for db in $(mk_hdbsql "$SID" "$INSTANCE" "$INSTANCE_USER" "SYSTEMDB" "$(query_instance_databases)" "$credentials"); do
             get_sections "$sid" "$instance" "$instance_user" "$db" "$hostname" "$credentials"
         done
     fi
@@ -705,11 +693,11 @@ query_instance() {
 #   '----------------------------------------------------------------------'
 
 if [ -n "$DBS" ];then
-    ALL_INSTANCES=$(for d in ${DBS[*]}; do echo "$d" | cut -d ',' -f 1,2; done)
-    INSTANCES_DATA=($(sort -u <<<"${ALL_INSTANCES[*]}"))
-
-    for INSTANCE_DATA in ${INSTANCES_DATA[*]}; do
-        IFS=',' read SID INSTANCE <<< "${INSTANCE_DATA}"
+    for d in "${DBS[@]}"; do
+        cut -d "," -f1-2 <<< "${d}"
+    done | \
+    sort -u | \
+    while IFS="," read -r SID INSTANCE; do
 
         INSTANCE_USER=$(get_instance_user "$SID" "$INSTANCE")
 

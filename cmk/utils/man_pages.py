@@ -173,6 +173,7 @@ catalog_titles = {
         "exchange"      : "Microsoft Exchange",
         "graylog"       : "Graylog",
         "haproxy"       : "HAProxy Loadbalancer",
+        "iis"           : "Microsoft Internet Information Service",
         "informix"      : "IBM Informix",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
         "jenkins"       : "Jenkins",

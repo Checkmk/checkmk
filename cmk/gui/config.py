@@ -694,17 +694,3 @@ def activation_sites() -> SiteConfigurations:
         for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
         if site_is_local(site_id) or site.get("replication")
     }
-
-
-def show_mode_choices() -> List[Tuple[Optional[str], str]]:
-    return [
-        ("default_show_less", _("Default to show less")),
-        ("default_show_more", _("Default to show more")),
-        ("enforce_show_more", _("Enforce show more")),
-    ]
-
-
-def get_page_heading() -> str:
-    if "%s" in page_heading:
-        return ensure_str(page_heading % (site(omd_site()).get('alias', _("GUI"))))
-    return ensure_str(page_heading)

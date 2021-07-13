@@ -15,6 +15,7 @@ import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.utils.theme import theme_choices
+from cmk.gui.utils import show_mode_choices
 from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request, user
@@ -157,7 +158,7 @@ class ConfigVariableShowMoreMode(ConfigVariable):
                    "mode for unvisited menus. Alternatively, you can enforce to "
                    "show more, so that the round button with the three dots is not "
                    "shown at all."),
-            choices=config.show_mode_choices(),
+            choices=show_mode_choices(),
         )
 
 

@@ -7,6 +7,7 @@
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.utils as utils
+from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, response, user
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.exceptions import HTTPRedirect
@@ -20,7 +21,7 @@ def page_index() -> None:
     if is_mobile(request, response):
         raise HTTPRedirect(makeuri(request, [], filename="mobile.py"))
 
-    title = config.get_page_heading()
+    title = get_page_heading()
     content = html.render_iframe("", src=_get_start_url(), name="main")
     SidebarRenderer().show(title, content)
 
@@ -31,3 +32,9 @@ def _get_start_url() -> str:
         default_start_url = "dashboard.py"
 
     return request.get_url_input("start_url", default_start_url)
+
+
+def get_page_heading() -> str:
+    if "%s" in config.page_heading:
+        return config.page_heading % (config.site(config.omd_site()).get('alias', _("GUI")))
+    return config.page_heading

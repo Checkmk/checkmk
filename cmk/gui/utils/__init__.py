@@ -213,3 +213,11 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
         if suggestion not in used_names_set:
             return suggestion
         nr += 1
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]

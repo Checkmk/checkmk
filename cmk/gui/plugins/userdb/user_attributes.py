@@ -6,7 +6,7 @@
 
 import cmk.gui.utils as utils
 from cmk.gui.utils.theme import theme_choices
-from cmk.gui.config import show_mode_choices
+from cmk.gui.utils import show_mode_choices
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,

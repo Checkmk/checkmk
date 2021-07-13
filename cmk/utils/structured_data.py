@@ -114,7 +114,7 @@ class StructuredDataStore:
     def load_file(file_path: Path) -> "StructuredDataNode":
         if raw_tree := store.load_object_from_file(file_path, default=None):
             return StructuredDataNode.deserialize(raw_tree)
-        return StructuredDataNode()
+        return StructuredDataNode(path=tuple())
 
     def __init__(self, path: Union[Path, str]) -> None:
         self._path = Path(path)
@@ -232,18 +232,18 @@ def _make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) ->
 
 
 class StructuredDataNode:
-    def __init__(self) -> None:
-        self.path: SDNodePath = tuple()
-        self.attributes = Attributes()
-        self.table = Table()
+    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
+        # Only root node has no path
+        if path:
+            self.path = path
+        else:
+            self.path = tuple()
+
+        self.attributes = Attributes(path=path)
+        self.table = Table(path=path)
         self._nodes: SDNodes = {}
 
         self._legacy_table: LegacyTable = []
-
-    def set_path(self, path: SDNodePath) -> None:
-        self.path = path
-        self.attributes.set_path(path)
-        self.table.set_path(path)
 
     def is_empty(self) -> bool:
         if not (self.attributes.is_empty() and self.table.is_empty()):
@@ -291,29 +291,18 @@ class StructuredDataNode:
         for key in compared_keys.only_old:
             self.add_node(key, other._nodes[key])
 
-    def copy(self) -> "StructuredDataNode":
-        new_node = StructuredDataNode()
-
-        new_node.add_attributes(self.attributes.data)
-        new_node.add_table(self.table.data)
-
-        for edge, node in self._nodes.items():
-            new_node.add_node(edge, node.copy())
-        return new_node
-
     #   ---node methods---------------------------------------------------------
 
     def setdefault_node(self, path: SDPath) -> "StructuredDataNode":
         if not path:
             return self
+
         edge = path[0]
-        node = self._nodes.setdefault(edge, StructuredDataNode())
-        node.set_path(self.path + (edge,))
+        node = self._nodes.setdefault(edge, StructuredDataNode(path=self.path + (edge,)))
         return node.setdefault_node(path[1:])
 
     def add_node(self, edge: SDEdge, node: "StructuredDataNode") -> "StructuredDataNode":
-        the_node = self._nodes.setdefault(edge, StructuredDataNode())
-        the_node.set_path(self.path + (edge,))
+        the_node = self._nodes.setdefault(edge, StructuredDataNode(path=self.path + (edge,)))
         the_node.merge_with(node)
         return the_node
 
@@ -464,7 +453,7 @@ class StructuredDataNode:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_node = StructuredDataNode()
+        delta_node = StructuredDataNode(path=self.path)
 
         # Attributes
         delta_attributes_result = self.attributes.compare_with(other.attributes)
@@ -524,7 +513,7 @@ class StructuredDataNode:
         return SDDeltaResult(counter=counter, delta=delta_node)
 
     def get_encoded_node(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
-        delta_node = StructuredDataNode()
+        delta_node = StructuredDataNode(path=self.path)
 
         delta_node.add_attributes(self.attributes.get_encoded_attributes(encode_as))
         delta_node.add_table(self.table.get_encoded_table(encode_as))
@@ -536,7 +525,7 @@ class StructuredDataNode:
     #   ---filtering------------------------------------------------------------
 
     def get_filtered_node(self, filters: List[SDFilter]) -> "StructuredDataNode":
-        filtered = StructuredDataNode()
+        filtered = StructuredDataNode(path=self.path)
         for f in filters:
             # First check if node exists
             node = self._get_node(f.path)
@@ -582,12 +571,14 @@ class StructuredDataNode:
 
 
 class Table:
-    def __init__(self) -> None:
-        self.path: SDNodePath = tuple()
-        self.data: SDTable = []
+    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
+        # Only root node has no path
+        if path:
+            self.path = path
+        else:
+            self.path = tuple()
 
-    def set_path(self, path: SDNodePath) -> None:
-        self.path = path
+        self.data: SDTable = []
 
     def is_empty(self) -> bool:
         return self.data == []
@@ -665,7 +656,7 @@ class Table:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_table = Table()
+        delta_table = Table(path=self.path)
 
         remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
@@ -773,12 +764,14 @@ class Table:
 
 
 class Attributes:
-    def __init__(self) -> None:
-        self.path: SDNodePath = tuple()
-        self.data: SDAttributes = {}
+    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
+        # Only root node has no path
+        if path:
+            self.path = path
+        else:
+            self.path = tuple()
 
-    def set_path(self, path: SDNodePath) -> None:
-        self.path = path
+        self.data: SDAttributes = {}
 
     def is_empty(self) -> bool:
         return self.data == {}
@@ -824,7 +817,7 @@ class Attributes:
             keep_identical=keep_identical,
         )
 
-        delta_attributes = Attributes()
+        delta_attributes = Attributes(path=self.path)
         delta_attributes.add_attributes(delta_dict_result.delta)
 
         return ADeltaResult(

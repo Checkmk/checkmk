@@ -856,13 +856,6 @@ def test_real_get_children(tree, len_children):
     assert len(tree_children) == len_children
 
 
-@pytest.mark.parametrize("tree", trees)
-def test_real_copy(tree):
-    copied = tree.copy()
-    assert id(tree) != id(copied)
-    assert tree.is_equal(copied)
-
-
 @pytest.mark.parametrize("tree_start,tree_edges", [
     (tree_old_addresses, [
         (tree_old_arrays, ["hardware", "networking"], [
@@ -889,7 +882,6 @@ def test_real_copy(tree):
     ]),
 ])
 def test_real_merge_with_get_children(tree_start, tree_edges):
-    tree_start = tree_start.copy()
     for tree, edges, sub_children in tree_edges:
         tree_start.merge_with(tree)
         assert id(tree) == id(tree)

@@ -69,7 +69,6 @@ from cmk.gui.watolib.utils import try_bake_agents_for_hosts
     method="post",
     etag="output",
     request_schema=request_schemas.CreateHost,
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def create_host(params):
@@ -90,7 +89,6 @@ def create_host(params):
     method="post",
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def create_cluster_host(params):
@@ -111,7 +109,6 @@ def create_cluster_host(params):
     constructors.domain_type_action_href("host_config", "bulk-create"),
     "cmk/bulk_create",
     method="post",
-    convert_response=True,
     request_schema=request_schemas.BulkCreateHost,
     response_schema=response_schemas.HostConfigCollection,
 )
@@ -153,7 +150,6 @@ def bulk_create_hosts(params):
     constructors.collection_href("host_config"),
     ".../collection",
     method="get",
-    convert_response=True,
     response_schema=response_schemas.HostConfigCollection,
 )
 def list_hosts(param):
@@ -190,7 +186,6 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
         }
     ],
     etag="both",
-    convert_response=True,
     request_schema=request_schemas.UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
 )
@@ -220,7 +215,6 @@ def update_nodes(params):
     path_params=[HOST_NAME],
     etag="both",
     request_schema=request_schemas.UpdateHost,
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def update_host(params):
@@ -263,7 +257,6 @@ def update_host(params):
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateHost,
-    convert_response=True,
     response_schema=response_schemas.HostConfigCollection,
 )
 def bulk_update_hosts(params):
@@ -327,7 +320,6 @@ def bulk_update_hosts(params):
         422: "The host could not be renamed.",
     },
     request_schema=request_schemas.RenameHost,
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def rename_host(params):
@@ -361,7 +353,6 @@ def rename_host(params):
     path_params=[HOST_NAME],
     etag="both",
     request_schema=request_schemas.MoveHost,
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def move(params):
@@ -444,7 +435,6 @@ def bulk_delete(params):
         }
     ],
     etag="output",
-    convert_response=True,
     response_schema=response_schemas.HostObject,
 )
 def show_host(params):

@@ -39,7 +39,6 @@ from cmk.gui.watolib.passwords import (
     constructors.collection_href("password"),
     "cmk/create",
     method="post",
-    convert_response=True,
     request_schema=request_schemas.InputPassword,
     etag="output",
     response_schema=response_schemas.PasswordObject,
@@ -73,7 +72,6 @@ def create_password(params):
     ".../update",
     method="put",
     path_params=[NAME_FIELD],
-    convert_response=True,
     request_schema=request_schemas.UpdatePassword,
     etag="both",
     response_schema=response_schemas.PasswordObject,
@@ -120,7 +118,6 @@ def delete_password(params):
     "cmk/show",
     method="get",
     path_params=[NAME_FIELD],
-    convert_response=True,
     response_schema=response_schemas.PasswordObject,
 )
 def show_password(params):
@@ -141,7 +138,6 @@ def show_password(params):
     constructors.collection_href("password"),
     ".../collection",
     method="get",
-    convert_response=True,
     response_schema=response_schemas.DomainObjectCollection,
 )
 def list_passwords(params):

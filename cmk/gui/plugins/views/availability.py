@@ -18,8 +18,6 @@ from cmk.utils.defines import (
     service_state_name,
 )
 
-import cmk.gui.config as config
-
 import cmk.gui.availability as availability
 from cmk.gui.availability import (
     AVObjectType,
@@ -482,7 +480,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
-    if not config.reporting_available():
+    if cmk_version.is_raw_edition():
         return
 
     if not user.may("general.reporting") or not user.may("general.instant_reports"):

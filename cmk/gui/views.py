@@ -899,7 +899,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
-        if not config.reporting_available():
+        if cmk_version.is_raw_edition():
             return
 
         if not user.may("general.instant_reports"):
@@ -2813,7 +2813,7 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if not config.combined_graphs_available():
+    if cmk_version.is_raw_edition():
         return False
 
     return view.datasource.ident in ["hosts", "services", "hostsbygroup", "servicesbygroup"]

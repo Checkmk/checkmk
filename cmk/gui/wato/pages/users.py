@@ -1176,7 +1176,7 @@ class ModeEditUser(WatoMode):
 
 
 def select_language(user_spec: UserSpec) -> None:
-    languages: Choices = [l for l in get_languages() if not config.hide_language(l[0])]
+    languages: Choices = [l for l in get_languages() if l[0] not in config.hide_languages]
     if not languages:
         return
 

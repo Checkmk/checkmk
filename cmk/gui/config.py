@@ -265,19 +265,6 @@ def _config_plugin_modules() -> List[ModuleType]:
     ]
 
 
-def reporting_available() -> bool:
-    # Check the existance of one arbitrary config variable from the reporting module
-    return 'reporting_filename' in globals()
-
-
-def combined_graphs_available() -> bool:
-    return 'have_combined_graphs' in globals()
-
-
-def hide_language(lang: str) -> bool:
-    return lang in hide_languages
-
-
 def has_custom_logo() -> bool:
     return cmk_version.is_managed_edition() and customers.get(current_customer, {}).get(
         "globals", {}).get("logo")

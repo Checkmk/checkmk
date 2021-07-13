@@ -61,6 +61,7 @@ from cmk.gui.sites import (
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, request as _request, user
 from cmk.gui.log import logger
@@ -1804,7 +1805,7 @@ def _add_extensions_for_license_usage():
     extensions_filepath = license_usage_dir.joinpath("extensions.json")
 
     with store.locked(extensions_filepath):
-        extensions = license_usage_samples.LicenseUsageExtensions(ntop=config.is_ntop_configured(),)
+        extensions = license_usage_samples.LicenseUsageExtensions(ntop=is_ntop_configured(),)
         store.save_bytes_to_file(extensions_filepath, extensions.serialize())
 
 

@@ -101,6 +101,7 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.ntop import is_ntop_configured
 
 loaded_with_language: Union[None, bool, str] = False
 
@@ -891,7 +892,7 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
         entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
     )
 
-    if config.is_ntop_configured():
+    if is_ntop_configured():
         yield PageMenuTopic(
             title=_("Ntop"),
             entries=list(_dashboard_add_ntop_dashlet_entries(name)),
@@ -958,7 +959,7 @@ def _dashboard_other_entries(
     name: str,
     linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
-    ntop_not_configured = not config.is_ntop_configured()
+    ntop_not_configured = not is_ntop_configured()
     for dashboard_name, dashboard in get_permitted_dashboards().items():
         if name in linked_dashboards and dashboard_name in linked_dashboards:
             continue

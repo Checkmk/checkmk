@@ -93,6 +93,7 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
                                 makeactionuri)
+from cmk.gui.utils.ntop import is_ntop_configured
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
@@ -1834,7 +1835,7 @@ class PagetypeTopics(Overridable):
                 "icon_name": "topic_network_statistics",
                 "description": "",
                 "sort_index": 95,
-                "hide": not config.is_ntop_configured(),
+                "hide": not is_ntop_configured(),
             },
             "my_workplace": {
                 "title": _("Workplace"),

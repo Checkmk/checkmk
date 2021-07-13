@@ -73,6 +73,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.type_defs import Choices, UserSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
 from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.ntop import is_ntop_available, get_ntop_connection_mandatory
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -715,8 +716,8 @@ class ModeEditUser(WatoMode):
             del user_attrs["authorized_sites"]
 
         # ntopng
-        if config.is_ntop_available():
-            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
@@ -842,8 +843,8 @@ class ModeEditUser(WatoMode):
         self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
 
         # ntopng
-        if config.is_ntop_available():
-            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
             # see corresponding WATO rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")

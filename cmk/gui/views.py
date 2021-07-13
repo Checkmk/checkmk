@@ -139,6 +139,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.ntop import is_ntop_configured, get_ntop_connection
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -816,8 +817,8 @@ class GUIViewRenderer(ABCViewRenderer):
 
         if rows:
             host_address = rows[0].get("host_address")
-            if config.is_ntop_configured():
-                ntop_connection = config.get_ntop_connection()
+            if is_ntop_configured():
+                ntop_connection = get_ntop_connection()
                 assert ntop_connection
                 ntop_instance = ntop_connection["hostaddress"]
                 if host_address is not None and get_cache().is_instance_up(

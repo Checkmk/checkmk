@@ -12,6 +12,7 @@ import socket
 import ssl
 import threading
 import time
+from io import BytesIO
 from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
@@ -481,7 +482,7 @@ class SingleSiteConnection(Helpers):
         if self.socket is None:
             raise MKLivestatusSocketError("Socket to '%s' is not connected" % self.socketurl)
 
-        result = b""
+        data = BytesIO()
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
         while size > 0:
@@ -490,8 +491,9 @@ class SingleSiteConnection(Helpers):
                 raise MKLivestatusSocketClosed(
                     "Read zero data from socket, nagios server closed connection")
             size -= len(packet)
-            result += packet
-        return result
+            data.write(packet)
+
+        return data.getvalue()
 
     def do_query(self, query_obj: Query, add_headers: str = "") -> LivestatusResponse:
         query = self.build_query(query_obj, add_headers)

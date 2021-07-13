@@ -3,6 +3,10 @@ from pathlib2 import Path
 
 import cmk.utils.paths
 
+system_paths = [
+    "mkbackup_lock_dir",
+]
+
 pathlib_paths = [
     "core_discovered_host_labels_dir",
     "base_discovered_host_labels_dir",
@@ -19,6 +23,9 @@ def _check_paths(root):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)
+            elif var in system_paths:
+                assert isinstance(value, str)
+                assert value.startswith("/")
             else:
                 assert isinstance(value, str)
                 assert value.startswith(root)

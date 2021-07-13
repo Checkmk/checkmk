@@ -21,7 +21,6 @@ echo "Update site $SITE..."
 PYTHON3_PATHS=(
     gui
     snmplib
-    utils
     ec
     notification_plugins
     special_agents
@@ -70,5 +69,9 @@ fi
 
 (
     cd core_helpers
+    bash .f12
+)
+(
+    cd utils
     bash .f12
 )

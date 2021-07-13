@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+ME="cmk/base/.f12"
+
 SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
     cat .site
     break
@@ -8,27 +10,22 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-echo "Update site $SITE..."
+echo "[$ME] Update site $SITE..."
 
-echo "Copy CRE files..."
+echo "[$ME] Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \
+    --exclude=plugins \
     -a * $ROOT/lib/python3/cmk/base/
 
 # Ensure cmk.base[.cee] is a namespace package
 sudo rm -f \
     "$ROOT/lib/python3/cmk/base/__init__.py" \
     "$ROOT/lib/python3/cmk/base/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/__init__.pyc" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py" \
-    "$ROOT/lib/python3/cmk/base/plugins/agent_based/utils/__init__.pyc"
 
 # Also deploy all other directories of same type
 if [ ${ALL_EDITIONS:-1} != 0 ]; then
@@ -45,3 +42,8 @@ fi
 if [ -z "$ONLY_COPY" ]; then
     sudo $ROOT/bin/python3 -m compileall -qq $ROOT/lib/python3/cmk/base
 fi
+
+(
+    cd plugins
+    bash .f12
+)

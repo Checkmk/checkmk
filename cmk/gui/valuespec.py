@@ -724,6 +724,14 @@ class TextUnicode(TextAscii):
         return json_value
 
 
+# In Checkmk 2.1 TextUnicode and TextAscii have been replaced by TextInput, which is mostly
+# the same as and in the signature fully compatible to TextUnicode.
+# We backport the name to 2.0, because it will
+# a) ease the backport of WATO rulesets developed against the master branch and
+# b) allow us to teach the new name in our developmenmt guide and training sessions
+TextInput = TextUnicode
+
+
 # TODO: Cleanup kwargs
 def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""

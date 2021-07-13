@@ -420,7 +420,7 @@ PARAMETER_DURATION_ABSOLUTE["levels_duration_absolute"] = (5.0, 10.0)
 @pytest.mark.parametrize(
     "item, params, string_table_aws_lambda_summary, string_table_aws_lambda, results", [
         (
-            'eu-central-1 my_python_test_function 710145618630',
+            'eu-central-1 my_python_test_function',
             _DEFAULT_PARAMETERS,
             _STRING_TABLE_AWS_LAMBDA_SUMMARY,
             _STRING_TABLE_AWS_LAMBDA_NOT_USED,
@@ -430,7 +430,7 @@ PARAMETER_DURATION_ABSOLUTE["levels_duration_absolute"] = (5.0, 10.0)
             ],
         ),
         (
-            'eu-central-1 my_python_test_function 710145618630',
+            'eu-central-1 my_python_test_function',
             _DEFAULT_PARAMETERS,
             _STRING_TABLE_AWS_LAMBDA_SUMMARY,
             _STRING_TABLE_AWS_LAMBDA,
@@ -450,7 +450,7 @@ PARAMETER_DURATION_ABSOLUTE["levels_duration_absolute"] = (5.0, 10.0)
             ],
         ),
         (
-            'eu-central-1 my_python_test_function 710145618630',
+            'eu-central-1 my_python_test_function',
             _DEFAULT_PARAMETERS,
             _STRING_TABLE_AWS_LAMBDA_SUMMARY,
             _STRING_TABLE_AWS_LAMBDA_INVALID_DATA,
@@ -467,7 +467,7 @@ PARAMETER_DURATION_ABSOLUTE["levels_duration_absolute"] = (5.0, 10.0)
             ],
         ),
         (
-            'eu-central-1 my_python_test_function 710145618630',
+            'eu-central-1 my_python_test_function',
             PARAMETER_DURATION_ABSOLUTE,
             _STRING_TABLE_AWS_LAMBDA_SUMMARY,
             _STRING_TABLE_AWS_LAMBDA,
@@ -515,7 +515,7 @@ def test_parse_aws_lambda_missing_mandatory_metric(string_table_aws_lambda, resu
 
 
 SECTION_AWS_LAMBDA = {
-    'eu-central-1 my_python_test_function 710145618630': LambdaCloudwatchMetrics(
+    'eu-central-1 my_python_test_function': LambdaCloudwatchMetrics(
         ConcurrentExecutions=0.005,
         DeadLetterErrors=None,
         DestinationDeliveryFailures=None,
@@ -533,8 +533,8 @@ SECTION_AWS_LAMBDA = {
 }
 
 SECTION_AWS_LAMBDA_SUMMARY = {
-    'eu-central-1 my_python_test_function 710145618630': 1.0,
-    'eu-north-1 myLambdaTestFunction 710145618630': 1.0,
+    'eu-central-1 my_python_test_function': 1.0,
+    'eu-north-1 myLambdaTestFunction': 1.0,
 }
 
 
@@ -548,8 +548,8 @@ SECTION_AWS_LAMBDA_SUMMARY = {
         SECTION_AWS_LAMBDA_SUMMARY,
         SECTION_AWS_LAMBDA,
         [
-            Service(item='eu-central-1 my_python_test_function 710145618630'),
-            Service(item='eu-north-1 myLambdaTestFunction 710145618630')
+            Service(item='eu-central-1 my_python_test_function'),
+            Service(item='eu-north-1 myLambdaTestFunction')
         ],
     ),
 ])

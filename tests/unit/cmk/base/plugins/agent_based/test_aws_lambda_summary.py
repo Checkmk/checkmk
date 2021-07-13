@@ -38,10 +38,7 @@ _STRING_TABLE_AWS_LAMBDA_SUMMARY = [
 @pytest.mark.parametrize("string_table_aws_lambda_summary, results", [
     (
         _STRING_TABLE_AWS_LAMBDA_SUMMARY,
-        [
-            'eu-central-1 my_python_test_function 710145618630',
-            'eu-north-1 myLambdaTestFunction 710145618630'
-        ],
+        ['eu-central-1 my_python_test_function', 'eu-north-1 myLambdaTestFunction'],
     ),
 ])
 def test_parse_aws_lambda_summary(string_table_aws_lambda_summary, results):

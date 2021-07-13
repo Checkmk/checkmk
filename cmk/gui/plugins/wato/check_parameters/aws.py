@@ -1265,8 +1265,8 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for duration in percent of the timeout"),
              elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
              ],
              help=
              _("Specify the upper levels for the elapsed time of a function’s execution (duration) in percent of the AWS Lambda configuration value \"Timeout\"."
@@ -1287,11 +1287,12 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for errors"),
              elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
              ],
              help=
-             _("Specify the upper levels for the number of failed invocations per second due to function errors."
+             _("Specify the upper levels for the number of failed invocations per second due to function errors. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
               ),
          )),
         ('levels_invocations',
@@ -1307,11 +1308,12 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for throttles"),
              elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
              ],
              help=
-             _("Specify the upper levels for the number of invocations per second that exceeded the concurrent limits (throttles)."
+             _("Specify the upper levels for the number of invocations per second that exceeded the concurrent limits (throttles). Default is CRIT for more than one error per hour (ca. 1.0/3600)."
               ),
          )),
         ('levels_iterator_age',
@@ -1330,12 +1332,14 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for dead letter errors"),
              elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
              ],
-             help=_(
-                 "Specify the upper levels for the number of discarded events per second that could not be processed. "
-                 "This metric is only reported for asynchronous invocations."),
+             help=
+             _("Specify the upper levels for the number of discarded events per second that could not be processed. "
+               "This metric is only reported for asynchronous invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+              ),
          )),
     ],)
 

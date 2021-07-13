@@ -96,11 +96,12 @@ def aws_rds_service_item(instance_id: str, region: str) -> str:
 
 def function_arn_to_item(function_arn: str) -> str:
     """Human readable representation of the FunctionArn without information loss.
-        The region, lambda function name and account id is extracted from the FunctionArn
-        (arn:aws:lambda:REGION:ACCOUNT_ID:function:LAMBDA_FUNCTION_NAME).
+        The region and the lambda function name is extracted from the FunctionArn
+        (arn:aws:lambda:REGION:account_id:function:LAMBDA_FUNCTION_NAME).
+        The account_id can be omitted, because it stays equal for all lambda functions of the same AWS account.
 
     >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function")
-    'eu-central-1 my_python_test_function 710145618630'
+    'eu-central-1 my_python_test_function'
     """
     splitted = function_arn.split(':')
-    return f"{splitted[3]} {splitted[-1]} {splitted[4]}"
+    return f"{splitted[3]} {splitted[-1]}"

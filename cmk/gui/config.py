@@ -411,19 +411,6 @@ def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     return False
 
 
-def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
-    # Prepare cache of already computed permissions
-    # Make sure, admin can restore permissions in any case!
-    if user_id in [ensure_str(u) for u in admin_users]:
-        return {
-            "general.use": True,  # use Multisite
-            "wato.use": True,  # enter WATO
-            "wato.edit": True,  # make changes in WATO...
-            "wato.users": True,  # ... with access to user management
-        }
-    return {}
-
-
 #.
 #   .--User Handling-------------------------------------------------------.
 #   |    _   _                 _   _                 _ _ _                 |

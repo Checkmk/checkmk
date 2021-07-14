@@ -2663,6 +2663,9 @@ class MonitoredHostname(AjaxDropdownChoice):
 
         return _sorted_unique_lq(query, 200, value, params)
 
+    def value_to_text(self, value: str) -> str:
+        return escaping.escape_attribute(value)
+
 
 @autocompleter_registry.register
 class MonitoredServiceDescription(AjaxDropdownChoice):

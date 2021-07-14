@@ -76,7 +76,7 @@ def save_custom_attrs_to_mk_file(attrs):
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
     store.mkdir(watolib.multisite_dir())
-    store.save_file(watolib.multisite_dir() + "custom_attrs.mk", output)
+    store.save_text_to_file(watolib.multisite_dir() + "custom_attrs.mk", output)
 
 
 def custom_attr_types() -> Choices:

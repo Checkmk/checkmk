@@ -537,7 +537,7 @@ class ABCHostsStorage(abc.ABC):
         raise NotImplementedError()
 
     def write(self, filename: str) -> None:
-        store.save_file(filename, self.getvalue())
+        store.save_text_to_file(filename, self.getvalue())
 
 
 class StandardHostsStorage(ABCHostsStorage):
@@ -622,7 +622,7 @@ class RawHostsStorage(ABCHostsStorage):
 
     def write(self, filename: str) -> None:
         self.save("}\n")
-        store.save_file(filename + ".cfg", self.getvalue())
+        store.save_text_to_file(filename + ".cfg", self.getvalue())
 
     def _save_group_rules(self, group_rules: List[GroupRuleType],
                           use_for_services: Optional[bool]) -> None:

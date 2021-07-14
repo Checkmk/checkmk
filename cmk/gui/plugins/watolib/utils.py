@@ -108,7 +108,7 @@ class ABCConfigDomain(abc.ABC):
             output += "%s = %s\n" % (varname, pprint.pformat(value))
 
         store.makedirs(os.path.dirname(filename))
-        store.save_file(filename, output)
+        store.save_text_to_file(filename, output)
 
     def save_site_globals(self, settings, custom_site_path=None):
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)

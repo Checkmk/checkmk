@@ -385,7 +385,7 @@ class LDAPUserConnector(UserConnector):
 
     def _cache_nearest_dc(self, server: str) -> None:
         self._logger.debug('Caching nearest DC %s' % server)
-        store.save_file(self._nearest_dc_cache_filepath(), server)
+        store.save_text_to_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self) -> None:
         if not self._uses_discover_nearest_server():

@@ -9,16 +9,12 @@ manager."""
 
 import ast
 import enum
-import errno
 from contextlib import nullcontext
 import logging
-import os
 import pprint
 import tempfile
 from pathlib import Path
-from typing import Any, AnyStr, Dict, List, Tuple, Union
-
-from six import ensure_binary
+from typing import Any, Dict, List, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
@@ -129,7 +125,7 @@ def save_mk_file(path: Union[Path, str], mk_content: str, add_header: bool = Tru
 
     content += mk_content
     content += "\n"
-    save_file(path, content)
+    save_text_to_file(path, content)
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
@@ -203,7 +199,7 @@ def _load_bytes_from_file(path: Union[Path, str]) -> bytes:
 # structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
     formatted_data = pprint.pformat(data) if pretty else repr(data)
-    save_file(path, "%s\n" % formatted_data)
+    save_text_to_file(path, "%s\n" % formatted_data)
 
 
 def save_text_to_file(path: Union[Path, str], content: str, mode: int = 0o660) -> None:
@@ -232,19 +228,6 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
     #    not!
     with locked(path):
         _save_data_to_file(path, content, mode)
-
-
-def save_file(path: Union[Path, str], content: AnyStr, mode: int = 0o660) -> None:
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        # Just to be sure: ensure_binary
-        _save_data_to_file(path, ensure_binary(content), mode=mode)
 
 
 # Saving assumes a locked destination file (usually done by loading code)

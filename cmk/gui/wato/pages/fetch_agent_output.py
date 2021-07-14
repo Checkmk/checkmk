@@ -259,7 +259,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
 
         preview_filepath = os.path.join(job_interface.get_work_dir(),
                                         AgentOutputPage.file_name(self._request))
-        store.save_file(preview_filepath, agent_data)
+        store.save_text_to_file(preview_filepath, agent_data)
 
         download_url = makeuri_contextless(
             request,

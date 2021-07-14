@@ -816,7 +816,7 @@ def load_custom_attr(userid: UserId,
 def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
     path = custom_attr_path(userid, key)
     store.mkdir(os.path.dirname(path))
-    store.save_file(path, '%s\n' % val)
+    store.save_text_to_file(path, '%s\n' % val)
 
 
 def remove_custom_attr(userid: UserId, key: str) -> None:
@@ -896,7 +896,7 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
-            store.save_file(auth_file, "%s\n" % user["automation_secret"])
+            store.save_text_to_file(auth_file, "%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.unlink(auth_file)
 
@@ -1060,7 +1060,8 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     serials = u""
     for user_id, user in updated_profiles.items():
         serials += u'%s:%d\n' % (user_id, user.get('serial', 0))
-    store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
+    store.save_text_to_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file),
+                            serials)
 
 
 def rewrite_users() -> None:

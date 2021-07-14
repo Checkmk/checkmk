@@ -298,7 +298,7 @@ class BIAggregationPacks:
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
 
     def save_config(self) -> None:
-        store.save_file(self._bi_configuration_file, repr(self.generate_config()))
+        store.save_text_to_file(self._bi_configuration_file, repr(self.generate_config()))
         enabled_aggregations = str(
             len([
                 bi_aggr for bi_aggr in self.get_all_aggregations()
@@ -306,7 +306,7 @@ class BIAggregationPacks:
             ]))
 
         store.makedirs(self._num_enabled_aggregations_dir())
-        store.save_file(self._num_enabled_aggregations_path(), enabled_aggregations)
+        store.save_text_to_file(self._num_enabled_aggregations_path(), enabled_aggregations)
 
     @classmethod
     def _num_enabled_aggregations_dir(cls):

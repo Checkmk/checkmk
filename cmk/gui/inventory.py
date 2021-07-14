@@ -230,7 +230,7 @@ def get_history_deltas(
                           delta_result.counter['removed'], delta_result.delta)
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
-                store.save_file(
+                store.save_text_to_file(
                     cached_delta_path,
                     repr((new, changed, removed, delta_tree.serialize())),
                 )

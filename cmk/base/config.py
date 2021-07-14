@@ -1681,7 +1681,7 @@ def _get_cached_check_includes(check_file_path: str, cache_file_path: str) -> Ch
     if cache_stat.st_size == 1:
         return []  # No includes
 
-    # store.save_file() creates file empty for locking (in case it does not exists).
+    # store.save_text_to_file() creates file empty for locking (in case it does not exists).
     # Skip loading the file.
     # Note: When raising here this process will also write the file. This means it
     # will write it another time after it was written by the other process. This
@@ -1698,7 +1698,7 @@ def _get_cached_check_includes(check_file_path: str, cache_file_path: str) -> Ch
 
 def _write_check_include_cache(cache_file_path: str, includes: CheckIncludes) -> None:
     store.makedirs(os.path.dirname(cache_file_path))
-    store.save_file(cache_file_path, "%s\n" % "|".join(includes))
+    store.save_text_to_file(cache_file_path, "%s\n" % "|".join(includes))
 
 
 def _include_cache_file_path(path: str) -> str:

@@ -4656,7 +4656,7 @@ class AWSConfig:
             return None
 
     def _write_config_hash(self):
-        store.save_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+        store.save_text_to_file(self._config_hash_file, "%s\n" % self._current_config_hash)
 
 
 def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_services=()):

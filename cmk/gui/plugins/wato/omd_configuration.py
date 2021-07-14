@@ -279,7 +279,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        store.save_file(self.diskspace_config, output)
+        store.save_text_to_file(self.diskspace_config, output)
 
     def default_globals(self):
         diskspace_context: Dict[str, Any] = {}
@@ -441,7 +441,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
         config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d",
                                         "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
         config = self.load(site_specific=False)
@@ -561,7 +561,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
         config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d",
                                         "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
         config = self.load(site_specific=False)

@@ -364,7 +364,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         self._logger.debug("Write data to cache file %s", path)
         try:
-            _store.save_file(path, self._to_cache_file(raw_data))
+            _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
         except Exception as e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (path, e))
 

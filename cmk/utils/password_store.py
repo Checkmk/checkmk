@@ -78,7 +78,7 @@ def save(stored_passwords):
     for ident, pw in stored_passwords.items():
         content += "%s:%s\n" % (ident, pw["password"])
 
-    store.save_file(password_store_path, content)
+    store.save_text_to_file(password_store_path, content)
 
 
 def load():

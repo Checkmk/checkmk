@@ -404,7 +404,7 @@ def save_autochecks_file(
     for service in sorted(services):
         content.append("  %s," % service.dump_autocheck())
     content.append("]\n")
-    store.save_file(path, "\n".join(content))
+    store.save_text_to_file(path, "\n".join(content))
 
 
 def remove_autochecks_file(hostname: HostName) -> None:

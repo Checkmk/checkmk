@@ -629,8 +629,8 @@ def _create_nagvis_backends(sites_config):
             cfg.append('verify_tls_peer=%d' % tls_settings["verify"])
             cfg.append('verify_tls_ca_path=%s' % ConfigDomainCACertificates.trusted_cas_file)
 
-    store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
-                    '\n'.join(cfg))
+    store.save_text_to_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
+                            '\n'.join(cfg))
 
 
 def _encode_socket_for_nagvis(site_id, site):
@@ -688,7 +688,7 @@ def _delete_distributed_wato_file():
     # we do not need write permissions to the conf.d
     # directory!
     if os.path.exists(p):
-        store.save_file(p, "")
+        store.save_text_to_file(p, "")
 
 
 PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [

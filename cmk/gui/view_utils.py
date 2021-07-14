@@ -6,6 +6,7 @@
 
 import json
 import re
+from html import unescape
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
 from livestatus import SiteId
@@ -77,9 +78,8 @@ def format_plugin_output(output: str,
         output = re.sub(
             "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
-                html.render_icon_button(
-                    p.group(1).replace('&quot;', ''),
-                    p.group(1).replace('&quot;', ''), "link")), output)
+                html.render_icon_button(unescape(p.group(1).replace(
+                    '&quot;', '')), unescape(p.group(1).replace('&quot;', '')), "link")), output)
 
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]

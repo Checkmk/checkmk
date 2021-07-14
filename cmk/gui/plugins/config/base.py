@@ -51,6 +51,9 @@ def _make_default_user_profile() -> _Dict[str, _Any]:
     }
 
 
+_ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
+
+
 @_dataclass
 class CREConfig:
     #.
@@ -88,7 +91,7 @@ class CREConfig:
             "cmk.web.slow-views": 30,
         })
 
-    slow_views_duration_threshold = 60
+    slow_views_duration_threshold: int = 60
 
     multisite_users: _Dict = _field(default_factory=dict)
     multisite_hostgroups: _Dict = _field(default_factory=dict)
@@ -109,16 +112,16 @@ class CREConfig:
     ])
 
     # Interval of snapin updates in seconds
-    sidebar_update_interval = 30.0
+    sidebar_update_interval: float = 30.0
 
     # It is possible (but ugly) to enable a scrollbar in the sidebar
-    sidebar_show_scrollbar = False
+    sidebar_show_scrollbar: bool = False
 
     # Enable regular checking for notification messages
-    sidebar_notify_interval = 30
+    sidebar_notify_interval: int = 30
 
     # Maximum number of results to show in quicksearch dropdown
-    quicksearch_dropdown_limit = 80
+    quicksearch_dropdown_limit: int = 80
 
     # Quicksearch search order
     quicksearch_search_order: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
@@ -129,7 +132,7 @@ class CREConfig:
         ("s", "continue"),
     ])
 
-    failed_notification_horizon = 7 * 60 * 60 * 24
+    failed_notification_horizon: int = 7 * 60 * 60 * 24
 
     #    _     _           _ _
     #   | |   (_)_ __ ___ (_) |_ ___
@@ -138,8 +141,8 @@ class CREConfig:
     #   |_____|_|_| |_| |_|_|\__|___/
     #
 
-    soft_query_limit = 1000
-    hard_query_limit = 5000
+    soft_query_limit: int = 1000
+    hard_query_limit: int = 5000
 
     #    ____                        _
     #   / ___|  ___  _   _ _ __   __| |___
@@ -148,8 +151,8 @@ class CREConfig:
     #   |____/ \___/ \__,_|_| |_|\__,_|___/
     #
 
-    sound_url = "sounds/"
-    enable_sounds = False
+    sound_url: str = "sounds/"
+    enable_sounds: bool = False
     sounds: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
         ("down", "down.wav"),
         ("critical", "critical.wav"),
@@ -169,7 +172,7 @@ class CREConfig:
     view_option_columns: _List[int] = _field(default_factory=lambda: [1, 2, 3, 4, 5, 6, 8, 10, 12])
 
     # MISC
-    doculink_urlformat = "https://checkmk.com/checkmk_%s.html"
+    doculink_urlformat: str = "https://checkmk.com/checkmk_%s.html"
 
     view_action_defaults: _Dict[str, bool] = _field(default_factory=lambda: {
         "ack_sticky": True,
@@ -199,93 +202,93 @@ class CREConfig:
     #     \_/ \__,_|_|  |_|\___/ \__,_|___/
     #
 
-    debug_livestatus_queries = False
+    debug_livestatus_queries: bool = False
 
     # Show livestatus errors in multi site setup if some sites are
     # not reachable.
-    show_livestatus_errors = True
+    show_livestatus_errors: bool = True
 
     # Whether the livestatu proxy daemon is available
-    liveproxyd_enabled = False
+    liveproxyd_enabled: bool = False
 
     # Set this to a list in order to globally control which views are
     # being displayed in the sidebar snapin "Views"
-    visible_views = None
+    visible_views: _Optional[_List[str]] = None
 
     # Set this list in order to actively hide certain views
-    hidden_views = None
+    hidden_views: _Optional[_List[str]] = None
 
     # Patterns to group services in table views together
     service_view_grouping: _List = _field(default_factory=list)
 
     # Custom user stylesheet to load (resides in htdocs/)
-    custom_style_sheet = None
+    custom_style_sheet: _Optional[str] = None
 
     # UI theme to use
-    ui_theme = "modern-dark"
+    ui_theme: str = "modern-dark"
 
     # Show mode to use
-    show_mode = "default_show_less"
+    show_mode: str = "default_show_less"
 
     # URL for start page in main frame (welcome page)
-    start_url = "dashboard.py"
+    start_url: str = "dashboard.py"
 
     # Page heading for main frame set
-    page_heading = "Checkmk %s"
+    page_heading: str = "Checkmk %s"
 
     login_screen: _Dict = _field(default_factory=dict)
 
     # Timeout for rescheduling of host- and servicechecks
-    reschedule_timeout = 10.0
+    reschedule_timeout: float = 10.0
 
     # Number of columsn in "Filter" form
-    filter_columns = 2
+    filter_columns: int = 2
 
     # Default language for l10n
-    default_language = None
+    default_language: _Optional[str] = None
 
     # Hide these languages from user selection
-    hide_languages: _List = _field(default_factory=list)
+    hide_languages: _List[str] = _field(default_factory=list)
 
     # Default timestamp format to be used in multisite
-    default_ts_format = 'mixed'
+    default_ts_format: str = 'mixed'
 
     # Maximum livetime of unmodified selections
-    selection_livetime = 3600
+    selection_livetime: int = 3600
 
     # Configure HTTP header to read usernames from
-    auth_by_http_header = False
+    auth_by_http_header: bool = False
 
     # Number of rows to display by default in tables rendered with
     # the table.py module
-    table_row_limit = 100
+    table_row_limit: int = 100
 
     # Add an icon pointing to the WATO rule to each service
-    multisite_draw_ruleicon = True
+    multisite_draw_ruleicon: bool = True
 
     # Default downtime configuration
     adhoc_downtime: _Dict = _field(default_factory=dict)
 
     # Display dashboard date
-    pagetitle_date_format = None
+    pagetitle_date_format: _Optional[_Literal["yyyy-mm-dd", "dd.mm.yyyy"]] = None
 
     # Value of the host_staleness/service_staleness field to make hosts/services
     # appear in a stale state
-    staleness_threshold = 1.5
+    staleness_threshold: float = 1.5
 
     # Escape HTML in plugin output / log messages
-    escape_plugin_output = True
+    escape_plugin_output: bool = True
 
     # Virtual host trees for the "Virtual Host Trees" snapin
     virtual_host_trees: _List = _field(default_factory=list)
 
     # Target URL for sending crash reports to
-    crash_report_url = "https://crash.checkmk.com"
+    crash_report_url: str = "https://crash.checkmk.com"
     # Target email address for "Crashed Check" page
-    crash_report_target = "feedback@checkmk.com"
+    crash_report_target: str = "feedback@checkmk.com"
 
     # GUI Tests (see cmk-guitest)
-    guitests_enabled = False
+    guitests_enabled: bool = False
 
     # Bulk discovery default options
     bulk_discovery_default_settings: _Dict[str, _Any] = _field(
@@ -296,7 +299,7 @@ class CREConfig:
             "error_handling": True,
         })
 
-    use_siteicons = False
+    use_siteicons: bool = False
 
     graph_timeranges: _List[_Dict[str, _Any]] = _field(default_factory=lambda: [
         {
@@ -331,20 +334,20 @@ class CREConfig:
     # This option can not be configured through WATO anymore. Config has been
     # moved to the sites configuration. This might have been configured in master/remote
     # in previous versions and is set on remote sites during WATO synchronization.
-    userdb_automatic_sync = "master"
+    userdb_automatic_sync: _Optional[str] = "master"
 
     # Permission to login to the web gui of a site (can be changed in sites
     # configuration)
-    user_login = True
+    user_login: bool = True
 
     # Holds dicts defining user connector instances and their properties
     user_connections: _List = _field(default_factory=list)
 
     default_user_profile: _Dict[str, _Any] = _field(default_factory=_make_default_user_profile)
-    log_logon_failures = True
-    lock_on_logon_failures = False
-    user_idle_timeout = 5400
-    single_user_session = None
+    log_logon_failures: bool = True
+    lock_on_logon_failures: bool = False
+    user_idle_timeout: int = 5400
+    single_user_session: _Optional[int] = None
     password_policy: _Dict = _field(default_factory=dict)
 
     user_localizations: _Dict[str, _Dict[str, str]] = _field(
@@ -449,15 +452,15 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled = True
-    mkeventd_pprint_rules = False
-    mkeventd_notify_contactgroup = ''
-    mkeventd_notify_facility = 16
-    mkeventd_notify_remotehost = None
-    mkeventd_connect_timeout = 10
-    log_level = 0
-    log_rulehits = False
-    rule_optimizer = True
+    mkeventd_enabled: bool = True
+    mkeventd_pprint_rules: bool = False
+    mkeventd_notify_contactgroup: str = ''
+    mkeventd_notify_facility: int = 16
+    mkeventd_notify_remotehost: _Optional[str] = None
+    mkeventd_connect_timeout: int = 10
+    log_level: int = 0
+    log_rulehits: bool = False
+    rule_optimizer: bool = True
 
     mkeventd_service_levels: _List[_Tuple[int, str]] = _field(default_factory=lambda: [
         (0, "(no Service level)"),
@@ -486,31 +489,30 @@ class CREConfig:
     })
 
     wato_enabled: bool = True
-    wato_hide_filenames = True
-    wato_hide_hosttags = False
-    wato_upload_insecure_snapshots = False
-    wato_hide_varnames = True
-    wato_hide_help_in_lists = True
-    wato_activate_changes_concurrency = "auto"
-    wato_max_snapshots = 50
-    wato_num_hostspecs = 12
-    wato_num_itemspecs = 15
-    wato_activation_method = 'restart'
-    wato_write_nagvis_auth = False
-    wato_use_git = False
+    wato_hide_filenames: bool = True
+    wato_hide_hosttags: bool = False
+    wato_upload_insecure_snapshots: bool = False
+    wato_hide_varnames: bool = True
+    wato_hide_help_in_lists: bool = True
+    wato_activate_changes_concurrency: str = "auto"
+    wato_max_snapshots: int = 50
+    wato_num_hostspecs: int = 12
+    wato_num_itemspecs: int = 15
+    wato_activation_method: str = 'restart'
+    wato_write_nagvis_auth: bool = False
+    wato_use_git: bool = False
     wato_hidden_users: _List = _field(default_factory=list)
     wato_user_attrs: _List = _field(default_factory=list)
     wato_host_attrs: _List = _field(default_factory=list)
     wato_read_only: _Dict = _field(default_factory=dict)
-    wato_hide_folders_without_read_permissions = False
-    wato_pprint_config = False
+    wato_hide_folders_without_read_permissions: bool = False
+    wato_pprint_config: bool = False
     wato_icon_categories: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
         ("logos", u"Logos"),
         ("parts", u"Parts"),
         ("misc", u"Misc"),
     ])
 
-    _ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
     wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
 
     #.
@@ -523,7 +525,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    rest_api_etag_locking = True
+    rest_api_etag_locking: bool = True
 
     #.
     #   .--BI------------------------------------------------------------------.
@@ -550,9 +552,9 @@ class CREConfig:
     })
 
     # Deprecated. Kept for compatibility.
-    bi_compile_log = None
-    bi_precompile_on_demand = False
-    bi_use_legacy_compilation = False
+    bi_compile_log: _Optional[str] = None
+    bi_precompile_on_demand: bool = False
+    bi_use_legacy_compilation: bool = False
 
 
 # TODO: Everything below will be removed once we switched the code base to the new Config object
@@ -571,6 +573,7 @@ class CREConfig:
 roles: _Dict = {}
 
 # define default values for all settings
+sites: _SiteConfigurations = {}
 debug = False
 screenshotmode = False
 profile: _Union[bool, str] = False
@@ -1032,7 +1035,6 @@ wato_icon_categories = [
     ("misc", u"Misc"),
 ]
 
-_ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
 wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
 
 #.

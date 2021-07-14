@@ -42,9 +42,20 @@ from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unu
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+else:
+    # Stub needed for non enterprise edition
+    class CEEConfig:  # type: ignore[no-redef]
+        pass
+
 
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+else:
+
+    # Stub needed for non managed services edition
+    class CMEConfig:  # type: ignore[no-redef]
+        pass
+
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -59,8 +70,7 @@ if cmk_version.is_managed_edition():
 
 
 @dataclass
-# TODO: Will be extended with CEEConfig and CREConfig in one of the next steps
-class Config(CREConfig):
+class Config(CREConfig, CEEConfig, CMEConfig):
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
@@ -235,7 +245,7 @@ def _get_default_config_from_module_plugins() -> Dict[str, Any]:
 
     default_config: Dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
-        if k[0] == "_" or k in ("CREConfig",):
+        if k[0] == "_" or k in ("CREConfig", "CEEConfig", "CMEConfig"):
             continue
 
         if isinstance(v, (dict, list)):
@@ -366,6 +376,3 @@ def default_single_site_configuration() -> SiteConfigurations:
             'proxy': None,
         }
     }
-
-
-sites: SiteConfigurations = {}

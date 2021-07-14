@@ -10,22 +10,22 @@ from pathlib import Path
 
 import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
+from dataclasses import asdict
 
 from testlib import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.config as config
+import cmk.gui.config
 import cmk.gui.permissions as permissions
+from cmk.gui.globals import config
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_default_config_from_plugins():
-    default_config = config.get_default_config()
-
     expected = [
         'roles',
         'debug',
@@ -150,6 +150,7 @@ def test_default_config_from_plugins():
         'bi_compile_log',
         'bi_precompile_on_demand',
         'bi_use_legacy_compilation',
+        'sites',
     ]
 
     if is_enterprise_repo():
@@ -185,17 +186,24 @@ def test_default_config_from_plugins():
             'current_customer',
         ]
 
-    assert list(default_config.keys()) == expected
+    default_config = cmk.gui.config.get_default_config()
+    assert sorted(list(default_config.keys())) == sorted(expected)
+
+    default_config2 = asdict(cmk.gui.config.make_config_object(default_config))
+    assert sorted(default_config2.keys()) == sorted(expected + ["tags"])
 
 
 def test_load_config():
+    assert cmk.gui.config.quicksearch_dropdown_limit == 80
     assert config.quicksearch_dropdown_limit == 80
-    config.load_config()
+    cmk.gui.config.load_config()
+    assert cmk.gui.config.quicksearch_dropdown_limit == 80
     assert config.quicksearch_dropdown_limit == 80
 
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("quicksearch_dropdown_limit = 1337\n")
-    config.load_config()
+    cmk.gui.config.load_config()
+    assert cmk.gui.config.quicksearch_dropdown_limit == 1337
     assert config.quicksearch_dropdown_limit == 1337
 
 
@@ -209,8 +217,9 @@ def local_config_plugin():
 
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin():
-    config.load_config()
+    cmk.gui.config.load_config()
     # Mypy will not understand this, because it's coming dynamically from a plugin.
+    assert cmk.gui.config.ding == 'dong'  # type: ignore[attr-defined]
     assert config.ding == 'dong'  # type: ignore[attr-defined]
 
 
@@ -218,8 +227,9 @@ def test_load_config_respects_local_plugin():
 def test_load_config_allows_local_plugin_setting():
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
-    config.load_config()
+    cmk.gui.config.load_config()
     # Mypy will not understand this, because it's coming dynamically from a plugin.
+    assert cmk.gui.config.ding == 'ding'  # type: ignore[attr-defined]
     assert config.ding == 'ding'  # type: ignore[attr-defined]
 
 
@@ -720,8 +730,8 @@ def test_registered_permissions():
             'wato.bake_agents',
             'wato.dcd_connections',
             'wato.download_all_agents',
-            'wato.influxdb_connections',
             'wato.license_usage',
+            'wato.influxdb_connections',
             'wato.submit_license_usage',
             'wato.manage_mkps',
             'wato.mkps',
@@ -803,7 +813,7 @@ def test_declare_permission_section(monkeypatch):
     monkeypatch.setattr(permissions, "permission_section_registry",
                         permissions.PermissionSectionRegistry())
     assert "bla" not in permissions.permission_section_registry
-    config.declare_permission_section("bla", u"bla perm", do_sort=False)
+    cmk.gui.config.declare_permission_section("bla", u"bla perm", do_sort=False)
     assert "bla" in permissions.permission_section_registry
 
     section = permissions.permission_section_registry["bla"]()
@@ -816,12 +826,12 @@ def test_declare_permission(monkeypatch):
     monkeypatch.setattr(permissions, "permission_section_registry",
                         permissions.PermissionSectionRegistry())
     assert "bla" not in permissions.permission_section_registry
-    config.declare_permission_section("bla", u"bla perm", do_sort=False)
+    cmk.gui.config.declare_permission_section("bla", u"bla perm", do_sort=False)
     assert "bla" in permissions.permission_section_registry
 
     monkeypatch.setattr(permissions, "permission_registry", permissions.PermissionRegistry())
     assert "bla.blub" not in permissions.permission_registry
-    config.declare_permission("bla.blub", u"bla perm", u"descrrrrr", ["admin"])
+    cmk.gui.config.declare_permission("bla.blub", u"bla perm", u"descrrrrr", ["admin"])
     assert "bla.blub" in permissions.permission_registry
 
     permission = permissions.permission_registry["bla.blub"]
@@ -1015,7 +1025,7 @@ def test_permission_sorting(do_sort, result):
         }),
     ])
 def test_migrate_old_site_config(site, result):
-    assert config.prepare_raw_site_config({"mysite": site}) == {"mysite": result}
+    assert cmk.gui.config.prepare_raw_site_config({"mysite": site}) == {"mysite": result}
 
 
 @pytest.mark.usefixtures("load_config")

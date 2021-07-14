@@ -9,7 +9,7 @@ import errno
 import os
 import copy
 from types import ModuleType
-from typing import Set, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
 from six import ensure_str
@@ -63,11 +63,6 @@ builtin_role_ids = ["user", "admin", "guest"]
 
 # Base directory of dynamic configuration
 config_dir = cmk.utils.paths.var_dir + "/web"
-
-# Stores the initial configuration values
-default_config: Dict[str, Any] = {}
-# Needed as helper to determine the builtin variables
-_legacy_plugin_vars: Dict[str, Any] = {}
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -166,7 +161,7 @@ def _load_config_file_to(path: str, raw_config: Dict[str, Any]) -> None:
 # the graph ajax page or similar.
 def load_config() -> None:
     # Set default values for all user-changable configuration settings
-    raw_config = _get_default_config()
+    raw_config = get_default_config()
 
     # Initialize sites with default site configuration. Need to do it here to
     # override possibly deleted sites
@@ -196,6 +191,10 @@ def load_config() -> None:
     raw_config["sites"] = prepare_raw_site_config(raw_config["sites"])
 
     _prepare_tag_config(raw_config)
+
+    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    for br in builtin_role_ids:
+        raw_config["roles"].setdefault(br, {})
 
     # TODO: Keep this until all call sites are refactored to use the ConfigContext
     # object from cmk.gui.globals, which will be introduced soon.
@@ -228,37 +227,24 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
     _post_config_load_hooks.append(func)
 
 
-def _get_default_config() -> Dict[str, Any]:
-    vars_before_plugins = all_nonfunction_vars(globals())
-    load_plugins(True)
-    vars_after_plugins = all_nonfunction_vars(globals())
-    new_vars = vars_after_plugins.difference(vars_before_plugins)
-
-    # Keep the known plugin vars during whole module lifetime.
-    # Extend the known plugin vars with each config loading.
-    _legacy_plugin_vars.update({k: globals()[k] for k in new_vars})
-
-    _load_default_config(_legacy_plugin_vars)
-
-    return {
-        k: copy.deepcopy(v) if isinstance(v, (dict, list)) else v
-        for k, v in default_config.items()
-    }
+def get_default_config() -> Dict[str, Any]:
+    default_config = _get_default_config_from_legacy_plugins()
+    default_config.update(_get_default_config_from_module_plugins())
+    return default_config
 
 
-def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
-    default_config.clear()
-    _load_default_config_from_module_plugins()
-    _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults)
+def _get_default_config_from_legacy_plugins() -> Dict[str, Any]:
+    default_config: Dict[str, Any] = {}
+    utils.load_web_plugins("config", default_config)
+    return default_config
 
 
-def _load_default_config_from_module_plugins() -> None:
-    # TODO: Find a better solution for this. Probably refactor declaration of default
-    # config option.
+def _get_default_config_from_module_plugins() -> Dict[str, Any]:
     config_plugin_vars: Dict = {}
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
+    default_config: Dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
         if k[0] == "_":
             continue
@@ -267,10 +253,7 @@ def _load_default_config_from_module_plugins() -> None:
             v = copy.deepcopy(v)
 
         default_config[k] = v
-
-
-def _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
-    default_config.update(legacy_plugin_var_defaults)
+    return default_config
 
 
 def _config_plugin_modules() -> List[ModuleType]:
@@ -293,13 +276,6 @@ def combined_graphs_available() -> bool:
 
 def hide_language(lang: str) -> bool:
     return lang in hide_languages
-
-
-def all_nonfunction_vars(var_dict: Dict[str, Any]) -> Set[str]:
-    return {
-        name for name, value in var_dict.items()
-        if name[0] != '_' and not hasattr(value, '__call__')
-    }
 
 
 def get_ntop_connection() -> Optional[Dict]:
@@ -784,28 +760,6 @@ def activation_sites() -> SiteConfigurations:
         for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
         if site_is_local(site_id) or site.get("replication")
     }
-
-
-#.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   +----------------------------------------------------------------------+
-#   |  Handling of our own plugins. In plugins other software pieces can   |
-#   |  declare defaults for configuration variables.                       |
-#   '----------------------------------------------------------------------'
-
-
-def load_plugins(force: bool) -> None:
-    utils.load_web_plugins("config", globals())
-
-    # Make sure, builtin roles are present, even if not modified and saved with WATO.
-    for br in builtin_role_ids:
-        roles.setdefault(br, {})
 
 
 def show_mode_choices() -> List[Tuple[Optional[str], str]]:

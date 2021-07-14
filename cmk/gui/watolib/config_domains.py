@@ -82,7 +82,7 @@ class ConfigDomainGUI(ABCConfigDomain):
         pass
 
     def default_globals(self):
-        return config.default_config
+        return config.get_default_config()
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible

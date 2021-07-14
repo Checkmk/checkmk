@@ -24,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_default_config_from_plugins():
-    default_config = config._get_default_config()
+    default_config = config.get_default_config()
 
     expected = [
         'roles',

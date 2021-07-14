@@ -16,7 +16,7 @@ from cmk.gui.sidebar import UserSidebarSnapin
 
 @pytest.fixture(scope="module", autouse=True)
 def gui_config():
-    config.__dict__.update(config._get_default_config())
+    config.__dict__.update(config.get_default_config())
 
 
 # TODO: Can be removed once all snapins have been refactored

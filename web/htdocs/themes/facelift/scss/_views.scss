@@ -1116,13 +1116,13 @@ table.data.headerleft.sla {
   }
 }
 
-table.timeline {
+.sla table.timeline {
   &.standalone.sla {
     margin-bottom: 5px;
 
     td {
       padding: 0;
-      border: none solid rgb(68, 68, 68);
+      border: none;
     }
 
     &.period {

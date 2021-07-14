@@ -10,6 +10,7 @@ from typing import List, Tuple, Optional
 import os
 
 import cmk.utils.paths
+from cmk.utils.version import is_managed_edition
 
 
 class Theme:
@@ -76,6 +77,17 @@ class Theme:
 
     def url(self, rel_url: str) -> str:
         return "themes/%s/%s" % (self._theme, rel_url)
+
+    def base_dir(self) -> Path:
+        return cmk.utils.paths.local_web_dir / "htdocs" / "themes" / self._theme
+
+    def has_custom_logo(self) -> bool:
+        """Whether or not the current CME customer has a custom logo
+
+        CME snapshot sync copies the customer logo to themes/facelift/images/mk-logo.png.
+        See CMESnapshotDataCollector._update_customer_sidebar_top.
+        """
+        return is_managed_edition() and self.base_dir().joinpath("images", "mk-logo.png").exists()
 
 
 def theme_choices() -> List[Tuple[str, str]]:

@@ -261,11 +261,6 @@ def _config_plugin_modules() -> List[ModuleType]:
     ]
 
 
-def has_custom_logo() -> bool:
-    return cmk_version.is_managed_edition() and customers.get(current_customer, {}).get(
-        "globals", {}).get("logo")
-
-
 def prepare_raw_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
     if not site_config:
         # Prevent problem when user has deleted all sites from his

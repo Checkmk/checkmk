@@ -529,7 +529,7 @@ class LoginPage(Page):
 
         html.img(src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
                  id_="logo",
-                 class_="custom" if config.has_custom_logo() else None)
+                 class_="custom" if theme.has_custom_logo() else None)
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')

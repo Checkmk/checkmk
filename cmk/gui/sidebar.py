@@ -548,12 +548,12 @@ class SidebarRenderer:
 
 def _render_header_icon() -> None:
     if user.get_attribute("nav_hide_icons_title"):
-        if config.has_custom_logo():
+        if theme.has_custom_logo():
             html.img(theme.detect_icon_path(icon_name="logo", prefix="mk-"), class_="custom")
         else:
             html.img(theme.detect_icon_path(icon_name="icon_min", prefix="tribe29_"))
     else:
-        if config.has_custom_logo():
+        if theme.has_custom_logo():
             html.img(theme.detect_icon_path(icon_name="logo", prefix="mk-"))
         else:
             html.img(theme.detect_icon_path(icon_name="icon", prefix="tribe29_"))

@@ -78,6 +78,20 @@ def test_url(th: Theme) -> None:
     assert th.url("asd/eee") == "themes/modern-dark/asd/eee"
 
 
+def test_base_dir(th: Theme) -> None:
+    assert th.base_dir() == cmk.utils.paths.local_web_dir / "htdocs" / "themes" / "modern-dark"
+
+
+@pytest.mark.parametrize("edition_short", ["cre", "cee", "cme"])
+@pytest.mark.parametrize("with_logo", [True, False])
+def test_has_custom_logo(monkeypatch, th: Theme, edition_short: str, with_logo: bool) -> None:
+    monkeypatch.setattr("cmk.utils.version.edition_short", lambda: edition_short)
+    if with_logo:
+        th.base_dir().joinpath("images").mkdir(parents=True, exist_ok=True)
+        th.base_dir().joinpath("images", "mk-logo.png").touch()
+    assert th.has_custom_logo() is (edition_short == "cme" and with_logo)
+
+
 def test_theme_choices_empty(theme_dirs):
     assert theme_choices() == []
 

@@ -210,8 +210,6 @@ def page_clear():
         acknowledge_failed_notifications(acktime)
 
         if config.user.authorized_login_sites():
-            watolib.init_wato_datastructures(with_wato_lock=True)
-
             title = _('Replicate user profile')
             breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
             html.header(title, breadcrumb)

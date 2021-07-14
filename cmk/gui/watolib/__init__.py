@@ -284,10 +284,12 @@ def load_watolib_plugins():
 
 # TODO: Must only be unlocked when it was not locked before. We should find a more
 # robust way for doing something like this. If it is locked before, it can now happen
-# that this call unlocks the wider locking when calling this funktion in a wrong way.
+# that this call unlocks the wider locking when calling this function in a wrong way.
+# NOTE: This code is now being called by omd/scripts/post-create/01_create-sample-config.py
+#       immediately after the site has been created.
 def init_wato_datastructures(with_wato_lock=False):
-    if os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and\
-        not _need_to_create_sample_config():
+    if (os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and
+            not _need_to_create_sample_config()):
         return
 
     def init():
@@ -303,12 +305,16 @@ def init_wato_datastructures(with_wato_lock=False):
 
 
 def _need_to_create_sample_config():
-    if os.path.exists(multisite_dir() + "tags.mk") \
-        or os.path.exists(wato_root_dir() + "rules.mk") \
-        or os.path.exists(wato_root_dir() + "groups.mk") \
-        or os.path.exists(wato_root_dir() + "notifications.mk") \
-        or os.path.exists(wato_root_dir() + "global.mk"):
-        return False
+    config_files = [
+        os.path.join(wato_root_dir(), file_name)
+        for file_name in ['rules.mk', 'groups.mk', 'notifications.mk', 'global.mk']
+    ]
+    config_files.append(os.path.join(multisite_dir(), 'tags.mk'))
+
+    for path in config_files:
+        if os.path.exists(path):
+            logger.debug("Sample file %s already exists", path)
+            return False
     return True
 
 

@@ -28,7 +28,6 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.gui.watolib.activate_changes import update_config_generation
-from cmk.gui.watolib import init_wato_datastructures
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 
 if cmk_version.is_managed_edition():
@@ -95,15 +94,6 @@ def page_handler() -> None:
 
 def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[PermissionName]],
                        mode_class: Type[WatoMode]) -> None:
-    try:
-        init_wato_datastructures(with_wato_lock=not html.is_transaction())
-    except Exception:
-        # Snapshot must work in any case
-        if current_mode == 'snapshot':
-            pass
-        else:
-            raise
-
     # Check general permission for this mode
     if mode_permissions is not None and not config.user.may("wato.seeall"):
         _ensure_mode_permissions(mode_permissions)

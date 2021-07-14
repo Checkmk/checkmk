@@ -21,7 +21,6 @@ import cmk.gui.escaping as escaping
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
 from cmk.gui.watolib.activate_changes import update_config_generation
@@ -109,7 +108,6 @@ def page_api():
 
         api_call = _get_api_call()
         _check_permissions(api_call)
-        watolib.init_wato_datastructures()  # Initialize host and site attributes
         request_object = _get_request(api_call)
         _check_formats(api_call, request_object)
         _check_request_keys(api_call, request_object)

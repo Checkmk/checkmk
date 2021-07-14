@@ -92,8 +92,6 @@ class AgentOutputPage(Page, metaclass=abc.ABCMeta):
 
         self._back_url = html.get_url_input("back_url", deflt="") or None
 
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         host = watolib.Folder.current().host(host_name)
         if not host:
             raise MKGeneralException(

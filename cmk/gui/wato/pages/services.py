@@ -212,8 +212,6 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 @page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         config.user.need_permission("wato.hosts")
 
         request: AjaxDiscoveryRequest = self.webapi_request()
@@ -1267,7 +1265,6 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._item = html.request.get_unicode_input_mandatory("item")
 
     def page(self):
-        watolib.init_wato_datastructures(with_wato_lock=True)
         try:
             state, output = check_mk_automation(self._site,
                                                 "active-check",

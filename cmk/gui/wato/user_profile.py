@@ -303,8 +303,6 @@ class ABCUserProfilePage(Page):
         return menu
 
     def page(self) -> None:
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
@@ -348,8 +346,6 @@ class UserProfileReplicate(Page):
         return menu
 
     def page(self) -> None:
-        watolib.init_wato_datastructures(with_wato_lock=True)
-
         title = _('Replicate user profile')
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))

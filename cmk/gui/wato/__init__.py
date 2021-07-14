@@ -373,8 +373,6 @@ if TYPE_CHECKING:
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
 def execute_network_scan_job() -> None:
-    init_wato_datastructures(with_wato_lock=True)
-
     if watolib.is_wato_slave_site():
         return  # Don't execute this job on slaves.
 

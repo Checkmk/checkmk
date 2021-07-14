@@ -67,7 +67,8 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import (permission_registry, declare_permission,
-                                 permission_section_registry, PermissionSection)
+                                 permission_section_registry, PermissionSection,
+                                 declare_dynamic_permissions)
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -307,7 +308,7 @@ def load_plugins(force: bool) -> None:
         )
 
     # Make sure that custom views also have permissions
-    config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
+    declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
 
 class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):

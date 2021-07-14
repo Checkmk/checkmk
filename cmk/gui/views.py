@@ -64,7 +64,8 @@ from cmk.gui.page_menu import (
     toggle_page_menu_entries,
 )
 from cmk.gui.pages import AjaxPage, page_registry, AjaxPageResult
-from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.permissions import (declare_permission, permission_section_registry, PermissionSection,
+                                 declare_dynamic_permissions)
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
     get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
@@ -1096,7 +1097,7 @@ def load_plugins(force):
                            config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
-    config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
+    declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.

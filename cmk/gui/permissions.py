@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Type, List
+from typing import Type, List, Callable
 
 from six import ensure_str
 
@@ -155,3 +155,23 @@ def declare_permission(name, title, description, defaults):
             description=description,
             defaults=defaults,
         ))
+
+
+_permission_declaration_functions = []
+
+
+# Some module have a non-fixed list of permissions. For example for
+# each user defined view there is also a permission. This list is
+# not known at the time of the loading of the module - though. For
+# that purpose module can register functions. These functions should
+# just call declare_permission(). They are being called in the correct
+# situations.
+def declare_dynamic_permissions(func: Callable[[], None]) -> None:
+    _permission_declaration_functions.append(func)
+
+
+# This function needs to be called by all code that needs access
+# to possible dynamic permissions
+def load_dynamic_permissions() -> None:
+    for func in _permission_declaration_functions:
+        func()

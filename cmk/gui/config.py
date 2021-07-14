@@ -28,7 +28,9 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKConfigError
-import cmk.gui.permissions as permissions
+
+# Kept for compatibility with pre 1.6 GUI plugins
+from cmk.gui.permissions import declare_permission, declare_permission_section  # noqa: F401 # pylint: disable=unused-import
 
 import cmk.gui.plugins.config
 
@@ -63,9 +65,6 @@ builtin_role_ids = ["user", "admin", "guest"]
 
 # Base directory of dynamic configuration
 config_dir = cmk.utils.paths.var_dir + "/web"
-
-# TODO: Clean this up
-permission_declaration_functions = []
 
 # Constants for BI
 ALL_HOSTS = '(.*)'
@@ -268,42 +267,6 @@ def _config_plugin_modules() -> List[ModuleType]:
 def has_custom_logo() -> bool:
     return cmk_version.is_managed_edition() and customers.get(current_customer, {}).get(
         "globals", {}).get("logo")
-
-
-#.
-#   .--Permissions---------------------------------------------------------.
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Declarations of permissions and roles                                |
-#   '----------------------------------------------------------------------'
-
-# Kept for compatibility with pre 1.6 GUI plugins
-declare_permission = permissions.declare_permission
-declare_permission_section = permissions.declare_permission_section
-
-
-# Some module have a non-fixed list of permissions. For example for
-# each user defined view there is also a permission. This list is
-# not known at the time of the loading of the module - though. For
-# that purpose module can register functions. These functions should
-# just call declare_permission(). They are being called in the correct
-# situations.
-# TODO: Clean this up
-def declare_dynamic_permissions(func: Callable) -> None:
-    permission_declaration_functions.append(func)
-
-
-# This function needs to be called by all code that needs access
-# to possible dynamic permissions
-# TODO: Clean this up
-def load_dynamic_permissions() -> None:
-    for func in permission_declaration_functions:
-        func()
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)

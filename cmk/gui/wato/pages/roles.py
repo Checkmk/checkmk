@@ -48,6 +48,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
+    load_dynamic_permissions,
 )
 
 from cmk.gui.plugins.wato import (
@@ -265,7 +266,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         # Make sure that all dynamic permissions are available (e.g. those for custom
         # views)
-        config.load_dynamic_permissions()
+        load_dynamic_permissions()
 
     def _from_vars(self):
         self._role_id = request.get_ascii_input_mandatory("edit")

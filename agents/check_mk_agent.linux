@@ -1153,8 +1153,9 @@ run_liveupdate() {
 }
 
 run_remote_plugins() {
-    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
-        grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" |
+    configfile="$1"
+    if [ -e "$configfile" ]; then
+        grep -Ev '^[[:space:]]*($|#)' "$configfile" |
             while read -r descr cmdline; do
                 interval=
                 args="-m"
@@ -1168,9 +1169,7 @@ run_remote_plugins() {
                     # split multiple parameter assignments
                     for par in $(echo "$parameters" | tr ":" "\n"); do
                         # split each assignment
-                        key=$(echo "$par" | cut -d= -f1)
-                        value=$(echo "$par" | cut -d= -f2)
-
+                        IFS='=' read -r key value <<<"${par}"
                         if [ "$key" = "interval" ]; then
                             interval=$value
                         elif [ "$key" = "appendage" ]; then
@@ -1191,21 +1190,21 @@ run_remote_plugins() {
 run_runas_executor() {
     if [ -e "$MK_CONFDIR/runas.cfg" ]; then
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
-            while read -r type user include; do
+            while read -r type user configfile; do
                 if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
-                    PREFIX=""
+                    prefix=""
                     if [ "$user" != "-" ]; then
-                        PREFIX="su $user -c "
+                        prefix="su $user -c "
                     fi
 
                     # mrpe includes
                     if [ "$type" == "mrpe" ]; then
-                        grep -Ev '^[[:space:]]*($|#)' "$include" |
+                        grep -Ev '^[[:space:]]*($|#)' "$configfile" |
                             while read -r descr cmdline; do
                                 interval=
-                                # NOTE: Due to an escaping-related bug in some old bash
-                                # versions (3.2.x), we have to use an intermediate variable
-                                # for the pattern.
+                                args="-m"
+                                # NOTE: Due to an escaping-related bug in some old bash versions
+                                # (3.2.x), we have to use an intermediate variable for the pattern.
                                 pattern='\(([^\)]*)\)[[:space:]](.*)'
                                 if [[ $cmdline =~ $pattern ]]; then
                                     parameters=${BASH_REMATCH[1]}
@@ -1222,13 +1221,13 @@ run_runas_executor() {
                                     done
                                 fi
 
-                                if [ -n "$PREFIX" ]; then
-                                    cmdline="$PREFIX'$cmdline'"
+                                if [ -n "$prefix" ]; then
+                                    cmdline="$prefix'$cmdline'"
                                 fi
                                 if [ -z "$interval" ]; then
                                     run_mrpe "$descr" "$cmdline"
                                 else
-                                    run_cached -m "$descr" "$interval" "_log_section_time 'mrpe_$descr' '$cmdline'"
+                                    run_cached "$args" "$descr" "$interval" "_log_section_time 'mrpe_$descr' '$cmdline'"
                                 fi
                             done
 
@@ -1240,8 +1239,8 @@ run_runas_executor() {
 
                         find "$include" -executable -type f |
                             while read -r filename; do
-                                if [ -n "$PREFIX" ]; then
-                                    cmdline="$PREFIX\"$filename\""
+                                if [ -n "$prefix" ]; then
+                                    cmdline="$prefix\"$filename\""
                                 else
                                     cmdline=$filename
                                 fi
@@ -1772,7 +1771,7 @@ run_liveupdate
 # MK's Remote Plugin Executor
 # run_remote_plugins -> run_mrpe -> _log_section_time CMD
 #                    -> run_cached _log_section_time CMD
-run_remote_plugins
+run_remote_plugins "$MK_CONFDIR/mrpe.cfg"
 
 # MK's runas Executor
 # run_runas_executor -> _log_section_time CMD

@@ -543,8 +543,8 @@ def draw_dashboard(name: DashboardName) -> None:
 
     # In case we have a dashboard / dashlet that requires context information that is not available
     # yet, display a message to the user to insert the missing information.
-    missing_mandatory_context_filters = set(board["mandatory_context_filters"]).difference(
-        board["context"])
+    missing_mandatory_context_filters = visuals.missing_context_filters(
+        set(board["mandatory_context_filters"]), board["context"])
 
     dashlets = _get_dashlets(name, board)
 
@@ -679,7 +679,8 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool,
                     mtime: int) -> Tuple[Union[str, HTML], HTMLInput]:
     content: HTMLInput = ""
     title: Union[str, HTML] = ""
-    missing_infos = set(board['mandatory_context_filters']).difference(board['context'])
+    missing_infos = visuals.missing_context_filters(set(board["mandatory_context_filters"]),
+                                                    board["context"])
     missing_infos.update(dashlet.missing_single_infos())
     try:
         if missing_infos:

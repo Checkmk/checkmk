@@ -9,6 +9,7 @@ import copy
 import sys
 import traceback
 import json
+from itertools import chain
 from contextlib import contextmanager
 from typing import (
     Any,
@@ -1883,10 +1884,7 @@ def info_params(info_key: InfoName) -> List[FilterName]:
 
 
 def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
-    keys: Set[FilterName] = set()
-    for info_key in single_infos:
-        keys.update(info_params(info_key))
-    return keys
+    return set(chain.from_iterable(map(info_params, single_infos)))
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:

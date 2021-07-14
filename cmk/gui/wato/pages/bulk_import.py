@@ -256,9 +256,9 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
+        folder_path = watolib.Folder.current().path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
-            folder_path = watolib.Folder.current().path()
             user.set_rowselection(
                 weblib.selection_id(),
                 'wato-folder-/' + folder_path,

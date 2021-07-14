@@ -15,6 +15,7 @@ from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.escaping as escaping
 from cmk.gui.i18n import _
+from cmk.gui.escaping import unescape_attributes
 from cmk.gui.globals import html, request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -77,9 +78,9 @@ def format_plugin_output(output: CellContent,
         output = re.sub(
             "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
-                html.render_icon_button(
-                    p.group(1).replace('&quot;', ''),
-                    p.group(1).replace('&quot;', ''), "link")), output)
+                html.render_icon_button(unescape_attributes(p.group(1).replace(
+                    '&quot;', '')), unescape_attributes(p.group(1).replace('&quot;', '')), "link")),
+            output)
 
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]

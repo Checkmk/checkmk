@@ -3,16 +3,21 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from dataclasses import dataclass
-from typing import Any, Generator, Mapping, Optional, Union
+from typing import (
+    Any,
+    Generator,
+    Mapping,
+    Optional,
+    Union,
+)
 
 from .agent_based_api.v1 import (
     check_levels,
-    register,
-    Result,
-    render,
-    Service,
     Metric,
+    register,
+    render,
+    Result,
+    Service,
 )
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -20,42 +25,15 @@ from .agent_based_api.v1.type_defs import (
 )
 from .utils.aws import (
     extract_aws_metrics_by_labels,
-    parse_aws,
     function_arn_to_item,
+    LambdaCloudwatchMetrics,
+    LambdaCloudwatchSection,
     LambdaSummarySection,
+    parse_aws,
 )
 
 
-@dataclass
-class LambdaCloudwatchMetrics:
-    Duration: float
-    Errors: float
-    Invocations: float
-    Throttles: float
-    ConcurrentExecutions: Optional[float] = None
-    DeadLetterErrors: Optional[float] = None
-    DestinationDeliveryFailures: Optional[float] = None
-    IteratorAge: Optional[float] = None
-    PostRuntimeExtensionsDuration: Optional[float] = None
-    ProvisionedConcurrencyInvocations: Optional[float] = None
-    ProvisionedConcurrencySpilloverInvocations: Optional[float] = None
-    ProvisionedConcurrencyUtilization: Optional[float] = None
-    ProvisionedConcurrentExecutions: Optional[float] = None
-    UnreservedConcurrentExecutions: Optional[float] = None
-
-    def __post_init__(self):
-        # convert timespans from milliseconds to canonical seconds
-        self.Duration /= 1000.0
-        if self.PostRuntimeExtensionsDuration:
-            self.PostRuntimeExtensionsDuration /= 1000.0
-        if self.IteratorAge:
-            self.IteratorAge /= 1000.0
-
-
-Section = Mapping[str, LambdaCloudwatchMetrics]
-
-
-def parse_aws_lambda(string_table: StringTable) -> Section:
+def parse_aws_lambda(string_table: StringTable) -> LambdaCloudwatchSection:
     parsed = parse_aws(string_table)
     metrics = extract_aws_metrics_by_labels([
         'ConcurrentExecutions',
@@ -87,7 +65,7 @@ register.agent_section(
 
 def discover_aws_lambda(
     section_aws_lambda_summary: Optional[LambdaSummarySection],
-    section_aws_lambda: Optional[Section],
+    section_aws_lambda: Optional[LambdaCloudwatchSection],
 ) -> DiscoveryResult:
     if section_aws_lambda_summary is None or section_aws_lambda is None:
         return
@@ -109,12 +87,12 @@ def check_aws_lambda_performance(
     item: str,
     params: Mapping[str, Any],
     section_aws_lambda_summary: Optional[LambdaSummarySection],
-    section_aws_lambda: Optional[Section],
+    section_aws_lambda: Optional[LambdaCloudwatchSection],
 ):
     if (section_aws_lambda_summary is None or section_aws_lambda_summary.get(item) is None or
             section_aws_lambda is None or section_aws_lambda.get(item) is None):
         # The metrics will not be reported by AWS if a lambda function was not used in the last monitoring period.
-        # In this case we don't want to suppress the message "Item not found in monitoring data", because it is
+        # In this case we want to suppress the message "Item not found in monitoring data", because it is
         # not an error.
         yield from check_invocations(
             0.0,

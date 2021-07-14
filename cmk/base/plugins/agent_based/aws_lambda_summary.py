@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from typing import Sequence, MutableMapping
 from .agent_based_api.v1 import register
 from .utils.aws import (
     function_arn_to_item,
     parse_aws,
     LambdaSummarySection,
+    LambdaRegionLimits,
+    LambdaRegionLimitsSection,
 )
 from .agent_based_api.v1.type_defs import StringTable
 
@@ -24,4 +28,20 @@ def parse_aws_lambda_summary(string_table: StringTable) -> LambdaSummarySection:
 register.agent_section(
     name="aws_lambda_summary",
     parse_function=parse_aws_lambda_summary,
+)
+
+
+def parse_aws_lambda_region_limits(string_table: StringTable) -> LambdaRegionLimitsSection:
+    parsed: Sequence[Sequence[Sequence[str]]] = [json.loads(" ".join(row)) for row in string_table]
+    region_limits: MutableMapping[str, LambdaRegionLimits] = {}
+    for region in parsed:
+        region_name = region[0][4]  # region must contain limits
+        region_limits[region_name] = LambdaRegionLimits(
+            **{limit[0]: float(limit[3]) for limit in region})
+    return region_limits
+
+
+register.agent_section(
+    name="aws_lambda_region_limits",
+    parse_function=parse_aws_lambda_region_limits,
 )

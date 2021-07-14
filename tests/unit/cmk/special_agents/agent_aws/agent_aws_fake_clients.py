@@ -6,7 +6,7 @@
 
 import abc
 import random
-from typing import Optional
+from typing import Any, Mapping, Optional, Sequence
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
@@ -139,10 +139,10 @@ class InstanceBuilder(metaclass=abc.ABCMeta):
         self._amount = amount
         self._skip_entities = [] if not skip_entities else skip_entities
 
-    def _fill_instance(self):
+    def _fill_instance(self) -> Sequence[Entity]:
         return []
 
-    def _create_instance(self):
+    def _create_instance(self) -> Mapping[str, Any]:
         return {
             value.key: value.create(self._idx, self._amount)
             for value in self._fill_instance()
@@ -190,16 +190,17 @@ class DictInstanceBuilder(metaclass=abc.ABCMeta):
         self._idx = idx
         self._amount = amount
 
-    def _key(self):
+    def _key(self) -> Optional[Entity]:
         return None
 
-    def _value(self):
+    def _value(self) -> Optional[Entity]:
         return None
 
     @classmethod
-    def create_instances(cls, amount):
+    def create_instances(cls, amount) -> Mapping[str, Any]:
         return {
-            key.create(idx, amount): value.create(idx, amount)
+            # static analysis does not recognize that None can not happen because of if clause -> disable warning
+            key.create(idx, amount): value.create(idx, amount)  # type: ignore 
             for idx in range(amount)
             if ((key := cls(idx, amount)._key()) is not None and
                 (value := cls(idx, amount)._value()) is not None)
@@ -2273,6 +2274,20 @@ class LambdaListTagsInstancesIB(DictInstanceBuilder):
 
     def _value(self):
         return Str('Value')
+
+
+class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return {
+            Str('FunctionArn',
+                value='arn:aws:lambda:eu-central-1:123456789:function:FunctionName:Alias'),
+            Int('RequestedProvisionedConcurrentExecutions'),
+            Int('AvailableProvisionedConcurrentExecutions'),
+            Int('AllocatedProvisionedConcurrentExecutions'),
+            Choice('Status', ['IN_PROGRESS', 'READY', 'FAILED']),
+            Str('StatusReason'),
+            Str('LastModified'),
+        }
 
 
 #.

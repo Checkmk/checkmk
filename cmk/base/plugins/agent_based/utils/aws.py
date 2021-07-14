@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
 import json
 from typing import (
     Any,
@@ -97,11 +98,51 @@ def aws_rds_service_item(instance_id: str, region: str) -> str:
 def function_arn_to_item(function_arn: str) -> str:
     """Human readable representation of the FunctionArn without information loss.
         The region and the lambda function name is extracted from the FunctionArn
-        (arn:aws:lambda:REGION:account_id:function:LAMBDA_FUNCTION_NAME).
+        (arn:aws:lambda:REGION:account_id:function:LAMBDA_FUNCTION_NAME:OPTIONAL_ALIAS_OR_VERSION).
         The account_id can be omitted, because it stays equal for all lambda functions of the same AWS account.
 
-    >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function")
-    'eu-central-1 my_python_test_function'
+    >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:OPTIONAL_ALIAS_OR_VERSION")
+    'eu-central-1 my_python_test_function OPTIONAL_ALIAS_OR_VERSION'
     """
     splitted = function_arn.split(':')
-    return f"{splitted[3]} {splitted[-1]}"
+    return f"{splitted[3]} {splitted[6]} {splitted[7]}" if len(
+        splitted) == 8 else f"{splitted[3]} {splitted[6]}"
+
+
+@dataclass
+class LambdaCloudwatchMetrics:
+    Duration: float
+    Errors: float
+    Invocations: float
+    Throttles: float
+    ConcurrentExecutions: Optional[float] = None
+    DeadLetterErrors: Optional[float] = None
+    DestinationDeliveryFailures: Optional[float] = None
+    IteratorAge: Optional[float] = None
+    PostRuntimeExtensionsDuration: Optional[float] = None
+    ProvisionedConcurrencyInvocations: Optional[float] = None
+    ProvisionedConcurrencySpilloverInvocations: Optional[float] = None
+    ProvisionedConcurrencyUtilization: Optional[float] = None
+    ProvisionedConcurrentExecutions: Optional[float] = None
+    UnreservedConcurrentExecutions: Optional[float] = None
+
+    def __post_init__(self):
+        # convert timespans from milliseconds to canonical seconds
+        self.Duration /= 1000.0
+        if self.PostRuntimeExtensionsDuration:
+            self.PostRuntimeExtensionsDuration /= 1000.0
+        if self.IteratorAge:
+            self.IteratorAge /= 1000.0
+
+
+LambdaCloudwatchSection = Mapping[str, LambdaCloudwatchMetrics]
+
+
+@dataclass(frozen=True)
+class LambdaRegionLimits:
+    total_code_size: float
+    concurrent_executions: float
+    unreserved_concurrent_executions: float
+
+
+LambdaRegionLimitsSection = Mapping[str, LambdaRegionLimits]

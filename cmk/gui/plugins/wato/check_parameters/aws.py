@@ -1399,3 +1399,90 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_aws_lambda_performance,
         title=lambda: _("AWS/Lambda Performance"),
     ))
+
+
+def _parameter_valuespec_aws_lambda_concurrency():
+    return Dictionary(elements=[
+        ('levels_concurrent_executions_in_percent',
+         Tuple(
+             title=_("Upper levels for concurrent executions in percent of the region limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_unreserved_concurrent_executions_in_percent',
+         Tuple(
+             title=_(
+                 "Upper levels for unreserved concurrent executions in percent of the region limit"
+             ),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_concurrent_executions_absolute',
+         Tuple(
+             title=_("Upper levels for concurrent executions"),
+             elements=[
+                 Float(title=_("Warning at"), display_format="%.1f"),
+                 Float(title=_("Critical at"), display_format="%.1f"),
+             ],
+         )),
+        ('levels_unreserved_concurrent_executions_absolute',
+         Tuple(
+             title=_("Upper levels for unreserved concurrent executions"),
+             elements=[
+                 Float(title=_("Warning at"), display_format="%.1f"),
+                 Float(title=_("Critical at"), display_format="%.1f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_executions',
+         Tuple(
+             title=_("Upper levels for provisioned concurrent executions per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_invocations',
+         Tuple(
+             title=_("Upper levels for provisioned concurrent invocations per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_spillover_invocations',
+         Tuple(
+             title=_("Upper levels for provisioned concurrency spillover invocations per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
+             ],
+             help=
+             _("Specify the upper levels for the number of invocations per second that are run on non-provisioned concurrency"
+               " (spillover invocations) when all provisioned concurrency is in use."
+               " Default is CRIT for more than one spillover invocation per hour (ca. 1.0/3600)."),
+         )),
+        ('levels_provisioned_concurrency_utilization',
+         Tuple(
+             title=_("Upper levels provisioned concurrency utilization"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_concurrency",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_concurrency,
+        title=lambda: _("AWS/Lambda Concurrency"),
+    ))

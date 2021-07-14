@@ -810,6 +810,54 @@ metric_info['aws_lambda_dead_letter_errors'] = {
     'color': '41/a',
 }
 
+metric_info['aws_lambda_concurrent_executions_in_percent'] = {
+    'title': _('Concurrent executions in percent'),
+    'unit': '%',
+    'color': '35/a',
+}
+
+metric_info['aws_lambda_concurrent_executions'] = {
+    'title': _('Concurrent executions'),
+    'unit': 'count',
+    'color': '36/a',
+}
+
+metric_info['aws_lambda_unreserved_concurrent_executions_in_percent'] = {
+    'title': _('Unreserved concurrent executions in percent'),
+    'unit': '%',
+    'color': '25/a',
+}
+
+metric_info['aws_lambda_unreserved_concurrent_executions'] = {
+    'title': _('Unreserved concurrent executions'),
+    'unit': 'count',
+    'color': '26/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_executions'] = {
+    'title': _('Provisioned concurrency executions'),
+    'unit': '1/s',
+    'color': '43/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_invocations'] = {
+    'title': _('Provisioned concurrency invocations'),
+    'unit': '1/s',
+    'color': '44/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_spillover_invocations'] = {
+    'title': _('Provisioned concurrency spillover invocations'),
+    'unit': '1/s',
+    'color': '12/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_utilization'] = {
+    'title': _('Provisioned concurrency utilization'),
+    'unit': '%',
+    'color': '31/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

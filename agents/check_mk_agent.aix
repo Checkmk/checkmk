@@ -115,6 +115,7 @@ _log_section_time() {
 }
 
 export PROFILING_LOGFILE_DIR
+export LOG_SECTION_TIME
 export _log_section_time
 
 if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then

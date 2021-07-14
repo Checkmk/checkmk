@@ -102,6 +102,7 @@ _log_section_time() {
 }
 
 export PROFILING_LOGFILE_DIR
+export LOG_SECTION_TIME
 export -f _log_section_time
 
 read_python_version() {

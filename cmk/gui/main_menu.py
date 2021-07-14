@@ -19,7 +19,7 @@ from cmk.utils.version import (
     is_expired_trial,
     is_free_edition,
 )
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, get_current_language
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 from datetime import timedelta
 import time
@@ -76,6 +76,7 @@ mega_menu_registry = MegaMenuRegistry()
 
 
 def _help_menu_topics() -> List[TopicMenuTopic]:
+    user_guide_language = "de" if get_current_language() == "de" else "en"
     return [
         TopicMenuTopic(
             name="version",
@@ -136,7 +137,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="manual",
                     title=_("User guide"),
-                    url="https://docs.checkmk.com/2.0.0",
+                    url="https://docs.checkmk.com/2.0.0/%s" % user_guide_language,
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

@@ -1,0 +1,11 @@
+Title: Fix "User guide" link in "User" menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1626245999
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p8
+
+The link led to an 404 error page.

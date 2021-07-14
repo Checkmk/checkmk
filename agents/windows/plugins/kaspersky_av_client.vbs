@@ -9,6 +9,7 @@ Option Explicit
 Const CMK_VERSION = "2.1.0i1"
 dim strStatisticsLoc, strProtection_BasesDate, strProtection_LastFscan, strProtection_LastConnected
 dim strBIASLoc, strBIAS
+dim strLocaleID, strDelimiter
 dim objShell
 
 Set objShell = CreateObject("WScript.Shell")
@@ -19,8 +20,8 @@ End Function
 
 Function Kasp2Win(TimeStamp)
   dim strTimeStampRepl
-  strTimeStampRepl = Replace(TimeStamp, "-", ".", 1, 2)
-  Kasp2Win = Replace(strTimeStampRepl, "-", ":")
+  strTimeStampRepl = Replace(TimeStamp, "-", ":")
+  Kasp2Win = Replace(strTimeStampRepl, ":", strDelimiter, 1, 2)
 End Function
 
 strBIASLoc = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation\ActiveTimeBias"
@@ -36,6 +37,16 @@ strProtection_LastConnected = objShell.RegRead(strProtection_LastConnected)
 if err.number = 0 then
 	WScript.Echo("<<<kaspersky_av_client>>>")
 
+    'Retrieve the locale to define the correct date separator to avoid CDate errors
+    strLocaleID = GetLocale()
+    'Default delimiter (German)
+    strDelimiter = "."
+    select case strLocaleID
+        case "1043"
+            'Dutch
+            strDelimiter = "-"
+    end select
+    
 	'Protection_BasesDate key is set with old signatures from installer
 	strProtection_BasesDate = strStatisticsLoc & "Protection_BasesDate"
 	strProtection_BasesDate = objShell.RegRead(strProtection_BasesDate)

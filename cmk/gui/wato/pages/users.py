@@ -74,6 +74,7 @@ from cmk.gui.type_defs import Choices, UserSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
 from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.ntop import is_ntop_available, get_ntop_connection_mandatory
+from cmk.gui.utils.roles import user_may
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -886,8 +887,8 @@ class ModeEditUser(WatoMode):
             html.open_td()
             # Only make password enforcement selection possible when user is allowed to change the PW
             uid = None if self._user_id is None else UserId(self._user_id)
-            if (self._is_new_user or (config.user_may(uid, 'general.edit_profile') and
-                                      config.user_may(uid, 'general.change_password'))):
+            if (self._is_new_user or (user_may(uid, 'general.edit_profile') and
+                                      user_may(uid, 'general.change_password'))):
                 html.checkbox("enforce_pw_change",
                               self._user.get("enforce_pw_change", False),
                               label=_("Change password at next login or access"))

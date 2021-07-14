@@ -19,6 +19,7 @@ from cmk.gui.globals import local
 from cmk.gui.i18n import _
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.utils.roles import may_with_roles, roles_of_user
 import cmk.gui.permissions as permissions
 
 
@@ -63,7 +64,7 @@ class LoggedInUser:
         return self.id
 
     def _gather_roles(self, user_id: Optional[UserId]) -> List[str]:
-        return config.roles_of_user(user_id)
+        return roles_of_user(user_id)
 
     def _load_attributes(self, user_id: Optional[UserId], role_ids: List[str]) -> Any:
         attributes = self.load_file("cached_profile", None)
@@ -340,7 +341,7 @@ class LoggedInUser:
     def may(self, pname: str) -> bool:
         if pname in self._permissions:
             return self._permissions[pname]
-        he_may = config.may_with_roles(self.role_ids, pname)
+        he_may = may_with_roles(self.role_ids, pname)
         self._permissions[pname] = he_may
         return he_may
 

@@ -94,6 +94,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
                                 makeactionuri)
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.roles import user_may
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
@@ -547,13 +548,12 @@ class Overridable(Base):
 
     def publish_is_allowed(self):
         """Whether or not not publishing an element to other users is allowed by the owner"""
-        return not self.owner() or config.user_may(self.owner(),
-                                                   "general.publish_" + self.type_name())
+        return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
 
     # Same, but checks if the owner has the permission to override builtin views
     def is_public_forced(self):
         return self.is_public() and \
-          config.user_may(self.owner(), "general.force_" + self.type_name())
+          user_may(self.owner(), "general.force_" + self.type_name())
 
     def is_published_to_me(self):
         """Whether or not the page is published to the currently active user"""
@@ -618,7 +618,7 @@ class Overridable(Base):
         # TODO: Permissions
         # ## visual = visuals[(owner, visual_name)]
         # ## if owner == user.id or \
-        # ##    (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
+        # ##    (visual["public"] and owner != '' and user_may(owner, "general.publish_" + what)):
         # ##     custom.append((owner, visual_name, visual))
         # ## elif visual["public"] and owner == "":
         # ##     builtin.append((owner, visual_name, visual))

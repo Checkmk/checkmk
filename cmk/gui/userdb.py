@@ -61,6 +61,7 @@ from cmk.gui.plugins.userdb.utils import (
 
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.utils.roles import roles_of_user
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -729,7 +730,7 @@ def load_users(lock: bool = False) -> Users:
             else:
                 # Create entry if this is an admin user
                 new_user = {
-                    "roles": config.roles_of_user(uid),
+                    "roles": roles_of_user(uid),
                     "password": password,
                     "locked": False,
                 }

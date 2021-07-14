@@ -106,6 +106,7 @@ from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
                                 makeactionuri)
+from cmk.gui.utils.roles import user_may
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -419,7 +420,7 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
     # 2. visuals of special users allowed to globally override builtin visuals
     for (u, n), visual in all_visuals.items():
         # Honor original permissions for the current user
-        if n not in visuals and published_to_user(visual) and config.user_may(
+        if n not in visuals and published_to_user(visual) and user_may(
                 u, "general.force_" + what) and not restricted_visual(n):
             visuals[n] = visual
 
@@ -434,7 +435,7 @@ def available(what: str, all_visuals: Dict[Tuple[UserId, VisualName],
     if user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
             # Is there a builtin visual with the same name? If yes, honor permissions.
-            if n not in visuals and published_to_user(visual) and config.user_may(
+            if n not in visuals and published_to_user(visual) and user_may(
                     u, "general.publish_" + what) and not restricted_visual(n):
                 visuals[n] = visual
 
@@ -668,7 +669,7 @@ def _partition_visuals(visuals: Dict[Tuple[UserId, str], Dict],
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
-        elif (visual["public"] and owner != '' and config.user_may(owner, "general.publish_%s" % what)) or \
+        elif (visual["public"] and owner != '' and user_may(owner, "general.publish_%s" % what)) or \
                 user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 

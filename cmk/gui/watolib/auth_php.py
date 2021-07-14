@@ -46,6 +46,7 @@ import cmk.utils.paths
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
+from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups import load_contact_group_information
 
 
@@ -207,7 +208,7 @@ def _create_auth_file(callee, users=None):
         if 'nagvis_maps' in group and group['nagvis_maps']:
             groups[gid] = group['nagvis_maps']
 
-    _create_php_file(callee, users, config.get_role_permissions(), groups)
+    _create_php_file(callee, users, get_role_permissions(), groups)
 
 
 def _on_userdb_job():

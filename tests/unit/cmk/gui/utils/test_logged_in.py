@@ -14,6 +14,7 @@ from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedIn
 from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.watolib.utils import may_edit_ruleset
+import cmk.gui.utils.roles as roles
 
 
 def test_user_context(with_user):
@@ -219,7 +220,7 @@ def fixture_monitoring_user(tmp_path, mocker):
     user_dir.joinpath('favorites.mk').write_text(str(MONITORING_USER_FAVORITES))
 
     mocker.patch.object(config, 'config_dir', str(config_dir))
-    mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])
+    mocker.patch.object(roles, 'roles_of_user', lambda user_id: ['user'])
 
     assert config.builtin_role_ids == ['user', 'admin', 'guest']
     assert 'test' not in config.admin_users

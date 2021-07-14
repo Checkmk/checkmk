@@ -118,6 +118,8 @@ def output_alerts(requester: Requester) -> Generator[SectionLine, None, None]:
         except KeyError:
             message = entity['message']
 
+        # message can contain line breaks which confuses the parser.
+        message = message.replace("\n", r"\n")
         yield (entity['createdTimeStampInUsecs'], entity['severity'], message, thin_context)
 
 

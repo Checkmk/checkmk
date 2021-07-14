@@ -23,7 +23,9 @@ def with_context_middleware(app):
         req = http.Request(environ)
         resp = http.Response()
         with AppContext(app), \
-                RequestContext(req=req, resp=resp, funnel=OutputFunnel(resp), display_options=DisplayOptions()), \
+                RequestContext(req=req, resp=resp, funnel=OutputFunnel(resp),
+                               config_obj=config.make_config_object(config.get_default_config()),
+                               display_options=DisplayOptions()), \
                 cmk.utils.store.cleanup_locks(), \
                 sites.cleanup_connections():
             config.initialize()

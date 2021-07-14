@@ -12,6 +12,7 @@ from unittest import mock
 from werkzeug.test import EnvironBuilder
 
 from cmk.gui import http, sites
+from cmk.gui.config import make_config_object, get_default_config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
@@ -48,6 +49,7 @@ def mock_livestatus(with_context: bool = False,
             req=req,
             resp=resp,
             funnel=OutputFunnel(resp),
+            config_obj=make_config_object(get_default_config()),
             display_options=DisplayOptions(),
             prefix_logs_with_url=False,
         )

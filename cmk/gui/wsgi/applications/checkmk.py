@@ -197,11 +197,13 @@ class CheckmkApp:
         timeout_manager.enable_timeout(req.request_timeout)
 
         theme = Theme()
+        config_obj = config.make_config_object(config.get_default_config())
 
         with AppContext(self), RequestContext(
                 req=req,
                 resp=resp,
                 funnel=funnel,
+                config_obj=config_obj,
                 html_obj=htmllib.html(req, resp, funnel, output_format),
                 timeout_manager=timeout_manager,
                 display_options=DisplayOptions(),

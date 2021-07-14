@@ -11,6 +11,8 @@ import copy
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Tuple, Union
 from pathlib import Path
+from functools import partial
+from dataclasses import dataclass, fields, field, make_dataclass
 
 from livestatus import SiteConfigurations
 
@@ -20,6 +22,7 @@ import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 
+from cmk.gui.globals import local
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -31,6 +34,7 @@ from cmk.gui.permissions import declare_permission, declare_permission_section  
 
 import cmk.gui.plugins.config
 
+# TODO: These imports will be removed once all call sites have been migrated to the config object
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
 # later handled with the default_config dict and _load_default_config()
@@ -53,8 +57,23 @@ if cmk_version.is_managed_edition():
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
-multisite_users = {}
-admin_users = []
+
+@dataclass
+# TODO: Will be extended with CEEConfig and CREConfig in one of the next steps
+class Config(CREConfig):
+    """Holds the loaded configuration during GUI processing
+
+    The loaded configuration is then accessible through `from cmk.gui.globals import config`.
+    For builtin config variables type checking and code completion works.
+
+    This class is extended by `load_config` to support custom config variables which may
+    be introduced by 3rd party extensions. For these variables we don't have the features
+    mentioned above. But that's fine for now.
+    """
+    tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
+
+
+# TODO: Will be removed once all call sites have been migrated to the config object
 tags = cmk.utils.tags.TagConfig()
 
 # hard coded in various permissions
@@ -141,11 +160,36 @@ def load_config() -> None:
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
-    # TODO: Keep this until all call sites are refactored to use the ConfigContext
-    # object from cmk.gui.globals, which will be introduced soon.
+    local.config = make_config_object(raw_config)
+
+    # TODO: Keep until all call sites are refactored to use the Config object from
+    # cmk.gui.globals
     globals().update(raw_config)
 
     execute_post_config_load_hooks()
+
+
+def make_config_object(raw_config: Dict[str, Any]) -> Config:
+    """Create the runtime config object
+
+    In case there are some custom extensions installed which introduce new config variables, we make
+    us compatible by creating a dynamic class which makes the Config class accept the required
+    values. Since it is dynamic, pylint / mypy will complain about call sites accessing these config
+    variables.
+    """
+    default_keys = set(f.name for f in fields(Config()))
+    configured_keys = set(raw_config.keys())
+    custom_keys = configured_keys - default_keys
+    if not custom_keys:
+        cls: type = Config
+    else:
+        cls = make_dataclass("ExtendedConfig",
+                             fields=[(k, object,
+                                      field(default_factory=partial(raw_config.__getitem__, k)))
+                                     for k in custom_keys],
+                             bases=(Config,))
+
+    return cls(**raw_config)
 
 
 def _prepare_tag_config(raw_config: Dict[str, Any]) -> None:
@@ -191,7 +235,7 @@ def _get_default_config_from_module_plugins() -> Dict[str, Any]:
 
     default_config: Dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
-        if k[0] == "_":
+        if k[0] == "_" or k in ("CREConfig",):
             continue
 
         if isinstance(v, (dict, list)):

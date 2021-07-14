@@ -8,6 +8,7 @@ import pytest
 from werkzeug.test import create_environ
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.config import make_config_object, get_default_config
 from cmk.gui.http import Request, Response
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.script_helpers import DummyApplication
@@ -21,5 +22,6 @@ def with_request_context():
             RequestContext(req=Request(environ),
                            resp=resp,
                            funnel=OutputFunnel(resp),
+                           config_obj=make_config_object(get_default_config()),
                            display_options=DisplayOptions()):
         yield

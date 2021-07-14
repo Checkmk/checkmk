@@ -25,6 +25,7 @@ from cmk.gui.utils.user_errors import UserErrors
 
 if TYPE_CHECKING:
     from cmk.gui import htmllib, http, userdb
+    from cmk.gui.config import Config
     from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.timeout_manager import TimeoutManager
     from cmk.gui.utils.theme import Theme
@@ -154,6 +155,7 @@ class RequestContext:
         req: http.Request,
         resp: http.Response,
         funnel: OutputFunnel,
+        config_obj: Config,
         html_obj: Optional[htmllib.html] = None,
         timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
         theme: Optional[Theme] = None,  # pylint: disable=redefined-outer-name
@@ -172,6 +174,7 @@ class RequestContext:
         self.request = req
         self.response = resp
         self.output_funnel = funnel
+        self.config = config_obj
 
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.utils.logged_in import LoggedInNobody
@@ -240,6 +243,7 @@ user: LoggedInUser = request_local_attr('user')
 request: http.Request = request_local_attr('request')
 response: http.Response = request_local_attr('response')
 output_funnel: OutputFunnel = request_local_attr('output_funnel')
+config: Config = request_local_attr('config')
 session: userdb.Session = request_local_attr('session')
 user_errors: UserErrors = request_local_attr('user_errors')
 

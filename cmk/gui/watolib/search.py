@@ -32,11 +32,10 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client
 
-import cmk.gui.config as config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import g, request, RequestContext, user
+from cmk.gui.globals import g, request, RequestContext, user, config
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
@@ -358,6 +357,7 @@ class IndexSearcher:
                 req=_request,
                 resp=_response,
                 funnel=_funnel,
+                config_obj=config,
                 html_obj=html(_request, _response, _funnel, output_format="html"),
                 display_options=DisplayOptions(),
                 theme=_theme,

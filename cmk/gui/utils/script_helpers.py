@@ -18,7 +18,7 @@ from typing import (
 
 from werkzeug.test import create_environ
 
-from cmk.gui.config import load_config
+from cmk.gui.config import load_config, make_config_object, get_default_config
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.utils.theme import Theme
 from cmk.gui.globals import (
@@ -53,6 +53,7 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
             req=req,
             resp=resp,
             funnel=funnel,
+            config_obj=make_config_object(get_default_config()),
             html_obj=html(req, resp, funnel, output_format="html"),
             display_options=DisplayOptions(),
             theme=Theme(),

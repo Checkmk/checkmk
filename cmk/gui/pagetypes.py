@@ -95,6 +95,7 @@ from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link,
                                 makeactionuri)
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.logged_in import save_user_file
 
 SubPagesSpec = List[Tuple[str, str, str]]
 
@@ -930,13 +931,14 @@ class Overridable(Base):
     def save_user_instances(cls, owner: _Optional[UserId] = None) -> None:
         if not owner:
             owner = user.id
+        assert owner is not None
 
         save_dict = {}
         for page in cls.instances():
             if page.owner() == owner:
                 save_dict[page.name()] = page.internal_representation()
 
-        config.save_user_file('user_%ss' % cls.type_name(), save_dict, owner)
+        save_user_file('user_%ss' % cls.type_name(), save_dict, owner)
 
     @classmethod
     def add_page(cls, new_page):

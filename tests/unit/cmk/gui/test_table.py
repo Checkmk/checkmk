@@ -13,6 +13,7 @@ from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.globals import html, output_funnel, response
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import LoggedInNobody
 from testlib import compare_html
 
 
@@ -200,12 +201,7 @@ def test_nesting_context(register_builtin_html):
 @pytest.mark.parametrize("output_format", ["html", "csv"])
 def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable, limit,
                        output_format):
-    # TODO: Better mock the access to save_user in table.*
-    def save_user_mock(name, data, user, unlock=False):
-        pass
-
-    import cmk.gui.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data
     rows = [(i, i**3) for i in range(10)]

@@ -369,7 +369,8 @@ class LoggedInUser:
             return deflt
 
     def save_file(self, name: str, content: Any) -> None:
-        config.save_user_file(name, content, self.id)
+        assert self.id is not None
+        save_user_file(name, content, self.id)
 
     def file_modified(self, name: str) -> float:
         if self.confdir is None:
@@ -395,6 +396,9 @@ class LoggedInSuperUser(LoggedInUser):
     def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
         return ["admin"]
 
+    def save_file(self, name: str, content: Any) -> None:
+        raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
+
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self) -> None:
@@ -404,6 +408,9 @@ class LoggedInNobody(LoggedInUser):
 
     def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
         return []
+
+    def save_file(self, name: str, content: Any) -> None:
+        raise TypeError("The profiles of LoggedInNobody cannot be saved")
 
 
 def UserContext(user_id: UserId) -> ContextManager[None]:
@@ -465,3 +472,9 @@ def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
             "wato.users": True,  # ... with access to user management
         }
     return {}
+
+
+def save_user_file(name: str, data: Any, user_id: UserId) -> None:
+    path = config.config_dir + "/" + user_id + "/" + name + ".mk"
+    store.mkdir(os.path.dirname(path))
+    store.save_object_to_file(path, data)

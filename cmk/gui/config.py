@@ -12,15 +12,12 @@ from types import ModuleType
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 
-from six import ensure_str
-
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId
 
 from cmk.gui.globals import user
 import cmk.gui.utils as utils
@@ -267,16 +264,6 @@ def _config_plugin_modules() -> List[ModuleType]:
 def has_custom_logo() -> bool:
     return cmk_version.is_managed_edition() and customers.get(current_customer, {}).get(
         "globals", {}).get("logo")
-
-
-# TODO: Check all calls for arguments (changed optional user to 3rd positional)
-def save_user_file(name: str, data: Any, user_id: Optional[UserId]) -> None:
-    if user_id is None:
-        raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
-
-    path = config_dir + "/" + ensure_str(user_id) + "/" + name + ".mk"
-    store.mkdir(os.path.dirname(path))
-    store.save_object_to_file(path, data)
 
 
 def prepare_raw_site_config(site_config: SiteConfigurations) -> SiteConfigurations:

@@ -107,6 +107,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
                                 makeactionuri)
 from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.logged_in import save_user_file
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
@@ -241,12 +242,13 @@ _user_visuals_cache = UserVisualsCache()
 def save(what, visuals, user_id=None):
     if user_id is None:
         user_id = user.id
+    assert user_id is not None
 
     uservisuals = {}
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user_id=user_id)
+    save_user_file('user_' + what, uservisuals, user_id=user_id)
 
 
 # FIXME: Currently all user visual files of this type are locked. We could optimize

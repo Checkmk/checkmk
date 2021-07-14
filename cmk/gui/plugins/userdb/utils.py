@@ -19,7 +19,7 @@ from cmk.gui.type_defs import UserSpec
 from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
 import cmk.gui.config as config
-from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
@@ -38,7 +38,7 @@ def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
 
 
 def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
-    config.save_user_file("cached_profile", cached_profile, user_id=user_id)
+    save_user_file("cached_profile", cached_profile, user_id=user_id)
 
 
 def _multisite_dir() -> str:

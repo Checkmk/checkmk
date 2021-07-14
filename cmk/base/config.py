@@ -3940,6 +3940,26 @@ class CEEConfigCache(ConfigCache):
             return default
         return value
 
+    def influxdb_metrics_of_service(
+        self,
+        hostname: HostName,
+        description: Optional[ServiceName],
+        *,
+        default: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        if description is None:
+            return default
+
+        value = self.get_service_ruleset_value(
+            hostname,
+            description,
+            cmc_influxdb_service_metrics,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=None,
+        )
+        if value is None:
+            return default
+        return value
+
     def matched_agent_config_entries(
             self, hostname: Union[HostName,
                                   Literal[BuiltinBakeryHostName.GENERIC]]) -> Dict[str, Any]:

@@ -484,13 +484,15 @@ def _build_index_background(
             break
         except redis.ConnectionError:
             job_interface.send_progress_update(
-                _(f"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis failed"
-                 ))
+                _("Connection attempt %d / %d to Redis failed") % (
+                    n_attempts,
+                    n_attempts_redis_connection,
+                ))
             if n_attempts == n_attempts_redis_connection:
                 job_interface.send_result_message(
                     _("Maximum number of allowed connection attempts reached, terminating"))
                 raise
-            job_interface.send_progress_update(_(f"Will wait for {sleep_time} seconds and retry"))
+            job_interface.send_progress_update(_("Will wait for %d seconds and retry") % sleep_time)
             sleep(sleep_time)
     job_interface.send_result_message(_("Search index successfully built"))
 

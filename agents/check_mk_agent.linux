@@ -1196,7 +1196,7 @@ run_runas_executor() {
     if [ -e "$MK_CONFDIR/runas.cfg" ]; then
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
             while read -r type user configfile; do
-                if [ -d "$include" -o \( "$type" == "mrpe" -a -f "$include" \) ]; then
+                if [ -d "$configfile" -o \( "$type" == "mrpe" -a -f "$configfile" \) ]; then
                     prefix=""
                     if [ "$user" != "-" ]; then
                         prefix="su $user -c "
@@ -1212,7 +1212,7 @@ run_runas_executor() {
                             echo "<<<local:sep(0)>>>"
                         fi
 
-                        find "$include" -executable -type f |
+                        find "$configfile" -executable -type f |
                             while read -r filename; do
                                 if [ -n "$prefix" ]; then
                                     cmdline="$prefix\"$filename\""

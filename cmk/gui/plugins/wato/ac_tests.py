@@ -144,6 +144,7 @@ class ACTestLivestatusUsage(ACTest):
         return _("Livestatus usage")
 
     def help(self) -> str:
+        # xgettext: no-python-format
         return _("<p>Livestatus is used by several components, for example the GUI, to gather "
                  "information about the monitored objects from the monitoring core. It is "
                  "very important for the overall performance of the monitoring system that "
@@ -641,6 +642,7 @@ class ACTestCheckMKHelperUsage(ACTest):
         return _("Checkmk helper usage")
 
     def help(self) -> str:
+        # xgettext: no-python-format
         return _(
             "<p>The Checkmk Microcore uses Checkmk helper processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
@@ -763,6 +765,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
         return _("Checkmk checker usage")
 
     def help(self) -> str:
+        # xgettext: no-python-format
         return _(
             "<p>The Checkmk Microcore uses Checkmk checker processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
@@ -850,6 +853,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return _("Check helper usage")
 
     def help(self) -> str:
+        # xgettext: no-python-format
         return _(
             "<p>The Checkmk Microcore uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "

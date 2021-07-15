@@ -51,7 +51,11 @@ CPU_RESCALE_MAX_UNSPEC = 'cpu_rescale_max_unspecified'
 
 def process_level_elements():
     cpu_rescale_max_choices: DropdownChoices = [
-        (True, _("100% is all cores at full load")),
+        (
+            True,
+            # xgettext: no-python-format
+            _("100% is all cores at full load"),
+        ),
         (False, _("N * 100% as each core contributes with 100% at full load")),
     ]
     return [

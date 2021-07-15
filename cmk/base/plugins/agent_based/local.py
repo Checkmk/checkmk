@@ -115,6 +115,17 @@ def _parse_perfentry(entry):
     cmk.base compatible perfdata 6-tuple.
 
     This function may raise Index- or ValueErrors.
+
+    >>> _parse_perfentry("a=5;3:7;2:8;1;9")
+    Perfdata(name='a', value=5.0, levels=(7.0, 8.0, 3.0, 2.0), tuple=('a', 5.0, 7.0, 8.0, 1.0, 9.0))
+    >>> _parse_perfentry("a=5;;;;")
+    Perfdata(name='a', value=5.0, levels=(None, None, None, None), tuple=('a', 5.0, None, None, None, None))
+    >>> _parse_perfentry("a=5;7;2:8;;")
+    Perfdata(name='a', value=5.0, levels=(7.0, 8.0, None, 2.0), tuple=('a', 5.0, 7.0, 8.0, None, None))
+    >>> _parse_perfentry("a=5;7;2:8;0;")
+    Perfdata(name='a', value=5.0, levels=(7.0, 8.0, None, 2.0), tuple=('a', 5.0, 7.0, 8.0, 0.0, None))
+    >>> _parse_perfentry("a=5;7;2:8;;20")
+    Perfdata(name='a', value=5.0, levels=(7.0, 8.0, None, 2.0), tuple=('a', 5.0, 7.0, 8.0, None, 20.0))
     '''
     entry = entry.rstrip(";")
     name, raw = entry.split('=', 1)
@@ -139,8 +150,8 @@ def _parse_perfentry(entry):
         levels[0] = levels[1]
 
     # create valid perfdata 6-tuple
-    min_ = float(raw[3]) if len(raw) >= 4 else None
-    max_ = float(raw[4]) if len(raw) >= 5 else None
+    min_ = _try_convert_to_float(raw[3]) if len(raw) >= 4 else None
+    max_ = _try_convert_to_float(raw[4]) if len(raw) >= 5 else None
     tuple_ = (name, value, levels[0], levels[1], min_, max_)
 
     # check_levels won't handle crit=None, if warn is present.

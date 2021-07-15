@@ -60,7 +60,7 @@ from cmk.gui.plugins.wato.utils import (
     HostGroupSelection,
     HostnameTranslation,
     IndividualOrStoredPassword,
-    passwordstore_choices,
+    PasswordFromStore,
     HTTPProxyReference,
     HTTPProxyInput,
     IPMIParameters,

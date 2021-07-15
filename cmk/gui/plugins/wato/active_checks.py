@@ -41,9 +41,8 @@ from cmk.gui.plugins.wato import (
     HostRulespec,
     PluginCommandLine,
     IndividualOrStoredPassword,
+    PasswordFromStore,
 )
-from cmk.gui.plugins.wato.utils import (
-    PasswordFromStore,)
 
 from cmk.gui.exceptions import MKUserError
 

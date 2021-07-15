@@ -36,13 +36,12 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     notification_parameter_registry,
     NotificationParameter,
-    passwordstore_choices,
     HTTPProxyReference,
     IndividualOrStoredPassword,
+    PasswordFromStore,
 )
 
-from cmk.gui.plugins.wato.utils import (
-    PasswordFromStore,)
+from cmk.gui.watolib.password_store import passwordstore_choices
 
 
 # We have to transform because 'add_to_event_context'

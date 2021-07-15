@@ -35,3 +35,9 @@ class PasswordStore(WatoSimpleConfigFile):
         assert user.id is not None
         user_groups = userdb.contactgroups_of_user(user.id)
         return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
+
+
+def passwordstore_choices():
+    pw_store = PasswordStore()
+    return [(ident, pw["title"])
+            for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()]

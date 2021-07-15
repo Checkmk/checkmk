@@ -12,6 +12,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user
 from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import (
@@ -759,7 +760,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self) -> bool:
-        return not (cmk.gui.config.has_wato_slave_sites() or cmk.gui.config.is_wato_slave_site())
+        return not (has_wato_slave_sites() or is_wato_slave_site())
 
     def topic(self):
         return HostAttributeTopicBasicSettings

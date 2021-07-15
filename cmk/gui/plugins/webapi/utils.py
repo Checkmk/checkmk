@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
+from cmk.gui.sites import allsites
 
 
 class APICallCollection(metaclass=abc.ABCMeta):
@@ -120,7 +121,7 @@ def _validate_general_host_attributes(host_attributes, new):
                 attr.validate_input(value, "")
 
         # The site attribute gets an extra check
-        if name == "site" and value not in config.allsites().keys():
+        if name == "site" and value not in allsites().keys():
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
 
 

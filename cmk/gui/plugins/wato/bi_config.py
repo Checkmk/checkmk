@@ -93,6 +93,7 @@ from cmk.gui.bi import get_cached_bi_packs, BIManager, bi_livestatus_query
 # TODO: forbidden import, integrate into bi_config... ?
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.sites
+from cmk.gui.sites import wato_slave_sites
 from cmk.utils.bi.bi_actions import BICallARuleAction
 from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_compiler import BICompiler
@@ -182,7 +183,7 @@ class ABCBIMode(WatoMode):
         return escaping.escape_attribute(bi_pack.title)
 
     def _add_change(self, action_name, text):
-        site_ids = list(config.wato_slave_sites().keys()) + [omd_site()]
+        site_ids = list(wato_slave_sites().keys()) + [omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     def url_to_pack(self, addvars, bi_pack):

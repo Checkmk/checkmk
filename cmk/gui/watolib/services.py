@@ -14,7 +14,7 @@ from typing import Tuple, List, NamedTuple, Set, Dict, Any
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.gui.globals import user
-from cmk.gui.sites import states, SiteStatus
+from cmk.gui.sites import states, SiteStatus, site_is_local, get_site_config
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.utils.type_defs import SetAutochecksTable
 
@@ -458,7 +458,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
             discovery_request.host, "refresh-autochecks",
             _("Refreshed check configuration of host '%s'") % discovery_request.host.name())
 
-    if config.site_is_local(discovery_request.host.site_id()):
+    if site_is_local(discovery_request.host.site_id()):
         return execute_discovery_job(discovery_request)
 
     discovery_result = _get_check_table_from_remote(discovery_request)
@@ -527,7 +527,7 @@ def _get_check_table_from_remote(api_request):
         sync_changes_before_remote_automation(api_request.host.site_id())
 
         return _deserialize_remote_result(
-            watolib.do_remote_automation(config.site(api_request.host.site_id()),
+            watolib.do_remote_automation(get_site_config(api_request.host.site_id()),
                                          "service-discovery-job", [
                                              ("host_name", api_request.host.name()),
                                              ("options", json.dumps(api_request.options._asdict())),

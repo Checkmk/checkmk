@@ -17,6 +17,7 @@ from typing import Dict, Mapping, Optional, Type, Iterator
 from six import ensure_str
 
 import livestatus
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
@@ -160,7 +161,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
 
     def _get_crash_report_row(self, crash_id: str, site_id: str) -> Optional[Dict[str, str]]:
         rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[config.SiteId(ensure_str(site_id))],
+            only_sites=[SiteId(ensure_str(site_id))],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
         if not rows:
             return None
@@ -445,7 +446,7 @@ class ABCReportRenderer(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
-                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+                                             site_id: SiteId) -> Iterator[PageMenuEntry]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -468,7 +469,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         return "generic"
 
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
-                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+                                             site_id: SiteId) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
         yield from ()
 
@@ -490,7 +491,7 @@ class ReportRendererSection(ABCReportRenderer):
         return "section"
 
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
-                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+                                             site_id: SiteId) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
         yield from ()
 
@@ -527,7 +528,7 @@ class ReportRendererCheck(ABCReportRenderer):
         return "check"
 
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
-                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+                                             site_id: SiteId) -> Iterator[PageMenuEntry]:
         host = crash_info["details"]["host"]
         service = crash_info["details"]["description"]
 
@@ -604,7 +605,7 @@ class ReportRendererGUI(ABCReportRenderer):
         return "gui"
 
     def page_menu_entries_related_monitoring(self, crash_info: CrashInfo,
-                                             site_id: config.SiteId) -> Iterator[PageMenuEntry]:
+                                             site_id: SiteId) -> Iterator[PageMenuEntry]:
         # We don't want to produce anything here
         return
         yield  # pylint: disable=unreachable

@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple, ContextManager
 
 import time
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -53,14 +52,13 @@ class MasterControlSnapin(SidebarSnapin):
         finally:
             sites.live().set_prepend_site(False)
 
-        for site_id, site_alias in config.sorted_sites():
+        for site_id, site_alias in sites.sorted_sites():
             container: ContextManager[bool] = foldable_container(
                 treename="master_control",
                 id_=site_id,
                 isopen=True,
                 title=site_alias,
-                icon="foldable_sidebar") if not config.is_single_local_site() else nullcontext(
-                    False)
+                icon="foldable_sidebar") if not sites.is_single_local_site() else nullcontext(False)
             with container:
                 try:
                     self._show_master_control_site(site_id, site_status_info, items)

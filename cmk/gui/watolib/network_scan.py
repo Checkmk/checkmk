@@ -19,11 +19,12 @@ from cmk.utils.type_defs import HostAddress, HostName
 from cmk.utils.translations import translate_hostname
 
 from cmk.gui.log import logger
-from cmk.gui import config, userdb
+from cmk.gui import userdb
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.logged_in import UserContext
+from cmk.gui.sites import is_wato_slave_site, site_is_local, get_site_config
 
 from cmk.gui.watolib import init_wato_datastructures
 from cmk.gui.watolib.automations import do_remote_automation
@@ -51,7 +52,7 @@ def execute_network_scan_job() -> None:
     automation. The result is written to the folder in the master site."""
     init_wato_datastructures(with_wato_lock=True)
 
-    if config.is_wato_slave_site():
+    if is_wato_slave_site():
         return  # Don't execute this job on slaves.
 
     folder = _find_folder_to_scan()
@@ -78,10 +79,10 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
         try:
-            if config.site_is_local(folder.site_id()):
+            if site_is_local(folder.site_id()):
                 found = _do_network_scan(folder)
             else:
-                found = do_remote_automation(config.site(folder.site_id()), "network-scan",
+                found = do_remote_automation(get_site_config(folder.site_id()), "network-scan",
                                              [("folder", folder.path())])
 
             if not isinstance(found, list):

@@ -16,17 +16,18 @@ from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, 
                     TypeVar, Generic)
 from pathlib import Path
 
+from livestatus import SiteId
 import cmk.utils
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, Labels
 from cmk.utils.object_diff import make_object_diff
 
 import cmk.gui.utils
+from cmk.gui.sites import site_is_local, activation_sites
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.globals import request, user
 from cmk.gui import config
 from cmk.gui.utils import escaping
-from cmk.gui.config import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
@@ -303,7 +304,7 @@ class ActivateChangesWriter:
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = config.activation_sites().keys()
+            sites = activation_sites().keys()
 
         change_id = self._new_change_id()
 
@@ -334,7 +335,7 @@ class ActivateChangesWriter:
         # If the local site don't need a restart, there is no reason to add a
         # change for that site. Otherwise the activation page would show a
         # change but the site would not be selected for activation.
-        if config.site_is_local(site_id) and need_restart is False:
+        if site_is_local(site_id) and need_restart is False:
             return None
 
         SiteChanges(SiteChanges.make_path(site_id)).append({

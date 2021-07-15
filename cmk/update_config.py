@@ -49,6 +49,7 @@ import cmk.utils.tty as tty
 
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.sites import is_wato_slave_site  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
@@ -219,7 +220,7 @@ class UpdateConfig:
 
     def _update_site_specific_global_settings(self):
         """Update the sitespecific.mk of the local site (which is a remote site)"""
-        if not cmk.gui.config.is_wato_slave_site():
+        if not is_wato_slave_site():
             return
 
         global_config = cmk.gui.watolib.global_settings.load_site_global_settings()

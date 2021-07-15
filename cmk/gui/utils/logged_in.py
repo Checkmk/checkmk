@@ -17,6 +17,7 @@ import cmk.utils.store as store
 
 from cmk.gui.globals import local
 from cmk.gui.i18n import _
+import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
@@ -321,7 +322,7 @@ class LoggedInUser:
                          unfiltered_sites: Optional[SiteConfigurations] = None
                         ) -> SiteConfigurations:
         if unfiltered_sites is None:
-            unfiltered_sites = config.allsites()
+            unfiltered_sites = sites.allsites()
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
@@ -334,9 +335,9 @@ class LoggedInUser:
         }
 
     def authorized_login_sites(self) -> SiteConfigurations:
-        login_site_ids = config.get_login_slave_sites()
+        login_site_ids = sites.get_login_slave_sites()
         return self.authorized_sites(
-            {site_id: s for site_id, s in config.allsites().items() if site_id in login_site_ids})
+            {site_id: s for site_id, s in sites.allsites().items() if site_id in login_site_ids})
 
     def may(self, pname: str) -> bool:
         if pname in self._permissions:

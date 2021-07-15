@@ -13,10 +13,11 @@ from typing import Any, Optional, Protocol, Tuple
 from marshmallow import fields as _fields, ValidationError, utils
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, valuespec as valuespec, sites, config
+from cmk.gui import watolib, valuespec as valuespec, sites
 from cmk.gui.globals import user
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_group_information
+from cmk.gui.sites import allsites
 from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
     NothingExpression
 from cmk.utils.livestatus_helpers.queries import Query
@@ -968,7 +969,7 @@ class SiteField(_fields.String):
     default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
 
     def _validate(self, value):
-        if value not in config.allsites().keys():
+        if value not in allsites().keys():
             raise self.make_error("unknown_site", site=value)
 
 

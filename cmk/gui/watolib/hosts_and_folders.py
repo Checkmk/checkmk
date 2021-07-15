@@ -59,6 +59,7 @@ from cmk.gui.watolib.search import (
     match_item_generator_registry,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.sites import is_wato_slave_site, allsites
 from cmk.gui.utils import urls
 
 import cmk.utils.paths
@@ -1480,7 +1481,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return self._attributes["site"]
         if self.has_parent():
             return self.parent().site_id()
-        if not config.is_wato_slave_site():
+        if not is_wato_slave_site():
             return omd_site()
 
         # Placeholder for "central site". This is only relevant when using WATO on a remote site
@@ -2941,7 +2942,7 @@ class CMEFolder(CREFolder):
                 _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
                   "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "
                   "following sites <i>%s</i>.") %
-                (config.allsites()[site_id]["alias"], self.title(),
+                (allsites()[site_id]["alias"], self.title(),
                  managed.get_customer_name_by_id(customer_id), folder_sites))
 
     def _check_childs_customer_conflicts(self, site_id):
@@ -2959,7 +2960,7 @@ class CMEFolder(CREFolder):
                         None,
                         _("The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
                           "customer <i>%s</i>. This violates the CME folder hierarchy.") %
-                        (subfolder.title(), config.allsites()[subfolder_explicit_site]["alias"],
+                        (subfolder.title(), allsites()[subfolder_explicit_site]["alias"],
                          managed.get_customer_name_by_id(subfolder_customer)))
 
             subfolder._check_childs_customer_conflicts(site_id)
@@ -2975,7 +2976,7 @@ class CMEFolder(CREFolder):
                         None,
                         _("The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
                           "customer <i>%s</i>. This violates the CME folder hierarchy.") %
-                        (host.name(), config.allsites()[host_explicit_site]["alias"],
+                        (host.name(), allsites()[host_explicit_site]["alias"],
                          managed.get_customer_name_by_id(host_customer)))
 
     def create_subfolder(self, name, title, attributes):
@@ -3026,8 +3027,7 @@ class CMEFolder(CREFolder):
                     _("Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the customer <i>%s</i>, "
                       "which owns this folder. This violates the CME folder hierarchy. You may "
                       "choose the sites: %s") %
-                    (hostname, config.allsites()[attributes["site"]]["alias"], customer_id,
-                     folder_sites))
+                    (hostname, allsites()[attributes["site"]]["alias"], customer_id, folder_sites))
 
     def move_hosts(self, host_names, target_folder):
         # Check if the target folder may have this host
@@ -3049,7 +3049,7 @@ class CMEFolder(CREFolder):
                         _("Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
                           "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "
                           "This violates the folder CME folder hierarchy.") %
-                        (hostname, config.allsites()[host_site]["alias"],
+                        (hostname, allsites()[host_site]["alias"],
                          managed.get_customer_of_site(host_site),
                          managed.get_customer_of_site(target_site_id)))
 

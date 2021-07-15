@@ -58,6 +58,11 @@ from cmk.gui.sites import (
     SiteStatus,
     states as sites_states,
     disconnect as sites_disconnect,
+    activation_sites,
+    allsites,
+    site_is_local,
+    is_single_local_site,
+    get_site_config,
 )
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -324,7 +329,7 @@ class ActivateChanges:
         self._changes_by_site = {}
         changes = {}
 
-        for site_id in config.activation_sites():
+        for site_id in activation_sites():
             site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
             self._changes_by_site[site_id] = site_changes
 
@@ -349,7 +354,7 @@ class ActivateChanges:
 
     def get_changes_estimate(self) -> Optional[str]:
         changes_counter = 0
-        for site_id in config.activation_sites():
+        for site_id in activation_sites():
             changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
             if changes_counter > 10:
                 return _("10+ changes")
@@ -383,10 +388,10 @@ class ActivateChanges:
 
     def dirty_sites(self) -> List[Tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
-        return [s for s in config.activation_sites().items() if self._changes_of_site(s[0])]
+        return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id, site):
-        return config.site_is_local(site_id) or "secret" in site
+        return site_is_local(site_id) or "secret" in site
 
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
@@ -406,7 +411,7 @@ class ActivateChanges:
         return bool([c for c in changes if self._is_foreign(c)])
 
     def is_sync_needed(self, site_id):
-        if config.site_is_local(site_id):
+        if site_is_local(site_id):
             return False
 
         return any(c["need_sync"] for c in self._changes_of_site(site_id))
@@ -436,8 +441,7 @@ class ActivateChanges:
         return change["user_id"] and change["user_id"] != user.id
 
     def _affects_all_sites(self, change):
-        return not set(change["affected_sites"]).symmetric_difference(set(
-            config.activation_sites()))
+        return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
     def update_activation_time(self, site_id, ty, duration):
         repl_status = _load_site_replication_status(site_id, lock=True)
@@ -666,7 +670,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites: List[SiteId]) -> List[SiteId]:
         for site_id in sites:
-            if site_id not in config.activation_sites():
+            if site_id not in activation_sites():
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
 
         return sites
@@ -1563,7 +1567,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         Calls the automation call "get-config-sync-state" on the remote site,
         which is handled by AutomationGetConfigSyncState."""
-        site = config.site(self._site_id)
+        site = get_site_config(self._site_id)
         response = cmk.gui.watolib.automations.do_remote_automation(
             site,
             "get-config-sync-state",
@@ -1582,7 +1586,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-        site = config.site(self._site_id)
+        site = get_site_config(self._site_id)
         response = cmk.gui.watolib.automations.do_remote_automation(
             site,
             "receive-config-sync",
@@ -1619,7 +1623,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _push_pre_17_snapshot_to_site(self) -> bool:
         """Calls a remote automation call push-snapshot which is handled by AutomationPushSnapshot()"""
-        site = config.site(self._site_id)
+        site = get_site_config(self._site_id)
 
         url = append_query_string(
             site["multisiteurl"] + "automation.py",
@@ -1658,12 +1662,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     def _call_activate_changes_automation(self) -> ConfigWarnings:
         domains = self._get_domains_needing_activation()
 
-        if config.site_is_local(self._site_id):
+        if site_is_local(self._site_id):
             return execute_activate_changes(domains)
 
         try:
             response = cmk.gui.watolib.automations.do_remote_automation(
-                config.site(self._site_id), "activate-changes", [
+                get_site_config(self._site_id), "activate-changes", [
                     ("domains", repr(domains)),
                     ("site_id", self._site_id),
                 ])
@@ -1874,7 +1878,7 @@ def _execute_post_config_sync_actions(site_id):
 def verify_remote_site_config(site_id: SiteId) -> None:
     our_id = omd_site()
 
-    if not config.is_single_local_site():
+    if not is_single_local_site():
         raise MKGeneralException(
             _("Configuration error. You treat us as "
               "a <b>remote</b>, but we have an own distributed WATO configuration!"))
@@ -2339,7 +2343,7 @@ def activate_changes_start(
                 _("There are changes from other users and foreign changes are "
                   "not allowed in this API call."))
 
-    known_sites = config.allsites().keys()
+    known_sites = allsites().keys()
     for site in sites:
         if site not in known_sites:
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))

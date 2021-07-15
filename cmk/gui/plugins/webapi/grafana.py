@@ -14,7 +14,6 @@ from cmk.gui.plugins.webapi import (
 )
 
 import cmk.gui.sites as sites
-import cmk.gui.config as config
 import cmk.gui.availability as availability
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -66,7 +65,7 @@ class APICallGrafanaConnector(APICallCollection):
         }
 
     def _get_user_sites(self, request):
-        return config.sorted_sites()
+        return sites.sorted_sites()
 
     def _get_host_names(self, request):
         return self._query_for_host_names(request.get("site_id"))

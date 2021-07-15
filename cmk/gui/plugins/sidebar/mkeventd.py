@@ -8,9 +8,8 @@ from typing import Optional, List, Tuple
 
 from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.config as config
 from cmk.gui.htmllib import HTMLContent
-from cmk.gui.sites import SiteId
+from cmk.gui.sites import SiteId, get_event_console_site_choices
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -44,8 +43,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
         return True
 
     def show(self) -> None:
-        only_sites = snapin_site_choice("mkeventd_performance",
-                                        config.get_event_console_site_choices())
+        only_sites = snapin_site_choice("mkeventd_performance", get_event_console_site_choices())
 
         try:
             entries = self._mkeventd_performance_entries(only_sites)

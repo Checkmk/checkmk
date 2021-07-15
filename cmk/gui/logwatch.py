@@ -9,6 +9,7 @@ import datetime
 from typing import Any, Dict, List, Optional, Iterator
 
 import livestatus
+from livestatus import SiteId
 
 from cmk.utils.type_defs import HostName
 
@@ -183,7 +184,7 @@ def _host_log_list_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
     return breadcrumb
 
 
-def _host_log_list_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId,
+def _host_log_list_page_menu(breadcrumb: Breadcrumb, site_id: SiteId,
                              host_name: HostName) -> PageMenu:
     return PageMenu(
         dropdowns=[
@@ -345,7 +346,7 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
     return breadcrumb
 
 
-def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_name: HostName,
+def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName,
                          int_filename: str) -> PageMenu:
 
     menu = PageMenu(
@@ -443,7 +444,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
+def _page_menu_entry_acknowledge(site: Optional[SiteId] = None,
                                  host_name: Optional[HostName] = None,
                                  int_filename: Optional[str] = None) -> Iterator[PageMenuEntry]:
     if not user.may("general.act") or (host_name and not may_see(site, host_name)):

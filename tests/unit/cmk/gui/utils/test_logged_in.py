@@ -9,6 +9,7 @@ from pathlib import Path
 
 from cmk.gui.globals import user as global_user
 import cmk.gui.config as config
+import cmk.gui.sites as sites
 from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext,
                                      SuperUserContext)
 from cmk.gui.exceptions import MKAuthException
@@ -117,21 +118,21 @@ def test_unauthenticated_users_language(mocker, user):
 
 
 @pytest.mark.parametrize('user', [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_sites(mocker, user):
+def test_unauthenticated_users_authorized_sites(monkeypatch, user):
     assert user.authorized_sites({
         'site1': {},
     }) == {
         'site1': {},
     }
 
-    mocker.patch.object(config, 'allsites', lambda: {'site1': {}, 'site2': {}})
+    monkeypatch.setattr('cmk.gui.sites.allsites', lambda: {'site1': {}, 'site2': {}})
     assert user.authorized_sites() == {'site1': {}, 'site2': {}}
 
 
 @pytest.mark.parametrize('user', [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_login_sites(mocker, user):
-    mocker.patch.object(config, 'get_login_slave_sites', lambda: ['slave_site'])
-    mocker.patch.object(config, 'allsites', lambda: {
+def test_unauthenticated_users_authorized_login_sites(monkeypatch, user):
+    monkeypatch.setattr('cmk.gui.sites.get_login_slave_sites', lambda: ['slave_site'])
+    monkeypatch.setattr('cmk.gui.sites.allsites', lambda: {
         'master_site': {},
         'slave_site': {},
     })

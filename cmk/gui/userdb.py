@@ -30,6 +30,7 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
@@ -1275,7 +1276,7 @@ def userdb_sync_job_enabled() -> bool:
     if cfg is None:
         return False  # not enabled at all
 
-    if cfg == "master" and config.is_wato_slave_site():
+    if cfg == "master" and is_wato_slave_site():
         return False
 
     return True

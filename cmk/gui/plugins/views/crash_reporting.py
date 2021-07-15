@@ -9,8 +9,8 @@ from typing import Dict, Optional, List
 from six import ensure_str
 
 import livestatus
+from livestatus import SiteId
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.globals import html, request
@@ -93,7 +93,7 @@ class CrashReportsRowTable(RowTable):
             })
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites: Optional[List[config.SiteId]],
+    def get_crash_report_rows(self, only_sites: Optional[List[SiteId]],
                               filter_headers: str) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
@@ -118,7 +118,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([config.SiteId(ensure_str(crash_info["site"]))])
+                sites.live().set_only_sites([SiteId(ensure_str(crash_info["site"]))])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
@@ -135,7 +135,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(self,
-                               only_sites: Optional[List[config.SiteId]],
+                               only_sites: Optional[List[SiteId]],
                                filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)

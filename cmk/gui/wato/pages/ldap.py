@@ -25,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.sites import get_login_sites
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -58,10 +59,7 @@ else:
 
 class LDAPMode(WatoMode):
     def _add_change(self, action_name, text):
-        add_change(action_name,
-                   text,
-                   domains=[watolib.ConfigDomainGUI],
-                   sites=config.get_login_sites())
+        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=get_login_sites())
 
 
 @mode_registry.register

@@ -13,7 +13,6 @@ from pathlib import Path
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
@@ -25,6 +24,7 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
 from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.sites import site_is_local, get_site_config
 from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
@@ -165,20 +165,20 @@ class PageFetchAgentOutput(AgentOutputPage):
 
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""
-        if config.site_is_local(self._request.host.site_id()):
+        if site_is_local(self._request.host.site_id()):
             start_fetch_agent_job(self._request)
             return
 
-        watolib.do_remote_automation(config.site(self._request.host.site_id()),
+        watolib.do_remote_automation(get_site_config(self._request.host.site_id()),
                                      "fetch-agent-output-start", [
                                          ("request", repr(self._request.serialize())),
                                      ])
 
     def _get_job_status(self) -> Dict:
-        if config.site_is_local(self._request.host.site_id()):
+        if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
-        return watolib.do_remote_automation(config.site(self._request.host.site_id()),
+        return watolib.do_remote_automation(get_site_config(self._request.host.site_id()),
                                             "fetch-agent-output-get-status", [
                                                 ("request", repr(self._request.serialize())),
                                             ])
@@ -284,10 +284,10 @@ class PageDownloadAgentOutput(AgentOutputPage):
         response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:
-        if config.site_is_local(self._request.host.site_id()):
+        if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_output_file(self._request)
 
-        return watolib.do_remote_automation(config.site(self._request.host.site_id()),
+        return watolib.do_remote_automation(get_site_config(self._request.host.site_id()),
                                             "fetch-agent-output-get-file", [
                                                 ("request", repr(self._request.serialize())),
                                             ])

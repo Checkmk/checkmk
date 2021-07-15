@@ -21,6 +21,7 @@ from typing import (
     Union,
 )
 
+from livestatus import SiteId
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -41,7 +42,6 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import SiteId
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,

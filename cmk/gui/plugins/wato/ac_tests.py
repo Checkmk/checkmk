@@ -21,13 +21,13 @@ from cmk.utils.site import omd_site
 import cmk.gui.utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-import cmk.gui.config as config
 import cmk.gui.plugins.userdb.htpasswd
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.sites import sitenames, get_site_config, has_wato_slave_sites, wato_slave_sites
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 
 from cmk.gui.plugins.wato import (
@@ -69,11 +69,11 @@ class ACTestPersistentConnections(ACTest):
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
-        return len(config.sitenames()) > 1
+        return len(sitenames()) > 1
 
     def execute(self) -> Iterator[ACResult]:
-        for site_id in config.sitenames():
-            site_config = config.site(site_id)
+        for site_id in sitenames():
+            site_config = get_site_config(site_id)
             for result in self._check_site(site_id, site_config):
                 result.site_id = site_id
                 yield result
@@ -115,10 +115,10 @@ class ACTestLiveproxyd(ACTest):
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
-        return len(config.sitenames()) > 1
+        return len(sitenames()) > 1
 
     def execute(self) -> Iterator[ACResult]:
-        for site_id in config.sitenames():
+        for site_id in sitenames():
             for result in self._check_site(site_id):
                 result.site_id = site_id
                 yield result
@@ -914,11 +914,11 @@ class ACTestSizeOfExtensions(ACTest):
                  "all the extensions.</p>")
 
     def is_relevant(self) -> bool:
-        return config.has_wato_slave_sites() and self._replicates_mkps()
+        return has_wato_slave_sites() and self._replicates_mkps()
 
     def _replicates_mkps(self):
         replicates_mkps = False
-        for site in config.wato_slave_sites().values():
+        for site in wato_slave_sites().values():
             if site.get("replicate_mkps"):
                 replicates_mkps = True
                 break

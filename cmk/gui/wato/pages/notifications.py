@@ -18,6 +18,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.permissions as permissions
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
@@ -858,8 +859,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 
 def _get_notification_sync_sites():
     return sorted(site_id  #
-                  for site_id in config.wato_slave_sites()
-                  if not config.site_is_local(site_id))
+                  for site_id in wato_slave_sites()
+                  if not site_is_local(site_id))
 
 
 @mode_registry.register
@@ -996,7 +997,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return user.id
 
     def _add_change(self, log_what, log_text):
-        if config.has_wato_slave_sites():
+        if has_wato_slave_sites():
             self._start_async_repl = True
             watolib.log_audit(log_what, log_text)
         else:
@@ -1536,14 +1537,14 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         return user.id
 
     def _add_change(self, log_what, log_text):
-        if config.has_wato_slave_sites():
+        if has_wato_slave_sites():
             self._start_async_repl = True
             watolib.log_audit(log_what, log_text)
         else:
             super()._add_change(log_what, log_text)
 
     def _back_mode(self) -> ActionResult:
-        if config.has_wato_slave_sites():
+        if has_wato_slave_sites():
             return None
         return redirect(mode_url("user_notifications_p"))
 

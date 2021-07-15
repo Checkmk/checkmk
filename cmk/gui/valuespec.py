@@ -6285,7 +6285,7 @@ class SetupSiteChoice(DropdownChoice):
                           _("The configured site is not known to this site."))
 
         kwargs.update({
-            "choices": config.get_activation_site_choices,
+            "choices": sites.get_activation_site_choices,
             "invalid_choice": "complain",
             "invalid_choice_title": _("Unknown site (%s)"),
         })
@@ -6293,12 +6293,12 @@ class SetupSiteChoice(DropdownChoice):
         super().__init__(**kwargs)
 
     def _site_default_value(self):
-        if config.is_wato_slave_site():
+        if sites.is_wato_slave_site():
             # Placeholder for "central site". This is only relevant when using WATO on a remote site
             # and a host / folder has no site set.
             return ""
 
-        default_value = config.site_attribute_default_value()
+        default_value = sites.site_attribute_default_value()
         if default_value:
             return default_value
         return self.canonical_value()
@@ -6308,7 +6308,7 @@ def MonitoringSiteChoice():
     """Select a single site that is known as status remote site"""
     return DropdownChoice(
         title=_("Site"),
-        choices=config.get_configured_site_choices(),
+        choices=sites.get_configured_site_choices(),
     )
 
 

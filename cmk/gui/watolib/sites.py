@@ -12,14 +12,14 @@ from pathlib import Path
 
 from six import ensure_binary
 
-from livestatus import SiteId
+from livestatus import SiteId, SiteConfigurations
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
 import cmk.gui.sites
-from cmk.gui.sites import SiteConfigurations
+from cmk.gui.sites import site_is_local, is_wato_slave_site, has_wato_slave_sites
 import cmk.gui.config as config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
@@ -188,7 +188,7 @@ class SiteManagement:
                      allow_empty=False,
                  )),
             ],
-            default_value="all" if config.site_is_local(site_id) else None,
+            default_value="all" if site_is_local(site_id) else None,
             help=_(
                 'By default the users are synchronized automatically in the interval configured '
                 'in the connection. For example the LDAP connector synchronizes the users every '
@@ -651,7 +651,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if config.site_is_local(siteid):
+        if site_is_local(siteid):
             cmk.gui.watolib.activate_changes.create_distributed_wato_files(
                 base_dir=Path(cmk.utils.paths.omd_root),
                 site_id=siteid,
@@ -673,14 +673,14 @@ def is_livestatus_encrypted(site) -> bool:
 def site_globals_editable(site_id, site) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote WATO is enabled
-    if config.is_wato_slave_site():
+    if is_wato_slave_site():
         return True
 
     # Local site: Don't enable site specific locals when no remote sites configured
-    if not config.has_wato_slave_sites():
+    if not has_wato_slave_sites():
         return False
 
-    return site["replication"] or config.site_is_local(site_id)
+    return site["replication"] or site_is_local(site_id)
 
 
 def _delete_distributed_wato_file():
@@ -725,11 +725,11 @@ class AutomationPushSnapshot(AutomationCommand):
                 cmk.gui.watolib.activate_changes.get_replication_paths())
 
 
-def get_effective_global_setting(site_id: SiteId, is_wato_slave_site: bool, varname: str) -> Any:
+def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname: str) -> Any:
     global_settings = load_configuration_settings()
     default_values = ABCConfigDomain.get_all_default_globals()
 
-    if is_wato_slave_site:
+    if is_remote_site:
         current_settings = load_configuration_settings(site_specific=True)
     else:
         sites = SiteManagementFactory.factory().load_sites()

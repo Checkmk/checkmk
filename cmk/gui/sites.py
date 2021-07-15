@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+import os
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple
+from typing import (Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple,
+                    TYPE_CHECKING)
 
 from livestatus import (
     MultiSiteConnection,
@@ -19,14 +22,18 @@ from livestatus import (
 
 from cmk.utils.version import is_managed_edition
 
+import cmk.utils.paths
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, request, user as global_user
-from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.log import logger
+
+if TYPE_CHECKING:
+    from cmk.gui.utils.logged_in import LoggedInUser
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -97,20 +104,20 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
 
 
 # TODO: this too does not really belong here...
-def get_alias_of_host(site: Optional[SiteId], host_name: str) -> str:
+def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
     query = ("GET hosts\n"
              "Cache: reload\n"
              "Columns: alias\n"
              "Filter: name = %s" % lqencode(host_name))
 
-    with only_sites(site):
+    with only_sites(site_id):
         try:
             return live().query_value(query)
         except Exception as e:
             logger.warning(
                 "Could not determine alias of host %s on site %s: %s",
                 host_name,
-                site,
+                site_id,
                 e,
             )
             if config.debug:
@@ -217,18 +224,18 @@ def _get_enabled_and_disabled_sites(
     enabled_sites: SiteConfigurations = {}
     disabled_sites: SiteConfigurations = {}
 
-    for site_id, site in user.authorized_sites().items():
-        site = _site_config_for_livestatus(site_id, site)
+    for site_id, site_spec in user.authorized_sites().items():
+        site_spec = _site_config_for_livestatus(site_id, site_spec)
 
         if user.is_site_disabled(site_id):
-            disabled_sites[site_id] = site
+            disabled_sites[site_id] = site_spec
         else:
-            enabled_sites[site_id] = site
+            enabled_sites[site_id] = site_spec
 
     return enabled_sites, disabled_sites
 
 
-def _site_config_for_livestatus(site_id: SiteId, site: SiteConfiguration) -> SiteConfiguration:
+def _site_config_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> SiteConfiguration:
     """Prepares a site config specification for the livestatus module
 
     In case the GUI connects to the local livestatus proxy there are several
@@ -236,25 +243,25 @@ def _site_config_for_livestatus(site_id: SiteId, site: SiteConfiguration) -> Sit
     a) Tell livestatus not to strip away the cache header
     b) Connect in plain text to the sites local proxy unix socket
     """
-    copied_site: SiteConfiguration = site.copy()
+    copied_site: SiteConfiguration = site_spec.copy()
 
     if copied_site["proxy"] is not None:
-        copied_site["cache"] = site["proxy"].get("cache", True)
+        copied_site["cache"] = site_spec["proxy"].get("cache", True)
 
     else:
         if copied_site["socket"][0] in ["tcp", "tcp6"]:
-            copied_site["tls"] = site["socket"][1]["tls"]
+            copied_site["tls"] = site_spec["socket"][1]["tls"]
 
-    copied_site["socket"] = encode_socket_for_livestatus(site_id, site)
+    copied_site["socket"] = encode_socket_for_livestatus(site_id, site_spec)
 
     return copied_site
 
 
-def encode_socket_for_livestatus(site_id: SiteId, site: SiteConfiguration) -> str:
-    socket_spec = site["socket"]
+def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) -> str:
+    socket_spec = site_spec["socket"]
     family_spec, address_spec = socket_spec
 
-    if site["proxy"] is not None:
+    if site_spec["proxy"] is not None:
         return "unix:%sproxy/%s" % (livestatus_unix_socket, site_id)
 
     if family_spec == "local":
@@ -304,13 +311,13 @@ def site_state_titles() -> Dict[str, str]:
     }
 
 
-def _set_initial_site_states(enabled_sites, disabled_sites):
-    # (SiteConfigurations, SiteConfigurations) -> None
-    for site_id, site in enabled_sites.items():
-        g.site_status[site_id] = {"state": "dead", "site": site}
+def _set_initial_site_states(enabled_sites: SiteConfigurations,
+                             disabled_sites: SiteConfigurations) -> None:
+    for site_id, site_spec in enabled_sites.items():
+        g.site_status[site_id] = {"state": "dead", "site": site_spec}
 
-    for site_id, site in disabled_sites.items():
-        g.site_status[site_id] = {"state": "disabled", "site": site}
+    for site_id, site_spec in disabled_sites.items():
+        g.site_status[site_id] = {"state": "disabled", "site": site_spec}
 
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
@@ -442,3 +449,153 @@ def filter_available_site_choices(choices: List[Tuple[SiteId, str]]) -> List[Tup
             continue
         sites_enabled.append(entry)
     return sites_enabled
+
+
+def sitenames() -> List[SiteId]:
+    return list(config.sites)
+
+
+# TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
+# and only returns the currently enabled sites. Or should we redeclare the "disabled" state
+# to disable the sites at all?
+# TODO: Rename this!
+def allsites() -> SiteConfigurations:
+    return {
+        name: get_site_config(name)  #
+        for name in sitenames()
+        if not get_site_config(name).get("disabled", False)
+    }
+
+
+def configured_sites() -> SiteConfigurations:
+    return {site_id: get_site_config(site_id) for site_id in sitenames()}
+
+
+def has_wato_slave_sites() -> bool:
+    return bool(wato_slave_sites())
+
+
+def is_wato_slave_site() -> bool:
+    return _has_distributed_wato_file() and not has_wato_slave_sites()
+
+
+def _has_distributed_wato_file() -> bool:
+    return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
+        and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
+
+
+def get_login_sites() -> List[SiteId]:
+    """Returns the WATO slave sites a user may login and the local site"""
+    return get_login_slave_sites() + [omd_site()]
+
+
+# TODO: All site listing functions should return the same data structure, e.g. a list of
+#       pairs (site_id, site)
+def get_login_slave_sites() -> List[SiteId]:
+    """Returns a list of site ids which are WATO slave sites and users can login"""
+    login_sites = []
+    for site_id, site_spec in wato_slave_sites().items():
+        if site_spec.get('user_login', True) and not site_is_local(site_id):
+            login_sites.append(site_id)
+    return login_sites
+
+
+def wato_slave_sites() -> SiteConfigurations:
+    return {
+        site_id: s  #
+        for site_id, s in config.sites.items()
+        if s.get("replication")
+    }
+
+
+def sorted_sites() -> List[Tuple[SiteId, str]]:
+    return sorted([(site_id, s['alias']) for site_id, s in global_user.authorized_sites().items()],
+                  key=lambda k: k[1].lower())
+
+
+def get_site_config(site_id: SiteId) -> SiteConfiguration:
+    s = dict(config.sites.get(site_id, {}))
+    # Now make sure that all important keys are available.
+    # Add missing entries by supplying default values.
+    s.setdefault("alias", site_id)
+    s.setdefault("socket", ("local", None))
+    s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
+    s["id"] = site_id
+    return s
+
+
+def site_is_local(site_id: SiteId) -> bool:
+    family_spec, address_spec = get_site_config(site_id)["socket"]
+    return _is_local_socket_spec(family_spec, address_spec)
+
+
+def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> bool:
+    if family_spec == "local":
+        return True
+
+    if family_spec == "unix" and address_spec["path"] == cmk.utils.paths.livestatus_unix_socket:
+        return True
+
+    return False
+
+
+def is_single_local_site() -> bool:
+    if len(config.sites) > 1:
+        return False
+    if len(config.sites) == 0:
+        return True
+
+    # Also use Multisite mode if the one and only site is not local
+    sitename = list(config.sites.keys())[0]
+    return site_is_local(sitename)
+
+
+def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(global_user.authorized_sites(unfiltered_sites=configured_sites()))
+
+
+def site_attribute_default_value() -> Optional[SiteId]:
+    site_id = omd_site()
+    authorized_site_ids = global_user.authorized_sites(unfiltered_sites=configured_sites()).keys()
+    if site_id in authorized_site_ids:
+        return site_id
+    return None
+
+
+def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
+    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
+    choices = []
+    for site_id, site_spec in site_configs.items():
+        title = site_id
+        if site_spec.get("alias"):
+            title += " - " + site_spec["alias"]
+
+        choices.append((site_id, title))
+
+    return sorted(choices, key=lambda s: s[1])
+
+
+def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices({
+        site_id: site
+        for site_id, site in global_user.authorized_sites(
+            unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replicate_ec", False)
+    })
+
+
+def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(activation_sites())
+
+
+def activation_sites() -> SiteConfigurations:
+    """Returns sites that are affected by WATO changes
+
+    These sites are shown on activation page and get change entries
+    added during WATO changes."""
+    return {
+        site_id: site
+        for site_id, site in global_user.authorized_sites(
+            unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication")
+    }

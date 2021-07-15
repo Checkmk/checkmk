@@ -30,6 +30,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
+from cmk.gui.sites import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, transactions, request
@@ -162,7 +163,7 @@ class ModeRoles(RoleManagement, WatoMode):
             self._save_roles()
             watolib.add_change("edit-roles",
                                _("Deleted role '%s'") % delid,
-                               sites=config.get_login_sites())
+                               sites=get_login_sites())
 
         elif request.var("_clone"):
             cloneid = request.get_ascii_input_mandatory("_clone")
@@ -192,7 +193,7 @@ class ModeRoles(RoleManagement, WatoMode):
             self._save_roles()
             watolib.add_change("edit-roles",
                                _("Created new role '%s'") % newid,
-                               sites=config.get_login_sites())
+                               sites=get_login_sites())
 
         return redirect(self.mode_url())
 
@@ -345,7 +346,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         self._save_roles()
         watolib.add_change("edit-roles",
                            _("Modified user role '%s'") % new_id,
-                           sites=config.get_login_sites())
+                           sites=get_login_sites())
         return redirect(mode_url("roles"))
 
     def page(self):

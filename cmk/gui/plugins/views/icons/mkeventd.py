@@ -10,7 +10,7 @@ import shlex
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
-from cmk.gui.sites import get_alias_of_host
+from cmk.gui.sites import get_alias_of_host, get_site_config
 from cmk.gui.utils.urls import urlencode_vars
 
 
@@ -82,7 +82,7 @@ class MkeventdIcon(Icon):
         # constructed here
         url_prefix = ''
         if getattr(config, 'mkeventd_distributed', False):
-            site = config.site(row["site"])
+            site = get_site_config(row["site"])
             url_prefix = site['url_prefix'] + 'check_mk/'
 
         url_vars = [

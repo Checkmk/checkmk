@@ -713,7 +713,7 @@ class GUIViewRenderer(ABCViewRenderer):
                         len(rows),
                         row_limit,
                 ):
-                    cmk.gui.view_utils.query_limit_exceeded_warn(row_limit, config.user)
+                    cmk.gui.view_utils.query_limit_exceeded_warn(row_limit, user)
                     del rows[row_limit:]
                     self.view.process_tracking.amount_rows_after_limit = len(rows)
 

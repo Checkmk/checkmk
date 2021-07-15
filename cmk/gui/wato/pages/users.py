@@ -25,6 +25,7 @@ import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
+from cmk.gui.sites import get_configured_site_choices
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import (
     cleanup_connection_id,
@@ -1156,7 +1157,7 @@ class ModeEditUser(WatoMode):
                 ),
                 DualListChoice(
                     title=_("Specific sites"),
-                    choices=config.get_configured_site_choices,
+                    choices=get_configured_site_choices,
                 ),
             ],
         )

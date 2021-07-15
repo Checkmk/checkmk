@@ -25,6 +25,7 @@ import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.view_utils import render_labels, format_plugin_output
+from cmk.gui.sites import sitenames
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html, transactions, request, output_funnel, user
@@ -1265,7 +1266,7 @@ class DiscoveryPageRenderer:
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self):
         self._site = request.get_ascii_input_mandatory("site")
-        if self._site not in config.sitenames():
+        if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
         self._host_name = request.get_ascii_input_mandatory("host")

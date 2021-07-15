@@ -26,16 +26,17 @@ from typing import (
 
 from six import ensure_str
 
+from livestatus import SiteId, SiteConfiguration, SiteConfigurations
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.mkeventd
 import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
 import cmk.gui.weblib as weblib
+from cmk.gui.sites import get_site_config, get_activation_site_choices
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g, transactions, request, user
@@ -2219,7 +2220,7 @@ def _site_rule_match_condition():
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
-            choices=config.get_activation_site_choices,
+            choices=get_activation_site_choices,
         ),
     )
 
@@ -2321,7 +2322,7 @@ def _search_text_matches(
             host.name(),
             host.effective_attributes().get("ipaddress"),
             host.site_id(),
-            config.site(host.site_id())["alias"],
+            get_site_config(host.site_id())["alias"],
             str(host.tag_groups()),
             str(host.labels()),
     ]:

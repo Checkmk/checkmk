@@ -38,7 +38,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.site import omd_site
 
-from cmk.gui.sites import SiteStatus
+from cmk.gui.sites import SiteStatus, site_is_local, has_wato_slave_sites, is_wato_slave_site
 import cmk.gui.sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -225,7 +225,7 @@ class ModeEditSite(WatoMode):
                            domains=watolib.ABCConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
-        if not site_spec["replication"] and not config.site_is_local(self._site_id):
+        if not site_spec["replication"] and not site_is_local(self._site_id):
             clear_site_replication_status(self._site_id)
 
         if self._site_id != omd_site():
@@ -974,7 +974,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
         # 3. Site specific global settings
 
-        if watolib.is_wato_slave_site():
+        if is_wato_slave_site():
             self._current_settings = load_site_global_settings()
         else:
             self._current_settings = self._site.get("globals", {})
@@ -1042,14 +1042,14 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
               "on that site. <b>Note</b>: this only makes sense if the site "
               "is part of a distributed setup."))
 
-        if not watolib.is_wato_slave_site():
-            if not config.has_wato_slave_sites():
+        if not is_wato_slave_site():
+            if not has_wato_slave_sites():
                 html.show_error(
                     _("You can not configure site specific global settings "
                       "in non distributed setups."))
                 return
 
-            if not self._site["replication"] and not config.site_is_local(self._site_id):
+            if not self._site["replication"] and not site_is_local(self._site_id):
                 html.show_error(
                     _("This site is not the central site nor a replication "
                       "remote site. You cannot configure specific settings for it."))

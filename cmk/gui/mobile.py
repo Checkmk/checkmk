@@ -360,8 +360,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
                 try:
                     if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
                                                              self.view.row_limit):
-                        cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit,
-                                                                     config.user)
+                        cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, user)
                         del rows[self.view.row_limit:]
                     self.view.layout.render(
                         rows,

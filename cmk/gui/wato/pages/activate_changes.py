@@ -45,6 +45,7 @@ from cmk.gui.page_menu import (
     make_simple_link,
     make_javascript_link,
 )
+from cmk.gui.sites import activation_sites
 from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
 from cmk.gui.utils.html import HTML
 
@@ -194,7 +195,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         cmk.gui.watolib.activate_changes.execute_activate_changes(
             [d.ident() for d in watolib.ABCConfigDomain.enabled_domains()])
 
-        for site_id in config.activation_sites():
+        for site_id in activation_sites():
             self.confirm_site_changes(site_id)
 
         build_index_background()
@@ -260,7 +261,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.close_div()
 
     def _get_initial_message(self) -> str:
-        changes = sum(len(self._changes_of_site(site_id)) for site_id in config.activation_sites())
+        changes = sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
         if changes == 0:
             if request.has_var("_finished"):
                 return _("Activation has finished.")
@@ -358,7 +359,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         with table_element("site-status", searchable=False, sortable=False,
                            css="activation") as table:
 
-            for site_id, site in sort_sites(config.activation_sites()):
+            for site_id, site in sort_sites(activation_sites()):
                 table.row()
 
                 site_status, status = self._get_site_status(site_id, site)

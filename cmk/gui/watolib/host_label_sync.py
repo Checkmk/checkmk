@@ -23,7 +23,6 @@ from cmk.utils.labels import (get_updated_host_label_files, save_updated_host_la
 import cmk.gui.log as log
 from cmk.gui.log import logger
 import cmk.gui.pages
-import cmk.gui.config as config
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -31,6 +30,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, automation_co
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.globals import request
+from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.i18n import _
 
 
@@ -86,7 +86,7 @@ class DiscoveredHostLabelSyncResponse:
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     """Contacts the given remote site to synchronize the labels of the given host"""
-    site_spec = config.site(site_id)
+    site_spec = get_site_config(site_id)
     result = _execute_site_sync(
         site_id, site_spec,
         SiteRequest(
@@ -99,7 +99,7 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
 def execute_host_label_sync_job() -> Optional[DiscoveredHostLabelSyncJob]:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
-    if not config.has_wato_slave_sites():
+    if not has_wato_slave_sites():
         return None
 
     job = DiscoveredHostLabelSyncJob()
@@ -145,7 +145,7 @@ class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
             results = pool.map(
                 self._execute_site_sync_bg,
                 [(site_id, site_spec, SiteRequest(newest_host_labels.get(site_id, 0.0), None))
-                 for site_id, site_spec in config.wato_slave_sites().items()])
+                 for site_id, site_spec in wato_slave_sites().items()])
 
         self._process_site_sync_results(newest_host_labels, results)
 

@@ -56,6 +56,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.sites import has_wato_slave_sites
 from cmk.gui.valuespec import (
     FixedValue,
     Dictionary,
@@ -1206,7 +1207,7 @@ class LDAPUserConnector(UserConnector):
                     has_changed_passwords = True
 
                 # Synchronize new user profile to remote sites if needed
-                if pw_changed and not changed and config.has_wato_slave_sites():
+                if pw_changed and not changed and has_wato_slave_sites():
                     profiles_to_synchronize[user_id] = user
 
                 if changed:

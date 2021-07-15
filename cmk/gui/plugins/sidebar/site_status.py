@@ -10,7 +10,6 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.utils.urls import makeactionuri_contextless
 import cmk.gui.sites as sites
-import cmk.gui.config as config
 from cmk.gui.utils.escaping import escape_html_permissive
 
 from cmk.gui.plugins.sidebar import (
@@ -44,8 +43,8 @@ class SiteStatus(SidebarSnapin):
 
         sites.update_site_states_from_dead_sites()
 
-        for sitename, _sitealias in config.sorted_sites():
-            site = config.site(sitename)
+        for sitename, _sitealias in sites.sorted_sites():
+            site = sites.get_site_config(sitename)
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
@@ -104,7 +103,7 @@ class SiteStatus(SidebarSnapin):
         if switch_var:
             for info in switch_var.split(","):
                 sitename, onoff = info.split(":")
-                if sitename not in config.sitenames():
+                if sitename not in sites.sitenames():
                     continue
 
                 if onoff == "on":

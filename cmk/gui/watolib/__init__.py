@@ -94,7 +94,7 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 # TODO: cleanup all call sites to this name
-from cmk.gui.config import (
+from cmk.gui.sites import (
     is_wato_slave_site,
     site_choices,
 )

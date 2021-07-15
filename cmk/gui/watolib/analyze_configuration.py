@@ -15,6 +15,7 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
@@ -202,7 +203,7 @@ class ACTest:
     def _get_effective_global_setting(self, varname: str) -> Any:
         return get_effective_global_setting(
             omd_site(),
-            cmk.gui.config.is_wato_slave_site(),
+            is_wato_slave_site(),
             varname,
         )
 

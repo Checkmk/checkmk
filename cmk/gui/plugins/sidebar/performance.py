@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -38,7 +37,7 @@ class Performance(SidebarSnapin):
         return True
 
     def show(self):
-        only_sites = snapin_site_choice("performance", config.get_configured_site_choices())
+        only_sites = snapin_site_choice("performance", sites.get_configured_site_choices())
 
         def write_line(left, right, show_more):
             html.open_tr(class_="show_more_mode" if show_more else "basic")
@@ -66,7 +65,7 @@ class Performance(SidebarSnapin):
              ("Cached log messages",    True, 6, "%d")]:
             write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
-        if only_sites is None and len(config.allsites()) == 1:
+        if only_sites is None and len(sites.allsites()) == 1:
             try:
                 data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
                                           "external_command_buffer_max\n")

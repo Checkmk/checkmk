@@ -15,6 +15,7 @@ import cmk.gui.sites as sites
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+from cmk.gui.sites import get_site_config, get_login_slave_sites, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
@@ -62,7 +63,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     if not profiles_to_synchronize:
         return
 
-    remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_slave_sites()]
+    remote_sites = [(site_id, get_site_config(site_id)) for site_id in get_login_slave_sites()]
 
     logger.info('Credentials changed for %s. Trying to sync to %d sites' %
                 (", ".join(profiles_to_synchronize.keys()), len(remote_sites)))
@@ -146,7 +147,7 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
 def _handle_ldap_sync_finished(logger, profiles_to_synchronize, changes):
     _synchronize_profiles_to_sites(logger, profiles_to_synchronize)
 
-    if changes and config.wato_enabled and not config.is_wato_slave_site():
+    if changes and config.wato_enabled and not is_wato_slave_site():
         add_change("edit-users", "<br>".join(changes), add_user=False)
 
 

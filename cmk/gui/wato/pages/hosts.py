@@ -8,12 +8,12 @@
 import abc
 from typing import Iterator, Optional, Type, overload, Tuple
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.valuespec import (
     ListOfStrings,
     Hostname,
@@ -357,7 +357,7 @@ class ModeEditHost(ABCHostMode):
         site = self._host.effective_attribute("site")
         return watolib.sites.get_effective_global_setting(
             site,
-            config.is_wato_slave_site(),
+            is_wato_slave_site(),
             "use_dns_cache",
         )
 

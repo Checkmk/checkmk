@@ -18,13 +18,13 @@ from cmk.gui.valuespec import ValueSpec
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user_errors, request
 from cmk.gui.view_utils import get_labels
 from cmk.gui.type_defs import Choices, ColumnName, Row, Rows, VisualContext
 from cmk.gui.page_menu import PageMenuEntry
+from cmk.gui.sites import get_site_config
 
 
 class VisualInfo(metaclass=abc.ABCMeta):
@@ -445,7 +445,7 @@ class FilterTime(Filter):
 
 
 def filter_cre_choices():
-    return sorted([(sitename, config.site(sitename)["alias"])
+    return sorted([(sitename, get_site_config(sitename)["alias"])
                    for sitename, state in sites.states().items()
                    if state["state"] == "online"],
                   key=lambda a: a[1].lower())
@@ -453,7 +453,7 @@ def filter_cre_choices():
 
 def filter_cre_heading_info():
     current_value = request.var("site")
-    return config.site(current_value)["alias"] if current_value else None
+    return get_site_config(current_value)["alias"] if current_value else None
 
 
 class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):

@@ -35,7 +35,6 @@ from cmk.gui.exceptions import (
     MKUserError,
     MKAuthException,
 )
-import cmk.gui.config as config
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -69,7 +68,7 @@ from cmk.gui.plugins.wato import (
     redirect,
 )
 from cmk.gui.pages import page_registry, Page
-
+from cmk.gui.sites import get_activation_site_choices, site_is_local, get_site_config
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 _CHECKMK_FILES_NOTE = _("<br>Note: Some files may contain highly sensitive data like"
@@ -159,11 +158,10 @@ class ModeDiagnostics(WatoMode):
             title=_("Collect diagnostic dump"),
             render="form",
             elements=[
-                ("site",
-                 DropdownChoice(
-                     title=_("Site"),
-                     choices=config.get_activation_site_choices(),
-                 )),
+                ("site", DropdownChoice(
+                    title=_("Site"),
+                    choices=get_activation_site_choices(),
+                )),
                 ("general",
                  FixedValue(True,
                             title=_("General information"),
@@ -421,10 +419,10 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
     def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
-        if config.site_is_local(site):
+        if site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
-        return do_remote_automation(config.site(site), "diagnostics-dump-get-file", [
+        return do_remote_automation(get_site_config(site), "diagnostics-dump-get-file", [
             ("tarfile_name", tarfile_name),
         ])
 

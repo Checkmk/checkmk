@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from cmk.gui.globals import user
 import cmk.gui.sites as sites
 
 
@@ -69,3 +70,31 @@ def test_encode_socket_for_livestatus(site_spec, result):
 ])
 def test_site_config_for_livestatus_tcp_tls(site_spec, result):
     assert sites._site_config_for_livestatus("mysite", site_spec) == result
+
+
+def test_sorted_sites(with_user_login, mocker):
+    mocker.patch.object(user,
+                        "authorized_sites",
+                        return_value={
+                            'site1': {
+                                'alias': 'Site 1'
+                            },
+                            'site3': {
+                                'alias': 'Site 3'
+                            },
+                            'site5': {
+                                'alias': 'Site 5'
+                            },
+                            'site23': {
+                                'alias': 'Site 23'
+                            },
+                            'site6': {
+                                'alias': 'Site 6'
+                            },
+                            'site12': {
+                                'alias': 'Site 12'
+                            },
+                        })
+    expected = [('site1', 'Site 1'), ('site12', 'Site 12'), ('site23', 'Site 23'),
+                ('site3', 'Site 3'), ('site5', 'Site 5'), ('site6', 'Site 6')]
+    assert sites.sorted_sites() == expected

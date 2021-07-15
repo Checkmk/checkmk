@@ -32,6 +32,7 @@ from cmk.gui.plugins.views import (
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.plugins.views.utils import DerivedColumnsSorter, cmp_insensitive_string
 from cmk.gui.type_defs import Row
+from cmk.gui.sites import get_site_config
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -149,8 +150,8 @@ class SorterSitealias(Sorter):
         return ['site']
 
     def cmp(self, r1, r2):
-        return (config.site(r1["site"])["alias"] > config.site(r2["site"])["alias"]) - (config.site(
-            r1["site"])["alias"] < config.site(r2["site"])["alias"])
+        return (get_site_config(r1["site"])["alias"] > get_site_config(r2["site"])["alias"]) - (
+            get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"])
 
 
 class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):

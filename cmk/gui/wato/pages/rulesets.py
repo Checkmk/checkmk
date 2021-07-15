@@ -52,6 +52,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html, request, transactions, output_funnel, user
+from cmk.gui.sites import wato_slave_sites
 from cmk.gui.valuespec import (
     FixedValue,
     Transform,
@@ -988,7 +989,7 @@ class ModeEditRuleset(WatoMode):
         if not self._hostname:
             return
 
-        remote_sites = config.wato_slave_sites()
+        remote_sites = wato_slave_sites()
         if not remote_sites:
             return
 

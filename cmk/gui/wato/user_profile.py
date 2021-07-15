@@ -9,6 +9,7 @@ import time
 import abc
 import json
 from typing import Iterator, List, Optional, Union
+from livestatus import SiteId, SiteConfiguration
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.i18n
@@ -19,10 +20,10 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
 
+from cmk.gui.sites import get_site_config, sitenames
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
-from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
@@ -610,7 +611,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
         site_id = site_id_val
-        if site_id not in config.sitenames():
+        if site_id not in sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
         status = cmk.gui.sites.states().get(site_id,
@@ -618,7 +619,7 @@ class ModeAjaxProfileReplication(AjaxPage):
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 
-        site = config.site(site_id)
+        site = get_site_config(site_id)
         assert user.id is not None
         result = self._synchronize_profile(site_id, site, user.id)
 

@@ -18,7 +18,6 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
-from cmk.gui.globals import user
 from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
@@ -222,34 +221,6 @@ def test_load_config_allows_local_plugin_setting():
     config.load_config()
     # Mypy will not understand this, because it's coming dynamically from a plugin.
     assert config.ding == 'ding'  # type: ignore[attr-defined]
-
-
-def test_sorted_sites(mocker):
-    mocker.patch.object(user,
-                        "authorized_sites",
-                        return_value={
-                            'site1': {
-                                'alias': 'Site 1'
-                            },
-                            'site3': {
-                                'alias': 'Site 3'
-                            },
-                            'site5': {
-                                'alias': 'Site 5'
-                            },
-                            'site23': {
-                                'alias': 'Site 23'
-                            },
-                            'site6': {
-                                'alias': 'Site 6'
-                            },
-                            'site12': {
-                                'alias': 'Site 12'
-                            },
-                        })
-    expected = [('site1', 'Site 1'), ('site12', 'Site 12'), ('site23', 'Site 23'),
-                ('site3', 'Site 3'), ('site5', 'Site 5'), ('site6', 'Site 6')]
-    assert config.sorted_sites() == expected
 
 
 def test_registered_permission_sections():

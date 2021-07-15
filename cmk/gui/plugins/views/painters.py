@@ -22,6 +22,7 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
+from cmk.gui.sites import get_site_config
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, html, request, response, output_funnel
@@ -386,7 +387,7 @@ class PainterSitealias(Painter):
         return ['site']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, config.site(row["site"])["alias"])
+        return (None, get_site_config(row["site"])["alias"])
 
 
 #.
@@ -1516,7 +1517,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
 
     def replace_tags(text: str) -> str:
         sitename = row["site"]
-        url_prefix = config.site(sitename)["url_prefix"]
+        url_prefix = get_site_config(sitename)["url_prefix"]
         return text\
             .replace('$URL_PREFIX$',     url_prefix)\
             .replace('$SITE$',           sitename)\

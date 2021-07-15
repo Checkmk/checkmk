@@ -21,7 +21,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
-import cmk.gui.config as config
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.log as log
@@ -29,6 +28,7 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.globals import html, request, transactions, user
+from cmk.gui.sites import activation_sites, site_is_local, get_site_config
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -114,7 +114,7 @@ class ModeAnalyzeConfig(WatoMode):
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
-            if site_id not in config.activation_sites():
+            if site_id not in activation_sites():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
         if request.var("_do") == "ack":
@@ -343,7 +343,7 @@ class ModeAnalyzeConfig(WatoMode):
         return results_by_category
 
     def _analyze_sites(self):
-        return config.activation_sites()
+        return activation_sites()
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
@@ -366,12 +366,12 @@ class ModeAnalyzeConfig(WatoMode):
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
-            if config.site_is_local(site_id):
+            if site_is_local(site_id):
                 automation = AutomationCheckAnalyzeConfig()
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = watolib.do_remote_automation(config.site(site_id),
+                results_data = watolib.do_remote_automation(get_site_config(site_id),
                                                             "check-analyze-config", [],
                                                             timeout=request.request_timeout - 10)
 

@@ -16,11 +16,12 @@ from marshmallow.decorators import post_load
 from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import HTTPException
 
-from cmk.gui import watolib, config
+from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.gui.watolib.tags import load_tag_config
+from cmk.gui.sites import sitenames
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 from livestatus import SiteId
 
@@ -357,7 +358,7 @@ def attr_openapi_schema(
 
     """
     def site_exists(site_name: SiteId) -> None:
-        if site_name not in config.sitenames():
+        if site_name not in sitenames():
             raise ValidationError(f"Site {site_name!r} does not exist.")
 
     validators = {

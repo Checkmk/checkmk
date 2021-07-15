@@ -61,6 +61,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import Choices
+from cmk.gui.sites import get_event_console_site_choices, allsites
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.valuespec import (
     DropdownChoice,
@@ -762,9 +763,8 @@ def vs_mkeventd_rule(customer=None):
          DualListChoice(
              title=_("Match site"),
              help=_("Apply this rule only on the following sites"),
-             choices=config.get_event_console_site_choices(),
-             locked_choices=list(config.allsites().keys() -
-                                 dict(config.get_event_console_site_choices()).keys()),
+             choices=get_event_console_site_choices(),
+             locked_choices=list(allsites().keys() - dict(get_event_console_site_choices()).keys()),
              locked_choices_text_singular=_("%d locked site"),
              locked_choices_text_plural=_("%d locked sites"),
          )),
@@ -1227,7 +1227,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                 ("site",
                  DropdownChoice(
                      title=_("Simulate for site"),
-                     choices=config.get_event_console_site_choices,
+                     choices=get_event_console_site_choices,
                  )),
             ])
 
@@ -2558,7 +2558,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
 
 def _get_event_console_sync_sites():
     """Returns a list of site ids which gets the Event Console configuration replicated"""
-    return [s[0] for s in config.get_event_console_site_choices()]
+    return [s[0] for s in get_event_console_site_choices()]
 
 
 @mode_registry.register

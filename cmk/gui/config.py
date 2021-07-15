@@ -9,10 +9,10 @@ import errno
 import os
 import copy
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 from pathlib import Path
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations
+from livestatus import SiteConfigurations
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
@@ -20,7 +20,6 @@ import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 
-from cmk.gui.globals import user
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -308,19 +307,6 @@ def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
     raise NotImplementedError()
 
 
-#.
-#   .--Sites---------------------------------------------------------------.
-#   |                        ____  _ _                                     |
-#   |                       / ___|(_) |_ ___  ___                          |
-#   |                       \___ \| | __/ _ \/ __|                         |
-#   |                        ___) | | ||  __/\__ \                         |
-#   |                       |____/|_|\__\___||___/                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  The config module provides some helper functions for sites.         |
-#   '----------------------------------------------------------------------'
-
-
 def default_single_site_configuration() -> SiteConfigurations:
     return {
         omd_site(): {
@@ -342,151 +328,3 @@ def default_single_site_configuration() -> SiteConfigurations:
 
 
 sites: SiteConfigurations = {}
-
-
-def sitenames() -> List[SiteId]:
-    return list(sites)
-
-
-# TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
-# and only returns the currently enabled sites. Or should we redeclare the "disabled" state
-# to disable the sites at all?
-# TODO: Rename this!
-def allsites() -> SiteConfigurations:
-    return {
-        name: site(name)  #
-        for name in sitenames()
-        if not site(name).get("disabled", False)
-    }
-
-
-def configured_sites() -> SiteConfigurations:
-    return {site_id: site(site_id) for site_id in sitenames()}
-
-
-def has_wato_slave_sites() -> bool:
-    return bool(wato_slave_sites())
-
-
-def is_wato_slave_site() -> bool:
-    return _has_distributed_wato_file() and not has_wato_slave_sites()
-
-
-def _has_distributed_wato_file() -> bool:
-    return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
-        and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
-
-
-def get_login_sites() -> List[SiteId]:
-    """Returns the WATO slave sites a user may login and the local site"""
-    return get_login_slave_sites() + [omd_site()]
-
-
-# TODO: All site listing functions should return the same data structure, e.g. a list of
-#       pairs (site_id, site)
-def get_login_slave_sites() -> List[SiteId]:
-    """Returns a list of site ids which are WATO slave sites and users can login"""
-    login_sites = []
-    for site_id, site_spec in wato_slave_sites().items():
-        if site_spec.get('user_login', True) and not site_is_local(site_id):
-            login_sites.append(site_id)
-    return login_sites
-
-
-def wato_slave_sites() -> SiteConfigurations:
-    return {
-        site_id: s  #
-        for site_id, s in sites.items()
-        if s.get("replication")
-    }
-
-
-def sorted_sites() -> List[Tuple[SiteId, str]]:
-    return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().items()],
-                  key=lambda k: k[1].lower())
-
-
-def site(site_id: SiteId) -> SiteConfiguration:
-    s = dict(sites.get(site_id, {}))
-    # Now make sure that all important keys are available.
-    # Add missing entries by supplying default values.
-    s.setdefault("alias", site_id)
-    s.setdefault("socket", ("local", None))
-    s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    s["id"] = site_id
-    return s
-
-
-def site_is_local(site_id: SiteId) -> bool:
-    family_spec, address_spec = site(site_id)["socket"]
-    return _is_local_socket_spec(family_spec, address_spec)
-
-
-def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> bool:
-    if family_spec == "local":
-        return True
-
-    if family_spec == "unix" and address_spec["path"] == cmk.utils.paths.livestatus_unix_socket:
-        return True
-
-    return False
-
-
-def is_single_local_site() -> bool:
-    if len(sites) > 1:
-        return False
-    if len(sites) == 0:
-        return True
-
-    # Also use Multisite mode if the one and only site is not local
-    sitename = list(sites.keys())[0]
-    return site_is_local(sitename)
-
-
-def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
-
-
-def site_attribute_default_value() -> Optional[SiteId]:
-    site_id = omd_site()
-    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if site_id in authorized_site_ids:
-        return site_id
-    return None
-
-
-def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
-    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
-    choices = []
-    for site_id, site_spec in site_configs.items():
-        title = site_id
-        if site_spec.get("alias"):
-            title += " - " + site_spec["alias"]
-
-        choices.append((site_id, title))
-
-    return sorted(choices, key=lambda s: s[1])
-
-
-def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices({
-        site_id: site
-        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
-        if site_is_local(site_id) or site.get("replicate_ec", False)
-    })
-
-
-def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(activation_sites())
-
-
-def activation_sites() -> SiteConfigurations:
-    """Returns sites that are affected by WATO changes
-
-    These sites are shown on activation page and get change entries
-    added during WATO changes."""
-    return {
-        site_id: site
-        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
-        if site_is_local(site_id) or site.get("replication")
-    }

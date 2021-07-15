@@ -33,6 +33,7 @@ import cmk.gui.hooks as hooks
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.sites import site_is_local, get_site_config
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
@@ -64,7 +65,7 @@ def check_mk_automation(siteid: SiteId,
     if args is None:
         args = []
 
-    if not siteid or config.site_is_local(siteid):
+    if not siteid or site_is_local(siteid):
         return check_mk_local_automation(command, args, indata, stdin_data, timeout)
 
     return check_mk_remote_automation(
@@ -182,7 +183,7 @@ def check_mk_remote_automation(site_id: SiteId,
                                timeout: Optional[int] = None,
                                sync: bool = True,
                                non_blocking_http: bool = False) -> Any:
-    site = config.site(site_id)
+    site = get_site_config(site_id)
     if "secret" not in site:
         raise MKGeneralException(
             _("Cannot connect to site \"%s\": The site is not logged in") %
@@ -204,7 +205,7 @@ def check_mk_remote_automation(site_id: SiteId,
 
     # Synchronous execution of the actual remote command in a single blocking HTTP request
     return do_remote_automation(
-        config.site(site_id),
+        get_site_config(site_id),
         "checkmk-automation",
         [
             ("automation", command),  # The Checkmk automation command
@@ -408,7 +409,7 @@ def _do_check_mk_remote_automation_in_background_job(
 
     It starts the background job using one call. It then polls the remote site, waiting for
     completion of the job."""
-    site_config = config.site(site_id)
+    site_config = get_site_config(site_id)
 
     job_id = _start_remote_automation_job(site_config, automation_request)
 

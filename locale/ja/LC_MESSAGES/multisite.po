@@ -1604,8 +1604,9 @@ msgstr ""
 "とえば、このルールを使用して、式 \"%s\" (引用符なし)を指定し、 \"%s\" を選択"
 "することで、Dockerコンテナに属するすべてのプロセスを除外できます。</p>"
 
+#, fuzzy
 msgid ""
-"<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+"<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
 "with ~. For each <tt>%s</tt> in the description, the expression has to "
 "contain one \"group\". A group is a subexpression enclosed in brackets, for "
@@ -1613,13 +1614,26 @@ msgid ""
 "inventory finds a process matching the pattern, it will substitute all such "
 "groups with the actual values when creating the check. That way one rule can "
 "create several checks on a host.</p><p>If the pattern contains more groups "
-"then occurrances of <tt>%s</tt> in the service description then only the "
+"then occurrences of <tt>%s</tt> in the service description then only the "
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
 "may also use <tt>%1</tt>, <tt>%2</tt>, etc.  These will be replaced by the "
 "first, second, ... matching group. This allows you to reorder thing"
 msgstr ""
+"<p>サービスの説明には、<tt>%s</tt>が1つ以上含まれている場合があります。この場"
+"合、パターンは接頭辞〜が付いた正規表現である必要があります。説明の<tt>%s</tt>"
+"ごとに、式に1つの\"グループ\"が含まれている必要があります。グループは、角かっ"
+"こで囲まれた部分式です。たとえば、 <tt>(.*)</tt> または<tt>([a-zA-Z]+)</tt>ま"
+"たは<tt>(...)</tt>。インベントリがパターンに一致するタスクを見つけると、"
+"チェックを作成するときに、そのようなすべてのグループを実際の値に置き換えま"
+"す。このようにして、1つのルールでホスト上に複数のチェックを作成できます。</"
+"p><p>パターンにサービスの説明で出現する<tt>%s</tt>よりも多くのグループが含ま"
+"れる場合、最初に一致する部分式のみが使用されます。サービスの説明について。そ"
+"れでも、残りのグループに対応する一致した部分文字列は正規表現にコピーされま"
+"す。</p><p> <tt>%s</tt>の代わりに、<tt>%1</tt>や<tt>%2</tt>などを使用すること"
+"もできます 。これらの式は、最初、2番目、...の一致するグループに置き換えられ、"
+"並べ替えることができます。</p>"
 
 msgid ""
 "<p>The service description may contain one or more occurances of <tt>%s</"
@@ -2363,6 +2377,10 @@ msgstr "AWS/Glacier Vaultオブジェクト"
 
 msgid "AWS/Glacier Vaults"
 msgstr "AWS/Glacier Vaults"
+
+#, fuzzy
+msgid "AWS/Lambda Performance"
+msgstr "パフォーマンス"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "AWS/RDS CPUクレジット"
@@ -4646,8 +4664,9 @@ msgstr "許可されたプロトコル"
 msgid "Allowed states (otherwise check will be critical)"
 msgstr "許可された状態(それ以外の場合はチェックが重要になります)"
 
-msgid "Allowed to see the following entries"
-msgstr "次のエントリを表示できます"
+#, fuzzy
+msgid "Allowed to see parts of the tree"
+msgstr "ツリー全体を表示できます"
 
 msgid "Allowed to see the whole tree"
 msgstr "ツリー全体を表示できます"
@@ -11187,6 +11206,10 @@ msgstr "認証とプライバシーのないSNMPv3の資格情報(noAuthNoPriv)"
 msgid "Credentials for processing SNMP traps"
 msgstr "SNMPトラップを処理するための資格情報"
 
+#, fuzzy
+msgid "Credentials for selected databases"
+msgstr "選択したデータベースにログインします"
+
 msgid "Credentials to access the Database"
 msgstr ""
 
@@ -12150,6 +12173,10 @@ msgstr ""
 "dg_broker_start=falseのData-Guardは、プライマリのSwitchoverstateを監視するた"
 "めにBrokerstateを無視する必要があります。"
 
+#, fuzzy
+msgid "Database"
+msgstr "データベースSID"
+
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "データベース可用性グループ(DAG)(Windows)"
 
@@ -12218,6 +12245,10 @@ msgstr "データベーススループット単位(パーセント)"
 
 msgid "Database/Collection name ('<DB name> <collection name>')"
 msgstr ""
+
+#, fuzzy
+msgid "Databases"
+msgstr "データベースユーザー"
 
 #, python-format
 msgid "Datacenter %d"
@@ -12317,6 +12348,10 @@ msgstr "非アクティブ化"
 
 msgid "Deactivated"
 msgstr "非アクティブ化"
+
+#, fuzzy
+msgid "Dead letter errors"
+msgstr "Lambdaユーザーエラー"
 
 msgid "Dead paths"
 msgstr "デッドパス"
@@ -14117,10 +14152,16 @@ msgstr "モニタリングコアのログファイルからのエントリを表
 msgid "Displays hosts and services producing the most notifications"
 msgstr "最も多くの通知を生成するホストとサービスを表示します"
 
-msgid "Displays statistics about host states as globe and a table."
+#, fuzzy
+msgid "Displays statistics about events as a hexagon and a table."
+msgstr "サービス状態に関する統計をグローブとテーブルとして表示します"
+
+#, fuzzy
+msgid "Displays statistics about host states as a hexagon and a table."
 msgstr "ホストの状態に関する統計を地球儀と表として表示します。"
 
-msgid "Displays statistics about service states as globe and a table."
+#, fuzzy
+msgid "Displays statistics about service states as a hexagon and a table."
 msgstr "サービス状態に関する統計をグローブとテーブルとして表示します"
 
 msgid "Displays the content of a custom website."
@@ -14128,6 +14169,10 @@ msgstr "カスタムWebサイトのコンテンツを表示します。"
 
 msgid "Displays the content of a view"
 msgstr "ビューのコンテンツを表示します"
+
+#, fuzzy
+msgid "Displays the state of a specific host."
+msgstr "特定のホストとサービスの単一のメトリックを表示します。"
 
 #, fuzzy
 msgid "Displays the state of a specific service."
@@ -15116,8 +15161,16 @@ msgstr "補助タグ内の重複タグID \"%s\""
 msgid "Duration"
 msgstr "期間"
 
+#, fuzzy
+msgid "Duration in percent of Lambda timeout"
+msgstr "タイムアウトの場合の状態"
+
 msgid "Duration levels"
 msgstr "期間レベル"
+
+#, fuzzy
+msgid "Duration of Lambda functions"
+msgstr "バックアップの期間"
 
 msgid "Duration of backup"
 msgstr "バックアップの期間"
@@ -16618,6 +16671,10 @@ msgstr "イベント処理時間"
 msgid "Event source IP address"
 msgstr "イベント送信元IPアドレス"
 
+#, fuzzy
+msgid "Event statistics"
+msgstr "ホスト統計"
+
 msgid "Event subscriptions"
 msgstr "イベントサブスクリプション"
 
@@ -16700,7 +16757,8 @@ msgstr "オペレーティングシステムユーザーの正確な名前"
 msgid "Exact name of the process path"
 msgstr "プロセスパスの正確な名前"
 
-msgid "Exact name of the process without argments"
+#, fuzzy
+msgid "Exact name of the process without arguments"
 msgstr "引数なしのプロセスの正確な名前"
 
 msgid "Exact name of the task"
@@ -16736,6 +16794,10 @@ msgstr "例外"
 #, python-format
 msgid "Exception during element refresh (element '%s')"
 msgstr "要素更新中の例外(要素 '%s')"
+
+#, fuzzy, python-format
+msgid "Exception in icon '%s': %s"
+msgstr "例外:%s"
 
 #, python-format
 msgid "Exception(s) caught during snapshot preparation: %s"
@@ -20662,6 +20724,10 @@ msgstr "ホストの問題(未処理)"
 msgid "Host Properties"
 msgstr "ホストのプロパティ"
 
+#, fuzzy
+msgid "Host State"
+msgstr "ホストの状態"
+
 msgid "Host Status Grouping"
 msgstr "ホストステータスのグループ化"
 
@@ -21984,6 +22050,11 @@ msgid ""
 msgstr ""
 "設定されている場合、プラグインは繰り返し呼び出される可能性があります-これまで"
 "何度も、または正常に終了するまで。"
+
+msgid ""
+"If single values, table columns or subcategories are not restricted, then "
+"all entries are added respectively."
+msgstr ""
 
 msgid ""
 "If sounds are enabled then the user will be alarmed by problems shown in a "
@@ -24523,6 +24594,10 @@ msgstr "インベントリ:履歴"
 msgid "Invert matching"
 msgstr "マッチングを反転"
 
+#, fuzzy
+msgid "Invocations"
+msgstr "感染"
+
 msgid "Involuntary context switches"
 msgstr "非自発的なコンテキストスイッチ"
 
@@ -24717,6 +24792,10 @@ msgstr "アイテム {val_t2} が追加されました。"
 
 msgid "Items"
 msgstr "アイテム"
+
+#, fuzzy
+msgid "Iterator age"
+msgstr "管理者名"
 
 msgid "JIRA URL"
 msgstr "JIRA URL"
@@ -25149,6 +25228,9 @@ msgid ""
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、<tt> "
 "os:windows </tt>です。"
+
+msgid "Lambda"
+msgstr ""
 
 msgid "Lambda user errors"
 msgstr "Lambdaユーザーエラー"
@@ -27185,6 +27267,10 @@ msgstr "バッチごとのMSSQLロック"
 msgid "MSSQL Log and Data File Sizes"
 msgstr "MSSQLログとデータファイルのサイズ"
 
+#, fuzzy
+msgid "MSSQL Mirroring State"
+msgstr "モニター状態"
+
 msgid "MSSQL Page Activity"
 msgstr "MSSQLページアクティビティ"
 
@@ -28484,8 +28570,13 @@ msgstr "マーカー"
 msgid "Message"
 msgstr "メッセージ"
 
-msgid "Message Age"
-msgstr "メッセージエイジ"
+#, fuzzy
+msgid "Message Age of newest messages"
+msgstr "最も古いメッセージの経過時間"
+
+#, fuzzy
+msgid "Message Age of oldest messages"
+msgstr "最も古いメッセージの経過時間"
 
 msgid "Message Count"
 msgstr "メッセージ数"
@@ -28749,6 +28840,14 @@ msgstr "ミラーライン"
 
 msgid "Mirrored Stacked"
 msgstr "ミラーリングスタック"
+
+#, fuzzy
+msgid "Mirroring state criticality"
+msgstr "垂直軸をミラーリングします"
+
+#, fuzzy
+msgid "Mirroring witness state criticality"
+msgstr "垂直軸をミラーリングします"
 
 msgid "Miscellaneous"
 msgstr "その他"
@@ -33303,8 +33402,8 @@ msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
 
 #, fuzzy
-msgid "Path to attributes or tables"
-msgstr "設定するホスト属性"
+msgid "Path to categories"
+msgstr "アイコンカテゴリ"
 
 msgid "Path to sapgenpse"
 msgstr "sapgenpseへの道"
@@ -36934,6 +37033,10 @@ msgstr "IPアドレスへのアクセスを制限する"
 msgid "Restrict access to the following source IP addresses"
 msgstr "次の送信元IPアドレスへのアクセスを制限します"
 
+#, fuzzy
+msgid "Restrict all"
+msgstr "連絡先グループによる制限"
+
 msgid "Restrict by contact groups"
 msgstr "連絡先グループによる制限"
 
@@ -36979,8 +37082,24 @@ msgstr "ログファイル解析の実行時間を制限する"
 msgid "Restrict severity to at worst"
 msgstr "重大度を最悪の場合に制限する"
 
+#, fuzzy
+msgid "Restrict single values"
+msgstr "単一のホストに制限する"
+
 msgid "Restrict source hosts"
 msgstr "ソースホストを制限する"
+
+#, fuzzy
+msgid "Restrict subcategories"
+msgstr "サブカテゴリ"
+
+#, fuzzy
+msgid "Restrict table columns"
+msgstr "単一のホストに制限する"
+
+#, fuzzy
+msgid "Restrict the following keys"
+msgstr "次のレベルを使用します"
 
 msgid "Restrict the length of the lines"
 msgstr "行の長さを制限する"
@@ -37477,6 +37596,10 @@ msgstr "SAP HANA ライセンス"
 
 msgid "SAP HANA Memory"
 msgstr "SAP HANAメモリ"
+
+#, fuzzy
+msgid "SAP HANA Process"
+msgstr "SAP HANA ライセンス"
 
 msgid "SAP HANA replication status"
 msgstr "SAP HANAレプリケーションステータス"
@@ -39364,6 +39487,16 @@ msgstr ""
 "ここで何も構成する必要はありません。ディレクトリから必要なすべてのユーザーオ"
 "ブジェクトとグループオブジェクトを一覧表示できる必要があります。"
 
+msgid ""
+"Set the criticalities of the mirroring state of database instances that have "
+"mirroring configured on Microsoft SQL server. Databases that do not have "
+"mirroring configured are not discovered. Note: mirroring information is only "
+"shown as a service on the server that hosts the principal database. It is "
+"NOT shown on any servers that host the mirror databases. This is to avoid "
+"duplicate service states and alerts. We therefore recommend to cluster these "
+"services."
+msgstr ""
+
 msgid "Set the height"
 msgstr "高さを設定する"
 
@@ -39769,6 +39902,10 @@ msgstr "ユーザー' メニューにヒントを表示する"
 msgid "Show historic values"
 msgstr "歴史的価値観を示す"
 
+#, fuzzy
+msgid "Show host status"
+msgstr "サービスステータスを表示する"
+
 msgid "Show icon linking to WATO parameter editor for services"
 msgstr "サービスのWATOパラメータエディタにリンクするアイコンを表示する"
 
@@ -39893,7 +40030,7 @@ msgid "Show stale hosts and services"
 msgstr "古いホストとサービスを表示する"
 
 #, fuzzy
-msgid "Show summary for not OK states"
+msgid "Show summary for not {cls._get_working_state().upper()} states"
 msgstr "ホスト通知の概要"
 
 msgid ""
@@ -41253,6 +41390,50 @@ msgid ""
 msgstr ""
 
 msgid "Specify the token to be used to connect to InfluxDB."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of discarded events per second that "
+"could not be processed. This metric is only reported for asynchronous "
+"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the number of failed invocations per second due "
+"to function errors. Default is CRIT for more than one error per hour (ca. "
+"1.0/3600)."
+msgstr "アクティブなデータベース接続数の上位レベル"
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the number of invocations per second that "
+"exceeded the concurrent limits (throttles). Default is CRIT for more than "
+"one error per hour (ca. 1.0/3600)."
+msgstr ""
+"ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位レベ"
+"ルを指定できます。"
+
+#, fuzzy
+msgid "Specify the upper levels for the number of invocations per second."
+msgstr "アクティブなデータベース接続数の上位レベル"
+
+msgid ""
+"Specify the upper levels in seconds for the age of the last record for each "
+"batch of records processed (iterator age). A high iterator age could result "
+"from the following scenarios: a high execution duration for a function, not "
+"enough shards in a stream, invocation errors, insufficient batch size. This "
+"metric is only reported for stream-based invocations."
 msgstr ""
 
 msgid "Specify time since last successful backup"
@@ -44656,6 +44837,16 @@ msgid ""
 "acknowledged."
 msgstr "この集計をOKにしない重大な問題が認識されています"
 
+msgid ""
+"The criticality of the service when the mirroring state is not "
+"'SYNCHRONIZED'. The default state is OK."
+msgstr ""
+
+msgid ""
+"The criticality of the service when the mirroring witness state is not "
+"'CONNECTED'. The default state is OK."
+msgstr ""
+
 #, python-format
 msgid ""
 "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
@@ -46228,6 +46419,10 @@ msgstr "プレビューしようとしているレポートに有効なファイ
 msgid "The report you are trying to preview is not available"
 msgstr "プレビューしようとしているレポートは利用できません"
 
+#, fuzzy, python-format
+msgid "The requested %s %s does not exist"
+msgstr "要求された %s は存在しません"
+
 #, python-format
 msgid "The requested %s does not exist"
 msgstr "要求された %s は存在しません"
@@ -47477,10 +47672,10 @@ msgstr ""
 "は、<a href=\"wato.py?mode=edit_ruleset&varname=cmc_service_flap_settings\">"
 "サービス</a>のルールを介して構成できます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "These texts may be localized depending on the users' language. You can "
-"configure the localizations %s."
+"configure the localizations <a href='%s'>in the global settings</a>."
 msgstr ""
 "これらのテキストは、ユーザーの言語に応じてローカライズされる場合があります。"
 "ローカリゼーション %sを構成できます。"
@@ -48189,9 +48384,6 @@ msgstr ""
 "これは、URLで使用されるアプリケーション名です。たとえば、アプリケーション名"
 "<tt>foobar</tt>を入力すると、REST APIへの接続に使用されるURL: <tt>/"
 "controller/rest/applications/foobar/metric-data</tt>になります。"
-
-msgid "This is the default LDAP connection."
-msgstr "これはデフォルトのLDAP接続です。"
 
 msgid ""
 "This is the master switch that allows you to immediately stop the agent "
@@ -48978,6 +49170,14 @@ msgstr ""
 "このプラグインは、コマンドラインツール<tt> MegaCli.exe </tt>を使用して、"
 "LSIRAIDコントローラーと接続されているハードディスクの監視情報を提供します。こ"
 "のツールは、<a href='http://www.lsi.com/'> LSI </a>からダウンロードできます。"
+
+#, fuzzy
+msgid ""
+"This predefined condition can not be used with the current ruleset, because "
+"it defines label conditions."
+msgstr ""
+"事前定義された各条件は、既存の事前定義された条件を編集、削除、および使用でき"
+"るユーザーのグループによって所有されます。"
 
 msgid "This problem has been acknowledged"
 msgstr "この問題は認められています"
@@ -50570,14 +50770,17 @@ msgstr ""
 "インには、プラグインを実行しているホスト上のリクエストpythonライブラリとJVM上"
 "のWARファイルの両方が必要です。"
 
+#, fuzzy
 msgid ""
 "This will deploy and configure the Check_MK agent plugin <tt>mk_sap_hana</"
-"tt>. To make this plugin work you have to configure USERSTOREKEY or USER and "
-"PASSWORD, ie. USERSTOREKEY=SVAMON and SID=I08 means we need a key for "
-"SVAMONI08 in the HDB userstore specified in $MK_CONFDIR/sap_hana.cfg. "
-"Moreover you can configure 'RUNAS' with the following values 'agent' or "
-"'instance'. The latter one is default.  Use the FQDN in the query if "
-"HOSTNAME is not set, other the short hostname."
+"tt>. To make this plugin work you have to configure default credentials that "
+"are used for all databases or configure credentials per database. To "
+"configure credentials specify USERSTOREKEY or USER and PASSWORD, ie. "
+"USERSTOREKEY=SVAMON and SID=I08 means we need a key for SVAMONI08 in the HDB "
+"userstore specified in $MK_CONFDIR/sap_hana.cfg. Moreover you can configure "
+"'RUNAS' with the following values 'agent' or 'instance'. The latter one is "
+"default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
+"hostname."
 msgstr ""
 "これにより、Check_MKエージェントプラグイン<tt>mk_sap_hana</tt>がデプロイおよ"
 "び構成されます。このプラグインを機能させるには、USERSTOREKEYまたはUSERと"
@@ -50743,6 +50946,10 @@ msgid "Throttled Server Connections"
 msgstr "スロットルされたサーバー接続"
 
 msgid "Throttled requests"
+msgstr "スロットルされたリクエスト"
+
+#, fuzzy
+msgid "Throttles"
 msgstr "スロットルされたリクエスト"
 
 msgid "Throughput"
@@ -52545,6 +52752,10 @@ msgstr "不明な %s グループ: %s"
 msgid "Unknown agent configuration"
 msgstr "不明なエージェント構成"
 
+#, fuzzy
+msgid "Unknown aggregation"
+msgstr "不明なエージェント構成"
+
 #, python-format
 msgid "Unknown attribute: %s"
 msgstr "不明な属性: %s"
@@ -53048,17 +53259,33 @@ msgstr "データの上位レベル"
 msgid "Upper levels for data file size"
 msgstr "データファイルサイズの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for dead letter errors"
+msgstr "サーバーエラー率の上位レベル"
+
 msgid "Upper levels for disk usage"
 msgstr "ディスク使用量の上位レベル"
 
 msgid "Upper levels for disk utilization"
 msgstr "ディスク使用率の上位レベル"
 
+#, fuzzy
+msgid "Upper levels for duration in percent of the timeout"
+msgstr "更新期間の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for duration in seconds"
+msgstr "感染の上位レベル"
+
 msgid "Upper levels for encountered exceptions"
 msgstr "発生した例外の上位レベル"
 
 msgid "Upper levels for encountered warnings"
 msgstr "発生した警告の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for errors"
+msgstr "HTTPエラーの上位レベル"
 
 msgid "Upper levels for estimated time to complete"
 msgstr "完了するまでの推定時間の上位レベル"
@@ -53071,6 +53298,14 @@ msgstr "インデックスの上位レベル"
 
 msgid "Upper levels for infections"
 msgstr "感染の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for invocations"
+msgstr "感染の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for iterator age"
+msgstr "バックアップ経過日数の上位レベル"
 
 msgid "Upper levels for latency"
 msgstr "レイテンシの上位レベル"
@@ -53146,6 +53381,10 @@ msgstr "拒否されたリクエスト数の上位レベル(spillover)"
 
 msgid "Upper levels for the vault size"
 msgstr "ボールトサイズの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for throttles"
+msgstr "%s の上位レベル"
 
 msgid "Upper levels for total index size"
 msgstr "合計インデックスサイズの上位レベル"
@@ -54666,8 +54905,10 @@ msgstr "Vhosts"
 
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host you can make the internal tree paths visible which "
-"can be inserted here."
+"Inventory page of a host the internal tree paths leading to subcategories, "
+"the keys of singles values and table column names become visible. See <a "
+"href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</"
+"a>. for more details about the HW/SW Inventory system."
 msgstr ""
 
 msgid "Vibrate only"
@@ -57422,6 +57663,11 @@ msgid "You can set a lower limit to the absolute number of spare disks."
 msgstr "スペアディスクの絶対数に下限を設定できます。"
 
 msgid ""
+"You can set explicit databases to which you want to apply criticalities of "
+"the mirroring state."
+msgstr ""
+
+msgid ""
 "You can set explicit jobs by defining their job names. The job names can be "
 "found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
 "database."
@@ -59538,6 +59784,9 @@ msgstr "利用不可"
 msgid "not present"
 msgstr "現在ではない"
 
+msgid "not {cls._get_working_state().upper()} states"
+msgstr ""
+
 msgid "notif."
 msgstr "notif."
 
@@ -60280,6 +60529,19 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Allowed to see the following entries"
+#~ msgstr "次のエントリを表示できます"
+
+#, fuzzy
+#~ msgid "Path to attributes or tables"
+#~ msgstr "設定するホスト属性"
+
+#~ msgid "This is the default LDAP connection."
+#~ msgstr "これはデフォルトのLDAP接続です。"
+
+#~ msgid "Message Age"
+#~ msgstr "メッセージエイジ"
 
 #~ msgid "changed"
 #~ msgstr "変更された"

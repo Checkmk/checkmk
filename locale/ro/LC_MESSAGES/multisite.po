@@ -1481,7 +1481,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+"<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
 "with ~. For each <tt>%s</tt> in the description, the expression has to "
 "contain one \"group\". A group is a subexpression enclosed in brackets, for "
@@ -1489,7 +1489,7 @@ msgid ""
 "inventory finds a process matching the pattern, it will substitute all such "
 "groups with the actual values when creating the check. That way one rule can "
 "create several checks on a host.</p><p>If the pattern contains more groups "
-"then occurrances of <tt>%s</tt> in the service description then only the "
+"then occurrences of <tt>%s</tt> in the service description then only the "
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
@@ -2142,6 +2142,10 @@ msgstr ""
 
 msgid "AWS/Glacier Vaults"
 msgstr ""
+
+#, fuzzy
+msgid "AWS/Lambda Performance"
+msgstr "Starea porturilor pentru inventariere"
 
 msgid "AWS/RDS CPU Credits"
 msgstr ""
@@ -4599,8 +4603,9 @@ msgstr ""
 msgid "Allowed states (otherwise check will be critical)"
 msgstr ""
 
-msgid "Allowed to see the following entries"
-msgstr ""
+#, fuzzy
+msgid "Allowed to see parts of the tree"
+msgstr "spatiu utilizat"
 
 msgid "Allowed to see the whole tree"
 msgstr ""
@@ -11094,6 +11099,10 @@ msgstr ""
 msgid "Credentials for processing SNMP traps"
 msgstr ""
 
+#, fuzzy
+msgid "Credentials for selected databases"
+msgstr "Conexiuni Active"
+
 msgid "Credentials to access the Database"
 msgstr ""
 
@@ -12127,6 +12136,10 @@ msgid ""
 "the Switchoverstate on Primary."
 msgstr ""
 
+#, fuzzy
+msgid "Database"
+msgstr "Nume tablespace"
+
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr ""
 
@@ -12197,6 +12210,10 @@ msgstr ""
 
 msgid "Database/Collection name ('<DB name> <collection name>')"
 msgstr ""
+
+#, fuzzy
+msgid "Databases"
+msgstr "Nume tablespace"
 
 #, python-format
 msgid "Datacenter %d"
@@ -12299,6 +12316,10 @@ msgstr " Activează această opțiune"
 
 msgid "Deactivated"
 msgstr ""
+
+#, fuzzy
+msgid "Dead letter errors"
+msgstr "Ascude regulile de utilizator"
 
 msgid "Dead paths"
 msgstr ""
@@ -14176,10 +14197,13 @@ msgstr ""
 msgid "Displays hosts and services producing the most notifications"
 msgstr "trimite notificare"
 
-msgid "Displays statistics about host states as globe and a table."
+msgid "Displays statistics about events as a hexagon and a table."
 msgstr ""
 
-msgid "Displays statistics about service states as globe and a table."
+msgid "Displays statistics about host states as a hexagon and a table."
+msgstr ""
+
+msgid "Displays statistics about service states as a hexagon and a table."
 msgstr ""
 
 msgid "Displays the content of a custom website."
@@ -14187,6 +14211,10 @@ msgstr ""
 
 msgid "Displays the content of a view"
 msgstr ""
+
+#, fuzzy
+msgid "Displays the state of a specific host."
+msgstr "O listă cu utilizatori specifici"
 
 #, fuzzy
 msgid "Displays the state of a specific service."
@@ -15189,9 +15217,16 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
+msgid "Duration in percent of Lambda timeout"
+msgstr ""
+
 #, fuzzy
 msgid "Duration levels"
 msgstr "doua nivele"
+
+#, fuzzy
+msgid "Duration of Lambda functions"
+msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
 msgid "Duration of backup"
@@ -16705,6 +16740,10 @@ msgid "Event source IP address"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Event statistics"
+msgstr "Statusul Serverului"
+
+#, fuzzy
 msgid "Event subscriptions"
 msgstr "foloseste descrierea"
 
@@ -16790,8 +16829,9 @@ msgstr ""
 msgid "Exact name of the process path"
 msgstr "Numarul maxim de procese cu statusul OK"
 
-msgid "Exact name of the process without argments"
-msgstr ""
+#, fuzzy
+msgid "Exact name of the process without arguments"
+msgstr "Numarul maxim de procese cu statusul OK"
 
 msgid "Exact name of the task"
 msgstr ""
@@ -16829,6 +16869,10 @@ msgstr "Adaugă Excepție"
 
 #, python-format
 msgid "Exception during element refresh (element '%s')"
+msgstr ""
+
+#, python-format
+msgid "Exception in icon '%s': %s"
 msgstr ""
 
 #, python-format
@@ -20654,6 +20698,10 @@ msgstr ""
 msgid "Host Properties"
 msgstr ""
 
+#, fuzzy
+msgid "Host State"
+msgstr "Numele Elementului"
+
 msgid "Host Status Grouping"
 msgstr ""
 
@@ -21944,6 +21992,11 @@ msgstr ""
 msgid ""
 "If set, the plugin may be called repeately - up to this many times or until "
 "it finishes successfully."
+msgstr ""
+
+msgid ""
+"If single values, table columns or subcategories are not restricted, then "
+"all entries are added respectively."
 msgstr ""
 
 msgid ""
@@ -24113,6 +24166,10 @@ msgstr ""
 msgid "Invert matching"
 msgstr "Activare schimbări"
 
+#, fuzzy
+msgid "Invocations"
+msgstr "Conexiuni Active"
+
 msgid "Involuntary context switches"
 msgstr ""
 
@@ -24296,6 +24353,10 @@ msgstr ""
 
 msgid "Items"
 msgstr ""
+
+#, fuzzy
+msgid "Iterator age"
+msgstr "Nume Administrator:"
 
 msgid "JIRA URL"
 msgstr ""
@@ -24748,6 +24809,9 @@ msgstr ""
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:"
 "windows</tt>."
+msgstr ""
+
+msgid "Lambda"
 msgstr ""
 
 #, fuzzy
@@ -26951,6 +27015,10 @@ msgstr ""
 msgid "MSSQL Log and Data File Sizes"
 msgstr ""
 
+#, fuzzy
+msgid "MSSQL Mirroring State"
+msgstr " pe siteul de monitorizare: "
+
 msgid "MSSQL Page Activity"
 msgstr ""
 
@@ -28359,8 +28427,12 @@ msgid "Message"
 msgstr ""
 
 #, fuzzy
-msgid "Message Age"
-msgstr "Mesajul Text"
+msgid "Message Age of newest messages"
+msgstr "Adaugă model mesaj"
+
+#, fuzzy
+msgid "Message Age of oldest messages"
+msgstr "Adaugă model mesaj"
 
 #, fuzzy
 msgid "Message Count"
@@ -28643,6 +28715,13 @@ msgid "Mirrored Line"
 msgstr ""
 
 msgid "Mirrored Stacked"
+msgstr ""
+
+#, fuzzy
+msgid "Mirroring state criticality"
+msgstr "foloseste descrierea"
+
+msgid "Mirroring witness state criticality"
 msgstr ""
 
 msgid "Miscellaneous"
@@ -33379,8 +33458,8 @@ msgid "Path to a CA certificate"
 msgstr "Adaugă notificare"
 
 #, fuzzy
-msgid "Path to attributes or tables"
-msgstr "Atribute personalizate"
+msgid "Path to categories"
+msgstr "cu context"
 
 msgid "Path to sapgenpse"
 msgstr ""
@@ -37135,6 +37214,10 @@ msgid "Restrict access to the following source IP addresses"
 msgstr ""
 
 #, fuzzy
+msgid "Restrict all"
+msgstr "Eticheta de grup nou"
+
+#, fuzzy
 msgid "Restrict by contact groups"
 msgstr "Eticheta de grup nou"
 
@@ -37182,8 +37265,24 @@ msgid "Restrict severity to at worst"
 msgstr ""
 
 #, fuzzy
+msgid "Restrict single values"
+msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
 msgid "Restrict source hosts"
 msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
+msgid "Restrict subcategories"
+msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
+msgid "Restrict table columns"
+msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
+msgid "Restrict the following keys"
+msgstr "Adaugă instanță NGINX"
 
 msgid "Restrict the length of the lines"
 msgstr ""
@@ -37696,6 +37795,10 @@ msgstr ""
 
 msgid "SAP HANA Memory"
 msgstr ""
+
+#, fuzzy
+msgid "SAP HANA Process"
+msgstr " Activează această opțiune"
 
 #, fuzzy
 msgid "SAP HANA replication status"
@@ -39683,6 +39786,16 @@ msgid ""
 "possible to list all needed user and group objects from the directory."
 msgstr ""
 
+msgid ""
+"Set the criticalities of the mirroring state of database instances that have "
+"mirroring configured on Microsoft SQL server. Databases that do not have "
+"mirroring configured are not discovered. Note: mirroring information is only "
+"shown as a service on the server that hosts the principal database. It is "
+"NOT shown on any servers that host the mirror databases. This is to avoid "
+"duplicate service states and alerts. We therefore recommend to cluster these "
+"services."
+msgstr ""
+
 msgid "Set the height"
 msgstr ""
 
@@ -40096,6 +40209,10 @@ msgstr ""
 msgid "Show historic values"
 msgstr "Arata regulile de utilizator"
 
+#, fuzzy
+msgid "Show host status"
+msgstr "Statusul Serverului"
+
 msgid "Show icon linking to WATO parameter editor for services"
 msgstr ""
 
@@ -40240,7 +40357,7 @@ msgid "Show stale hosts and services"
 msgstr ""
 
 #, fuzzy
-msgid "Show summary for not OK states"
+msgid "Show summary for not {cls._get_working_state().upper()} states"
 msgstr "(Nu primi notificări)"
 
 msgid ""
@@ -41500,6 +41617,46 @@ msgid ""
 msgstr ""
 
 msgid "Specify the token to be used to connect to InfluxDB."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of discarded events per second that "
+"could not be processed. This metric is only reported for asynchronous "
+"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of failed invocations per second due "
+"to function errors. Default is CRIT for more than one error per hour (ca. "
+"1.0/3600)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of invocations per second that "
+"exceeded the concurrent limits (throttles). Default is CRIT for more than "
+"one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+#, fuzzy
+msgid "Specify the upper levels for the number of invocations per second."
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+msgid ""
+"Specify the upper levels in seconds for the age of the last record for each "
+"batch of records processed (iterator age). A high iterator age could result "
+"from the following scenarios: a high execution duration for a function, not "
+"enough shards in a stream, invocation errors, insufficient batch size. This "
+"metric is only reported for stream-based invocations."
 msgstr ""
 
 msgid "Specify time since last successful backup"
@@ -44731,6 +44888,16 @@ msgid ""
 "acknowledged."
 msgstr ""
 
+msgid ""
+"The criticality of the service when the mirroring state is not "
+"'SYNCHRONIZED'. The default state is OK."
+msgstr ""
+
+msgid ""
+"The criticality of the service when the mirroring witness state is not "
+"'CONNECTED'. The default state is OK."
+msgstr ""
+
 #, python-format
 msgid ""
 "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
@@ -46092,6 +46259,10 @@ msgid "The report you are trying to preview is not available"
 msgstr ""
 
 #, fuzzy, python-format
+msgid "The requested %s %s does not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy, python-format
 msgid "The requested %s does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
@@ -47141,7 +47312,7 @@ msgstr ""
 #, python-format
 msgid ""
 "These texts may be localized depending on the users' language. You can "
-"configure the localizations %s."
+"configure the localizations <a href='%s'>in the global settings</a>."
 msgstr ""
 
 #, python-format
@@ -47730,9 +47901,6 @@ msgid ""
 "application name <tt>foobar</tt>, this would result in the URL being used to "
 "contact the REST API: <tt>/controller/rest/applications/foobar/metric-data</"
 "tt>"
-msgstr ""
-
-msgid "This is the default LDAP connection."
 msgstr ""
 
 msgid ""
@@ -48340,6 +48508,11 @@ msgid ""
 "This plugin uses the command line tool <tt>MegaCli.exe</tt> in order to "
 "provide monitoring information of LSI RAID controllers and attached hard "
 "disks. You can download this tool from <a href='http://www.lsi.com/'>LSI</a>."
+msgstr ""
+
+msgid ""
+"This predefined condition can not be used with the current ruleset, because "
+"it defines label conditions."
 msgstr ""
 
 msgid "This problem has been acknowledged"
@@ -49566,12 +49739,14 @@ msgstr ""
 
 msgid ""
 "This will deploy and configure the Check_MK agent plugin <tt>mk_sap_hana</"
-"tt>. To make this plugin work you have to configure USERSTOREKEY or USER and "
-"PASSWORD, ie. USERSTOREKEY=SVAMON and SID=I08 means we need a key for "
-"SVAMONI08 in the HDB userstore specified in $MK_CONFDIR/sap_hana.cfg. "
-"Moreover you can configure 'RUNAS' with the following values 'agent' or "
-"'instance'. The latter one is default.  Use the FQDN in the query if "
-"HOSTNAME is not set, other the short hostname."
+"tt>. To make this plugin work you have to configure default credentials that "
+"are used for all databases or configure credentials per database. To "
+"configure credentials specify USERSTOREKEY or USER and PASSWORD, ie. "
+"USERSTOREKEY=SVAMON and SID=I08 means we need a key for SVAMONI08 in the HDB "
+"userstore specified in $MK_CONFDIR/sap_hana.cfg. Moreover you can configure "
+"'RUNAS' with the following values 'agent' or 'instance'. The latter one is "
+"default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
+"hostname."
 msgstr ""
 
 msgid ""
@@ -49704,6 +49879,10 @@ msgstr "Conexiuni Active"
 
 #, fuzzy
 msgid "Throttled requests"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Throttles"
 msgstr "cereri"
 
 #, fuzzy
@@ -51560,6 +51739,10 @@ msgstr ""
 msgid "Unknown agent configuration"
 msgstr ""
 
+#, fuzzy
+msgid "Unknown aggregation"
+msgstr "Agregare noua"
+
 #, python-format
 msgid "Unknown attribute: %s"
 msgstr ""
@@ -52131,6 +52314,10 @@ msgid "Upper levels for data file size"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for dead letter errors"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "Upper levels for disk usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -52138,11 +52325,23 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Upper levels for disk utilization"
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Upper levels for duration in percent of the timeout"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for duration in seconds"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Upper levels for encountered exceptions"
 msgstr ""
 
 msgid "Upper levels for encountered warnings"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for errors"
+msgstr "trei nivele"
 
 msgid "Upper levels for estimated time to complete"
 msgstr ""
@@ -52156,6 +52355,14 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for infections"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for invocations"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for iterator age"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Upper levels for latency"
 msgstr ""
@@ -52243,6 +52450,10 @@ msgstr ""
 #, fuzzy
 msgid "Upper levels for the vault size"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for throttles"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Upper levels for total index size"
@@ -53746,8 +53957,10 @@ msgstr "(fără elemente)"
 
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host you can make the internal tree paths visible which "
-"can be inserted here."
+"Inventory page of a host the internal tree paths leading to subcategories, "
+"the keys of singles values and table column names become visible. See <a "
+"href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</"
+"a>. for more details about the HW/SW Inventory system."
 msgstr ""
 
 msgid "Vibrate only"
@@ -56094,6 +56307,11 @@ msgid "You can set a lower limit to the absolute number of spare disks."
 msgstr ""
 
 msgid ""
+"You can set explicit databases to which you want to apply criticalities of "
+"the mirroring state."
+msgstr ""
+
+msgid ""
 "You can set explicit jobs by defining their job names. The job names can be "
 "found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
 "database."
@@ -58129,6 +58347,9 @@ msgstr ""
 msgid "not present"
 msgstr ""
 
+msgid "not {cls._get_working_state().upper()} states"
+msgstr ""
+
 msgid "notif."
 msgstr ""
 
@@ -58902,6 +59123,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Path to attributes or tables"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Message Age"
+#~ msgstr "Mesajul Text"
 
 #, fuzzy
 #~ msgid "Port number for HTTPS connection to InfluxDB."
@@ -61731,10 +61960,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Reserved Space"
-#~ msgstr "spatiu utilizat"
-
-#, fuzzy
-#~ msgid "Reserved part of Free"
 #~ msgstr "spatiu utilizat"
 
 #, fuzzy

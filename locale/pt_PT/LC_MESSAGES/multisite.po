@@ -1657,8 +1657,9 @@ msgstr ""
 "excluir todos os processos pertencentes a um container docker especificando "
 "a expressão \"%s\" (sem as aspas), e selecionando \"%s\".</p>"
 
+#, fuzzy
 msgid ""
-"<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+"<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
 "with ~. For each <tt>%s</tt> in the description, the expression has to "
 "contain one \"group\". A group is a subexpression enclosed in brackets, for "
@@ -1666,7 +1667,7 @@ msgid ""
 "inventory finds a process matching the pattern, it will substitute all such "
 "groups with the actual values when creating the check. That way one rule can "
 "create several checks on a host.</p><p>If the pattern contains more groups "
-"then occurrances of <tt>%s</tt> in the service description then only the "
+"then occurrences of <tt>%s</tt> in the service description then only the "
 "first matching subexpressions are used for the service descriptions. The "
 "matched substrings corresponding to the remaining groups are copied into the "
 "regular expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you "
@@ -2498,6 +2499,10 @@ msgstr "AWS/Glacier Vault Objectos"
 
 msgid "AWS/Glacier Vaults"
 msgstr "AWS/Glaciar Vaults"
+
+#, fuzzy
+msgid "AWS/Lambda Performance"
+msgstr "Desempenho"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "Créditos CPU AWS/RDS"
@@ -4856,8 +4861,9 @@ msgstr "Protocolos permitidos"
 msgid "Allowed states (otherwise check will be critical)"
 msgstr "Estados permitidos (caso contrário, a verificação será crítica)"
 
-msgid "Allowed to see the following entries"
-msgstr "Permitido ver as seguintes entradas"
+#, fuzzy
+msgid "Allowed to see parts of the tree"
+msgstr "Permitido ver a árvore inteira"
 
 msgid "Allowed to see the whole tree"
 msgstr "Permitido ver a árvore inteira"
@@ -11664,6 +11670,10 @@ msgstr "Credenciais para SNMPv3 sem autenticação e privacidade (noAuthNoPriv)"
 msgid "Credentials for processing SNMP traps"
 msgstr "Credenciais para o processamento de armadilhas SNMP"
 
+#, fuzzy
+msgid "Credentials for selected databases"
+msgstr "Login para bancos de dados selecionados"
+
 msgid "Credentials to access the Database"
 msgstr "Credenciais para aceder à Base de Dados"
 
@@ -12637,6 +12647,10 @@ msgstr ""
 "Data-Guards com dg_broker_start=false needs Ignore Brokerstate para "
 "monitorar o Switchoverstate no Primary."
 
+#, fuzzy
+msgid "Database"
+msgstr "SID da base de dados"
+
 msgid "Database Availability Group (DAG) (Windows)"
 msgstr "Grupo de Disponibilidade da Base de Dados (DAG) (Windows)"
 
@@ -12707,6 +12721,10 @@ msgid "Database/Collection name ('<DB name> <collection name>')"
 msgstr ""
 "Nome do banco de dados/colheita ('<nome do banco de dados> <nome da "
 "coleção>')"
+
+#, fuzzy
+msgid "Databases"
+msgstr "Usuário da Base de Dados"
 
 #, python-format
 msgid "Datacenter %d"
@@ -12806,6 +12824,10 @@ msgstr "Desativar"
 
 msgid "Deactivated"
 msgstr "Desativado"
+
+#, fuzzy
+msgid "Dead letter errors"
+msgstr "Erros do usuário Lambda"
 
 msgid "Dead paths"
 msgstr "Caminhos mortos"
@@ -14662,11 +14684,17 @@ msgstr "Exibe as entradas do arquivo de log do núcleo de monitorização."
 msgid "Displays hosts and services producing the most notifications"
 msgstr "Exibe hosts e serviços que produzem a maioria das notificações"
 
-msgid "Displays statistics about host states as globe and a table."
+#, fuzzy
+msgid "Displays statistics about events as a hexagon and a table."
+msgstr "Mostra estatísticas sobre estados de serviço como globo e uma tabela."
+
+#, fuzzy
+msgid "Displays statistics about host states as a hexagon and a table."
 msgstr ""
 "Exibe estatísticas sobre os estados anfitriões como globo e uma tabela."
 
-msgid "Displays statistics about service states as globe and a table."
+#, fuzzy
+msgid "Displays statistics about service states as a hexagon and a table."
 msgstr "Mostra estatísticas sobre estados de serviço como globo e uma tabela."
 
 msgid "Displays the content of a custom website."
@@ -14674,6 +14702,10 @@ msgstr "Exibe o conteúdo de um site personalizado."
 
 msgid "Displays the content of a view"
 msgstr "Exibe o conteúdo de uma vista"
+
+#, fuzzy
+msgid "Displays the state of a specific host."
+msgstr "Exibe uma métrica única de um host e serviço específico."
 
 #, fuzzy
 msgid "Displays the state of a specific service."
@@ -15670,8 +15702,16 @@ msgstr "Duplicação do ID da etiqueta \"%s\" nas etiquetas auxiliares"
 msgid "Duration"
 msgstr "Duração"
 
+#, fuzzy
+msgid "Duration in percent of Lambda timeout"
+msgstr "Estado no caso de um timeout"
+
 msgid "Duration levels"
 msgstr "Níveis de duração"
+
+#, fuzzy
+msgid "Duration of Lambda functions"
+msgstr "Duração do backup"
 
 msgid "Duration of backup"
 msgstr "Duração do backup"
@@ -17196,6 +17236,10 @@ msgstr "Tempo de processamento de eventos"
 msgid "Event source IP address"
 msgstr "Endereço IP de origem do evento"
 
+#, fuzzy
+msgid "Event statistics"
+msgstr "Estatísticas do país de acolhimento"
+
 msgid "Event subscriptions"
 msgstr "Assinaturas de eventos"
 
@@ -17281,7 +17325,8 @@ msgstr "Nome exato do usuário do sistema operacional"
 msgid "Exact name of the process path"
 msgstr "Nome exato do caminho do processo"
 
-msgid "Exact name of the process without argments"
+#, fuzzy
+msgid "Exact name of the process without arguments"
 msgstr "Nome exato do processo sem argamassa"
 
 msgid "Exact name of the task"
@@ -17317,6 +17362,10 @@ msgstr "Exceção"
 #, python-format
 msgid "Exception during element refresh (element '%s')"
 msgstr "Exceção durante atualização de elementos (elemento '%s')"
+
+#, fuzzy, python-format
+msgid "Exception in icon '%s': %s"
+msgstr "Exceção: %s"
 
 #, python-format
 msgid "Exception(s) caught during snapshot preparation: %s"
@@ -21416,6 +21465,10 @@ msgstr "Problemas com o anfitrião (sem manuseio)"
 msgid "Host Properties"
 msgstr "Propriedades anfitriãs"
 
+#, fuzzy
+msgid "Host State"
+msgstr "Estado anfitrião"
+
 msgid "Host Status Grouping"
 msgstr "Agrupamento do status de anfitrião"
 
@@ -22792,6 +22845,11 @@ msgid ""
 msgstr ""
 "Se definido, o plugin pode ser chamado repetidamente - até isto muitas vezes "
 "ou até que termine com sucesso."
+
+msgid ""
+"If single values, table columns or subcategories are not restricted, then "
+"all entries are added respectively."
+msgstr ""
 
 msgid ""
 "If sounds are enabled then the user will be alarmed by problems shown in a "
@@ -25524,6 +25582,10 @@ msgstr "Inventário: História"
 msgid "Invert matching"
 msgstr "Inverter a correspondência"
 
+#, fuzzy
+msgid "Invocations"
+msgstr "Infecções"
+
 msgid "Involuntary context switches"
 msgstr "Mudanças de contexto involuntárias"
 
@@ -25730,6 +25792,10 @@ msgstr "Item {val_t2} adicionado."
 
 msgid "Items"
 msgstr "Itens"
+
+#, fuzzy
+msgid "Iterator age"
+msgstr "Nome do administrador"
 
 msgid "JIRA URL"
 msgstr "URL DO JIRA"
@@ -26167,6 +26233,9 @@ msgid ""
 msgstr ""
 "Os rótulos precisam estar no formato <tt>[KEY]:[VALUE]</tt>. Por exemplo "
 "<tt>os:windows</tt>."
+
+msgid "Lambda"
+msgstr ""
 
 msgid "Lambda user errors"
 msgstr "Erros do usuário Lambda"
@@ -28253,6 +28322,10 @@ msgstr "Bloqueios MSSQL por Lote"
 msgid "MSSQL Log and Data File Sizes"
 msgstr "Tamanhos de Log e Arquivo de Dados MSSQL"
 
+#, fuzzy
+msgid "MSSQL Mirroring State"
+msgstr "Estado de monitorização"
+
 msgid "MSSQL Page Activity"
 msgstr "Atividade da página MSSQL"
 
@@ -29587,8 +29660,13 @@ msgstr "Merker"
 msgid "Message"
 msgstr "Mensagem"
 
-msgid "Message Age"
-msgstr "Idade da Mensagem"
+#, fuzzy
+msgid "Message Age of newest messages"
+msgstr "Idade da mensagem mais antiga"
+
+#, fuzzy
+msgid "Message Age of oldest messages"
+msgstr "Idade da mensagem mais antiga"
 
 msgid "Message Count"
 msgstr "Contagem de mensagens"
@@ -29854,6 +29932,14 @@ msgstr "Linha Espelhada"
 
 msgid "Mirrored Stacked"
 msgstr "Empilhados Espelhados"
+
+#, fuzzy
+msgid "Mirroring state criticality"
+msgstr "Espelhar o eixo vertical"
+
+#, fuzzy
+msgid "Mirroring witness state criticality"
+msgstr "Espelhar o eixo vertical"
 
 msgid "Miscellaneous"
 msgstr "Diversos"
@@ -34515,8 +34601,8 @@ msgid "Path to a CA certificate"
 msgstr "Caminho para um certificado CA"
 
 #, fuzzy
-msgid "Path to attributes or tables"
-msgstr "Atributos do anfitrião a definir"
+msgid "Path to categories"
+msgstr "Categorias de ícones"
 
 msgid "Path to sapgenpse"
 msgstr "Caminho para a sapgenpse"
@@ -38268,6 +38354,10 @@ msgstr "Restringir o acesso a endereços IP"
 msgid "Restrict access to the following source IP addresses"
 msgstr "Restringir o acesso aos seguintes endereços IP de origem"
 
+#, fuzzy
+msgid "Restrict all"
+msgstr "Restringir por grupos de contato"
+
 msgid "Restrict by contact groups"
 msgstr "Restringir por grupos de contato"
 
@@ -38313,8 +38403,24 @@ msgstr "Restringir tempo de execução de análise de arquivos de log"
 msgid "Restrict severity to at worst"
 msgstr "Restringir a severidade à pior das hipóteses"
 
+#, fuzzy
+msgid "Restrict single values"
+msgstr "Restringir-se a um único anfitrião"
+
 msgid "Restrict source hosts"
 msgstr "Anfitriões de fontes restritas"
+
+#, fuzzy
+msgid "Restrict subcategories"
+msgstr "subcategorias"
+
+#, fuzzy
+msgid "Restrict table columns"
+msgstr "Restringir-se a um único anfitrião"
+
+#, fuzzy
+msgid "Restrict the following keys"
+msgstr "Use os seguintes níveis"
 
 msgid "Restrict the length of the lines"
 msgstr "Restringir o comprimento das linhas"
@@ -38827,6 +38933,10 @@ msgstr "Licença SAP HANA"
 
 msgid "SAP HANA Memory"
 msgstr "Memória SAP HANA"
+
+#, fuzzy
+msgid "SAP HANA Process"
+msgstr "Licença SAP HANA"
 
 msgid "SAP HANA replication status"
 msgstr "Status de replicação SAP HANA"
@@ -40766,6 +40876,16 @@ msgstr ""
 "Deve ser possível listar todos os objetos necessários de usuário e grupo do "
 "diretório."
 
+msgid ""
+"Set the criticalities of the mirroring state of database instances that have "
+"mirroring configured on Microsoft SQL server. Databases that do not have "
+"mirroring configured are not discovered. Note: mirroring information is only "
+"shown as a service on the server that hosts the principal database. It is "
+"NOT shown on any servers that host the mirror databases. This is to avoid "
+"duplicate service states and alerts. We therefore recommend to cluster these "
+"services."
+msgstr ""
+
 msgid "Set the height"
 msgstr "Ajuste a altura"
 
@@ -41194,6 +41314,10 @@ msgstr "Mostrar dica no menu 'Usuário'."
 msgid "Show historic values"
 msgstr "Mostrar valores históricos"
 
+#, fuzzy
+msgid "Show host status"
+msgstr "Mostrar estado do serviço"
+
 msgid "Show icon linking to WATO parameter editor for services"
 msgstr "Mostrar ícone de ligação ao editor de parâmetros WATO para serviços"
 
@@ -41318,7 +41442,7 @@ msgid "Show stale hosts and services"
 msgstr "Mostrar hospedeiros e serviços obsoletos"
 
 #, fuzzy
-msgid "Show summary for not OK states"
+msgid "Show summary for not {cls._get_working_state().upper()} states"
 msgstr "Resumo das notificações do anfitrião"
 
 msgid ""
@@ -42770,6 +42894,50 @@ msgstr ""
 #, fuzzy
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Especifique o protocolo utilizado para se ligar ao quadro de gestão."
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of discarded events per second that "
+"could not be processed. This metric is only reported for asynchronous "
+"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the number of failed invocations per second due "
+"to function errors. Default is CRIT for more than one error per hour (ca. "
+"1.0/3600)."
+msgstr "Níveis superiores para o número de ligações a bases de dados activas"
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the number of invocations per second that "
+"exceeded the concurrent limits (throttles). Default is CRIT for more than "
+"one error per hour (ca. 1.0/3600)."
+msgstr ""
+"Aqui você pode especificar os níveis superiores para o número de infecções "
+"detectadas pelo McAfee Gateway Antimalware Engine."
+
+#, fuzzy
+msgid "Specify the upper levels for the number of invocations per second."
+msgstr "Níveis superiores para o número de ligações a bases de dados activas"
+
+msgid ""
+"Specify the upper levels in seconds for the age of the last record for each "
+"batch of records processed (iterator age). A high iterator age could result "
+"from the following scenarios: a high execution duration for a function, not "
+"enough shards in a stream, invocation errors, insufficient batch size. This "
+"metric is only reported for stream-based invocations."
+msgstr ""
 
 msgid "Specify time since last successful backup"
 msgstr "Especifique o tempo desde o último backup bem sucedido"
@@ -46377,6 +46545,16 @@ msgstr ""
 "Os problemas críticos que fazem com que esta agregação não-OK tenha sido "
 "reconhecida."
 
+msgid ""
+"The criticality of the service when the mirroring state is not "
+"'SYNCHRONIZED'. The default state is OK."
+msgstr ""
+
+msgid ""
+"The criticality of the service when the mirroring witness state is not "
+"'CONNECTED'. The default state is OK."
+msgstr ""
+
 #, python-format
 msgid ""
 "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
@@ -48106,6 +48284,10 @@ msgstr ""
 msgid "The report you are trying to preview is not available"
 msgstr "O relatório que você está tentando visualizar não está disponível"
 
+#, fuzzy, python-format
+msgid "The requested %s %s does not exist"
+msgstr "As %s solicitadas não existem"
+
 #, python-format
 msgid "The requested %s does not exist"
 msgstr "As %s solicitadas não existem"
@@ -49475,10 +49657,10 @@ msgstr ""
 "ou via <a href=\"wato.py?mode=edit_ruleset&varname=cmc_service_flap_settings"
 "\">service</a> rules."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "These texts may be localized depending on the users' language. You can "
-"configure the localizations %s."
+"configure the localizations <a href='%s'>in the global settings</a>."
 msgstr ""
 "Estes textos podem ser localizados dependendo do idioma do usuário. Você "
 "pode configurar as localizações %s."
@@ -50277,9 +50459,6 @@ msgstr ""
 "nome da aplicação <tt>foobar</tt>, isso resultaria no URL usado para entrar "
 "em contato com a API REST: <tt>/controller/rest/applications/foobar/metric-"
 "data</tt>"
-
-msgid "This is the default LDAP connection."
-msgstr "Esta é a conexão LDAP padrão."
 
 msgid ""
 "This is the master switch that allows you to immediately stop the agent "
@@ -51149,6 +51328,14 @@ msgstr ""
 "de fornecer informações de monitoramento de controladores RAID LSI e discos "
 "rígidos conectados. Você pode baixar esta ferramenta de <a href='http://www."
 "lsi.com/'>LSI</a>."
+
+#, fuzzy
+msgid ""
+"This predefined condition can not be used with the current ruleset, because "
+"it defines label conditions."
+msgstr ""
+"Cada condição predefinida é propriedade de um grupo de utilizadores que são "
+"capazes de editar, eliminar e utilizar condições pré-definidas existentes."
 
 msgid "This problem has been acknowledged"
 msgstr "Este problema foi reconhecido"
@@ -52943,14 +53130,17 @@ msgstr ""
 "<tt>mk_jolokia</tt> plugin requer ambos os pedidos python library no host "
 "rodando o plugin <b>and</b> o arquivo WAR nos JVMs."
 
+#, fuzzy
 msgid ""
 "This will deploy and configure the Check_MK agent plugin <tt>mk_sap_hana</"
-"tt>. To make this plugin work you have to configure USERSTOREKEY or USER and "
-"PASSWORD, ie. USERSTOREKEY=SVAMON and SID=I08 means we need a key for "
-"SVAMONI08 in the HDB userstore specified in $MK_CONFDIR/sap_hana.cfg. "
-"Moreover you can configure 'RUNAS' with the following values 'agent' or "
-"'instance'. The latter one is default.  Use the FQDN in the query if "
-"HOSTNAME is not set, other the short hostname."
+"tt>. To make this plugin work you have to configure default credentials that "
+"are used for all databases or configure credentials per database. To "
+"configure credentials specify USERSTOREKEY or USER and PASSWORD, ie. "
+"USERSTOREKEY=SVAMON and SID=I08 means we need a key for SVAMONI08 in the HDB "
+"userstore specified in $MK_CONFDIR/sap_hana.cfg. Moreover you can configure "
+"'RUNAS' with the following values 'agent' or 'instance'. The latter one is "
+"default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
+"hostname."
 msgstr ""
 "Isto irá implementar e configurar o plugin de agente Check_MK "
 "<tt>mk_sap_hana</tt>. Para fazer este plugin funcionar você tem que "
@@ -53136,6 +53326,10 @@ msgid "Throttled Server Connections"
 msgstr "Conexões do Servidor Aceleradas"
 
 msgid "Throttled requests"
+msgstr "Pedidos estrangulados"
+
+#, fuzzy
+msgid "Throttles"
 msgstr "Pedidos estrangulados"
 
 msgid "Throughput"
@@ -54978,6 +55172,10 @@ msgstr "Desconhecido %s grupo: %s"
 msgid "Unknown agent configuration"
 msgstr "Configuração de agente desconhecido"
 
+#, fuzzy
+msgid "Unknown aggregation"
+msgstr "Configuração de agente desconhecido"
+
 #, python-format
 msgid "Unknown attribute: %s"
 msgstr "Atributo desconhecido: %s"
@@ -55487,17 +55685,33 @@ msgstr "Níveis superiores para os dados"
 msgid "Upper levels for data file size"
 msgstr "Níveis superiores para o tamanho do ficheiro de dados"
 
+#, fuzzy
+msgid "Upper levels for dead letter errors"
+msgstr "Níveis superiores para taxa de erros do servidor"
+
 msgid "Upper levels for disk usage"
 msgstr "Níveis superiores para uso do disco"
 
 msgid "Upper levels for disk utilization"
 msgstr "Níveis superiores para utilização do disco"
 
+#, fuzzy
+msgid "Upper levels for duration in percent of the timeout"
+msgstr "Níveis superiores em percentagem do limite"
+
+#, fuzzy
+msgid "Upper levels for duration in seconds"
+msgstr "Níveis superiores para infecções"
+
 msgid "Upper levels for encountered exceptions"
 msgstr "Níveis superiores para exceções encontradas"
 
 msgid "Upper levels for encountered warnings"
 msgstr "Níveis superiores para avisos encontrados"
+
+#, fuzzy
+msgid "Upper levels for errors"
+msgstr "Níveis superiores para erros HTTP"
 
 msgid "Upper levels for estimated time to complete"
 msgstr "Níveis superiores para o tempo estimado de conclusão"
@@ -55510,6 +55724,14 @@ msgstr "Níveis superiores para os índices"
 
 msgid "Upper levels for infections"
 msgstr "Níveis superiores para infecções"
+
+#, fuzzy
+msgid "Upper levels for invocations"
+msgstr "Níveis superiores para infecções"
+
+#, fuzzy
+msgid "Upper levels for iterator age"
+msgstr "Níveis superiores para a idade"
 
 msgid "Upper levels for latency"
 msgstr "Níveis superiores para a latência"
@@ -55589,6 +55811,10 @@ msgstr ""
 
 msgid "Upper levels for the vault size"
 msgstr "Níveis superiores para o tamanho do cofre"
+
+#, fuzzy
+msgid "Upper levels for throttles"
+msgstr "Níveis superiores para a idade"
 
 msgid "Upper levels for total index size"
 msgstr "Níveis superiores para o tamanho total do índice"
@@ -57183,8 +57409,10 @@ msgstr "Vhosts"
 
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host you can make the internal tree paths visible which "
-"can be inserted here."
+"Inventory page of a host the internal tree paths leading to subcategories, "
+"the keys of singles values and table column names become visible. See <a "
+"href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</"
+"a>. for more details about the HW/SW Inventory system."
 msgstr ""
 
 msgid "Vibrate only"
@@ -60194,6 +60422,11 @@ msgstr ""
 "sobressalentes."
 
 msgid ""
+"You can set explicit databases to which you want to apply criticalities of "
+"the mirroring state."
+msgstr ""
+
+msgid ""
 "You can set explicit jobs by defining their job names. The job names can be "
 "found in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB "
 "database."
@@ -62434,6 +62667,9 @@ msgstr "não disponíveis"
 msgid "not present"
 msgstr "não presentes"
 
+msgid "not {cls._get_working_state().upper()} states"
+msgstr ""
+
 msgid "notif."
 msgstr "Notif."
 
@@ -63180,6 +63416,19 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Allowed to see the following entries"
+#~ msgstr "Permitido ver as seguintes entradas"
+
+#, fuzzy
+#~ msgid "Path to attributes or tables"
+#~ msgstr "Atributos do anfitrião a definir"
+
+#~ msgid "This is the default LDAP connection."
+#~ msgstr "Esta é a conexão LDAP padrão."
+
+#~ msgid "Message Age"
+#~ msgstr "Idade da Mensagem"
 
 #~ msgid "changed"
 #~ msgstr "alterado"

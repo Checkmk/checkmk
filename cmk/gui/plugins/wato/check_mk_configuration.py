@@ -1652,12 +1652,18 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
     def valuespec(self):
         return CascadingDropdown(
             title=_("Maximum parallel site activations"),
-            choices=[("auto", _("Start new activations untils 90% of RAM is used")),
-                     (
-                         "maximum",
-                         _("Limit maximum number to"),
-                         Integer(minvalue=5, default_value=20),
-                     )],
+            choices=[
+                (
+                    "auto",
+                    # xgettext: no-python-format
+                    _("Start new activations untils 90% of RAM is used"),
+                ),
+                (
+                    "maximum",
+                    _("Limit maximum number to"),
+                    Integer(minvalue=5, default_value=20),
+                )
+            ],
             orientation="horizontal",
             help=
             _("Specifies the maximum number of parallel running site activate changes processes. "

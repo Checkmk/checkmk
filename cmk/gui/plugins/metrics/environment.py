@@ -160,6 +160,7 @@ metric_info["output_load"] = {
 }
 
 metric_info["voltage_percent"] = {
+    # xgettext: no-python-format
     "title": _("Electrical tension in % of normal value"),
     "unit": "%",
     "color": "#ffc020",

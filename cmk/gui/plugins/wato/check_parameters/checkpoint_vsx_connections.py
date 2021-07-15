@@ -25,14 +25,23 @@ def _parameter_valuespec_checkpoint_vsx_connections():
         help=_("This rule allows you to configure the number of maximum "
                "connections for a given VSID."),
         elements=[
-            ("levels_perc",
-             Tuple(
-                 title=_("Percentage of maximum available connections"),
-                 elements=[
-                     Percentage(title=_("Warning at"), unit=_("% of maximum connections")),
-                     Percentage(title=_("Critical at"), unit=_("% of maximum connections")),
-                 ],
-             )),
+            (
+                "levels_perc",
+                Tuple(
+                    title=_("Percentage of maximum available connections"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum connections"),
+                        ),
+                        Percentage(
+                            title=_("Critical at"),
+                            # xgettext: no-python-format
+                            unit=_("% of maximum connections"),
+                        ),
+                    ],
+                )),
             ("levels_abs",
              Tuple(
                  title=_("Absolute number of connections"),

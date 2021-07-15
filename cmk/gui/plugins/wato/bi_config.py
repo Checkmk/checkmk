@@ -1205,29 +1205,28 @@ class ModeBIEditRule(ABCBIMode):
                  allow_empty=False,
                  empty_text=_("Please add at least one child node."),
              )),
-            ("state_messages",
-             Optional(
-                 Dictionary(elements=[(state,
-                                       TextInput(
-                                           title=_("Message when rule result is %s") % name,
-                                           default_value=None,
-                                           size=80,
-                                       )) for state, name in [
-                                           ("0", "OK"),
-                                           ("1",
-                                            "WARN"),
-                                           ("2",
-                                            "CRIT"),
-                                           ("3",
-                                            "UNKNOWN"),
-                                       ]]),
-                 title=_("Display additional messages"),
-                 help=
-                 _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
-                   "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
-                   "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
-                   "check plugins."),
-                 label=_("Add messages"))),
+            (
+                "state_messages",
+                Optional(
+                    Dictionary(elements=[(state,
+                                          TextInput(
+                                              title=_("Message when rule result is %s") % name,
+                                              default_value=None,
+                                              size=80,
+                                          )) for state, name in [
+                                              ("0", "OK"),
+                                              ("1", "WARN"),
+                                              ("2", "CRIT"),
+                                              ("3", "UNKNOWN"),
+                                          ]]),
+                    title=_("Display additional messages"),
+                    help=
+                    # xgettext: no-python-format
+                    _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
+                      "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
+                      "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
+                      "check plugins."),
+                    label=_("Add messages"))),
             ("disabled",
              Checkbox(
                  title=_("Rule activation"),

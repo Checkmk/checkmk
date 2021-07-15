@@ -60,20 +60,25 @@ def _transform_legacy_parameters_jvm_memory(
 
 def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
     return [
-        ("perc_%s" % mem_type,
-         Tuple(
-             title=_("Percentual levels for %s memory" % mem_type),
-             elements=[
-                 Percentage(title=_("Warning at"),
-                            label=_("% usage"),
-                            default_value=80.0,
-                            maxvalue=None),
-                 Percentage(title=_("Critical at"),
-                            label=_("% usage"),
-                            default_value=90.0,
-                            maxvalue=None),
-             ],
-         )),
+        (
+            "perc_%s" % mem_type,
+            Tuple(
+                title=_("Percentual levels for %s memory" % mem_type),
+                elements=[
+                    Percentage(
+                        title=_("Warning at"),
+                        # xgettext: no-python-format
+                        label=_("% usage"),
+                        default_value=80.0,
+                        maxvalue=None),
+                    Percentage(
+                        title=_("Critical at"),
+                        # xgettext: no-python-format
+                        label=_("% usage"),
+                        default_value=90.0,
+                        maxvalue=None),
+                ],
+            )),
         ("abs_%s" % mem_type,
          Tuple(
              title=_("Absolute levels for %s memory" % mem_type),

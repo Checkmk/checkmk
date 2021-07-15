@@ -251,20 +251,26 @@ fs_magic_elements = [
     ("magic_normsize",
      Integer(title=_("Reference size for magic factor"), default_value=20, minvalue=1,
              unit=_("GB"))),
-    ("levels_low",
-     Tuple(title=_("Minimum levels if using magic factor"),
-           help=_("The filesystem levels will never fall below these values, when using "
-                  "the magic factor and the filesystem is very small."),
-           elements=[
-               Percentage(title=_("Warning at"),
-                          unit=_("% usage"),
-                          allow_int=True,
-                          default_value=50),
-               Percentage(title=_("Critical at"),
-                          unit=_("% usage"),
-                          allow_int=True,
-                          default_value=60)
-           ]))
+    (
+        "levels_low",
+        Tuple(
+            title=_("Minimum levels if using magic factor"),
+            help=_("The filesystem levels will never fall below these values, when using "
+                   "the magic factor and the filesystem is very small."),
+            elements=[
+                Percentage(
+                    title=_("Warning at"),
+                    # xgettext: no-python-format
+                    unit=_("% usage"),
+                    allow_int=True,
+                    default_value=50),
+                Percentage(
+                    title=_("Critical at"),
+                    # xgettext: no-python-format
+                    unit=_("% usage"),
+                    allow_int=True,
+                    default_value=60)
+            ]))
 ]
 
 TREND_RANGE_DEFAULT = 24

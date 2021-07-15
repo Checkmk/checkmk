@@ -21,8 +21,16 @@ def _parameter_valuespec_innovaphone_mem():
     return Tuple(
         title=_("Specify levels in percentage of total RAM"),
         elements=[
-            Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
-            Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
+            Percentage(
+                title=_("Warning at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+            ),
+            Percentage(
+                title=_("Critical at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+            ),
         ],
     )
 

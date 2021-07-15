@@ -29,30 +29,35 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
 
 def _parameter_valuespec_cisco_mem():
     elements: List[DictionaryEntry] = [
-        ("levels",
-         Alternative(
-             title=_("Levels for memory usage"),
-             elements=[
-                 Tuple(
-                     title=_("Specify levels in percentage of total RAM"),
-                     elements=[
-                         Percentage(title=_("Warning at a usage of"),
-                                    unit=_("% of RAM"),
-                                    maxvalue=None),
-                         Percentage(title=_("Critical at a usage of"),
-                                    unit=_("% of RAM"),
-                                    maxvalue=None)
-                     ],
-                 ),
-                 Tuple(
-                     title=_("Specify levels in absolute usage values"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("MB")),
-                         Integer(title=_("Critical at"), unit=_("MB"))
-                     ],
-                 ),
-             ],
-         )),
+        (
+            "levels",
+            Alternative(
+                title=_("Levels for memory usage"),
+                elements=[
+                    Tuple(
+                        title=_("Specify levels in percentage of total RAM"),
+                        elements=[
+                            Percentage(
+                                title=_("Warning at a usage of"),
+                                # xgettext: no-python-format
+                                unit=_("% of RAM"),
+                                maxvalue=None),
+                            Percentage(
+                                title=_("Critical at a usage of"),
+                                # xgettext: no-python-format
+                                unit=_("% of RAM"),
+                                maxvalue=None)
+                        ],
+                    ),
+                    Tuple(
+                        title=_("Specify levels in absolute usage values"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("MB")),
+                            Integer(title=_("Critical at"), unit=_("MB"))
+                        ],
+                    ),
+                ],
+            )),
     ]
     return Transform(
         Dictionary(elements=elements + size_trend_elements),

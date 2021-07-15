@@ -29,14 +29,18 @@ def _parameter_valuespec_juniper_mem_modules():
     return Tuple(
         title=_("Specify levels in percentage of total memory usage"),
         elements=[
-            Percentage(title=_("Warning at a usage of"),
-                       unit=_("% of RAM"),
-                       default_value=80.0,
-                       maxvalue=100.0),
-            Percentage(title=_("Critical at a usage of"),
-                       unit=_("% of RAM"),
-                       default_value=90.0,
-                       maxvalue=100.0)
+            Percentage(
+                title=_("Warning at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+                default_value=80.0,
+                maxvalue=100.0),
+            Percentage(
+                title=_("Critical at a usage of"),
+                # xgettext: no-python-format
+                unit=_("% of RAM"),
+                default_value=90.0,
+                maxvalue=100.0)
         ],
     )
 

@@ -642,8 +642,8 @@ class ACTestCheckMKHelperUsage(ACTest):
         return _("Checkmk helper usage")
 
     def help(self) -> str:
-        # xgettext: no-python-format
         return _(
+            # xgettext: no-python-format
             "<p>The Checkmk Microcore uses Checkmk helper processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
@@ -765,8 +765,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
         return _("Checkmk checker usage")
 
     def help(self) -> str:
-        # xgettext: no-python-format
         return _(
+            # xgettext: no-python-format
             "<p>The Checkmk Microcore uses Checkmk checker processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
@@ -853,8 +853,8 @@ class ACTestGenericCheckHelperUsage(ACTest):
         return _("Check helper usage")
 
     def help(self) -> str:
-        # xgettext: no-python-format
         return _(
+            # xgettext: no-python-format
             "<p>The Checkmk Microcore uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
             "always be enough helper processes to handle the configured checks.</p>"

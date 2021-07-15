@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Iterable, Union, Tuple, Sequence, Literal, List
+import time
+from typing import Optional, Iterable, Union, Tuple, Sequence, Literal, List, NamedTuple
 
 import cmk.utils.debug
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import StructuredDataNode, ATTRIBUTES_KEY, TABLE_KEY
 
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
@@ -16,7 +17,12 @@ from cmk.base.api.agent_based.inventory_classes import (
     TableRow,
 )
 
-from .utils import InventoryTrees
+from ._retentions import RetentionsTracker, RawCacheInfo
+
+
+class InventoryTrees(NamedTuple):
+    inventory: StructuredDataNode
+    status_data: StructuredDataNode
 
 
 class TreeAggregator:
@@ -30,6 +36,8 @@ class TreeAggregator:
     def aggregate_results(
         self,
         inventory_generator: InventoryResult,
+        retentions_tracker: RetentionsTracker,
+        raw_cache_info: Optional[RawCacheInfo],
     ) -> Optional[Exception]:
 
         try:
@@ -39,11 +47,33 @@ class TreeAggregator:
                 raise
             return exc
 
+        now = int(time.time())
         for tabr in table_rows:
             self._integrate_table_row(tabr)
 
+            if not set(tabr.inventory_columns):
+                # For old, legacy table plugins the retention intervals feature for HW/SW entries
+                # is not supported because we do not have a clear, defined row identifier.
+                # The consequences would be incomprehensible and non-transparent, eg. additional
+                # history entries, delta tree calculation, filtering or merging does not work
+                # reliable.
+                continue
+
+            retentions_tracker.may_add_cache_info(
+                now=now,
+                node_name=TABLE_KEY,
+                path=tabr.path,
+                raw_cache_info=raw_cache_info,
+            )
+
         for attr in attributes:
             self._integrate_attributes(attr)
+            retentions_tracker.may_add_cache_info(
+                now=now,
+                node_name=ATTRIBUTES_KEY,
+                path=attr.path,
+                raw_cache_info=raw_cache_info,
+            )
 
         return None
 

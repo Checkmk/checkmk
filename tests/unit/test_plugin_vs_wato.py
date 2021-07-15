@@ -291,6 +291,7 @@ class ErrorReporter:
         ('inventory', 'inv_exports:software_csv'),
         ('inventory', 'inv_parameters:inv_if'),
         ('inventory', 'inv_parameters:lnx_sysctl'),
+        ('inventory', 'inv_retention_intervals'),
     }
     _known_item_requirements = {
         # type # plugin # wato

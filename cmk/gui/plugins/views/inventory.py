@@ -35,6 +35,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     Table,
     Attributes,
+    RetentionIntervals,
 )
 from cmk.utils.type_defs import HostName
 
@@ -190,8 +191,9 @@ def _paint_host_inventory_tree_value(
             # a path and attribute_keys which may be either None, [], or ["KEY"].
             # TODO parse instead of validate
             assert isinstance(child, Attributes)
-            tree_renderer.show_attribute(child.pairs.get(attribute_keys[-1]),
-                                         _inv_display_hint(invpath))
+            filtered = child.get_filtered_attributes(lambda key: key == attribute_keys[-1])
+            tree_renderer.show_attributes(filtered)
+
         code = HTML(output_funnel.drain())
     return "", code
 
@@ -1870,7 +1872,6 @@ class NodeRenderer:
         invpath = ".%s:" % self._get_raw_path(list(table.path))
         hint = _inv_display_hint(invpath)
         keyorder = hint.get("keyorder", [])  # well known keys
-        data = table.rows
 
         # Add titles for those keys
         titles: TableTitles = []
@@ -1884,7 +1885,7 @@ class NodeRenderer:
         # Determine *all* keys, in order to find unknown ones
         # Order not well-known keys alphabetically
         extratitles: TableTitles = []
-        for key in set(key for row in data for key in row):
+        for key in set(key for row in table.rows for key in row):
             if key not in keyorder:
                 _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key))
                 extratitles.append((title, key, key in table.key_columns))
@@ -1903,14 +1904,9 @@ class NodeRenderer:
             html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
                      class_="invtablelink")
 
-        self._show_table_data(titles, invpath, data)
+        self._show_table_data(table, titles, invpath)
 
-    def _show_table_data(
-        self,
-        titles: TableTitles,
-        invpath: SDRawPath,
-        data: InventoryRows,
-    ) -> None:
+    def _show_table_data(self, table: Table, titles: TableTitles, invpath: SDRawPath) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
@@ -1918,7 +1914,7 @@ class NodeRenderer:
             html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
 
         html.close_tr()
-        for index, entry in enumerate(data):
+        for index, entry in enumerate(table.rows):
             html.open_tr(class_="even0")
             for title, key, _is_key_column in titles:
                 value = entry.get(key)
@@ -1934,12 +1930,21 @@ class NodeRenderer:
                     tdclass = None
 
                 html.open_td(class_=tdclass)
-                self._show_table_value(value, hint)
+                self._show_table_value(
+                    value,
+                    hint,
+                    retention_intervals=table.get_retention_intervals(key, entry),
+                )
                 html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _show_table_value(self, value: Any, hint: Dict) -> None:
+    def _show_table_value(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
         raise NotImplementedError()
 
     #   ---attributes-----------------------------------------------------------
@@ -1966,12 +1971,21 @@ class NodeRenderer:
             html.open_tr()
             html.th(self._get_header(title, key, "#DDD"), title=sub_invpath)
             html.open_td()
-            self.show_attribute(value, hint)
+            self._show_attribute(
+                value,
+                hint,
+                retention_intervals=attributes.get_retention_intervals(key),
+            )
             html.close_td()
             html.close_tr()
         html.close_table()
 
-    def show_attribute(self, value: Any, hint: Dict) -> None:
+    def _show_attribute(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
         raise NotImplementedError()
 
     #   ---helper---------------------------------------------------------------
@@ -1985,6 +1999,7 @@ class NodeRenderer:
         title: str,
         key: str,
         hex_color: str,
+        *,
         is_key_column: bool = False,
     ) -> HTML:
         header = HTML(title)
@@ -1993,7 +2008,12 @@ class NodeRenderer:
             header += " " + html.render_span("(%s)" % key_info, style="color: %s" % hex_color)
         return header
 
-    def _show_child_value(self, value: Any, hint: Dict) -> None:
+    def _show_child_value(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
         if "paint_function" in hint:
             paint_function: PaintFunction = hint["paint_function"]
             _tdclass, code = paint_function(value)
@@ -2009,22 +2029,67 @@ class NodeRenderer:
         elif value is not None:
             html.write_text(str(value))
 
+        if (ret_value_to_write := self._get_retention_value(retention_intervals)) is not None:
+            html.write_html(ret_value_to_write)
+
+    def _get_retention_value(
+        self,
+        retention_intervals: Optional[RetentionIntervals],
+    ) -> Optional[HTML]:
+        if retention_intervals is None:
+            return None
+
+        now = time.time()
+
+        if now <= retention_intervals.valid_until:
+            return None
+
+        if now <= retention_intervals.keep_until:
+            _tdclass, value = inv_paint_age(retention_intervals.keep_until - now)
+            return html.render_span(_(" (%s left)") % value, style="color: #DDD")
+
+        return html.render_span(_(" (outdated)"), style="color: darkred")
+
 
 class AttributeRenderer(NodeRenderer):
-    def _show_table_value(self, value: Any, hint: Dict) -> None:
-        self._show_child_value(value, hint)
+    def _show_table_value(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
+        self._show_child_value(value, hint, retention_intervals)
 
-    def show_attribute(self, value: Any, hint: Dict) -> None:
-        self._show_child_value(value, hint)
+    def _show_attribute(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
+        self._show_child_value(value, hint, retention_intervals)
 
 
 class DeltaNodeRenderer(NodeRenderer):
-    def _show_table_value(self, value: Any, hint: Dict) -> None:
+    def _show_table_value(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
+        self._show_delta_child_value(value, hint)
+
+    def _show_attribute(
+        self,
+        value: Any,
+        hint: Dict,
+        retention_intervals: Optional[RetentionIntervals] = None,
+    ) -> None:
+        self._show_delta_child_value(value, hint)
+
+    def _show_delta_child_value(self, value: Any, hint: Dict) -> None:
         if value is None:
             value = (None, None)
-        self.show_attribute(value, hint)
 
-    def show_attribute(self, value: Any, hint: Dict) -> None:
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")

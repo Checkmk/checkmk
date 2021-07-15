@@ -17,9 +17,13 @@ from cmk.gui.valuespec import (
     RegExp,
     TextInput,
     Transform,
+    ValueSpec,
+    ListOf,
+    CascadingDropdown,
 )
 
 from cmk.gui.i18n import _
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 
 from cmk.gui.plugins.wato import (
     rulespec_group_registry,
@@ -237,4 +241,54 @@ rulespec_registry.register(
         match_type="dict",
         name="inv_parameters:lnx_sysctl",
         valuespec=_valuespec_inv_parameters_lnx_sysctl,
+    ))
+
+
+def _valuespec_inv_retention_intervals() -> ValueSpec:
+    def vs_choices(title):
+        return CascadingDropdown(
+            title=title,
+            choices=[
+                ("all", _("Choose all")),
+                ("choices", _("Choose the following keys"),
+                 ListOfStrings(
+                     orientation="horizontal",
+                     size=15,
+                     allow_empty=True,
+                 )),
+            ],
+            default_value="choices",
+        )
+
+    return ListOf(
+        Dictionary(
+            elements=[
+                ("interval",
+                 Age(
+                     title=_("How long single values or table columns are kept."),
+                     minvalue=1,
+                     default_value=3600 * 2,
+                     display=["days", "hours", "minutes"],
+                 )),
+                vs_element_inventory_visible_raw_path(),
+                ("attributes", vs_choices(_("Choose single values"))),
+                ("columns", vs_choices(_("Choose table columns"))),
+            ],
+            optional_keys=["attributes", "columns"],
+        ),
+        title=_("Retention intervals for HW/SW inventory entities"),
+        help=vs_inventory_path_or_keys_help() +
+        _("<br>With these intervals specific single values or table columns can be kept"
+          " from the previous inventory tree if the current agent output does not"
+          " provide any new data for these entries."
+          "<br>Only entries corresponding to chosen single values or columns are added."),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        match_type="all",
+        name="inv_retention_intervals",
+        valuespec=_valuespec_inv_retention_intervals,
     ))

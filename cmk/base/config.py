@@ -96,6 +96,7 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
     TimeperiodName,
 )
+from cmk.utils.structured_data import RawIntervalsFromConfig
 
 from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
     SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
@@ -3123,6 +3124,11 @@ class HostConfig:
         params = {} if entries[0] is None else entries[0]
 
         return params.get('status_data_inventory', False)
+
+    @property
+    def inv_retention_intervals(self) -> RawIntervalsFromConfig:
+        entries = self._config_cache.host_extra_conf(self.hostname, inv_retention_intervals)
+        return entries[0] if entries else []
 
     @property
     def service_level(self) -> Optional[int]:

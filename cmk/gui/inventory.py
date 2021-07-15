@@ -49,9 +49,6 @@ from cmk.gui.exceptions import (
 from cmk.gui.valuespec import (
     ValueSpec,
     TextInput,
-    Dictionary,
-    CascadingDropdown,
-    ListOfStrings,
 )
 
 # TODO Cleanup variation:
@@ -268,52 +265,24 @@ def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
     return invpath[:last_sep + 1]
 
 
-def vs_inventory_path_and_keys() -> ValueSpec:
+def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
     # 'Contact groups::Permitted HW/SW inventory paths'.
-    def vs_choices(title):
-        return CascadingDropdown(
-            title=title,
-            choices=[
-                ("nothing", _("Restrict all")),
-                ("choices", _("Restrict the following keys"),
-                 ListOfStrings(
-                     orientation="horizontal",
-                     size=15,
-                     allow_empty=True,
-                 )),
-            ],
-            default_value="nothing",
-        )
+    return ("visible_raw_path", TextInput(
+        title=_("Path to categories"),
+        size=60,
+        allow_empty=False,
+    ))
 
-    # Naming, see also https://docs.checkmk.com/latest/de/inventory.html
-    # attributes == single values
-    # table == table
-    # nodes == categories
-    return Dictionary(
-        elements=[
-            ("visible_raw_path",
-             TextInput(
-                 title=_("Path to categories"),
-                 size=60,
-                 allow_empty=False,
-                 help=_(
-                     "Via <tt>Display options > Show internal tree paths</tt>"
-                     " on the HW/SW Inventory page of a host the internal tree paths leading"
-                     " to subcategories, the keys of singles values and table column names"
-                     " become visible. Key columns of tables are marked with '*'. See"
-                     " <a href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</a>."
-                     " for more details about the HW/SW Inventory system."),
-             )),
-            ("attributes", vs_choices(_("Restrict single values"))),
-            ("columns", vs_choices(_("Restrict table columns"))),
-            ("nodes", vs_choices(_("Restrict subcategories"))),
-        ],
-        optional_keys=["attributes", "columns", "nodes"],
-        help=_("If single values, table columns or subcategories are not restricted,"
-               " then all entries are added respectively."),
-    )
+
+def vs_inventory_path_or_keys_help():
+    return _("Via <tt>Display options > Show internal tree paths</tt>"
+             " on the HW/SW Inventory page of a host the internal tree paths leading"
+             " to subcategories, the keys of singles values or table column names"
+             " become visible. Key columns of tables are marked with '*'. See"
+             " <a href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</a>."
+             " for more details about the HW/SW Inventory system.")
 
 
 #.

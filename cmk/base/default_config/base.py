@@ -109,6 +109,7 @@ inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
+inv_retention_intervals: _List[_Dict[str, int]] = []
 # TODO: Remove this already deprecated option
 always_cleanup_autochecks = None  # For compatiblity with old configuration
 

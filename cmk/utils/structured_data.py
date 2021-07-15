@@ -40,6 +40,7 @@ from cmk.utils.type_defs import HostName
 # - is_equal -> __eq__/__ne__
 # - merge_with -> __add__
 # - count_entries -> __len__?
+# TODO Improve/clarify adding Attributes/Table while deserialization/filtering/merging/...
 
 SDRawPath = str
 # TODO improve this
@@ -72,12 +73,15 @@ SDNodes = Dict[SDNodeName, "StructuredDataNode"]
 SDEncodeAs = Callable
 SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
 
+# Used for de/serialization and retentions
+ATTRIBUTES_KEY = "Attributes"
+TABLE_KEY = "Table"
+
 _PAIRS_KEY = "Pairs"
-_ATTRIBUTES_KEY = "Attributes"
 _KEY_COLUMNS_KEY = "KeyColumns"
 _ROWS_KEY = "Rows"
-_TABLE_KEY = "Table"
 _NODES_KEY = "Nodes"
+_RETENTIONS_KEY = "Retentions"
 
 
 class SDDeltaResult(NamedTuple):
@@ -108,6 +112,40 @@ class SDFilter(NamedTuple):
     filter_nodes: SDFilterFunc
     filter_attributes: SDFilterFunc
     filter_columns: SDFilterFunc
+
+
+RawIntervalsFromConfig = List[Dict]
+RawRetentionIntervals = Tuple[int, int, int]
+
+
+class RetentionIntervals(NamedTuple):
+    cached_at: int
+    cache_interval: int
+    retention_interval: int
+
+    @property
+    def valid_until(self) -> int:
+        return self.cached_at + self.cache_interval
+
+    @property
+    def keep_until(self) -> int:
+        return self.cached_at + self.cache_interval + self.retention_interval
+
+    def serialize(self) -> RawRetentionIntervals:
+        return self.cached_at, self.cache_interval, self.retention_interval
+
+    @classmethod
+    def deserialize(cls, raw_intervals: RawRetentionIntervals) -> RetentionIntervals:
+        return cls(*raw_intervals)
+
+
+RawRetentionIntervalsByKeys = Dict[SDKey, RawRetentionIntervals]
+RetentionIntervalsByKeys = Dict[SDKey, RetentionIntervals]
+
+
+class UpdateResult(NamedTuple):
+    save_tree: bool
+    reason: str
 
 
 #   .--IO------------------------------------------------------------------.
@@ -178,6 +216,8 @@ class StructuredDataStore:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# TODO filter table rows?
+
 _use_all = lambda key: True
 _use_nothing = lambda key: False
 
@@ -203,13 +243,13 @@ def make_filter(entry: Union[Tuple[SDPath, Optional[SDKeys]], Dict]) -> SDFilter
 
     return SDFilter(
         path=parse_visible_raw_path(entry["visible_raw_path"]),
-        filter_attributes=_make_filter_from_choice(entry.get("attributes")),
-        filter_columns=_make_filter_from_choice(entry.get("columns")),
-        filter_nodes=_make_filter_from_choice(entry.get("nodes")),
+        filter_attributes=make_filter_from_choice(entry.get("attributes")),
+        filter_columns=make_filter_from_choice(entry.get("columns")),
+        filter_nodes=make_filter_from_choice(entry.get("nodes")),
     )
 
 
-def _make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> SDFilterFunc:
+def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> SDFilterFunc:
     # choice is of the form:
     #   - ('choices', ['some', 'keys'])
     #   - 'nothing'
@@ -242,6 +282,7 @@ class StructuredDataNode:
     def __init__(self, *, name: SDNodeName = "", path: Optional[SDNodePath] = None) -> None:
         # Only root node has no name or path
         self.name = name
+
         if path:
             self.path = path
         else:
@@ -251,10 +292,12 @@ class StructuredDataNode:
         self.table = Table(path=path)
         self._nodes: SDNodes = {}
 
-    def _set_path(self, path: SDNodePath) -> None:
+    def set_path(self, path: SDNodePath) -> None:
         self.path = path
-        self.attributes._set_path(path)
-        self.table._set_path(path)
+        self.attributes.set_path(path)
+        self.table.set_path(path)
+
+    #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
         if not (self.attributes.is_empty() and self.table.is_empty()):
@@ -309,6 +352,12 @@ class StructuredDataNode:
 
         return node
 
+    def remove_retentions(self) -> None:
+        self.attributes.remove_retentions()
+        self.table.remove_retentions()
+        for node in self._nodes.values():
+            node.remove_retentions()
+
     #   ---node methods---------------------------------------------------------
 
     def setdefault_node(self, path: SDPath) -> StructuredDataNode:
@@ -326,10 +375,10 @@ class StructuredDataNode:
         path = self.path + (node.name,)
         if node.name in self._nodes:
             the_node = self._nodes[node.name]
-            the_node._set_path(path)
+            the_node.set_path(path)
         else:
-            the_node = self._nodes.setdefault(node.name,
-                                              StructuredDataNode(name=node.name, path=path))
+            dflt_node = StructuredDataNode(name=node.name, path=path)
+            the_node = self._nodes.setdefault(node.name, dflt_node)
 
         the_node.add_attributes(node.attributes)
         the_node.add_table(node.table)
@@ -340,9 +389,11 @@ class StructuredDataNode:
         return the_node
 
     def add_attributes(self, attributes: Attributes) -> None:
+        self.attributes.set_retentions(attributes.retentions)
         self.attributes.add_pairs(attributes.pairs)
 
     def add_table(self, table: Table) -> None:
+        self.table.set_retentions(table.retentions)
         self.table.add_key_columns(table.key_columns)
         for ident, row in table._rows.items():
             self.table.add_row(ident, row)
@@ -372,8 +423,8 @@ class StructuredDataNode:
     def _format(self) -> Dict:
         # Only used for repr/debug purposes
         return {
-            _ATTRIBUTES_KEY: self.attributes._format(),
-            _TABLE_KEY: self.table._format(),
+            ATTRIBUTES_KEY: self.attributes._format(),
+            TABLE_KEY: self.table._format(),
             _NODES_KEY: {name: node._format() for name, node in self._nodes.items()},
         }
 
@@ -381,14 +432,14 @@ class StructuredDataNode:
 
     def serialize(self) -> SDRawTree:
         return {
-            _ATTRIBUTES_KEY: self.attributes.serialize(),
-            _TABLE_KEY: self.table.serialize(),
+            ATTRIBUTES_KEY: self.attributes.serialize(),
+            TABLE_KEY: self.table.serialize(),
             _NODES_KEY: {name: node.serialize() for name, node in self._nodes.items()},
         }
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> StructuredDataNode:
-        if all(key in raw_tree for key in (_ATTRIBUTES_KEY, _TABLE_KEY, _NODES_KEY)):
+        if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
             return cls._deserialize(name="", path=tuple(), raw_tree=raw_tree)
         return cls._deserialize_legacy(name="", path=tuple(), raw_tree=raw_tree)
 
@@ -402,8 +453,8 @@ class StructuredDataNode:
     ) -> StructuredDataNode:
         node = cls(name=name, path=path)
 
-        node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[_ATTRIBUTES_KEY]))
-        node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[_TABLE_KEY]))
+        node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[ATTRIBUTES_KEY]))
+        node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[TABLE_KEY]))
 
         for raw_name, raw_node in raw_tree[_NODES_KEY].items():
             node.add_node(
@@ -586,6 +637,8 @@ class StructuredDataNode:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+TableRetentions = Dict[SDRowIdent, RetentionIntervalsByKeys]
+
 
 class Table:
     def __init__(
@@ -593,8 +646,8 @@ class Table:
         *,
         path: Optional[SDNodePath] = None,
         key_columns: Optional[SDKeyColumns] = None,
+        retentions: Optional[TableRetentions] = None,
     ) -> None:
-        # Only root node has no path
         if path:
             self.path = path
         else:
@@ -605,18 +658,25 @@ class Table:
         else:
             self.key_columns = []
 
+        if retentions:
+            self.retentions = retentions
+        else:
+            self.retentions = {}
+
         self._rows: SDRows = {}
 
-    @property
-    def rows(self) -> List[SDRow]:
-        return list(self._rows.values())
+    def set_path(self, path: SDNodePath) -> None:
+        self.path = path
 
     def add_key_columns(self, key_columns: SDKeyColumns) -> None:
         if not self.key_columns:
             self.key_columns = key_columns
 
-    def _set_path(self, path: SDNodePath) -> None:
-        self.path = path
+    @property
+    def rows(self) -> List[SDRow]:
+        return list(self._rows.values())
+
+    #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
         return not self._rows
@@ -646,7 +706,14 @@ class Table:
         return self._merge_with_legacy(other)
 
     def _merge_with(self, other: Table) -> Table:
-        table = Table(path=self.path, key_columns=self.key_columns)
+        table = Table(
+            path=self.path,
+            key_columns=self.key_columns,
+            retentions={
+                **self.retentions,
+                **other.retentions,
+            },
+        )
 
         compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
 
@@ -665,6 +732,10 @@ class Table:
         table = Table(
             path=self.path,
             key_columns=sorted(set(self.key_columns).intersection(other.key_columns)),
+            retentions={
+                **self.retentions,
+                **other.retentions,
+            },
         )
 
         # Re-calculates row identifiers
@@ -693,12 +764,104 @@ class Table:
 
     def add_row(self, ident: SDRowIdent, row: SDRow) -> None:
         if not self.key_columns:
-            raise AttributeError("Cannot add row due to missing key_columns")
+            raise ValueError("Cannot add row due to missing key_columns")
 
         if not row:
             return
 
         self._rows.setdefault(ident, {}).update(row)
+
+    def get_row(self, row: SDRow) -> SDRow:
+        ident = self._make_row_ident(row)
+        if ident in self.retentions:
+            return {k: row[k] for k in self.retentions[ident] if k in row}
+        return row
+
+    #   ---retentions-----------------------------------------------------------
+
+    def update_from_previous(
+        self,
+        now: int,
+        other: Table,
+        filter_func: SDFilterFunc,
+        inv_intervals: RetentionIntervals,
+    ) -> UpdateResult:
+
+        # TODO cleanup
+
+        reasons = []
+        compared_idents = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
+        self.add_key_columns(other.key_columns)
+
+        for ident in compared_idents.only_old:
+            old_row: SDRow = {}
+            for key, value in other._rows[ident].items():
+                previous_intervals = other.retentions.get(ident, {}).get(key)
+                if not previous_intervals:
+                    continue
+
+                if (key not in self.key_columns and filter_func(key) and
+                        now <= previous_intervals.keep_until):
+                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    old_row.setdefault(key, value)
+
+            if old_row:
+                old_row.update({k: other._rows[ident][k] for k in other.key_columns})
+                self.add_row(ident, old_row)
+                reasons.append("added row below %r" % ident)
+
+        for ident in compared_idents.both:
+            compared_keys = _compare_dict_keys(old_dict=other._rows[ident],
+                                               new_dict=self._rows[ident])
+
+            row: SDRow = {}
+            for key in compared_keys.only_old:
+                previous_intervals = other.retentions.get(ident, {}).get(key)
+                if not previous_intervals:
+                    continue
+
+                if (key not in self.key_columns and filter_func(key) and
+                        now <= previous_intervals.keep_until):
+                    self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
+                    row.setdefault(key, other._rows[ident][key])
+
+            for key in compared_keys.both.union(compared_keys.only_new):
+                if key not in self.key_columns and filter_func(key):
+                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+
+            if row:
+                row.update({
+                    **{
+                        k: other._rows[ident][k] for k in other.key_columns if k in other._rows[ident][k]
+                    },
+                    **{
+                        k: self._rows[ident][k] for k in self.key_columns if k in self._rows[ident][k]
+                    },
+                })
+                self.add_row(ident, row)
+                reasons.append("added row below %r" % ident)
+
+        for ident in compared_idents.only_new:
+            for key in self._rows[ident]:
+                if key not in self.key_columns and filter_func(key):
+                    self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
+
+        if self.retentions:
+            reasons.append("new retention intervals %r" % self.retentions)
+
+        return UpdateResult(
+            save_tree=bool(reasons),
+            reason=", ".join(reasons),
+        )
+
+    def set_retentions(self, table_retentions: TableRetentions) -> None:
+        self.retentions = table_retentions
+
+    def get_retention_intervals(self, key: SDKey, row: SDRow) -> Optional[RetentionIntervals]:
+        return self.retentions.get(self._make_row_ident(row), {}).get(key)
+
+    def remove_retentions(self) -> None:
+        self.retentions = {}
 
     #   ---representation-------------------------------------------------------
 
@@ -710,17 +873,25 @@ class Table:
         return {
             _KEY_COLUMNS_KEY: self.key_columns,
             _ROWS_KEY: self._rows,
+            _RETENTIONS_KEY: self.retentions,
         }
 
     #   ---de/serializing-------------------------------------------------------
 
     def serialize(self) -> SDRawTree:
+        raw_table = {}
         if self._rows:
-            return {
+            raw_table.update({
                 _KEY_COLUMNS_KEY: self.key_columns,
                 _ROWS_KEY: list(self._rows.values()),
+            })
+
+        if self.retentions:
+            raw_table[_RETENTIONS_KEY] = {
+                ident: _serialize_retentions(intervals)
+                for ident, intervals in self.retentions.items()
             }
-        return {}
+        return raw_table
 
     @classmethod
     def deserialize(cls, *, path: SDNodePath, raw_rows: SDRawTree) -> Table:
@@ -730,13 +901,23 @@ class Table:
         else:
             key_columns = cls._get_default_key_columns(rows)
 
-        table = cls(path=path, key_columns=key_columns)
+        table = cls(
+            path=path,
+            key_columns=key_columns,
+            retentions={
+                ident: _deserialize_retentions(raw_intervals)
+                for ident, raw_intervals in raw_rows.get(_RETENTIONS_KEY, {}).items()
+            },
+        )
         table.add_rows(rows)
         return table
 
     @classmethod
     def _deserialize_legacy(cls, *, path: SDNodePath, legacy_rows: LegacyRows) -> Table:
-        table = cls(path=path, key_columns=cls._get_default_key_columns(legacy_rows))
+        table = cls(
+            path=path,
+            key_columns=cls._get_default_key_columns(legacy_rows),
+        )
         table.add_rows(legacy_rows)
         return table
 
@@ -752,7 +933,7 @@ class Table:
 
         counter: SDDeltaCounter = Counter()
         key_columns = sorted(set(self.key_columns).union(other.key_columns))
-        delta_table = Table(path=self.path, key_columns=key_columns)
+        delta_table = Table(path=self.path, key_columns=key_columns, retentions=self.retentions)
 
         compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
         for key in compared_keys.only_old:
@@ -777,7 +958,7 @@ class Table:
         return TDeltaResult(counter=counter, delta=delta_table)
 
     def get_encoded_table(self, encode_as: SDEncodeAs) -> Table:
-        table = Table(path=self.path, key_columns=self.key_columns)
+        table = Table(path=self.path, key_columns=self.key_columns, retentions=self.retentions)
         for ident, row in self._rows.items():
             table.add_row(ident, {k: encode_as(v) for k, v in row.items()})
         return table
@@ -785,7 +966,7 @@ class Table:
     #   ---filtering------------------------------------------------------------
 
     def get_filtered_table(self, filter_func: SDFilterFunc) -> Table:
-        table = Table(path=self.path, key_columns=self.key_columns)
+        table = Table(path=self.path, key_columns=self.key_columns, retentions=self.retentions)
         for ident, row in self._rows.items():
             table.add_row(ident, _get_filtered_dict(row, filter_func))
         return table
@@ -809,16 +990,28 @@ class Table:
 
 
 class Attributes:
-    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
-        # Only root node has no path
+    def __init__(
+        self,
+        *,
+        path: Optional[SDNodePath] = None,
+        retentions: Optional[RetentionIntervalsByKeys] = None,
+    ) -> None:
         if path:
             self.path = path
         else:
             self.path = tuple()
+
+        if retentions:
+            self.retentions = retentions
+        else:
+            self.retentions = {}
+
         self.pairs: SDPairs = {}
 
-    def _set_path(self, path: SDNodePath) -> None:
+    def set_path(self, path: SDNodePath) -> None:
         self.path = path
+
+    #   ---common methods-------------------------------------------------------
 
     def is_empty(self) -> bool:
         return self.pairs == {}
@@ -836,7 +1029,13 @@ class Attributes:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        attributes = Attributes(path=self.path)
+        attributes = Attributes(
+            path=self.path,
+            retentions={
+                **self.retentions,
+                **other.retentions,
+            },
+        )
         attributes.add_pairs(self.pairs)
         attributes.add_pairs(other.pairs)
 
@@ -847,6 +1046,54 @@ class Attributes:
     def add_pairs(self, pairs: Union[SDPairs, SDPairsFromPlugins]) -> None:
         self.pairs.update(pairs)
 
+    #   ---retentions-----------------------------------------------------------
+
+    def update_from_previous(
+        self,
+        now: int,
+        other: Attributes,
+        filter_func: SDFilterFunc,
+        inv_intervals: RetentionIntervals,
+    ) -> UpdateResult:
+
+        reasons = []
+        compared_keys = _compare_dict_keys(old_dict=other.pairs, new_dict=self.pairs)
+
+        pairs: SDPairs = {}
+        for key in compared_keys.only_old:
+            previous_intervals = other.retentions.get(key)
+            if not previous_intervals:
+                continue
+
+            if filter_func(key) and now <= previous_intervals.keep_until:
+                self.retentions.setdefault(key, previous_intervals)
+                pairs.setdefault(key, other.pairs[key])
+
+        for key in compared_keys.both.union(compared_keys.only_new):
+            if filter_func(key):
+                self.retentions.setdefault(key, inv_intervals)
+
+        if pairs:
+            self.add_pairs(pairs)
+            reasons.append("added pairs")
+
+        if self.retentions:
+            reasons.append("new retention intervals %r" % self.retentions)
+
+        return UpdateResult(
+            save_tree=bool(reasons),
+            reason=", ".join(reasons),
+        )
+
+    def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
+        self.retentions = intervals_by_keys
+
+    def get_retention_intervals(self, key: SDKey) -> Optional[RetentionIntervals]:
+        return self.retentions.get(key)
+
+    def remove_retentions(self) -> None:
+        self.retentions = {}
+
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -854,20 +1101,29 @@ class Attributes:
 
     def _format(self) -> Dict:
         # Only used for repr/debug purposes
-        return {_PAIRS_KEY: self.pairs}
+        return {
+            _PAIRS_KEY: self.pairs,
+            _RETENTIONS_KEY: self.retentions,
+        }
 
     #   ---de/serializing-------------------------------------------------------
 
     def serialize(self) -> SDRawTree:
+        raw_attributes = {}
         if self.pairs:
-            return {_PAIRS_KEY: self.pairs}
-        return {}
+            raw_attributes[_PAIRS_KEY] = self.pairs
+
+        if self.retentions:
+            raw_attributes[_RETENTIONS_KEY] = _serialize_retentions(self.retentions)
+        return raw_attributes
 
     @classmethod
     def deserialize(cls, *, path: SDNodePath, raw_pairs: SDRawTree) -> Attributes:
-        attributes = cls(path=path)
-        if _PAIRS_KEY in raw_pairs:
-            attributes.add_pairs(raw_pairs[_PAIRS_KEY])
+        attributes = cls(
+            path=path,
+            retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)),
+        )
+        attributes.add_pairs(raw_pairs.get(_PAIRS_KEY, {}))
         return attributes
 
     @classmethod
@@ -888,7 +1144,7 @@ class Attributes:
             keep_identical=keep_identical,
         )
 
-        delta_attributes = Attributes(path=self.path)
+        delta_attributes = Attributes(path=self.path, retentions=self.retentions)
         delta_attributes.add_pairs(delta_dict_result.delta)
 
         return ADeltaResult(
@@ -897,14 +1153,14 @@ class Attributes:
         )
 
     def get_encoded_attributes(self, encode_as: SDEncodeAs) -> Attributes:
-        attributes = Attributes(path=self.path)
+        attributes = Attributes(path=self.path, retentions=self.retentions)
         attributes.add_pairs({k: encode_as(v) for k, v in self.pairs.items()})
         return attributes
 
     #   ---filtering------------------------------------------------------------
 
     def get_filtered_attributes(self, filter_func: SDFilterFunc) -> Attributes:
-        attributes = Attributes(path=self.path)
+        attributes = Attributes(path=self.path, retentions=self.retentions)
         attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
         return attributes
 
@@ -1005,3 +1261,18 @@ def _identical_delta_tree_node(value: SDValue) -> Tuple[SDValue, SDValue]:
 
 def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
     return [part for part in raw_path.split(".") if part]
+
+
+def _serialize_retentions(
+        intervals_by_keys: RetentionIntervalsByKeys) -> RawRetentionIntervalsByKeys:
+    return {key: intervals.serialize() for key, intervals in intervals_by_keys.items()}
+
+
+def _deserialize_retentions(
+        raw_intervals_by_keys: Optional[RawRetentionIntervalsByKeys]) -> RetentionIntervalsByKeys:
+    if not raw_intervals_by_keys:
+        return {}
+    return {
+        key: RetentionIntervals.deserialize(intervals)
+        for key, intervals in raw_intervals_by_keys.items()
+    }

@@ -8,6 +8,7 @@ while the inventory is performed for one host.
 
 In the future all inventory code should be moved to this module."""
 
+import time
 from pathlib import Path
 from typing import (
     Container,
@@ -51,8 +52,8 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.sources import Source
 
-from .utils import InventoryTrees
-from ._tree_aggregator import TreeAggregator
+from ._tree_aggregator import TreeAggregator, InventoryTrees
+from ._retentions import RetentionsTracker, Retentions
 
 
 class ActiveInventoryResult(NamedTuple):
@@ -112,6 +113,7 @@ def _commandline_inventory_on_host(
         host_config=host_config,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
+        retentions_tracker=RetentionsTracker([]),
     )
 
     for detail in check_parsing_errors(errors=inv_result.parsing_errors).details:
@@ -162,15 +164,25 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
 
     host_config = config.HostConfig.make_host_config(hostname)
 
+    retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
+
     inv_result = _inventorize_host(
         host_config=host_config,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
+        retentions_tracker=retentions_tracker,
     )
     trees = inv_result.trees
 
+    retentions = Retentions(
+        retentions_tracker,
+        trees.inventory,
+        # If no intervals are configured then remove all known retentions
+        do_update=bool(host_config.inv_retention_intervals),
+    )
+
     if inv_result.safe_to_write:
-        old_tree = _save_inventory_tree(hostname, trees.inventory)
+        old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult(0, (), (), ())
     else:
         old_tree, sources_state = None, 1
@@ -254,6 +266,7 @@ def _inventorize_host(
     host_config: config.HostConfig,
     run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
+    retentions_tracker: RetentionsTracker,
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
@@ -285,6 +298,7 @@ def _inventorize_host(
             ipaddress,
             parsed_sections_broker=broker,
             run_plugin_names=run_plugin_names,
+            retentions_tracker=retentions_tracker,
         ),
         source_results=results,
         parsing_errors=parsing_errors,
@@ -328,6 +342,7 @@ def do_inventory_actions_during_checking_for(
         ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
+        retentions_tracker=RetentionsTracker([]),
     )
     if trees.status_data and not trees.status_data.is_empty():
         status_data_store.save(host_name=host_config.hostname, tree=trees.status_data)
@@ -354,8 +369,10 @@ def _do_inv_for_realhost(
     *,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
+    retentions_tracker: RetentionsTracker,
 ) -> InventoryTrees:
     tree_aggregator = TreeAggregator()
+
     _set_cluster_property(tree_aggregator.trees.inventory, host_config)
 
     section.section_step("Executing inventory plugins")
@@ -384,15 +401,19 @@ def _do_inv_for_realhost(
                 }
 
             exception = tree_aggregator.aggregate_results(
-                inventory_plugin.inventory_function(**kwargs),)
+                inventory_plugin.inventory_function(**kwargs),
+                retentions_tracker,
+                parsed_sections_broker.get_cache_info(inventory_plugin.sections),
+            )
+
             if exception:
                 console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
                                 tty.normal, exception)
             else:
                 console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
                 console.vverbose(": ok\n")
-    console.verbose("\n")
 
+    console.verbose("\n")
     return tree_aggregator.trees
 
 
@@ -407,6 +428,7 @@ def _set_cluster_property(
 def _save_inventory_tree(
     hostname: HostName,
     inventory_tree: StructuredDataNode,
+    retentions: Retentions,
 ) -> Optional[StructuredDataNode]:
 
     inventory_store = StructuredDataStore(cmk.utils.paths.inventory_output_dir)
@@ -417,18 +439,25 @@ def _save_inventory_tree(
         return None
 
     old_tree = inventory_store.load(host_name=hostname)
-    if old_tree.is_equal(inventory_tree):
-        console.verbose("Inventory was unchanged\n")
-        return None
+    update_result = retentions.may_update(int(time.time()), old_tree)
 
     if old_tree.is_empty():
-        console.verbose("New inventory tree\n")
-    else:
-        console.verbose("Inventory tree has changed\n")
+        console.verbose("New inventory tree.\n")
+
+    elif not old_tree.is_equal(inventory_tree):
+        console.verbose("Inventory tree has changed. Add history entry.\n")
         inventory_store.archive(
             host_name=hostname,
             archive_dir=cmk.utils.paths.inventory_archive_dir,
         )
+
+    elif update_result.save_tree:
+        console.verbose("Update inventory tree%s.\n" %
+                        (" (%s)" % update_result.reason if update_result.reason else ""))
+    else:
+        console.verbose("Inventory tree not updated%s.\n" %
+                        (" (%s)" % update_result.reason if update_result.reason else ""))
+        return None
 
     inventory_store.save(host_name=hostname, tree=inventory_tree)
     return old_tree

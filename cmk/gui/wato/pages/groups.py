@@ -23,6 +23,8 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     ListChoice,
     ListOf,
+    ListOfStrings,
+    Dictionary,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -43,7 +45,7 @@ from cmk.gui.watolib.groups import (
     load_contact_group_information,
     GroupType,
 )
-from cmk.gui.inventory import vs_inventory_path_and_keys
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -505,12 +507,40 @@ class ModeEditContactgroup(ABCModeEditGroup):
             self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
 
     def _vs_inventory_paths_and_keys(self):
+        def vs_choices(title):
+            return CascadingDropdown(
+                title=title,
+                choices=[
+                    ("nothing", _("Restrict all")),
+                    ("choices", _("Restrict the following keys"),
+                     ListOfStrings(
+                         orientation="horizontal",
+                         size=15,
+                         allow_empty=True,
+                     )),
+                ],
+                default_value="nothing",
+            )
+
         return CascadingDropdown(
             choices=[
                 ("allow_all", _("Allowed to see the whole tree")),
                 ("forbid_all", _("Forbid to see the whole tree")),
                 ("paths", _("Allowed to see parts of the tree"),
-                 ListOf(vs_inventory_path_and_keys())),
+                 ListOf(
+                     Dictionary(
+                         elements=[
+                             vs_element_inventory_visible_raw_path(),
+                             ("attributes", vs_choices(_("Restrict single values"))),
+                             ("columns", vs_choices(_("Restrict table columns"))),
+                             ("nodes", vs_choices(_("Restrict subcategories"))),
+                         ],
+                         optional_keys=["attributes", "columns", "nodes"],
+                     ),
+                     help=vs_inventory_path_or_keys_help() +
+                     _("<br>If single values, table columns or subcategories are not"
+                       " restricted, then all entries are added respectively."),
+                 )),
             ],
             default_value="allow_all",
         )

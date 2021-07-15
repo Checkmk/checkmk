@@ -63,60 +63,12 @@ builtin_role_ids = ["user", "admin", "guest"]
 # Base directory of dynamic configuration
 config_dir = cmk.utils.paths.var_dir + "/web"
 
-# Constants for BI
-ALL_HOSTS = '(.*)'
-HOST_STATE = ('__HOST_STATE__',)
-HIDDEN = ('__HIDDEN__',)
-
-
-class FOREACH_HOST:
-    pass
-
-
-class FOREACH_CHILD:
-    pass
-
-
-class FOREACH_CHILD_WITH:
-    pass
-
-
-class FOREACH_PARENT:
-    pass
-
-
-class FOREACH_SERVICE:
-    pass
-
-
-class REMAINING:
-    pass
-
-
-class DISABLED:
-    pass
-
-
-class HARD_STATES:
-    pass
-
-
-class DT_AGGR_WARN:
-    pass
-
-
 config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
 
 
 def get_storage_format() -> 'store.StorageFormat':
     return store.StorageFormat.from_str(config_storage_format)
 
-
-# Has to be declared here once since the functions can be assigned in
-# bi.py and also in multisite.mk. "Double" declarations are no problem
-# here since this is a dict (List objects have problems with duplicate
-# definitions).
-aggregation_functions: Dict[str, Callable] = {}
 
 #.
 #   .--Functions-----------------------------------------------------------.

@@ -14,6 +14,7 @@ from livestatus import (
     SiteConfiguration,
     SiteConfigurations,
     lqencode,
+    LivestatusOutputFormat,
 )
 
 from cmk.utils.version import is_managed_edition
@@ -362,6 +363,16 @@ def only_sites(sites: Union[None, List[SiteId], SiteId]) -> Iterator[None]:
         yield
     finally:
         live().set_only_sites(None)
+
+
+@contextmanager
+def output_format(use_format: LivestatusOutputFormat) -> Iterator[None]:
+    previous_format = live().get_output_format()
+    try:
+        live().set_output_format(use_format)
+        yield
+    finally:
+        live().set_output_format(previous_format)
 
 
 @contextmanager

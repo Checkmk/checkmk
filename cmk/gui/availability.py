@@ -13,7 +13,7 @@ import functools
 from typing import (Callable, Set, Dict, Any, Union, List, NamedTuple, Literal, Tuple as _Tuple,
                     Optional as _Optional, Iterator)
 
-from livestatus import SiteId, OnlySites
+from livestatus import SiteId, OnlySites, LivestatusOutputFormat
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
@@ -2088,7 +2088,7 @@ def get_bi_leaf_history(
     if len(hosts) != 1:
         query += "Or: %d\n" % len(hosts)
 
-    with sites.only_sites(
+    with sites.output_format(LivestatusOutputFormat.JSON), sites.only_sites(
             list(only_sites)), sites.prepend_site(), sites.set_limit(livestatus_limit):
         data = sites.live().query(query)
 

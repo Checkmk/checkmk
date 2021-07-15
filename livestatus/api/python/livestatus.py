@@ -6,6 +6,7 @@
 """MK Livestatus Python API"""
 import ast
 import contextlib
+import json
 import os
 import re
 import socket
@@ -13,6 +14,7 @@ import ssl
 import threading
 import time
 from io import BytesIO
+from enum import Enum
 from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(
@@ -26,6 +28,20 @@ SiteConfigurations = Dict[
 LivestatusColumn = Any
 LivestatusRow = NewType("LivestatusRow", List[LivestatusColumn])
 LivestatusResponse = NewType("LivestatusResponse", List[LivestatusRow])
+
+
+# Note: If you want to use JSON as OutputFormat, then note that there are subtle differences
+#       in the handling of data types between the Python and JSON formats.
+#       So in general you can't transparently switch back and forth between the two.
+#       It depends heavily on the queries you use to determine if this is an issue.
+#       One known problem with the JSON format:
+#         The mk_inventory_gz column contains a BLOB object.
+#         The cmc encodes this column with latin-1 and sends it as string
+#         After json.loads it needs to be encoded with latin-1 (again) to convert it to a
+#         bytes like object
+class LivestatusOutputFormat(Enum):
+    PYTHON = "python3"
+    JSON = "json"
 
 
 class LivestatusTestingError(RuntimeError):
@@ -373,6 +389,7 @@ class SingleSiteConnection(Helpers):
         self.socket: Optional[socket.socket] = None
         self.timeout: Optional[int] = None
         self.successful_persistence = False
+        self._output_format = LivestatusOutputFormat.PYTHON
 
         # Whether to establish an encrypted connection
         self.tls = tls
@@ -509,7 +526,7 @@ class SingleSiteConnection(Helpers):
             self.auth_header,
             self.add_headers,
             f"Localtime: {int(time.time()):d}",
-            "OutputFormat: python3",
+            "OutputFormat: %s" % self._output_format.value,
             "KeepAlive: on",
             "ResponseHeader: fixed16",
             add_headers,
@@ -567,7 +584,14 @@ class SingleSiteConnection(Helpers):
 
             if code == "200":
                 try:
-                    return ast.literal_eval(data)
+                    if self._output_format == LivestatusOutputFormat.PYTHON:
+                        return ast.literal_eval(data)
+
+                    if self._output_format == LivestatusOutputFormat.JSON:
+                        return json.loads(data)
+
+                    raise MKLivestatusQueryError("Unknown OutputFormat %r" % self._output_format)
+
                 except (ValueError, SyntaxError):
                     self.disconnect()
                     raise MKLivestatusSocketError("Malformed output")
@@ -624,6 +648,12 @@ class SingleSiteConnection(Helpers):
 
     def set_only_sites(self, sites: Optional[List[SiteId]] = None) -> None:
         pass
+
+    def set_output_format(self, output_format: LivestatusOutputFormat) -> None:
+        self._output_format = output_format
+
+    def get_output_format(self) -> LivestatusOutputFormat:
+        return self._output_format
 
     def set_limit(self, limit: Optional[int] = None) -> None:
         self.limit = limit
@@ -901,6 +931,16 @@ class MultiSiteConnection(Helpers):
             if connection.successfully_persisted():
                 return True
         return False
+
+    def set_output_format(self, output_format: LivestatusOutputFormat):
+        for _sitename, _site, connection in self.connections:
+            connection.set_output_format(output_format)
+
+    def get_output_format(self) -> LivestatusOutputFormat:
+        # Since all connections share the same output format, simple return the first connection
+        if not self.connections:
+            return LivestatusOutputFormat.PYTHON
+        return self.connections[0][2].get_output_format()
 
     def set_auth_user(self, domain: str, user: UserId) -> None:
         for _sitename, _site, connection in self.connections:

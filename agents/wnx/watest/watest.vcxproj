@@ -164,8 +164,9 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -203,8 +204,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -244,8 +246,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -285,8 +288,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo off
-copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+      <Command>@echo Installing test in "$(OutDirFullPath)"
+@cd $(SolutionDir) 
+@prepare_to_tests.cmd $(TargetDir)test
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

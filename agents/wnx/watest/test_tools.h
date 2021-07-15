@@ -208,7 +208,7 @@ public:
     TempCfgFs& operator=(TempCfgFs&&) = delete;
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
-
+    [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view config);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
@@ -221,6 +221,8 @@ public:
 
     const std::filesystem::path root() const { return root_; }
     const std::filesystem::path data() const { return data_; }
+
+    void allowUserAccess();
 
 private:
     TempCfgFs(Mode mode);

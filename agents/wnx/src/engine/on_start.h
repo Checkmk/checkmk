@@ -14,9 +14,10 @@ namespace cma {
 
 enum class AppType { automatic = 99, srv = 0, test, exe, failed };
 enum class YamlCacheOp { nothing, update };
-constexpr const wchar_t* kTemporaryRoot = L"CMA_TEST_DIR";
-constexpr const wchar_t* kRemoteMachine = L"REMOTE_MACHINE";
-constexpr const wchar_t* kAutoReload = L"CMA_AUTO_RELOAD";
+namespace env {
+constexpr const std::wstring_view test_root{L"WNX_TEST_ROOT"};
+constexpr const std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
+}  // namespace env
 
 AppType AppDefaultType();  // defined by main
 
@@ -55,6 +56,6 @@ private:
 extern UninstallAlert g_uninstall_alert;
 
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
-    std::wstring_view environment_variable);
+    AppType app_type);
 
 }  // namespace cma

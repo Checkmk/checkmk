@@ -64,13 +64,13 @@ TEST(CmaCore, Misc) {
 
 namespace tools {
 TEST(CapTest, CheckAreFilesSame) {
-    EXPECT_TRUE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\explorer.exe"));
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\HelpPane.exe"));
+    EXPECT_TRUE(AreFilesSame("c:\\windows\\system32\\chcp.com",
+                             "c:\\windows\\system32\\chcp.com"));
+    EXPECT_FALSE(AreFilesSame("c:\\windows\\system32\\chcp.com",
+                              "c:\\windows\\HelpPane.exe"));
 
-    EXPECT_FALSE(
-        AreFilesSame("c:\\windows\\explorer.exe", "c:\\windows\\ssd.exe"));
+    EXPECT_FALSE(AreFilesSame("c:\\windows\\system32\\chcp.com",
+                              "c:\\windows\\ssd.exe"));
 }
 
 }  // namespace tools

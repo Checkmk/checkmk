@@ -111,7 +111,7 @@ TEST_F(WmiWrapperFixture, TablePostProcess) {
     EXPECT_EQ(line1.size(), line2.size());
     EXPECT_EQ(line1.size(), header_array.size());
     auto last_line = cma::tools::SplitString(table[table.size() - 1], L",");
-    EXPECT_EQ(line1.size(), last_line.size());
+    EXPECT_LE(line1.size(), last_line.size());
 
     {
         auto str = WmiPostProcess(ToUtf8(result), StatusColumn::ok, ',');
@@ -159,10 +159,6 @@ TEST_F(WmiWrapperFixture, Table) {
     auto line2 = cma::tools::SplitString(table[2], L",");
     EXPECT_EQ(line1.size(), line2.size());
     EXPECT_EQ(line1.size(), header_array.size());
-    auto last_line = cma::tools::SplitString(table[table.size() - 1], L",");
-    EXPECT_EQ(line1.size(), last_line.size()) << "line1     = \n"
-                                              << table[1] << "last_line = \n"
-                                              << table[table.size() - 1];
 }
 
 }  // namespace wtools

@@ -328,11 +328,10 @@ TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
 
     using namespace std::chrono;
-    if (!cma::ConfigLoaded()) cma::OnStartTest();
 
-    tst::SafeCleanTempDir();
-    auto [work, _] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+    auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUTF16(
+        ::testing::UnitTest::GetInstance()->current_test_info()->name()));
+    fs::create_directories(work);
 
     fs::path ping(R"(c:\windows\system32\ping.exe)");
     if (!fs::exists(ping)) GTEST_SKIP() << "there is no ping.exe";
@@ -357,6 +356,7 @@ TEST(CapTest, StoreFileAgressive) {
     fs::remove(cmk_test_ping, ec);
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
     ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
+    wtools::KillProcessFully(cmk_test_ping.filename().wstring());
 }
 
 class CapTestProcessFixture : public ::testing::Test {
@@ -474,25 +474,18 @@ TEST(CapTest, ReInstallRestoreIntegration) {
     using namespace cma::tools;
     enum class Mode { build, wato };
     for (auto mode : {Mode::build, Mode::wato}) {
-        XLOG::SendStringToStdio("*\n", XLOG::Colors::yellow);
+        auto test_fs = tst::TempCfgFs::Create();
 
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
-        fs::path r;
-        fs::path u;
-        std::tie(r, u) = tst::CreateInOut();
-        auto root = r.wstring();
-        auto user = u.wstring();
-        ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+        ASSERT_TRUE(test_fs->loadFactoryConfig());
 
-        auto old_user = cma::cfg::GetUserDir();
+        auto r = test_fs->root();
+        auto u = test_fs->data();
 
-        fs::path cap_base = old_user;
-        cap_base /= "plugins.test.cap";
-        fs::path yml_b_base = old_user;
-        yml_b_base /= "check_mk.build.install.yml";
-        fs::path yml_w_base = old_user;
-        yml_w_base /= "check_mk.wato.install.yml";
+        fs::path cap_base = tst::MakePathToCapTestFiles() / "plugins.test.cap";
+        fs::path yml_b_base =
+            tst::MakePathToConfigTestFiles() / "check_mk.build.install.yml";
+        fs::path yml_w_base =
+            tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
 
         std::error_code ec;
         try {
@@ -514,9 +507,6 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         }
 
         // change folders
-        GetCfg().pushFolders(r, u);
-        ON_OUT_OF_SCOPE(GetCfg().popFolders(););
-
         auto user_gen = [u](const std::wstring_view name) -> auto {
             return (u / dirs::kInstall / name).wstring();
         };

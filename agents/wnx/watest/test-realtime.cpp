@@ -224,9 +224,9 @@ TEST(RealtimeTest, Base_Long) {
         if (first.joinable()) first.join();
         EXPECT_GT(TestTable.size(), static_cast<size_t>(3));
 
-        for (auto packet : TestTable) {
+        for (const auto& packet : TestTable) {
             auto d = reinterpret_cast<const char*>(packet.data());
-            std::string p(d);
+            std::string p(d, packet.size());
             EXPECT_TRUE(p.find(kPlainHeader) == 0);
             EXPECT_TRUE(p.find("<<<df") != std::string::npos);
             EXPECT_TRUE(p.find("<<<mem") != std::string::npos);
@@ -254,13 +254,13 @@ TEST(RealtimeTest, Base_Long) {
         if (first.joinable()) first.join();
         EXPECT_TRUE(TestTable.size() > 3);
         cma::encrypt::Commander dec("encrypt");
-        for (auto packet : TestTable) {
+        for (auto& packet : TestTable) {
             auto d = reinterpret_cast<char*>(packet.data());
             auto [success, size] =
                 dec.decode(d + kHeaderSize + kTimeStampSize,
                            packet.size() - kHeaderSize - kTimeStampSize, true);
             ASSERT_TRUE(success);
-            std::string p(d);
+            std::string p(d, packet.size());
             ASSERT_TRUE(p.find(kEncryptedHeader) == 0);
 
             EXPECT_TRUE(p.find("<<<df") != std::string::npos);

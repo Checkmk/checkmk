@@ -2181,21 +2181,11 @@ std::wstring GetArgv(uint32_t index) noexcept {
     return {};
 }
 
-std::wstring GetCurrentExePath() noexcept {
-    namespace fs = std::filesystem;
-
-    std::wstring exe_path;
-    int args_count = 0;
-    auto* arg_list = ::CommandLineToArgvW(GetCommandLineW(), &args_count);
-    if (nullptr == arg_list) return {};
-
-    ON_OUT_OF_SCOPE(::LocalFree(arg_list););
-    fs::path exe = arg_list[0];
-
-    std::error_code ec;
-    if (fs::exists(exe, ec)) return exe.parent_path();
-    xlog::l("Impossible exception: [%d] %s", ec.value(), ec.message());
-
+std::filesystem::path GetCurrentExePath() {
+    WCHAR path[MAX_PATH];
+    auto ret = ::GetModuleFileNameW(nullptr, path, MAX_PATH);
+    if (ret) return {path};
+    XLOG::l("Can't determine exe path [{}]", ::GetLastError());
     return {};
 }
 
@@ -2699,8 +2689,9 @@ std::filesystem::path MakeCmdFileInTemp(
 }
 }  // namespace
 
-std::filesystem::path ExecuteCommandsAsync(
-    std::wstring_view name, const std::vector<std::wstring>& commands) {
+std::filesystem::path ExecuteCommands(std::wstring_view name,
+                                      const std::vector<std::wstring>& commands,
+                                      bool wait_for_end) {
     XLOG::l.i("'{}' Starting executing commands [{}]", ToUtf8(name),
               commands.size());
     if (commands.empty()) {
@@ -2709,7 +2700,7 @@ std::filesystem::path ExecuteCommandsAsync(
 
     auto to_exec = MakeCmdFileInTemp(name, commands);
     if (!to_exec.empty()) {
-        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), false);
+        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), wait_for_end);
         if (pid != 0) {
             XLOG::l.i("Process is started '{}'  with pid [{}]", to_exec, pid);
             return to_exec;
@@ -2719,6 +2710,16 @@ std::filesystem::path ExecuteCommandsAsync(
     }
 
     return {};
+}
+
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    return ExecuteCommands(name, commands, false);
+}
+
+std::filesystem::path ExecuteCommandsSync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    return ExecuteCommands(name, commands, true);
 }
 
 // simple scanner of multi_sz strings

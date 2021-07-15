@@ -137,13 +137,8 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo "prebuild"</Command>
@@ -178,13 +173,8 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo "prebuild"</Command>
@@ -225,13 +215,8 @@
       <Command>echo "prebuild"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>pause 'aaaaaa'</Command>
@@ -269,13 +254,8 @@
       <Command>echo "prebuild"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>@echo off
-@if "$(VS_DEPLOY)" == "YES" (
-@copy   "$(TargetDir)\$(TargetName).pdb"   $(LOCAL_IMAGES_PDB) 1&gt; nul || exit 1
-@copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-@copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-)
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>pause 'aaaaaa'</Command>

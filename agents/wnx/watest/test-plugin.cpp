@@ -28,6 +28,7 @@ constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
 constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 namespace {
+
 void CreatePluginInTemp(const std::filesystem::path& filename, int timeout,
                         std::string_view plugin_name) {
     std::ofstream ofs(filename.u8string());
@@ -1496,10 +1497,6 @@ TEST(PluginTest, RemoveDuplicatedPlugins) {
 }
 
 TEST(PluginTest, AsyncStartSimulation_Integration) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
     cma::OnStart(cma::AppType::test);
     PrepareFastStructures();
 
@@ -2137,17 +2134,14 @@ std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
 
 // Check that plugin is started from the valid user in group
 TEST(PluginTest, SyncPluginsGroup) {
-    using namespace cma::cfg;
-    using namespace wtools;
-    namespace fs = std::filesystem;
-    using namespace std::chrono;
-    cma::OnStart(cma::AppType::test);
+    auto test_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(test_fs->loadFactoryConfig());
+    test_fs->allowUserAccess();
     auto files = PrepareFilesAndStructures(plugins_file_group,
                                            R"(@echo 2 name %username%)",
                                            provider::PluginType::normal);
 
     std::error_code ec;
-    ON_OUT_OF_SCOPE(for (auto& f : files) fs::remove(f, ec););
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, true, files, plugins_file_group_param, false);
@@ -2496,54 +2490,6 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
     }
 }
-#if 0
-static std::string s_user_config =
-    "global:\n"
-    "  enabled: true\n"
-    "  async_script_execution: parallel\n"
-    "  encrypted: yes\n"
-    "  realtime:\n"
-    "    encrypted: yes\n"
-    "  passphrase: XXXXXXXXXX\n"
-    "  port: 6556\n"
-    "local:\n"
-    "  enabled: true\n"
-    "  execution:\n"
-    "    - pattern: \"*\"\n"
-    "      async: yes\n"
-    "plugins:\n"
-    "  enabled: true\n"
-    "  execution:\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\*\n"
-    "      async: yes\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mssql.vbs\n"
-    "      retry_count: 3\n"
-    "      timeout: 45\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\mk_mysql.vbs\n"
-    "      retry_count: 1\n"
-    "      timeout: 45\n"
-    "    - pattern: $CUSTOM_PLUGINS_PATH$\\msexch_database.ps1\n"
-    "      retry_count: 1\n"
-    "      timeout: 120\n";
-
-TEST(PluginTest, CheckRules) {
-    namespace fs = std::filesystem;
-
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    tst::SafeCleanTmpxDir();
-    {
-        fs::path root = tst::very_temp;
-        std::error_code ec;
-        fs::create_directory(root, ec);
-        tst::CreateTextFile(root / cma::cfg::files::kDefaultMainConfig,
-                           s_user_config);
-        cma::tools::win::WithEnv we(std::wstring(kTemporaryRoot),
-                                    root.wstring());
-        cma::OnStart(AppType::exe);
-        EXPECT_TRUE(false);
-    }
-}
-#endif
 TEST(PluginTest, DebugInit) {
     std::vector<cma::cfg::Plugins::ExeUnit> exe_units_valid_SYNC_local = {
         //       Async  Timeout CacheAge              Retry  Run

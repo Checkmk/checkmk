@@ -30,6 +30,19 @@ namespace fs = std::filesystem;
 
 namespace tst {
 
+void AllowReadWriteAccess(const std::filesystem::path& path,
+                          std::vector<std::wstring>& commands) {
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect file from User write '{}'", path);
+}
+
 std::string GetFabricYmlContent() {
     static std::string fabric_yaml_content;
     static bool one_run{false};
@@ -333,6 +346,8 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
     return ret;
 }
 
+bool TempCfgFs::loadFactoryConfig() { return loadConfig(tst::GetFabricYml()); }
+
 bool TempCfgFs::loadContent(std::string_view content) {
     auto ret = cma::cfg::GetCfg().loadDirect(content);
     if (ret) {
@@ -341,6 +356,12 @@ bool TempCfgFs::loadContent(std::string_view content) {
     }
 
     return ret;
+}
+
+void TempCfgFs::allowUserAccess() {
+    std::vector<std::wstring> commands;
+    tst::AllowReadWriteAccess(base_, commands);
+    wtools::ExecuteCommandsSync(L"all", commands);
 }
 
 [[nodiscard]] bool TempCfgFs::createFile(

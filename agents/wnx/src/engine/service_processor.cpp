@@ -447,7 +447,7 @@ void ServiceProcessor::sendDebugData() {
 /// \brief called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string& ip_from,
                                      rt::Device& rt_device) {
-    auto value = tools::win::GetEnv(kAutoReload);
+    auto value = tools::win::GetEnv(env::auto_reload);
 
     if (cfg::ReloadConfigAutomatically() || tools::IsEqual(value, L"yes"))
         ReloadConfig();  // automatic config reload

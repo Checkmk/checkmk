@@ -6,9 +6,7 @@ rem build before owm build start.
 rem this is for command line only
 rem In GUI we should do Batch Rebuild of everything
 rem variables to set OPTOIONALLY, when you are using the same git checkout multiple times
-rem REMOTE_MACHINE - final artefacts, expected bz build script
-rem LOCAL_IMAGES_EXE - exe
-rem LOCAL_IMAGE_PDB - pdb
+rem arte - final artefacts, expected bz build script
 rem WNX_BUILD - in the future this is name of subfloder to build out
 rem creates # artefacts in the output folder
 SETLOCAL EnableDelayedExpansion
@@ -46,18 +44,7 @@ rem #define CMK_WIN_AGENT_VERSION "
 
 set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
-mkdir %arte% 2> nul
-mkdir %arte%\plugins 2> nul
-mkdir %arte%\watest 2> nul
-mkdir %arte%\watest\plugins 2> nul
-mkdir %arte%\providers 2> nul
-mkdir %arte%\exe 2> nul
-mkdir %arte%\pdb 2> nul
-set REMOTE_MACHINE=%arte%
-set VS_DEPLOY=YES
-set VS_DEPLOY_MSI=YES
-set LOCAL_IMAGES_PDB=%arte%\pdb
-set LOCAL_IMAGES_EXE=%arte%\exe
+set build_dir=.\build
 set SKIP_MINOR_BINARIES=YES
 
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
@@ -92,8 +79,8 @@ echo %wnx_version:~1,-1%
 rem info
 powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
 @rem command
-@echo cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+@echo cscript.exe //nologo WiRunSQL.vbs %arte%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+cscript.exe //nologo WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 @rem check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
@@ -102,7 +89,7 @@ goto end
 @rem this phase is skipped, there is no need to inculde unit tests in the build script
 powershell Write-Host "starting unit tests" -Foreground Cyan 
 
-pushd %REMOTE_MACHINE%
+pushd %arte%
 watest
 if not %errorlevel% == 0 goto error
 popd
@@ -118,19 +105,13 @@ exit 100
 :end
 
 @rem Deploy Phase: post processing/build special modules using make
-copy install\resources\check_mk.user.yml %REMOTE_MACHINE%
-pushd %REMOTE_MACHINE%
-
-copy check_mk_service.msi check_mk_agent.msi || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
-copy check_mk_service32.exe check_mk_agent.exe || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34
-copy check_mk_service64.exe check_mk_agent-64.exe || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
+copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
+copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
+copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
+copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
+copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34
+copy install\resources\check_mk.user.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
-
-popd
-
-set build_dir=.\build
-copy %build_dir%\watest\Win32\Release\watest32.exe %REMOTE_MACHINE% /y	
-copy %build_dir%\watest\x64\Release\watest64.exe %REMOTE_MACHINE% /Y	
 
 
 @rem Additional Phase: post processing/build special modules using make

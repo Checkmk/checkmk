@@ -720,7 +720,7 @@ inline int64_t QueryPerformanceCo() {
 
 // util to get in windows find path to your binary
 // MAY NOT WORK when you are running as a service
-std::wstring GetCurrentExePath() noexcept;
+std::filesystem::path GetCurrentExePath();
 
 // wrapper for win32 specific function
 // return 0 when no data or error
@@ -1139,6 +1139,12 @@ void ProtectPathFromUserAccess(const std::filesystem::path& entry,
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
+///
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsSync(
     std::wstring_view name, const std::vector<std::wstring>& commands);
 
 /// \brief Changes Access Rights in Windows crazy manner

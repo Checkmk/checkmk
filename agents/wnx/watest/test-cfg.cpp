@@ -361,18 +361,19 @@ TEST(CmaToolsDetails, FindRootByExePath) {
 
 }  // namespace details
 
-TEST(Cma, OnStart) {
-    {
-        auto [r, d] = cma::FindAlternateDirs(L"");
-        EXPECT_TRUE(r.empty());
-        EXPECT_TRUE(d.empty());
+TEST(Cma, FindAlternateDirs) {
+    for (auto app_type :
+         {AppType::exe, AppType::automatic, AppType::failed, AppType::srv}) {
+        auto [r, d] = cma::FindAlternateDirs(app_type);
+        EXPECT_EQ(r, "");
+        EXPECT_EQ(d, "");
     }
-    {
-        auto [r, d] = cma::FindAlternateDirs(kRemoteMachine);
-        EXPECT_EQ(r, cma::tools::win::GetEnv(kRemoteMachine));
-        EXPECT_EQ(d,
-                  cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
-    }
+    auto expected = tools::win::GetEnv(env::test_root);
+    auto [r, d] = cma::FindAlternateDirs(AppType::test);
+    EXPECT_TRUE(fs::exists(r)) << "Not exists " << r;
+    EXPECT_TRUE(fs::exists(d)) << "Not exists " << d;
+    EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);
 }
 
 TEST(CmaCfg, ReloadCfg) {

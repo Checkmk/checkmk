@@ -60,7 +60,6 @@ if type timeout >/dev/null 2>&1; then
 fi
 
 _log_section_time() {  # dummy to be compatible to smarter agents
-    shift
     $*
 }
 
@@ -819,13 +818,13 @@ run_local_checks() {
     if cd "$LOCALDIR" 2>/dev/null; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                _log_section_time "local_$skript" "./$skript"
+                _log_section_time "./$skript"
             fi
         done
         # Call some local checks only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
             fi
         done
     fi

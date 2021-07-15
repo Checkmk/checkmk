@@ -95,18 +95,17 @@ preamble_3() {
         . "$PROFILING_CONFIG"
     fi
 
-    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/$(date +"%Y%m%d_%H%M%S")"
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
     if $LOG_SECTION_TIME; then
         mkdir -p "$PROFILING_LOGFILE_DIR"
     fi
 }
 
 _log_section_time() {
-    local section_name="${1//\//\\}"
-    shift
     local section_func="$*"
 
-    profiling_logfile="${PROFILING_LOGFILE_DIR}/profiling_${section_name}.log"
+    base_name=${section_func//[^a-zA-Z0-9._-]/_}
+    profiling_logfile="${PROFILING_LOGFILE_DIR}/${base_name}.log"
 
     # TODO In the future
     # echo "<<<check_mk_agent_profiling>>>"
@@ -1200,7 +1199,7 @@ run_remote_plugins() {
                 if [ -z "$interval" ]; then
                     run_mrpe "$descr" "$cmdline"
                 else
-                    run_cached "$args" "$descr" "$interval" "_log_section_time 'mrpe_$descr' '$cmdline'"
+                    run_cached "$args" "$descr" "$interval" "_log_section_time '$cmdline'"
                 fi
             done
     fi
@@ -1235,7 +1234,7 @@ run_runas_executor() {
                                     cmdline=$filename
                                 fi
 
-                                _log_section_time "local_or_plugin_$filename" "$cmdline"
+                                _log_section_time "$cmdline"
                             done
                     fi
                 fi
@@ -1261,13 +1260,13 @@ run_local_checks() {
     if cd "$LOCALDIR" 2>/dev/null; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                _log_section_time "local_$skript" "./$skript"
+                _log_section_time "./$skript"
             fi
         done
         # Call some local checks only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
             fi
         done
     fi
@@ -1301,7 +1300,7 @@ run_mrpe() {
     echo '<<<mrpe>>>'
 
     PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval _log_section_time "mrpe_$descr" "$cmdline")
+    OUTPUT=$(eval _log_section_time "$cmdline")
 
     echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
     echo
@@ -1328,7 +1327,7 @@ run_agent_plugin() {
 
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        _log_section_time "agent_plugin_$agent_plugin" "./$agent_plugin"
+        _log_section_time "./$agent_plugin"
         return
     fi
 
@@ -1338,7 +1337,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            _log_section_time "agent_plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
+            _log_section_time "$PYTHON3 $agent_plugin"
             return
         fi
         if [ ! -e "${filename}_2.py" ]; then
@@ -1353,7 +1352,7 @@ run_agent_plugin() {
     fi
 
     if [ -n "$PYTHON2" ]; then
-        _log_section_time "agent_plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
+        _log_section_time "$PYTHON2 $agent_plugin"
         return
     fi
 
@@ -1630,24 +1629,24 @@ section_checkmk_failed_plugins() {
 run_sections_with_run_cached() {
 
     # Time synchronization with Chrony
-    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time "chrony" section_chrony
+    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time section_chrony
 
     # Hardware sensors via IPMI (need ipmitool)
-    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time "ipmitool" section_ipmitool
+    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time section_ipmitool
 
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
-    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time "ipmisensors" section_ipmisensors
+    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time section_ipmisensors
 
     # RAID controllers from areca (Taiwan)
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    [ -z "$MK_SKIP_ARECA" ] && _log_section_time "areca_raid" section_areca_raid
+    [ -z "$MK_SKIP_ARECA" ] && _log_section_time section_areca_raid
 
     ## Check status of OMD sites and Checkmk Notification spooler
-    [ -z "$MK_SKIP_OMD" ] && _log_section_time "omd" section_omd
+    [ -z "$MK_SKIP_OMD" ] && _log_section_time section_omd
 
     if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
-        _log_section_time "timesyncd" section_timesyncd || _log_section_time "ntp" section_ntp
+        _log_section_time section_timesyncd || _log_section_time section_ntp
     fi
 
 }
@@ -1666,136 +1665,136 @@ main() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
     fi
 
-    _log_section_time "check_mk" section_checkmk
+    _log_section_time section_checkmk
 
-    [ -z "$MK_SKIP_LABELS" ] && _log_section_time "labels" section_labels
+    [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_labels
 
-    [ -z "$MK_SKIP_DF" ] && _log_section_time "df" section_df
+    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
 
-    [ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time "systemd" sections_systemd
+    [ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time sections_systemd
 
     # Filesystem usage for ZFS
-    [ -z "$MK_SKIP_ZFS" ] && _log_section_time "zfs" section_zfs
+    [ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
 
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    [ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time "nfs_mounts" section_nfs_mounts
+    [ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time section_nfs_mounts
 
     # Check mount options. Filesystems may switch to 'ro' in case
     # of a read error.
-    [ -z "$MK_SKIP_MOUNTS" ] && _log_section_time "mounts" section_mounts
+    [ -z "$MK_SKIP_MOUNTS" ] && _log_section_time section_mounts
 
-    [ -z "$MK_SKIP_PS" ] && _log_section_time "ps" section_ps
+    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
 
     # Memory usage
-    [ -z "$MK_SKIP_MEM" ] && _log_section_time "mem" section_mem
+    [ -z "$MK_SKIP_MEM" ] && _log_section_time section_mem
 
     # Load and number of processes
-    [ -z "$MK_SKIP_CPU" ] && _log_section_time "cpu" section_cpu
+    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
 
     # Uptime
-    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time "uptime" section_uptime
+    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
 
     # New variant: Information about speed and state in one section
-    [ -z "$MK_SKIP_LNX_IF" ] && _log_section_time "lnx_if" section_lnx_if
+    [ -z "$MK_SKIP_LNX_IF" ] && _log_section_time section_lnx_if
 
     # Current state of bonding interfaces
-    [ -z "$MK_SKIP_BONDING_IF" ] && _log_section_time "bonding_interfaces" section_bonding_interfaces
+    [ -z "$MK_SKIP_BONDING_IF" ] && _log_section_time section_bonding_interfaces
 
     # Same for Open vSwitch bonding
-    [ -z "$MK_SKIP_VSWITCH_BONDING" ] && _log_section_time "vswitch_bonding" section_vswitch_bonding
+    [ -z "$MK_SKIP_VSWITCH_BONDING" ] && _log_section_time section_vswitch_bonding
 
     # Number of TCP connections in the various states
-    [ -z "$MK_SKIP_TCP" ] && _log_section_time "tcp" section_tcp
+    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
 
     # Linux Multipathing
-    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time "multipathing" section_multipathing
+    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
 
     # Performancecounter Platten
-    [ -z "$MK_SKIP_DISKSTAT" ] && _log_section_time "diskstat" section_diskstat
+    [ -z "$MK_SKIP_DISKSTAT" ] && _log_section_time section_diskstat
 
     # Performancecounter Kernel
-    [ -z "$MK_SKIP_KERNEL" ] && _log_section_time "kernel" section_kernel
+    [ -z "$MK_SKIP_KERNEL" ] && _log_section_time section_kernel
 
     # RAID status of Linux software RAID
-    [ -z "$MK_SKIP_MD" ] && _log_section_time "md" section_md
+    [ -z "$MK_SKIP_MD" ] && _log_section_time section_md
 
     # RAID status of Linux RAID via device mapper
-    [ -z "$MK_SKIP_DM_RAID" ] && _log_section_time "dm_raid" section_dm_raid
+    [ -z "$MK_SKIP_DM_RAID" ] && _log_section_time section_dm_raid
 
     # RAID status of LSI controllers via cfggen
-    [ -z "$MK_SKIP_CFGGEN" ] && _log_section_time "cfggen" section_cfggen
+    [ -z "$MK_SKIP_CFGGEN" ] && _log_section_time section_cfggen
 
     # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
     # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-    [ -z "$MK_SKIP_MEGARAID" ] && _log_section_time "megaraid" section_megaraid
+    [ -z "$MK_SKIP_MEGARAID" ] && _log_section_time section_megaraid
 
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
-    [ -z "$MK_SKIP_THREE_WARE_RAID" ] && _log_section_time "3ware_raid" section_3ware_raid
+    [ -z "$MK_SKIP_THREE_WARE_RAID" ] && _log_section_time section_3ware_raid
 
     # VirtualBox Guests. Section must always been output. Otherwise the
     # check would not be executed in case no guest additions are installed.
     # And that is something the check wants to detect
-    [ -z "$MK_SKIP_VBOX_GUEST" ] && _log_section_time "vbox_guest" section_vbox_guest
+    [ -z "$MK_SKIP_VBOX_GUEST" ] && _log_section_time section_vbox_guest
 
     # OpenVPN Clients. Currently we assume that the configuration # is in
     # /etc/openvpn. We might find a safer way to find the configuration later.
-    [ -z "$MK_SKIP_OPENVPN" ] && _log_section_time "openvpn" section_openvpn
+    [ -z "$MK_SKIP_OPENVPN" ] && _log_section_time section_openvpn
 
-    [ -z "$MK_SKIP_NVIDIA" ] && _log_section_time "nvidia" section_nvidia
+    [ -z "$MK_SKIP_NVIDIA" ] && _log_section_time section_nvidia
 
-    [ -z "$MK_SKIP_DRBD" ] && _log_section_time "drbd" section_drbd
+    [ -z "$MK_SKIP_DRBD" ] && _log_section_time section_drbd
 
     # Heartbeat monitoring
     # Different handling for heartbeat clusters with and without CRM
     # for the resource state
-    [ -z "$MK_SKIP_HEARTBEAT" ] && _log_section_time "heartbeat" section_heartbeat
+    [ -z "$MK_SKIP_HEARTBEAT" ] && _log_section_time section_heartbeat
 
-    [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time "mailqueue" section_mailqueue
+    [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time section_mailqueue
 
     ## Check status of OMD sites and Checkmk Notification spooler
     # Welcome the ZFS check on Linux
     # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
     # check zpool status
-    [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time "zpool" section_zpool
+    [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
 
     # Veritas Cluster Server
     # Software is always installed in /opt/VRTSvcs.
     # Secure mode must be off to allow root to execute commands
-    [ -z "$MK_SKIP_VERITAS" ] && _log_section_time "veritas_cluster" section_veritas_cluster
+    [ -z "$MK_SKIP_VERITAS" ] && _log_section_time section_veritas_cluster
 
     ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time "fileinfo" section_fileinfo
+    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
 
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
     # on non-OMD machines.
-    [ -z "$MK_SKIP_OMD_CORES" ] && _log_section_time "omd_core" section_omd_core
+    [ -z "$MK_SKIP_OMD_CORES" ] && _log_section_time section_omd_core
 
     # Collect states of configured Checkmk site backup jobs
-    _log_section_time "mkbackup" section_mkbackup
+    _log_section_time section_mkbackup
 
     # Get statistics about monitored jobs. Below the job directory there
     # is a sub directory per user that ran a job. That directory must be
     # owned by the user so that a symlink or hardlink attack for reading
     # arbitrary files can be avoided.
-    [ -z "$MK_SKIP_JOB" ] && _log_section_time "job" section_job
+    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
 
     # Gather thermal information provided e.g. by acpi
     # At the moment only supporting thermal sensors
-    [ -z "$MK_SKIP_THERMAL" ] && _log_section_time "thermal" section_thermal
+    [ -z "$MK_SKIP_THERMAL" ] && _log_section_time section_thermal
 
     # Libelle Business Shadow
-    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time "libelle" section_libelle
+    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
 
     # HTTP Accelerator Statistics
-    [ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && _log_section_time "http_accelerator" section_http_accelerator
+    [ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && _log_section_time section_http_accelerator
 
     # Proxmox Cluster
-    [ -z "$MK_SKIP_PROXMOX" ] && _log_section_time "proxmox" section_proxmox
+    [ -z "$MK_SKIP_PROXMOX" ] && _log_section_time section_proxmox
 
-    [ -z "$MK_SKIP_HAPROXY" ] && _log_section_time "haproxy" section_haproxy
+    [ -z "$MK_SKIP_HAPROXY" ] && _log_section_time section_haproxy
 
     run_sections_with_run_cached
 
@@ -1825,9 +1824,9 @@ main() {
     # run_plugins -> run_agent_plugin -> _log_section_time CMD
     run_plugins
 
-    _log_section_time "failed_plugins" section_checkmk_failed_plugins
+    _log_section_time section_checkmk_failed_plugins
 
-    _log_section_time "run_spooler" run_spooler
+    _log_section_time run_spooler
 
     if $LOG_SECTION_TIME; then
         profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"

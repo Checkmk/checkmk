@@ -77,17 +77,16 @@ elif [ -e "$PROFILING_CONFIG" ]; then
     . "$PROFILING_CONFIG"
 fi
 
-PROFILING_LOGFILE_DIR="${MK_LOGDIR}/$(date +"%Y%m%d_%H%M%S")"
+PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
 if $LOG_SECTION_TIME; then
     mkdir -p "$PROFILING_LOGFILE_DIR"
 fi
 
 _log_section_time() {
-    local section_name="${1//\//\\}"
-    shift
     local section_func="$*"
 
-    profiling_logfile="${PROFILING_LOGFILE_DIR}/profiling_${section_name}.log"
+    local base_name=${section_func//[^a-zA-Z0-9._-]/_}
+    profiling_logfile="${PROFILING_LOGFILE_DIR}/${base_name}.log"
 
     # TODO In the future
     # echo "<<<check_mk_agent_profiling>>>"
@@ -149,7 +148,7 @@ run_mrpe() {
 
     echo '<<<mrpe>>>'
 
-    OUTPUT=$(eval _log_section_time "mrpe_$descr" "$cmdline")
+    OUTPUT=$(eval _log_section_time "$cmdline")
 
     echo -n "$descr $? $OUTPUT" | tr \\n \\1
     echo
@@ -568,7 +567,7 @@ run_remote_plugins() {
             then
                 run_mrpe $descr "$cmdline"
             else
-                run_cached $args $descr $interval "_log_section_time 'mrpe_$descr' '$cmdline'"
+                run_cached $args $descr $interval "_log_section_time '$cmdline'"
             fi
         done
     fi
@@ -587,13 +586,13 @@ run_local_checks() {
     if cd "$LOCALDIR" 2>/dev/null; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                _log_section_time "local_$skript" "./$skript"
+                _log_section_time "./$skript"
             fi
         done
         # Call some local checks only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
             fi
         done
     fi
@@ -622,7 +621,7 @@ run_agent_plugin() {
 
     # Execute all non python plugins with ./foo
     if [ "$extension" != "py" ]; then
-        _log_section_time "agent_plugin_$agent_plugin" "./$agent_plugin"
+        _log_section_time "./$agent_plugin"
         return
     fi
 
@@ -632,7 +631,7 @@ run_agent_plugin() {
             return
         fi
         if [ -n "$PYTHON3" ]; then
-            _log_section_time "agent_plugin_py3_${agent_plugin}" "$PYTHON3 $agent_plugin"
+            _log_section_time "$PYTHON3 $agent_plugin"
             return
         fi
         if [ ! -e "${filename}_2.py" ]; then
@@ -647,7 +646,7 @@ run_agent_plugin() {
     fi
 
     if [ -n "$PYTHON2" ]; then
-        _log_section_time "agent_plugin_py2_${agent_plugin}" "$PYTHON2 $agent_plugin"
+        _log_section_time "$PYTHON2 $agent_plugin"
         return
     fi
 
@@ -666,7 +665,7 @@ run_plugins() {
         # Call some plugins only every X'th second
         for skript in [1-9]*/* ; do
             if [ -x "$skript" ] ; then
-                run_cached plugins_${skript//\//\#} ${skript%/*} "_log_section_time 'plugin_$skript' './$skript'"
+                run_cached plugins_${skript//\//\#} ${skript%/*} "_log_section_time './$skript'"
             fi
         done
     fi
@@ -688,41 +687,41 @@ if $LOG_SECTION_TIME; then
     agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 fi
 
-_log_section_time "check_mk" section_checkmk
+_log_section_time section_checkmk
 
-[ -z "$MK_SKIP_JOB" ] && _log_section_time "job" section_job
+[ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
 
-[ -z "$MK_SKIP_DF" ] && _log_section_time "df" section_df
+[ -z "$MK_SKIP_DF" ] && _log_section_time section_df
 
-[ -z "$MK_SKIP_ZFS" ] && _log_section_time "zfs" section_zfs
+[ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
 
-[ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && _log_section_time "zfs_arc_cache" section_zfs_arc_cache
+[ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && _log_section_time section_zfs_arc_cache
 
-[ -z "$MK_SKIP_PS" ] && _log_section_time "ps" section_ps
+[ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
 
-[ -z "$MK_SKIP_STATGRAB" ] && _log_section_time "statgrab" section_statgrab
+[ -z "$MK_SKIP_STATGRAB" ] && _log_section_time section_statgrab
 
-[ -z "$MK_SKIP_CPU" ] && _log_section_time "cpu" section_cpu
+[ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
 
-[ -z "$MK_SKIP_ZPOOL" ] && _log_section_time "zpool" section_zpool
+[ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
 
-[ -z "$MK_SKIP_UPTIME" ] && _log_section_time "uptime" section_uptime
+[ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
 
-[ -z "$MK_SKIP_NTP" ] && _log_section_time "ntp" section_ntp
+[ -z "$MK_SKIP_NTP" ] && _log_section_time section_ntp
 
-[ -z "$MK_SKIP_SOLARIS_PRTG" ] && _log_section_time "solaris_prtg" section_solaris_prtg
+[ -z "$MK_SKIP_SOLARIS_PRTG" ] && _log_section_time section_solaris_prtg
 
-[ -z "$MK_SKIP_TCP" ] && _log_section_time "tcp" section_tcp
+[ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
 
-[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time "multipathing" section_multipathing
+[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
 
-[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time "fileinfo" section_fileinfo
+[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
 
-[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time "libelle" section_libelle
+[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
 
-[ -z "$MK_SKIP_SOLARIS_FMADM" ] && _log_section_time "solaris_fmadm" section_solaris_fmadm
+[ -z "$MK_SKIP_SOLARIS_FMADM" ] && _log_section_time section_solaris_fmadm
 
-[ -z "$MK_SKIP_SOLARIS_SERVICES" ] && _log_section_time "solaris_services" section_solaris_services
+[ -z "$MK_SKIP_SOLARIS_SERVICES" ] && _log_section_time section_solaris_services
 
 # _log_section_time: log single commands not all at once
 # run_remote_plugins -> run_mrpe -> _log_section_time CMD
@@ -739,7 +738,7 @@ run_local_checks
 #             -> run_cached _log_section_time CMD
 run_plugins
 
-_log_section_time "failed_plugins" section_checkmk_failed_plugins
+_log_section_time section_checkmk_failed_plugins
 
 if $LOG_SECTION_TIME; then
     profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"

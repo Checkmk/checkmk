@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+DEBUG=false
+DISABLE_CACHING=false
+LOG_SECTION_TIME=false
+
 # Make sure that locally installed binaries are found
 PATH=$PATH:/usr/local/bin
 
@@ -42,8 +46,6 @@ LOCALDIR=$MK_LIBDIR/local
 # output if they are not outdated (see below)
 SPOOLDIR=$MK_VARDIR/spool
 
-DEBUG=false
-LOG_SECTION_TIME=false
 while test -n "$1"; do
     case "$1" in
         -d)
@@ -73,7 +75,6 @@ elif [ -z "$MK_FROM_NODE" ]; then
     exec </dev/null 2>/dev/null
 fi
 
-DISABLE_CACHING=false
 PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
 if $LOG_SECTION_TIME; then
     # If option '-p' is set disable caching in order to get the whole execution time
@@ -1514,6 +1515,42 @@ run_real_time_checks() {
     done
 }
 
+# Agent output snippets created by cronjobs, etc.
+run_spooler() {
+    (
+        cd "$SPOOLDIR" 2>/dev/null || return
+        test -r "$SPOOLDIR" || return
+        now=$(date +%s)
+
+        for file in *; do
+            test "$file" = "*" && break
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
+
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt "$maxage" ]; then
+                    continue
+                fi
+            fi
+
+            # Output the file
+            cat "$file"
+        done
+    )
+}
+
 # ntpq helper function
 
 get_ntpq() {
@@ -1767,43 +1804,7 @@ run_plugins
 
 _log_section_time "failed_plugins" section_checkmk_failed_plugins
 
-# Agent output snippets created by cronjobs, etc.
-spooldir_files() {
-    (
-        cd "$SPOOLDIR" 2>/dev/null || return
-        test -r "$SPOOLDIR" || return
-        now=$(date +%s)
-
-        for file in *; do
-            test "$file" = "*" && break
-            # output every file in this directory. If the file is prefixed
-            # with a number, then that number is the maximum age of the
-            # file in seconds. If the file is older than that, it is ignored.
-            maxage=""
-            part="$file"
-
-            # Each away all digits from the front of the filename and
-            # collect them in the variable maxage.
-            while [ "${part/#[0-9]/}" != "$part" ]; do
-                maxage=$maxage${part:0:1}
-                part=${part:1}
-            done
-
-            # If there is at least one digit, than we honor that.
-            if [ "$maxage" ]; then
-                mtime=$(stat -c %Y "$file")
-                if [ $((now - mtime)) -gt "$maxage" ]; then
-                    continue
-                fi
-            fi
-
-            # Output the file
-            cat "$file"
-        done
-    )
-}
-
-_log_section_time "spooldir_files" spooldir_files
+_log_section_time "run_spooler" run_spooler
 
 if $LOG_SECTION_TIME; then
     profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"

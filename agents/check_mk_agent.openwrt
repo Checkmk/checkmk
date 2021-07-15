@@ -216,6 +216,41 @@ run_real_time_checks() {
     done
 }
 
+# Agent output snippets created by cronjobs, etc.
+run_spooler() {
+    (
+        cd "$SPOOLDIR" 2>/dev/null || return
+        test -r "$SPOOLDIR" || return
+        now=$(date +%s)
+
+        for file in *; do
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
+
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt $maxage ]; then
+                    continue
+                fi
+            fi
+
+            # Output the file
+            cat "$file"
+        done
+    )
+}
+
 echo "<<<check_mk>>>"
 echo "Version: 2.1.0i1"
 echo "AgentOS: openwrt"
@@ -807,39 +842,4 @@ if cd $PLUGINSDIR; then
     done
 fi
 
-# Agent output snippets created by cronjobs, etc.
-spooldir_files() {
-    (
-        cd "$SPOOLDIR" 2>/dev/null || return
-        test -r "$SPOOLDIR" || return
-        now=$(date +%s)
-
-        for file in *; do
-            # output every file in this directory. If the file is prefixed
-            # with a number, then that number is the maximum age of the
-            # file in seconds. If the file is older than that, it is ignored.
-            maxage=""
-            part="$file"
-
-            # Each away all digits from the front of the filename and
-            # collect them in the variable maxage.
-            while [ "${part/#[0-9]/}" != "$part" ]; do
-                maxage=$maxage${part:0:1}
-                part=${part:1}
-            done
-
-            # If there is at least one digit, than we honor that.
-            if [ "$maxage" ]; then
-                mtime=$(stat -c %Y "$file")
-                if [ $((now - mtime)) -gt $maxage ]; then
-                    continue
-                fi
-            fi
-
-            # Output the file
-            cat "$file"
-        done
-    )
-}
-
-spooldir_files
+run_spooler

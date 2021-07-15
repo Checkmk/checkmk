@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-06-16 06:00+0000\n"
-"Last-Translator: Louis Wevers <louis@wevers.tv>\n"
+"PO-Revision-Date: 2021-07-15 13:15+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: Dutch <https://translate.checkmk.com/projects/checkmk/"
 "software/nl/>\n"
 "Language: nl\n"
@@ -245,45 +245,45 @@ msgstr "% boven voorspelde waarde"
 msgid "% below predicted value"
 msgstr "% onder voorspelde waarde"
 
-#, python-format
+#, no-python-format
 msgid "% free"
 msgstr "% vrij"
 
 msgid "% memory left"
 msgstr "% geheugen vrij"
 
-#, python-format
+#, no-python-format
 msgid "% of Flash"
 msgstr "% van Flash"
 
-#, python-format
+#, no-python-format
 msgid "% of RAM"
 msgstr "% van RAM"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum active connections"
 msgstr "% van maximum active connecties"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum connections"
 msgstr "% van maximum connecties"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% van maximum vrije connecties"
 
-#, python-format
+#, no-python-format
 msgid "% of port speed"
 msgstr "% van poort snelheid"
 
 msgid "% time"
 msgstr "% tijd"
 
-#, python-format
+#, no-python-format
 msgid "% usage"
 msgstr "% gebruikt"
 
-#, python-format
+#, no-python-format
 msgid "% used"
 msgstr "% gebruikt"
 
@@ -407,7 +407,7 @@ msgstr "%d open onverenigbare werks"
 msgid "%d rows"
 msgstr "%d rijen"
 
-#, python-format
+#, fuzzy, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
 msgstr[0] "%d site is %s."
@@ -433,7 +433,7 @@ msgstr "%d tijd intervallen"
 msgid "%d translations"
 msgstr "%d vertalingen"
 
-#, python-format
+#, fuzzy, python-format
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
 msgstr[0] "%d niet erkend onverenigbaar werk"
@@ -915,7 +915,7 @@ msgstr "10+ wijzigingen"
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ms"
 
-#, python-format
+#, no-python-format
 msgid "100% is all cores at full load"
 msgstr "100% is alle kernen op volledige belasting"
 
@@ -1462,7 +1462,7 @@ msgstr ""
 "communicatie. Kijk eens naar <a href=\"werk.py?werk=7017\">werk #7017</a> "
 "voor meer informatie.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1483,7 +1483,7 @@ msgstr ""
 "livestatus-verbindingen te verhogen of spoor de clients op om na te gaan of "
 "u het gebruik op de een of andere manier kunt verminderen.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1557,7 +1557,7 @@ msgstr ""
 "opstarten van de Microcore, wat pieken in de belasting kan veroorzaken als "
 "er veel Checkmk helperprocessen zijn geconfigureerd.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1595,7 +1595,7 @@ msgstr ""
 "belasting kan veroorzaken als er veel Checkmk helper processen zijn "
 "geconfigureerd.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -3651,9 +3651,6 @@ msgstr "Aanvullende informatie"
 msgid "Additional Plugin Output"
 msgstr "Extra plug-in uitgang"
 
-msgid "Additional context"
-msgstr "Extra context"
-
 msgid "Additional header lines"
 msgstr "Extra kopregels"
 
@@ -5602,7 +5599,7 @@ msgstr "Toewijzing van diensten aan contactgroepen"
 msgid "Assignment of services to service groups"
 msgstr "Toewijzing van diensten aan dienstengroepen"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Associated hosts, services and events are not included in the Tactical "
 "Overview. The %s site is %s."
@@ -10621,10 +10618,8 @@ msgstr "Aansluiting"
 msgid "Connection ID"
 msgstr "Verbinding ID"
 
-#, python-brace-format
-msgid ""
-"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
-"failed"
+#, fuzzy, python-format
+msgid "Connection attempt %d / %d to Redis failed"
 msgstr ""
 "Verbindingspoging {n_attempts} / {n_ pogingen_redis_verbinding} naar Redis "
 "mislukt"
@@ -16348,7 +16343,7 @@ msgstr "Elektrische energie"
 msgid "Electrical power"
 msgstr "Elektrisch vermogen"
 
-#, python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische spanning in % van de normale waarde"
 
@@ -25976,11 +25971,11 @@ msgstr ""
 "Houdt hosts terwijl piggyback bron stuurt piggyback gegevens alleen voor "
 "andere hosts voor"
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Houd in gedachten dat als je 1GB RAM en 1GB Swap hebt, je 120% of 1200MB "
@@ -28626,9 +28621,6 @@ msgstr "Manager"
 
 msgid "Managers"
 msgstr "Managers"
-
-msgid "Mandatory context"
-msgstr "Verplichte context"
 
 msgid "Manual"
 msgstr "Handmatig"
@@ -43117,7 +43109,7 @@ msgstr "Start tijdens het opstarten van het systeem"
 msgid "Start log from"
 msgstr "Start log vanaf"
 
-#, python-format
+#, no-python-format
 msgid "Start new activations untils 90% of RAM is used"
 msgstr "Start nieuwe activeringen tot 90% van RAM is gebruikt"
 
@@ -45882,7 +45874,7 @@ msgstr ""
 #, python-format
 msgid "The active check services have an average check latency of %.3fs."
 msgstr ""
-"De actieve controlediensten hebben een gemiddelde controlelatentie van %,3fs."
+"De actieve controlediensten hebben een gemiddelde controlelatentie van %.3fs."
 
 msgid "The age of the current host state"
 msgstr "De leeftijd van de huidige host state"
@@ -50213,7 +50205,7 @@ msgstr "Dit evenement heeft het doelaantal nog niet bereikt."
 msgid "This expression must match the value of the variable"
 msgstr "Deze expressie moet overeenkomen met de waarde van de variabele"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -50766,7 +50758,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -52742,7 +52734,7 @@ msgstr ""
 "niet werkt voor gegroepeerde interfaces, aangezien de bijkomende informatie "
 "van gegroepeerde interfaces verschillend is"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -59264,8 +59256,8 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr "Creëert kind-knooppunten die de status van diensten weergeven."
 
-#, python-brace-format
-msgid "Will wait for {sleep_time} seconds and retry"
+#, fuzzy, python-format
+msgid "Will wait for %d seconds and retry"
 msgstr "Zal wachten op {sleep_time} seconden en opnieuw proberen"
 
 msgid "Windows"
@@ -63463,6 +63455,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Additional context"
+#~ msgstr "Extra context"
+
+#~ msgid "Mandatory context"
+#~ msgstr "Verplichte context"
 
 #~ msgid "Allowed to see the following entries"
 #~ msgstr "Toegelaten om de volgende items te zien"

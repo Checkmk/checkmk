@@ -239,45 +239,45 @@ msgstr "% peste valoarea prezisâ"
 msgid "% below predicted value"
 msgstr "% sub valoarea prezisă"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "% free"
 msgstr "% liber"
 
 msgid "% memory left"
 msgstr "% memorie liberă"
 
-#, python-format
+#, no-python-format
 msgid "% of Flash"
 msgstr "% din Flash"
 
-#, python-format
+#, no-python-format
 msgid "% of RAM"
 msgstr "% din RAM"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "% of maximum active connections"
 msgstr "Numarul maxim de conexiuni"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "% of maximum connections"
 msgstr "Numarul maxim de conexiuni"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "% of maximum idle connections"
 msgstr "Numarul maxim de conexiuni"
 
-#, python-format
+#, no-python-format
 msgid "% of port speed"
 msgstr "% din viteza portului"
 
 msgid "% time"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid "% usage"
 msgstr "% utilizare"
 
-#, fuzzy, python-format
+#, fuzzy, no-python-format
 msgid "% used"
 msgstr "(nefolosit)"
 
@@ -915,7 +915,7 @@ msgstr ""
 msgid "10.0 - 20.0 ms"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid "100% is all cores at full load"
 msgstr ""
 
@@ -1369,7 +1369,7 @@ msgid ""
 "information.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1381,7 +1381,7 @@ msgid ""
 "whether or not you can reduce the usage somehow.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1420,7 +1420,7 @@ msgid ""
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1440,7 +1440,7 @@ msgid ""
 "lot of Checkmk helper processes configured.</p>"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -3475,10 +3475,6 @@ msgstr "Informații Adiționale"
 
 msgid "Additional Plugin Output"
 msgstr "Output adițional de la Plugin"
-
-#, fuzzy
-msgid "Additional context"
-msgstr "Opțiuni adiționale"
 
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
@@ -10014,10 +10010,8 @@ msgstr ""
 msgid "Connection ID"
 msgstr "Conexiuni Active"
 
-#, python-brace-format
-msgid ""
-"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
-"failed"
+#, python-format
+msgid "Connection attempt %d / %d to Redis failed"
 msgstr ""
 
 #, fuzzy
@@ -15868,7 +15862,7 @@ msgstr ""
 msgid "Electrical power"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr ""
 
@@ -24553,11 +24547,11 @@ msgid ""
 "for"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 
@@ -27323,10 +27317,6 @@ msgstr "Statusul Serverului"
 #, fuzzy
 msgid "Managers"
 msgstr "Statusul Serverului"
-
-#, fuzzy
-msgid "Mandatory context"
-msgstr "fara context"
 
 msgid "Manual"
 msgstr ""
@@ -41843,7 +41833,7 @@ msgstr ""
 msgid "Start log from"
 msgstr "Întreruperi adhoc"
 
-#, python-format
+#, no-python-format
 msgid "Start new activations untils 90% of RAM is used"
 msgstr ""
 
@@ -47727,7 +47717,7 @@ msgstr ""
 msgid "This expression must match the value of the variable"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -48111,7 +48101,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -49435,7 +49425,7 @@ msgid ""
 "grouped interfaces is different"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -55356,8 +55346,8 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr ""
 
-#, python-brace-format
-msgid "Will wait for {sleep_time} seconds and retry"
+#, python-format
+msgid "Will wait for %d seconds and retry"
 msgstr ""
 
 msgid "Windows"
@@ -59123,6 +59113,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Additional context"
+#~ msgstr "Opțiuni adiționale"
+
+#, fuzzy
+#~ msgid "Mandatory context"
+#~ msgstr "fara context"
 
 #, fuzzy
 #~ msgid "Path to attributes or tables"

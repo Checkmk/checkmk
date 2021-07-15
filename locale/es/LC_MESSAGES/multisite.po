@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-06-25 18:59+0000\n"
-"Last-Translator: Weblate Admin <marketing@tribe29.com>\n"
+"PO-Revision-Date: 2021-07-15 13:19+0000\n"
+"Last-Translator: Pablo Mazzú <pmazzu@gmail.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
 "Language: es\n"
@@ -244,45 +244,45 @@ msgstr "% por encima del valor previsto"
 msgid "% below predicted value"
 msgstr "% debajo del valor previsto"
 
-#, python-format
+#, no-python-format
 msgid "% free"
 msgstr "% libre"
 
 msgid "% memory left"
 msgstr "% de memoria restante"
 
-#, python-format
+#, no-python-format
 msgid "% of Flash"
 msgstr "% de Flash"
 
-#, python-format
+#, no-python-format
 msgid "% of RAM"
 msgstr "% de RAM"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum active connections"
 msgstr "% de conexiones activas máximas"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum connections"
 msgstr "% máximo de conexiones"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% de conexiones inactivas máximas"
 
-#, python-format
+#, no-python-format
 msgid "% of port speed"
 msgstr "% de velocidad del puerto"
 
 msgid "% time"
 msgstr "% tiempo"
 
-#, python-format
+#, no-python-format
 msgid "% usage"
 msgstr "% uso"
 
-#, python-format
+#, no-python-format
 msgid "% used"
 msgstr "% usado"
 
@@ -435,7 +435,7 @@ msgstr "%d traducciones"
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
 msgstr[0] "%d trabajo incompatible no reconocido"
-msgstr[1] ""
+msgstr[1] "%d trabajos incompatibles no reconocidos"
 
 msgid "%m-%d"
 msgstr "%m-%d"
@@ -913,7 +913,7 @@ msgstr "10+ cambios"
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ms"
 
-#, python-format
+#, no-python-format
 msgid "100% is all cores at full load"
 msgstr "100% es todos los núcleos a máxima carga"
 
@@ -1464,7 +1464,7 @@ msgstr ""
 "SSL. Mire esto <a href=\"werk.py?werk=7017\">werk #7017</a> para mayor "
 "información.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1485,7 +1485,7 @@ msgstr ""
 "paralelas o rastrear a los clientes para verificar si puede o no reducir el "
 "uso de alguna manera.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1559,7 +1559,7 @@ msgstr ""
 "paralelo durante el inicio del Microcore, lo que puede causar picos de carga "
 "cuando se tienen configurados muchos procesos auxiliares de Checkmk.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1597,7 +1597,7 @@ msgstr ""
 "picos de carga cuando se tienen muchos procesos de ayuda de Checkmk "
 "configurados.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -3680,9 +3680,6 @@ msgstr "Información adicional"
 msgid "Additional Plugin Output"
 msgstr "Salida adicional de plugins"
 
-msgid "Additional context"
-msgstr "Contexto adicional"
-
 msgid "Additional header lines"
 msgstr "Líneas de cabecera adicionales"
 
@@ -5642,7 +5639,7 @@ msgstr "Asignación de servicios a grupos de contactos"
 msgid "Assignment of services to service groups"
 msgstr "Asignación de servicios a grupos de servicios"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Associated hosts, services and events are not included in the Tactical "
 "Overview. The %s site is %s."
@@ -10712,10 +10709,8 @@ msgstr "Conexión"
 msgid "Connection ID"
 msgstr "Identificación de la conexión"
 
-#, python-brace-format
-msgid ""
-"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
-"failed"
+#, fuzzy, python-format
+msgid "Connection attempt %d / %d to Redis failed"
 msgstr ""
 "Intento de conexión {n_intentos} / {n_attempts_redis_connection} a Redis "
 "falló"
@@ -16489,7 +16484,7 @@ msgstr "Energía eléctrica"
 msgid "Electrical power"
 msgstr "Energía eléctrica"
 
-#, python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Tensión eléctrica en % del valor normal"
 
@@ -26188,11 +26183,11 @@ msgstr ""
 "Mantener los hosts mientras la fuente de piggyback envía datos de piggyback "
 "sólo para otros hosts para"
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Tenga en cuenta que si tiene 1GB de RAM y 1GB de Swap necesita especificar "
@@ -28869,9 +28864,6 @@ msgstr "Gerente"
 
 msgid "Managers"
 msgstr "Gerentes"
-
-msgid "Mandatory context"
-msgstr "Contexto obligatorio"
 
 msgid "Manual"
 msgstr "Manual"
@@ -43510,7 +43502,7 @@ msgstr "Inicio durante el arranque del sistema"
 msgid "Start log from"
 msgstr "Iniciar el registro desde"
 
-#, python-format
+#, no-python-format
 msgid "Start new activations untils 90% of RAM is used"
 msgstr "Iniciar nuevas activaciones hasta que se utilice el 90% de la RAM"
 
@@ -50648,7 +50640,7 @@ msgstr "Este evento aún no ha alcanzado el recuento objetivo."
 msgid "This expression must match the value of the variable"
 msgstr "Esta expresión debe coincidir con el valor de la variable"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -51202,7 +51194,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -53211,7 +53203,7 @@ msgstr ""
 "ajuste no funciona para las interfaces agrupadas, ya que la información "
 "adicional de las interfaces agrupadas es diferente"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -59767,8 +59759,8 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr "Creará nodos hijos que representen el estado de los servicios."
 
-#, python-brace-format
-msgid "Will wait for {sleep_time} seconds and retry"
+#, fuzzy, python-format
+msgid "Will wait for %d seconds and retry"
 msgstr "Esperará durante {sleep_time} segundos y reintentará"
 
 msgid "Windows"
@@ -63998,6 +63990,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Additional context"
+#~ msgstr "Contexto adicional"
+
+#~ msgid "Mandatory context"
+#~ msgstr "Contexto obligatorio"
 
 #~ msgid "Allowed to see the following entries"
 #~ msgstr "Se permite ver las siguientes entradas"

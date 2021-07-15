@@ -244,45 +244,45 @@ msgstr "% über der Prognose"
 msgid "% below predicted value"
 msgstr "% unter der Prognose"
 
-#, python-format
+#, no-python-format
 msgid "% free"
 msgstr "% frei"
 
 msgid "% memory left"
 msgstr "% freier Speicher"
 
-#, python-format
+#, no-python-format
 msgid "% of Flash"
 msgstr "% Flash"
 
-#, python-format
+#, no-python-format
 msgid "% of RAM"
 msgstr "% RAM"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum active connections"
 msgstr "% der maximal aktiven Verbindungen"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum connections"
 msgstr "% der maximalen Verbindungen"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% der maximal inaktiven Verbindungen"
 
-#, python-format
+#, no-python-format
 msgid "% of port speed"
 msgstr "% der Portgeschwindigkeit"
 
 msgid "% time"
 msgstr "% Zeit"
 
-#, python-format
+#, no-python-format
 msgid "% usage"
 msgstr "% Nutzung"
 
-#, python-format
+#, no-python-format
 msgid "% used"
 msgstr "% verbraucht"
 
@@ -917,7 +917,7 @@ msgstr "10+ Änderungen"
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ms"
 
-#, python-format
+#, no-python-format
 msgid "100% is all cores at full load"
 msgstr "100% entspricht Volllast bei allen Kernen"
 
@@ -1450,7 +1450,7 @@ msgstr ""
 "verarbeiten. Werfen Sie einen Blick auf <a href=\"werk.py?werk=7017\">werk "
 "#7017</a> für weitere Informationen."
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1471,7 +1471,7 @@ msgstr ""
 "Anzahl der maximalen Verbindungen erhöhen können, oder ob Sie die Clients "
 "anpassen können um die Auslastung zu reduzieren.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1546,7 +1546,7 @@ msgstr ""
 "werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
 "kann.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1584,7 +1584,7 @@ msgstr ""
 "initialisiert werden, was zu Lastspitzen bzw. einer längeren "
 "Initialisierungsphase führen kann.</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -3634,9 +3634,6 @@ msgstr "Zusätzliche Information"
 
 msgid "Additional Plugin Output"
 msgstr "Zusätzliche Pluginausgabe"
-
-msgid "Additional context"
-msgstr "Zusätzlicher Kontext"
 
 msgid "Additional header lines"
 msgstr "Zusätzliche Headerzeilen"
@@ -10609,10 +10606,8 @@ msgstr "Verbindung"
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
 
-#, python-brace-format
-msgid ""
-"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
-"failed"
+#, fuzzy, python-format
+msgid "Connection attempt %d / %d to Redis failed"
 msgstr ""
 "Verbindungsversuch {n_attempts} / {n_attempts_redis_connection} zu Redis "
 "fehlgeschlagen"
@@ -16359,7 +16354,7 @@ msgstr "Elektrische Energie"
 msgid "Electrical power"
 msgstr "Elektrische Leistung"
 
-#, python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "Elektrische Spannung in % des Normwertes"
 
@@ -25986,11 +25981,11 @@ msgstr ""
 "Hosts beibehalten, während die Piggyback-Quelle Piggyback-Daten nur für "
 "andere Hosts sendet"
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "Bitte beachten Sie, dass Sie - falls Sie z.B. 1GB RAM und 1GB SWAP haben, "
@@ -28641,9 +28636,6 @@ msgstr "Manager"
 
 msgid "Managers"
 msgstr "Manager"
-
-msgid "Mandatory context"
-msgstr "Notwendiger Kontext"
 
 msgid "Manual"
 msgstr "Manuell"
@@ -43167,7 +43159,7 @@ msgstr "Mit dem Betriebssystem starten"
 msgid "Start log from"
 msgstr "Zeige log seit"
 
-#, python-format
+#, no-python-format
 msgid "Start new activations untils 90% of RAM is used"
 msgstr "Neue Aktivierungen starten, bis 90 % des RAM belegt sind"
 
@@ -50218,7 +50210,7 @@ msgstr "Das Ereignis hat den Ziel-Zähler noch nicht erreicht."
 msgid "This expression must match the value of the variable"
 msgstr "Dieser Ausdruck muss auf den Wert der Variable matchen."
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -50773,7 +50765,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -52731,7 +52723,7 @@ msgstr ""
 "Sie, dass dies nicht für gruppierte Interfaces gilt, da die zusätzliche "
 "Information von gruppierten Interfaces sich hiervon unterscheiden."
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -59242,8 +59234,8 @@ msgstr ""
 "Erzeugt Child-Nodes, die den Status von Services betreffen. Hosts und "
 "zugehörige Services werden weiter unten spezifiziert."
 
-#, python-brace-format
-msgid "Will wait for {sleep_time} seconds and retry"
+#, fuzzy, python-format
+msgid "Will wait for %d seconds and retry"
 msgstr "Wartet für {sleep_time} Sekunden und versucht es erneut"
 
 msgid "Windows"
@@ -63452,6 +63444,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Additional context"
+#~ msgstr "Zusätzlicher Kontext"
+
+#~ msgid "Mandatory context"
+#~ msgstr "Notwendiger Kontext"
 
 #~ msgid "Allowed to see the following entries"
 #~ msgstr "Erlaube, die folgenden Einträge zu sehen"

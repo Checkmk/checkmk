@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-05-29 06:00+0000\n"
-"Last-Translator: Martin Hirschvogel <martin.hirschvogel@tribe29.com>\n"
+"PO-Revision-Date: 2021-07-15 13:06+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
 "Language: ja\n"
@@ -241,45 +241,45 @@ msgstr "% 予測値を上回る"
 msgid "% below predicted value"
 msgstr "%予測値を下回る"
 
-#, python-format
+#, no-python-format
 msgid "% free"
 msgstr "% フリー"
 
 msgid "% memory left"
 msgstr "% 残りのメモリ"
 
-#, python-format
+#, no-python-format
 msgid "% of Flash"
 msgstr "% フラッシュ"
 
-#, python-format
+#, no-python-format
 msgid "% of RAM"
 msgstr "RAMの %"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum active connections"
 msgstr "最大アクティブ接続の%"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum connections"
 msgstr "最大接続数の %"
 
-#, python-format
+#, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% 最大アイドル接続"
 
-#, python-format
+#, no-python-format
 msgid "% of port speed"
 msgstr "ポート速度の%"
 
 msgid "% time"
 msgstr "時間"
 
-#, python-format
+#, no-python-format
 msgid "% usage"
 msgstr "%使用法"
 
-#, python-format
+#, no-python-format
 msgid "% used"
 msgstr "% 利用される"
 
@@ -516,7 +516,7 @@ msgstr "%s は %s で %s の後に終了しました。"
 
 #, python-format
 msgid "%s for %d hosts started (%s)..."
-msgstr "%d ホストの %s が開始されました (%s)…"
+msgstr "%s ホストの %d が開始されました (%s)…"
 
 #, python-format
 msgid "%s for all hosts started..."
@@ -905,7 +905,7 @@ msgstr "10+ 変更"
 msgid "10.0 - 20.0 ms"
 msgstr "10.0 - 20.0 ミリ秒"
 
-#, python-format
+#, no-python-format
 msgid "100% is all cores at full load"
 msgstr "100%は全負荷時のすべてのコアです"
 
@@ -1074,7 +1074,7 @@ msgstr "<b>%sの長さの%%s </b>"
 
 #, python-format
 msgid "<b>%s for the next %d minutes</b>"
-msgstr "<b>次の %d 分間の%s </b>"
+msgstr "<b>次の %s 分間の%d </b>"
 
 #, python-format
 msgid "<b>%s until 24:00:00</b>"
@@ -1412,7 +1412,7 @@ msgstr ""
 "す。詳細については、<a href=\"werk.py?werk=7017\">werk #7017</a>をご覧くださ"
 "い。</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>Livestatus is used by several components, for example the GUI, to gather "
 "information about the monitored objects from the monitoring core. It is very "
@@ -1432,7 +1432,7 @@ msgstr ""
 "やすか、クライアントを追跡して、何らかの方法で使用量を減らすことができるかど"
 "うかを確認することを検討してください。</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1502,7 +1502,7 @@ msgstr ""
 "されることです。これにより、多数のCheckmkヘルパープロセスが構成されている場合"
 "に負荷のピークが発生する可能性があります。</p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1538,7 +1538,7 @@ msgstr ""
 "パープロセスが構成されている場合に負荷のピークが発生する可能性があります。</"
 "p>"
 
-#, python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -3518,9 +3518,6 @@ msgstr "追加情報"
 
 msgid "Additional Plugin Output"
 msgstr "追加のプラグイン出力"
-
-msgid "Additional context"
-msgstr "追加のコンテキスト"
 
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
@@ -8227,7 +8224,7 @@ msgstr "LDAP接続%sの位置を%dに変更しました"
 
 #, python-format
 msgid "Changed position of notification rule %d of user %s"
-msgstr "ユーザー%sの通知ルール%dの位置を変更しました"
+msgstr "ユーザー%dの通知ルール%sの位置を変更しました"
 
 #, python-format
 msgid "Changed position of rule %s"
@@ -10191,10 +10188,8 @@ msgstr "接続"
 msgid "Connection ID"
 msgstr "接続ID"
 
-#, python-brace-format
-msgid ""
-"Connection attempt {n_attempts} / {n_attempts_redis_connection} to Redis "
-"failed"
+#, fuzzy, python-format
+msgid "Connection attempt %d / %d to Redis failed"
 msgstr ""
 "Redisへの接続試行 {n_attempts} / {n_attempts_redis_connection}が失敗しました"
 
@@ -12759,7 +12754,7 @@ msgstr "処理されたメッセージを削除する"
 msgid "Delete report schedule entry '%s'?"
 msgstr "レポートスケジュールエントリ '%s'を削除しますか？"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Delete rule #%d (ID: %s) of folder '%s'?"
 msgstr "フォルダ%sのルール#%d(ID: %s)を削除しますか?"
 
@@ -12940,7 +12935,7 @@ msgstr "削除されたフォルダ %s"
 msgid "Deleted host %s"
 msgstr "削除されたホスト %s"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "ユーザー%sの通知ルール%dを削除しました"
 
@@ -12948,7 +12943,7 @@ msgstr "ユーザー%sの通知ルール%dを削除しました"
 msgid "Deleted role '%s'"
 msgstr "削除された役割 '%s'"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
 msgstr "フォルダ[%s]のルールセット[%s]のルール＃%dを削除しました"
 
@@ -15532,7 +15527,7 @@ msgstr "モデルの編集"
 msgid "Edit notification rule %d"
 msgstr "通知ルール %d を編集します"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Edit notification rule %d of user %s"
 msgstr "ユーザー %sの通知ルール %d を編集します"
 
@@ -15813,7 +15808,7 @@ msgstr "電気エネルギー"
 msgid "Electrical power"
 msgstr "電力"
 
-#, python-format
+#, no-python-format
 msgid "Electrical tension in % of normal value"
 msgstr "通常値の%で表した電気張力"
 
@@ -24978,11 +24973,11 @@ msgid ""
 "for"
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
-"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify "
-"120% or 1200MB to get an alert if there is only 20% free RAM available. The "
-"free memory levels do not work with the fortigate check, because it does not "
+"Keep in mind that if you have 1GB RAM and 1GB Swap you need to specify 120% "
+"or 1200MB to get an alert if there is only 20% free RAM available. The free "
+"memory levels do not work with the fortigate check, because it does not "
 "provide total memory data."
 msgstr ""
 "1GBのRAMと1GBのスワップがある場合、使用可能な空きRAMが20%しかない場合にアラー"
@@ -27570,9 +27565,6 @@ msgstr "マネージャー"
 
 msgid "Managers"
 msgstr "マネージャー"
-
-msgid "Mandatory context"
-msgstr "必須のコンテキスト"
 
 msgid "Manual"
 msgstr "マニュアル"
@@ -36154,7 +36146,7 @@ msgstr "更新間隔"
 msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Refreshed check configuration of host [%s] with %d services"
 msgstr "%d サービスを使用してホスト[%s]の構成を更新しました"
 
@@ -37315,11 +37307,11 @@ msgstr "Ruckus Spotの一意のMACアドレス"
 msgid "Rule"
 msgstr "ルール"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Rule %d in %s"
 msgstr "%s のルール %d"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Rule %d in Folder %s is affected"
 msgstr "フォルダ%sのルール%dが影響を受けます"
 
@@ -38042,7 +38034,7 @@ msgstr "このホストを保存して、行く"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
 
-#, python-format
+#, fuzzy, python-format
 msgid "Saved check configuration of host [%s] with %d services"
 msgstr "%dサービスを使用してホスト[%s]のチェック構成を保存しました"
 
@@ -41635,7 +41627,7 @@ msgstr "システム起動中に開始"
 msgid "Start log from"
 msgstr "からログを開始"
 
-#, python-format
+#, no-python-format
 msgid "Start new activations untils 90% of RAM is used"
 msgstr ""
 
@@ -48184,7 +48176,7 @@ msgstr "このイベントはまだ目標数に達していません。"
 msgid "This expression must match the value of the variable"
 msgstr "この式は変数の値と一致する必要があります"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -48232,16 +48224,15 @@ msgstr "このフィルターは表示できません"
 msgid "This forecast graph"
 msgstr "この予測グラフ"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "This graph is based on data consolidated with the function \"%s\". The "
 "values in this column are the \"%s\" values of the \"%s\" values aggregated "
 "in %s steps. Assuming a check interval of 1 minute, the %s values here are "
 "based on the %s value out of %d raw values."
 msgstr ""
-"このグラフは、関数 \"%s\"で統合されたデータに基づいています。この列の値は、%s"
-"ステップで集計された \"%s\" 値の \"%s\" 値です。チェック間隔を1分とすると、こ"
-"こでの \"%s\" 値は、\"%d\" の生の値のうちの \"%s\" 値に基づいています"
+"このグラフは、関数 \"%s\"で統合されたデータに基づいています。この列の値は、%sステップで集計された \"%s\" 値の \"%s\" "
+"値です。チェック間隔を1分とすると、ここでの \"%s\" 値は、\"%d\" の生の値のうちの \"%s\" 値に基づいています"
 
 #, python-format
 msgid ""
@@ -48659,7 +48650,7 @@ msgid ""
 "more Datadog tags. Any matching tag will be displayed in the service output."
 msgstr ""
 
-#, python-format
+#, no-python-format
 msgid ""
 "This option allows you to display an additional, freely configurable text, "
 "to the rule outcome, which may describe the state more in detail. For "
@@ -50391,7 +50382,7 @@ msgstr ""
 "ます。グループ化されたインターフェースの追加情報が異なるため、この設定はグ"
 "ループ化されたインターフェースでは機能しないことに注意してください"
 
-#, python-format
+#, no-python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "
@@ -52604,13 +52595,11 @@ msgstr ""
 "ダッシュレット %d ダッシュボード %s の を変換できません。自分で移行する必要が"
 "あります。定義: %r"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to transform dashlet %d of dashboard %s: the dashlet is using "
 "\"urlfunc\" which can not be converted automatically."
-msgstr ""
-"ダッシュボード%sのダッシュレット%dを変換できません:ダッシュボードは自動的に変"
-"換できない\"urlfunc\"を使用しています。"
+msgstr "ダッシュボード%sのダッシュレット%dを変換できません:ダッシュボードは自動的に変換できない\"urlfunc\"を使用しています。"
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -56560,8 +56549,8 @@ msgstr ""
 msgid "Will create child nodes representing the state of services."
 msgstr ""
 
-#, python-brace-format
-msgid "Will wait for {sleep_time} seconds and retry"
+#, fuzzy, python-format
+msgid "Will wait for %d seconds and retry"
 msgstr "{sleep_time} 秒待ってから再試行します"
 
 msgid "Windows"
@@ -60529,6 +60518,12 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Additional context"
+#~ msgstr "追加のコンテキスト"
+
+#~ msgid "Mandatory context"
+#~ msgstr "必須のコンテキスト"
 
 #~ msgid "Allowed to see the following entries"
 #~ msgstr "次のエントリを表示できます"

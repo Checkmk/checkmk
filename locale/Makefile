@@ -59,8 +59,8 @@ update-pos:
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	git pull; \
 	for lang in $(LANGUAGES); do \
-		(msgfmt --check-format -o temp.mo $$lang/multisite.po &>> $$MSGFMT_OUT) || true; \
 		sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
+		(msgfmt --check-format -o temp.mo ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po &>> $$MSGFMT_OUT) || true; \
 	done; \
 	rm -f temp.mo
 	# We are back in the Checkmk repo

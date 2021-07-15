@@ -7,7 +7,6 @@
 import os
 import subprocess
 import sys
-from contextlib import suppress
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -16,6 +15,7 @@ from six import ensure_str
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
+import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
@@ -149,54 +149,47 @@ def do_snmptranslate(walk_filename: str) -> None:
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
-    walk_path = "%s/%s" % (cmk.utils.paths.snmpwalks_dir, walk_filename)
-    if not os.path.exists(walk_path):
+    walk_path = Path(cmk.utils.paths.snmpwalks_dir) / walk_filename
+    if not walk_path.exists():
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
-    def translate(lines: List[bytes]) -> List[Tuple[bytes, bytes]]:
-        result_lines = []
-        try:
-            oids_for_command = []
-            for line in lines:
-                oids_for_command.append(line.split(b" ")[0])
+    command: List[str] = [
+        "snmptranslate", "-m", "ALL",
+        "-M+%s" % cmk.utils.paths.local_mib_dir, '-'
+    ]
+    p = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=open(os.devnull, "w"),
+        close_fds=True,
+    )
 
-            command = [b"snmptranslate", b"-m", b"ALL",
-                       b"-M+%s" % cmk.utils.paths.local_mib_dir] + oids_for_command
-            p = subprocess.Popen(command,
-                                 stdout=subprocess.PIPE,
-                                 stderr=open(os.devnull, "w"),
-                                 close_fds=True)
-            p.wait()
-            if p.stdout is None:
-                raise RuntimeError()
-            output = p.stdout.read()
-            result = output.split(b"\n")[0::2]
-            for idx, line in enumerate(result):
-                result_lines.append((line.strip(), lines[idx].strip()))
+    with walk_path.open("rb") as walk_file:
+        walk = walk_file.read().split(b"\n")
+    while walk[-1] == b'':
+        del walk[-1]
 
-        except Exception as e:
-            console.error("%s\n" % e)
+    # to be compatible to previous version of this script, we do not feed
+    # to original walk to snmptranslate (which would be possible) but a
+    # version without values. The output should look like:
+    # "[full oid] [value] --> [translated oid]"
+    walk_without_values = b"\n".join(line.split(b" ", 1)[0] for line in walk)
+    stdout, _stderr = p.communicate(walk_without_values)
 
-        return result_lines
+    data_translated = stdout.split(b"\n")
+    # remove last empty line (some tools add a '\n' at the end of the file, others not)
+    if data_translated[-1] == b"":
+        del data_translated[-1]
 
-    # Translate n-oid's per cycle
-    entries_per_cycle = 500
-    translated_lines: List[Tuple[bytes, bytes]] = []
+    if len(walk) != len(data_translated):
+        raise MKGeneralException("call to snmptranslate returned a ambiguous result")
 
-    walk_lines = open(walk_path, "rb").readlines()
-    console.error("Processing %d lines.\n" % len(walk_lines))
-
-    i = 0
-    while i < len(walk_lines):
-        console.error("\r%d to go...    " % (len(walk_lines) - i))
-        translated = translate(walk_lines[i:i + entries_per_cycle])
-        i += len(translated)
-        translated_lines += translated
-    console.error("\rfinished.                \n")
-
-    with suppress(IOError):
-        sys.stdout.write("\n".join("%s --> %s" % (ensure_str(line), ensure_str(translation))
-                                   for translation, line in translated_lines) + "\n")
+    for element_input, element_translated in zip(walk, data_translated):
+        sys.stdout.buffer.write(element_input.strip())
+        sys.stdout.buffer.write(b" --> ")
+        sys.stdout.buffer.write(element_translated.strip())
+        sys.stdout.buffer.write(b"\n")
 
 
 def do_snmpwalk(options: SNMPWalkOptions, *, backend: SNMPBackend) -> None:

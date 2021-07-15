@@ -469,7 +469,7 @@ section_lnx_if() {
         else
             # If interface down we get "Invalid argument"
             speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
-            if [ -n "$speed" ] && [ $speed -ge 0 ]; then
+            if [ -n "$speed" ] && [ "$speed" -ge 0 ]; then
                 echo -e "\tSpeed: ${speed}Mb/s\n"
             fi
         fi
@@ -721,7 +721,7 @@ section_drbd() {
 }
 
 section_heartbeat() {
-    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
+    if [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
@@ -884,10 +884,10 @@ section_omd() {
         echo 'site;used_version;autostart'
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
-            used_version=$(readlink ${sitedir}/version)
+            used_version=$(readlink "${sitedir}"/version)
             used_version=${used_version##*/}
             autostart="0"
-            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" $sitedir/etc/omd/site.conf; then
+            if grep -q "CONFIG_AUTOSTART[[:blank:]]*=[[:blank:]]*'on'" "$sitedir"/etc/omd/site.conf; then
                 autostart="1"
             fi
             echo "$site;$used_version;$autostart"
@@ -1065,7 +1065,7 @@ section_thermal() {
             line="${F##*/}"
             if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
             line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
-            for G in $(ls "$F"/trip_point_*_{temp,type}); do
+            for G in "$F"/trip_point_*_{temp,type}; do
                 line="${line}$(tr <"$G" \\n "|")"
             done
             echo "${line%?}"
@@ -1196,7 +1196,8 @@ run_runas_executor() {
     if [ -e "$MK_CONFDIR/runas.cfg" ]; then
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
             while read -r type user configfile; do
-                if [ -d "$configfile" -o \( "$type" == "mrpe" -a -f "$configfile" \) ]; then
+                # TODO: cleanup: run_remote_plugins checks for existence.
+                if [ -d "$configfile" ] || [ "$type" == "mrpe" ] && [ -f "$configfile" ]; then
                     prefix=""
                     if [ "$user" != "-" ]; then
                         prefix="su $user -c "
@@ -1207,7 +1208,7 @@ run_runas_executor() {
                         run_remote_plugins "$configfile" "$prefix"
 
                     # local and plugin includes
-                    elif [ "$type" == "local" -o "$type" == "plugin" ]; then
+                    elif [ "$type" == "local" ] || [ "$type" == "plugin" ]; then
                         if [ "$type" == "local" ]; then
                             echo "<<<local:sep(0)>>>"
                         fi
@@ -1356,6 +1357,7 @@ run_cached() {
     # TODO: this function is unable to handle mulitple args at once
     #       for example: -s -m won't work, it is read as single token "-s -m"
     if [ "$1" = -s ]; then
+        # shellcheck disable=SC2089
         local section="echo '<<<$2:cached($NOW,$3)>>>' ; "
         shift
     fi

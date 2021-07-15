@@ -17,6 +17,7 @@ import cmk.gui.sites as sites
 import cmk.gui.availability as availability
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.visuals import get_filter_headers, cleaup_context_filters
 from cmk.gui.plugins.metrics.utils import (
     perfvar_translation,
     metric_info,
@@ -151,8 +152,10 @@ class APICallGrafanaConnector(APICallCollection):
         else:
             single_infos = []
 
+        context = cleaup_context_filters(request['context'], single_infos)
+
         filter_headers, only_sites = self._get_filter_headers_of_context(datasource_name="services",
-                                                                         context=request["context"],
+                                                                         context=context,
                                                                          single_infos=single_infos)
 
         return {
@@ -170,17 +173,7 @@ class APICallGrafanaConnector(APICallCollection):
         context,
         single_infos,
     ) -> Tuple[str, livestatus.OnlySites]:
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import get_filter_and_filterheaders_of_context
-        except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
-
-        _filters, filterheaders, selected_sites = get_filter_and_filterheaders_of_context(
-            data_source_registry[datasource_name]().infos,
-            context,
-            single_infos,
-        )
-        return filterheaders, selected_sites
+        return get_filter_headers("", data_source_registry[datasource_name]().infos, context)
 
     def _get_availability_timelines(self, start_time, end_time, only_sites, filter_headers):
         avoptions = availability.get_default_avoptions()

@@ -255,7 +255,7 @@ class StructuredDataNode:
                 return False
         return True
 
-    def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
+    def is_equal(self, other: object) -> bool:
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
@@ -594,7 +594,7 @@ class Table:
     def is_empty(self) -> bool:
         return self.rows == []
 
-    def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
+    def is_equal(self, other: object) -> bool:
         if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
@@ -797,7 +797,7 @@ class Attributes:
     def is_empty(self) -> bool:
         return self.pairs == {}
 
-    def is_equal(self, other: object, edges: Optional[SDPath] = None) -> bool:
+    def is_equal(self, other: object) -> bool:
         if not isinstance(other, Attributes):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 

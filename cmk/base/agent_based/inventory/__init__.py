@@ -216,11 +216,11 @@ def _check_inventory_tree(
         status = max(status, sw_missing)
 
     if old_tree is not None:
-        if not old_tree.is_equal(trees.inventory, edges=["software"]):
+        if not _tree_nodes_are_equal(old_tree, trees.inventory, "software"):
             infotexts.append("software changes" + state_markers[sw_changes])
             status = max(status, sw_changes)
 
-        if not old_tree.is_equal(trees.inventory, edges=["hardware"]):
+        if not _tree_nodes_are_equal(old_tree, trees.inventory, "hardware"):
             infotexts.append("hardware changes" + state_markers[hw_changes])
             status = max(status, hw_changes)
 
@@ -228,6 +228,25 @@ def _check_inventory_tree(
         infotexts.append(f"Found {trees.status_data.count_entries()} status entries")
 
     return ActiveCheckResult(status, infotexts, (), ())
+
+
+def _tree_nodes_are_equal(
+    old_tree: StructuredDataNode,
+    inv_tree: Optional[StructuredDataNode],
+    edge: str,
+) -> bool:
+    if inv_tree is None:
+        return False
+
+    old_node = old_tree.get_node([edge])
+    inv_node = inv_tree.get_node([edge])
+    if old_node is None:
+        return inv_node is None
+
+    if inv_node is None:
+        return False
+
+    return old_node.is_equal(inv_node)
 
 
 def _inventorize_host(

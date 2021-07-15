@@ -52,6 +52,7 @@ from cmk.gui.plugins.wato import (
     make_confirm_link,
     mode_url,
     redirect,
+    IndividualOrStoredPassword,
 )
 
 from cmk.gui.valuespec import (
@@ -69,7 +70,6 @@ from cmk.gui.valuespec import (
     rule_option_elements,
     CascadingDropdownChoice,
     DictionaryEntry,
-    Password,
     TextInput,
 )
 
@@ -206,7 +206,7 @@ class LDAPConnectionValuespec(Transform):
                          ),
                          size=63,
                      ),
-                     Password(
+                     IndividualOrStoredPassword(
                          title=_("Bind password"),
                          help=_("Specify the password to be used to bind to "
                                 "the LDAP directory."),

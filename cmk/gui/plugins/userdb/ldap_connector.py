@@ -47,6 +47,7 @@ from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.password_store as password_store
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 
@@ -412,19 +413,19 @@ class LDAPUserConnector(UserConnector):
                            catch=False,
                            conn=conn)
             else:
-                self._bind('', '', catch=False, conn=conn)  # anonymous bind
+                self._bind('', ('password', ''), catch=False, conn=conn)  # anonymous bind
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise MKLDAPException(
                 _('Unable to connect to LDAP server with the configured bind credentials. '
                   'Please fix this in the '
                   '<a href="wato.py?mode=ldap_config">LDAP connection settings</a>.'))
 
-    def _bind(self, user_dn, password, catch=True, conn=None):
+    def _bind(self, user_dn, password: _Tuple[str, str], catch=True, conn=None):
         if conn is None:
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(ensure_str(user_dn), password)
+            conn.simple_bind_s(ensure_str(user_dn), password_store.extract(password))
             self._logger.info('  SUCCESS')
         except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -1014,7 +1015,7 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
+    def check_credentials(self, user_id, password: _Tuple[str, str]) -> CheckCredentialsResult:
         self.connect()
 
         # Did the user provide an suffix with his user_id? This might enforce

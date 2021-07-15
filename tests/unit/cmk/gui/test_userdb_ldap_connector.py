@@ -284,7 +284,7 @@ def mocked_ldap(monkeypatch):
                 "server": "127.0.0.1"
             }),
         }),
-        "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", "sync-secret"),
+        "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", ("password", "sync-secret")),
         "user_id_umlauts": "keep",
         "user_scope": "sub",
         "user_dn": "ou=users,dc=check-mk,dc=org",
@@ -331,11 +331,11 @@ def _check_restored_bind_user(mocked_ldap):
 
 
 def test_check_credentials_success(request_context, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin", "ldap-test")
+    result = mocked_ldap.check_credentials("admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
 
-    result = mocked_ldap.check_credentials(u"admin", "ldap-test")
+    result = mocked_ldap.check_credentials(u"admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
@@ -352,7 +352,7 @@ def test_check_credentials_not_existing(mocked_ldap):
 
 
 def test_check_credentials_enforce_conn_success(request_context, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
+    result = mocked_ldap.check_credentials("admin@testldap", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)

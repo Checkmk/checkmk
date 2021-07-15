@@ -18,6 +18,7 @@ from functools import partial
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
 import cmk.gui.config as config
 import cmk.gui.utils.escaping as escaping
@@ -849,7 +850,7 @@ def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):
 
 def transform_topology_dashlet(dashlet_spec: DashletConfig,
                                filter_group: str = "") -> DashletConfig:
-    site_id = dashlet_spec["context"].get("site", config.omd_site())
+    site_id = dashlet_spec["context"].get("site", omd_site())
 
     dashlet_spec.update({
         "type": "url",

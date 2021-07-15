@@ -23,9 +23,9 @@ from werkzeug.routing import Map, Rule, Submount
 from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
-from cmk.gui import config, userdb
-from cmk.gui.config import omd_site
+from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data, add_once
@@ -409,9 +409,9 @@ class CheckmkRESTAPI:
             if self.debug:
                 raise
 
-            crash_url = f"/{config.omd_site()}/check_mk/crash.py?" + urllib.parse.urlencode([
+            crash_url = f"/{omd_site()}/check_mk/crash.py?" + urllib.parse.urlencode([
                 ("crash_id", crash.ident_to_text()),
-                ("site", config.omd_site()),
+                ("site", omd_site()),
             ],)
 
             return problem(status=500,

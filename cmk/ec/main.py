@@ -65,6 +65,7 @@ import cmk.utils.debug
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
+from cmk.utils.site import omd_site
 import cmk.utils.store as store
 
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
@@ -2023,7 +2024,7 @@ class RuleMatcher:
         return MatchPriority(has_match=has_match, has_canceling_match=has_canceling_match)
 
     def event_rule_matches_site(self, rule: Rule, event: Event) -> bool:
-        return "match_site" not in rule or cmk_version.omd_site() in rule["match_site"]
+        return "match_site" not in rule or omd_site() in rule["match_site"]
 
     def event_rule_matches_host(self, rule: Rule, event: Event) -> bool:
         if match(rule.get("match_host"), event["host"], complete=True) is False:

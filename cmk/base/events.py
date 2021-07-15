@@ -17,11 +17,11 @@ from urllib.parse import quote
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import livestatus
-import cmk.utils.version as cmk_version
 from cmk.utils.regex import regex
 import cmk.utils.debug
 import cmk.utils.daemon
 from cmk.utils.type_defs import EventRule
+from cmk.utils.site import omd_site
 
 import cmk.base.config as config
 import cmk.base.core
@@ -278,7 +278,7 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
         raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
-        raw_context.setdefault("OMD_SITE", cmk_version.omd_site())
+        raw_context.setdefault("OMD_SITE", omd_site())
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
@@ -447,7 +447,7 @@ def event_match_site(rule: EventRule, context: EventContext) -> Optional[str]:
     required_site_ids = rule["match_site"]
 
     # Fallback to local site ID in case there is none in the context
-    site_id = context.get("OMD_SITE", cmk_version.omd_site())
+    site_id = context.get("OMD_SITE", omd_site())
 
     if site_id not in required_site_ids:
         return "The site '%s' is not in the required sites list: %s" % \

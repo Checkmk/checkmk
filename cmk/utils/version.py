@@ -23,8 +23,6 @@ from six import ensure_str
 
 import cmk.utils.paths
 import livestatus
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.i18n import _
 from functools import lru_cache
 
 
@@ -32,16 +30,6 @@ from functools import lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
     return ensure_str(version_link.resolve().name)
-
-
-@lru_cache
-def omd_site() -> str:
-    try:
-        return os.environ["OMD_SITE"]
-    except KeyError:
-        raise MKGeneralException(
-            _("OMD_SITE environment variable not set. You can "
-              "only execute this in an OMD site."))
 
 
 @lru_cache

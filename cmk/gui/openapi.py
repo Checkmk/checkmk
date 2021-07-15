@@ -12,12 +12,13 @@ from typing import Any, Dict, List
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 
-from cmk.gui import config
+from cmk.utils import version
+from cmk.utils.site import omd_site
+
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
-from cmk.utils import version
 
 # TODO
 #   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
@@ -94,7 +95,7 @@ def _add_cookie_auth(check_dict):
     add_once(check_dict['security'], {schema_name: []})
     check_dict['components']['securitySchemes'][schema_name] = {
         'in': 'cookie',
-        'name': f'auth_{config.omd_site()}',
+        'name': f'auth_{omd_site()}',
         'type': 'apiKey',
         'description': 'Any user of Checkmk, who has already logged in, and thus got a cookie '
                        'assigned, can use the REST API. Some actions may or may not succeed due '

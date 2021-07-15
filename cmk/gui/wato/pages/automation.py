@@ -12,6 +12,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
 import cmk.gui.utils
 import cmk.gui.config as config
@@ -138,7 +139,7 @@ class ModeAutomation(AjaxPage):
         if not user_id:
             raise MKGeneralException(_("Missing variable user_id"))
 
-        our_id = config.omd_site()
+        our_id = omd_site()
 
         if our_id is not None and our_id != site_id:
             raise MKGeneralException(

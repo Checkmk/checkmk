@@ -9,7 +9,7 @@ import typing
 import pytest
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
 
 if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
@@ -70,7 +70,7 @@ def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=200)
-    assert resp.json['site'] == cmk_version.omd_site()
+    assert resp.json['site'] == omd_site()
 
 
 def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):

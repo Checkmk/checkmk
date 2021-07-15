@@ -10,6 +10,8 @@ import copy
 from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional, overload
 
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
+
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.pages import page_registry, AjaxPage
 
@@ -180,7 +182,7 @@ class ABCBIMode(WatoMode):
         return escaping.escape_attribute(bi_pack.title)
 
     def _add_change(self, action_name, text):
-        site_ids = list(config.wato_slave_sites().keys()) + [config.omd_site()]
+        site_ids = list(config.wato_slave_sites().keys()) + [omd_site()]
         add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=site_ids)
 
     def url_to_pack(self, addvars, bi_pack):

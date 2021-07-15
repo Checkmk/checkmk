@@ -6,7 +6,7 @@
 import time
 from typing import Any, List
 
-from cmk.gui import config
+from cmk.utils.site import omd_site
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 # TODO: typing of connection when livestatus.py is on pypi
@@ -55,4 +55,4 @@ def send_command(
         if not isinstance(param, (int, str)):
             raise ValueError(f"Unknown type of parameter {pos}: {type(param)}")
         cmd += f";{param}"
-    connection.command(f"[{current_time}] {cmd}", sitename=config.omd_site())
+    connection.command(f"[{current_time}] {cmd}", sitename=omd_site())

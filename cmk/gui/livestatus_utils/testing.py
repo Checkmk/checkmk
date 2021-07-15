@@ -16,7 +16,7 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.utils import version
+from cmk.utils.site import omd_site
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection, MatchType
 from livestatus import MultiSiteConnection
 
@@ -64,10 +64,10 @@ def mock_livestatus(with_context: bool = False,
          mock.patch.dict(os.environ, {'OMD_ROOT': '/', 'OMD_SITE': 'NO_SITE'}):
 
         # We don't want to be polluted by other tests.
-        version.omd_site.cache_clear()
+        omd_site.cache_clear()
         yield live
         # We don't want to pollute other tests.
-        version.omd_site.cache_clear()
+        omd_site.cache_clear()
 
 
 @contextlib.contextmanager

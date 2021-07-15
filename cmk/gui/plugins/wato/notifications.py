@@ -7,8 +7,8 @@
 import socket
 
 import cmk.utils.version as cmk_version
+from cmk.utils.site import url_prefix
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 
@@ -69,7 +69,7 @@ def transform_forth_html_mail_url_prefix(p):
 
 
 def local_site_url():
-    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/"
+    return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
 
 
 def _vs_add_common_mail_elements(elements):
@@ -238,10 +238,9 @@ class NotificationParameterMail(NotificationParameter):
                  rows="auto",
              )),
             ("url_prefix",
-             _get_url_prefix_specs(
-                 "http://" + socket.gethostname() + "/" +
-                 (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                 request.is_ssl_request and "automatic_https" or "automatic_http")),
+             _get_url_prefix_specs("http://" + socket.gethostname() + url_prefix() + "check_mk/",
+                                   request.is_ssl_request and "automatic_https" or
+                                   "automatic_http")),
             ("no_floating_graphs",
              FixedValue(
                  True,

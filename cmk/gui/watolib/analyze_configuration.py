@@ -11,9 +11,9 @@ from typing import Dict, Type, Iterator, Optional, List, Any
 
 from livestatus import LocalConnection
 import cmk.utils.defines
+from cmk.utils.site import omd_site
 
 import cmk.gui.sites
-import cmk.gui.config as config
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -32,7 +32,7 @@ class ACResult:
     def __init__(self, text: str) -> None:
         super(ACResult, self).__init__()
         self.text = text
-        self.site_id = config.omd_site()
+        self.site_id = omd_site()
 
     def from_test(self, test):
         self.test_id = test.id()
@@ -201,7 +201,7 @@ class ACTest:
 
     def _get_effective_global_setting(self, varname: str) -> Any:
         return get_effective_global_setting(
-            config.omd_site(),
+            omd_site(),
             cmk.gui.config.is_wato_slave_site(),
             varname,
         )

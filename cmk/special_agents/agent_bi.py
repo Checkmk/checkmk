@@ -13,10 +13,10 @@ from typing import Dict, Set
 import requests
 import urllib3  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.site
 from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKException
+from cmk.utils.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -149,7 +149,7 @@ class AggregationRawdataGenerator:
 
         if site_config == "local":
             self._site_url = "http://localhost:%d/%s" % (cmk.utils.site.get_apache_port(),
-                                                         cmk_version.omd_site())
+                                                         omd_site())
         else:
             self._site_url = site_config[1]
 

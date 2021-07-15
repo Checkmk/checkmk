@@ -19,6 +19,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
 
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
@@ -55,7 +56,7 @@ def fixture_edition_short(monkeypatch, request):
 @pytest.fixture(autouse=True, scope="function")
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
-    cmk_version.omd_site.cache_clear()
+    omd_site.cache_clear()
 
     _touch(cmk.utils.paths.htpasswd_file)
     store.makedirs(cmk.utils.paths.autochecks_dir)
@@ -73,7 +74,7 @@ def patch_omd_site(monkeypatch):
     _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
 
     yield
-    cmk_version.omd_site.cache_clear()
+    omd_site.cache_clear()
 
 
 def _touch(path):

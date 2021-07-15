@@ -15,6 +15,7 @@ from pathlib import Path
 from livestatus import SiteId, SiteConfiguration, SiteConfigurations
 
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site, url_prefix
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -320,14 +321,6 @@ def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
 #   '----------------------------------------------------------------------'
 
 
-def omd_site() -> SiteId:
-    return SiteId(cmk_version.omd_site())
-
-
-def url_prefix() -> str:
-    return "/%s/" % cmk_version.omd_site()
-
-
 def default_single_site_configuration() -> SiteConfigurations:
     return {
         omd_site(): {
@@ -336,7 +329,7 @@ def default_single_site_configuration() -> SiteConfigurations:
             'disable_wato': True,
             'disabled': False,
             'insecure': False,
-            'url_prefix': "/%s/" % omd_site(),
+            'url_prefix': url_prefix(),
             'multisiteurl': '',
             'persist': False,
             'replicate_ec': False,

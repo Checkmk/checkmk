@@ -14,6 +14,7 @@ from livestatus import SiteId
 import cmk.utils.store as store
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.globals import g, user
@@ -56,8 +57,8 @@ def release_users_lock() -> None:
 def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the WATO master site
-    default_cfg = user_sync_default_config(config.omd_site())
-    return config.site(config.omd_site()).get("user_sync", default_cfg)
+    default_cfg = user_sync_default_config(omd_site())
+    return config.site(omd_site()).get("user_sync", default_cfg)
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".

@@ -11,10 +11,10 @@ import json
 from typing import Optional, Any, Dict, List, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
+from cmk.utils.site import url_prefix
 
 from cmk.gui.sites import SiteId, filter_available_site_choices
 import cmk.gui.pages
-import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user
@@ -236,7 +236,7 @@ def render_link(text: Union[str, HTML],
     # [2] /absolute/link.py
     # [3] relative.py
     if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
-        url = config.url_prefix() + "check_mk/" + url
+        url = url_prefix() + "check_mk/" + url
     return html.render_a(text,
                          href=url,
                          class_="link",

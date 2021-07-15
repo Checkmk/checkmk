@@ -11,6 +11,8 @@ This folder collects individual endpoints not fitting into the other endpoint fo
 import sys
 
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
+
 from cmk.gui.globals import request
 
 from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas, constructors
@@ -22,7 +24,7 @@ def search(param):
     if request.args.get('fail'):
         raise Exception("This is an intentional failure.")
     return constructors.serve_json({
-        "site": cmk_version.omd_site(),
+        "site": omd_site(),
         "group": request.environ.get('mod_wsgi.application_group', 'unknown'),
         "rest_api": {
             'revision': '0',

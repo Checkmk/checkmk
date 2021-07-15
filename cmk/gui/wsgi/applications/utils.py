@@ -10,8 +10,9 @@ import functools
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
+from cmk.utils.site import url_prefix
 
-from cmk.gui import config, login, pages, modules
+from cmk.gui import login, pages, modules
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import (
     MKAuthException,
@@ -118,7 +119,7 @@ def _handle_not_authenticated() -> Response:
             post_login_url = makeuri_contextless(request, [("start_url", post_login_url)],
                                                  filename="index.py")
         raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
-                           (config.url_prefix(), urlencode(post_login_url)))
+                           (url_prefix(), urlencode(post_login_url)))
 
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally

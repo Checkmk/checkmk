@@ -47,6 +47,7 @@ import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
 import cmk.utils.license_usage.samples as license_usage_samples
+from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -740,7 +741,7 @@ class ActivateChangesManager(ActivateChanges):
             # Do not create a snapshot for the local site. All files are already in place
             site_snapshot_settings = self._site_snapshot_settings.copy()
             try:
-                del site_snapshot_settings[config.omd_site()]
+                del site_snapshot_settings[omd_site()]
             except KeyError:
                 pass
 
@@ -1375,7 +1376,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             log_audit("activate-changes", _("Started activation of site %s") % self._site_id)
 
-            if cmk_version.is_expired_trial() and self._site_id != config.omd_site():
+            if cmk_version.is_expired_trial() and self._site_id != omd_site():
                 raise MKGeneralException(get_trial_expired_message())
 
             if self.is_sync_needed(self._site_id):
@@ -1810,7 +1811,7 @@ def _add_extensions_for_license_usage():
 
 
 def confirm_all_local_changes() -> None:
-    ActivateChanges().confirm_site_changes(config.omd_site())
+    ActivateChanges().confirm_site_changes(omd_site())
 
 
 def get_pending_changes_info() -> Optional[str]:
@@ -1871,7 +1872,7 @@ def _execute_post_config_sync_actions(site_id):
 
 
 def verify_remote_site_config(site_id: SiteId) -> None:
-    our_id = config.omd_site()
+    our_id = omd_site()
 
     if not config.is_single_local_site():
         raise MKGeneralException(

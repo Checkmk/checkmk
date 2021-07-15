@@ -16,6 +16,7 @@ from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 from cmk.gui.sites import SiteConfigurations
@@ -216,12 +217,12 @@ class SiteManagement:
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
 
         # Connection
-        if site_configuration["socket"][0] == "local" and site_id != config.omd_site():
+        if site_configuration["socket"][0] == "local" and site_id != omd_site():
             raise MKUserError(
                 "method_sel",
                 _("You can only configure a local site connection for "
                   "the local site. The site IDs ('%s' and '%s') are "
-                  "not equal.") % (site_id, config.omd_site()))
+                  "not equal.") % (site_id, omd_site()))
 
         # Timeout
         if "timeout" in site_configuration:
@@ -339,7 +340,7 @@ class SiteManagement:
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
-                                           sites=[config.omd_site()])
+                                           sites=[omd_site()])
 
     @classmethod
     def _affected_config_domains(cls):
@@ -608,7 +609,7 @@ def _create_nagvis_backends(sites_config):
         '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
     ]
     for site_id, site in sites_config.items():
-        if site == config.omd_site():
+        if site == omd_site():
             continue  # skip local site, backend already added by omd
 
         socket = _encode_socket_for_nagvis(site_id, site)

@@ -19,6 +19,7 @@ from six import ensure_binary, ensure_str
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 import cmk.utils.paths
+from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -182,7 +183,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
-            mkeventd.execute_command("RELOAD", site=config.omd_site())
+            mkeventd.execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
             if hooks.registered('mkeventd-activate-changes'):
                 hooks.call("mkeventd-activate-changes")

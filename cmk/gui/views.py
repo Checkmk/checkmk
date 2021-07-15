@@ -25,6 +25,7 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.site import omd_site
 
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -1925,7 +1926,7 @@ def _add_rest_api_menu_entries(view_renderer, queries):
         except ValueError:
             continue
         try:
-            url = create_url(config.omd_site(), query)
+            url = create_url(omd_site(), query)
         except ValueError:
             continue
         table = cast(str, query.table.__tablename__)

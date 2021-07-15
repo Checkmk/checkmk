@@ -8,8 +8,8 @@
 from typing import Optional, Type
 
 import cmk.utils.paths
+from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
 from cmk.gui.i18n import _
@@ -265,7 +265,7 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
         return ModeBackupKeyManagement
 
     def _file_name(self, key_id, key):
-        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
+        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), omd_site(), key_id)
 
 
 @mode_registry.register

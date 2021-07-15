@@ -36,6 +36,7 @@ from cryptography.hazmat.primitives import hashes
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
+from cmk.utils.site import omd_site
 
 from cmk.gui.sites import SiteStatus
 import cmk.gui.sites
@@ -126,7 +127,7 @@ class ModeEditSite(WatoMode):
         self._clone_id = request.get_ascii_input("clone")
         self._new = self._site_id is None
 
-        if cmk_version.is_expired_trial() and (self._new or self._site_id != config.omd_site()):
+        if cmk_version.is_expired_trial() and (self._new or self._site_id != omd_site()):
             raise MKUserError(None, get_trial_expired_message())
 
         configured_sites = self._site_mgmt.load_sites()
@@ -227,11 +228,11 @@ class ModeEditSite(WatoMode):
         if not site_spec["replication"] and not config.site_is_local(self._site_id):
             clear_site_replication_status(self._site_id)
 
-        if self._site_id != config.omd_site():
+        if self._site_id != omd_site():
             # On central site issue a change only affecting the GUI
             watolib.add_change("edit-sites",
                                msg,
-                               sites=[config.omd_site()],
+                               sites=[omd_site()],
                                domains=[watolib.ConfigDomainGUI])
 
         flash(msg)
@@ -301,7 +302,7 @@ class ModeEditSite(WatoMode):
         # In case one tries to add a site with a Site-ID "[central_site]_bi" this will result
         # in a name conflict between the central site BI backend and the remote site livestatus
         # backend. See CMK-6968.
-        if value == "%s_bi" % config.omd_site():
+        if value == "%s_bi" % omd_site():
             raise MKUserError(
                 varprefix,
                 _("You can not connect remote sites named <tt>[central_site]_bi</tt>. You will "
@@ -541,7 +542,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         # Prevent deletion of the local site. This does not make sense, even on
         # standalone sites or distributed remote sites.
-        if delete_id == config.omd_site():
+        if delete_id == omd_site():
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
@@ -572,7 +573,7 @@ class ModeDistributedMonitoring(WatoMode):
         watolib.add_change("edit-site",
                            _("Logged out of remote site %s") % html.render_tt(site["alias"]),
                            domains=[watolib.ConfigDomainGUI],
-                           sites=[config.omd_site()])
+                           sites=[omd_site()])
         flash(_("Logged out."))
         return redirect(mode_url("sites"))
 
@@ -694,7 +695,7 @@ class ModeDistributedMonitoring(WatoMode):
 
         # Prevent deletion of the local site. This does not make sense, even on
         # standalone sites or distributed remote sites.
-        if site_id == config.omd_site():
+        if site_id == omd_site():
             html.empty_icon_button()
         else:
             delete_url = make_confirm_link(
@@ -1092,7 +1093,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     def _save(self):
         watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
-        if self._site_id == config.omd_site():
+        if self._site_id == omd_site():
             save_site_global_settings(self._current_settings)
 
     def _show_global_setting(self):

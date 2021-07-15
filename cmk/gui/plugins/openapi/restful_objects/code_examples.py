@@ -19,7 +19,7 @@ import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
-from cmk.utils.version import omd_site
+from cmk.utils.site import omd_site
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi, fill_out_path_template
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC

@@ -11,6 +11,7 @@ from typing import Dict
 from pathlib import Path
 
 import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -60,7 +61,7 @@ class FetchAgentOutputRequest:
                 _("Host %s does not exist on remote site %s. This "
                   "may be caused by a failed configuration synchronization. Have a look at "
                   "the <a href=\"wato.py?folder=&mode=changelog\">activate changes page</a> "
-                  "for further information.") % (host_name, config.omd_site()))
+                  "for further information.") % (host_name, omd_site()))
         host.need_permission("read")
 
         return cls(host, serialized["agent_type"])

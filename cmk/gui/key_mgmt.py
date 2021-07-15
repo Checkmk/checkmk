@@ -12,9 +12,9 @@ from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
 from cmk.gui.table import table_element
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, transactions, response, user
 from cmk.gui.valuespec import (
@@ -492,7 +492,7 @@ class PageDownloadKey:
 
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
+    cert.get_subject().O = "Check_MK Site %s" % omd_site()
     cert.get_subject().CN = user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)

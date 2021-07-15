@@ -67,7 +67,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
-
+from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName
 
 if cmk_version.is_managed_edition():
@@ -1481,7 +1481,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if self.has_parent():
             return self.parent().site_id()
         if not config.is_wato_slave_site():
-            return config.omd_site()
+            return omd_site()
 
         # Placeholder for "central site". This is only relevant when using WATO on a remote site
         # and a host / folder has no site set.

@@ -16,6 +16,7 @@ from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
 from cmk.utils.type_defs import HostName
+from cmk.utils.site import omd_site
 
 from cmk.gui import sites
 from cmk.gui.globals import html, theme, request, user
@@ -144,7 +145,7 @@ class ParentChildTopologyPage(Page):
         # If no explicit site is set and the number of initially displayed hosts
         # exceeds the auto growth range, only the hosts of the master site are shown
         if len(hosts) > max_nodes:
-            hostnames = {x[1] for x in hosts if x[0] == config.omd_site()}
+            hostnames = {x[1] for x in hosts if x[0] == omd_site()}
         else:
             hostnames = {x[1] for x in hosts}
 

@@ -59,6 +59,7 @@ import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKIPAddressLookupError, MKGeneralException, MKTerminate
@@ -3411,7 +3412,7 @@ class ConfigCache:
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk_version.omd_site(),
+            'site': omd_site(),
             'address_family': 'ip-v4-only',
             # Assume it's an aux tag in case there is a tag configured without known group
             **{tag_to_group_map.get(tag_id, tag_id): tag_id for tag_id in tag_list},
@@ -3448,7 +3449,7 @@ class ConfigCache:
             'agent': 'cmk-agent',
             'criticality': 'prod',
             'snmp_ds': 'no-snmp',
-            'site': cmk_version.omd_site(),
+            'site': omd_site(),
             'address_family': 'ip-v4-only',
         }
 

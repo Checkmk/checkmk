@@ -13,6 +13,8 @@ from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
+from cmk.utils.site import omd_site
+
 import cmk.gui.config as config
 from cmk.gui.globals import request
 from cmk.gui.http import Response
@@ -31,7 +33,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     Serializable,
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.utils import version
 
 
 @contextlib.contextmanager
@@ -45,7 +46,7 @@ def _request_context(secure=True):
     else:
         protocol = 'http'
     # Previous tests already set the site to "heute", which makes this test fail.
-    version.omd_site.cache_clear()
+    omd_site.cache_clear()
     with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}), \
             request_context(create_environ(base_url=f"{protocol}://localhost:5000/")):
         yield
@@ -76,7 +77,7 @@ def absolute_url(href):
     if href.startswith("/"):
         href = href.lstrip("/")
 
-    return f"{request.host_url}{config.omd_site()}/check_mk/api/1.0/{href}"
+    return f"{request.host_url}{omd_site()}/check_mk/api/1.0/{href}"
 
 
 def link_rel(

@@ -20,6 +20,7 @@ import livestatus
 
 import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
+from cmk.utils.site import omd_site
 
 import cmk.gui.pages
 import cmk.gui.i18n
@@ -92,7 +93,7 @@ def _show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_sil
         crash_url = makeuri(
             request,
             [
-                ("site", config.omd_site()),
+                ("site", omd_site()),
                 ("crash_id", crash.ident_to_text()),
             ],
             filename="crash.py",

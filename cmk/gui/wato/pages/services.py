@@ -16,6 +16,7 @@ import six
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
+from cmk.utils.site import omd_site
 
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.htmllib import HTML, foldable_container
@@ -178,7 +179,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                 _("Host %s does not exist on remote site %s. This "
                   "may be caused by a failed configuration synchronization. Have a look at "
                   "the <a href=\"wato.py?folder=&mode=changelog\">activate changes page</a> "
-                  "for further information.") % (host_name, config.omd_site()))
+                  "for further information.") % (host_name, omd_site()))
         host.need_permission("read")
 
         ascii_input = request.get_ascii_input("options")

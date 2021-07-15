@@ -42,6 +42,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.render
 import cmk.utils.packaging
+from cmk.utils.site import omd_site
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -2281,7 +2282,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             self._add_change("edit-rule",
                              _("Modified event correlation rule %s") % self._rule["id"])
             # Reset hit counters of this rule
-            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], config.omd_site())
+            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self):
@@ -2339,7 +2340,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             new_mode = "sync"
         else:
             new_mode = "takeover"
-        cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
+        cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], omd_site())
         watolib.log_audit("mkeventd-switchmode",
                           _("Switched replication slave mode to %s") % new_mode)
         flash(_("Switched to %s mode") % new_mode)

@@ -16,6 +16,7 @@ import multiprocessing
 from livestatus import LocalConnection
 
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import omd_site
 
 import cmk.gui.utils
 import cmk.gui.userdb as userdb
@@ -209,7 +210,7 @@ class ACTestTmpfs(ACTest):
         return True
 
     def execute(self) -> Iterator[ACResult]:
-        if self._tmpfs_mounted(config.omd_site()):
+        if self._tmpfs_mounted(omd_site()):
             yield ACResultOK(_("The temporary filesystem is mounted"))
         else:
             yield ACResultWARN(

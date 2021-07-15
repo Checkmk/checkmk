@@ -31,6 +31,7 @@ from cmk.utils.log import console
 import cmk.utils.packaging as packaging
 import cmk.utils.site as site
 from cmk.utils.structured_data import StructuredDataStore
+from cmk.utils.site import omd_site
 
 from cmk.utils.diagnostics import (
     OPT_LOCAL_FILES,
@@ -573,7 +574,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         url = "http://%s:%s/%s/check_mk/report.py?" % (
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
-            cmk_version.omd_site(),
+            omd_site(),
         ) + urllib.parse.urlencode([
             ("_username", "automation"),
             ("_secret", automation_secret),

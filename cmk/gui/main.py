@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.site import omd_site
+
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -36,5 +38,5 @@ def _get_start_url() -> str:
 
 def get_page_heading() -> str:
     if "%s" in config.page_heading:
-        return config.page_heading % (config.site(config.omd_site()).get('alias', _("GUI")))
+        return config.page_heading % (config.site(omd_site()).get('alias', _("GUI")))
     return config.page_heading

@@ -19,6 +19,7 @@ from werkzeug.local import LocalProxy
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
+from cmk.utils.site import url_prefix, omd_site
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -84,13 +85,13 @@ def auth_cookie_name() -> str:
 
 
 def site_cookie_suffix() -> str:
-    url_prefix = config.url_prefix()
+    prefix = url_prefix()
 
     # Strip of eventual present "http://<host>". DIRTY!
-    if url_prefix.startswith('http:'):
-        url_prefix = url_prefix[url_prefix[7:].find('/') + 7:]
+    if prefix.startswith('http:'):
+        prefix = prefix[prefix[7:].find('/') + 7:]
 
-    return os.path.dirname(url_prefix).replace('/', '_')
+    return os.path.dirname(prefix).replace('/', '_')
 
 
 def _load_secret() -> str:
@@ -464,7 +465,7 @@ class LoginPage(Page):
             if not password:
                 raise MKUserError('_password', _('No password given.'))
 
-            default_origtarget = config.url_prefix() + "check_mk/"
+            default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)
 
             # Disallow redirections to:
@@ -599,14 +600,14 @@ class LogoutPage(Page):
         userdb.on_logout(user.id, session_id)
 
         if auth_type == 'cookie':
-            raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
+            raise HTTPRedirect(url_prefix() + 'check_mk/login.py')
 
         # Implement HTTP logout with cookie hack
         if not request.has_cookie('logout'):
             response.headers['WWW-Authenticate'] = ('Basic realm="OMD Monitoring Site %s"' %
-                                                    config.omd_site())
+                                                    omd_site())
             response.set_http_cookie('logout', '1', secure=request.is_secure)
             raise FinalizeRequest(http.client.UNAUTHORIZED)
 
         response.delete_cookie('logout')
-        raise HTTPRedirect(config.url_prefix() + 'check_mk/')
+        raise HTTPRedirect(url_prefix() + 'check_mk/')

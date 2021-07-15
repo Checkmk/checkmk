@@ -4,12 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from pathlib import Path
 from typing import Dict, Optional
+from functools import lru_cache
+
+from livestatus import SiteId
 
 import cmk.utils.paths
+from cmk.utils.i18n import _
+from cmk.utils.exceptions import MKGeneralException
 
 OMDConfig = Dict[str, str]
+
+
+@lru_cache
+def omd_site() -> SiteId:
+    try:
+        return SiteId(os.environ["OMD_SITE"])
+    except KeyError:
+        raise MKGeneralException(
+            _("OMD_SITE environment variable not set. You can "
+              "only execute this in an OMD site."))
+
+
+def url_prefix() -> str:
+    return "/%s/" % omd_site()
 
 
 def get_omd_config(omd_root: Optional[Path] = None) -> OMDConfig:

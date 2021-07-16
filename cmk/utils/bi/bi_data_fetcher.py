@@ -28,7 +28,7 @@ from cmk.utils.bi.bi_lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
 )
-from livestatus import SiteId, LivestatusResponse, LivestatusColumn
+from livestatus import SiteId, LivestatusResponse, LivestatusColumn, LivestatusOutputFormat
 from pathlib import Path
 
 SiteProgramStart = Tuple[SiteId, int]
@@ -108,12 +108,16 @@ class BIStructureFetcher:
         # If something happens (reload config) between the host and service query, we simply ignore it
         host_query = "GET hosts\nColumns: %s\nCache: reload\n" % " ".join(
             self._host_structure_columns())
-        host_rows = self._sites_callback.query(host_query, list(only_sites.keys()))
+        host_rows = self._sites_callback.query(host_query,
+                                               list(only_sites.keys()),
+                                               output_format=LivestatusOutputFormat.JSON)
 
         service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
             self._service_structure_columns())
         host_service_lookup: Dict[HostName, List] = {}
-        for row in self._sites_callback.query(service_query, list(only_sites.keys())):
+        for row in self._sites_callback.query(service_query,
+                                              list(only_sites.keys()),
+                                              output_format=LivestatusOutputFormat.JSON):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
         site_data: Dict[str, Dict] = {x: {} for x in only_sites.keys()}
@@ -291,7 +295,10 @@ class BIStatusFetcher(ABCBIStatusFetcher):
             host_filter += "Or: %d\n" % len(req_hosts)
 
         query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
-        return self.create_bi_status_data(self._sites_callback.query(query, list(req_sites)))
+        return self.create_bi_status_data(
+            self._sites_callback.query(query,
+                                       list(req_sites),
+                                       output_format=LivestatusOutputFormat.JSON))
 
     # This variant of the function is configured not with a list of
     # hosts but with a livestatus filter header and a list of columns

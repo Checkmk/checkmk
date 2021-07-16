@@ -45,6 +45,7 @@ pathlib_paths = [
     "diagnostics_dir",
     "site_config_dir",
     "license_usage_dir",
+    "profile_dir",
 ]
 
 

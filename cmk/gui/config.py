@@ -60,9 +60,6 @@ tags = cmk.utils.tags.TagConfig()
 # hard coded in various permissions
 builtin_role_ids = ["user", "admin", "guest"]
 
-# Base directory of dynamic configuration
-config_dir = cmk.utils.paths.var_dir + "/web"
-
 config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
 
 

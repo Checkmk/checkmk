@@ -605,20 +605,20 @@ def test_load_custom_attr_convert(user_id):
 
 
 def test_cleanup_user_profiles_keep_recently_updated(user_id):
-    (profile := Path(config.config_dir, "profile")).mkdir()
+    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
     (profile / "bla.mk").touch()
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
     assert profile.exists()
 
 
 def test_cleanup_user_profiles_remove_empty(user_id):
-    (profile := Path(config.config_dir, "profile")).mkdir()
+    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
     assert not profile.exists()
 
 
 def test_cleanup_user_profiles_remove_abandoned(user_id):
-    (profile := Path(config.config_dir, "profile")).mkdir()
+    (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
     (bla := profile / "bla.mk").touch()
     with on_time('2018-04-15 16:50', 'CET'):
         os.utime(bla, (time.time(), time.time()))
@@ -627,13 +627,13 @@ def test_cleanup_user_profiles_remove_abandoned(user_id):
 
 
 def test_cleanup_user_profiles_keep_active_profile(user_id):
-    assert Path(config.config_dir, user_id).exists()
+    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
-    assert Path(config.config_dir, user_id).exists()
+    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()
 
 
 def test_cleanup_user_profiles_keep_active_profile_old(user_id):
-    profile_dir = Path(config.config_dir, user_id)
+    profile_dir = cmk.utils.paths.profile_dir.joinpath(user_id)
 
     assert profile_dir.exists()
 
@@ -642,4 +642,4 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id):
             os.utime(file_path, (time.time(), time.time()))
 
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
-    assert Path(config.config_dir, user_id).exists()
+    assert cmk.utils.paths.profile_dir.joinpath(user_id).exists()

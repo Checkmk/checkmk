@@ -32,6 +32,7 @@ from livestatus import LivestatusTestingError
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
@@ -301,23 +302,22 @@ def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
                       lock: bool) -> Dict[Tuple[UserId, str], Dict]:
     visuals: Dict[Tuple[UserId, str], Dict] = {}
 
-    subdirs = os.listdir(config.config_dir)
-    for user_id in subdirs:
+    for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
-            dirpath = config.config_dir + "/" + user_id
-            if not os.path.isdir(dirpath):
+            if not dirpath.exists():
                 continue
 
             # Be compatible to old views.mk. The views.mk contains customized views
             # in an old format which will be loaded, transformed and when saved stored
             # in users_views.mk. When this file exists only this file is used.
-            path = "%s/user_%s.mk" % (dirpath, what)
-            if what == 'views' and not os.path.exists(path):
-                path = "%s/%s.mk" % (dirpath, what)
+            path = dirpath.joinpath("user_%s.mk" % what)
+            if what == 'views' and not path.exists():
+                path = dirpath.joinpath("%s.mk" % what)
 
-            if not os.path.exists(path):
+            if not path.exists():
                 continue
 
+            user_id = dirpath.name
             if not userdb.user_exists(UserId(user_id)):
                 continue
 
@@ -377,13 +377,11 @@ def declare_visual_permission(what, name, visual):
 
 # Load all users visuals just in order to declare permissions of custom visuals
 def declare_custom_permissions(what):
-    subdirs = os.listdir(config.config_dir)
-    for user_id in subdirs:
+    for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
-            dirpath = config.config_dir + "/" + user_id
-            if os.path.isdir(dirpath):
-                path = "%s/%s.mk" % (dirpath, what)
-                if not os.path.exists(path):
+            if dirpath.is_dir():
+                path = dirpath.joinpath("%s.mk" % what)
+                if not path.exists():
                     continue
                 visuals = store.load_object_from_file(path, default={})
                 for name, visual in visuals.items():

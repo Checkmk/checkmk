@@ -151,6 +151,7 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "var/check_mk/precompiled"))
     monkeypatch.setattr("cmk.utils.paths.discovered_host_labels_dir",
                         Path(tmp_dir, "var/check_mk/discovered_host_labels"))
+    monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
 
 
 def import_module(pathname):

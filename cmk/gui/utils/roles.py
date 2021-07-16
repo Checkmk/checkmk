@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 from typing import Dict, List, Optional
 
+import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
@@ -68,8 +68,8 @@ def roles_of_user(user_id: Optional[UserId]) -> List[str]:
         return ["guest"]
     if config.users is not None and user_id in config.users:
         return ["user"]
-    if user_id is not None and os.path.exists(config.config_dir + "/" + user_id +
-                                              "/automation.secret"):
+    if user_id is not None and cmk.utils.paths.profile_dir.joinpath(user_id,
+                                                                    "automation.secret").exists():
         return ["guest"]  # unknown user with automation account
     if 'roles' in config.default_user_profile:
         return existing_role_ids(config.default_user_profile['roles'])

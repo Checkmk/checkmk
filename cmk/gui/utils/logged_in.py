@@ -13,6 +13,7 @@ from typing import Optional, Dict, Union, Tuple, Any, Set, Iterator, List, Conte
 
 from livestatus import SiteConfigurations, SiteId
 from cmk.utils.type_defs import UserId
+import cmk.utils.paths
 import cmk.utils.store as store
 
 from cmk.gui.globals import local
@@ -439,9 +440,9 @@ def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
     if user_id is None:
         return None
 
-    confdir = config.config_dir + "/" + user_id
+    confdir = cmk.utils.paths.profile_dir / user_id
     store.mkdir(confdir)
-    return confdir
+    return str(confdir)
 
 
 def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
@@ -476,6 +477,6 @@ def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:
-    path = config.config_dir + "/" + user_id + "/" + name + ".mk"
-    store.mkdir(os.path.dirname(path))
+    path = cmk.utils.paths.profile_dir.joinpath(user_id, name + ".mk")
+    store.mkdir(path.parent)
     store.save_object_to_file(path, data)

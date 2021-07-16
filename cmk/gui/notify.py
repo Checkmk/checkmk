@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Tuple
 
 from six import ensure_str
 
+import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.pages
@@ -54,7 +55,7 @@ from cmk.gui.utils.urls import makeuri
 def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
+    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
@@ -83,8 +84,8 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
-    store.mkdir(os.path.dirname(path))
+    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
+    store.mkdir(path.parent)
     store.save_object_to_file(path, messages)
 
 

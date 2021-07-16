@@ -3,13 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import os
 
 from typing import List, Dict, Tuple as _Tuple
 from livestatus import SiteId
 
+import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 
 from cmk.utils.type_defs import HostName
@@ -249,13 +248,11 @@ def _rename_host_in_multisite(oldname, newname):
     # also only users that really have a profile.
     users_changed = 0
     total_changed = 0
-    for userid in os.listdir(config.config_dir):
-        if userid[0] == '.':
-            continue
-        if not os.path.isdir(config.config_dir + "/" + userid):
+    for profile_path in cmk.utils.paths.profile_dir.iterdir():
+        if not profile_path.is_dir():
             continue
 
-        favpath = config.config_dir + "/" + userid + "/favorites.mk"
+        favpath = profile_path / "favorites.mk"
         num_changed = 0
         favorites = store.load_object_from_file(favpath, default=[], lock=True)
         for nr, entry in enumerate(favorites):

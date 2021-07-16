@@ -31,7 +31,6 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.table import table_element, init_rowselect
@@ -890,12 +889,11 @@ class Overridable(Base):
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        for user_dir in os.listdir(config.config_dir):
-            user_id = UserId(ensure_str(user_dir))
+        for profile_path in cmk.utils.paths.profile_dir.iterdir():
+            user_id = UserId(ensure_str(profile_path.name))
             try:
-                path = "%s/%s/user_%ss.mk" % (config.config_dir, ensure_str(user_id),
-                                              cls.type_name())
-                if not os.path.exists(path):
+                path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
+                if not path.exists():
                     continue
 
                 if not userdb.user_exists(user_id):

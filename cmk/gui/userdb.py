@@ -186,9 +186,8 @@ def user_exists(username: UserId) -> bool:
 
 
 def _user_exists_according_to_profile(username: UserId) -> bool:
-    base_path = config.config_dir + "/" + ensure_str(username) + "/"
-    return os.path.exists(base_path + "transids.mk") \
-        or os.path.exists(base_path + "serial.mk")
+    base_path = cmk.utils.paths.profile_dir / username
+    return base_path.joinpath("transids.mk").exists() or base_path.joinpath("serial.mk").exists()
 
 
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
@@ -1420,7 +1419,7 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
             self._logger.warning("Found no users. Be careful and not cleaning up anything.")
             return
 
-        profile_base_dir = Path(config.config_dir)
+        profile_base_dir = cmk.utils.paths.profile_dir
         profiles = set(profile_dir.name for profile_dir in profile_base_dir.iterdir())
 
         abandoned_profiles = sorted(profiles - users)

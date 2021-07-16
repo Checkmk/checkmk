@@ -7,9 +7,10 @@
 import pytest
 from pathlib import Path
 
+import cmk.utils.paths
+
 from cmk.gui.globals import user as global_user
 import cmk.gui.config as config
-import cmk.gui.sites as sites
 from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext,
                                      SuperUserContext)
 from cmk.gui.exceptions import MKAuthException
@@ -207,10 +208,9 @@ MONITORING_USER_FAVORITES = ['heute;CPU load']
 
 
 @pytest.fixture(name="monitoring_user")
-def fixture_monitoring_user(tmp_path, mocker):
+def fixture_monitoring_user(mocker):
     """Returns a "Normal monitoring user" object."""
-    config_dir = tmp_path / 'config_dir'
-    user_dir = config_dir / 'test'
+    user_dir = cmk.utils.paths.profile_dir / "test"
     user_dir.mkdir(parents=True)
     user_dir.joinpath('cached_profile.mk').write_text(str(MONITORING_USER_CACHED_PROFILE))
     # SITE STATUS snapin settings:
@@ -220,7 +220,6 @@ def fixture_monitoring_user(tmp_path, mocker):
     # Favorites set in the commands menu:
     user_dir.joinpath('favorites.mk').write_text(str(MONITORING_USER_FAVORITES))
 
-    mocker.patch.object(config, 'config_dir', str(config_dir))
     mocker.patch.object(roles, 'roles_of_user', lambda user_id: ['user'])
 
     assert config.builtin_role_ids == ['user', 'admin', 'guest']
@@ -233,7 +232,7 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.id == 'test'
     assert monitoring_user.alias == 'Test user'
     assert monitoring_user.email == 'test_user@tribe29.com'
-    assert monitoring_user.confdir.endswith('/config_dir/test')
+    assert monitoring_user.confdir.endswith('/web/test')
 
     assert monitoring_user.role_ids == ['user']
     assert monitoring_user.get_attribute('roles') == ['user']
@@ -273,7 +272,7 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
-def test_monitoring_user_read_broken_file(monitoring_user, tmp_path):
+def test_monitoring_user_read_broken_file(monitoring_user):
     with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
         f.write("%#%#%")
 

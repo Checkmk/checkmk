@@ -1556,7 +1556,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         "  run         : no\n"
         "\n"
         "- pattern     : '3'\n"
-        "  group       : Users\n"
+        "  group       : SomeUsers\n"
         "\n"
         "- pattern     : '4'\n"
         "  retry_count : 4\n"

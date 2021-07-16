@@ -26,47 +26,50 @@ static std::atomic<bool> S_OnStartCalled = false;
 
 bool ConfigLoaded() { return S_ConfigLoaded; }
 
+std::pair<std::filesystem::path, std::filesystem::path> FindTestDirs(
+    const std::filesystem::path& base) {
+    auto root_dir = fs::path{base} / "test" / "root";
+    auto data_dir = fs::path{base} / "test" / "data";
+    std::error_code ec;
+
+    if (fs::exists(root_dir, ec) && fs::exists(data_dir, ec)) {
+        return {root_dir, data_dir};
+    }
+
+    return {};
+}
+
 std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     AppType app_type) {
-    constexpr std::wstring_view environment_variable{};
+    std::wstring dir;
     switch (app_type) {
         case AppType::exe:
-            return {};
-        case AppType::test:
+            dir = tools::win::GetEnv(env::test_integration_root);
+            if (dir.empty()) {
+                return {};
+            }
+            XLOG::l.i("YOU ARE USING '{}' set by environment variable '{}'",
+                      wtools::ToUtf8(dir),
+                      wtools::ToUtf8(env::test_integration_root));
             break;
+
+        case AppType::test: {
+            dir = tools::win::GetEnv(env::test_root);
+            if (!dir.empty()) {
+                break;
+            }
+            dir = wtools::GetCurrentExePath();
+            XLOG::l.i(
+                "Environment variable {} not found, fallback to exe path '{}'",
+                wtools::ToUtf8(env::test_root), wtools::ToUtf8(dir));
+            break;
+        }
         default:
             XLOG::l("Bad Mode [{}]", static_cast<int>(app_type));
             return {};
     }
 
-    auto base = cma::tools::win::GetEnv(env::test_root);
-    std::error_code ec;
-    if (base.empty()) {
-        auto exe = wtools::GetCurrentExePath();
-        XLOG::l.i(
-            "Environment variable {} not found, fallback to exe path '{}'",
-            wtools::ToUtf8(env::test_root), exe);
-        auto root = exe.parent_path() / "test" / "root";
-        auto data = exe.parent_path() / "test" / "data";
-        if (fs::exists(root, ec) && fs::exists(data, ec)) {
-            return {root, data};
-        }
-
-        return {};
-    }
-
-    namespace fs = std::filesystem;
-    auto root_dir = fs::path{base} / "test" / "root";
-    auto data_dir = fs::path{base} / "test" / "data";
-
-    if (!std::filesystem::exists(data_dir, ec) &&
-        !fs::create_directories(data_dir, ec)) {
-        XLOG::l.crit("Cannot create test folder {} error:{}", data_dir,
-                     ec.value());
-        return {};
-    }
-
-    return {root_dir, data_dir};
+    return FindTestDirs(dir);
 }
 
 namespace cfg {

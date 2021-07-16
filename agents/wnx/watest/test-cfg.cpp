@@ -51,8 +51,10 @@ static void SetEnabledFlag(bool flag) {
 }
 
 TEST(Cma, Commander) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     //
+    auto temp_cfg = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_cfg->loadFactoryConfig());
     auto yaml = cma::cfg::GetLoadedConfig();
     auto yaml_global = yaml[cma::cfg::groups::kGlobal];
     EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
@@ -368,12 +370,32 @@ TEST(Cma, FindAlternateDirs) {
         EXPECT_EQ(r, "");
         EXPECT_EQ(d, "");
     }
+
     auto expected = tools::win::GetEnv(env::test_root);
     auto [r, d] = cma::FindAlternateDirs(AppType::test);
-    EXPECT_TRUE(fs::exists(r)) << "Not exists " << r;
-    EXPECT_TRUE(fs::exists(d)) << "Not exists " << d;
     EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
     EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);
+}
+
+class CmaFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        expected_ = tst::MakeTempFolderInTempPath(L"special_dir");
+        fs::create_directories(expected_ / "test" / "root");
+        fs::create_directories(expected_ / "test" / "data");
+        tools::win::SetEnv(std::wstring{env::test_integration_root},
+                           expected_.wstring());
+    }
+    void TearDown() override {
+        tools::win::SetEnv(std::wstring{env::test_integration_root}, {});
+        fs::remove_all(expected_);
+    }
+    fs::path expected_;
+};
+TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
+    auto [r, d] = cma::FindAlternateDirs(AppType::exe);
+    EXPECT_TRUE(r.wstring().find(expected_) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected_) != std::wstring::npos);
 }
 
 TEST(CmaCfg, ReloadCfg) {

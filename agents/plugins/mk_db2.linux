@@ -126,7 +126,7 @@ for INSTANCE in $INSTANCES; do
             fi
             GET_PORT=0
         fi
-        waitmax -s 9 10 su "${INSTANCE}" -s /bin/bash -c "get_sections_for_single_db \"${INSTANCE}\" \"${DB}\" \"${VERSION_NUMBER}\" \"${NOW}\" \"${DB_PORT}\""
+        waitmax 10 su "${INSTANCE}" -s /bin/bash -c "get_sections_for_single_db \"${INSTANCE}\" \"${DB}\" \"${VERSION_NUMBER}\" \"${NOW}\" \"${DB_PORT}\""
     done
 done
 

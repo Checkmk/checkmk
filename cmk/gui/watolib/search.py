@@ -43,10 +43,10 @@ from cmk.gui.http import Request, Response
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
+from cmk.gui.utils.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
-from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 if TYPE_CHECKING:
@@ -129,6 +129,13 @@ class IndexBuilder:
         return cls.add_to_prefix(prefix, "match_texts")
 
     def _build_index(
+        self,
+        match_item_generators: Iterable[ABCMatchItemGenerator],
+    ) -> None:
+        with SuperUserContext():
+            self._do_build_index(match_item_generators)
+
+    def _do_build_index(
         self,
         match_item_generators: Iterable[ABCMatchItemGenerator],
     ) -> None:

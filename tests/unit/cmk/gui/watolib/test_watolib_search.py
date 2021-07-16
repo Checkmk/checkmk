@@ -4,18 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import contextmanager
+
+from typing import Iterator
+
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.gui.globals import user
 from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainApache,
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.globals import user
 from cmk.gui.type_defs import SearchResult
+from cmk.gui.utils.logged_in import _UserContext, LoggedInNobody
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -192,6 +197,7 @@ class TestIndexBuilder:
         index_builder.build_changed_sub_indices("something")
         assert not index_builder.index_is_built(index_builder._redis_client)
 
+    @pytest.mark.usefixtures("with_admin_login")
     def test_language_after_built(
         self,
         monkeypatch: MonkeyPatch,
@@ -352,6 +358,8 @@ class TestIndexSearcher:
                 ('Global settings', [SearchResult(title='global_setting', url='')]),
             ]
 
+
+class TestRealisticSearch:
     @pytest.mark.usefixtures(
         "load_plugins",
         "with_admin_login",
@@ -385,3 +393,70 @@ class TestIndexSearcher:
         live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
         live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
         return live
+
+    @pytest.mark.usefixtures(
+        "load_plugins",
+        "with_admin_login",
+        "fake_omd_default_globals",
+        "fake_diskspace_default_globals",
+        "fake_apache_default_globals",
+        "fake_rrdcached_default_globals",
+        "suppress_automation_calls",
+    )
+    def test_index_is_built_as_super_user(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+    ):
+        """
+        We test that the index is always built as a super user.
+        """
+
+        with _UserContext(LoggedInNobody()):
+            builder = IndexBuilder(real_match_item_generator_registry)
+            with self._livestatus_mock(mock_livestatus):
+                builder.build_full_index()
+
+        searcher = IndexSearcher()
+        searcher._redis_client = builder._redis_client
+
+        # if the search index did not internally use the super user while building, this item would
+        # be missing, because the match item generator for the setup menu only yields entries which
+        # the current user is allowed to see
+        assert list(searcher.search("dynamic host management"))
+
+    @pytest.mark.usefixtures(
+        "load_plugins",
+        "with_admin_login",
+        "fake_omd_default_globals",
+        "fake_diskspace_default_globals",
+        "fake_apache_default_globals",
+        "fake_rrdcached_default_globals",
+        "suppress_automation_calls",
+    )
+    def test_dcd_not_found_if_not_super_user(
+        self,
+        monkeypatch: MonkeyPatch,
+        mock_livestatus: MockLiveStatusConnection,
+    ):
+        """
+        This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
+        build as a super user, the entry "Dynamic host management" is not found.
+        """
+        @contextmanager
+        def SuperUserContext() -> Iterator[None]:
+            yield
+
+        monkeypatch.setattr(
+            search,
+            "SuperUserContext",
+            SuperUserContext,
+        )
+
+        with _UserContext(LoggedInNobody()):
+            builder = IndexBuilder(real_match_item_generator_registry)
+            with self._livestatus_mock(mock_livestatus):
+                builder.build_full_index()
+
+        searcher = IndexSearcher()
+        searcher._redis_client = builder._redis_client
+        assert not list(searcher.search("dynamic host management"))

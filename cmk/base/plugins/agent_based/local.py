@@ -93,20 +93,6 @@ def _try_convert_to_float(value: str) -> Optional[float]:
         return None
 
 
-def _parse_cache(cache_raw: Optional[str], now: float) -> Optional[CacheInfo]:
-    """Parse and preprocess cache info
-    make sure max(..) will give the oldest/most outdated case
-    """
-    if not cache_raw:
-        return None
-    creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
-    age = now - creation_time
-    return CacheInfo(
-        age=age,
-        cache_interval=interval,
-    )
-
-
 def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
     state_mapping: Mapping[str, Tuple[Union[int, str], str]] = {
         "0": (0, ""),
@@ -338,7 +324,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
 
         parsed_data[item] = LocalResult(
-            cache_info=_parse_cache(raw_cached, now),
+            cache_info=CacheInfo.from_raw(raw_cached, now),
             item=item,
             state=State.OK if state == 'P' else State(state),
             apply_levels=state == 'P',

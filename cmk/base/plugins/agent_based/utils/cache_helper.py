@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from ..agent_based_api.v1.render import timespan, percent
 
 
@@ -32,6 +32,17 @@ class CacheInfo(
                 cache_interval=cache_interval,
             ),
         )
+
+    @classmethod
+    def from_raw(cls, cache_raw: Optional[str], now: float) -> Optional["CacheInfo"]:
+        """Parse and preprocess cache info
+        make sure max(..) will give the oldest/most outdated case
+        """
+        if not (cache_raw and cache_raw.startswith("cached(")):
+            return None
+        creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
+        age = now - creation_time
+        return cls(age=age, cache_interval=interval)
 
     @staticmethod
     def _calculate_elapsed_percent(

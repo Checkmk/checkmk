@@ -363,7 +363,7 @@ def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_na
                         title=_("Log files"),
                         entries=[
                             PageMenuEntry(
-                                title=_("Log files of host %s" % host_name),
+                                title=_("Log files of host %s") % host_name,
                                 icon_name="logwatch",
                                 item=make_simple_link(makeuri(request, [('file', '')])),
                             ),

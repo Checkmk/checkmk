@@ -2734,9 +2734,7 @@ def _valuespec_special_agents_aws():
                                  size=50,
                                  help=
                                  _("A unique identifier that might be required when you assume a role in another "
-                                   +
                                    "account. If the administrator of the account to which the role belongs provided "
-                                   +
                                    "you with an external ID, then provide that value in the External ID parameter. "
                                   ))
                          ]))])),

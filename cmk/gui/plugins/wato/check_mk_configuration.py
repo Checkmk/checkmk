@@ -5149,10 +5149,10 @@ def _valuespec_piggybacked_host_files():
         filename="wato.py",
     )
 
-    global_max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a>" %
-                                   global_max_cache_age_uri)
-    max_cache_age_title = _("Use maximum age from <a href=\"%s\">global settings</a> or above" %
-                            global_max_cache_age_uri)
+    global_max_cache_age_title = (_("Use maximum age from <a href=\"%s\">global settings</a>") %
+                                  global_max_cache_age_uri)
+    max_cache_age_title = (_("Use maximum age from <a href=\"%s\">global settings</a> or above") %
+                           global_max_cache_age_uri)
 
     return Dictionary(
         title=_("Processing of Piggybacked Host Data"),

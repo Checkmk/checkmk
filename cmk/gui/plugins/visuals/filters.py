@@ -3150,8 +3150,8 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             raise MKMissingDataError(
                 _("As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
                   "the history of your host problems will appear here. Currently the following "
-                  "Checkmk sites are not monitored: %s. " %
-                  ", ".join(connected_sites - unique_sites_from_services)) + manual_ref)
+                  "Checkmk sites are not monitored: %s. ") %
+                ", ".join(connected_sites - unique_sites_from_services) + manual_ref)
 
         # there are duplicate sites --> filter by PID
         rows_filtered = []

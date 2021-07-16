@@ -325,7 +325,7 @@ class ModeTimeperiods(WatoMode):
                 ("mode", "timeperiods"),
                 ("_delete", name),
             ]),
-            message=_("Do you really want to delete the time period '%s'?" % name))
+            message=_("Do you really want to delete the time period '%s'?") % name)
 
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy"), "clone")

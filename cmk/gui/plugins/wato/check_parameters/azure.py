@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Tuple as TupleType, Union
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -305,54 +306,71 @@ rulespec_registry.register(
     ))
 
 
-def _azure_vms_summary_levels(title, lower=(None, None), upper=(None, None)):
-    return Dictionary(title=_(title),
-                      elements=[
-                          ("levels_lower",
-                           Tuple(title=_("Lower levels"),
-                                 elements=[
-                                     Integer(title=_("Warning below"), default_value=lower[0]),
-                                     Integer(title=_("Critical below"), default_value=lower[1]),
-                                 ])),
-                          ("levels",
-                           Tuple(title=_("Upper levels"),
-                                 elements=[
-                                     Integer(title=_("Warning at"), default_value=upper[0]),
-                                     Integer(title=_("Critical at"), default_value=upper[1]),
-                                 ])),
-                      ])
+def _azure_vms_summary_levels(
+        title: str,
+        lower: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
+        upper: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
+) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements=[
+            ("levels_lower",
+             Tuple(title=_("Lower levels"),
+                   elements=[
+                       Integer(title=_("Warning below"), default_value=lower[0]),
+                       Integer(title=_("Critical below"), default_value=lower[1]),
+                   ])),
+            ("levels",
+             Tuple(title=_("Upper levels"),
+                   elements=[
+                       Integer(title=_("Warning at"), default_value=upper[0]),
+                       Integer(title=_("Critical at"), default_value=upper[1]),
+                   ])),
+        ],
+    )
 
 
-def _parameter_valuespec_azure_vms_summary():
+def _parameter_valuespec_azure_vms_summary() -> Dictionary:
     return Dictionary(
         help=_("To obtain the data required for this check, please configure"
                " the datasource program \"Microsoft Azure\"."),
         elements=[
-            ('levels_provisioning',
-             Dictionary(
-                 title=_("Levels for provisioning count"),
-                 elements=[
-                     ("succeeded", _azure_vms_summary_levels("Succeeded provionings", (0, -1))),
-                     ("failed", _azure_vms_summary_levels(
-                         "Failed provisionings",
-                         (-1, -1),
-                         (1, 1),
-                     )),
-                 ],
-             )),
-            ('levels_power',
-             Dictionary(
-                 title=_("Levels for power state count"),
-                 elements=[
-                     ("starting", _azure_vms_summary_levels("Starting VMs")),
-                     ("running", _azure_vms_summary_levels("Running VMs")),
-                     ("stopping", _azure_vms_summary_levels("Stopping VMs")),
-                     ("stopped", _azure_vms_summary_levels("Stopped VMs")),
-                     ("deallocating", _azure_vms_summary_levels("Deallocating VMs")),
-                     ("deallocated", _azure_vms_summary_levels("Deallocated VMs")),
-                     ("unknown", _azure_vms_summary_levels("VMs in unknown state", upper=(1, 1))),
-                 ],
-             )),
+            (
+                'levels_provisioning',
+                Dictionary(
+                    title=_("Levels for provisioning count"),
+                    elements=[
+                        (
+                            "succeeded",
+                            _azure_vms_summary_levels(_("Succeeded provionings"), (0, -1)),
+                        ),
+                        (
+                            "failed",
+                            _azure_vms_summary_levels(
+                                _("Failed provisionings"),
+                                (-1, -1),
+                                (1, 1),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                'levels_power',
+                Dictionary(
+                    title=_("Levels for power state count"),
+                    elements=[
+                        ("starting", _azure_vms_summary_levels(_("Starting VMs"))),
+                        ("running", _azure_vms_summary_levels(_("Running VMs"))),
+                        ("stopping", _azure_vms_summary_levels(_("Stopping VMs"))),
+                        ("stopped", _azure_vms_summary_levels(_("Stopped VMs"))),
+                        ("deallocating", _azure_vms_summary_levels(_("Deallocating VMs"))),
+                        ("deallocated", _azure_vms_summary_levels(_("Deallocated VMs"))),
+                        ("unknown",
+                         _azure_vms_summary_levels(_("VMs in unknown state"), upper=(1, 1))),
+                    ],
+                ),
+            ),
         ],
     )
 

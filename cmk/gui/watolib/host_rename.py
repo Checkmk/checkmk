@@ -48,10 +48,10 @@ def perform_rename_hosts(renamings, job_interface=None):
             only relevant for WATO interaction, allows to update the interface with the current
             update info
     """
-    def update_interface(message):
+    def update_interface(message: str) -> None:
         if job_interface is None:
             return
-        job_interface.send_progress_update(_(message))
+        job_interface.send_progress_update(message)
 
     actions = []
     all_hosts = Host.all()
@@ -59,19 +59,19 @@ def perform_rename_hosts(renamings, job_interface=None):
     # 1. Fix WATO configuration itself ----------------
     auth_problems = []
     successful_renamings = []
-    update_interface("Renaming WATO configuration...")
+    update_interface(_("Renaming WATO configuration..."))
     for folder, oldname, newname in renamings:
         try:
             this_host_actions = []
-            update_interface("Renaming host(s) in folders...")
+            update_interface(_("Renaming host(s) in folders..."))
             this_host_actions += _rename_host_in_folder(folder, oldname, newname)
-            update_interface("Renaming host(s) in cluster nodes...")
+            update_interface(_("Renaming host(s) in cluster nodes..."))
             this_host_actions += _rename_host_as_cluster_node(all_hosts, oldname, newname)
-            update_interface("Renaming host(s) in parents...")
+            update_interface(_("Renaming host(s) in parents..."))
             this_host_actions += _rename_host_in_parents(oldname, newname)
-            update_interface("Renaming host(s) in rulesets...")
+            update_interface(_("Renaming host(s) in rulesets..."))
             this_host_actions += _rename_host_in_rulesets(folder, oldname, newname)
-            update_interface("Renaming host(s) in BI aggregations...")
+            update_interface(_("Renaming host(s) in BI aggregations..."))
             this_host_actions += _rename_host_in_bi(oldname, newname)
             actions += this_host_actions
             successful_renamings.append((folder, oldname, newname))
@@ -79,13 +79,13 @@ def perform_rename_hosts(renamings, job_interface=None):
             auth_problems.append((oldname, e))
 
     # 2. Checkmk stuff ------------------------------------------------
-    update_interface("Renaming host(s) in base configuration, rrd, history files, etc.")
-    update_interface("This might take some time and involves a core restart...")
+    update_interface(_("Renaming host(s) in base configuration, rrd, history files, etc."))
+    update_interface(_("This might take some time and involves a core restart..."))
     action_counts = _rename_hosts_in_check_mk(successful_renamings)
 
     # 3. Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
-    update_interface("Renaming host(s) in notification rules...")
+    update_interface(_("Renaming host(s) in notification rules..."))
     for folder, oldname, newname in successful_renamings:
         actions += _rename_host_in_event_rules(oldname, newname)
         actions += _rename_host_in_multisite(oldname, newname)
@@ -94,7 +94,7 @@ def perform_rename_hosts(renamings, job_interface=None):
         action_counts.setdefault(action, 0)
         action_counts[action] += 1
 
-    update_interface("Calling final hooks")
+    update_interface(_("Calling final hooks"))
     call_hook_hosts_changed(Folder.root_folder())
     return action_counts, auth_problems
 

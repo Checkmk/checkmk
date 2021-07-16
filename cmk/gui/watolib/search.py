@@ -415,7 +415,13 @@ class IndexSearcher:
                 if not permissions_check(match_item_dict["url"]):
                     continue
 
-                results[_(match_item_dict["topic"])].append(
+                # This call to i18n._ with a non-constant string is ok. Here, we translate the
+                # topics of our search results. For localization-dependent search results, such as
+                # rulesets, they are already localized anyway. However, for localization-independent
+                # results, such as hosts, they are not. For example, "Hosts" in French is "Hôtes".
+                # Without this call to i18n._, found hosts would be displayed under the topic
+                # "Hosts" instead of "Hôtes" in the setup search.
+                results[_(match_item_dict["topic"])].append(  # pylint: disable=translation-of-non-string
                     SearchResult(
                         match_item_dict["title"],
                         match_item_dict["url"],

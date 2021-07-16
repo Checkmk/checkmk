@@ -14,14 +14,14 @@ STATES_CHECK_RES = [("deleted", 2), ("read-only", 1), ("read-write", 0),
                     ("retention lock enabled", 0), ("unknown", 3)]
 
 
-def _parameter_valuespec_emc_datadomain_mtree():
+def _parameter_valuespec_emc_datadomain_mtree() -> Dictionary:
     return Dictionary(
         title=_("Mapping of MTree state to monitoring state"),
         help=_("Define a translation of the possible states of the MTree to monitoring "
                "states, i.e. to the result of the check. This overwrites the default "
                "mapping used by the check."),
         elements=[(state,
-                   MonitoringState(title=_("Monitoring state if MTree state is '%s'" % state),
+                   MonitoringState(title=_("Monitoring state if MTree state is '%s'") % state,
                                    default_value=check_res))
                   for state, check_res in STATES_CHECK_RES])
 

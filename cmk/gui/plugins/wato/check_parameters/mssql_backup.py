@@ -27,8 +27,8 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
 
 
-def _vs_mssql_backup_age(title):
-    return Alternative(title=_("%s" % title),
+def _vs_mssql_backup_age(title: str) -> Alternative:
+    return Alternative(title=title,
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[
@@ -75,14 +75,14 @@ def _parameter_valuespec_mssql_backup():
                "Backup</i>, etc.) you can use the option <i>Database Backup"
                "</i> to set a general limit"),
         elements=[
-            ("database", _vs_mssql_backup_age("Database backup")),
-            ("database_diff", _vs_mssql_backup_age("Database diff backup")),
-            ("log", _vs_mssql_backup_age("Log backup")),
-            ("file_or_filegroup", _vs_mssql_backup_age("File or filegroup backup")),
-            ("file_diff", _vs_mssql_backup_age("File diff backup")),
-            ("partial", _vs_mssql_backup_age("Partial backup")),
-            ("partial_diff", _vs_mssql_backup_age("Partial diff backup")),
-            ("unspecific", _vs_mssql_backup_age("Unspecific backup")),
+            ("database", _vs_mssql_backup_age(_("Database backup"))),
+            ("database_diff", _vs_mssql_backup_age(_("Database diff backup"))),
+            ("log", _vs_mssql_backup_age(_("Log backup"))),
+            ("file_or_filegroup", _vs_mssql_backup_age(_("File or filegroup backup"))),
+            ("file_diff", _vs_mssql_backup_age(_("File diff backup"))),
+            ("partial", _vs_mssql_backup_age(_("Partial backup"))),
+            ("partial_diff", _vs_mssql_backup_age(_("Partial diff backup"))),
+            ("unspecific", _vs_mssql_backup_age(_("Unspecific backup"))),
             ("not_found", MonitoringState(title=_("State if no backup found"))),
         ]),
                      forth=lambda params: (params if isinstance(params, dict) else {

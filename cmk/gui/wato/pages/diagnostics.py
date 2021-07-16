@@ -217,7 +217,7 @@ class ModeDiagnostics(WatoMode):
              )),
             (OPT_CHECKMK_CONFIG_FILES,
              self._get_component_specific_checkmk_files_choices(
-                 "Checkmk Configuration files",
+                 _("Checkmk Configuration files"),
                  [(f, get_checkmk_file_info(f)) for f in self._checkmk_config_files_map])),
         ]
 
@@ -239,8 +239,8 @@ class ModeDiagnostics(WatoMode):
             (OPT_COMP_GLOBAL_SETTINGS,
              Dictionary(
                  title=_("Global Settings"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
-                        _CHECKMK_FILES_NOTE),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s") %
+                 _CHECKMK_FILES_NOTE,
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_GLOBAL_SETTINGS),
                  default_keys=["config_files"],
@@ -248,8 +248,8 @@ class ModeDiagnostics(WatoMode):
             (OPT_COMP_HOSTS_AND_FOLDERS,
              Dictionary(
                  title=_("Hosts and Folders"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s" %
-                        _CHECKMK_FILES_NOTE),
+                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s") %
+                 _CHECKMK_FILES_NOTE,
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_HOSTS_AND_FOLDERS),
                  default_keys=["config_files"],
@@ -258,8 +258,8 @@ class ModeDiagnostics(WatoMode):
              Dictionary(
                  title=_("Notifications"),
                  help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
-                        " or log files ('*.log' or '*.state') from var/log.%s" %
-                        _CHECKMK_FILES_NOTE),
+                        " or log files ('*.log' or '*.state') from var/log.%s") %
+                 _CHECKMK_FILES_NOTE,
                  elements=self._get_component_specific_checkmk_files_elements(
                      OPT_COMP_NOTIFICATIONS),
                  default_keys=["config_files"],
@@ -279,7 +279,7 @@ class ModeDiagnostics(WatoMode):
         if config_files:
             elements.append(
                 ("config_files",
-                 self._get_component_specific_checkmk_files_choices("Configuration files",
+                 self._get_component_specific_checkmk_files_choices(_("Configuration files"),
                                                                     config_files)))
 
         log_files = [(f, fi)
@@ -289,7 +289,7 @@ class ModeDiagnostics(WatoMode):
         if log_files:
             elements.append(
                 ("log_files",
-                 self._get_component_specific_checkmk_files_choices("Log files", log_files)))
+                 self._get_component_specific_checkmk_files_choices(_("Log files"), log_files)))
         return elements
 
     def _get_component_specific_checkmk_files_choices(
@@ -314,7 +314,7 @@ class ModeDiagnostics(WatoMode):
                                                  key=lambda t: t[0])
         sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
         return CascadingDropdown(
-            title=_(title),
+            title=title,
             sorted=False,
             choices=[
                 ("all", _("Pack all files: High, Medium, Low sensitivity"),

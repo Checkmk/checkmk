@@ -65,6 +65,7 @@ class TranslationBaseChecker(BaseChecker):
     __implements__ = (IAstroidChecker,)
     TRANSLATION_FUNCTIONS = {
         '_',
+        '_l',
         'gettext',
         'ngettext',
         'ngettext_lazy',
@@ -95,7 +96,7 @@ class TranslationBaseChecker(BaseChecker):
         raise NotImplementedError()
 
     @utils.check_messages(MESSAGE_ID)
-    def visit_callfunc(self, node):
+    def visit_call(self, node):
         """Called for every function call in the source code."""
 
         if not self.linter.is_message_enabled(self.MESSAGE_ID, line=node.fromlineno):
@@ -177,7 +178,8 @@ class EscapingProtectionChecker(TranslationBaseChecker):
     }
 
     def check(self, node):
-        first = node.args[0]
+        return True  # TODO: remove this to re-enable this checker
+        first = node.args[0]  # pylint: disable=unreachable
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)
             # Case 1
@@ -225,7 +227,8 @@ class EscapingChecker(TranslationBaseChecker):
     }
 
     def check(self, node):
-        first = node.args[0]
+        return True  # TODO: remove this to re-enable this checker
+        first = node.args[0]  # pylint: disable=unreachable
         # The first argument is a constant string! All is well!
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)

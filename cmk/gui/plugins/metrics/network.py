@@ -1458,16 +1458,16 @@ metric_info['write_avg_exe_ms'] = {
 }
 
 
-def register_requests_metrics():
+def register_requests_metrics() -> None:
     for request, color in zip(['get', 'put', 'delete', 'head', 'post', 'select', 'list'],
                               ['11/a', '13/a', '15/a', '21/a', '23/a', '25/a', '31/a']):
         metric_info['%s_requests' % request] = {
-            'title': _('%s Requests' % request.upper()),
+            'title': _('%s Requests') % request.upper(),
             'unit': '1/s',
             'color': color,
         }
         metric_info['%s_requests_perc' % request] = {
-            'title': _('Percentage %s Requests' % request.upper()),
+            'title': _('Percentage %s Requests') % request.upper(),
             'unit': '%',
             'color': color,
         }

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.i18n import _
+
 #.
 #   .--for imports---------------------------------------------------------.
 #   |         __              _                            _               |
@@ -111,12 +113,12 @@ AWSEC2InstTypes = [
 ] + ['cr1.8xlarge', 'cc1.4xlarge', 'hi1.4xlarge', 'hs1.8xlarge', 'cg1.4xlarge']
 
 AWSEC2InstFamilies = {
-    'f': 'Running On-Demand F instances',
-    'g': 'Running On-Demand G instances',
-    'inf': 'Running On-Demand Inf instances',
-    'p': 'Running On-Demand P instances',
-    'x': 'Running On-Demand X instances',
-    '_': 'Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances'
+    'f': _('Running On-Demand F instances'),
+    'g': _('Running On-Demand G instances'),
+    'inf': _('Running On-Demand Inf instances'),
+    'p': _('Running On-Demand P instances'),
+    'x': _('Running On-Demand X instances'),
+    '_': _('Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances')
 }
 
 # (On-Demand, Reserved, Spot)

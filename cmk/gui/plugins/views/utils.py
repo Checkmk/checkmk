@@ -508,10 +508,17 @@ class Command(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
-        what = "host" if cmdtag == "HOST" else "service"
         return title + " the following %(count)d %(what)s?" % {
             "count": len_action_rows,
-            "what": ungettext(what, what + "s", len_action_rows)
+            "what": ungettext(
+                "host",
+                "hosts",
+                len_action_rows,
+            ) if cmdtag == "HOST" else ungettext(
+                "service",
+                "services",
+                len_action_rows,
+            )
         }
 
     def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:

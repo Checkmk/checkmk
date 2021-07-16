@@ -13,18 +13,18 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _mongodb_cluster_count_tuple(title, course):
-    return Tuple(title=_(title),
-                 elements=[
-                     Integer(title=_("Warning if %s") % course, unit=_("count"), minvalue=0),
-                     Integer(title=_("Critical if %s") % course, unit=_("count"), minvalue=0),
-                 ])
-
-
-def _parameter_valuespec_mongodb_cluster():
+def _parameter_valuespec_mongodb_cluster() -> Dictionary:
     return Dictionary(elements=[
-        ("levels_number_jumbo",
-         _mongodb_cluster_count_tuple("Number of jumbo chunks per shard per collection", "above")),
+        (
+            "levels_number_jumbo",
+            Tuple(
+                title=_("Number of jumbo chunks per shard per collection"),
+                elements=[
+                    Integer(title=_("Warning if above"), unit=_("count"), minvalue=0),
+                    Integer(title=_("Critical if above"), unit=_("count"), minvalue=0),
+                ],
+            ),
+        ),
     ])
 
 

@@ -31,7 +31,7 @@ def _item_spec_hyperv_vms():
     )
 
 
-def _parameter_valuespec_hyperv_vms():
+def _parameter_valuespec_hyperv_vms() -> Alternative:
     return Alternative(
         title=_("Translation of VM state to monitoring state"),
         elements=[
@@ -41,7 +41,7 @@ def _parameter_valuespec_hyperv_vms():
                        "states, i.e. to the result of the check. This overwrites the default "
                        "mapping used by the check."),
                 elements=[(vm_state,
-                           MonitoringState(title=_("Monitoring state if VM state is %s" % vm_state),
+                           MonitoringState(title=_("Monitoring state if VM state is %s") % vm_state,
                                            default_value=default_value))
                           for vm_state, default_value in VM_STATES_DEFVALS]),
             FixedValue(

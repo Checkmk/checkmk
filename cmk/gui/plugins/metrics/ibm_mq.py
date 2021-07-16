@@ -28,7 +28,7 @@ from cmk.gui.plugins.metrics import (
 
 metric_info["curdepth"] = {
     "title": _("Queue depth"),
-    "help": _("The current depth of the queue, that is, the number of messages " +
+    "help": _("The current depth of the queue, that is, the number of messages "
               "on the queue, including both committed messages and uncommitted messages."),
     "unit": "count",
     "color": "#4287f5",

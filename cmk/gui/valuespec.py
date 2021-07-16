@@ -84,7 +84,7 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html, theme, output_funnel, request, user
 from cmk.gui.http import UploadedFile
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.type_defs import ChoiceGroup, ChoiceId, ChoiceText, Choices, GroupedChoices
 from cmk.gui.utils.html import HTML
@@ -3368,15 +3368,11 @@ class DualListChoice(ListChoice):
                           add_var=True)
 
     def _locked_choice_text(self, value: Any) -> _Optional[ChoiceText]:
-        locked_choices_text: _Optional[ChoiceText] = None
-        num_locked_choices: int = sum(1 for choice_id in value if choice_id in self._locked_choices)
-        if num_locked_choices:
-            locked_choices_text = ungettext(
-                self._locked_choices_text_singular,
-                self._locked_choices_text_plural,
-                num_locked_choices,
-            ) % num_locked_choices
-        return locked_choices_text
+        num_locked_choices = sum(1 for choice_id in value if choice_id in self._locked_choices)
+        return (  #
+            self._locked_choices_text_singular % num_locked_choices if num_locked_choices == 1  #
+            else self._locked_choices_text_plural % num_locked_choices if num_locked_choices > 1  #
+            else None)
 
     def _value_is_invalid(self, value: ListChoiceChoiceValue) -> bool:
         all_elements: List[ChoiceId] = list(dict(self._elements).keys()) + self._locked_choices

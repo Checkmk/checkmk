@@ -389,7 +389,7 @@ class PageRenderer(Base):
             (1.6, "is_show_more",
              Checkbox(
                  title=_("Show more"),
-                 label=_("Only show the %s if show more is active" % cls.phrase("title_plural")),
+                 label=_("Only show the %s if show more is active") % cls.phrase("title_plural"),
                  default_value=False,
                  help=_("The navigation allows to hide items based on a show "
                         "less / show more toggle. You can specify here whether or "

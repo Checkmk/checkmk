@@ -106,12 +106,12 @@ def register_aws_http_metrics():
         ['2xx', '3xx', '4xx', '5xx', '500', '502', '503', '504'],
         ['53/a', '11/a', '32/a', '42/a', '13/a', '14/a', '16/b', '34/a']):
         metric_info["aws_http_%s_rate" % http_err_code] = {
-            "title": _("HTTP %s errors" % http_err_code.upper()),
+            "title": _("HTTP %s errors") % http_err_code.upper(),
             "unit": "1/s",
             "color": color,
         }
         metric_info["aws_http_%s_perc" % http_err_code] = {
-            "title": _("Percentage of HTTP %s errors" % http_err_code.upper()),
+            "title": _("Percentage of HTTP %s errors") % http_err_code.upper(),
             "unit": "%",
             "color": color,
         }

@@ -316,7 +316,7 @@ class ModeTags(ABCTagMode):
               "In current Checkmk versions these are <i>builtin</i> tag groups which "
               "can not be customized anymore. Your customized tag group will work for "
               "the moment, but needs to be migrated until 1.7. With 1.7 it won't work "
-              "anymore." % ", ".join(customized)))
+              "anymore.") % ", ".join(customized))
 
     def _render_tag_group_list(self):
         with table_element("tags",

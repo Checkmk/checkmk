@@ -8,7 +8,7 @@ import re
 
 from typing import Optional
 
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
@@ -63,12 +63,21 @@ def _make_wato_page_state() -> PageState:
             text=html.render_span(changes_info, id_=span_id),
             icon_name="pending_changes",
             url=changelog_url,
-            tooltip_text=(ungettext(
-                _("Currently there is one change to activate"),
-                _("Currently there are %s to activate." % changes_info),
-                int(re.findall(r"\d+", changes_info)[0]),
-            ) + "\n" + _("Click here to go to pending changes.")),
+            tooltip_text=(_tooltip_changes_info(changes_info) + "\n" +
+                          _("Click here to go to pending changes.")),
         )
     return PageState(text=html.render_span(_("No pending changes"), id_=span_id),
                      url=changelog_url,
                      tooltip_text=_("Click here to see the activation status per site."))
+
+
+def _tooltip_changes_info(info: str) -> str:
+    """
+    >>> _tooltip_changes_info('1 change')
+    'Currently there is one change to activate.'
+    >>> _tooltip_changes_info('4 changes')
+    'Currently there are 4 changes to activate.'
+    """
+    n_changes = int(re.findall(r"\d+", info)[0])
+    return (_("Currently there is one change to activate.")
+            if n_changes == 1 else _("Currently there are %s to activate.") % info)

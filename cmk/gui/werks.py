@@ -76,7 +76,7 @@ def _release_switch(major: bool) -> PageState:
 @cmk.gui.pages.page_registry.register_page("version")
 class ModeReleaseNotesPage(cmk.gui.pages.Page):
     def _title(self) -> str:
-        return _("Welcome to Checkmk %s" % __version__)
+        return _("Welcome to Checkmk %s") % __version__
 
     def page(self) -> cmk.gui.pages.PageResult:
         if request.get_integer_input_mandatory("major", 0):

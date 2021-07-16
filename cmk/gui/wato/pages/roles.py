@@ -153,7 +153,9 @@ class ModeRoles(RoleManagement, WatoMode):
             for user in users.values():
                 if delid in user["roles"]:
                     raise MKUserError(
-                        None, _("You cannot delete roles, that are still in use (%s)!" % delid))
+                        None,
+                        _("You cannot delete roles, that are still in use (%s)!") % delid,
+                    )
 
             self._rename_user_role(delid, None)  # Remove from existing users
             del self._roles[delid]

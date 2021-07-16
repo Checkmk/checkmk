@@ -205,10 +205,10 @@ def _vs_grouping():
 
 def _vs_regex_matching(match_obj):
     return ListOfStrings(
-        title=_("Match interface %s (regex)" % match_obj),
+        title=_("Match interface %s (regex)") % match_obj,
         help=_("Apply this rule only to interfaces whose %s matches one of the configured regular "
-               "expressions. The match is done on the beginning of the %s." %
-               (match_obj, match_obj)),
+               "expressions. The match is done on the beginning of the %s.") %
+        (match_obj, match_obj),
         orientation="horizontal",
         valuespec=RegExp(
             size=32,
@@ -288,9 +288,9 @@ def _vs_matching_conditions():
                         "admin_states",
                         ListChoice(
                             title=_("Match admin states (SNMP with 64-bit counters only)"),
-                            help=_("Apply this rule only to interfaces whose admin state "
-                                   "(<tt>ifAdminStatus</tt>) is listed below. " +
-                                   _note_for_admin_state_options()),
+                            help=(_("Apply this rule only to interfaces whose admin state "
+                                    "(<tt>ifAdminStatus</tt>) is listed below.") + " " +
+                                  _note_for_admin_state_options()),
                             choices=_admin_states(),
                             toggle_all=True,
                             default_value=['1', '2', '3'],
@@ -784,9 +784,9 @@ def _vs_state_mappings() -> CascadingDropdown:
                                 ],
                             ),
                             title=_('Map admin states (SNMP with 64-bit counters only)'),
-                            help=
-                            _("Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. "
-                              + _note_for_admin_state_options()),
+                            help=(_(
+                                "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
+                            ) + " " + _note_for_admin_state_options()),
                         ),
                     ),
                 ],),
@@ -815,14 +815,14 @@ def _vs_state_mappings() -> CascadingDropdown:
                             MonitoringState(title=_("Monitoring state")),
                         ],
                     ),
-                    help=_(
+                    help=(_(
                         "Map combinations of the operational state (<tt>ifOperStatus</tt>) and the "
                         "admin state (<tt>ifAdminStatus</tt>) to a monitoring state. Here, you can "
                         "for example configure that an interface which is down <i>and</i> admin "
                         "down should be considered OK. Such a setting will only apply to "
                         "interfaces matching the operational <i>and</i> the admin state. For "
-                        "example, an interface which is down but admin up would not be affected. " +
-                        _note_for_admin_state_options()),
+                        "example, an interface which is down but admin up would not be affected.") +
+                          " " + _note_for_admin_state_options()),
                 ),
             ),
         ],
@@ -907,10 +907,10 @@ def _parameter_valuespec_if():
                             allow_empty=False,
                         ),
                         title=_("Admin state (SNMP with 64-bit counters only)"),
-                        help=_("If you activate the monitoring of the admin state "
-                               "(<tt>ifAdminStatus</tt>), the check will go critical if the "
-                               "current state of the interface does not match one of the expected "
-                               "states. " + _note_for_admin_state_options()),
+                        help=(_("If you activate the monitoring of the admin state "
+                                "(<tt>ifAdminStatus</tt>), the check will go critical if the "
+                                "current state of the interface does not match one of the expected "
+                                "states.") + " " + _note_for_admin_state_options()),
                         label=_("Ignore the admin state"),
                         none_label=_("ignore"),
                         negate=True,

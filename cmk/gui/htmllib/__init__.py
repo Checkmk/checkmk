@@ -1229,7 +1229,7 @@ class html(ABCHTMLGenerator):
             icon_name="trans",
             css_classes=["default"],
             url="javascript:document.location.reload()",
-            tooltip_text=_("Automatic page reload in %d seconds." % self.browser_reload) + "\n" +
+            tooltip_text=_("Automatic page reload in %d seconds.") % self.browser_reload + "\n" +
             _("Click for instant reload."),
         )
 

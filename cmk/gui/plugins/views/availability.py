@@ -1081,14 +1081,14 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             if recl_host_state is not None:
                 html.icon(
                     "status",
-                    _("This period has been reclassified in host state to state: %s" %
-                      host_state_name(recl_host_state)))
+                    _("This period has been reclassified in host state to state: %s") %
+                    host_state_name(recl_host_state))
             recl_svc_state = annotation.get("service_state")
             if recl_svc_state is not None:
                 html.icon(
                     "status",
-                    _("This period has been reclassified in service state to state: %s" %
-                      service_state_name(recl_svc_state)))
+                    _("This period has been reclassified in service state to state: %s") %
+                    service_state_name(recl_svc_state))
 
             table.cell(_("Annotation"), escape_html_permissive(annotation["text"]))
             table.cell(_("Author"), annotation["author"])

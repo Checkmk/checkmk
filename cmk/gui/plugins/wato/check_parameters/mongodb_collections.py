@@ -13,23 +13,39 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
-def _mongodb_collections_size_tuple(title, course, unit):
-    return Tuple(title=_(title),
-                 elements=[
-                     Integer(title=_("Warning if %s") % course, unit=_(unit), minvalue=0),
-                     Integer(title=_("Critical if %s") % course, unit=_(unit), minvalue=0),
-                 ])
+def _mongodb_collections_size_tuple(title: str, unit: str) -> Tuple:
+    return Tuple(
+        title=title,
+        elements=[
+            Integer(title=_("Warning if above"), unit=unit, minvalue=0),
+            Integer(title=_("Critical if above"), unit=unit, minvalue=0),
+        ],
+    )
 
 
-def _parameter_valuespec_mongodb_collections():
+def _parameter_valuespec_mongodb_collections() -> Dictionary:
     return Dictionary(elements=[
-        ("levels_size",
-         _mongodb_collections_size_tuple("Uncompressed size in memory", "above", "MiB")),
-        ("levels_storageSize",
-         _mongodb_collections_size_tuple("Allocated for document storage", "above", "MiB")),
-        ("levels_totalIndexSize",
-         _mongodb_collections_size_tuple("Total size of all indexes for the collection", "above",
-                                         "KByte")),
+        (
+            "levels_size",
+            _mongodb_collections_size_tuple(
+                _("Uncompressed size in memory"),
+                _("MiB"),
+            ),
+        ),
+        (
+            "levels_storageSize",
+            _mongodb_collections_size_tuple(
+                _("Allocated for document storage"),
+                _("MiB"),
+            ),
+        ),
+        (
+            "levels_totalIndexSize",
+            _mongodb_collections_size_tuple(
+                _("Total size of all indexes for the collection"),
+                _("KByte"),
+            ),
+        ),
     ])
 
 

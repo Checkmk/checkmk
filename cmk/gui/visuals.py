@@ -907,7 +907,7 @@ def _vs_general(single_infos, default_id, visual_type, visibility_elements):
             ("is_show_more",
              Checkbox(
                  title=_("Show more"),
-                 label=_("Only show the %s if show more is active" % visual_type.title),
+                 label=_("Only show the %s if show more is active") % visual_type.title,
                  help=_("The navigation allows to hide items based on a show "
                         "less / show more toggle. You can specify here whether or "
                         "not this %s should only be shown with show more %s.") %

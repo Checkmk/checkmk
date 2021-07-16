@@ -16,12 +16,12 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple, Age
 def _parameter_valuespec_mongodb_replication_lag():
     return Dictionary(
         elements=[("levels_mongdb_replication_lag",
-                   _sec_tuple("Levels over an extended time period on replication lag"))])
+                   _sec_tuple(_("Levels over an extended time period on replication lag")))])
 
 
-def _sec_tuple(title):
+def _sec_tuple(title: str) -> Tuple:
     return Tuple(
-        title=_(title),
+        title=title,
         elements=[
             Integer(title=_(
                 "Time between the last operation on primary's oplog and on secondary above"),

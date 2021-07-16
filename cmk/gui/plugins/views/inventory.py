@@ -1556,7 +1556,7 @@ class RowTableInventoryHistory(ABCRowTable):
                 MKUserError(
                     "load_inventory_delta_tree",
                     _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
-                      % ", ".join(sorted(corrupted_history_files)))))
+                     ) % ", ".join(sorted(corrupted_history_files))))
 
         return history_deltas
 

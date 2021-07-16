@@ -140,7 +140,7 @@ class BICompiledLeaf(ABCBICompiledNode):
                     int(assumed_state),
                     downtime_state,
                     bool(entity.acknowledged),
-                    _("Assumed to be %s" % self._get_state_name(assumed_state)),
+                    _("Assumed to be %s") % self._get_state_name(assumed_state),
                     entity.in_service_period,
                     {},
                     {},

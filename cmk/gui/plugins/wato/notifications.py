@@ -309,7 +309,7 @@ class NotificationParameterSlack(NotificationParameter):
                      CascadingDropdown(
                          title=_("Webhook-URL"),
                          help=
-                         _("Webhook URL. Setup Slack Webhook " +
+                         _("Webhook URL. Setup Slack Webhook "
                            "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
                            "<br />For Mattermost follow the documentation "
                            "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
@@ -354,7 +354,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                  CascadingDropdown(
                      title=_("Webhook-URL"),
                      help=
-                     _("Webhook URL. Setup Cisco Webex Teams Webhook " +
+                     _("Webhook URL. Setup Cisco Webex Teams Webhook "
                        "<a href=\"https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054\" target=\"_blank\">here</a>"
                        "<br />This URL can also be collected from the Password Store from Checkmk."
                       ),

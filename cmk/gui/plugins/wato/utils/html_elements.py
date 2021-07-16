@@ -63,10 +63,11 @@ def _make_wato_page_state() -> PageState:
             text=html.render_span(changes_info, id_=span_id),
             icon_name="pending_changes",
             url=changelog_url,
-            tooltip_text=ungettext(singular=_("Currently there is one change to activate"),
-                                   plural=_("Currently there are %s to activate." % changes_info),
-                                   n=int(re.findall(r"\d+", changes_info)[0])) + \
-                         "\n" + _("Click here to go to pending changes."),
+            tooltip_text=(ungettext(
+                _("Currently there is one change to activate"),
+                _("Currently there are %s to activate." % changes_info),
+                int(re.findall(r"\d+", changes_info)[0]),
+            ) + "\n" + _("Click here to go to pending changes.")),
         )
     return PageState(text=html.render_span(_("No pending changes"), id_=span_id),
                      url=changelog_url,

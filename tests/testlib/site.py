@@ -432,6 +432,7 @@ class Site:
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
+            cmk_path() + "/agents/windows/plugins",
             cmk_path() + "/agents",
             cmk_path() + "/modules",
             cmk_path() + "/cmk/base",

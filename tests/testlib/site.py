@@ -403,6 +403,7 @@ class Site:
             assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
+            self._ensure_sample_config_is_present()
             self._set_number_of_helpers()
             self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
@@ -417,8 +418,28 @@ class Site:
         if self.update_from_git:
             self._update_with_f12_files()
 
-        if not os.path.exists(self.result_dir()):
+        if _is_dockerized() and not os.path.exists(self.result_dir()):
             os.makedirs(self.result_dir())
+
+    def _ensure_sample_config_is_present(self):
+        if missing_files := self._missing_but_required_wato_files():
+            raise Exception("Sample config was not created by post create hook "
+                            "01_create-sample-config.py (Missing files: %s)" % missing_files)
+
+    def _missing_but_required_wato_files(self):
+        required_files = [
+            "etc/check_mk/conf.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/wato/tags.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "var/check_mk/web/automation",
+            "var/check_mk/web/automation/automation.secret",
+        ]
+
+        missing = []
+        for f in required_files:
+            if not self.file_exists(f):
+                missing.append(f)
+        return missing
 
     def _update_with_f12_files(self):
         paths = [
@@ -690,37 +711,10 @@ class Site:
 
     def prepare_for_tests(self):
         self.verify_cmk()
-        self.init_wato()
-
-    def init_wato(self):
-        if not self._missing_but_required_wato_files():
-            logger.info("WATO is already initialized -> Skipping initializiation")
-            return
-
-        logger.debug("Initializing WATO...")
 
         web = CMKWebSession(self)
         web.login()
-
-        # Call WATO once for creating the default WATO configuration
-        logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
-        response = web.get("wato.py?mode=sites").text
-        #logger.debug("Debug: %r" % response)
-        assert "site=%s" % web.site.id in response
-
-        logger.debug("Waiting for WATO files to be created...")
-        wait_time = 20.0
-        while self._missing_but_required_wato_files() and wait_time >= 0:
-            time.sleep(0.5)
-            wait_time -= 0.5
-
-        missing_files = self._missing_but_required_wato_files()
-        assert not missing_files, \
-            "Failed to initialize WATO data structures " \
-            "(Still missing: %s)" % missing_files
-
         web.enforce_non_localized_gui()
-
         self._add_wato_test_config(web)
 
     # Add some test configuration that is not test specific. These settings are set only to have a
@@ -748,21 +742,6 @@ class Site:
                     ],
                 }
             })
-
-    def _missing_but_required_wato_files(self):
-        required_files = [
-            "etc/check_mk/conf.d/wato/rules.mk",
-            "etc/check_mk/multisite.d/wato/tags.mk",
-            "etc/check_mk/conf.d/wato/global.mk",
-            "var/check_mk/web/automation",
-            "var/check_mk/web/automation/automation.secret",
-        ]
-
-        missing = []
-        for f in required_files:
-            if not self.file_exists(f):
-                missing.append(f)
-        return missing
 
     def open_livestatus_tcp(self, encrypted):
         """This opens a currently free TCP port and remembers it in the object for later use

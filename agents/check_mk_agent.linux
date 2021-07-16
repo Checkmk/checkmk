@@ -1636,6 +1636,31 @@ section_checkmk_failed_plugins() {
     fi
 }
 
+run_sections_with_run_cached() {
+
+    # Time synchronization with Chrony
+    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time "chrony" section_chrony
+
+    # Hardware sensors via IPMI (need ipmitool)
+    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time "ipmitool" section_ipmitool
+
+    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
+    # have installed freeipmi that IPMI is really support by your hardware.
+    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time "ipmisensors" section_ipmisensors
+
+    # RAID controllers from areca (Taiwan)
+    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
+    [ -z "$MK_SKIP_ARECA" ] && _log_section_time "areca_raid" section_areca_raid
+
+    ## Check status of OMD sites and Checkmk Notification spooler
+    [ -z "$MK_SKIP_OMD" ] && _log_section_time "omd" section_omd
+
+    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+        _log_section_time "timesyncd" section_timesyncd || _log_section_time "ntp" section_ntp
+    fi
+
+}
+
 main() {
 
     preamble_1
@@ -1702,13 +1727,6 @@ main() {
     # Performancecounter Kernel
     [ -z "$MK_SKIP_KERNEL" ] && _log_section_time "kernel" section_kernel
 
-    # Hardware sensors via IPMI (need ipmitool)
-    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time "ipmitool" section_ipmitool
-
-    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
-    # have installed freeipmi that IPMI is really support by your hardware.
-    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time "ipmisensors" section_ipmisensors
-
     # RAID status of Linux software RAID
     [ -z "$MK_SKIP_MD" ] && _log_section_time "md" section_md
 
@@ -1725,10 +1743,6 @@ main() {
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
     [ -z "$MK_SKIP_THREE_WARE_RAID" ] && _log_section_time "3ware_raid" section_3ware_raid
 
-    # RAID controllers from areca (Taiwan)
-    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    [ -z "$MK_SKIP_ARECA" ] && _log_section_time "areca_raid" section_areca_raid
-
     # VirtualBox Guests. Section must always been output. Otherwise the
     # check would not be executed in case no guest additions are installed.
     # And that is something the check wants to detect
@@ -1737,13 +1751,6 @@ main() {
     # OpenVPN Clients. Currently we assume that the configuration # is in
     # /etc/openvpn. We might find a safer way to find the configuration later.
     [ -z "$MK_SKIP_OPENVPN" ] && _log_section_time "openvpn" section_openvpn
-
-    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
-        _log_section_time "timesyncd" section_timesyncd || _log_section_time "ntp" section_ntp
-    fi
-
-    # Time synchronization with Chrony
-    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time "chrony" section_chrony
 
     [ -z "$MK_SKIP_NVIDIA" ] && _log_section_time "nvidia" section_nvidia
 
@@ -1757,8 +1764,6 @@ main() {
     [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time "mailqueue" section_mailqueue
 
     ## Check status of OMD sites and Checkmk Notification spooler
-    [ -z "$MK_SKIP_OMD" ] && _log_section_time "omd" section_omd
-
     # Welcome the ZFS check on Linux
     # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
     # check zpool status
@@ -1800,6 +1805,8 @@ main() {
     [ -z "$MK_SKIP_PROXMOX" ] && _log_section_time "proxmox" section_proxmox
 
     [ -z "$MK_SKIP_HAPROXY" ] && _log_section_time "haproxy" section_haproxy
+
+    run_sections_with_run_cached
 
     # Start new liveupdate process in background on each agent execution. Starting
     # a new live update process will terminate the old one automatically after

@@ -1588,7 +1588,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
     } data[5] = {
         {"1", false, true, 1, 0, 0, "", ""},
         {"2", false, false, 2, 0, 0, "", ""},
-        {"3", false, true, kDefaultPluginTimeout, 0, 0, "Users", ""},
+        {"3", false, true, kDefaultPluginTimeout, 0, 0, "SomeUsers", ""},
         {"4", false, true, kDefaultPluginTimeout, 0, 4, "", "users_"},
         {"5", true, false, kDefaultPluginTimeout, 120, 0, "a a a ", ""},
     };

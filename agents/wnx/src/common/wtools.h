@@ -1167,6 +1167,9 @@ bool ChangeAccessRights(
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end);
+
+std::wstring SidToName(const std::wstring_view sid,
+                       const SID_NAME_USE& sid_type);
 }  // namespace wtools
 
 #endif  // wtools_h__

@@ -93,7 +93,7 @@ TEST(WtoolsUserControl, AddDeleteUser) {
 
 TEST(WtoolsUserControl, AddDeleteUserToUsers) {
     LdapControl lc;
-    std::wstring_view g = L"Users";
+    auto g = wtools::SidToName(L"S-1-5-32-545", SidTypeGroup);
     std::wstring_view u = L"x_user_name";
     ASSERT_EQ(Status::success, lc.userAdd(u, L"Aaaasxwxwwxwecfwecwe 1"));
     EXPECT_EQ(Status::success, lc.localGroupAddMembers(g, u));
@@ -119,9 +119,13 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
-TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
+TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
     using namespace std::literals::string_literals;
     LdapControl lc;
+    if (wtools::SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {
+        GTEST_SKIP() << "This test is only suitable for English Windows";
+        return;
+    }
     static const std::wstring groups[] = {
         L"Access Control Assistance Operators"s,
         L"Administrators"s,
@@ -142,9 +146,10 @@ TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroup) {
         L"Replicator"s,
         L"System Managed Accounts Group"s,
         L"Users"s};
+
     for (auto& g : groups) {
         //
-        EXPECT_EQ(Status::error, lc.localGroupDel(g));
+        EXPECT_EQ(Status::error, lc.localGroupDel(g)) << "Missing group: " << g;
     }
 }
 

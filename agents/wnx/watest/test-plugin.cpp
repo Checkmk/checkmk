@@ -391,7 +391,8 @@ TEST(PluginTest, ApplyConfig) {
         pe.fillInternalUser();
         ASSERT_TRUE(pe.iu_.first.empty());
         ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = "Users";
+        pe.group_ =
+            wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
         pe.fillInternalUser();
         ASSERT_TRUE(!pe.iu_.first.empty());
         ASSERT_TRUE(!pe.iu_.second.empty());
@@ -399,7 +400,8 @@ TEST(PluginTest, ApplyConfig) {
         pe.fillInternalUser();
         ASSERT_TRUE(pe.iu_.first.empty());
         ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = "Users";
+        pe.group_ =
+            wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
         pe.user_ = "u p";
         pe.fillInternalUser();
         ASSERT_TRUE(pe.iu_.first == L"cmk_TST_Users");

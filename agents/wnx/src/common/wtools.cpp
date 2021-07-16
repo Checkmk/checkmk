@@ -7,6 +7,7 @@
 #if defined(_WIN32)
 #include <WinSock2.h>
 
+#include <Sddl.h>
 #include <comdef.h>
 #include <shellapi.h>
 
@@ -2933,6 +2934,28 @@ void SecurityAttributeKeeper::cleanupAll() {
     acl_ = nullptr;
     sd_ = nullptr;
     sa_ = nullptr;
+}
+
+std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE& sid_type) {
+    constexpr DWORD buf_size = 256;
+    PSID psid{nullptr};
+
+    if (::ConvertStringSidToSid(sid.data(), &psid) == FALSE) {
+        return {};
+    }
+    ON_OUT_OF_SCOPE(::LocalFree(psid));
+
+    wchar_t name[buf_size];
+    DWORD name_size{buf_size};
+    wchar_t domain[buf_size];
+    DWORD domain_size{buf_size};
+    SID_NAME_USE try_sid_type{sid_type};
+
+    if (::LookupAccountSid(NULL, psid, name, &name_size, domain, &domain_size,
+                           &try_sid_type)) {
+        return name;
+    }
+    return {};
 }
 
 #if 0

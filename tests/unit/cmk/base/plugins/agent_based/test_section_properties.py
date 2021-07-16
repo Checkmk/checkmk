@@ -131,7 +131,6 @@ def test_section_parse_function_does_something(fix_register):
         'appdynamics_memory',
         'appdynamics_sessions',
         'appdynamics_web_container',
-        'apt',
         'arc_raid_status',
         'arcserve_backup',
         'citrix_controller',

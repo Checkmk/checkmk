@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence, Tuple
+from typing import Any, Sequence, Tuple
 
 import pytest
 
 from testlib import Check
+
+from cmk.base.plugins.agent_based.apt import parse_apt, Section
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],
@@ -19,7 +21,6 @@ _SECTION_UPDATES_AV = [
     ["Inst librsvg2-2 [2.40.16-1+b1] (2.40.21-0+deb9u1 Debian-Security:9/oldstable [amd64])"],
 ]
 _SECTION_NO_UPDATES = [["No updates pending for installation"]]
-_SECTION_BROKEN = [["not found"]]
 _PARAMS = {
     "normal": 1,
     "removals": 1,
@@ -28,37 +29,27 @@ _PARAMS = {
 
 
 @pytest.mark.parametrize(
-    "info, expected_result",
+    "section",
     [
         pytest.param(
-            _SECTION_UPDATES_AV,
-            [(None, {})],
+            parse_apt(_SECTION_UPDATES_AV),
             id="updates_available",
         ),
         pytest.param(
-            _SECTION_NO_UPDATES,
-            [(None, {})],
+            parse_apt(_SECTION_NO_UPDATES),
             id="no_updates",
-        ),
-        pytest.param(
-            _SECTION_BROKEN,
-            [],
-            id="broken_section",
         ),
     ],
 )
-def test_inventory_apt(
-    info: Sequence[Sequence[str]],
-    expected_result: Sequence[Tuple[None, Mapping[str, Any]]],
-) -> None:
-    assert list(Check("apt").run_discovery(info)) == expected_result
+def test_inventory_apt(section: Section) -> None:
+    assert list(Check("apt").run_discovery(section)) == [(None, {})]
 
 
 @pytest.mark.parametrize(
-    "info, expected_result",
+    "section, expected_result",
     [
         pytest.param(
-            _SECTION_UPDATES_AV,
+            parse_apt(_SECTION_UPDATES_AV),
             [
                 (1, '3 normal updates', [('normal_updates', 3)]),
                 (1, '2 auto removals (default-java-plugin, icedtea-8-plugin)', [('removals', 2)]),
@@ -67,14 +58,14 @@ def test_inventory_apt(
             id="updates_available",
         ),
         pytest.param(
-            _SECTION_NO_UPDATES,
+            parse_apt(_SECTION_NO_UPDATES),
             [(0, 'No updates pending for installation')],
             id="no_updates",
         ),
     ],
 )
 def test_check_apt(
-    info: Sequence[Sequence[str]],
+    section: Section,
     expected_result: Sequence[Tuple[Any]],
 ) -> None:
-    assert list(Check("apt").run_check(None, _PARAMS, info)) == expected_result
+    assert list(Check("apt").run_check(None, _PARAMS, section)) == expected_result

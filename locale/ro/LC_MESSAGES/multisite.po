@@ -19171,6 +19171,10 @@ msgstr ""
 msgid "Go to main page"
 msgstr ""
 
+#, fuzzy
+msgid "Go to rules of this InfluxDB connection"
+msgstr "Conexiune Noua"
+
 msgid "Go to the report store"
 msgstr ""
 
@@ -50327,6 +50331,11 @@ msgid ""
 "reached, no further events will be currented which means that new incoming "
 "messages will be dropped. In the moment the limit is reached, the Event "
 "Console will create a notification with empty contact information."
+msgstr ""
+
+msgid ""
+"To send data to InfluxDB with this connection, you still need to configure "
+"at least one rule that determines what data should be sent."
 msgstr ""
 
 msgid "To:"

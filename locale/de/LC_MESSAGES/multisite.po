@@ -19729,6 +19729,10 @@ msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 msgid "Go to main page"
 msgstr "Zur Hauptübersicht"
 
+#, fuzzy
+msgid "Go to rules of this InfluxDB connection"
+msgstr "Neue Graphite- / InfluxDB-Verbindung hinzufügen"
+
 msgid "Go to the report store"
 msgstr "Gehe zum Report-Lager"
 
@@ -53818,6 +53822,11 @@ msgstr ""
 "Meldungen nicht mehr zu neuen Ereignissen führen können und verworfen "
 "werden. In dem Moment, wo das Limit erreicht wird, wird ein Alarm mit leeren "
 "Kontaktinformationen erzeugt."
+
+msgid ""
+"To send data to InfluxDB with this connection, you still need to configure "
+"at least one rule that determines what data should be sent."
+msgstr ""
 
 msgid "To:"
 msgstr "An:"

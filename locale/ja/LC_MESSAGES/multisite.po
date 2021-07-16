@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-07-15 13:06+0000\n"
 "Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
@@ -19079,6 +19079,10 @@ msgstr "すべてのライセンスが使用されている場合はクリティ
 
 msgid "Go to main page"
 msgstr "メインページに移動"
+
+#, fuzzy
+msgid "Go to rules of this InfluxDB connection"
+msgstr "新しいGraphite / InfluxDB接続を追加します"
 
 msgid "Go to the report store"
 msgstr "レポートストアに移動します"
@@ -48231,8 +48235,9 @@ msgid ""
 "in %s steps. Assuming a check interval of 1 minute, the %s values here are "
 "based on the %s value out of %d raw values."
 msgstr ""
-"このグラフは、関数 \"%s\"で統合されたデータに基づいています。この列の値は、%sステップで集計された \"%s\" 値の \"%s\" "
-"値です。チェック間隔を1分とすると、ここでの \"%s\" 値は、\"%d\" の生の値のうちの \"%s\" 値に基づいています"
+"このグラフは、関数 \"%s\"で統合されたデータに基づいています。この列の値は、%s"
+"ステップで集計された \"%s\" 値の \"%s\" 値です。チェック間隔を1分とすると、こ"
+"こでの \"%s\" 値は、\"%d\" の生の値のうちの \"%s\" 値に基づいています"
 
 #, python-format
 msgid ""
@@ -51405,6 +51410,11 @@ msgstr ""
 "ベントは発生しません。つまり、新しい着信メッセージはドロップされます。制限に"
 "達すると、イベントコンソールは空の連絡先情報を含む通知を作成します。"
 
+msgid ""
+"To send data to InfluxDB with this connection, you still need to configure "
+"at least one rule that determines what data should be sent."
+msgstr ""
+
 msgid "To:"
 msgstr "に:"
 
@@ -52599,7 +52609,9 @@ msgstr ""
 msgid ""
 "Unable to transform dashlet %d of dashboard %s: the dashlet is using "
 "\"urlfunc\" which can not be converted automatically."
-msgstr "ダッシュボード%sのダッシュレット%dを変換できません:ダッシュボードは自動的に変換できない\"urlfunc\"を使用しています。"
+msgstr ""
+"ダッシュボード%sのダッシュレット%dを変換できません:ダッシュボードは自動的に変"
+"換できない\"urlfunc\"を使用しています。"
 
 #, python-format
 msgid "Unable to upload icon: %s"

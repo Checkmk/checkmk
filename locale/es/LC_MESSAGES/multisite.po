@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-07-15 13:19+0000\n"
 "Last-Translator: Pablo Mazzú <pmazzu@gmail.com>\n"
@@ -19869,6 +19869,10 @@ msgstr "Pasar al estado crítico si se utilizan todas las licencias"
 
 msgid "Go to main page"
 msgstr "Ir a la página principal"
+
+#, fuzzy
+msgid "Go to rules of this InfluxDB connection"
+msgstr "Añadir nueva conexión Graphite / InfluxDB"
 
 msgid "Go to the report store"
 msgstr "Ir a la tienda de informes"
@@ -54301,6 +54305,11 @@ msgstr ""
 "los nuevos mensajes entrantes serán descartados. En el momento en que se "
 "alcance el límite, la Consola de Eventos creará una notificación con la "
 "información de contacto vacía."
+
+msgid ""
+"To send data to InfluxDB with this connection, you still need to configure "
+"at least one rule that determines what data should be sent."
+msgstr ""
 
 msgid "To:"
 msgstr "Para:"

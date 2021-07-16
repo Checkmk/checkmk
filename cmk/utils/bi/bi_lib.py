@@ -7,6 +7,7 @@
 import abc
 from typing import (
     Callable,
+    Protocol,
     TypeVar,
     Any,
     NamedTuple,
@@ -21,7 +22,7 @@ from typing import (
 )
 
 from cmk.utils.bi.bi_schema import Schema
-from livestatus import SiteId
+from livestatus import SiteId, LivestatusOutputFormat, LivestatusResponse
 from marshmallow.fields import (
     List as MList,
     Dict as MDict,
@@ -98,9 +99,20 @@ NodeResultBundle = NamedTuple("NodeResultBundle", [
     ("instance", Any),
 ])
 
+
+class QueryCallback(Protocol):
+    def __call__(
+        self,
+        query: str,
+        only_sites: Optional[List[SiteId]] = None,
+        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON
+    ) -> LivestatusResponse:
+        ...
+
+
 SitesCallback = NamedTuple("SitesCallback", [
     ("states", Callable),
-    ("query", Callable),
+    ("query", QueryCallback),
 ])
 
 MapGroup2Value = Dict[str, str]

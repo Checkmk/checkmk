@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from typing import Any, List, Optional, Set, Tuple, Type, Union
 from pathlib import Path
 
-from livestatus import SiteId, LivestatusResponse
+from livestatus import SiteId, LivestatusResponse, LivestatusOutputFormat
 
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.bi.bi_packs import BIAggregationPacks
@@ -20,6 +20,7 @@ from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
 from cmk.utils.bi.bi_trees import BICompiledRule
 
 from cmk.gui.exceptions import MKConfigError
+from cmk.gui import sites
 from cmk.gui.valuespec import DropdownChoiceEntry
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
@@ -960,15 +961,15 @@ def get_cached_bi_compiler() -> BICompiler:
     return g.bi_compiler
 
 
-def bi_livestatus_query(query: str,
-                        only_sites: Optional[List[SiteId]] = None) -> LivestatusResponse:
-    ls = cmk.gui.sites.live()
-    try:
-        ls.set_only_sites(only_sites)
-        ls.set_prepend_site(True)
-        ls.set_auth_domain('bi')
-        return ls.query(query)
-    finally:
-        ls.set_prepend_site(False)
-        ls.set_only_sites(None)
-        ls.set_auth_domain('read')
+def bi_livestatus_query(
+        query: str,
+        only_sites: Optional[List[SiteId]] = None,
+        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON
+) -> LivestatusResponse:
+
+    with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
+        try:
+            sites.live().set_auth_domain('bi')
+            return sites.live().query(query)
+        finally:
+            sites.live().set_auth_domain('read')

@@ -1,4 +1,6 @@
-FROM centos:centos8
+ARG IMAGE_CENTOS_8
+# hadolint ignore=DL3006
+FROM ${IMAGE_CENTOS_8}
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"

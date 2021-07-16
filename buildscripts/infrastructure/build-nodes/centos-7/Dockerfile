@@ -1,4 +1,6 @@
-FROM centos:7
+ARG IMAGE_CENTOS_7
+# hadolint ignore=DL3006
+FROM ${IMAGE_CENTOS_7}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"

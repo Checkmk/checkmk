@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.0
+ARG IMAGE_SLES_15
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_15}
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"

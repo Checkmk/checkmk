@@ -1,7 +1,6 @@
-FROM registry.suse.com/suse/sles12sp5
-
-SHELL ["/bin/bash", "-c"]
-ENV PATH="/opt/bin:${PATH}"
+ARG IMAGE_SLES_12SP5
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_12SP5}
 
 ARG ARTIFACT_STORAGE
 

@@ -1,5 +1,6 @@
-ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}/sles-12sp4-base
+ARG IMAGE_SLES_12SP4
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_12SP4}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"

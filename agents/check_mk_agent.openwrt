@@ -118,10 +118,6 @@ run_cached() {
         local mrpe=1
         shift
     fi
-    if [ "$1" = -a ]; then
-        local append_age=1
-        shift
-    fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -150,12 +146,8 @@ run_cached() {
         if [ $AGE -le $MAXAGE ]; then local USE_CACHEFILE=1; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
-        if [ $append_age -eq 1 ]; then
-            # insert the cached-string before the pipe (first -e)
-            # or, if no pipe found (-e t) append it (third -e),
-            # but only once and on the second line (2!b) (first line is section header,
-            # all further lines are long output)
-            cat "$CACHEFILE" | sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/"
+        if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
+            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
         else
             CACHE_INFO=":cached($MTIME,$MAXAGE)"
             # insert the cache info in the section header (^= after '!'),

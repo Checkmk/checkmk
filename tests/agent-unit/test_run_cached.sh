@@ -32,8 +32,9 @@ test_run_cached_plugin() {
     MTIME="$(stat -c %X "$PLUG_CACHE")"
     OUTPUT="$(run_cached "plugins_my_plugin" "180" "run_agent_plugin" "180/my_plugin")"
 
-    assertEquals "<<<my_plugin:cached($MTIME,180)>>>
-This is a custom plugin output" "$OUTPUT"
+    assertEquals "$OUTPUT" \
+"<<<my_plugin:cached($MTIME,180)>>>
+This is a custom plugin output"
 
 }
 
@@ -42,7 +43,8 @@ test_run_cached_local() {
     MTIME="$(stat -c %X "$LOCA_CACHE")"
     OUTPUT=$(run_cached "local_my_local_check" "180" "run_agent_locals" "_log_section_time 'local_180/my_local_check' './180/my_local_check'")
 
-    assertEquals "cached($MTIME,180) P \"This is local output\"" "$OUTPUT"
+    assertEquals "$OUTPUT" \
+"cached($MTIME,180) P \"This is local output\""
 
 }
 
@@ -51,11 +53,11 @@ test_run_cached_mrpe() {
     descr="mrpetest"
     cmdline="this is the cmdline for the mrpe call"
     MTIME="$(stat -c %X "$MRPE_CACHE")"
-    OUTPUT=$(run_cached "-ma" "$descr" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
+    OUTPUT=$(run_cached "-m" "$descr" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
 
-    assertEquals "<<<mrpe>>>
-(my_check) Description 0 This is mrpe output (Cached: 0/180s)" \
-        "$OUTPUT"
+    assertEquals "$OUTPUT" \
+"<<<mrpe>>>
+cached($MTIME,180) (my_check) Description 0 This is mrpe output"
 
 }
 

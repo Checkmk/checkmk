@@ -6,6 +6,8 @@
 
 import typing
 
+from cmk.base.plugins.agent_based.utils import cache_helper
+
 LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
                                  typing.Optional[float], typing.Optional[float]]
 
@@ -91,6 +93,9 @@ def check_mrpe(_no_item, _no_params, data):
         new_perf = parse_nagios_perfstring(perfvalue)
         if new_perf:
             perf_parsed.append(new_perf)
+
+    if dataset.cache_info is not None:
+        yield 0, cache_helper.render_cache_info(dataset.cache_info)
 
     yield dataset.state, "\n".join(output), perf_parsed
 

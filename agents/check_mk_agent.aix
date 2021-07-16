@@ -206,7 +206,7 @@ run_cached() {
         MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
         CACHE_INFO="cached($MTIME,$MAXAGE)"
         if [[ $NAME == local_* ]]; then
-            sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
         else
             # insert the cache info in the section header (^= after '!'),
             # if none is present (^= before '!')

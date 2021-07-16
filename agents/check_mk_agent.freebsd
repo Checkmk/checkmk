@@ -91,7 +91,7 @@ run_cached() {
         # outdated. The new file will not yet be available
         CACHE_INFO="cached($MTIME,$MAXAGE)"
         if [[ $NAME == local_* ]]; then
-            sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
         else
             # insert the cache info in the section header (^= after '!'),
             # if none is present (^= before '!')

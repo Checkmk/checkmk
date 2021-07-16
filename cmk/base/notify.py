@@ -69,8 +69,8 @@ notify_mode = "notify"
 
 ContactName = str
 
-NotifyPluginParams = Dict  # TODO: Improve this
-NotifyBulkParameters = Dict  # TODO: Improve this
+NotifyPluginParams = Union[List[str], Dict[str, Any]]  # TODO: Improve this
+NotifyBulkParameters = Dict[str, Any]  # TODO: Improve this
 NotifyRuleInfo = Tuple[str, EventRule, str]
 NotifyPluginName = str
 NotifyPluginInfo = Tuple[ContactName, NotifyPluginName, NotifyPluginParams,
@@ -610,7 +610,7 @@ def _process_notifications(raw_context: EventContext, notifications: Notificatio
                 split_contexts = (
                     plugin_name not in ["", "mail", "asciimail", "slack"] or
                     # params can be a list (e.g. for custom notificatios)
-                    params.get("disable_multiplexing") or bulk)
+                    (isinstance(params, dict) and params.get("disable_multiplexing")) or bulk)
                 if not split_contexts:
                     plugin_contexts = [plugin_context]
                 else:
@@ -1899,7 +1899,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
     # the directory after our work. It will be the starting point for
     # the next bulk with the same ID, which is completely OK.
     bulk_context = []
-    old_params = None
+    old_params: Optional[NotifyPluginParams] = None
     unhandled_uuids: UUIDs = []
     for mtime, notify_uuid in uuids:
         try:
@@ -1928,7 +1928,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:
         if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
 
-        assert isinstance(old_params, dict)
+        assert old_params is not None
         plugin_text = NotificationPluginName("bulk " + (plugin_name or "plain email"))
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:

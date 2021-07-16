@@ -8,6 +8,7 @@ import typing
 
 import pytest  # type: ignore[import]
 
+import cmk.utils.store as store
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
@@ -21,8 +22,8 @@ def test_profiling(wsgi_app, mocker):
     assert not os.path.exists(var_dir + "/multisite.profile")
     assert not os.path.exists(var_dir + "/multisite.cachegrind")
 
-    config = mocker.patch("cmk.gui.config")
-    config.profile = True
+    store.save_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk",
+                       "profile = True\n")
 
     _ = wsgi_app.get('/NO_SITE/check_mk/login.py')
 

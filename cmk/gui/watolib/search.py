@@ -13,6 +13,7 @@ from time import sleep
 from typing import (
     Any,
     Callable,
+    Collection,
     DefaultDict,
     Dict,
     Final,
@@ -21,7 +22,6 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Sequence,
     TYPE_CHECKING,
 )
 
@@ -172,7 +172,7 @@ class IndexBuilder:
 
     def _add_language_dependent_item_generators_to_redis(
         self,
-        match_item_generators: Sequence[ABCMatchItemGenerator],
+        match_item_generators: Collection[ABCMatchItemGenerator],
         redis_pipeline: redis.client.Pipeline,
     ) -> None:
         key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)

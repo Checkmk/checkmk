@@ -5035,6 +5035,10 @@ msgstr ""
 msgid "Application Load balancers"
 msgstr "Numele Aplicatiei"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "Numele Aplicatiei"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr ""
 
@@ -13144,6 +13148,9 @@ msgstr ""
 msgid "Deploy plugin for MS Exchange database latency"
 msgstr ""
 
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr ""
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr ""
 
@@ -14416,6 +14423,9 @@ msgid "Do not deploy plugin for JAR signatures"
 msgstr ""
 
 msgid "Do not deploy plugin for MS Exchange database latency"
+msgstr ""
+
+msgid "Do not deploy plugin for MS IIS Application Pool States"
 msgstr ""
 
 msgid "Do not deploy plugin for MS Office 365"
@@ -21586,6 +21596,9 @@ msgstr ""
 msgid "IGNORE"
 msgstr ""
 
+msgid "IIS Application Pool State Settings"
+msgstr ""
+
 msgid "IMAP"
 msgstr ""
 
@@ -26945,6 +26958,9 @@ msgid "MS Exchange counters (various)"
 msgstr ""
 
 msgid "MS Exchange message queues discovery"
+msgstr ""
+
+msgid "MS IIS Application Pool State (Windows)"
 msgstr ""
 
 msgid "MS Office 365 (Windows)"
@@ -48437,6 +48453,9 @@ msgid ""
 msgstr ""
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 
 msgid "This plugin monitors Veeam backup status on Window hosts."

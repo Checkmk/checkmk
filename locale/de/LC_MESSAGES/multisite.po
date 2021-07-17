@@ -5295,6 +5295,10 @@ msgstr "Application Load Balancer Zertifikate"
 msgid "Application Load balancers"
 msgstr "Application Load Balancer"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "Name der Anwendung"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
 
@@ -13645,6 +13649,10 @@ msgstr "Plugin für JAR-Signaturen ausrollen"
 msgid "Deploy plugin for MS Exchange database latency"
 msgstr "Deploy Plugin für MS Exchange Datenbank-Latenzzeiten"
 
+#, fuzzy
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr "Plugin für NFS IO Stats bereitstellen"
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr "Plugin für NFS IO Stats bereitstellen"
 
@@ -14902,6 +14910,10 @@ msgstr "Plugin für JAR-Signaturen nicht ausrollen"
 
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht bereitstellen."
+
+#, fuzzy
+msgid "Do not deploy plugin for MS IIS Application Pool States"
+msgstr "Kein Plugin für NFS IO Stats bereitstellen"
 
 msgid "Do not deploy plugin for MS Office 365"
 msgstr "Das MS Office 365-Plugin nicht ausrollen"
@@ -22376,6 +22388,10 @@ msgstr "IDLE"
 msgid "IGNORE"
 msgstr "IGNORE"
 
+#, fuzzy
+msgid "IIS Application Pool State Settings"
+msgstr "Zustand der Replikation"
+
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -28260,6 +28276,9 @@ msgstr "MS Exchange-Counters (verschiede)"
 
 msgid "MS Exchange message queues discovery"
 msgstr "MS Exchange Message Queues Erkennung"
+
+msgid "MS IIS Application Pool State (Windows)"
+msgstr ""
 
 msgid "MS Office 365 (Windows)"
 msgstr "MS Office 365 (Windows)"
@@ -51241,6 +51260,12 @@ msgstr ""
 "Datenbankverfügbarkeitsgruppe auf Windows-Hosts."
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+"Dieses Plugin überwacht die Latenzzeiten der MS Exchange-Datenbank auf "
+"Windows-Hosts."
+
+#, fuzzy
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "Dieses Plugin überwacht die Latenzzeiten der MS Exchange-Datenbank auf "
 "Windows-Hosts."

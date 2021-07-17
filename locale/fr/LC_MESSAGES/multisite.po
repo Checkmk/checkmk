@@ -5381,6 +5381,10 @@ msgstr "Certificats d'équilibreur de charge d'application"
 msgid "Application Load balancers"
 msgstr "Équilibreurs de charge d'applications"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "Nom de l'application"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Équilibrage de la charge des applications et des réseaux (ELBv2)"
 
@@ -13820,6 +13824,10 @@ msgstr "Déployer le plugin pour les signatures JAR"
 msgid "Deploy plugin for MS Exchange database latency"
 msgstr "Déployer un plugin pour la latence des bases de données MS Exchange"
 
+#, fuzzy
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr "Déployer le plugin pour NFS IO Stats"
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr "Déployer le plugin pour NFS IO Stats"
 
@@ -15085,6 +15093,10 @@ msgstr "Ne pas déployer le plugin pour les signatures JAR"
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr ""
 "Ne pas déployer le plugin pour la latence de la base de données MS Exchange"
+
+#, fuzzy
+msgid "Do not deploy plugin for MS IIS Application Pool States"
+msgstr "Ne pas déployer le plugin pour NFS IO Stats"
 
 msgid "Do not deploy plugin for MS Office 365"
 msgstr "Ne pas déployer le plugin pour MS Office 365"
@@ -22629,6 +22641,10 @@ msgstr "IDLE"
 msgid "IGNORE"
 msgstr "IGNORE"
 
+#, fuzzy
+msgid "IIS Application Pool State Settings"
+msgstr "États de réplication"
+
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -28601,6 +28617,9 @@ msgstr "Compteurs MS Exchange (divers)"
 
 msgid "MS Exchange message queues discovery"
 msgstr "Découverte des files d'attente de messages MS Exchange"
+
+msgid "MS IIS Application Pool State (Windows)"
+msgstr ""
 
 msgid "MS Office 365 (Windows)"
 msgstr "MS Office 365 (Windows)"
@@ -51907,6 +51926,12 @@ msgstr ""
 "groupe de disponibilité de base de données sur des hôtes Windows."
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+"Ce plugin surveille la latence des bases de données MS Exchange sur les "
+"hôtes Windows."
+
+#, fuzzy
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "Ce plugin surveille la latence des bases de données MS Exchange sur les "
 "hôtes Windows."

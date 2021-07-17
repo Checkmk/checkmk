@@ -5366,6 +5366,10 @@ msgstr "Certificados del equilibrador de carga de aplicaciones"
 msgid "Application Load balancers"
 msgstr "Equilibradores de carga de aplicaciones"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "Nombre de la aplicación"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Equilibrio de carga de aplicaciones y redes (ELBv2)"
 
@@ -13762,6 +13766,10 @@ msgstr ""
 "Implementación de un plugin para la latencia de la base de datos de MS "
 "Exchange"
 
+#, fuzzy
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr "Despliegue del plugin para NFS IO Stats"
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr "Despliegue del plugin para NFS IO Stats"
 
@@ -15029,6 +15037,10 @@ msgstr "No desplegar el plugin para las firmas JAR"
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr ""
 "No implementar el plugin para la latencia de la base de datos de MS Exchange"
+
+#, fuzzy
+msgid "Do not deploy plugin for MS IIS Application Pool States"
+msgstr "No desplegar el plugin para NFS IO Stats"
 
 msgid "Do not deploy plugin for MS Office 365"
 msgstr "No implementar el plugin para MS Office 365"
@@ -22536,6 +22548,10 @@ msgstr "IDLE"
 msgid "IGNORE"
 msgstr "IGNORAR"
 
+#, fuzzy
+msgid "IIS Application Pool State Settings"
+msgstr "Estados de replicación"
+
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -28477,6 +28493,9 @@ msgstr "Contadores de MS Exchange (varios)"
 
 msgid "MS Exchange message queues discovery"
 msgstr "Descubrimiento de colas de mensajes de MS Exchange"
+
+msgid "MS IIS Application Pool State (Windows)"
+msgstr ""
 
 msgid "MS Office 365 (Windows)"
 msgstr "MS Office 365 (Windows)"
@@ -51693,6 +51712,12 @@ msgstr ""
 "en un grupo de disponibilidad de bases de datos en hosts de Windows."
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+"Este plugin monitoriza la latencia de la base de datos de MS Exchange en "
+"hosts de Windows."
+
+#, fuzzy
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "Este plugin monitoriza la latencia de la base de datos de MS Exchange en "
 "hosts de Windows."

@@ -5122,6 +5122,10 @@ msgstr "アプリケーションロードバランサー証明書"
 msgid "Application Load balancers"
 msgstr "アプリケーションロードバランサー"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "アプリケーション名"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "アプリケーションとネットワークの負荷分散(ELBv2)"
 
@@ -13162,6 +13166,10 @@ msgstr "JAR署名用のプラグインをデプロイします"
 msgid "Deploy plugin for MS Exchange database latency"
 msgstr "MS Exchangeデータベースの遅延用のプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr "NFS IO Statsのプラグインをデプロイします"
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr "NFS IO Statsのプラグインをデプロイします"
 
@@ -14376,6 +14384,10 @@ msgstr "JAR署名用のプラグインをデプロイしないでください"
 
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr "MS Exchangeデータベース遅延用のプラグインを展開しないでください"
+
+#, fuzzy
+msgid "Do not deploy plugin for MS IIS Application Pool States"
+msgstr "NFS IO Statsのプラグインをデプロイしないでください"
 
 msgid "Do not deploy plugin for MS Office 365"
 msgstr "MS Office365のプラグインをデプロイしないでください"
@@ -21599,6 +21611,10 @@ msgstr "IDLE"
 msgid "IGNORE"
 msgstr "無視する"
 
+#, fuzzy
+msgid "IIS Application Pool State Settings"
+msgstr "レプリケーションの状態"
+
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -27202,6 +27218,9 @@ msgstr "MS Exchangeカウンター(さまざまな)"
 
 msgid "MS Exchange message queues discovery"
 msgstr "MS Exchangeメッセージキューの検出"
+
+msgid "MS IIS Application Pool State (Windows)"
+msgstr ""
 
 msgid "MS Office 365 (Windows)"
 msgstr "MS Office 365 (Windows)"
@@ -49077,6 +49096,12 @@ msgstr ""
 "メールボックスサーバーを監視します。"
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+"このプラグインは、WindowホストでのMS Exchangeデータベースの待ち時間時間を監視"
+"します。"
+
+#, fuzzy
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "このプラグインは、WindowホストでのMS Exchangeデータベースの待ち時間時間を監視"
 "します。"

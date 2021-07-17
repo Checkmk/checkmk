@@ -5329,6 +5329,10 @@ msgstr "Application Load Balancer Certificaten"
 msgid "Application Load balancers"
 msgstr "Load balancers voor toepassingen"
 
+#, fuzzy
+msgid "Application Pool name"
+msgstr "Naam van de toepassing"
+
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Toepassing en netwerkbelasting balancering (ELBv2)"
 
@@ -13643,6 +13647,10 @@ msgstr "Implementeer plugin voor JAR handtekeningen"
 msgid "Deploy plugin for MS Exchange database latency"
 msgstr "Inzet plugin voor MS Exchange database latency"
 
+#, fuzzy
+msgid "Deploy plugin for MS IIS Application Pool States"
+msgstr "Implementeer plugin voor NFS IO Stats"
+
 msgid "Deploy plugin for NFS IO Stats"
 msgstr "Implementeer plugin voor NFS IO Stats"
 
@@ -14891,6 +14899,10 @@ msgstr "Implementeer geen plugin voor JAR handtekeningen"
 
 msgid "Do not deploy plugin for MS Exchange database latency"
 msgstr "Gebruik geen plugin voor MS Exchange database latency"
+
+#, fuzzy
+msgid "Do not deploy plugin for MS IIS Application Pool States"
+msgstr "Implementeer geen plugin voor NFS IO Stats"
 
 msgid "Do not deploy plugin for MS Office 365"
 msgstr "Invoegtoepassing voor MS Office 365 niet implementeren"
@@ -22342,6 +22354,10 @@ msgstr "IDLE"
 msgid "IGNORE"
 msgstr "IGNORE"
 
+#, fuzzy
+msgid "IIS Application Pool State Settings"
+msgstr "Replicatie Staten"
+
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -28244,6 +28260,9 @@ msgstr "MS Exchange tellers (diverse)"
 
 msgid "MS Exchange message queues discovery"
 msgstr "MS Exchange bericht wachtrijen ontdekking"
+
+msgid "MS IIS Application Pool State (Windows)"
+msgstr ""
 
 msgid "MS Office 365 (Windows)"
 msgstr "MS Office 365 (Windows)"
@@ -51246,6 +51265,11 @@ msgstr ""
 "Group op Window hosts."
 
 msgid "This plugin monitors MS Exchange database latency on Window hosts."
+msgstr ""
+"Deze plugin controleert de MS Exchange database latency op Window hosts."
+
+#, fuzzy
+msgid "This plugin monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "Deze plugin controleert de MS Exchange database latency op Window hosts."
 

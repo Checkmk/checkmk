@@ -5,13 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
+import urllib.parse
 
 LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
                                  typing.Optional[float], typing.Optional[float]]
 
 
+class PluginData(typing.NamedTuple):
+    name: str
+    state: int
+    info: str
+
+
 def parse_mrpe(info):
-    PluginData = collections.namedtuple("PluginData", ("name", "state", "info"))
 
     parsed = {}
     for line in info:
@@ -26,7 +32,6 @@ def parse_mrpe(info):
         if len(line) < 2:
             continue
 
-        import urllib.parse
         item = urllib.parse.unquote(line[0])
         state = line[1]
         line = line[2:]

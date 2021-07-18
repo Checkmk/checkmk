@@ -178,8 +178,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
     }
 
     def check(self, node):
-        return True  # TODO: remove this to re-enable this checker
-        first = node.args[0]  # pylint: disable=unreachable
+        first = node.args[0]
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)
             # Case 1
@@ -212,7 +211,7 @@ class EscapingChecker(TranslationBaseChecker):
         _("hello <tt> World </tt>")
         _("This is a &lt;HOST&gt;.")
 
-    The message id is `protection-of-html-tags`.
+    The message id is `escaping-of-html-tags`.
 
     """
     name = "escaping-checker"
@@ -227,8 +226,7 @@ class EscapingChecker(TranslationBaseChecker):
     }
 
     def check(self, node):
-        return True  # TODO: remove this to re-enable this checker
-        first = node.args[0]  # pylint: disable=unreachable
+        first = node.args[0]
         # The first argument is a constant string! All is well!
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)

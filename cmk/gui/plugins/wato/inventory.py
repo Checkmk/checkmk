@@ -109,7 +109,7 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_inv_exports_software_csv():
+def _valuespec_inv_exports_software_csv() -> Dictionary:
     return Dictionary(
         title=_("Export List of Software packages as CSV file"),
         elements=[
@@ -118,13 +118,13 @@ def _valuespec_inv_exports_software_csv():
                  title=_(
                      "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"),
                  help=_(
-                     "Please specify the path to the export file. The text <tt><HOST></tt> "
+                     "Please specify the path to the export file. The text <tt>[HOST]</tt> "
                      "will be replaced with the host name the inventory has been done for. "
                      "If you use a relative path then that will be relative to Check_MK's directory "
                      "for variable data, which is <tt>%s</tt>.") % cmk.utils.paths.var_dir,
                  allow_empty=False,
                  size=64,
-                 default_value="csv-export/<HOST>.csv",
+                 default_value="csv-export/[HOST].csv",
              )),
             ("separator",
              TextInput(

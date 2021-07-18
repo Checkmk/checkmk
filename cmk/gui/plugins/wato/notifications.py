@@ -469,7 +469,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
         return "signl4"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url"],
@@ -478,7 +478,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
                  IndividualOrStoredPassword(
                      title=_("Team Secret"),
                      help=_("The team secret of your SIGNL4 team. That is the last part of "
-                            "your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
+                            "your webhook URL: https://connect.signl4.com/webhook/[TEAM_SECRET]"),
                      allow_empty=False,
                  )),
                 ("ignore_ssl",

@@ -33,7 +33,7 @@ rulespec_registry.register(
         check_group_name="mongodb_cluster",
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextInput(title=_(
-            "Database/Collection name ('<DB name> <collection name>')"),),
+            "Database/Collection name ('[DB_NAME] [COLLECTION_NAME]')"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_cluster,
         title=lambda: _("MongoDB Cluster"),

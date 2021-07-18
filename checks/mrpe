@@ -5,53 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
-import urllib.parse
 
 LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
                                  typing.Optional[float], typing.Optional[float]]
-
-
-class PluginData(typing.NamedTuple):
-    name: str
-    state: int
-    info: str
-
-
-def parse_mrpe(info):
-
-    parsed = {}
-    for line in info:
-        # New Linux agent sends (check_name) in first column. Stay
-        # compatible with MRPE versions not providing this info
-        if line[0].startswith("("):
-            name = line[0].strip('()')
-            line = line[1:]
-        else:
-            name = None
-
-        if len(line) < 2:
-            continue
-
-        item = urllib.parse.unquote(line[0])
-        state = line[1]
-        line = line[2:]
-
-        try:
-            state = int(state)
-        except ValueError:
-            pass
-
-        if state not in (0, 1, 2, 3):
-            line.insert(0, "Invalid plugin status '%s'. Output is:" % state)
-            state = 3
-
-        # convert to original format by joining and splitting at \1 (which replaced \n)
-        info = " ".join(line).split("\1")
-
-        dataset = PluginData(name, state, info)
-        parsed.setdefault(item, []).append(dataset)
-
-    return parsed
 
 
 def _opt_float(string: str) -> typing.Optional[float]:
@@ -144,7 +100,7 @@ def check_mrpe(_no_item, _no_params, data):
 
 
 check_info["mrpe"] = {
-    'parse_function': parse_mrpe,
+    # section already migrated!
     'inventory_function': discover(),
     'check_function': check_mrpe,
     'service_description': '%s',

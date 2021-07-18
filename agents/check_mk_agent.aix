@@ -561,25 +561,34 @@ section_aix_hacmp() {
     fi
 }
 
+is_valid_plugin() {
+    [ -x "$1" ]
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
 run_local_checks() {
     echo '<<<local:sep(0)>>>'
-    if cd $LOCALDIR 2>/dev/null
-    then
-      for skript in $(ls)
-      do
-        if [ -x "$skript" ] ; then
-            _log_section_time "local_$skript" "./$skript"
-        fi
-      done
-
-      # Call some local checks only every X'th second
-      for skript in [1-9]*/* ; do
-          if [ -x "$skript" ] ; then
-              run_cached local_${skript//\//\#} ${skript%/*} "_log_section_time 'local_$skript' './$skript'"
-          fi
-      done
+    if cd "$LOCALDIR" 2>/dev/null; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                _log_section_time "local_$skript" "./$skript"
+            fi
+        done
+        # Call some local checks only every X'th second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+            fi
+        done
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_remote_plugins() {
     # MK's Remote Plugin Executor

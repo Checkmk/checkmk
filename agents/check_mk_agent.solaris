@@ -582,27 +582,34 @@ run_remote_plugins() {
     fi
 }
 
+is_valid_plugin() {
+    [ -x "$1" ]
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
 run_local_checks() {
-    # Local checks
-    if cd $LOCALDIR 2>/dev/null
-    then
-        echo '<<<local:sep(0)>>>'
-        for skript in $(ls)
-        do
-            if [ -x "$skript" ] ; then
+    echo '<<<local:sep(0)>>>'
+    if cd "$LOCALDIR" 2>/dev/null; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
                 _log_section_time "local_$skript" "./$skript"
             fi
         done
-
-        # Call some plugins only every X'th second
-        for skript in [1-9]*/* ; do
-            if [ -x "$skript" ] ; then
-                run_cached local_${skript//\//\#} ${skript%/*} "_log_section_time 'local_$skript' './$skript'"
+        # Call some local checks only every X'th second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
             fi
         done
-
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 add_failed_python_plugin() {
     if [ -z "$FAILED_PYTHON_PLUGINS" ]; then

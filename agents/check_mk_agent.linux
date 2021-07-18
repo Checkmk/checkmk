@@ -1254,23 +1254,30 @@ is_valid_plugin() {
     esac
 }
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
 run_local_checks() {
-    # Local checks
     echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR"; then
+    if cd "$LOCALDIR" 2>/dev/null; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 _log_section_time "local_$skript" "./$skript"
             fi
         done
-        # Call some plugins only every X'th second
+        # Call some local checks only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\\}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
             fi
         done
     fi
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_plugins() {
     if cd "$PLUGINSDIR"; then

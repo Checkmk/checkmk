@@ -59,6 +59,13 @@ if type timeout >/dev/null 2>&1; then
     }
 fi
 
+_log_section_time() {  # dummy to be compatible to smarter agents
+    shift
+    $*
+}
+
+export -f _log_section_time
+
 #
 # CHECK SECTIONS
 #
@@ -811,21 +818,32 @@ is_valid_plugin() {
     [ -f "$1" ] && [ -x "$1" ] && true || false
 }
 
-# Local checks
-echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR; then
-    for skript in $(ls); do
-        if is_valid_plugin "$skript"; then
-            ./$skript
-        fi
-    done
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached local_${skript//\//\\} ${skript%/*} "$skript"
-        fi
-    done
-fi
+#
+# BEGIN COMMON AGENT CODE
+#
+
+run_local_checks() {
+    echo '<<<local:sep(0)>>>'
+    if cd "$LOCALDIR" 2>/dev/null; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                _log_section_time "local_$skript" "./$skript"
+            fi
+        done
+        # Call some local checks only every X'th second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time 'local_$skript' './$skript'"
+            fi
+        done
+    fi
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+run_local_checks
 
 # Plugins
 if cd $PLUGINSDIR; then

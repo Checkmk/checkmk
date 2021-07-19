@@ -4,19 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
-import cmk.gui.config as config
 
 
 @pytest.fixture(scope='function', name='etags_off')
-def etags_off_fixture():
-    def _set_config():
-        config.rest_api_etag_locking = False
-
-    config.register_post_config_load_hook(_set_config)
-    config.initialize()
-    yield
-    config._post_config_load_hooks.remove(_set_config)
-    config.initialize()
+def etags_off_fixture(wsgi_app):
+    with wsgi_app.set_config(rest_api_etag_locking=False):
+        yield
 
 
 def test_openapi_etag_disabled(etags_off, wsgi_app, with_automation_user, with_host):

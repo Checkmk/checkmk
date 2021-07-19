@@ -11,9 +11,10 @@ import json
 import shutil
 import threading
 import urllib.parse
+from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Any, NamedTuple, Literal, Optional, Dict
+from typing import Any, NamedTuple, Literal, Optional, Dict, Iterator
 from functools import lru_cache
 
 import pytest  # type: ignore[import]
@@ -346,6 +347,22 @@ class WebTestAppForCMK(webtest.TestApp):
         if output_format == 'json':
             return json.loads(_resp.body)
         raise NotImplementedError("Format %s not implemented" % output_format)
+
+    @contextmanager
+    def set_config(self, **kwargs: Dict[str, Any]) -> Iterator[None]:
+        """Patch the GUI config for the current test
+
+        In normal tests, if you want to patch the GUI config, you can simply monkeypatch the
+        attribute of your choice. But with the webtest, the config is read during the request
+        handling in the test. This needs a special handling.
+        """
+        def _set_config():
+            for key, val in kwargs.items():
+                setattr(config, key, val)
+
+        config.register_post_config_load_hook(_set_config)
+        yield
+        config._post_config_load_hooks.remove(_set_config)
 
 
 @lru_cache

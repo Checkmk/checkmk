@@ -160,6 +160,8 @@ if ($ORACLE_HOME) {
 # setting the output error language to be English
 $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
 
+$ASYNC_PROC_PATH = "$MK_TEMPDIR\async_proc.txt"
+
 #.
 #   .--SQL Queries---------------------------------------------------------.
 #   |        ____   ___  _        ___                  _                   |
@@ -199,6 +201,21 @@ Function get_dbversion_database ($ORACLE_HOME) {
 }
 
 
+function is_async_running {
+     if (-not(Test-Path -path "$ASYNC_PROC_PATH")) {
+          # no file, no running process
+          return $false
+     }
+
+     $proc_pid = (Get-Content ${ASYNC_PROC_PATH})
+     $proc = Get-Process -id $proc_pid -ErrorAction SilentlyContinue
+     if ($proc) {
+         return $true
+     }
+     # The process to the PID cannot be found, so remove also the proc file
+     rm $ASYNC_PROC_PATH
+     return $false
+}
 
 ################################################################################
 # Run any SQL against the Oracle database
@@ -212,7 +229,7 @@ Function sqlcall {
           [string]$sqltext,
 
           [Parameter(Mandatory = $True, Position = 3)]
-          [int]$Delayed,
+          [int]$run_async,
 
           [Parameter(Mandatory = $True, Position = 5)]
           [string]$sqlsid
@@ -224,7 +241,7 @@ Function sqlcall {
      #    The sql_message is also used as the job name if run asynchronously
      #    The sql_message is also used as a temporary filename
      # 2. sqltext - The text of the SQL statement
-     # 3. Delayed, set to 1 if this SQL should run asynchronously. If the SQL takes a long time to run
+     # 3. run_async, set to 1 if this SQL should run asynchronously. If the SQL takes a long time to run
      #    we do not want to wait for the output of the SQL, but simply use the last output if it is fresh enough.
      # 4. the oracle sid
 
@@ -425,35 +442,6 @@ Function sqlcall {
      # currently default path is used here. change this @TBR?
      $fullpath = $MK_TEMPDIR + "\" + "$sql_message.$sqlsid.txt"
 
-     if ($delayed -gt 0) {
-          # If this SQL takes longer, then we want to run it asynchronously
-          $run_async = 1
-
-          # We first check if the file exists, otherwise we cannot show the old SQL output
-          if (Test-Path -path "$fullPath") {
-               # the file exists, so now we can check how old it is
-               debug_echo "file found $run_async"
-               $lastWrite = (get-item $fullPath).LastWriteTime
-               # How old may the SQL Output files be, before new ones are generated?
-               $timespan = new-timespan -days 0 -hours 0 -minutes ($CACHE_MAXAGE / 60)
-               if (((get-date) - $lastWrite) -gt $timespan) {
-                    # we wanted to run the SQL asynchronously, but the file is too old.
-                    $run_async = 0
-                    debug_echo "file too old $run_async"
-               }
-          }
-          else {
-               # file not found, so we cannot run asynchronously
-               $run_async = 0
-               debug_echo "file not found $run_async"
-          }
-     }
-     else {
-          # otherwise, we run the SQL every time
-          $run_async = 0
-     }
-
-
      if ($run_async -eq 0) {
           $SKIP_DOUBLE_ERROR = 0
           try {
@@ -493,19 +481,53 @@ Function sqlcall {
 
      }
      else {
-          # The file is not so old, simply show the contents of the file
-          cat $fullpath
-          #####################################################
-          # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
-          #####################################################
-          debug_echo "about to call bg task $sql_message"
-          $job = Start-Job -name $sql_message -ScriptBlock { $THE_SQL | sqlplus -L -s "$SQL_CONNECT" | set-content $fullpath }
-          # get the feedback from the async job
-          Receive-Job -job $job
-          # now we clean up the old job to avoid Powershell crashing
-          stop-job -name $sql_message
-          debug_echo "should be run here $run_async"
+          [bool]$need_async_process = $false
+          # We first check if the file exists, otherwise we cannot show the old SQL output
+          if (Test-Path -path "$fullPath") {
+               cat $fullpath
+               # the file exists, so now we can check how old it is
+               debug_echo "file found $run_async"
+               $lastWrite = (get-item $fullPath).LastWriteTime
+               # How old may the SQL Output files be, before new ones are generated?
+               $timespan = new-timespan -days 0 -hours 0 -minutes ($CACHE_MAXAGE / 60)
+               if (((get-date) - $lastWrite) -gt $timespan) {
+                    # the file is too old - so start a new process
+                    $need_async_process = $true
+               }
+          }
+          else {
+               # file not found, so we need to run it
+               $need_async_process = $true
+          }
 
+          if ($need_async_process) {
+               #####################################################
+               # now we ensure that the async SQL Calls have up-to-date SQL outputs, running this job asynchronously...
+               #####################################################
+               debug_echo "about to call bg task $sql_message"
+               if (-not(is_async_running)) {
+
+                    $command = {
+                        param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
+                        $res = ("$sql" | sqlplus -s -L $sql_connect)
+                        if ($LastExitCode -eq 0) {
+                            $res | Set-Content $path
+                        }
+                        else {
+                        $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
+                        '<<<oracle_instance:sep(124)>>>' | Set-Content $path
+                        $stripped_res | Add-Content $path
+                        }
+                    }
+
+                    # This escaping is needed as it seems the here string attribute gets lost or has no effect when passing the
+                    # variable to the script block
+                    $escaped_sql = $THE_SQL.replace("'", "''")
+                    $async_proc = Start-Process -PassThru powershell -windowstyle hidden -ArgumentList "-command invoke-command -scriptblock {$command} -argumentlist '$SQL_CONNECT', '$escaped_sql', '$fullpath', '$sqlsid'"
+                    $async_proc.id | set-content $ASYNC_PROC_PATH
+                    debug_echo "should be run here $run_async"
+               }
+          }
      }
      # normally we would simply return with a 1 or 0, but in powershell if I return from the function
      # with a value, then nothing else is shown on the screen. Hence the following less elegant solution...
@@ -2221,7 +2243,7 @@ if ($the_count -gt 0) {
                     debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
                     $ERROR_FOUND = 0
                     if ($THE_SQL) {
-                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -delayed 0 -sqlsid $inst_name
+                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
                     }
                }
 
@@ -2259,7 +2281,7 @@ if ($the_count -gt 0) {
                          }
                          debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
                          if ("$THE_SQL") {
-                              sqlcall -sql_message "Async_SQLs" -sqltext "$THE_SQL" -delayed 1 -sqlsid $inst_name
+                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
                          }
                     }
                }

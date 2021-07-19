@@ -302,14 +302,15 @@ class ConfigVariableGUIProfile(ConfigVariable):
     def valuespec(self):
         return DropdownChoice(
             title=_("Profile requests"),
-            help=_("It is possible to profile the rendering process of Multisite pages. This "
-                   "Is done using the Python module cProfile. When profiling is performed "
-                   "two files are created <tt>%s</tt> and <tt>%s</tt>. By executing the later "
-                   "file you can get runtime statistics about the last processed page. When "
-                   "enabled by request the profiling mode is enabled by providing the HTTP "
-                   "variable <tt>_profile</tt>.") %
-            (site_neutral_path(cmk.utils.paths.var_dir + "/multisite.profile"),
-             site_neutral_path(cmk.utils.paths.var_dir + "/multisite.profile.py")),
+            help=_(
+                "It is possible to profile the rendering process of Multisite pages. This "
+                "Is done using the Python module cProfile. When profiling is performed "
+                "three files are created in <tt>%s</tt>: <tt>multisite.profile</tt>, "
+                "<tt>multisite.cachegrind</tt> and <tt>multisite.py</tt>. By executing the latter "
+                "file you can get runtime statistics about the last processed page. When "
+                "enabled by request the profiling mode is enabled by providing the HTTP "
+                "variable <tt>_profile</tt> in the query parameters.") %
+            site_neutral_path(cmk.utils.paths.var_dir),
             choices=[
                 (False, _("Disable profiling")),
                 ("enable_by_var", _("Enable profiling by request")),

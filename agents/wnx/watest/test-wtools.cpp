@@ -301,7 +301,8 @@ std::vector<int> TsValues = {
     8154,  // windows 10, dev machine
     2066,  // windows server, build machine
     5090,  // windows 10, dev machine, late build
-    6324   // windows 10, 20h2
+    6324,  // windows 10, 20h2
+    8868,  // windows server build machine
 };
 
 TEST(Wtools, Perf) {

@@ -574,7 +574,8 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
               cma::section::MakeHeader(kMsExch, wmi::kSepChar));
 }
 
-TEST_F(WmiProviderTestFixture, WmiWeb) {
+// Test is integration because wmi web services may be not available
+TEST_F(WmiProviderTestFixture, WmiWebIntegration) {
     auto table = execWmiProvider(
         kWmiWebservices,
         ::testing::UnitTest::GetInstance()->current_test_info()->name());

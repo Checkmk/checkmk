@@ -53,7 +53,7 @@ test_run_cached_mrpe() {
     descr="mrpetest"
     cmdline="this is the cmdline for the mrpe call"
     MTIME="$(stat -c %X "$MRPE_CACHE")"
-    OUTPUT=$(run_cached "-m" "$descr" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
+    OUTPUT=$(run_cached "mrpe_$descr" "180" "_log_section_time 'mrpe_$descr' '$cmdline'")
 
     assertEquals "$OUTPUT" \
 "<<<mrpe>>>

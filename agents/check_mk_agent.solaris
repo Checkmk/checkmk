@@ -481,7 +481,6 @@ run_remote_plugins() {
         grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
         while read descr cmdline; do
             interval=
-            args="-m"
             if [[ $cmdline =~ \(([^\)]*)\)[[:space:]](.*) ]]; then
                 parameters=${BASH_REMATCH[1]}
                 cmdline=${BASH_REMATCH[2]}
@@ -501,7 +500,7 @@ run_remote_plugins() {
             if [ -z "$interval" ]; then
                 ${MK_RUN_SYNC_PARTS} && run_mrpe $descr "$cmdline"
             else
-                run_cached "$args" "$descr" "$interval" "run_mrpe '$descr' '$cmdline'"
+                run_cached "mrpe_${descr}" "$interval" "run_mrpe '$descr' '$cmdline'"
             fi
         done
     fi
@@ -528,12 +527,10 @@ export -f run_mrpe
 
 # Runs a command asynchronous by use of a cache file
 run_cached() {
-    local mrpe=0
     # TODO: this function is unable to handle mulitple args at once
     #       for example: -s -m won't work, it is read as single token "-s -m"
 
     if [ "$1" = -s ]; then local section="echo '<<<$2>>>'; "; shift; fi
-    if [ "$1" = -m ]; then local mrpe=1; shift; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -547,11 +544,7 @@ run_cached() {
     fi
 
     if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
-    if [ "$mrpe" = 1 ]; then
-        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
-    else
-        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
-    fi
+    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
@@ -573,7 +566,7 @@ run_cached() {
             # Output the file even if it is outdated.
             # The new file will not yet be available.
             CACHE_INFO="cached($MTIME,$MAXAGE)"
-            if [ "${NAME%%_*}" = "local" ] || [ "$mrpe" = 1 ]; then
+            if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
                 # insert the cache info at the beginning of every non-header line
                 sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
             else

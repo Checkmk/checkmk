@@ -1199,7 +1199,7 @@ run_remote_plugins() {
                 if [ -z "$interval" ]; then
                     run_mrpe "$descr" "$cmdline"
                 else
-                    run_cached "$args" "$descr" "$interval" "_log_section_time '$cmdline'"
+                    run_cached "$args" "$descr" "$interval" "$cmdline"
                 fi
             done
     fi

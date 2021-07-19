@@ -5,9 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Callable,
     Iterable,
     Mapping,
     Tuple as TupleType,
+    Type,
     Union,
 )
 
@@ -37,8 +39,9 @@ def _item_spec_jvm_memory() -> TextAscii:
 
 
 def _transform_legacy_parameters_jvm_memory(
-    params: Union[TupleType[float, float], Mapping[str, TupleType[float, float]]]
-) -> Mapping[str, TupleType[float, float]]:
+    params: Union[TupleType[float, float],  #
+                  Mapping[str, Union[TupleType[int, int], TupleType[float, float]]]]
+) -> Mapping[str, Union[TupleType[int, int], TupleType[float, float]]]:
     # These old parameters only applied to the depricated jolokia_metrics.mem service
     # NOT to jolokia_jvm_memory(.pools).
     # However, absolute values were lower levels for *free* memory,
@@ -46,13 +49,35 @@ def _transform_legacy_parameters_jvm_memory(
     if isinstance(params, tuple) and isinstance(params[0], float):
         return {"perc_total": params}
 
-    if new_params_from_legacy := {
-            new_key: levels for old_key, new_key in (
-                ("totalheap", "perc_total"),
-                ("heap", "perc_heap"),
-                ("nonheap", "perc_nonheap"),
-            ) if isinstance(levels := params.get(old_key), tuple) and isinstance(levels[0], float)
-    }:
+    old_key_to_new_key = {
+        "totalheap": "total",
+    }
+    type_to_prefix = {
+        int: "abs",
+        float: "perc",
+    }
+    type_to_transform: Mapping[Type, Callable[[float], float]] = {
+        int: lambda v: v * 1024**2,
+        float: lambda v: v,
+    }
+
+    new_params_from_legacy = {}
+    for old_key in (
+            "totalheap",
+            "heap",
+            "nonheap",
+    ):
+        if not (levels := params.get(old_key)):  # pylint: disable=superfluous-parens
+            continue
+        type_ = type(levels[0])
+        transform = type_to_transform[type_]
+        new_params_from_legacy[
+            f"{type_to_prefix[type_]}_{old_key_to_new_key.get(old_key, old_key)}"] = (
+                transform(levels[0]),
+                transform(levels[1]),
+            )
+
+    if new_params_from_legacy:
         return new_params_from_legacy
 
     return params

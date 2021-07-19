@@ -971,20 +971,58 @@ def test_get_inventory(web):  # noqa: F811 # pylint: disable=redefined-outer-nam
 
         inv = web.get_inventory([host_name])
         assert inv[host_name] == {
-            u'hardware': {
-                u'memory': {
-                    u'foo': 1,
-                    u'ram': 10000
-                },
-                u'blubb': 42
+            'Attributes': {},
+            'Table': {},
+            'Nodes': {
+                'hardware': {
+                    'Attributes': {
+                        'Pairs': {
+                            'blubb': 42
+                        }
+                    },
+                    'Table': {},
+                    'Nodes': {
+                        'memory': {
+                            'Attributes': {
+                                'Pairs': {
+                                    'ram': 10000,
+                                    'foo': 1
+                                }
+                            },
+                            'Table': {},
+                            'Nodes': {}
+                        }
+                    }
+                }
             }
         }
 
         inv = web.get_inventory([host_name], paths=['.hardware.memory.'])
-        assert inv[host_name] == {u'hardware': {u'memory': {u'foo': 1, u'ram': 10000}}}
+        assert inv[host_name] == {
+            'Attributes': {},
+            'Table': {},
+            'Nodes': {
+                'hardware': {
+                    'Attributes': {},
+                    'Table': {},
+                    'Nodes': {
+                        'memory': {
+                            'Attributes': {
+                                'Pairs': {
+                                    'ram': 10000,
+                                    'foo': 1
+                                }
+                            },
+                            'Table': {},
+                            'Nodes': {}
+                        }
+                    }
+                }
+            }
+        }
 
         inv = web.get_inventory([host_name], paths=['.hardware.mumpf.'])
-        assert inv[host_name] == {}
+        assert inv[host_name] == {'Attributes': {}, 'Nodes': {}, 'Table': {}}
     finally:
         web.delete_host(host_name)
 

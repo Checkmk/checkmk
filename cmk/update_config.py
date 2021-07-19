@@ -9,7 +9,6 @@ This command is normally executed automatically at the end of "omd update" on
 all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
-
 import argparse
 import ast
 import copy
@@ -22,6 +21,7 @@ import re
 import shutil
 import subprocess
 import time
+from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from typing import (
     Any,
@@ -68,7 +68,6 @@ from cmk.base.autochecks.migration import load_unmigrated_autocheck_entries
 import cmk.gui.config
 import cmk.gui.groups
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.query_filters as query_filters
 import cmk.gui.utils
 import cmk.gui.visuals as visuals
 import cmk.gui.watolib.groups
@@ -91,7 +90,6 @@ from cmk.gui.plugins.userdb.utils import (
     USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views
-from cmk.gui.plugins.visuals.utils import filter_registry
 from cmk.gui.plugins.wato.utils import config_variable_registry
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 from cmk.gui.sites import is_wato_slave_site
@@ -163,6 +161,17 @@ REMOVED_WATO_RULESETS_MAP = {
 _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
+@contextmanager
+def _save_user_instances(visual_type: str, all_visuals: Dict):
+    modified_user_instances: Set[UserId] = set()
+
+    yield modified_user_instances
+
+    # Now persist all modified instances
+    for user_id in modified_user_instances:
+        visuals.save(visual_type, all_visuals, user_id)
+
+
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super().__init__()
@@ -218,7 +227,7 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._migrate_range_filters, "Migrate Range filters"),
+            (self._rewrite_visuals, "Migrate Visuals context"),
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting tags"),
@@ -851,42 +860,29 @@ class UpdateConfig:
 
         return topic_created_for
 
-    def _migrate_range_filters(self) -> None:
-        range_filters = [
-            filter_ident
-            for filter_ident, filter_object in filter_registry.items()
-            if hasattr(filter_object, "query_filter")
-            and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
-        ]
+    def _rewrite_visuals(self):
+        """This function uses the updates in visuals.transform_old_visual which
+        takes place upon visuals load. However, load forces no save, thus save
+        the transformed visual in this update step. All user configs are rewriten.
+        The load and transform functions are specific to each visual, saving is generic."""
 
-        self._migrate_visual_range_filter(range_filters, "views", get_all_views())
-        self._migrate_visual_range_filter(range_filters, "dashboards", get_all_dashboards())
+        def updates(visual_type: str, all_visuals: Dict):
+            with _save_user_instances(visual_type, all_visuals) as affected_user:
+                # skip builtins, only users
+                affected_user.update(owner for owner, _name in all_visuals if owner)
+
+        updates("views", get_all_views())
+        updates("dashboards", get_all_dashboards())
+
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting
-
-            reporting.load_reports()
-            self._migrate_visual_range_filter(range_filters, "reports", reporting.reports)
+            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
         except ImportError:
-            pass
+            reporting = None  # type: ignore[assignment]
 
-    def _migrate_visual_range_filter(
-        self, range_filters: List[str], visual_type: str, all_visuals: Dict
-    ) -> None:
-        modified_user_instances = set()
-        for (owner, _name), visual_spec in all_visuals.items():
-            for key, filter_vars in visual_spec.get("context", {}).items():
-                if key in range_filters:
-                    new_vars = {
-                        re.sub("_to$", "_until", request_var): value
-                        for request_var, value in filter_vars.items()
-                    }
-                    if filter_vars != new_vars:
-                        modified_user_instances.add(owner)
-                        visual_spec["context"][key] = new_vars
-
-        for owner in modified_user_instances:
-            visuals.save(visual_type, all_visuals, owner)
+        if reporting:
+            reporting.load_reports()  # Loading does the transformation
+            updates("reports", reporting.reports)
 
     def _migrate_all_visuals_topics(self, topics: Dict) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
@@ -926,23 +922,19 @@ class UpdateConfig:
         all_visuals: Dict,
     ) -> Set[UserId]:
         topic_created_for: Set[UserId] = set()
-        modified_user_instances: Set[UserId] = set()
+        with _save_user_instances(visual_type, all_visuals) as affected_user:
 
-        # First modify all instances in memory and remember which things have changed
-        for (owner, _name), visual_spec in all_visuals.items():
-            instance_modified, topic_created = self._transform_pre_17_topic_to_id(
-                topics, visual_spec
-            )
+            # First modify all instances in memory and remember which things have changed
+            for (owner, _name), visual_spec in all_visuals.items():
+                instance_modified, topic_created = self._transform_pre_17_topic_to_id(
+                    topics, visual_spec
+                )
 
-            if instance_modified and owner:
-                modified_user_instances.add(owner)
+                if instance_modified and owner:
+                    affected_user.add(owner)
 
-            if topic_created and owner:
-                topic_created_for.add(owner)
-
-        # Now persist all modified instances
-        for user_id in modified_user_instances:
-            visuals.save(visual_type, all_visuals, user_id)
+                if topic_created and owner:
+                    topic_created_for.add(owner)
 
         return topic_created_for
 
@@ -1025,26 +1017,23 @@ class UpdateConfig:
         filter_group = global_config.get("topology_default_filter_group", "")
 
         dashboards = visuals.load("dashboards", builtin_dashboards)
-        modified_user_instances: Set[UserId] = set()
-        for (owner, _name), dashboard in dashboards.items():
-            for dashlet in dashboard["dashlets"]:
-                if dashlet["type"] == "network_topology":
-                    transform_topology_dashlet(dashlet, filter_group)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in ("hoststats", "servicestats"):
-                    transform_stats_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-                elif dashlet["type"] in (
-                    "single_timeseries",
-                    "custom_graph",
-                    "combined_graph",
-                    "problem_graph",
-                ):
-                    transform_timerange_dashlet(dashlet)
-                    modified_user_instances.add(owner)
-
-        for user_id in modified_user_instances:
-            visuals.save("dashboards", dashboards, user_id)
+        with _save_user_instances("dashboards", dashboards) as affected_user:
+            for (owner, _name), dashboard in dashboards.items():
+                for dashlet in dashboard["dashlets"]:
+                    if dashlet["type"] == "network_topology":
+                        transform_topology_dashlet(dashlet, filter_group)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in ("hoststats", "servicestats"):
+                        transform_stats_dashlet(dashlet)
+                        affected_user.add(owner)
+                    elif dashlet["type"] in (
+                        "single_timeseries",
+                        "custom_graph",
+                        "combined_graph",
+                        "problem_graph",
+                    ):
+                        transform_timerange_dashlet(dashlet)
+                        affected_user.add(owner)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""

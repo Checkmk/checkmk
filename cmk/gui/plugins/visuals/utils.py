@@ -8,6 +8,7 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+import re
 from itertools import chain
 from typing import (
     Any,
@@ -418,6 +419,20 @@ def parse_ranged_tables_literal(s: str) -> RangedTables:
     raise ValueError("Expected a RangedTables Literal")
 
 
+def recover_pre_2_1_range_filter_request_vars(query: query_filters.NumberRangeQuery):
+    """Some range filters used the _to suffix instead of the standard _until.
+
+    Do inverse translation to search for this request vars."""
+    request_var_match = ((var, re.sub("_until(_|$)", "_to\\1", var)) for var in query.request_vars)
+    return {
+        current_var: (
+            request.get_str_input_mandatory(current_var, "")
+            or request.get_str_input_mandatory(old_var, "")
+        )
+        for current_var, old_var in request_var_match
+    }
+
+
 class FilterNumberRange(Filter):  # type is int
     def __init__(
         self,
@@ -461,6 +476,10 @@ class FilterNumberRange(Filter):  # type is int
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the request context."""
+        return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
 
 class FilterTime(Filter):
@@ -511,6 +530,10 @@ class FilterTime(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the request context."""
+        return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
 
 def checkbox_component(htmlvar: str, value: FilterHTTPVariables, label: str):

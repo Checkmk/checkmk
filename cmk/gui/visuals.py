@@ -10,6 +10,7 @@ import copy
 import json
 import os
 import pickle
+import re
 import sys
 import traceback
 from enum import Enum
@@ -42,6 +43,7 @@ import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.query_filters as query_filters
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui import hooks
@@ -322,12 +324,20 @@ def transform_old_visual(visual):
     visual["context"] = cleanup_context_filters(visual["context"], visual["single_infos"])
 
 
-def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+def transform_pre_2_1_discovery_state(
+    fident: FilterName, vals: FilterHTTPVariables
+) -> Tuple[FilterName, FilterHTTPVariables]:
     # Fix context into type VisualContext
-    if filter_conf := context.get("discovery_state"):
-        # CMK-6606: States were saved as bools instead of str
-        context["discovery_state"] = {key: "on" if val else "" for key, val in filter_conf.items()}
+    if fident == "discovery_state":
+        return "discovery_state", {key: "on" if val else "" for key, val in vals.items()}
+    return fident, vals
 
+
+def transform_pre_2_1_single_infos(
+    single_infos: SingleInfos,
+) -> Callable[
+    [FilterName, Union[str, int, FilterHTTPVariables]], Tuple[FilterName, FilterHTTPVariables]
+]:
     # Remove the old single infos
     single_info_keys = get_single_info_keys(single_infos)
 
@@ -350,7 +360,39 @@ def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext
             % (fident, vals)
         )
 
-    return dict(starmap(unsingle, context.items()))
+    return unsingle
+
+
+def transform_pre_2_1_range_filters() -> Callable[
+    [FilterName, FilterHTTPVariables], Tuple[FilterName, FilterHTTPVariables]
+]:
+    # Update Visual Range Filters
+    range_filters = [
+        filter_ident
+        for filter_ident, filter_object in filter_registry.items()
+        if hasattr(filter_object, "query_filter")
+        and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)  # type: ignore[attr-defined]
+    ]
+
+    def transform_range_vars(
+        fident: FilterName, vals: FilterHTTPVariables
+    ) -> Tuple[FilterName, FilterHTTPVariables]:
+        if fident in range_filters:
+            return fident, {
+                re.sub("_to(_|$)", "_until\\1", request_var): value
+                for request_var, value in vals.items()
+            }
+        return fident, vals
+
+    return transform_range_vars
+
+
+def cleanup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
+    new_context_vars = starmap(transform_pre_2_1_single_infos(single_infos), context.items())
+    new_context_vars = starmap(transform_pre_2_1_discovery_state, new_context_vars)
+    new_context_vars = starmap(transform_pre_2_1_range_filters(), new_context_vars)
+
+    return dict(new_context_vars)
 
 
 class _CombinedVisualsCache:

@@ -22,6 +22,7 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 namespace cma {  // to become friendly for wtools classes
 constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
@@ -2147,6 +2148,8 @@ TEST(PluginTest, SyncPluginsGroup) {
 
     PluginMap pm;  // load from the groups::plugin
     UpdatePluginMap(pm, true, files, plugins_file_group_param, false);
+    auto group_name =
+        wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
 
     // async part should provide nothing
     for (const auto& f : files) {
@@ -2162,7 +2165,7 @@ TEST(PluginTest, SyncPluginsGroup) {
 
         auto base_table = cma::tools::SplitString(a, G_EndOfString);
         ASSERT_TRUE(base_table.size() == 2);
-        ASSERT_TRUE(base_table[1] == "2 name cmk_TST_Users");
+        EXPECT_EQ(base_table[1], "2 name cmk_TST_"s + group_name);
     }
 }
 

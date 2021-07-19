@@ -33,7 +33,34 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import (
                 "perc_heap": (13.4, 15.9),
                 "perc_nonheap": (0.1, 30.),
             },
-            id="legacy case",
+            id="legacy case 1",
+        ),
+        pytest.param(
+            {
+                "totalheap": (10, 21),
+                "heap": (13.4, 15.9),
+                "nonheap": (1, 3),
+            },
+            {
+                "abs_total": (10485760, 22020096),
+                "perc_heap": (13.4, 15.9),
+                "abs_nonheap": (1048576, 3145728),
+            },
+            id="legacy case 2",
+        ),
+        pytest.param(
+            {
+                "totalheap": (1, 2),
+                "heap": (3, 4),
+                "nonheap": (5, 6),
+                "perm": (10., 20.)
+            },
+            {
+                "abs_total": (1048576, 2097152),
+                "abs_heap": (3145728, 4194304),
+                "abs_nonheap": (5242880, 6291456),
+            },
+            id="legacy case 3",
         ),
         pytest.param(
             {

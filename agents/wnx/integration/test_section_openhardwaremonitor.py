@@ -12,23 +12,25 @@ import re
 import shutil
 import time
 import it_utils
-from local import (actual_output, assert_subprocess, make_yaml_config, local_test, write_config,
-                   user_dir)
+from local import (
+    local_test,
+    user_dir,
+)
 
 
-class Globals(object):
+class Globals():
     it_utils.stop_ohm()
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=[('openhardwaremonitor', True), ('openhardwaremonitor', False)],
+@pytest.fixture(name="testconfig", params=[('openhardwaremonitor', True), ('openhardwaremonitor', False)],
                 ids=['sections=openhardwaremonitor', 'sections=openhardwaremonitor_systemtime'])
-def testconfig(request, make_yaml_config):
+def testconfig_engine(request, make_yaml_config):
     Globals.alone = request.param[1]
     if Globals.alone:
         make_yaml_config['global']['sections'] = request.param[0]
@@ -47,8 +49,8 @@ def wait_agent():
     return inner
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     re_str = (r'^\d+,[^,]+,(\/\w+)+,(Power|Clock|Load|Data|Temperature),'
               r'\d+\.\d{6},\b(?:OK|Timeout)\b')
     if not Globals.alone:

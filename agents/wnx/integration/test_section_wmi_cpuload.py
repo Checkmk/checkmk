@@ -7,7 +7,7 @@
 import os
 import pytest  # type: ignore[import]
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
+from local import local_test
 import it_utils
 
 
@@ -16,8 +16,8 @@ class Globals(object):
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
@@ -31,8 +31,8 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     expected = [
         re.escape(r'<<<%s:sep(124)>>>' % Globals.section),
         re.escape(r'[system_perf]'),

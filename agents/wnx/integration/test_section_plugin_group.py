@@ -13,8 +13,10 @@ import re
 import sys
 import time
 import shutil
-from local import (actual_output, assert_subprocess, make_yaml_config, src_exec_dir, local_test,
-                   wait_agent, write_config, user_dir)
+from local import (
+    local_test,
+    user_dir,
+)
 
 
 class Globals():
@@ -26,21 +28,21 @@ class Globals():
     alone = False
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['bat ps1'], ids=['bat_ps1'])
-def testconfig_suffixes(request, make_yaml_config):
+@pytest.fixture(name="testconfig_suffixes", params=['bat ps1'], ids=['bat_ps1'])
+def testconfig_suffixes_engine(request, make_yaml_config):
     Globals.suffixes = request.param
     if request.param != 'default':
         make_yaml_config['global']['execute'] = request.param
     return make_yaml_config
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig_sections(request, testconfig_suffixes):
+@pytest.fixture(name="testconfig_sections", params=['alone', 'with_systemtime'])
+def testconfig_sections_engine(request, testconfig_suffixes):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
         testconfig_suffixes['global']['sections'] = [Globals.plugintype]
@@ -49,8 +51,8 @@ def testconfig_sections(request, testconfig_suffixes):
     return testconfig_suffixes
 
 
-@pytest.fixture(params=['sync', 'async', 'async+cached'])
-def testconfig(request, testconfig_sections):
+@pytest.fixture(name="testconfig", params=['sync', 'async', 'async+cached'])
+def testconfig_engine(request, testconfig_sections):
     Globals.executionmode = request.param
     name = Globals.plugintype
     if request.param == 'sync':
@@ -77,8 +79,8 @@ def testconfig(request, testconfig_sections):
     return testconfig_sections
 
 
-@pytest.fixture()
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     main_label = [
         re.escape(r'<<<%s>>>' % ('local:sep(0)' if Globals.plugintype == 'local' else ''))
     ]
@@ -146,15 +148,17 @@ def expected_output():
     return chain(main_label, plugin_fixed, plugin_variadic)
 
 
-@pytest.fixture(params=['plugins', 'local'])
-def plugin_dir(request):
+@pytest.fixture(name="plugin_dir", params=['plugins', 'local'])
+def plugin_dir_engine(request):
     Globals.plugintype = request.param
     target_dir = os.path.join(user_dir, request.param)
     return target_dir
 
 
-@pytest.fixture(params=['netstat_an.bat', 'wmic_if.bat', 'windows_if.ps1'], autouse=True)
-def manage_plugins(request, plugin_dir):
+@pytest.fixture(name="manage_plugins",
+                params=['netstat_an.bat', 'wmic_if.bat', 'windows_if.ps1'],
+                autouse=True)
+def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                               "test_files\\integration")
@@ -167,7 +171,7 @@ def manage_plugins(request, plugin_dir):
     yield
     if platform.system() == 'Windows':
         for plugin in [request.param, Globals.binaryplugin]:
-            for i in range(0, 5):
+            for _ in range(0, 5):
                 try:
                     os.unlink(os.path.join(plugin_dir, plugin))
                     break

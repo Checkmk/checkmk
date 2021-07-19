@@ -5,27 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from builtins import range
-from builtins import object
 
 import sys
 import os
 import platform
 from typing import List
 import pytest  # type: ignore
-from local import (make_yaml_config, local_test, run_subprocess, write_config, main_exe)
+from local import (
+    local_test,
+    run_subprocess,
+    main_exe,
+)
 
 
-class Globals(object):
+class Globals():
     param: List[str] = []
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(make_yaml_config):
+@pytest.fixture(name="testconfig")
+def testconfig_engine(make_yaml_config):
     if Globals.param[0] == 'showconfig':
         make_yaml_config['zzz'] = {
             'enabled': 'yes',
@@ -38,12 +41,12 @@ def testconfig(make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def actual_output(request, write_config):
+@pytest.fixture(name="actual_output")
+def actual_output_engine(request, write_config):
     if platform.system() == 'Windows':
         # Run agent and yield its output.
         try:
-            exit_code, _stdout, _stderr = run_subprocess([main_exe] + Globals.param)
+            exit_code, _stdout, _stderr = run_subprocess([str(main_exe)] + Globals.param)
             if _stdout:
                 sys.stdout.write(_stdout.decode(encoding='cp1252'))
             if _stderr:
@@ -73,8 +76,8 @@ def output_bad_usage():
     return r
 
 
-@pytest.fixture
-def expected_output(request, testconfig):
+@pytest.fixture(name="expected_output")
+def expected_output_engine(request, testconfig):
     return {
         'version': [r'Check_MK Agent version \d+\.\d+\.\d+([bi]\d+)?(p\d+)?'],
         'showconfig': [

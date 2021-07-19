@@ -8,23 +8,25 @@ import os
 import platform
 import pytest  # type: ignore[import]
 import re
-from local import (actual_output, make_yaml_config, local_test, src_exec_dir, wait_agent,
-                   write_config, user_dir, root_dir)
+from local import (
+    local_test,
+    user_dir,
+)
 
 
-class Globals(object):
+class Globals():
     section = 'spool'
     alone = True
     test_message = 'Test message'
     outdated = False
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
+@pytest.fixture(name="testconfig",params=['alone', 'with_systemtime'])
 def testconfig(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
@@ -34,8 +36,8 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     expected = []
     if not Globals.outdated:
         expected += [r'%s' % Globals.test_message]

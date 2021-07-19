@@ -1,0 +1,13 @@
+Title: REST API: Missing default tag groups in the REST API
+Class: fix
+Compatible: compat
+Component: core
+Date: 1626683070
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p8
+
+This is an update to the werk #12950 which was released with
+2.0.0p7. The werk did not completely solve the issue which
+is now done with this release.

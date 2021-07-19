@@ -11,7 +11,7 @@ from typing import List, Tuple as _Tuple, Optional, Type, Iterator, Union
 
 from six import ensure_str
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

@@ -41,7 +41,7 @@ from cmk.utils.structured_data import (
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.inventory import InventoryDeltaData

@@ -20,7 +20,8 @@ from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
@@ -219,7 +220,7 @@ class Dashlet(metaclass=abc.ABCMeta):
 
     @classmethod
     def allowed_roles(cls) -> List[str]:
-        return config.builtin_role_ids
+        return builtin_role_ids
 
     @classmethod
     def add_url(cls) -> str:

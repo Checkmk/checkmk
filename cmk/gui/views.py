@@ -27,7 +27,8 @@ from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
+from cmk.gui.config import register_post_config_load_hook, builtin_role_ids
+from cmk.gui.globals import config
 import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.inventory as inventory
@@ -1094,8 +1095,7 @@ def load_plugins(force):
     # Declare permissions for builtin views
     for name, view_spec in multisite_builtin_views.items():
         declare_permission("view.%s" % name, format_view_title(name, view_spec),
-                           "%s - %s" % (name, _u(view_spec["description"])),
-                           config.builtin_role_ids)
+                           "%s - %s" % (name, _u(view_spec["description"])), builtin_role_ids)
 
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
@@ -1133,7 +1133,7 @@ def _calc_config_hash() -> int:
     return hash(repr(config.tags.get_dict_format()))
 
 
-config.register_post_config_load_hook(_register_tag_plugins)
+register_post_config_load_hook(_register_tag_plugins)
 
 
 def _register_host_tag_painters():

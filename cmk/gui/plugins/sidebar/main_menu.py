@@ -9,7 +9,7 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 """
 from typing import NamedTuple, List, Optional, Union
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html, request, response, output_funnel, user

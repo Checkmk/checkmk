@@ -16,7 +16,7 @@ import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
 from cmk.gui.i18n import _, _l

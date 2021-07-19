@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, Mapping, Optional, Type
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.globals import g, html, request, response
 from cmk.gui.log import logger

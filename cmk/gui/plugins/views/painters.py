@@ -19,7 +19,7 @@ from cmk.utils.type_defs import Timestamp
 import cmk.utils.version as cmk_version
 
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 from cmk.gui.sites import get_site_config

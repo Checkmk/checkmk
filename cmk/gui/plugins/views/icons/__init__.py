@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML

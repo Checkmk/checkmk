@@ -11,7 +11,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, display_options, transactions, user_errors, request, user

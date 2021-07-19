@@ -16,7 +16,7 @@ from six import ensure_binary
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.watolib.host_attributes import host_attribute_registry

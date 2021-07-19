@@ -9,7 +9,7 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, NamedTuple, Union, Literal
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

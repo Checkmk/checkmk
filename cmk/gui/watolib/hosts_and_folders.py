@@ -19,7 +19,8 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, 
 from livestatus import SiteId
 
 from cmk.gui.log import logger
-import cmk.gui.config as config
+from cmk.gui.config import get_storage_format
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
 import cmk.gui.utils.escaping as escaping
@@ -1174,7 +1175,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 custom_macros[custom_varname][hostname] = nagstring
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
-        if config.get_storage_format() == store.StorageFormat.RAW:
+        if get_storage_format() == store.StorageFormat.RAW:
             storage_list.append(RawHostsStorage())
 
         for storage in storage_list:  # = make_hosts_storage()

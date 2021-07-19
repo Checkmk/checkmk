@@ -98,3 +98,4 @@ def test_sorted_sites(with_user_login, mocker):
     expected = [('site1', 'Site 1'), ('site12', 'Site 12'), ('site23', 'Site 23'),
                 ('site3', 'Site 3'), ('site5', 'Site 5'), ('site6', 'Site 6')]
     assert sites.sorted_sites() == expected
+    mocker.stopall()

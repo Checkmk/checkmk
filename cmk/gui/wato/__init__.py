@@ -92,7 +92,7 @@ import cmk.utils.render as render
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib

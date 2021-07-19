@@ -11,9 +11,8 @@ import pytest
 import cmk.utils.version as cmk_version
 import cmk.utils.tags
 
-import cmk.gui.config
 import cmk.gui.inventory
-from cmk.gui.globals import output_funnel, request
+from cmk.gui.globals import output_funnel, request, config
 import cmk.gui.plugins.visuals
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 
@@ -566,10 +565,10 @@ def filter_test_id(t):
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
 def test_filters_filter(register_builtin_html, test, monkeypatch):
     # Needed for ABCFilterCustomAttribute
-    monkeypatch.setattr(cmk.gui.config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
+    monkeypatch.setattr(config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
 
     # Need for ABCTagFilter
-    monkeypatch.setattr(cmk.gui.config, "tags", cmk.utils.tags.BuiltinTagConfig())
+    monkeypatch.setattr(config, "tags", cmk.utils.tags.BuiltinTagConfig())
 
     with request.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
         request.del_vars()

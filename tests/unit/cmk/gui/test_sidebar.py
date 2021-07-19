@@ -9,15 +9,9 @@ from typing import Optional
 import pytest
 
 import cmk.gui.sidebar as sidebar
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.globals import html, user
 from cmk.gui.sidebar import UserSidebarSnapin
-
-
-@pytest.fixture(scope="module", autouse=True)
-def gui_config():
-    config.__dict__.update(config.get_default_config())
-
 
 # TODO: Can be removed once all snapins have been refactored
 # to class based snapins

@@ -7,7 +7,7 @@
 from contextlib import nullcontext
 from typing import Any, Dict, List
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _

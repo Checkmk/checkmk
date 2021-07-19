@@ -17,7 +17,8 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import DiscoveryResult
 
 import cmk.utils.tags
-import cmk.gui.config as config
+from cmk.gui.globals import config
+from cmk.gui.config import prepare_raw_site_config
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 
@@ -1000,7 +1001,7 @@ class APICallSites(APICallCollection):
 
         site_mgmt.validate_configuration(request["site_id"], request["site_config"], all_sites)
 
-        sites = config.prepare_raw_site_config({request["site_id"]: request["site_config"]})
+        sites = prepare_raw_site_config({request["site_id"]: request["site_config"]})
 
         all_sites.update(sites)
         site_mgmt.save_sites(all_sites)
@@ -1015,7 +1016,7 @@ class APICallSites(APICallCollection):
         for site_id, site_config in request["sites"].items():
             site_mgmt.validate_configuration(site_id, site_config, request["sites"])
 
-        site_mgmt.save_sites(config.prepare_raw_site_config(request["sites"]))
+        site_mgmt.save_sites(prepare_raw_site_config(request["sites"]))
 
     def _delete(self, request):
         site_mgmt = watolib.SiteManagementFactory().factory()

@@ -22,7 +22,7 @@ from marshmallow.schema import SchemaMeta
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import import_string
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.globals import request
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples

@@ -17,9 +17,16 @@ import cmk.utils.log
 import cmk.update_config as update_config
 import cmk.gui.config
 import cmk.utils.paths
+from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+
+
+@pytest.fixture()
+def request_context():
+    with application_and_request_context():
+        yield
 
 
 @pytest.fixture()
@@ -92,6 +99,7 @@ def test_cleanup_version_specific_caches(uc):
         },
     ),
 ])
+@pytest.mark.usefixtures("request_context")
 def test__transform_wato_rulesets_params(
     ruleset_name,
     param_value,
@@ -113,6 +121,7 @@ def test__transform_wato_rulesets_params(
     ('non_inline_snmp_hosts', True, 'snmp_backend_hosts', 'classic'),
     ('non_inline_snmp_hosts', False, 'snmp_backend_hosts', 'inline'),
 ])
+@pytest.mark.usefixtures("request_context")
 def test__transform_replaced_wato_rulesets_and_params(
     ruleset_name,
     param_value,
@@ -244,6 +253,7 @@ def _non_discovery_ignored_services_ruleset():
             _non_discovery_ignored_services_ruleset(),
         ),
     ])
+@pytest.mark.usefixtures("request_context")
 def test__transform_discovery_disabled_services(
     ruleset_spec,
     expected_ruleset,

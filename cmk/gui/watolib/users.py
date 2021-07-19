@@ -8,7 +8,7 @@ from cmk.gui.globals import user
 from cmk.gui.type_defs import UserId
 import cmk.gui.userdb as userdb
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.mkeventd
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError

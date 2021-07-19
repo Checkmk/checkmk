@@ -12,10 +12,12 @@ import threading
 import urllib.parse
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, NamedTuple, Literal, Optional, Dict, Iterator
+from typing import Any, NamedTuple, Literal, Optional, Dict, Iterator, Generator
 from functools import lru_cache
 
 import pytest
+# TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
+from _pytest.monkeypatch import MonkeyPatch
 import webtest  # type: ignore[import]
 from mock import MagicMock
 
@@ -24,7 +26,8 @@ from testlib.users import create_and_destroy_user
 import cmk.utils.log
 
 from cmk.gui import watolib
-import cmk.gui.config as config
+from cmk.gui.globals import config
+import cmk.gui.config as config_module
 import cmk.gui.login as login
 from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.wsgi import make_app
@@ -47,11 +50,30 @@ HTTPMethod = Literal[
 ]  # yapf: disable
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     with application_and_request_context():
         yield
+
+
+@pytest.fixture()
+def monkeypatch(monkeypatch, register_builtin_html) -> Generator[MonkeyPatch, None, None]:
+    """Makes patch/undo of request globals possible
+
+    In the GUI we often use the monkeypatch for patching request globals (e.g.
+    cmk.gui.globals.config). To be able to undo all these patches, we need to be within the request
+    context while monkeypatch.undo is running. However, with the default "monkeypatch" fixture the
+    undo would be executed after leaving the application and request context.
+
+    What we do here is to override the default monkeypatch fixture of pytest for the GUI tests:
+    See also: https://github.com/pytest-dev/pytest/blob/main/src/_pytest/monkeypatch.py.
+
+    The drawback here may be that we create some unnecessary application / request context objects
+    for some tests. If you have an idea for a cleaner approach, let me know.
+    """
+    yield monkeypatch
+    monkeypatch.undo()
 
 
 @pytest.fixture(scope='module')
@@ -64,9 +86,9 @@ def module_wide_request_context():
 
 
 @pytest.fixture()
-def load_config(register_builtin_html):
+def load_config(register_builtin_html, monkeypatch):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
-    config.initialize()
+    config_module.initialize()
     yield
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
@@ -76,6 +98,8 @@ def load_plugins(register_builtin_html, monkeypatch, tmp_path):
     import cmk.gui.modules as modules
     monkeypatch.setattr(config, "roles", {'user': {}, 'admin': {}, 'guest': {}})
     modules.load_all_plugins()
+    yield
+    monkeypatch.undo()
 
 
 @pytest.fixture(scope='function', name="patch_json", autouse=True)
@@ -291,9 +315,9 @@ class WebTestAppForCMK(webtest.TestApp):
             for key, val in kwargs.items():
                 setattr(config, key, val)
 
-        config.register_post_config_load_hook(_set_config)
+        config_module.register_post_config_load_hook(_set_config)
         yield
-        config._post_config_load_hooks.remove(_set_config)
+        config_module._post_config_load_hooks.remove(_set_config)
 
     def login(self, username: str, password: str) -> WebTestAppForCMK:
         wsgi_app.username = username
@@ -316,7 +340,7 @@ def _make_webtest(debug):
 
 
 @pytest.fixture(scope='function')
-def wsgi_app(monkeypatch):
+def wsgi_app(monkeypatch, register_builtin_html):
     return _make_webtest(debug=True)
 
 

@@ -10,13 +10,16 @@ import cmk.utils.bi.bi_legacy_config_converter
 import bi_test_data.sample_config as sample_config
 import logging
 
+from cmk.gui.utils.script_helpers import application_and_request_context
+
 
 def test_bi_legacy_config_conversion(monkeypatch):
     monkeypatch.setattr("cmk.utils.bi.bi_legacy_config_converter.BIManagement._get_config_string",
                         lambda x: sample_config.LEGACY_BI_PACKS_CONFIG_STRING)
 
-    schema_from_legacy_packs = cmk.utils.bi.bi_legacy_config_converter.BILegacyConfigConverter(
-        logging.Logger("unit test")).get_schema_for_packs()
+    with application_and_request_context():
+        schema_from_legacy_packs = cmk.utils.bi.bi_legacy_config_converter.BILegacyConfigConverter(
+            logging.Logger("unit test")).get_schema_for_packs()
     assert sample_config.bi_packs_config["packs"] == schema_from_legacy_packs
 
 

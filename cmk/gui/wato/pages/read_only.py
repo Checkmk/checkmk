@@ -10,7 +10,7 @@ import time
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user

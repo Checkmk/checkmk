@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from functools import partial
 from itertools import chain
 from time import sleep
@@ -35,7 +35,8 @@ from cmk.utils.redis import get_redis_client
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import g, request, RequestContext, user, config
+from cmk.gui.globals import g, request, RequestContext, user, config, local
+from cmk.gui.config import make_config_object
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
@@ -353,11 +354,12 @@ class IndexSearcher:
         _funnel = OutputFunnel(_response)
         _theme = Theme()
         _theme.from_config(config.ui_theme)
+        _config = make_config_object(asdict(local.config))
         with RequestContext(
                 req=_request,
                 resp=_response,
                 funnel=_funnel,
-                config_obj=config,
+                config_obj=_config,
                 html_obj=html(_request, _response, _funnel, output_format="html"),
                 display_options=DisplayOptions(),
                 theme=_theme,

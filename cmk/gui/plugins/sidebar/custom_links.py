@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, user

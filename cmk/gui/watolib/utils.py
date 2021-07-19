@@ -21,7 +21,7 @@ import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
 from cmk.gui.globals import user
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException

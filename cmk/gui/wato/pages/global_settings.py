@@ -17,7 +17,7 @@ from typing import (
 )
 
 import cmk.utils.version as cmk_version
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms

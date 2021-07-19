@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.version as cmk_version
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import html
-import cmk.gui.config as config
+from cmk.gui.config import builtin_role_ids
 
 
 class DummyDashlet(dashboard.Dashlet):
@@ -158,7 +158,7 @@ _attr_map = [
     ("opt_params", "opt_parameters", False),
     ("validate_params", "validate_parameters_func", None),
     ("refresh", "initial_refresh_interval", False),
-    ("allowed", "allowed_roles", config.builtin_role_ids),
+    ("allowed", "allowed_roles", builtin_role_ids),
     ("styles", "styles", None),
     ("script", "script", None),
     ("title", "title", "Test dashlet"),
@@ -307,7 +307,7 @@ def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None
-    assert dashboard.Dashlet.allowed_roles() == config.builtin_role_ids
+    assert dashboard.Dashlet.allowed_roles() == builtin_role_ids
 
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 

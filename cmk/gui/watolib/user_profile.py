@@ -13,7 +13,7 @@ from typing import NamedTuple
 
 import cmk.gui.sites as sites
 import cmk.gui.hooks as hooks
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 from cmk.gui.sites import get_site_config, get_login_slave_sites, is_wato_slave_site
 from cmk.gui.utils.urls import urlencode_vars

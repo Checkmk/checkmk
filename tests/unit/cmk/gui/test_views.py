@@ -12,7 +12,7 @@ from typing import Any, Dict
 
 import pytest
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 

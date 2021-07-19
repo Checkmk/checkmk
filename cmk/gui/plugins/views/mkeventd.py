@@ -12,7 +12,8 @@ from livestatus import SiteId
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.utils.escaping as escaping
-import cmk.gui.config as config
+from cmk.gui.globals import config
+from cmk.gui.config import builtin_role_ids
 import cmk.gui.sites as sites
 from cmk.gui.type_defs import HTTPVariables, Row
 
@@ -147,7 +148,7 @@ permission_registry.register(
         title=_("See all events"),
         description=_("If a user lacks this permission then he/she can see only those events that "
                       "originate from a host that he/she is a contact for."),
-        defaults=config.builtin_role_ids,
+        defaults=builtin_role_ids,
     ))
 
 permission_registry.register(
@@ -159,7 +160,7 @@ permission_registry.register(
             "If that user does not have the permission <i>See all events</i> then this permission "
             "controls wether he/she can see events that are not related to a host in the monitoring "
             "and that do not have been assigned specific contact groups to via the event rule."),
-        defaults=config.builtin_role_ids,
+        defaults=builtin_role_ids,
     ))
 
 permission_registry.register(
@@ -170,7 +171,7 @@ permission_registry.register(
         description=_(
             "Whether or not the user is permitted to see the number of open events in the "
             "sidebar element 'Overview'."),
-        defaults=config.builtin_role_ids,
+        defaults=builtin_role_ids,
     ))
 
 

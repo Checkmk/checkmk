@@ -39,7 +39,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Dictionary,
 )
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.forms as forms
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.breadcrumb import (

@@ -76,7 +76,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb

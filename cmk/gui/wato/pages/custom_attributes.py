@@ -11,7 +11,7 @@ import pprint
 import re
 from typing import Dict, Any, Optional, Type, Iterable
 
-import cmk.gui.config as config
+from cmk.gui.config import load_config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
@@ -47,7 +47,7 @@ def update_user_custom_attrs():
 
 
 def _update_host_custom_attrs():
-    config.load_config()
+    load_config()
     Folder.invalidate_caches()
     Folder.root_folder().rewrite_hosts_files()
 

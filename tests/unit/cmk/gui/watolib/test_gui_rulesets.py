@@ -13,7 +13,7 @@ import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.exceptions import MKGeneralException
 import cmk.gui.utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib.rulesets as rulesets
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 

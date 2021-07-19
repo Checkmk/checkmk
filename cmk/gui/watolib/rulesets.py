@@ -25,7 +25,8 @@ import cmk.utils.store as store
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.regex import escape_regex_chars
 
-import cmk.gui.config as config
+from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.globals import config
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -56,7 +57,7 @@ from cmk.gui.watolib.utils import (
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 # Make the GUI config module reset the base config to always get the latest state of the config
-config.register_post_config_load_hook(cmk.base.export.reset_config)
+register_post_config_load_hook(cmk.base.export.reset_config)
 
 RulesetName = str
 FolderPath = str

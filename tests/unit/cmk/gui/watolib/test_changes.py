@@ -191,7 +191,7 @@ class TestSiteChanges:
         assert store.read()[0]["object"] == ObjectRef(ref_type, 'node1')
 
 
-def test_log_audit_with_object_diff():
+def test_log_audit_with_object_diff(register_builtin_html):
     old = {
         "a": "b",
         "b": "c",

@@ -12,7 +12,8 @@ from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union, Dict
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import TagID
 
-import cmk.gui.config as config
+from cmk.gui.config import register_post_config_load_hook, builtin_role_ids
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 
 from cmk.gui.type_defs import Row
@@ -121,7 +122,7 @@ class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
         ident = self.plugin_name(instance)
         declare_permission("icons_and_actions.%s" % ident, ident,
                            _("Allow to see the icon %s in the host and service views") % ident,
-                           config.builtin_role_ids)
+                           builtin_role_ids)
 
 
 icon_and_action_registry = IconRegistry()
@@ -132,7 +133,7 @@ def update_icons_from_configuration():
     _register_custom_user_icons_and_actions(config.user_icons_and_actions)
 
 
-config.register_post_config_load_hook(update_icons_from_configuration)
+register_post_config_load_hook(update_icons_from_configuration)
 
 
 def _update_builtin_icons(builtin_icon_visibility):

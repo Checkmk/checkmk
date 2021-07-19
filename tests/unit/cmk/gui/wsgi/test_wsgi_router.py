@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
-def test_profiling(wsgi_app, mocker):
+def test_profiling(wsgi_app):
     var_dir = cmk.utils.paths.var_dir
     assert not os.path.exists(var_dir + "/multisite.py")
     assert not os.path.exists(var_dir + "/multisite.profile")

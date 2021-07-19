@@ -12,7 +12,7 @@ from typing import (
     Optional,
 )
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib

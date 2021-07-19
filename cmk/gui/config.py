@@ -12,7 +12,7 @@ from types import ModuleType
 from typing import Any, Callable, Dict, List, Tuple, Union
 from pathlib import Path
 from functools import partial
-from dataclasses import dataclass, fields, field, make_dataclass
+from dataclasses import dataclass, fields, field, make_dataclass, asdict
 
 from livestatus import SiteConfigurations
 
@@ -22,7 +22,7 @@ import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
 
-from cmk.gui.globals import local
+from cmk.gui.globals import config, local
 import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -34,14 +34,10 @@ from cmk.gui.permissions import declare_permission, declare_permission_section  
 
 import cmk.gui.plugins.config
 
-# TODO: These imports will be removed once all call sites have been migrated to the config object
-# This import is added for static analysis tools like pylint to make them
-# know about all shipped config options. The default config options are
-# later handled with the default_config dict and _load_default_config()
-from cmk.gui.plugins.config.base import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.gui.plugins.config.base import CREConfig
 
 if not cmk_version.is_raw_edition():
-    from cmk.gui.cee.plugins.config.cee import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+    from cmk.gui.cee.plugins.config.cee import CEEConfig
 else:
     # Stub needed for non enterprise edition
     class CEEConfig:  # type: ignore[no-redef]
@@ -49,7 +45,7 @@ else:
 
 
 if cmk_version.is_managed_edition():
-    from cmk.gui.cme.plugins.config.cme import *  # pylint: disable=wildcard-import,unused-wildcard-import,no-name-in-module
+    from cmk.gui.cme.plugins.config.cme import CMEConfig
 else:
 
     # Stub needed for non managed services edition
@@ -68,6 +64,9 @@ else:
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
+# hard coded in various permissions
+builtin_role_ids: List[str] = ["user", "admin", "guest"]
+
 
 @dataclass
 class Config(CREConfig, CEEConfig, CMEConfig):
@@ -83,17 +82,8 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
 
 
-# TODO: Will be removed once all call sites have been migrated to the config object
-tags = cmk.utils.tags.TagConfig()
-
-# hard coded in various permissions
-builtin_role_ids = ["user", "admin", "guest"]
-
-config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
-
-
 def get_storage_format() -> 'store.StorageFormat':
-    return store.StorageFormat.from_str(config_storage_format)
+    return store.StorageFormat.from_str(config.config_storage_format)
 
 
 #.
@@ -111,8 +101,8 @@ def get_storage_format() -> 'store.StorageFormat':
 
 def initialize() -> None:
     load_config()
-    log.set_log_levels(log_levels)
-    cmk.gui.i18n.set_user_localizations(user_localizations)
+    log.set_log_levels(config.log_levels)
+    cmk.gui.i18n.set_user_localizations(config.user_localizations)
 
 
 def _load_config_file_to(path: str, raw_config: Dict[str, Any]) -> None:
@@ -172,10 +162,6 @@ def load_config() -> None:
 
     local.config = make_config_object(raw_config)
 
-    # TODO: Keep until all call sites are refactored to use the Config object from
-    # cmk.gui.globals
-    globals().update(raw_config)
-
     execute_post_config_load_hooks()
 
 
@@ -227,18 +213,28 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def get_default_config() -> Dict[str, Any]:
-    default_config = _get_default_config_from_legacy_plugins()
+    default_config = asdict(Config())  # First apply the builtin config
+    default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config
 
 
 def _get_default_config_from_legacy_plugins() -> Dict[str, Any]:
+    """Plugins from local/share/check_mk/web/plugins/config are loaded here"""
     default_config: Dict[str, Any] = {}
     utils.load_web_plugins("config", default_config)
     return default_config
 
 
 def _get_default_config_from_module_plugins() -> Dict[str, Any]:
+    """Plugins from the config plugin module namespace are loaded here
+
+    These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
+    `cmk.gui.cme.plugins.config`.
+
+    Please note: Currently they can not be overriden from the sites local hiearchy, because it's
+    no namespace package.
+    """
     config_plugin_vars: Dict = {}
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
@@ -258,9 +254,14 @@ def _get_default_config_from_module_plugins() -> Dict[str, Any]:
 def _config_plugin_modules() -> List[ModuleType]:
     return [
         module for name, module in sys.modules.items()
-        if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
-            "cmk.gui.cee.plugins.config.") or name.startswith("cmk.gui.cme.plugins.config.")) and
-        module is not None
+        if (name.startswith("cmk.gui.plugins.config.")  #
+            or name.startswith("cmk.gui.cee.plugins.config.")  #
+            or name.startswith("cmk.gui.cme.plugins.config."))  #
+        and name not in (
+            "cmk.gui.plugins.config.base",  #
+            "cmk.gui.cee.plugins.config.cee",  #
+            "cmk.gui.cme.plugins.config.cme")  #
+        and module is not None
     ]
 
 

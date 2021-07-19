@@ -6,9 +6,8 @@
 
 import pytest
 
-from cmk.gui.globals import html, user, local
+from cmk.gui.globals import html, user, local, config
 import cmk.gui.main
-import cmk.gui.config
 
 
 def test_get_start_url_default(register_builtin_html):
@@ -16,12 +15,12 @@ def test_get_start_url_default(register_builtin_html):
 
 
 def test_get_start_url_default_config(monkeypatch, register_builtin_html):
-    monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
+    monkeypatch.setattr(config, "start_url", "bla.py")
     assert cmk.gui.main._get_start_url() == "bla.py"
 
 
 def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
-    monkeypatch.setattr(cmk.gui.config, "start_url", "bla.py")
+    monkeypatch.setattr(config, "start_url", "bla.py")
 
     class MockUser:
         @property

@@ -23,7 +23,7 @@ from cmk.gui.exceptions import MKConfigError
 from cmk.gui import sites
 from cmk.gui.valuespec import DropdownChoiceEntry
 import cmk.gui.watolib as watolib
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils

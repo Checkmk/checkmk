@@ -11,7 +11,7 @@ from typing import NamedTuple, List, Optional, Type
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job

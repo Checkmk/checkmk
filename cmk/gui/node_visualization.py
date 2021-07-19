@@ -23,7 +23,7 @@ from cmk.gui.globals import html, theme, request, user
 from cmk.gui.i18n import _
 import cmk.gui.bi as bi
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.pages import (
     page_registry,
     Page,

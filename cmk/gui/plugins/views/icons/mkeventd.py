@@ -7,7 +7,7 @@
 import re
 import shlex
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.sites import get_alias_of_host, get_site_config

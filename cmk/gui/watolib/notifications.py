@@ -9,7 +9,7 @@ from typing import Dict, List
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId, EventRule
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 from cmk.gui.watolib.utils import wato_root_dir
 

@@ -6,7 +6,6 @@
 
 import pytest
 
-import cmk.gui.config as config
 from cmk.gui.valuespec import (
     DropdownChoice,)
 
@@ -18,11 +17,6 @@ from cmk.gui.plugins.wato import (
     config_variable_registry,
     ConfigDomainGUI,
 )
-
-
-@pytest.fixture(autouse=True)
-def initialize_default_config():
-    config.__dict__.update(config.get_default_config())
 
 
 def test_ui_theme_registration():

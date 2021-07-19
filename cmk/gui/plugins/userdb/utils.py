@@ -19,7 +19,8 @@ from cmk.utils.site import omd_site
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
-import cmk.gui.config as config
+from cmk.gui.globals import config
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.sites import get_site_config, site_is_local, is_wato_slave_site
 from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
 
@@ -292,7 +293,7 @@ def _get_builtin_roles() -> Roles:
             "alias": builtin_role_names.get(rid, rid),
             "permissions": {},  # use default everywhere
             "builtin": True,
-        } for rid in config.builtin_role_ids
+        } for rid in builtin_role_ids
     }
 
 

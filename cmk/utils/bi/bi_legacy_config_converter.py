@@ -21,7 +21,7 @@ from pathlib import Path
 import logging
 import re
 from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_tag_to_group_map)
-import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

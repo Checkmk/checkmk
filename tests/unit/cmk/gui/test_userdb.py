@@ -18,7 +18,7 @@ import cmk.utils.version
 
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.valuespec import Dictionary
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 from cmk.gui.globals import g
 import cmk.gui.plugins.userdb.utils as utils
@@ -334,11 +334,11 @@ def test_initialize_session_single_user_session(user_id):
     )
 
 
-def test_cleanup_old_sessions_no_existing():
+def test_cleanup_old_sessions_no_existing(register_builtin_html):
     assert userdb._cleanup_old_sessions({}) == {}
 
 
-def test_cleanup_old_sessions_remove_outdated():
+def test_cleanup_old_sessions_remove_outdated(register_builtin_html):
     assert list(
         userdb._cleanup_old_sessions({
             "outdated": userdb.SessionInfo(
@@ -356,7 +356,7 @@ def test_cleanup_old_sessions_remove_outdated():
         }).keys()) == ["keep"]
 
 
-def test_cleanup_old_sessions_too_many():
+def test_cleanup_old_sessions_too_many(register_builtin_html):
     sessions = {
         f"keep_{num}": userdb.SessionInfo(
             session_id=f"keep_{num}",
@@ -419,7 +419,7 @@ def test_get_last_activity(with_user, session_valid):
     assert userdb.get_last_activity(user_id, user) == time.time()
 
 
-def test_user_attribute_sync_plugins(monkeypatch):
+def test_user_attribute_sync_plugins(register_builtin_html, monkeypatch):
     monkeypatch.setattr(config, "wato_user_attrs", [{
         'add_custom_macro': False,
         'help': u'VIP attribute',

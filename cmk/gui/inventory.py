@@ -36,7 +36,7 @@ from cmk.utils.type_defs import HostName
 
 from cmk.gui.type_defs import Row
 import cmk.gui.pages
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _

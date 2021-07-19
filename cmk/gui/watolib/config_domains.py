@@ -24,7 +24,8 @@ from cmk.utils.site import omd_site
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
-import cmk.gui.config as config
+from cmk.gui.config import get_default_config
+from cmk.gui.globals import config
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -83,7 +84,7 @@ class ConfigDomainGUI(ABCConfigDomain):
         pass
 
     def default_globals(self):
-        return config.get_default_config()
+        return get_default_config()
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible

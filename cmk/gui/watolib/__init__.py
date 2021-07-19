@@ -53,7 +53,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.utils
 import cmk.gui.sites
 import cmk.utils.tags
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.mkeventd as mkeventd

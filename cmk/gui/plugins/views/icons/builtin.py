@@ -41,7 +41,7 @@ import json
 import re
 
 import cmk.gui.bi as bi
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.utils
 import cmk.utils.render
 from cmk.gui.globals import g, html, request, response, user

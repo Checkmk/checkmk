@@ -18,7 +18,7 @@ import livestatus
 
 
 # Override top level fixture to make livestatus connects possible here
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def prevent_livestatus_connect():
     pass
 

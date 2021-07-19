@@ -9,7 +9,7 @@ from typing import Dict
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir

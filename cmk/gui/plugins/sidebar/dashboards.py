@@ -6,7 +6,7 @@
 
 from typing import List
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.dashboard as dashboard
 from cmk.gui.globals import user
 from cmk.gui.i18n import _

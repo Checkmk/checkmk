@@ -64,7 +64,7 @@ def test_call(mocker):
     hook2_mock.assert_called_once()
 
 
-def test_call_exception_handling(mocker):
+def test_call_exception_handling(register_builtin_html, mocker):
     hooks.register_builtin("bli", lambda: 1.0 / 0.0)
     hook3_mock = mocker.Mock()
     hooks.register("bli", hook3_mock)

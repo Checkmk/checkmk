@@ -27,7 +27,7 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.globals import g, request, user as global_user
 from cmk.gui.log import logger

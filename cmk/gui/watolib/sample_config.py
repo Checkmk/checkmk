@@ -11,7 +11,6 @@ from cmk.utils.version import is_free_edition
 from cmk.utils.tags import TagConfig, sample_tag_config
 
 from cmk.gui.userdb import create_cmk_automation_user
-from cmk.gui import config
 from cmk.gui.log import logger
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.notifications import save_notification_rules
@@ -401,8 +400,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         tag_config = TagConfig()
         tag_config.parse_config(sample_tag_config())
         TagConfigFile().save(tag_config.get_dict_format())
-        # Make sure the host tag attributes are immediately declared!
-        config.tags = tag_config
 
 
 @sample_config_generator_registry.register

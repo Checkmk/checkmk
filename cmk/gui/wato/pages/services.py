@@ -20,7 +20,7 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.utils.escaping import escape_html
 from cmk.gui.htmllib import HTML, foldable_container
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 from cmk.gui.background_job import JobStatusStates

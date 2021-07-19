@@ -10,7 +10,7 @@ from typing import Any, Optional, Literal, List, Tuple, Sequence
 import livestatus
 from livestatus import SiteId
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites

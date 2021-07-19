@@ -53,7 +53,7 @@ from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.sites import has_wato_slave_sites

@@ -23,7 +23,7 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.globals import user
 from cmk.gui.log import logger
 from cmk.gui.watolib.changes import log_audit

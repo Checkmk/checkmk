@@ -40,7 +40,7 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.sites import SiteStatus, site_is_local, has_wato_slave_sites, is_wato_slave_site
 import cmk.gui.sites
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.log as log

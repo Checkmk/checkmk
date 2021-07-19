@@ -11,7 +11,7 @@ import abc
 
 import cmk.utils.tags
 
-import cmk.gui.config as config
+from cmk.gui.config import load_config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
@@ -82,7 +82,7 @@ class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
 
     def _save_tags_and_update_hosts(self, tag_config):
         self._tag_config_file.save(tag_config)
-        config.load_config()
+        load_config()
         watolib.Folder.invalidate_caches()
         watolib.Folder.root_folder().rewrite_hosts_files()
 

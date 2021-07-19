@@ -7,7 +7,7 @@
 import copy
 from typing import Any, Dict, List
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError

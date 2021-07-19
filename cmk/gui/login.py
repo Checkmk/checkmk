@@ -21,7 +21,7 @@ import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 from cmk.utils.site import url_prefix, omd_site
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.log import logger

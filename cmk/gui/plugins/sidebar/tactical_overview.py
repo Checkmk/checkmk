@@ -8,7 +8,7 @@ from collections import namedtuple
 
 import livestatus
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications

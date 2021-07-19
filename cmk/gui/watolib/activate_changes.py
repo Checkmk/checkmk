@@ -64,7 +64,7 @@ from cmk.gui.sites import (
     is_single_local_site,
     get_site_config,
 )
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.utils.ntop import is_ntop_configured

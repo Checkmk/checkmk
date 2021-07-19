@@ -9,7 +9,7 @@ this mode is used."""
 import copy
 from typing import List, Tuple, cast, Type, Optional
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.forms as forms
 from cmk.gui.log import logger

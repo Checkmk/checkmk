@@ -11,6 +11,7 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.login as login
 import cmk.gui.userdb as userdb
+from cmk.gui.config import load_config
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.globals import user, request, session
 from cmk.gui.exceptions import MKAuthException
@@ -78,6 +79,7 @@ def fixture_current_cookie(with_user, session_id):
     environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode("utf-8"))
 
     with application_and_request_context(environ):
+        load_config()
         yield cookie_name
 
 

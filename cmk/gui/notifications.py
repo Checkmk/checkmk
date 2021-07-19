@@ -9,7 +9,7 @@ import time
 from livestatus import MKLivestatusNotFoundError
 import cmk.utils.render
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib

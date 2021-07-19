@@ -7,7 +7,7 @@
 import time
 import copy
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.globals import request, response
 from cmk.gui.valuespec import (

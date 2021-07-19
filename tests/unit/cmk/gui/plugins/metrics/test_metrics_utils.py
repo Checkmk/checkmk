@@ -8,7 +8,7 @@ import pytest
 
 import cmk.utils.version
 
-import cmk.gui.config
+from cmk.gui.globals import config
 import cmk.gui.metrics as metrics
 from cmk.gui.type_defs import Perfdata
 from cmk.gui.plugins.metrics import utils
@@ -41,13 +41,13 @@ def test_split_perf_data(data_string, result):
         ("not_here", 6, u"M", 5.6, None, None, None),
     ], "test")),
 ])
-def test_parse_perf_data(perf_str, check_command, result):
+def test_parse_perf_data(register_builtin_html, perf_str, check_command, result):
     assert utils.parse_perf_data(perf_str, check_command) == result
 
 
-def test_parse_perf_data2(monkeypatch):
+def test_parse_perf_data2(register_builtin_html, monkeypatch):
     with pytest.raises(ValueError):
-        monkeypatch.setattr(cmk.gui.config, "debug", True)
+        monkeypatch.setattr(config, "debug", True)
         utils.parse_perf_data("hi ho", None)
 
 

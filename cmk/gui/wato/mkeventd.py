@@ -54,7 +54,7 @@ else:
 
 from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.forms as forms
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib

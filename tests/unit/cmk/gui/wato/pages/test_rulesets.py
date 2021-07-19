@@ -77,6 +77,7 @@ def fixture_tag_config():
 
 @pytest.fixture(autouse=True)
 def patch_tag_config(
+    register_builtin_html,
     monkeypatch: MonkeyPatch,
     tag_config: TagConfig,
 ) -> None:

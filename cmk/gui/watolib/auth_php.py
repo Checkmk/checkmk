@@ -43,7 +43,7 @@ from six import ensure_str
 import cmk.utils.store as store
 import cmk.utils.paths
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 from cmk.gui.utils.roles import get_role_permissions

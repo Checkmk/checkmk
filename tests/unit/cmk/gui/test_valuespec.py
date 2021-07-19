@@ -9,10 +9,11 @@ from pathlib import Path
 
 import pytest
 
-import cmk.gui.config
+import cmk.utils.paths
+
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
-from cmk.gui.globals import html
+from cmk.gui.globals import html, config
 
 from testlib import on_time
 
@@ -167,9 +168,9 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
         (25 * 60 * 60, "The last 25 hard hours"),  # defaults are idents
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ])
-def test_timerange_value_to_text_conversion(monkeypatch, value, result_title):
-
-    monkeypatch.setattr(cmk.gui.config, "graph_timeranges", [{
+def test_timerange_value_to_text_conversion(register_builtin_html, monkeypatch, value,
+                                            result_title):
+    monkeypatch.setattr(config, "graph_timeranges", [{
         'title': "The last 4 fun hours",
         "duration": 4 * 60 * 60
     }, {
@@ -183,7 +184,7 @@ def test_timerange_value_to_text_conversion(monkeypatch, value, result_title):
     assert vs.Timerange().value_to_text(value) == result_title
 
 
-def test_timerange_value_to_json_conversion():
+def test_timerange_value_to_json_conversion(register_builtin_html):
     with on_time("2020-03-02", "UTC"):
         for ident, title, _vs in vs.Timerange().choices():
             choice_value: vs.CascadingDropdownChoiceValue = ident

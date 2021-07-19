@@ -28,7 +28,7 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
 from cmk.gui.globals import request
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.hooks as hooks
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.i18n import _

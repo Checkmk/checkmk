@@ -26,7 +26,8 @@ from cmk.utils.type_defs import UserId, ContactgroupName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.globals import config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
@@ -98,7 +99,7 @@ def _fix_user_connections() -> None:
         cfg.setdefault('type', 'ldap')
 
 
-config.register_post_config_load_hook(_fix_user_connections)
+register_post_config_load_hook(_fix_user_connections)
 
 
 # When at least one LDAP connection is defined and active a sync is possible
@@ -1160,7 +1161,7 @@ def _clear_config_based_user_attributes() -> None:
 
 
 # Make the config module initialize the user attributes after loading the config
-config.register_post_config_load_hook(update_config_based_user_attributes)
+register_post_config_load_hook(update_config_based_user_attributes)
 
 #.
 #   .-Hooks----------------------------------------------------------------.

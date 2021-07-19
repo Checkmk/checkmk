@@ -75,7 +75,7 @@ import cmk.utils.regex
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import Seconds
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites

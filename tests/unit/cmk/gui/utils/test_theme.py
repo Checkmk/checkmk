@@ -26,12 +26,16 @@ def fixture_theme_dirs(tmp_path, monkeypatch):
 
 
 @pytest.fixture(name="my_theme")
-def fixture_my_theme(theme_dirs):
+def fixture_my_theme(theme_dirs, monkeypatch):
     theme_path = theme_dirs[0]
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
         str(json.dumps({"title": "Määh Theme :-)"})))
+
+    # Update the theme choices after introducing a new theme here
+    monkeypatch.setattr(theme, "theme_choices", theme_choices())
+
     return my_dir
 
 

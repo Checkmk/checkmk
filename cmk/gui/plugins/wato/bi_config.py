@@ -20,7 +20,7 @@ try:
 except ImportError:
     managed = None  # type: ignore[assignment]
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib

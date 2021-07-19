@@ -18,7 +18,7 @@ import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.weblib as weblib
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 
 from cmk.gui.table import table_element

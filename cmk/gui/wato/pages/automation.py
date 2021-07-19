@@ -15,7 +15,7 @@ from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 

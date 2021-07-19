@@ -21,7 +21,7 @@ import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html

@@ -20,7 +20,8 @@ import cmk.gui.pages
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
@@ -73,7 +74,7 @@ permission_registry.register(
         description=_l("This permissions specifies if the role "
                        "is able to use Web-API functions. It is only available "
                        "for automation users."),
-        defaults=config.builtin_role_ids,
+        defaults=builtin_role_ids,
     ))
 
 Formatter = Callable[[Dict[str, Any]], str]

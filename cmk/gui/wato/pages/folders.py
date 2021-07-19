@@ -12,7 +12,7 @@ from typing import List, Tuple, Dict, Optional, Type, Iterator
 
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
 from cmk.gui.table import table_element, init_rowselect

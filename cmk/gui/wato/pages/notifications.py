@@ -16,7 +16,7 @@ import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
 import cmk.gui.userdb as userdb
 import cmk.gui.permissions as permissions
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
 from cmk.gui.htmllib import foldable_container

@@ -18,7 +18,7 @@ from cmk.gui.sites import states, SiteStatus, site_is_local, get_site_config
 from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.utils.type_defs import SetAutochecksTable
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 

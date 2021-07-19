@@ -15,7 +15,7 @@ from cmk.utils.prediction import lq_logic
 
 import cmk.gui.utils
 from cmk.gui.utils.labels import encode_labels_for_livestatus
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd

@@ -19,9 +19,10 @@ import cmk.utils.store as store
 from cmk.gui.globals import local
 from cmk.gui.i18n import _
 import cmk.gui.sites as sites
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
+from cmk.gui.config import builtin_role_ids
 import cmk.gui.permissions as permissions
 
 
@@ -69,6 +70,8 @@ class LoggedInUser:
         return roles_of_user(user_id)
 
     def _load_attributes(self, user_id: Optional[UserId], role_ids: List[str]) -> Any:
+        if user_id is None:
+            return {"roles": role_ids}
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
             attributes = config.multisite_users.get(user_id, {
@@ -448,7 +451,7 @@ def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
 def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
     base_roles = set()
     for r in role_ids:
-        if r in config.builtin_role_ids:
+        if r in builtin_role_ids:
             base_roles.add(r)
         else:
             base_roles.add(config.roles[r]["basedon"])
@@ -464,6 +467,9 @@ def _most_permissive_baserole_id(baserole_ids: List[str]) -> str:
 
 
 def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
+    if user_id is None:
+        return {}
+
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
     if user_id in config.admin_users:

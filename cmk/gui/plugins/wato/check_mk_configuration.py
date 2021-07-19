@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple as _Tuple, Any
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.utils as utils
 from cmk.gui.utils.theme import theme_choices

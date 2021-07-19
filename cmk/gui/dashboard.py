@@ -27,7 +27,7 @@ from six import ensure_str
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.config as config
+from cmk.gui.config import builtin_role_ids
 import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.forms as forms
 import cmk.gui.i18n
@@ -298,7 +298,7 @@ def load_plugins(force: bool) -> None:
             # would have to manually adjust the permissions on the main dashboard on his own.
             default_permissions = permission_registry["general.see_all"].defaults
         else:
-            default_permissions = config.builtin_role_ids
+            default_permissions = builtin_role_ids
 
         declare_permission(
             "dashboard.%s" % name,
@@ -375,7 +375,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 
     @classmethod
     def allowed_roles(cls) -> List[str]:
-        return cls._spec.get("allowed", config.builtin_role_ids)
+        return cls._spec.get("allowed", builtin_role_ids)
 
     @classmethod
     def styles(cls) -> Optional[str]:
@@ -442,7 +442,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 #     "description" : _("Displays statistics about host states as globe and a table."),
 #     "render"      : dashlet_hoststats,
 #     "refresh"     : 60,
-#     "allowed"     : config.builtin_role_ids,
+#     "allowed"     : builtin_role_ids,
 #     "size"        : (30, 18),
 #     "resizable"   : False,
 # }

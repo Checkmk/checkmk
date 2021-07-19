@@ -26,7 +26,7 @@ from six import ensure_str
 
 from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _

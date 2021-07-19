@@ -9,7 +9,7 @@ from typing import Iterable, Optional, Type
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 from cmk.gui.table import table_element

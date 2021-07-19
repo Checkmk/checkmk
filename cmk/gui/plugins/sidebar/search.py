@@ -22,7 +22,7 @@ from cmk.utils.exceptions import (
 
 from cmk.gui.type_defs import ABCMegaMenuSearch
 import cmk.gui.utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.wato import main_module_registry

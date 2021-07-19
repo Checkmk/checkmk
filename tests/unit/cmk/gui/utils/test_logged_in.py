@@ -9,14 +9,16 @@ from pathlib import Path
 
 import cmk.utils.paths
 
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.globals import user as global_user
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext,
                                      SuperUserContext)
 from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.watolib.utils import may_edit_ruleset
-import cmk.gui.utils.roles as roles
+
+from testlib.users import create_and_destroy_user
 
 
 def test_user_context(with_user):
@@ -107,6 +109,7 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 
 
 @pytest.mark.parametrize('user', [LoggedInNobody(), LoggedInSuperUser()])
+@pytest.mark.usefixtures("register_builtin_html")
 def test_unauthenticated_users_language(mocker, user):
     mocker.patch.object(config, 'default_language', 'esperanto')
     assert user.language == 'esperanto'
@@ -140,6 +143,7 @@ def test_unauthenticated_users_authorized_login_sites(monkeypatch, user):
     assert user.authorized_login_sites() == {'slave_site': {}}
 
 
+@pytest.mark.usefixtures("register_builtin_html")
 def test_logged_in_nobody_permissions(mocker):
     user = LoggedInNobody()
 
@@ -151,6 +155,7 @@ def test_logged_in_nobody_permissions(mocker):
         user.need_permission('any_permission')
 
 
+@pytest.mark.usefixtures("register_builtin_html")
 def test_logged_in_super_user_permissions(mocker):
     user = LoggedInSuperUser()
 
@@ -208,7 +213,7 @@ MONITORING_USER_FAVORITES = ['heute;CPU load']
 
 
 @pytest.fixture(name="monitoring_user")
-def fixture_monitoring_user(mocker):
+def fixture_monitoring_user(register_builtin_html):
     """Returns a "Normal monitoring user" object."""
     user_dir = cmk.utils.paths.profile_dir / "test"
     user_dir.mkdir(parents=True)
@@ -220,18 +225,17 @@ def fixture_monitoring_user(mocker):
     # Favorites set in the commands menu:
     user_dir.joinpath('favorites.mk').write_text(str(MONITORING_USER_FAVORITES))
 
-    mocker.patch.object(roles, 'roles_of_user', lambda user_id: ['user'])
-
-    assert config.builtin_role_ids == ['user', 'admin', 'guest']
+    assert builtin_role_ids == ['user', 'admin', 'guest']
     assert 'test' not in config.admin_users
 
-    return LoggedInUser('test')
+    with create_and_destroy_user(username="test") as user:
+        yield LoggedInUser(user[0])
 
 
 def test_monitoring_user(monitoring_user):
     assert monitoring_user.id == 'test'
     assert monitoring_user.alias == 'Test user'
-    assert monitoring_user.email == 'test_user@tribe29.com'
+    assert monitoring_user.email == 'test_user_test@tribe29.com'
     assert monitoring_user.confdir.endswith('/web/test')
 
     assert monitoring_user.role_ids == ['user']
@@ -313,6 +317,5 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
     "agent_config:runas",
     "agent_config:only_from",
 ])
-def test_ruleset_permissions_with_commandline_access(register_builtin_html, monitoring_user,
-                                                     varname):
+def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
     assert may_edit_ruleset(varname) is False

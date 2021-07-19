@@ -14,7 +14,7 @@ from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple, Union
 
 from six import ensure_str
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.weblib as weblib

@@ -31,7 +31,7 @@ import cmk.utils.plugin_registry
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.mkeventd
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks

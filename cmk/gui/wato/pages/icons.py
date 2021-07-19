@@ -12,7 +12,7 @@ from PIL import Image, PngImagePlugin  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

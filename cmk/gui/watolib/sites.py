@@ -20,7 +20,8 @@ from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 from cmk.gui.sites import site_is_local, is_wato_slave_site, has_wato_slave_sites
-import cmk.gui.config as config
+from cmk.gui.config import prepare_raw_site_config, load_config, default_single_site_configuration
+from cmk.gui.globals import config
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import request, transactions
@@ -271,13 +272,13 @@ class SiteManagement:
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
-            return config.default_single_site_configuration()
+            return default_single_site_configuration()
 
         raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
         if not raw_sites:
-            return config.default_single_site_configuration()
+            return default_single_site_configuration()
 
-        sites = config.prepare_raw_site_config(raw_sites)
+        sites = prepare_raw_site_config(raw_sites)
         for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
@@ -294,7 +295,7 @@ class SiteManagement:
         # Do not activate when just the site's global settings have
         # been edited
         if activate:
-            config.load_config()  # make new site configuration active
+            load_config()  # make new site configuration active
             _update_distributed_wato_file(sites)
             Folder.invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()

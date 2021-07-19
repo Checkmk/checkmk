@@ -14,7 +14,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.config as config
+from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.globals import config
 from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _u
@@ -570,7 +571,7 @@ def _update_config_based_host_attributes() -> None:
 
 
 # Make the config module initialize the host attributes after loading the config
-config.register_post_config_load_hook(_update_config_based_host_attributes)
+register_post_config_load_hook(_update_config_based_host_attributes)
 
 
 def _clear_config_based_host_attributes():

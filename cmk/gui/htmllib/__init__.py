@@ -50,7 +50,7 @@ from cmk.gui.globals import transactions, user_errors, theme, user
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.log as log
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.popups import PopupMethod

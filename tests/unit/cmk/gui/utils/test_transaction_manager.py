@@ -6,9 +6,11 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import List
+from typing import List, Optional
 import time
 import pytest
+
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.http as http
 from cmk.gui.globals import transactions
@@ -45,6 +47,9 @@ class MockLoggedInUser(LoggedInUser):
 
     def save_transids(self, transids: List[str]) -> None:
         pass
+
+    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
+        return []
 
 
 @pytest.mark.parametrize("transid,ignore_transids,result,is_existing", [

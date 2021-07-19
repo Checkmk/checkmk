@@ -17,7 +17,7 @@ import responses  # type: ignore[import]
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.wato.mkeventd
 import cmk.gui.watolib.utils as utils
 import cmk.gui.watolib.activate_changes as activate_changes

@@ -16,7 +16,7 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config, pages, http, htmllib, sites
+from cmk.gui import config as config_module, pages, http, htmllib, sites
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     MKUserError,
@@ -27,7 +27,7 @@ from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,
 )
-from cmk.gui.globals import html, RequestContext, AppContext, request, response
+from cmk.gui.globals import html, RequestContext, AppContext, request, response, config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -197,7 +197,7 @@ class CheckmkApp:
         timeout_manager.enable_timeout(req.request_timeout)
 
         theme = Theme()
-        config_obj = config.make_config_object(config.get_default_config())
+        config_obj = config_module.make_config_object(config_module.get_default_config())
 
         with AppContext(self), RequestContext(
                 req=req,
@@ -209,7 +209,7 @@ class CheckmkApp:
                 display_options=DisplayOptions(),
                 theme=theme,
         ), patch_json(json):
-            config.initialize()
+            config_module.initialize()
             theme.from_config(config.ui_theme)
             return self.wsgi_app(environ, start_response)
 

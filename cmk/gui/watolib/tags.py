@@ -15,7 +15,7 @@ from enum import Enum
 
 from six import ensure_str
 
-import cmk.gui.config as config
+from cmk.gui.config import load_config
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import (MKAuthException, MKGeneralException)
 
@@ -151,7 +151,7 @@ def load_aux_tags() -> List[str]:
 
 
 def _update_tag_dependencies():
-    config.load_config()
+    load_config()
     watolib.Folder.invalidate_caches()
     watolib.Folder.root_folder().rewrite_hosts_files()
 

@@ -151,6 +151,8 @@ def test_default_config_from_plugins():
         'bi_precompile_on_demand',
         'bi_use_legacy_compilation',
         'sites',
+        'config_storage_format',
+        'tags',
     ]
 
     if is_enterprise_repo():
@@ -190,20 +192,17 @@ def test_default_config_from_plugins():
     assert sorted(list(default_config.keys())) == sorted(expected)
 
     default_config2 = asdict(cmk.gui.config.make_config_object(default_config))
-    assert sorted(default_config2.keys()) == sorted(expected + ["tags"])
+    assert sorted(default_config2.keys()) == sorted(expected)
 
 
 def test_load_config():
-    assert cmk.gui.config.quicksearch_dropdown_limit == 80
     assert config.quicksearch_dropdown_limit == 80
     cmk.gui.config.load_config()
-    assert cmk.gui.config.quicksearch_dropdown_limit == 80
     assert config.quicksearch_dropdown_limit == 80
 
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("quicksearch_dropdown_limit = 1337\n")
     cmk.gui.config.load_config()
-    assert cmk.gui.config.quicksearch_dropdown_limit == 1337
     assert config.quicksearch_dropdown_limit == 1337
 
 
@@ -218,8 +217,6 @@ def local_config_plugin():
 @pytest.mark.usefixtures("local_config_plugin")
 def test_load_config_respects_local_plugin():
     cmk.gui.config.load_config()
-    # Mypy will not understand this, because it's coming dynamically from a plugin.
-    assert cmk.gui.config.ding == 'dong'  # type: ignore[attr-defined]
     assert config.ding == 'dong'  # type: ignore[attr-defined]
 
 
@@ -228,8 +225,6 @@ def test_load_config_allows_local_plugin_setting():
     with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
         f.write("ding = 'ding'\n")
     cmk.gui.config.load_config()
-    # Mypy will not understand this, because it's coming dynamically from a plugin.
-    assert cmk.gui.config.ding == 'ding'  # type: ignore[attr-defined]
     assert config.ding == 'ding'  # type: ignore[attr-defined]
 
 

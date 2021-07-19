@@ -42,7 +42,7 @@ from cmk.utils.type_defs import (
 )
 from cmk.utils.werks import parse_check_mk_version
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html

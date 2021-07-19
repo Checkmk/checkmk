@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from six import ensure_str
 
 import cmk.gui.utils as utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, theme, user

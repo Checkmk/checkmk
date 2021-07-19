@@ -18,7 +18,7 @@ from cmk.utils.type_defs import UserId, timeperiod_spec_alias
 
 import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms

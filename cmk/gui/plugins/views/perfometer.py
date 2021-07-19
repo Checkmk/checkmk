@@ -6,7 +6,7 @@
 
 from typing import Optional, Tuple
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.metrics as metrics
 from cmk.gui.i18n import _

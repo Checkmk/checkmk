@@ -26,7 +26,8 @@ import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.config as config
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
@@ -315,7 +316,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         # based on
         if not self._role.get("builtin"):
             basedon = request.get_ascii_input_mandatory("basedon")
-            if basedon not in config.builtin_role_ids:
+            if basedon not in builtin_role_ids:
                 raise MKUserError("basedon",
                                   _("Invalid valid for based on. Must be id of builtin rule."))
             self._role["basedon"] = basedon

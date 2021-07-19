@@ -34,6 +34,8 @@ class StageInfo(TypedDict, total=False):
     COMMAND: str
     TEXT_ON_SKIP: str
     SKIPPED: str
+    RESULT_CHECK_TYPE: str
+    RESULT_CHECK_FILE_PATTERN: str
 
 
 Stages = Sequence[StageInfo]
@@ -87,6 +89,8 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         ENV_VARS={str(k): str(v) for k, v in raw_stage.get("ENV_VARS", {}).items()},
         COMMAND=str(raw_stage["COMMAND"]),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
+        RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
+        RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_PATTERN", "")),
     )
 
 
@@ -117,6 +121,8 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
         ENV_VARS={k: replace_variables(v, env_vars) for k, v in in_data["ENV_VARS"].items()},
         COMMAND=replace_variables(in_data["COMMAND"], env_vars),
         TEXT_ON_SKIP=replace_variables(in_data["TEXT_ON_SKIP"], env_vars),
+        RESULT_CHECK_TYPE=replace_variables(in_data["RESULT_CHECK_TYPE"], env_vars),
+        RESULT_CHECK_FILE_PATTERN=replace_variables(in_data["RESULT_CHECK_FILE_PATTERN"], env_vars),
     )
 
 
@@ -130,6 +136,8 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
             DIR=stage.get("DIR", ""),
             ENV_VAR_LIST=[f"{k}={v}" for k, v in stage.get("ENV_VARS", {}).items()],
             COMMAND=stage["COMMAND"],
+            RESULT_CHECK_TYPE=stage["RESULT_CHECK_TYPE"],
+            RESULT_CHECK_FILE_PATTERN=stage["RESULT_CHECK_FILE_PATTERN"],
         ) if no_skip or not skip_stage else  #
         StageInfo(
             NAME=stage["NAME"],

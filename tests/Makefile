@@ -11,7 +11,7 @@ YAPF := $(PIPENV) run yapf
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
-ADDITIONAL_MYPY_ARGS :=
+ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
 GCC_TOOLCHAIN := /opt/gcc-11.1.0
 
@@ -217,7 +217,7 @@ test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-mypy-docker:
-	../scripts/run-in-docker.sh make --quiet test-mypy
+	../scripts/run-in-docker.sh make test-mypy
 
 test-packaging:
 	$(PYTEST) -T packaging packaging

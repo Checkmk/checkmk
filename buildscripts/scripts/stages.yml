@@ -60,8 +60,10 @@ STAGES:
       ENV_VARS:
         JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
         MYPY_ADDOPTS: "--no-color-output"
-      COMMAND: 'make --quiet test-mypy-docker'
+      COMMAND: 'make test-mypy-docker'
       TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "MYPY"
+      RESULT_CHECK_FILE_PATTERN: "results/mypy.xml"
 
     - NAME: 'Python Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
@@ -89,6 +91,8 @@ STAGES:
         PYLINT_ARGS: "--output-format=cmk_parseable"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
       TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
+      RESULT_CHECK_TYPE: "PYLINT"
+      RESULT_CHECK_FILE_PATTERN: "results/pylint.xml"
 
     - NAME: 'Shell Format'
       DIR: 'tests'
@@ -116,10 +120,12 @@ STAGES:
       COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: 'No agent files changed'
 
-    - NAME: 'NEB/CMC Compile (neb-cmc-compile.txt)'
+    - NAME: 'NEB/CMC Compile'
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
 
-    - NAME: 'Clang Tidy Livestatus (livestatus-tidy.txt)'
+    - NAME: 'Clang Tidy Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -127,8 +133,10 @@ STAGES:
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
       COMMAND: "make test-tidy-livestatus-docker"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
 
-    - NAME: 'Clang Tidy core (core-tidy.txt)'
+    - NAME: 'Clang Tidy core'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -136,8 +144,10 @@ STAGES:
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
       COMMAND: "make test-tidy-core-docker"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
 
-    - NAME: 'IWYU Livestatus (livestatus-iwyu.txt)'
+    - NAME: 'IWYU Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -145,8 +155,10 @@ STAGES:
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
       COMMAND: "make test-iwyu-livestatus-docker"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
 
-    - NAME: 'IWYU core (core-iwyu.txt)'
+    - NAME: 'IWYU core'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -154,22 +166,28 @@ STAGES:
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
       COMMAND: "make test-iwyu-core-docker"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
 
-    - NAME: 'Unit Test Livestatus (livestatus-neb-cmc.txt)'
+    - NAME: 'Unit Test Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'livestatus/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"
       COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus-neb-cmc.txt"
 
-    - NAME: 'Unit Test core (core-neb-cmc.txt)'
+    - NAME: 'Unit Test core'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
       DIR: 'enterprise/core/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"
       COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt"
       TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/core-neb-cmc.txt"
 
     - NAME: 'Software Documentation Generation'
       ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES

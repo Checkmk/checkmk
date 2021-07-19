@@ -12,6 +12,7 @@ withFolderProperties {
 node (NODE) {
     def WORKSPACE = pwd()
     def RESULTS = WORKSPACE + "/results"
+    def issues = [];
 
     try {
         stage("Auschecken: Checkmk") {
@@ -27,7 +28,7 @@ node (NODE) {
         test_gerrit_helper.desc_init()
         test_gerrit_helper.desc_add_line(GERRIT_CHANGE_SUBJECT)
         test_gerrit_helper.desc_add_table()
-        test_gerrit_helper.desc_add_row('Stage', 'Status')
+        test_gerrit_helper.desc_add_row('Stage', 'Status', 'Result Files')
 
         /// Generate list of stages to be added - save them locally for reference
         sh("""scripts/run-in-docker.sh \
@@ -42,27 +43,22 @@ node (NODE) {
                   buildscripts/scripts/stages.yml
            """);
         def stage_info = test_gerrit_helper.load_json("${RESULTS}/stages.json");
+        def allStagesPassed = true;
         stage_info.STAGES.each { item ->
-            test_gerrit_helper.create_stage(item);
+            allStagesPassed = test_gerrit_helper.create_stage(item, issues) and allStagesPassed;
+            sh("ls -alF ${RESULTS}");
         }
+        currentBuild.result = allStagesPassed ? "SUCCESS" : "FAILED";
     } catch (e) {
         currentBuild.result = "FAILED"
         throw e
     } finally {
         stage("Analyse Issues") {
-            def CLANG = scanForIssues(tool: clang(
-                pattern: "results/*-tidy.txt"))
-            def GCC = scanForIssues(tool: gcc(
-                pattern: "results/*.iwyu.txt,results/neb-cmc-compile.txt,results/*neb-cmc.txt,results/python-yapf.txt"))
-            def PYLINT = scanForIssues(tool: pyLint(
-                pattern: "results/pylint.txt"))
-            def MYPY = scanForIssues(tool: myPy(
-                pattern: "results/mypy.xml"))
-
             publishIssues(
-                issues:[CLANG,GCC,PYLINT,MYPY],
+                issues: issues,
                 trendChartType: 'TOOLS_ONLY',
                 qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]])
+
             xunit([Custom(
                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                 deleteOutputFiles: false,

@@ -19,21 +19,45 @@ def load_json(json_file) {
 // ENV_VARS: Array [] of environment variables needed for the test
 // COMMAND:  command that should be executed. It should be possible to use this exact
 //           command to reproduce the test locally in the coresponding DIR
-def create_stage(Map args) {
+def create_stage(Map args, issues) {
     stage(args.NAME) {
         if (args.SKIPPED) {
-            println("SKIPPED: ${args.SKIPPED}")
-            desc_add_status_row(args.NAME, 'skipped')
-        } else {
-            println("CMD: ${args.COMMAND}")
-            dir(args.DIR) {
-                withEnv(args.ENV_VAR_LIST) {
-                    def cmd_status = sh(script: args.COMMAND, returnStatus: true)
-                    desc_add_status_row(args.NAME, cmd_status)
-                    sh('exit ' + cmd_status)
+            println("SKIPPED: ${args.SKIPPED}");
+            desc_add_status_row(args.NAME, 'skipped', '--');
+            return true;
+        }
+
+        sh(script: "figlet -w 150 '${args.NAME}'", returnStatus: true);
+        println("CMD: ${args.COMMAND}")
+        def cmd_status;
+        withEnv(args.ENV_VAR_LIST) {
+            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                dir(args.DIR) {
+                    cmd_status = sh(script: args.COMMAND, returnStatus: true);
                 }
+                desc_add_status_row(args.NAME, cmd_status, "${args.RESULT_CHECK_FILE_PATTERN}");
+
+                println("Check results: ${args.RESULT_CHECK_TYPE}");
+                if (args.RESULT_CHECK_TYPE) {
+                    if (args.RESULT_CHECK_TYPE == "MYPY") {
+                        issues.add(scanForIssues(
+                            tool: myPy(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                    } else if (args.RESULT_CHECK_TYPE == "PYLINT") {
+                        issues.add(scanForIssues(
+                            tool: pyLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                    } else if (args.RESULT_CHECK_TYPE == "GCC") {
+                        issues.add(scanForIssues(
+                            tool: gcc(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                    } else if (args.RESULT_CHECK_TYPE == "CLANG") {
+                        issues.add(scanForIssues(
+                            tool: clang(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
+                    }
+                }
+                /// make the stage fail if the command returned nonzero
+                sh('exit ' + cmd_status);
             }
         }
+        return cmd_status == 0;
     }
 }
 
@@ -58,19 +82,19 @@ def desc_add_table() {
 def desc_rm_table_bottom() {
     currentBuild.description -= '</table>'
 }
-def desc_add_row(ITEM_1, ITEM_2) {
+def desc_add_row(ITEM_1, ITEM_2, ITEM_3) {
     desc_rm_table_bottom()
-    currentBuild.description += '<tr><td>' + ITEM_1 + '</td><td>' + ITEM_2 + '</td></tr>'
+    currentBuild.description += '<tr><td>' + ITEM_1 + '</td><td>' + ITEM_2 + '</td><td>' + ITEM_3 + '</td></tr>'
     desc_add_table_bottom()
 }
-def desc_add_status_row(STAGE, STATUS) {
+def desc_add_status_row(STAGE, STATUS, PATTERN) {
     desc_rm_table_bottom()
     if (STATUS == 0) {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: green;">success</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: green;">success</td><td>' + PATTERN + '</td></tr>'
     } else if (STATUS == 'skipped') {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: grey;">skipped</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: grey;">skipped</td><td>' + PATTERN + '</td></tr>'
     } else {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: red;">failed</td></tr>'
+        currentBuild.description += '<tr><td>' + STAGE + '</td><td style="color: red;">failed</td><td>' + PATTERN + '</td></tr>'
     }
     desc_add_table_bottom()
 }

@@ -2978,8 +2978,8 @@ def test_get_inventory_display_hint():
     assert isinstance(hint, dict)
 
 
-def test_view_page(logged_in_wsgi_app, mock_livestatus):
-    wsgi_app = logged_in_wsgi_app
+def test_view_page(logged_in_admin_wsgi_app, mock_livestatus):
+    wsgi_app = logged_in_admin_wsgi_app
 
     def _prepend(prefix, dict_):
         d = {}

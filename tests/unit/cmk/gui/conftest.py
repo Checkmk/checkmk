@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+from __future__ import annotations
 import ast
 import json
 import threading
@@ -85,7 +86,7 @@ def fixture_patch_json():
 
 @pytest.fixture(scope='function')
 def with_user(register_builtin_html, load_config):
-    with create_and_destroy_user(automation=False) as user:
+    with create_and_destroy_user(automation=False, role="user") as user:
         yield user
 
 
@@ -174,7 +175,7 @@ def inline_background_jobs(mocker):
 
 @pytest.fixture(scope='function')
 def with_automation_user(register_builtin_html, load_config):
-    with create_and_destroy_user(automation=True) as user:
+    with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
 
 
@@ -294,6 +295,15 @@ class WebTestAppForCMK(webtest.TestApp):
         yield
         config._post_config_load_hooks.remove(_set_config)
 
+    def login(self, username: str, password: str) -> WebTestAppForCMK:
+        wsgi_app.username = username
+        login = self.get('/NO_SITE/check_mk/login.py')
+        login.form['_username'] = username
+        login.form['_password'] = password
+        resp = login.form.submit('_login', index=1)
+        assert "Invalid credentials." not in resp.text
+        return self
+
 
 @lru_cache
 def _session_wsgi_callable(debug):
@@ -326,18 +336,16 @@ def avoid_search_index_update_background(monkeypatch):
 
 @pytest.fixture(scope='function')
 def logged_in_wsgi_app(wsgi_app, with_user):
-    username, password = with_user
-    wsgi_app.username = username
-    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
-    login.form['_username'] = username
-    login.form['_password'] = password
-    resp = login.form.submit('_login', index=1)
-    assert "Invalid credentials." not in resp.text
-    return wsgi_app
+    return wsgi_app.login(with_user[0], with_user[1])
 
 
 @pytest.fixture(scope='function')
-def with_groups(module_wide_request_context, with_user_login, suppress_automation_calls):
+def logged_in_admin_wsgi_app(wsgi_app, with_admin):
+    return wsgi_app.login(with_admin[0], with_admin[1])
+
+
+@pytest.fixture(scope='function')
+def with_groups(module_wide_request_context, with_admin_login, suppress_automation_calls):
     watolib.add_group('windows', 'host', {'alias': 'windows'})
     watolib.add_group('routers', 'service', {'alias': 'routers'})
     watolib.add_group('admins', 'contact', {'alias': 'admins'})
@@ -348,7 +356,7 @@ def with_groups(module_wide_request_context, with_user_login, suppress_automatio
 
 
 @pytest.fixture(scope='function')
-def with_host(module_wide_request_context, with_user_login, suppress_automation_calls):
+def with_host(module_wide_request_context, with_admin_login, suppress_automation_calls):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts([
         (hostname, {}, None) for hostname in hostnames

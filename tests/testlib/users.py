@@ -15,7 +15,7 @@ from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
 
 
-def _mk_user_obj(username, password, automation=False):
+def _mk_user_obj(username, password, automation, role):
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
         "Ischbinwischtisch": '$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9',
@@ -27,11 +27,11 @@ def _mk_user_obj(username, password, automation=False):
     user = {
         username: {
             'attributes': {
-                'alias': username,
-                'email': 'admin@example.com',
+                'alias': 'Test user',
+                'email': 'test_user_%s@tribe29.com' % username,
                 'password': precomputed_hashes[password],
                 'notification_method': 'email',
-                'roles': ['admin'],
+                'roles': [role],
                 'serial': 0
             },
             'is_new_user': True,
@@ -43,11 +43,11 @@ def _mk_user_obj(username, password, automation=False):
 
 
 @contextlib.contextmanager
-def create_and_destroy_user(automation=False, role="user", username=None):
+def create_and_destroy_user(*, automation=False, role="user", username=None):
     if username is None:
         username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
     password = u'Ischbinwischtisch'
-    edit_users(_mk_user_obj(username, password, automation=automation))
+    edit_users(_mk_user_obj(username, password, automation, role))
     config.load_config()
 
     profile_path = Path(cmk.utils.paths.omd_root, "var", "check_mk", "web", username)

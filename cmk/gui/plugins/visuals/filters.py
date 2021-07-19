@@ -2509,7 +2509,7 @@ class BITextFilter(Filter):
 filter_registry.register(
     BITextFilter(
         ident="aggr_name_regex",
-        title=_l("Aggregation name"),
+        title=_l("Aggregation name regex"),
         sort_index=120,
         what="name",
         suffix="_regex",

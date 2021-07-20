@@ -8,7 +8,7 @@ from itertools import chain, repeat
 import os
 import pytest  # type: ignore
 import re
-from local import  local_test
+from local import local_test
 import it_utils
 
 

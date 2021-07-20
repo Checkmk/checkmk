@@ -26,7 +26,7 @@ def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(name="testconfig",params=['alone', 'with_systemtime'])
+@pytest.fixture(name="testconfig", params=['alone', 'with_systemtime'])
 def testconfig(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:

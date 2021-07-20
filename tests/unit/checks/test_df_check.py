@@ -418,23 +418,24 @@ def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
     assertDiscoveryResultsEqual(check, discovery_result, expected_result)
 
 
-df_params = {
-    'trend_range': 24,
-    'show_levels': 'onmagic',
-    'inodes_levels': (10.0, 5.0),
-    'magic_normsize': 20,
-    'show_inodes': 'onlow',
-    'levels': (80.0, 90.0),
-    'show_reserved': False,
-    'levels_low': (50.0, 60.0),
-    'trend_perfdata': True
-}
+def make_test_df_params():
+    return {
+        'trend_range': 24,
+        'show_levels': 'onmagic',
+        'inodes_levels': (10.0, 5.0),
+        'magic_normsize': 20,
+        'show_inodes': 'onlow',
+        'levels': (80.0, 90.0),
+        'show_reserved': False,
+        'levels_low': (50.0, 60.0),
+        'trend_perfdata': True
+    }
 
 
 @pytest.mark.parametrize("item,params,info,expected_result", [
     (
         '/',
-        df_params,
+        make_test_df_params(),
         info_df_lnx,
         [
             (
@@ -457,7 +458,7 @@ df_params = {
     ),
     (
         '/dev/sda4 /',
-        df_params,
+        make_test_df_params(),
         info_df_lnx,
         [
             (
@@ -480,7 +481,7 @@ df_params = {
     ),
     (
         'E:/',
-        df_params,
+        make_test_df_params(),
         info_df_win,
         [
             (
@@ -496,7 +497,7 @@ df_params = {
     ),
     (
         'New_Volume E:/',
-        df_params,
+        make_test_df_params(),
         info_df_win,
         [
             (
@@ -512,7 +513,7 @@ df_params = {
     ),
     (
         'btrfs /dev/sda1',
-        df_params,
+        make_test_df_params(),
         info_df_btrfs,
         [
             (
@@ -528,7 +529,7 @@ df_params = {
     ),
     (
         '/home',
-        df_params,
+        make_test_df_params(),
         info_df_lnx,
         [],
     ),
@@ -1027,7 +1028,7 @@ def test_df_discovery_groups_with_parse(inventory_df_rules, filesystem_groups, e
     ])
 def test_df_check_groups_with_parse(add_params, expected_result):
     check = Check('df')
-    params = df_params
+    params = make_test_df_params()
     params.update(add_params)
 
     actual = CheckResult(check.run_check("my-group", params, parse_df(info_df_groups)))

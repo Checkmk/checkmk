@@ -1786,7 +1786,6 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
         show_filters = visuals.filters_of_visual(view_spec,
                                                  datasource.infos,
                                                  link_filters=datasource.link_filters)
-        show_filters = visuals.visible_filters_of_visual(view_spec, show_filters)
         view_context = view_spec.get("context", {})
 
         # Return a visual filters dict filled with the view context values
@@ -2076,12 +2075,9 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
     force_checkboxes = view.spec.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or request.var('show_checkboxes', '0') == '1'
 
-    # Not all filters are really shown later in show_filter_form(), because filters which
-    # have a hardcoded value are not changeable by the user
     show_filters = visuals.filters_of_visual(view.spec,
                                              view.datasource.infos,
                                              link_filters=view.datasource.link_filters)
-    show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
     # Set browser reload
     if browser_reload and display_options.enabled(display_options.R):

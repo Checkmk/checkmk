@@ -300,7 +300,7 @@ def fixture_created_host_url(with_admin_login) -> str:
 
 
 class TestURLChecker:
-    @pytest.mark.usefixtures("module_wide_request_context")
+    @pytest.mark.usefixtures("request_context")
     def test_is_permitted_false(self) -> None:
         assert not URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
 
@@ -317,7 +317,7 @@ class TestURLChecker:
     def test_is_permitted_host_false(
         self,
         monkeypatch: MonkeyPatch,
-        module_wide_request_context,
+        request_context,
         created_host_url: str,
     ) -> None:
         monkeypatch.setattr(

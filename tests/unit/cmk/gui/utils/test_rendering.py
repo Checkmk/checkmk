@@ -40,7 +40,7 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
     ],
 )
 def test_text_with_links_to_user_translated_html(
-    module_wide_request_context,
+    request_context,
     elements,
     separator,
     rendered_title,

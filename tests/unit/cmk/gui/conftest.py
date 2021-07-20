@@ -76,15 +76,6 @@ def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, No
     monkeypatch.undo()
 
 
-@pytest.fixture(scope='module')
-def module_wide_request_context():
-    # This one is kind of an hack because some other test-fixtures touch the user object AFTER the
-    # request context has already ended. If we increase our scope this won't matter, but it is of
-    # course wrong. These other fixtures have to be fixed.
-    with application_and_request_context():
-        yield
-
-
 @pytest.fixture()
 def load_config(request_context):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
@@ -369,7 +360,7 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 
 @pytest.fixture(scope='function')
-def with_groups(module_wide_request_context, with_admin_login, suppress_automation_calls):
+def with_groups(request_context, with_admin_login, suppress_automation_calls):
     watolib.add_group('windows', 'host', {'alias': 'windows'})
     watolib.add_group('routers', 'service', {'alias': 'routers'})
     watolib.add_group('admins', 'contact', {'alias': 'admins'})
@@ -380,7 +371,7 @@ def with_groups(module_wide_request_context, with_admin_login, suppress_automati
 
 
 @pytest.fixture(scope='function')
-def with_host(module_wide_request_context, with_admin_login, suppress_automation_calls):
+def with_host(request_context, with_admin_login, suppress_automation_calls):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts([
         (hostname, {}, None) for hostname in hostnames

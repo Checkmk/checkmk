@@ -20,11 +20,7 @@ sidebar.load_plugins(True)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def fixture_user(module_wide_request_context, monkeypatch):
-    # We use the module wide request context because the monkeypatch would roll back the user
-    # stuff after the request context has already been ended and thus throwing an error. So we
-    # actually need to fix these tests and their user-handling because the natural way to test
-    # with a request-context is to have a fresh one for each function call.
+def fixture_user(request_context, monkeypatch):
     monkeypatch.setattr(user, "confdir", "")
     monkeypatch.setattr(user, "may", lambda x: True)
 
@@ -219,7 +215,7 @@ def test_save_user_config_allowed(request_context, mocker, monkeypatch):
     (False, "yes", True),
     (True, "", False),
 ])
-def test_ajax_fold(module_wide_request_context, mocker, origin_state, fold_var, set_state):
+def test_ajax_fold(request_context, mocker, origin_state, fold_var, set_state):
     html.request.set_var("fold", fold_var)
     m_config = mocker.patch.object(user,
                                    "load_file",
@@ -249,7 +245,7 @@ def test_ajax_fold(module_wide_request_context, mocker, origin_state, fold_var, 
     ("open", "off"),
     ("closed", "off"),
 ])
-def test_ajax_openclose_close(module_wide_request_context, mocker, origin_state, set_state):
+def test_ajax_openclose_close(request_context, mocker, origin_state, set_state):
     html.request.set_var("name", "tactical_overview")
     html.request.set_var("state", set_state)
     m_config = mocker.patch.object(user,
@@ -284,7 +280,7 @@ def test_ajax_openclose_close(module_wide_request_context, mocker, origin_state,
     })
 
 
-def test_move_snapin_not_permitted(monkeypatch, mocker, module_wide_request_context):
+def test_move_snapin_not_permitted(monkeypatch, mocker, request_context):
     monkeypatch.setattr(user, "may", lambda x: x != "general.configure_sidebar")
     m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
     sidebar.move_snapin()
@@ -295,7 +291,7 @@ def test_move_snapin_not_permitted(monkeypatch, mocker, module_wide_request_cont
     ("tactical_overview", "views", True),
     ("not_existing", "admin", None),
 ])
-def test_move_snapin(module_wide_request_context, mocker, move, before, do_save):
+def test_move_snapin(request_context, mocker, move, before, do_save):
     html.request.set_var("name", move)
     html.request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")

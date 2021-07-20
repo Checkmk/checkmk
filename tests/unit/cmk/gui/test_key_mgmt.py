@@ -10,7 +10,7 @@ from cmk.gui.globals import user
 import cmk.gui.key_mgmt as key_mgmt
 
 
-def test_key_mgmt_create_key(module_wide_request_context, monkeypatch):
+def test_key_mgmt_create_key(request_context, monkeypatch):
     monkeypatch.setattr(user, "id", "dingdöng")
     monkeypatch.setattr(time, "time", lambda: 123)
 

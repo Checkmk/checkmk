@@ -39,7 +39,7 @@ def test_render_help_text(request_context):
                         HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
 
 
-def test_render_help_visible(module_wide_request_context, request_context, monkeypatch):
+def test_render_help_visible(request_context, monkeypatch):
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
@@ -55,7 +55,7 @@ def test_add_manual_link(request_context):
         ))
 
 
-def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
+def test_add_manual_link_localized(request_context, monkeypatch):
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[introduction_docker|docker]"),
@@ -64,7 +64,7 @@ def test_add_manual_link_localized(module_wide_request_context, monkeypatch):
         ))
 
 
-def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
+def test_add_manual_link_anchor(request_context, monkeypatch):
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help(u"[graphing#rrds|RRDs]"),

@@ -79,7 +79,7 @@ def fixture_main_module_registry(monkeypatch):
 class TestWatoMode:
     def test_breadcrumb_without_additions(
         self,
-        module_wide_request_context,
+        request_context,
         main_module_registry,
     ):
         assert list(SomeWatoMode().breadcrumb()) == [
@@ -90,7 +90,7 @@ class TestWatoMode:
     def test_breadcrumb_with_additions(
         self,
         monkeypatch,
-        module_wide_request_context,
+        request_context,
         main_module_registry,
     ):
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:

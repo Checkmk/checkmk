@@ -22,7 +22,7 @@ def fixture_user_id(with_user):
     return UserId(with_user[0])
 
 
-def test_authenticate_success(module_wide_request_context, monkeypatch, user_id):
+def test_authenticate_success(request_context, monkeypatch, user_id):
     monkeypatch.setattr(login, "_check_auth", lambda r: user_id)
     assert user.id is None
     with login.authenticate(request) as authenticated:
@@ -31,7 +31,7 @@ def test_authenticate_success(module_wide_request_context, monkeypatch, user_id)
     assert user.id is None
 
 
-def test_authenticate_fails(module_wide_request_context, monkeypatch, user_id):
+def test_authenticate_fails(request_context, monkeypatch, user_id):
     monkeypatch.setattr(login, "_check_auth", lambda r: None)
     assert user.id is None
     with login.authenticate(request) as authenticated:

@@ -40,5 +40,5 @@ from cmk.gui.plugins.views.perfometers.check_mk import (
          )),
     ),
 ])
-def test_perfometer_fileinfo_groups(perf_data, expected_result, module_wide_request_context):
+def test_perfometer_fileinfo_groups(perf_data, expected_result, request_context):
     assert perfometer_fileinfo_groups({}, '', perf_data) == expected_result

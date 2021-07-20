@@ -54,7 +54,7 @@ def test_url_sorters_parse_encode(url, sorters):
 )
 def test_replace_action_url_macros(
     monkeypatch,
-    module_wide_request_context,
+    request_context,
     url,
     what,
     row,

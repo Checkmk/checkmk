@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def test_match_item_generator_settings(monkeypatch, module_wide_request_context):
+def test_match_item_generator_settings(monkeypatch, request_context):
     class SomeConfigVariable(ConfigVariable):
         def ident(self) -> str:
             return "ident"

@@ -674,53 +674,64 @@ section_checkmk_failed_plugins() {
     fi
 }
 
+run_purely_synchronous_sections() {
+    _log_section_time section_checkmk
+
+    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
+
+    [ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time section_nfs_mounts
+
+    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
+
+    [ -z "$MK_SKIP_AIX_LPARSTAT" ] && _log_section_time section_lparstat_aix
+
+    [ -z "$MK_SKIP_AIX_VMSTAT" ] && _log_section_time section_vmstat_aix
+
+    [ -z "$MK_SKIP_AIX_DISKIO" ] && _log_section_time section_aix_diskio
+
+    [ -z "$MK_SKIP_AIX_MEM" ] && _log_section_time section_aix_memory
+
+    [ -z "$MK_SKIP_AIX_MPSTAT" ] && _log_section_time section_mpstat_aix
+
+    [ -z "$MK_SKIP_AIX_PAGING" ] && _log_section_time section_aix_paging
+
+    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
+
+    [ -z "$MK_SKIP_AIX_IF" ] && _log_section_time section_aix_if
+
+    [ -z "$MK_SKIP_TIMESYNCHRONISATION" ] && _log_section_time section_ntp
+
+    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
+
+    [ -z "$MK_SKIP_AIX_LVM" ] && _log_section_time section_aix_lvm
+
+    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
+
+    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
+
+    [ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time section_mailqueue
+
+    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
+
+    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
+
+    [ -z "$MK_SKIP_AIX_HACMP" ] && _log_section_time section_aix_hacmp
+
+    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+}
+
+run_partially_asynchronous_sections() {
+    # kept to keep agents similar. Currently no section in this agent calls run_cached.
+    :
+}
+
 if $LOG_SECTION_TIME; then
     agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 fi
 
-_log_section_time section_checkmk
+run_purely_synchronous_sections
 
-[ -z "$MK_SKIP_DF" ] && _log_section_time section_df
-
-[ -z "$MK_SKIP_NFS_MOUNTS" ] && _log_section_time section_nfs_mounts
-
-[ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
-
-[ -z "$MK_SKIP_AIX_LPARSTAT" ] && _log_section_time section_lparstat_aix
-
-[ -z "$MK_SKIP_AIX_VMSTAT" ] && _log_section_time section_vmstat_aix
-
-[ -z "$MK_SKIP_AIX_DISKIO" ] && _log_section_time section_aix_diskio
-
-[ -z "$MK_SKIP_AIX_MEM" ] && _log_section_time section_aix_memory
-
-[ -z "$MK_SKIP_AIX_MPSTAT" ] && _log_section_time section_mpstat_aix
-
-[ -z "$MK_SKIP_AIX_PAGING" ] && _log_section_time section_aix_paging
-
-[ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
-
-[ -z "$MK_SKIP_AIX_IF" ] && _log_section_time section_aix_if
-
-[ -z "$MK_SKIP_TIMESYNCHRONISATION" ] && _log_section_time section_ntp
-
-[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
-
-[ -z "$MK_SKIP_AIX_LVM" ] && _log_section_time section_aix_lvm
-
-[ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
-
-[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
-
-[ -z "$MK_SKIP_MAILQUEUE" ] && _log_section_time section_mailqueue
-
-[ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
-
-[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
-
-[ -z "$MK_SKIP_AIX_HACMP" ] && _log_section_time section_aix_hacmp
-
-[ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+run_partially_asynchronous_sections
 
 # run_remote_plugins -> _log_section_time CMD
 run_remote_plugins

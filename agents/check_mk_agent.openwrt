@@ -267,8 +267,6 @@ section_checkmk() {
     fi
 }
 
-section_checkmk
-
 section_df() {
     # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
     # Heads up: NFS-mounts are generally supressed to avoid agent hangs.
@@ -290,8 +288,6 @@ section_df() {
     echo '[df_inodes_end]'
 }
 
-section_df
-
 section_zfsget() {
     # Filesystem usage for ZFS
     if type zfs >/dev/null 2>&1; then
@@ -302,8 +298,6 @@ section_zfsget() {
         df -PTlk -t zfs | sed 1d
     fi
 }
-
-section_zfsget
 
 section_mounts() {
     # Check NFS mounts by accessing them with stat -f (System
@@ -348,28 +342,16 @@ section_mounts() {
     grep ^/dev </proc/mounts
 }
 
-section_mounts
-
 section_ps() {
     # processes including username, without kernel processes
     echo '<<<ps>>>'
     ps ax -o user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 }
 
-section_ps
-
-# Memory usage
-section_mem
-
-# Load and number of processes
-section_cpu
-
 section_uptime() {
     echo '<<<uptime>>>'
     cat /proc/uptime
 }
-
-section_uptime
 
 section_lnx_if() {
     # New variant: Information about speed and state in one section
@@ -391,8 +373,6 @@ section_lnx_if() {
     fi
 }
 
-section_lnx_if
-
 # Current state of bonding interfaces
 section_bonding_interfaces() {
     (
@@ -401,8 +381,6 @@ section_bonding_interfaces() {
         head -v -n 1000 *
     )
 }
-
-section_bonding_interfaces
 
 section_ovs_bonding() {
     # Same for Open vSwitch bonding
@@ -417,15 +395,11 @@ section_ovs_bonding() {
     fi
 }
 
-section_ovs_bonding
-
 section_tcp_conn() {
     # Number of TCP connections in the various states
     echo '<<<tcp_conn_stats>>>'
     cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
 }
-
-section_tcp_conn
 
 section_multipath() {
     # Linux Multipathing
@@ -436,8 +410,6 @@ section_multipath() {
         fi
     fi
 }
-
-section_multipath
 
 section_diskstat() {
     # Performancecounter Platten
@@ -454,16 +426,12 @@ section_diskstat() {
     fi
 }
 
-section_diskstat
-
 section_kernel() {
     # Performancecounter Kernel
     echo '<<<kernel>>>'
     date +%s
     cat /proc/vmstat /proc/stat
 }
-
-section_kernel
 
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
@@ -474,9 +442,7 @@ section_ipmitool() {
     fi
 }
 
-section_ipmitool
-
-section_ipmisensors() { 
+section_ipmisensors() {
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
     if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
@@ -497,15 +463,11 @@ section_ipmisensors() {
     fi
 }
 
-section_ipmisensors
-
 section_md() {
     # RAID status of Linux software RAID
     echo '<<<md>>>'
     cat /proc/mdstat
 }
-
-section_md
 
 section_dmraid() {
     # RAID status of Linux RAID via device mapper
@@ -526,8 +488,6 @@ section_dmraid() {
     fi
 }
 
-section_dmraid
-
 section_lsi() {
     # RAID status of LSI controllers via cfggen
     if type cfggen >/dev/null; then
@@ -535,8 +495,6 @@ section_lsi() {
         cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
     fi
 }
-
-section_lsi
 
 section_megaraid() {
     # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
@@ -572,8 +530,6 @@ section_megaraid() {
     fi
 }
 
-section_megaraid
-
 section_3ware() {
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
     if type tw_cli >/dev/null; then
@@ -588,8 +544,6 @@ section_3ware() {
     fi
 }
 
-section_3ware
-
 section_arc_raid_status() {
     # RAID controllers from areca (Taiwan)
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
@@ -597,8 +551,6 @@ section_arc_raid_status() {
         run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
-
-section_arc_raid_status
 
 section_openvpn_clients() {
     # OpenVPN Clients. Currently we assume that the configuration # is in
@@ -609,8 +561,6 @@ section_openvpn_clients() {
     fi
 }
 
-section_openvpn_clients
-
 section_ntp() {
     # Time synchronization with NTP
     if type ntpq >/dev/null 2>&1; then
@@ -619,8 +569,6 @@ section_ntp() {
     fi
 }
 
-section_ntp
-
 section_chrony() {
     # Time synchronization with Chrony
     if type chronyc >/dev/null 2>&1; then
@@ -628,8 +576,6 @@ section_chrony() {
         run_cached -s chrony 30 "waitmax 5 chronyc tracking || true"
     fi
 }
-
-section_chrony
 
 section_nvidia() {
     if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]; then
@@ -640,16 +586,12 @@ section_nvidia() {
     fi
 }
 
-seciton_nvidia
-
 section_drbd() {
     if [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
     fi
 }
-
-section_drbd
 
 section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups_queues?
     # Status of CUPS printer queues
@@ -685,8 +627,6 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
     fi
 }
 
-section_cups_queues
-
 section_heartbeat() {
     # Heartbeat monitoring
     # Different handling for heartbeat clusters with and without CRM
@@ -713,8 +653,6 @@ section_heartbeat() {
     fi
 }
 
-section_heartbeat
-
 section_postfix() {
     # Postfix mailqueue monitoring
     # Determine the number of mails and their size in several postfix mail queues
@@ -738,8 +676,6 @@ section_postfix() {
     fi
 }
 
-section_postfix
-
 section_qmail() {
     # Check status of qmail mailqueue
     if type qmail-qstat >/dev/null; then
@@ -747,8 +683,6 @@ section_qmail() {
         qmail-qstat
     fi
 }
-
-section_qmail
 
 section_nullmailer() {
     # Nullmailer queue monitoring
@@ -759,8 +693,6 @@ section_nullmailer() {
         echo "$SIZE $COUNT"
     fi
 }
-
-section_nullmailer
 
 section_mknotify() {
     # Check status of OMD sites and Checkmk Notification spooler
@@ -779,8 +711,6 @@ section_mknotify() {
     fi
 }
 
-section_mknotify
-
 section_omd_apache() {
     if type omd >/dev/null; then
         echo '<<<omd_apache:sep(124)>>>'
@@ -796,8 +726,6 @@ section_omd_apache() {
     fi
 }
 
-section_omd_apache
-
 section_zpool() {
     # Welcome the ZFS check on Linux
     # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
@@ -807,8 +735,6 @@ section_zpool() {
         zpool status -x
     fi
 }
-
-section_zpool
 
 section_veritas_vcs() {
     # Veritas Cluster Server
@@ -823,8 +749,6 @@ section_veritas_vcs() {
         waitmax -s 9 2 /opt/VRTSvcs/bin/hares -display -sys $vcshost -attribute State -localclus
     fi
 }
-
-section_veritas_vcs
 
 section_fileinfo() {
     # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
@@ -861,8 +785,6 @@ section_fileinfo() {
     ' -- "$MK_CONFDIR"
 }
 
-section_fileinfo
-
 section_livestatus_status() {
     # Get stats about OMD monitoring cores running on this machine.
     # Since cd is a shell builtin the check does not affect the performance
@@ -877,8 +799,6 @@ section_livestatus_status() {
         done
     fi
 }
-
-section_livestatus_status
 
 # Get statistics about monitored jobs. Below the job directory there
 # is a sub directory per user that ran a job. That directory must be
@@ -903,8 +823,6 @@ section_job() {
     )
 }
 
-section_job
-
 section_lnx_thermal() {
     # Gather thermal information provided e.g. by acpi
     # At the moment only supporting thermal sensors
@@ -919,8 +837,6 @@ section_lnx_thermal() {
     fi
 }
 
-section_lnx_thermal
-
 section_libelle() {
     # Libelle Business Shadow
     if type trd >/dev/null; then
@@ -929,8 +845,6 @@ section_libelle() {
     fi
 }
 
-section_libelle
-
 section_varnish() {
     # HTTP Accelerator Statistics
     if type varnishstat >/dev/null; then
@@ -938,8 +852,6 @@ section_varnish() {
         varnishstat -1
     fi
 }
-
-section_varnish
 
 section_pvecm() {
     # Proxmox Cluster
@@ -950,8 +862,6 @@ section_pvecm() {
         pvecm nodes
     fi
 }
-
-section_pvecm
 
 run_liveupdate() {
     # Start new liveupdate process in background on each agent execution. Starting
@@ -1013,6 +923,104 @@ run_local_checks() {
 #
 # END COMMON AGENT CODE
 #
+
+run_purely_synchronous_sections() {
+    section_checkmk
+
+    section_df
+
+    section_zfsget
+
+    section_mounts
+
+    section_ps
+
+    # Memory usage
+    section_mem
+
+    # Load and number of processes
+    section_cpu
+
+    section_uptime
+
+    section_lnx_if
+
+    section_bonding_interfaces
+
+    section_ovs_bonding
+
+    section_tcp_conn
+
+    section_multipath
+
+    section_diskstat
+
+    section_kernel
+
+    section_md
+
+    section_dmraid
+
+    section_lsi
+
+    section_megaraid
+
+    section_3ware
+
+    section_openvpn_clients
+
+    seciton_nvidia
+
+    section_drbd
+
+    section_cups_queues
+
+    section_heartbeat
+
+    section_postfix
+
+    section_qmail
+
+    section_nullmailer
+
+    section_mknotify
+
+    section_omd_apache
+
+    section_zpool
+
+    section_veritas_vcs
+
+    section_fileinfo
+
+    section_livestatus_status
+
+    section_job
+
+    section_lnx_thermal
+
+    section_libelle
+
+    section_varnish
+
+    section_pvecm
+}
+
+run_partially_asnchronous_sections() {
+    section_ipmitool
+
+    section_ipmisensors
+
+    section_arc_raid_status
+
+    section_ntp
+
+    section_chrony
+}
+
+run_purely_synchronous_sections
+
+run_partially_asnchronous_sections
 
 run_liveupdate
 

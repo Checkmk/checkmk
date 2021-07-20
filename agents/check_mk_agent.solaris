@@ -683,45 +683,53 @@ section_checkmk_failed_plugins() {
     fi
 }
 
+run_purely_synchronous_sections() {
+    _log_section_time section_checkmk
+
+    [ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
+
+    [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
+
+    [ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
+
+    [ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && _log_section_time section_zfs_arc_cache
+
+    [ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
+
+    [ -z "$MK_SKIP_STATGRAB" ] && _log_section_time section_statgrab
+
+    [ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
+
+    [ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
+
+    [ -z "$MK_SKIP_NTP" ] && _log_section_time section_ntp
+
+    [ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
+
+    [ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
+
+    [ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
+
+    [ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
+
+    [ -z "$MK_SKIP_SOLARIS_FMADM" ] && _log_section_time section_solaris_fmadm
+
+    [ -z "$MK_SKIP_SOLARIS_SERVICES" ] && _log_section_time section_solaris_services
+}
+
+run_partially_asynchronous_sections() {
+    [ -z "$MK_SKIP_SOLARIS_PRTG" ] && _log_section_time section_solaris_prtg
+
+    [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
+}
+
 if $LOG_SECTION_TIME; then
     agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 fi
 
-_log_section_time section_checkmk
+run_purely_synchronous_sections
 
-[ -z "$MK_SKIP_JOB" ] && _log_section_time section_job
-
-[ -z "$MK_SKIP_DF" ] && _log_section_time section_df
-
-[ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs
-
-[ -z "$MK_SKIP_ZFS_ARC_CACHE" ] && _log_section_time section_zfs_arc_cache
-
-[ -z "$MK_SKIP_PS" ] && _log_section_time section_ps
-
-[ -z "$MK_SKIP_STATGRAB" ] && _log_section_time section_statgrab
-
-[ -z "$MK_SKIP_CPU" ] && _log_section_time section_cpu
-
-[ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
-
-[ -z "$MK_SKIP_UPTIME" ] && _log_section_time section_uptime
-
-[ -z "$MK_SKIP_NTP" ] && _log_section_time section_ntp
-
-[ -z "$MK_SKIP_SOLARIS_PRTG" ] && _log_section_time section_solaris_prtg
-
-[ -z "$MK_SKIP_TCP" ] && _log_section_time section_tcp
-
-[ -z "$MK_SKIP_MULTIPATHING" ] && _log_section_time section_multipathing
-
-[ -z "$MK_SKIP_FILEINFO" ] && _log_section_time section_fileinfo
-
-[ -z "$MK_SKIP_LIBELLE" ] && _log_section_time section_libelle
-
-[ -z "$MK_SKIP_SOLARIS_FMADM" ] && _log_section_time section_solaris_fmadm
-
-[ -z "$MK_SKIP_SOLARIS_SERVICES" ] && _log_section_time section_solaris_services
+run_partially_asynchronous_sections
 
 # _log_section_time: log single commands not all at once
 # run_remote_plugins -> run_mrpe -> _log_section_time CMD

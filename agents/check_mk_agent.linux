@@ -1626,45 +1626,7 @@ section_checkmk_failed_plugins() {
     fi
 }
 
-run_sections_with_run_cached() {
-
-    # Time synchronization with Chrony
-    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time section_chrony
-
-    # Hardware sensors via IPMI (need ipmitool)
-    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time section_ipmitool
-
-    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
-    # have installed freeipmi that IPMI is really support by your hardware.
-    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time section_ipmisensors
-
-    # RAID controllers from areca (Taiwan)
-    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    [ -z "$MK_SKIP_ARECA" ] && _log_section_time section_areca_raid
-
-    ## Check status of OMD sites and Checkmk Notification spooler
-    [ -z "$MK_SKIP_OMD" ] && _log_section_time section_omd
-
-    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
-        _log_section_time section_timesyncd || _log_section_time section_ntp
-    fi
-
-}
-
-main() {
-
-    preamble_1
-    preamble_2_arguments "$@"
-    preamble_3
-    preamble_4
-    preamble_5
-    preamble_6
-    preamble_7
-
-    if $LOG_SECTION_TIME; then
-        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
-    fi
-
+run_purely_synchronous_sections() {
     _log_section_time section_checkmk
 
     [ -z "$MK_SKIP_LABELS" ] && _log_section_time section_labels
@@ -1795,8 +1757,48 @@ main() {
     [ -z "$MK_SKIP_PROXMOX" ] && _log_section_time section_proxmox
 
     [ -z "$MK_SKIP_HAPROXY" ] && _log_section_time section_haproxy
+}
 
-    run_sections_with_run_cached
+run_partially_asynchronous_sections() {
+    # Time synchronization with Chrony
+    [ -z "$MK_SKIP_CHRONY" ] && _log_section_time section_chrony
+
+    # Hardware sensors via IPMI (need ipmitool)
+    [ -z "$MK_SKIP_IPMITOOL" ] && _log_section_time section_ipmitool
+
+    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
+    # have installed freeipmi that IPMI is really support by your hardware.
+    [ -z "$MK_SKIP_IPMISENSORS" ] && _log_section_time section_ipmisensors
+
+    # RAID controllers from areca (Taiwan)
+    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
+    [ -z "$MK_SKIP_ARECA" ] && _log_section_time section_areca_raid
+
+    ## Check status of OMD sites and Checkmk Notification spooler
+    [ -z "$MK_SKIP_OMD" ] && _log_section_time section_omd
+
+    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+        _log_section_time section_timesyncd || _log_section_time section_ntp
+    fi
+}
+
+main() {
+
+    preamble_1
+    preamble_2_arguments "$@"
+    preamble_3
+    preamble_4
+    preamble_5
+    preamble_6
+    preamble_7
+
+    if $LOG_SECTION_TIME; then
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+    fi
+
+    run_purely_synchronous_sections
+
+    run_partially_asynchronous_sections
 
     # Start new liveupdate process in background on each agent execution. Starting
     # a new live update process will terminate the old one automatically after

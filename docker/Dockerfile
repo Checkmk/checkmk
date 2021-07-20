@@ -2,7 +2,7 @@ FROM debian:buster-slim
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.0.0p8"
+ARG CMK_VERSION="2.0.0p9"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 

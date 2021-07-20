@@ -34,7 +34,6 @@ node (NODE) {
         sh("""scripts/run-in-docker.sh \
                 scripts/run-pipenv run \
                   buildscripts/scripts/validate_changes.py \
-                  --log-level=DEBUG \
                   --no-skip=False \
                   --env "RESULTS=${RESULTS}" \
                   --env "WORKSPACE=${WORKSPACE}" \

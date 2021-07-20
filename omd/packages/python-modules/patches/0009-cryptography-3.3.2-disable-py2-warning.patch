@@ -1,0 +1,23 @@
+diff -Nur dest/cryptography-3.3.2.orig/src/cryptography/__init__.py dest/cryptography-3.3.2/src/cryptography/__init__.py
+--- dest/cryptography-3.3.2.orig/src/cryptography/__init__.py	2021-02-07 17:39:35.000000000 +0100
++++ dest/cryptography-3.3.2/src/cryptography/__init__.py	2021-07-20 14:10:28.342465294 +0200
+@@ -31,11 +31,11 @@
+     "__copyright__",
+ ]
+
+-if sys.version_info[0] == 2:
+-    warnings.warn(
+-        "Python 2 is no longer supported by the Python core team. Support for "
+-        "it is now deprecated in cryptography, and will be removed in the "
+-        "next release.",
+-        CryptographyDeprecationWarning,
+-        stacklevel=2,
+-    )
++#if sys.version_info[0] == 2:
++#    warnings.warn(
++#        "Python 2 is no longer supported by the Python core team. Support for "
++#        "it is now deprecated in cryptography, and will be removed in the "
++#        "next release.",
++#        CryptographyDeprecationWarning,
++#        stacklevel=2,
++#    )

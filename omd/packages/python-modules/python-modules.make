@@ -122,6 +122,7 @@ ifneq ($(filter $(DISTRO_CODE),el6 el7 cma jessie stretch xenial sles12sp1 sles1
 else
     PYTHON_MODULES_LIST  += cryptography-3.3.2.tar.gz
     PYTHON_MODULES_LIST  += cffi-1.12.0.tar.gz # needed by e.g. Pillow
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-3.3.2-disable-py2-warning.patch
 endif
 
 # Has requests as dependency -> must be built after

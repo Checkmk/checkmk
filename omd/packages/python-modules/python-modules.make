@@ -115,7 +115,7 @@ PYTHON_MODULES_LIST += pbr-5.1.0.tar.gz
 
 PYTHON_MODULES_LIST  += asn1crypto-0.24.0.tar.gz
 
-ifneq ($(filter $(DISTRO_CODE),xenial sles12sp3 sles12sp4),)
+ifneq ($(filter $(DISTRO_CODE),el6 el7 cma jessie stretch xenial sles12sp1 sles12sp2 sles12sp3 sles12sp4 sles12sp5),)
     PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz
     PYTHON_MODULES_LIST  += cffi-1.11.5.tar.gz # needed by e.g. Pillow
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-2.4.1-disable-version-warning.patch

@@ -792,21 +792,40 @@ if type pvecm >/dev/null 2>&1; then
     pvecm nodes
 fi
 
-# Start new liveupdate process in background on each agent execution. Starting
-# a new live update process will terminate the old one automatically after
-# max. 1 sec.
-if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
-    if [ -z $REMOTE ]; then
-        echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-    elif ! type openssl >/dev/null; then
-        echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
-    else
-        run_real_time_checks >/dev/null &
+run_liveupdate() {
+    # Start new liveupdate process in background on each agent execution. Starting
+    # a new live update process will terminate the old one automatically after
+    # max. 1 sec.
+    if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
+        if [ -z $REMOTE ]; then
+            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+        elif ! type openssl >/dev/null; then
+            echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+        else
+            run_real_time_checks >/dev/null &
+        fi
     fi
-fi
+}
 
 is_valid_plugin() {
     [ -f "$1" ] && [ -x "$1" ] && true || false
+}
+
+run_plugins() {
+    # Plugins
+    if cd $PLUGINSDIR; then
+        for skript in $(ls); do
+            if is_valid_plugin "$skript"; then
+                ./$skript
+            fi
+        done
+        # Call some plugins only every Xth second
+        for skript in [1-9]*/*; do
+            if is_valid_plugin "$skript"; then
+                run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+            fi
+        done
+    fi
 }
 
 #
@@ -834,21 +853,10 @@ run_local_checks() {
 # END COMMON AGENT CODE
 #
 
+run_liveupdate
+
 run_local_checks
 
-# Plugins
-if cd $PLUGINSDIR; then
-    for skript in $(ls); do
-        if is_valid_plugin "$skript"; then
-            ./$skript
-        fi
-    done
-    # Call some plugins only every Xth second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
-        fi
-    done
-fi
+run_plugins
 
 run_spooler

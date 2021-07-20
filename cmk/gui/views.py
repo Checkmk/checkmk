@@ -309,7 +309,7 @@ class View:
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
-        self.context = context
+        self.context: VisualContext = context
         self._row_limit: Optional[int] = None
         self._only_sites: Optional[List[SiteId]] = None
         self._user_sorters: Optional[List[SorterSpec]] = None

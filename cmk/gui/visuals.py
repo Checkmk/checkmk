@@ -9,7 +9,7 @@ import copy
 import sys
 import traceback
 import json
-from itertools import chain
+from itertools import chain, starmap
 from contextlib import contextmanager
 from typing import (
     Any,
@@ -299,14 +299,37 @@ def transform_old_visual(visual):
     visual.setdefault("is_show_more", False)
 
     # 2.1
-    _cleaup_context_filters(visual['context'])
+    visual["context"] = cleaup_context_filters(visual['context'], visual['single_infos'])
 
 
-def _cleaup_context_filters(context):
+def cleaup_context_filters(context, single_infos: SingleInfos) -> VisualContext:
     # Fix context into type VisualContext
     if filter_conf := context.get("discovery_state"):
         # CMK-6606: States were saved as bools instead of str
         context['discovery_state'] = {key: "on" if val else "" for key, val in filter_conf.items()}
+
+    # Remove the old single infos
+    single_info_keys = get_single_info_keys(single_infos)
+
+    def unsingle(
+            fident: FilterName,
+            vals: Union[str, int, FilterHTTPVariables]) -> Tuple[FilterName, FilterHTTPVariables]:
+        if isinstance(vals, dict):  # Alredy FilterHTTPVariables
+            return fident, vals
+        # Single infos come from VisualInfo children. They have a str or int valuespec
+        if fident in single_info_keys:
+            filt = get_filter(fident)
+            return filt.ident, {filt.htmlvars[0]: str(vals)}
+        if fident in ["site", "sites", "siteopt"]:  # Because the site hint is not a VisualInfo
+            htmlvar = "site" if fident == "siteopt" else fident
+            return fident, {htmlvar: str(vals)}
+
+        # should never happen
+        raise MKGeneralException(
+            "Unexpected configuration of context variable: Filter '%s' with value %r" %
+            (fident, vals))
+
+    return dict(starmap(unsingle, context.items()))
 
 
 def load_user_visuals(what: str, builtin_visuals: Dict[Any, Any],
@@ -798,15 +821,45 @@ def get_context_specs(visual, info_handler):
 
 
 def visual_spec_single(info_key):
+    # VisualInfos have a single_spec, which might declare multiple filters.
+    # In this case each spec is as filter value and it is typed(at the moment only Integer & TextInput).
+    # Filters at the moment, due to use of url_vars, are string only.
+    # At the moment single_info_spec relation to filters is:
+    #     for all (i): info.single_spec[i][0]==filter.ident==filter.htmlvars[0]
+
+    # This visual_spec_single stores direct into the VisualContext, thus it needs to dissosiate
+    # the single_spec into separate filters. This transformations are the equivalent of flattening
+    # the values into the url, but now they preserve the VisualContext type.
+
+    # In both cases unused keys need to be removed otherwise empty values proliferate
+    # either they are saved or they corrupt the VisualContext during merges.
+
+    def back(values: Dict[str, Union[str, int]],
+             single_spec: List[Tuple[FilterName, ValueSpec]]) -> VisualContext:
+        return {
+            ident: {
+                ident: str(value)
+            } for ident, _vs in single_spec for value in [values.get(ident)] if value
+        }
+
+    def forth(context: VisualContext,
+              single_spec: List[Tuple[FilterName, ValueSpec]]) -> Dict[str, Union[str, int]]:
+        return {
+            ident: value
+            for ident, vs in single_spec for value in [context.get(ident, {}).get(ident)] if value
+        }
+
     info = visual_info_registry[info_key]()
-    params = info.single_spec
-    optional = True
-    isopen = True
-    return Dictionary(
-        title=info.title,
-        form_isopen=isopen,
-        optional_keys=optional,
-        elements=params,
+
+    return Transform(
+        Dictionary(
+            title=info.title,
+            form_isopen=True,
+            optional_keys=True,
+            elements=info.single_spec,
+        ),
+        back=lambda values: back(values, info.single_spec),
+        forth=lambda context: forth(context, info.single_spec),
     )
 
 
@@ -818,8 +871,8 @@ def visual_spec_multi(info_key):
     return filter_list if filter_names else None
 
 
-def process_context_specs(context_specs):
-    context: Dict[Any, Any] = {}
+def process_context_specs(context_specs) -> VisualContext:
+    context: VisualContext = {}
     for info_key, spec in context_specs:
         ident = 'context_' + info_key
 
@@ -851,7 +904,7 @@ def render_context_specs(
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
-            is_show_more=spec.has_show_more() if isinstance(spec, Dictionary) else all(
+            is_show_more=spec.has_show_more() if isinstance(spec, Transform) else all(
                 flt.is_show_more for _title, flt in spec.filter_items() if flt is not None))
         ident = 'context_' + info_key
         spec.render_input(ident, value)

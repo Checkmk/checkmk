@@ -256,20 +256,10 @@ class Dashlet(metaclass=abc.ABCMeta):
     def _get_context(self) -> Optional[VisualContext]:
         if not self.has_context():
             return None
-        # TODO: reverse globaly single spec
-        def unsingle(fident, vals):
-            if isinstance(vals, str):  # Single
-                return {fident: {visuals.get_filter(fident).htmlvars[0]: vals}}
-
-            return fident, vals
-
-        from itertools import starmap
-        dc = dict(starmap(unsingle, self._dashlet_spec["context"].items()))
 
         return visuals.get_merged_context(
             self._dashboard["context"],
-            dc,
-            #self._dashlet_spec["context"],
+            self._dashlet_spec["context"],
         )
 
     @property

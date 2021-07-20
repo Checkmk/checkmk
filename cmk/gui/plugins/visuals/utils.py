@@ -484,6 +484,7 @@ def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]
       VisualContext is structured like this:
 
       {"site": {"site": "sitename"}}
+      {"siteopt": {"site": "sitename"}}
       {"sites": {"sites": "sitename|second"}}
 
       The difference is no fault or "old" data structure. We can have both kind of structures.

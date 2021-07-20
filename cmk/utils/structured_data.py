@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-This module handles tree structures for HW/SW inventory system and
+This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
 """
 
@@ -45,8 +45,8 @@ SDRawPath = str
 # TODO improve this
 SDRawTree = Dict
 
-SDEdge = str
-SDPath = List[SDEdge]
+SDNodeName = str
+SDPath = List[SDNodeName]
 
 SDKey = str
 SDKeys = List[SDKey]
@@ -64,8 +64,8 @@ SDRow = Dict[SDKey, SDValue]
 SDRows = List[SDRow]
 LegacyRows = List[SDRow]
 
-SDNodePath = Tuple[SDEdge, ...]
-SDNodes = Dict[SDEdge, "StructuredDataNode"]
+SDNodePath = Tuple[SDNodeName, ...]
+SDNodes = Dict[SDNodeName, "StructuredDataNode"]
 
 SDEncodeAs = Callable
 SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
@@ -127,7 +127,7 @@ class StructuredDataStore:
     def load_file(file_path: Path) -> "StructuredDataNode":
         if raw_tree := store.load_object_from_file(file_path, default=None):
             return StructuredDataNode.deserialize(raw_tree)
-        return StructuredDataNode(path=tuple())
+        return StructuredDataNode()
 
     def __init__(self, path: Union[Path, str]) -> None:
         self._path = Path(path)
@@ -245,8 +245,9 @@ def _make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) ->
 
 
 class StructuredDataNode:
-    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
-        # Only root node has no path
+    def __init__(self, *, name: SDNodeName = "", path: Optional[SDNodePath] = None) -> None:
+        # Only root node has no name or path
+        self.name = name
         if path:
             self.path = path
         else:
@@ -257,6 +258,11 @@ class StructuredDataNode:
         self._nodes: SDNodes = {}
 
         self._legacy_rows: LegacyRows = []
+
+    def _set_path(self, path: SDNodePath) -> None:
+        self.path = path
+        self.attributes._set_path(path)
+        self.table._set_path(path)
 
     def is_empty(self) -> bool:
         if not (self.attributes.is_empty() and self.table.is_empty()):
@@ -293,7 +299,7 @@ class StructuredDataNode:
         if not isinstance(other, StructuredDataNode):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        node = StructuredDataNode(path=self.path)
+        node = StructuredDataNode(name=self.name, path=self.path)
 
         node.add_attributes(self.attributes.merge_with(other.attributes))
         node.add_table(self.table.merge_with(other.table))
@@ -301,13 +307,13 @@ class StructuredDataNode:
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
         for key in compared_keys.only_old:
-            node.add_node(key, other._nodes[key])
+            node.add_node(other._nodes[key])
 
         for key in compared_keys.both:
-            node.add_node(key, self._nodes[key].merge_with(other._nodes[key]))
+            node.add_node(self._nodes[key].merge_with(other._nodes[key]))
 
         for key in compared_keys.only_new:
-            node.add_node(key, self._nodes[key])
+            node.add_node(self._nodes[key])
 
         return node
 
@@ -317,18 +323,27 @@ class StructuredDataNode:
         if not path:
             return self
 
-        edge = path[0]
-        node = self._nodes.setdefault(edge, StructuredDataNode(path=self.path + (edge,)))
+        name = path[0]
+        node = self._nodes.setdefault(name, StructuredDataNode(name=name, path=self.path + (name,)))
         return node.setdefault_node(path[1:])
 
-    def add_node(self, edge: SDEdge, node: "StructuredDataNode") -> "StructuredDataNode":
-        the_node = self.setdefault_node([edge])
+    def add_node(self, node: "StructuredDataNode") -> "StructuredDataNode":
+        if not node.name:
+            raise ValueError("Root cannot be added.")
+
+        path = self.path + (node.name,)
+        if node.name in self._nodes:
+            the_node = self._nodes[node.name]
+            the_node._set_path(path)
+        else:
+            the_node = self._nodes.setdefault(node.name,
+                                              StructuredDataNode(name=node.name, path=path))
 
         the_node.add_attributes(node.attributes)
         the_node.add_table(node.table)
 
-        for sub_edge, sub_node in node._nodes.items():
-            the_node.add_node(sub_edge, sub_node)
+        for sub_node in node._nodes.values():
+            the_node.add_node(sub_node)
 
         return the_node
 
@@ -373,47 +388,71 @@ class StructuredDataNode:
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
         if all(key in raw_tree for key in (_ATTRIBUTES_KEY, _TABLE_KEY, _NODES_KEY)):
-            return cls._deserialize(raw_tree)
-        return cls._deserialize_legacy(raw_tree)
+            return cls._deserialize(name="", path=tuple(), raw_tree=raw_tree)
+        return cls._deserialize_legacy(name="", path=tuple(), raw_tree=raw_tree)
 
     @classmethod
-    def _deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
-        node = cls()
+    def _deserialize(
+        cls,
+        *,
+        name: SDNodeName,
+        path: SDNodePath,
+        raw_tree: SDRawTree,
+    ) -> "StructuredDataNode":
+        node = cls(name=name, path=path)
 
-        node.add_attributes(Attributes.deserialize(raw_tree[_ATTRIBUTES_KEY]))
-        node.add_table(Table.deserialize(raw_tree[_TABLE_KEY]))
+        node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[_ATTRIBUTES_KEY]))
+        node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[_TABLE_KEY]))
 
-        for edge, raw_node in raw_tree[_NODES_KEY].items():
-            node.add_node(edge, cls._deserialize(raw_node))
+        for raw_name, raw_node in raw_tree[_NODES_KEY].items():
+            node.add_node(
+                cls._deserialize(
+                    name=raw_name,
+                    path=path + (raw_name,),
+                    raw_tree=raw_node,
+                ))
 
         return node
 
     @classmethod
-    def _deserialize_legacy(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
-        node = cls()
+    def _deserialize_legacy(
+        cls,
+        *,
+        name: SDNodeName,
+        path: SDNodePath,
+        raw_tree: SDRawTree,
+    ) -> "StructuredDataNode":
+        node = cls(name=name, path=path)
         raw_pairs: SDPairs = {}
 
         for key, value in raw_tree.items():
+            the_path = path + (key,)
             if isinstance(value, dict):
                 if not value:
                     continue
-                node.add_node(key, cls._deserialize_legacy(value))
+                node.add_node(cls._deserialize_legacy(name=key, path=the_path, raw_tree=value))
 
             elif isinstance(value, list):
                 if not value:
                     continue
 
+                inst = node.setdefault_node([key])
                 if node._is_table(value):
-                    node.setdefault_node([key]).add_table(Table._deserialize_legacy(value))
-                else:
-                    indexed_node = node.setdefault_node([key])
-                    for idx, entry in enumerate(value):
-                        indexed_node.add_node(str(idx), cls._deserialize_legacy(entry))
+                    inst.add_table(Table._deserialize_legacy(path=the_path, legacy_rows=value))
+                    continue
+
+                for idx, entry in enumerate(value):
+                    inst.add_node(
+                        cls._deserialize_legacy(
+                            name=str(idx),
+                            path=the_path + (str(idx),),
+                            raw_tree=entry,
+                        ))
 
             else:
                 raw_pairs.setdefault(key, value)
 
-        node.add_attributes(Attributes._deserialize_legacy(raw_pairs))
+        node.add_attributes(Attributes._deserialize_legacy(path=path, legacy_pairs=raw_pairs))
         return node
 
     @staticmethod
@@ -452,13 +491,14 @@ class StructuredDataNode:
             add_to_my_rows = True
             for k, v in entry.items():
                 if isinstance(v, list):
-                    self.setdefault_node([str(idx), k]).add_table(Table._deserialize_legacy(v))
+                    self.setdefault_node([str(idx), k]).add_table(
+                        Table._deserialize_legacy(path=self.path + (str(idx), k), legacy_rows=v))
                     add_to_my_rows = False
 
             if add_to_my_rows:
                 my_rows.append(entry)
 
-        self.add_table(Table._deserialize_legacy(my_rows))
+        self.add_table(Table._deserialize_legacy(path=self.path, legacy_rows=my_rows))
 
         # normalize_nodes is executed after all plugins: clear legacy_table
         # in order to avoid duplicate rows if executed multiple times (should not happen).
@@ -474,7 +514,7 @@ class StructuredDataNode:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_node = StructuredDataNode(path=self.path)
+        delta_node = StructuredDataNode(name=self.name, path=self.path)
 
         # Attributes
         delta_attributes_result = self.attributes.compare_with(other.attributes)
@@ -494,10 +534,7 @@ class StructuredDataNode:
             new_entries = node.count_entries()
             if new_entries:
                 counter.update(new=new_entries)
-                delta_node.add_node(
-                    key,
-                    node.get_encoded_node(encode_as=_new_delta_tree_node),
-                )
+                delta_node.add_node(node.get_encoded_node(encode_as=_new_delta_tree_node))
 
         for key in compared_keys.both:
             node = self._nodes[key]
@@ -505,10 +542,7 @@ class StructuredDataNode:
 
             if node.is_equal(other_node):
                 if keep_identical:
-                    delta_node.add_node(
-                        key,
-                        node.get_encoded_node(encode_as=_identical_delta_tree_node),
-                    )
+                    delta_node.add_node(node.get_encoded_node(encode_as=_identical_delta_tree_node))
                 continue
 
             delta_node_result = node.compare_with(
@@ -519,34 +553,32 @@ class StructuredDataNode:
             if (delta_node_result.counter['new'] or delta_node_result.counter['changed'] or
                     delta_node_result.counter['removed']):
                 counter.update(delta_node_result.counter)
-                delta_node.add_node(key, delta_node_result.delta)
+                delta_node.add_node(delta_node_result.delta)
 
         for key in compared_keys.only_old:
             other_node = other._nodes[key]
             removed_entries = other_node.count_entries()
             if removed_entries:
                 counter.update(removed=removed_entries)
-                delta_node.add_node(
-                    key,
-                    other_node.get_encoded_node(encode_as=_removed_delta_tree_node),
-                )
+                delta_node.add_node(other_node.get_encoded_node(encode_as=_removed_delta_tree_node))
 
         return SDDeltaResult(counter=counter, delta=delta_node)
 
     def get_encoded_node(self, encode_as: SDEncodeAs) -> "StructuredDataNode":
-        delta_node = StructuredDataNode(path=self.path)
+        delta_node = StructuredDataNode(name=self.name, path=self.path)
 
         delta_node.add_attributes(self.attributes.get_encoded_attributes(encode_as))
         delta_node.add_table(self.table.get_encoded_table(encode_as))
 
-        for edge, node in self._nodes.items():
-            delta_node.add_node(edge, node.get_encoded_node(encode_as))
+        for node in self._nodes.values():
+            delta_node.add_node(node.get_encoded_node(encode_as))
         return delta_node
 
     #   ---filtering------------------------------------------------------------
 
     def get_filtered_node(self, filters: List[SDFilter]) -> "StructuredDataNode":
-        filtered = StructuredDataNode(path=self.path)
+        filtered = StructuredDataNode(name=self.name, path=self.path)
+
         for f in filters:
             # First check if node exists
             node = self._get_node(f.path)
@@ -562,7 +594,7 @@ class StructuredDataNode:
             for edge, sub_node in node._nodes.items():
                 # From GUI::permitted_paths: We always get a list of strs.
                 if f.filter_nodes(str(edge)):
-                    filtered_node.add_node(edge, sub_node)
+                    filtered_node.add_node(sub_node)
 
         return filtered
 
@@ -598,8 +630,10 @@ class Table:
             self.path = path
         else:
             self.path = tuple()
-
         self.rows: SDRows = []
+
+    def _set_path(self, path: SDNodePath) -> None:
+        self.path = path
 
     def is_empty(self) -> bool:
         return self.rows == []
@@ -611,6 +645,7 @@ class Table:
         for row in self.rows:
             if row not in other.rows:
                 return False
+
         for row in other.rows:
             if row not in self.rows:
                 return False
@@ -669,19 +704,23 @@ class Table:
 
     def serialize(self) -> SDRawTree:
         if self.rows:
-            return {_ROWS_KEY: self.rows}
+            return {
+                _ROWS_KEY: self.rows,
+            }
         return {}
 
     @classmethod
-    def deserialize(cls, raw_rows: SDRawTree) -> "Table":
-        table = cls()
+    def deserialize(cls, *, path: SDNodePath, raw_rows: SDRawTree) -> "Table":
+        # We don't need to set a path, table rows will be added to composite.
+        table = cls(path=path)
         if _ROWS_KEY in raw_rows:
             table.add_rows(raw_rows[_ROWS_KEY])
         return table
 
     @classmethod
-    def _deserialize_legacy(cls, legacy_rows: LegacyRows) -> "Table":
-        table = cls()
+    def _deserialize_legacy(cls, *, path: SDNodePath, legacy_rows: LegacyRows) -> "Table":
+        # We don't need to set a path, table rows will be added to composite.
+        table = cls(path=path)
         table.add_rows(legacy_rows)
         return table
 
@@ -810,8 +849,10 @@ class Attributes:
             self.path = path
         else:
             self.path = tuple()
-
         self.pairs: SDPairs = {}
+
+    def _set_path(self, path: SDNodePath) -> None:
+        self.path = path
 
     def is_empty(self) -> bool:
         return self.pairs == {}
@@ -848,15 +889,17 @@ class Attributes:
         return {}
 
     @classmethod
-    def deserialize(cls, raw_pairs: SDRawTree) -> "Attributes":
-        attributes = cls()
+    def deserialize(cls, *, path: SDNodePath, raw_pairs: SDRawTree) -> "Attributes":
+        # We don't need to set a path, attributes pairs will be added to composite.
+        attributes = cls(path=path)
         if _PAIRS_KEY in raw_pairs:
             attributes.add_pairs(raw_pairs[_PAIRS_KEY])
         return attributes
 
     @classmethod
-    def _deserialize_legacy(cls, legacy_pairs: LegacyPairs) -> "Attributes":
-        attributes = cls()
+    def _deserialize_legacy(cls, *, path: SDNodePath, legacy_pairs: LegacyPairs) -> "Attributes":
+        # We don't need to set a path, attributes pairs will be added to composite.
+        attributes = cls(path=path)
         attributes.add_pairs(legacy_pairs)
         return attributes
 

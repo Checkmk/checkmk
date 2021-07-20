@@ -131,6 +131,40 @@ def test_set_path():
     assert ta.path == tuple(["path", "to", "nta", "ta"])
 
 
+def test_set_path_sub_nodes_error():
+    root = _create_empty_tree()
+    nta = root.get_node(["path", "to", "nta"])
+
+    sub_node = StructuredDataNode()
+    sub_node.setdefault_node(["sub-path", "sub-to", "sub-node"])
+
+    with pytest.raises(ValueError):
+        nta.add_node(sub_node)
+
+
+def test_set_path_sub_nodes():
+    root = _create_empty_tree()
+    nta = root.get_node(["path", "to", "nta"])
+
+    sub_node = StructuredDataNode(name="node")
+    sub_node.setdefault_node(["sub-path-to", "sub-node"])
+
+    nta.add_node(sub_node)
+
+    path_to_node = root.get_node(["path", "to", "nta", "node", "sub-path-to"])
+    assert path_to_node is not None
+    assert path_to_node.attributes.path == ("path", "to", "nta", "node", "sub-path-to")
+    assert path_to_node.table.path == ("path", "to", "nta", "node", "sub-path-to")
+    assert path_to_node.path == ("path", "to", "nta", "node", "sub-path-to")
+
+    path_to_sub_node = root.get_node(["path", "to", "nta", "node", "sub-path-to", "sub-node"])
+    assert path_to_sub_node is not None
+    assert path_to_sub_node.attributes.path == ("path", "to", "nta", "node", "sub-path-to",
+                                                "sub-node")
+    assert path_to_sub_node.table.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
+    assert path_to_sub_node.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
+
+
 def test_empty_but_different_structure():
     root = _create_empty_tree()
 
@@ -205,7 +239,7 @@ def test_not_empty():
 def test_add_node():
     root = _create_filled_tree()
 
-    sub_node = StructuredDataNode()
+    sub_node = StructuredDataNode(name="node")
     sub_node.attributes.add_pairs({"sn0": "SN 0", "sn1": "SN 1"})
     sub_node.table.add_rows([
         {
@@ -218,7 +252,7 @@ def test_add_node():
         },
     ])
 
-    node = root.get_node(["path", "to", "nta"]).add_node("node", sub_node)
+    node = root.get_node(["path", "to", "nta"]).add_node(sub_node)
 
     # Do not modify orig node.
     assert sub_node.attributes.path == tuple()

@@ -6,6 +6,8 @@
 
 from typing import Dict, Any
 
+import pytest
+
 import cmk.utils.version as cmk_version
 import cmk.gui.views
 
@@ -15,7 +17,8 @@ if not cmk_version.is_raw_edition():
 import cmk.gui.plugins.views.icons as icons
 
 
-def test_builtin_icons_and_actions():
+@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
+def test_builtin_icons_and_actions(registry_reset):
     expected_icons_and_actions = [
         'action_menu',
         'aggregation_checks',
@@ -63,7 +66,8 @@ def test_builtin_icons_and_actions():
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-def test_legacy_icon_plugin():
+@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
+def test_legacy_icon_plugin(monkeypatch, registry_reset):
     icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -72,7 +76,7 @@ def test_legacy_icon_plugin():
         "sort_index": 10,
         "toplevel": True,
     }
-    cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
+    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.transform_old_dict_based_icons()
 
     registered_icon = icons.get_multisite_icons()["legacy"]
@@ -84,14 +88,15 @@ def test_legacy_icon_plugin():
     assert registered_icon.sort_index() == 10
 
 
-def test_legacy_icon_plugin_defaults():
+@pytest.mark.registry_reset(cmk.gui.views.icon_and_action_registry)
+def test_legacy_icon_plugin_defaults(monkeypatch, registry_reset):
     icon = {
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
         "paint": lambda: "bla",
     }
-    cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
+    monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.transform_old_dict_based_icons()
 
     registered_icon = icons.get_multisite_icons()["legacy"]

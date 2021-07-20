@@ -311,7 +311,7 @@ class WebTestAppForCMK(webtest.TestApp):
         config_module._post_config_load_hooks.remove(_set_config)
 
     def login(self, username: str, password: str) -> WebTestAppForCMK:
-        wsgi_app.username = username
+        self.username = username
         login = self.get('/NO_SITE/check_mk/login.py')
         login.form['_username'] = username
         login.form['_password'] = password

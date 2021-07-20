@@ -530,6 +530,10 @@ msgstr "%s van %d hosts gestart (%s)..."
 msgid "%s for all hosts started..."
 msgstr "%s voor alle gestartte hosts..."
 
+#, fuzzy, python-format
+msgid "%s instances"
+msgstr "DB-instanties"
+
 #, python-format
 msgid "%s into %s"
 msgstr "%s in %s"
@@ -3978,7 +3982,8 @@ msgstr "Leeftijd"
 msgid "Age (sec)"
 msgstr "Leeftijd (sec)"
 
-msgid "Age filter specification must be of the format <operator><int>."
+#, fuzzy
+msgid "Age filter specification must be of the format [OPERATOR][INT]."
 msgstr ""
 "De ouderdomsfilterspecificatie moet van het formaat <operator><int> zijn."
 
@@ -5414,9 +5419,10 @@ msgstr ""
 "de geconfigureerde reguliere expressies. De overeenkomst wordt uitgevoerd op "
 "het begin van de %s."
 
+#, fuzzy
 msgid ""
 "Apply this rule only to interfaces whose admin state (<tt>ifAdminStatus</"
-"tt>) is listed below. "
+"tt>) is listed below."
 msgstr ""
 "Pas deze regel alleen toe op interfaces waarvan de admin status "
 "(<tt>ifAdminStatus</tt>) hieronder vermeld staat. "
@@ -8064,6 +8070,9 @@ msgstr ""
 "bewerken/oplossen uit naam van de beller. Kijk in de ServiceNow documentatie "
 "voor details."
 
+msgid "Calling final hooks"
+msgstr ""
+
 msgid "Can be used until version:"
 msgstr "Kan gebruikt worden tot versie:"
 
@@ -9029,6 +9038,10 @@ msgstr ""
 "(Agent plugin mk_inventory moet geïnstalleerd zijn)"
 
 msgid "Checkmk Configuration Files"
+msgstr "Checkmk Configuratie Bestanden"
+
+#, fuzzy
+msgid "Checkmk Configuration files"
 msgstr "Checkmk Configuratie Bestanden"
 
 msgid "Checkmk Log Files"
@@ -10186,6 +10199,10 @@ msgid ""
 msgstr ""
 "Configuratiefout. U behandelt ons als een <b>remote</b>, maar we hebben een "
 "eigen gedistribueerde WATO-configuratie!"
+
+#, fuzzy
+msgid "Configuration files"
+msgstr "Configuratie"
 
 #, python-format
 msgid ""
@@ -11962,9 +11979,6 @@ msgid "Currently there are no unsent notification bulks pending."
 msgstr ""
 "Momenteel zijn er geen niet-verzonden kennisgevingsbulken in behandeling."
 
-msgid "Currently there is one change to activate"
-msgstr "Momenteel is er één wijziging te activeren"
-
 msgid "Currently there is one change to activate."
 msgstr "Momenteel is er één verandering te activeren."
 
@@ -12669,8 +12683,16 @@ msgstr "Database gebruikersgegevens"
 msgid "Database apply lag"
 msgstr "Databank pas vertraging toe"
 
+#, fuzzy
+msgid "Database backup"
+msgstr "Databank Naam"
+
 msgid "Database changed to emergency"
 msgstr "Database veranderd in noodgeval"
+
+#, fuzzy
+msgid "Database diff backup"
+msgstr "Duur van de back-up"
 
 msgid "Database identifier"
 msgstr "Identificatiecode databank"
@@ -12699,8 +12721,8 @@ msgstr "Database doorvoer eenheid"
 msgid "Database throughput units in percent"
 msgstr "Database doorvoer eenheden in procenten"
 
-msgid "Database/Collection name ('<DB name> <collection name>')"
-msgstr "Databank-/verzamelnaam ('<DB-naam> <verzamelnaam>')"
+msgid "Database/Collection name ('[DB_NAME] [COLLECTION_NAME]')"
+msgstr ""
 
 #, fuzzy
 msgid "Databases"
@@ -12818,6 +12840,14 @@ msgstr "Dead- en waitlocks"
 msgid "Deadlocks"
 msgstr "Deadlocks"
 
+#, fuzzy
+msgid "Deallocated VMs"
+msgstr "toegewezen"
+
+#, fuzzy
+msgid "Deallocating VMs"
+msgstr "Verplaatsen van scherven"
+
 msgid "Debug"
 msgstr "Debug"
 
@@ -12931,6 +12961,10 @@ msgstr "Standaard lay-out"
 
 msgid "Default levels"
 msgstr "Standaardniveaus"
+
+#, fuzzy
+msgid "Default limit set by AWS"
+msgstr "Standaard lijnstijl"
 
 msgid "Default line style"
 msgstr "Standaard lijnstijl"
@@ -17924,6 +17958,10 @@ msgstr "Mislukte meldingshorizon"
 msgid "Failed notifications"
 msgstr "Mislukte kennisgevingen"
 
+#, fuzzy
+msgid "Failed provisionings"
+msgstr "Provisioning states in kaart brengen"
+
 msgid "Failed requests to Adressbook files"
 msgstr "Mislukte verzoeken om Adressbook bestanden"
 
@@ -18391,6 +18429,10 @@ msgstr "Pogingen om een bestandsdescriptor te openen"
 msgid "File descriptor open attempts rate"
 msgstr "Poging tot openen van bestandsdescriptor"
 
+#, fuzzy
+msgid "File diff backup"
+msgstr "Plaats back-up"
+
 msgid "File grouping"
 msgstr "Bestandsgroepering"
 
@@ -18411,6 +18453,10 @@ msgstr "Bestandsnaam"
 
 msgid "File opened"
 msgstr "Bestand geopend"
+
+#, fuzzy
+msgid "File or filegroup backup"
+msgstr "Leeftijd van laatste back-up van bestand of bestandsgroep"
 
 msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
 msgstr ""
@@ -22418,6 +22464,9 @@ msgstr "Uit te sluiten IP-bereiken"
 msgid "IP ranges to scan"
 msgstr "Te scannen IP-bereiken"
 
+msgid "IP sets"
+msgstr ""
+
 msgid "IP-Address of Tunnel Endpoint"
 msgstr "IP-Adres van Tunnel Eindpunt"
 
@@ -23194,10 +23243,11 @@ msgstr ""
 "CRIT niveaus instellen om te controleren of de delta van de laatste minuut X "
 "procent hoger is dan de gemiddelde delta."
 
+#, fuzzy
 msgid ""
 "If you activate the monitoring of the admin state (<tt>ifAdminStatus</tt>), "
 "the check will go critical if the current state of the interface does not "
-"match one of the expected states. "
+"match one of the expected states."
 msgstr ""
 "Als u de bewaking van de admin toestand activeert (<tt>ifAdminStatus</tt>), "
 "zal de controle kritisch worden als de huidige toestand van de interface "
@@ -25978,6 +26028,10 @@ msgstr "Verwijder gewoon de betrokken tags uit de regels."
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Toon alleen de beschikbaarheid (d.w.z. OK/UP)"
 
+#, fuzzy
+msgid "KByte"
+msgstr "Bytes"
+
 msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "Kaspersky Anti-Virus (Linux)"
 
@@ -26950,6 +27004,10 @@ msgstr "Niveaus op ingangsgegevens in bytes"
 msgid "Levels on latency"
 msgstr "Niveaus op latentie"
 
+#, fuzzy
+msgid "Levels on read capacity"
+msgstr "Niveaus op lees/schrijfcapaciteit"
+
 msgid "Levels on server latency in seconds"
 msgstr "Niveaus op server latency in seconden"
 
@@ -27012,8 +27070,16 @@ msgstr "Niveaus voor trends in graden Celsius per tijdschaal"
 msgid "Levels on used capacity in bytes"
 msgstr "Niveaus op gebruikte capaciteit in bytes"
 
+#, fuzzy
+msgid "Levels on write capacity"
+msgstr "Niveaus op lees/schrijfcapaciteit"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "Niveaus over een langere periode op een enkele kern CPU-gebruik"
+
+#, fuzzy
+msgid "Levels over an extended time period on replication lag"
+msgstr "Niveaus over een langere periode op het totale CPU-gebruik"
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr "Niveaus over een langere periode op het totale CPU-gebruik"
@@ -27074,6 +27140,9 @@ msgstr "Beperking levensduur gebeurtenissen"
 
 msgid "Limit for upper bound dynamic levels"
 msgstr "Limiet voor bovengrens dynamische niveaus"
+
+msgid "Limit from AWS API"
+msgstr ""
 
 msgid "Limit length of mail body"
 msgstr "Lengte van e-mail beperken"
@@ -27363,6 +27432,10 @@ msgstr "Luister naar inkomende berichten via"
 
 msgid "Listen for passive checks via NSCA"
 msgstr "Luister naar passieve controles via NSCA"
+
+#, fuzzy
+msgid "Listeners per load balancer"
+msgstr "Load balancers"
 
 msgid "Lists all aggregations which only rely on information of one host."
 msgstr ""
@@ -27712,6 +27785,10 @@ msgstr "Logboek Invoer"
 
 msgid "Log all messages into syslog-like logfiles"
 msgstr "Log alle berichten in syslog-achtige logfiles"
+
+#, fuzzy
+msgid "Log backup"
+msgstr "back-up"
 
 msgid "Log files"
 msgstr "Logbestanden"
@@ -28714,7 +28791,7 @@ msgid ""
 "for example configure that an interface which is down <i>and</i> admin down "
 "should be considered OK. Such a setting will only apply to interfaces "
 "matching the operational <i>and</i> the admin state. For example, an "
-"interface which is down but admin up would not be affected. "
+"interface which is down but admin up would not be affected."
 msgstr ""
 
 msgid "Map data relating to VMs"
@@ -28776,7 +28853,8 @@ msgstr "Kaart staten"
 msgid "Map systemd states to monitoring states"
 msgstr "Map systemd states naar monitoring states"
 
-msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. "
+#, fuzzy
+msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
 msgstr ""
 "Zet de admin status (<tt>ifAdminStatus</tt>) om in een monitoring status. "
 
@@ -32593,6 +32671,10 @@ msgstr "Aantal banen"
 msgid "Number of jumbo chunks per collection"
 msgstr "Aantal jumbo chunks per collectie"
 
+#, fuzzy
+msgid "Number of jumbo chunks per shard per collection"
+msgstr "Aantal jumbo chunks per collectie"
+
 msgid "Number of kernel events per second"
 msgstr "Aantal kernelgebeurtenissen per seconde"
 
@@ -34514,6 +34596,14 @@ msgstr ""
 "configureert.<br><br>In een gedistribueerde opstelling moet u ervoor zorgen "
 "dat de host en al zijn ouders door dezelfde site worden gemonitord."
 
+#, fuzzy
+msgid "Partial backup"
+msgstr "Leeftijd van laatste gedeeltelijke back-up"
+
+#, fuzzy
+msgid "Partial diff backup"
+msgstr "Duur van de back-up"
+
 msgid "Partitions (XEN)"
 msgstr "Partities (XEN)"
 
@@ -35802,9 +35892,9 @@ msgstr "Geef de extensies op in kleine letters en zonder punt."
 msgid "Please specify the name of the status host."
 msgstr "Geef de naam van de status host op."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Please specify the path to the export file. The text <tt><HOST></tt> will be "
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
 "relative path then that will be relative to Check_MK's directory for "
 "variable data, which is <tt>%s</tt>."
@@ -37149,6 +37239,10 @@ msgstr "Lees blokken per seconde"
 msgid "Read bytes per operation"
 msgstr "Lees bytes per operatie"
 
+#, fuzzy
+msgid "Read capacity"
+msgstr "Lees capaciteit"
+
 msgid "Read hits"
 msgstr "Lees hits"
 
@@ -37468,6 +37562,10 @@ msgstr "Regex voor host alias"
 msgid "Regex for host name"
 msgstr "Regex voor hostnaam"
 
+#, fuzzy
+msgid "Regex sets"
+msgstr "Regelsets"
+
 msgid "Region name"
 msgstr "Naam van de regio"
 
@@ -37482,6 +37580,9 @@ msgstr "Geregistreerde agenten"
 
 msgid "Registered desktops"
 msgstr "Geregistreerde desktops"
+
+msgid "Registered instances per load balancer"
+msgstr ""
 
 msgid "Registered modems"
 msgstr "Geregistreerde modems"
@@ -37890,6 +37991,35 @@ msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
 
 msgid "Renaming Operations"
 msgstr "Operaties hernoemen"
+
+#, fuzzy
+msgid "Renaming WATO configuration..."
+msgstr "RRA-configuratie"
+
+#, fuzzy
+msgid "Renaming host(s) in BI aggregations..."
+msgstr "Aggregaties van afzonderlijke hosts"
+
+msgid "Renaming host(s) in base configuration, rrd, history files, etc."
+msgstr ""
+
+msgid "Renaming host(s) in cluster nodes..."
+msgstr ""
+
+#, fuzzy
+msgid "Renaming host(s) in folders..."
+msgstr "Hosts in map: %s"
+
+#, fuzzy
+msgid "Renaming host(s) in notification rules..."
+msgstr "Nieuwe meldingsregel maken"
+
+msgid "Renaming host(s) in parents..."
+msgstr ""
+
+#, fuzzy
+msgid "Renaming host(s) in rulesets..."
+msgstr "Hernoemde host in %d regelsets van map %s"
 
 #, python-format
 msgid "Renaming of %s"
@@ -38659,6 +38789,10 @@ msgstr "Regel redacteur"
 msgid "Rule efficiency"
 msgstr "Regel efficiëntie"
 
+#, fuzzy
+msgid "Rule groups"
+msgstr "Regel contactgroepen"
+
 msgid "Rule hit ratio"
 msgstr "Regel trefverhouding"
 
@@ -38730,6 +38864,10 @@ msgstr "Regels in map"
 
 msgid "Rules matching pattern"
 msgstr "Regels die overeenkomen met patroon"
+
+#, fuzzy
+msgid "Rules of VPC security group"
+msgstr "DB-beveiligingsgroepen"
 
 msgid ""
 "Rules that influence the discovery of services. These rules allow, for "
@@ -38843,6 +38981,33 @@ msgid "Runnable (Waiting for resource)"
 msgstr "Runnable (wachtend op middelen)"
 
 msgid "Running"
+msgstr "Lopend"
+
+#, fuzzy
+msgid "Running On-Demand F instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Running On-Demand G instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Running On-Demand Inf instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Running On-Demand P instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+msgid "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"
+msgstr ""
+
+#, fuzzy
+msgid "Running On-Demand X instances"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Running VMs"
 msgstr "Lopend"
 
 msgid "Running as standby"
@@ -41420,8 +41585,8 @@ msgstr "Toon ruimte gereserveerd voor de <tt>root</tt> gebruiker"
 msgid "Show stale hosts and services"
 msgstr "Toon verouderde hosts en diensten"
 
-#, fuzzy
-msgid "Show summary for not {cls._get_working_state().upper()} states"
+#, fuzzy, python-format
+msgid "Show summary for not %s states"
 msgstr "Samenvatting voor hostmeldingen"
 
 msgid ""
@@ -41888,7 +42053,8 @@ msgstr "Grootte en leeftijd van afzonderlijke bestanden"
 msgid "Size delta"
 msgstr "Grootte delta"
 
-msgid "Size filter specification must be of the format <operator><int>."
+#, fuzzy
+msgid "Size filter specification must be of the format [OPERATOR][INT]."
 msgstr ""
 "De specificatie van het maatfilter moet van het formaat <operator><int> zijn."
 
@@ -43190,6 +43356,10 @@ msgstr "Begonnen op: %s."
 msgid "Starting"
 msgstr "Beginnen"
 
+#, fuzzy
+msgid "Starting VMs"
+msgstr "Beginnen"
+
 #, python-format
 msgid "Starting activation (Sites: %s)"
 msgstr "Start activering (Sites: %s)"
@@ -44003,6 +44173,10 @@ msgstr "Stop deze job"
 msgid "Stopped"
 msgstr "Gestopt"
 
+#, fuzzy
+msgid "Stopped VMs"
+msgstr "Gestopt"
+
 msgid "Stopped acknowledgement"
 msgstr "Gestopte bevestiging"
 
@@ -44017,6 +44191,9 @@ msgstr "Gestopte containers lagere niveaus"
 
 msgid "Stopped containers upper levels"
 msgstr "Containers bovenste niveaus gestopt"
+
+msgid "Stopping VMs"
+msgstr ""
 
 msgid "Storage"
 msgstr "Opslag"
@@ -44210,6 +44387,10 @@ msgid "Substitution"
 msgstr "Substitutie"
 
 msgid "Succeeded"
+msgstr "Geslaagd"
+
+#, fuzzy
+msgid "Succeeded provionings"
 msgstr "Geslaagd"
 
 msgid "Success"
@@ -48861,9 +49042,10 @@ msgstr "Het doelwit is verwijderd."
 msgid "The target rule is no longer available"
 msgstr "De doelregel is niet langer beschikbaar"
 
+#, fuzzy
 msgid ""
 "The team secret of your SIGNL4 team. That is the last part of your webhook "
-"URL: https://connect.signl4.com/webhook/<team_secret>"
+"URL: https://connect.signl4.com/webhook/[TEAM_SECRET]"
 msgstr ""
 "Het teamgeheim van uw SIGNL4 team. Dat is het laatste deel van uw webhook "
 "URL: https://connect.signl4.com/webhook/<team_secret>"
@@ -50624,6 +50806,9 @@ msgid ""
 msgstr ""
 "Dit kan nodig zijn om de synchronisatie problemen met SSL certificaten te "
 "laten accepteren wanneer een SSL beveiligde verbinding wordt gebruikt."
+
+msgid "This might take some time and involves a core restart..."
+msgstr ""
 
 msgid ""
 "This module can be used to define conditions for Check_MK rules in a central "
@@ -53300,18 +53485,20 @@ msgstr ""
 "Dit zal resulteren in alle bestanden waarvan het volledige bestandspad niet "
 "overeenkomt met de reguliere expressie, worden afgewezen."
 
+#, fuzzy
 msgid ""
 "This will result in all files with ages not matching the specification being "
-"dismissed. Specifications are in the format <operator><age in seconds>, e.g. "
+"dismissed. Specifications are in the format [OPERATOR][AGE_IN_SECONDS], e.g. "
 "'>=3600'."
 msgstr ""
 "Dit zal ertoe leiden dat alle bestanden met een leeftijd die niet "
 "overeenkomt met de specificatie worden geweigerd. Specificaties zijn in het "
 "formaat <operator><leeftijd in seconden>, bijvoorbeeld '>=3600'."
 
+#, fuzzy
 msgid ""
 "This will result in all files with sizes not matching the specification "
-"being dismissed. Specifications are in the format <operator><size in bytes>, "
+"being dismissed. Specifications are in the format [OPERATOR][SIZE_IN_BYTES], "
 "e.g. '>=1024'."
 msgstr ""
 "Dit zal ertoe leiden dat alle bestanden met een grootte die niet overeenkomt "
@@ -53966,14 +54153,30 @@ msgstr "Totaal %s vCPU's"
 msgid "Total Active Sessions"
 msgstr "Totaal actieve sessies"
 
+#, fuzzy
+msgid "Total Block store snapshots"
+msgstr "Blokopslag momentopnamen"
+
+#, fuzzy
+msgid "Total Cold HDD space"
+msgstr "Koude HDD ruimte"
+
 msgid "Total Data in relation to RAM"
 msgstr "Totale gegevens in verhouding tot RAM"
+
+#, fuzzy
+msgid "Total General Purpose SSD space"
+msgstr "SSD-ruimte voor algemene doeleinden"
 
 msgid "Total IO operations per second"
 msgstr "Totaal IO operaties per seconde"
 
 msgid "Total Index Size"
 msgstr "Totale indexomvang"
+
+#, fuzzy
+msgid "Total Magnetic volumes space"
+msgstr "Magnetische volumes ruimte"
 
 msgid "Total Number of Cores"
 msgstr "Totaal aantal kernen"
@@ -54002,11 +54205,27 @@ msgstr "Totaal aantal pakketten Minimum"
 msgid "Total Pending Mails"
 msgstr "Totaal in afwachting van e-mails"
 
+#, fuzzy
+msgid "Total Provisioned IOPS SSD IO operations per seconds"
+msgstr "Geprovisioneerde IOPS SSD IO-bewerkingen per seconde"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD space"
+msgstr "Geprovisioneerde IOPS SSD ruimte"
+
 msgid "Total RAM + Swap installed"
 msgstr "Totaal RAM + Swap geïnstalleerd"
 
 msgid "Total RAM installed"
 msgstr "Totaal geïnstalleerd RAM"
+
+#, fuzzy
+msgid "Total Running On-Demand Instances(Deprecated by AWS)"
+msgstr "Totaal draaiende On-Demand Instances"
+
+#, fuzzy
+msgid "Total Throughput Optimized HDD space"
+msgstr "Doorvoer Geoptimaliseerde HDD-ruimte"
 
 msgid "Total Traffic Maximum"
 msgstr "Totaal verkeer Maximum"
@@ -54308,6 +54527,10 @@ msgstr "Totaal aantal sessies"
 
 msgid "Total size"
 msgstr "Totale omvang"
+
+#, fuzzy
+msgid "Total size of all indexes for the collection"
+msgstr "De totale grootte van alle indexen voor de verzameling"
 
 msgid "Total size of all vaults"
 msgstr "Totale grootte van alle kluizen"
@@ -55327,6 +55550,10 @@ msgstr "Niet opvraagbaar geheugen"
 
 msgid "Unregistered"
 msgstr "Niet-geregistreerd"
+
+#, fuzzy
+msgid "Unspecific backup"
+msgstr "Ongespecificeerd."
 
 msgid "Unspecified."
 msgstr "Ongespecificeerd."
@@ -57172,6 +57399,10 @@ msgstr "VMalloc Adresruimte"
 msgid "VMs"
 msgstr "VM's"
 
+#, fuzzy
+msgid "VMs in unknown state"
+msgstr "Dienst gaat in onbekende toestand"
+
 msgid "VMware Tools have never been installed"
 msgstr "VMware Tools zijn nooit geïnstalleerd"
 
@@ -57195,6 +57426,13 @@ msgstr "VNX quota en bestandssystemen zoeken"
 
 msgid "VPC Elastic IP Addresses"
 msgstr "VPC Elastische IP-adressen"
+
+#, fuzzy
+msgid "VPC security groups"
+msgstr "DB-beveiligingsgroepen"
+
+msgid "VPC security groups of elastic network interface"
+msgstr ""
 
 msgid "VPN Tunnel"
 msgstr "VPN-tunnel"
@@ -57353,6 +57591,10 @@ msgid "Varnish Worker thread ratio"
 msgstr "Vernis Werker draad verhouding"
 
 msgid "Vault size"
+msgstr "Kluis grootte"
+
+#, fuzzy
+msgid "Vaults"
 msgstr "Kluis grootte"
 
 msgid "Veeam Backup Status (Windows)"
@@ -58087,6 +58329,10 @@ msgstr "Web ACL Verzoeken"
 
 msgid "Web ACL capacity units (WCUs)"
 msgstr "Web ACL capaciteitseenheden (WCUs)"
+
+#, fuzzy
+msgid "Web ACLs"
+msgstr "Web ACL Verzoeken"
 
 msgid "Web API communication"
 msgstr "Web API-communicatie"
@@ -59769,6 +60015,10 @@ msgstr "Schrijf cache status"
 
 msgid "Write cache usage"
 msgstr "Schrijf cache gebruik"
+
+#, fuzzy
+msgid "Write capacity"
+msgstr "Schrijfcapaciteit"
 
 msgid "Write latency"
 msgstr "Schrijf latentie"
@@ -62723,6 +62973,10 @@ msgstr "normale verbinding"
 msgid "not"
 msgstr "niet"
 
+#, fuzzy, python-format
+msgid "not %s states"
+msgstr "niet OK staten"
+
 msgid "not OK states"
 msgstr "niet OK staten"
 
@@ -62737,9 +62991,6 @@ msgstr "niet beschikbaar"
 
 msgid "not present"
 msgstr "niet aanwezig"
-
-msgid "not {cls._get_working_state().upper()} states"
-msgstr ""
 
 msgid "notif."
 msgstr "notif."
@@ -63488,6 +63739,17 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Currently there is one change to activate"
+#~ msgstr "Momenteel is er één wijziging te activeren"
+
+#~ msgid "Database/Collection name ('<DB name> <collection name>')"
+#~ msgstr "Databank-/verzamelnaam ('<DB-naam> <verzamelnaam>')"
+
+#, fuzzy
+#~| msgid "Summary for host notifications"
+#~ msgid "Show summary for not {cls._get_working_state().upper()} states"
+#~ msgstr "Samenvatting voor hostmeldingen"
 
 #~ msgid "Additional context"
 #~ msgstr "Extra context"

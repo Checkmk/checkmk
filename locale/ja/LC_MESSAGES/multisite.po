@@ -522,6 +522,10 @@ msgstr "%s ホストの %d が開始されました (%s)…"
 msgid "%s for all hosts started..."
 msgstr "すべてのホストの%sが開始されました..."
 
+#, fuzzy, python-format
+msgid "%s instances"
+msgstr "DBインスタンス"
+
 #, python-format
 msgid "%s into %s"
 msgstr "%sから%sへ"
@@ -3814,7 +3818,8 @@ msgstr "年数"
 msgid "Age (sec)"
 msgstr "経過時間(秒)"
 
-msgid "Age filter specification must be of the format <operator><int>."
+#, fuzzy
+msgid "Age filter specification must be of the format [OPERATOR][INT]."
 msgstr "期間フィルターの指定は、<operator><int>の形式である必要があります。"
 
 msgid "Age in weeks of log data to fetch"
@@ -5201,9 +5206,10 @@ msgid ""
 "regular expressions. The match is done on the beginning of the %s."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Apply this rule only to interfaces whose admin state (<tt>ifAdminStatus</"
-"tt>) is listed below. "
+"tt>) is listed below."
 msgstr ""
 "このルールは、管理状態(<tt>ifAdminStatus</tt>)が以下にリストされているイン"
 "ターフェースにのみ適用してください。 "
@@ -7737,6 +7743,9 @@ msgstr ""
 "代わってインシデントを作成/編集/解決できるように、ServiceNowのACLルールを調整"
 "する必要があります。詳細については、ServiceNowのドキュメントをご覧ください。"
 
+msgid "Calling final hooks"
+msgstr ""
+
 msgid "Can be used until version:"
 msgstr "バージョンまで使用できます:"
 
@@ -8675,6 +8684,10 @@ msgstr ""
 "ジェントプラグインmk_inventoryをインストールする必要があります)"
 
 msgid "Checkmk Configuration Files"
+msgstr "Checkmk設定ファイル"
+
+#, fuzzy
+msgid "Checkmk Configuration files"
 msgstr "Checkmk設定ファイル"
 
 msgid "Checkmk Log Files"
@@ -9801,6 +9814,10 @@ msgid ""
 msgstr ""
 "構成エラー。あなたは私たちを <b>リモート</b> として扱いますが、私たちは独自の"
 "分散WATO構成を持っています！"
+
+#, fuzzy
+msgid "Configuration files"
+msgstr "コンフィギュレーション"
 
 #, python-format
 msgid ""
@@ -11508,9 +11525,6 @@ msgstr "現在、アクティブ化する変更はありません。"
 msgid "Currently there are no unsent notification bulks pending."
 msgstr "現在、保留中の未送信の通知バルクはありません。"
 
-msgid "Currently there is one change to activate"
-msgstr "現在、アクティブ化する変更が1つあります"
-
 msgid "Currently there is one change to activate."
 msgstr "現在、アクティブ化する変更が1つあります。"
 
@@ -12212,8 +12226,16 @@ msgstr "データベースユーザー資格情報"
 msgid "Database apply lag"
 msgstr "データベース適用ラグ"
 
+#, fuzzy
+msgid "Database backup"
+msgstr "データベース名"
+
 msgid "Database changed to emergency"
 msgstr "データベースが緊急事態に変更されました"
+
+#, fuzzy
+msgid "Database diff backup"
+msgstr "バックアップの期間"
 
 msgid "Database identifier"
 msgstr "データベース識別子"
@@ -12242,7 +12264,7 @@ msgstr "データベーススループットユニット"
 msgid "Database throughput units in percent"
 msgstr "データベーススループット単位(パーセント)"
 
-msgid "Database/Collection name ('<DB name> <collection name>')"
+msgid "Database/Collection name ('[DB_NAME] [COLLECTION_NAME]')"
 msgstr ""
 
 #, fuzzy
@@ -12361,6 +12383,14 @@ msgstr "デッドロックとウェイトロック"
 msgid "Deadlocks"
 msgstr "デッドロック"
 
+#, fuzzy
+msgid "Deallocated VMs"
+msgstr "割り当てられた"
+
+#, fuzzy
+msgid "Deallocating VMs"
+msgstr "シャードの再配置"
+
 msgid "Debug"
 msgstr "デバッグ"
 
@@ -12473,6 +12503,10 @@ msgstr "デフォルトのレイアウト"
 
 msgid "Default levels"
 msgstr "デフォルトレベル"
+
+#, fuzzy
+msgid "Default limit set by AWS"
+msgstr "デフォルトの線種"
 
 msgid "Default line style"
 msgstr "デフォルトの線種"
@@ -17364,6 +17398,10 @@ msgstr ""
 msgid "Failed notifications"
 msgstr "失敗した通知"
 
+#, fuzzy
+msgid "Failed provisionings"
+msgstr "マッププロビジョニングの状態"
+
 msgid "Failed requests to Adressbook files"
 msgstr "Adressbookファイルへのリクエストの失敗"
 
@@ -17824,6 +17862,10 @@ msgstr "ファイル記述子のオープン試行"
 msgid "File descriptor open attempts rate"
 msgstr "ファイル記述子のオープン試行率"
 
+#, fuzzy
+msgid "File diff backup"
+msgstr "サイトのバックアップ"
+
 msgid "File grouping"
 msgstr ""
 
@@ -17844,6 +17886,10 @@ msgstr "ファイル名"
 
 msgid "File opened"
 msgstr "ファイルが開かれました"
+
+#, fuzzy
+msgid "File or filegroup backup"
+msgstr "最後のファイルまたはファイルグループのバックアップの経過時間"
 
 msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
 msgstr ""
@@ -21675,6 +21721,9 @@ msgstr "除外するIP範囲"
 msgid "IP ranges to scan"
 msgstr "スキャンするIP範囲"
 
+msgid "IP sets"
+msgstr ""
+
 msgid "IP-Address of Tunnel Endpoint"
 msgstr "トンネルエンドポイントのIPアドレス"
 
@@ -22368,10 +22417,11 @@ msgid ""
 "check if the last minute's delta is X percent higher than the average delta."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "If you activate the monitoring of the admin state (<tt>ifAdminStatus</tt>), "
 "the check will go critical if the current state of the interface does not "
-"match one of the expected states. "
+"match one of the expected states."
 msgstr ""
 "管理状態の監視をアクティブにすると(<tt>ifAdminStatus</tt>)、インターフェイス"
 "の現在の状態が予想される状態の1つと一致しない場合、チェックはクリティカルにな"
@@ -24982,6 +25032,10 @@ msgstr "影響を受けるタグをルールから削除するだけです。"
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "可用性を表示するだけです (i.e. OK/UP)"
 
+#, fuzzy
+msgid "KByte"
+msgstr "バイト"
+
 msgid "Kaspersky Anti-Virus (Linux)"
 msgstr "カスペルスキーアンチウイルス(Linux)"
 
@@ -25938,6 +25992,10 @@ msgstr "入力データのレベル(バイト単位)"
 msgid "Levels on latency"
 msgstr "遅延のレベル"
 
+#, fuzzy
+msgid "Levels on read capacity"
+msgstr "読み取り/書き込み容量のレベル"
+
 msgid "Levels on server latency in seconds"
 msgstr "サーバー遅延のレベル(秒単位)"
 
@@ -25996,8 +26054,16 @@ msgstr ""
 msgid "Levels on used capacity in bytes"
 msgstr "バイト単位の使用済み容量のレベル"
 
+#, fuzzy
+msgid "Levels on write capacity"
+msgstr "読み取り/書き込み容量のレベル"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "シングルコアCPU使用率の長期間にわたるレベル"
+
+#, fuzzy
+msgid "Levels over an extended time period on replication lag"
+msgstr "総CPU使用率の長期間にわたるレベル"
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr "総CPU使用率の長期間にわたるレベル"
@@ -26057,6 +26123,9 @@ msgid "Limit event lifetime"
 msgstr "イベントの有効期間を制限する"
 
 msgid "Limit for upper bound dynamic levels"
+msgstr ""
+
+msgid "Limit from AWS API"
 msgstr ""
 
 msgid "Limit length of mail body"
@@ -26336,6 +26405,10 @@ msgstr "経由で着信メッセージを聞く"
 
 msgid "Listen for passive checks via NSCA"
 msgstr "NSCAを介してパッシブチェックをリッスンします"
+
+#, fuzzy
+msgid "Listeners per load balancer"
+msgstr "ロードバランサー"
 
 msgid "Lists all aggregations which only rely on information of one host."
 msgstr "1つのホストの情報のみに依存するすべての集計を一覧表示します。"
@@ -26678,6 +26751,10 @@ msgstr "ログエントリ"
 
 msgid "Log all messages into syslog-like logfiles"
 msgstr "すべてのメッセージをsyslogのようなログファイルに記録します"
+
+#, fuzzy
+msgid "Log backup"
+msgstr "バックアップ"
 
 msgid "Log files"
 msgstr "ログファイル"
@@ -27658,7 +27735,7 @@ msgid ""
 "for example configure that an interface which is down <i>and</i> admin down "
 "should be considered OK. Such a setting will only apply to interfaces "
 "matching the operational <i>and</i> the admin state. For example, an "
-"interface which is down but admin up would not be affected. "
+"interface which is down but admin up would not be affected."
 msgstr ""
 
 msgid "Map data relating to VMs"
@@ -27720,7 +27797,8 @@ msgstr "マップの状態"
 msgid "Map systemd states to monitoring states"
 msgstr "systemdの状態を監視状態にマップする"
 
-msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state. "
+#, fuzzy
+msgid "Map the admin state (<tt>ifAdminStatus</tt>) to a monitoring state."
 msgstr "管理状態(<tt> ifAdminStatus </tt>)を監視状態にマップします。 "
 
 msgid ""
@@ -31471,6 +31549,10 @@ msgstr "ジョブの数"
 msgid "Number of jumbo chunks per collection"
 msgstr "コレクションごとのジャンボチャンクの数"
 
+#, fuzzy
+msgid "Number of jumbo chunks per shard per collection"
+msgstr "コレクションごとのジャンボチャンクの数"
+
 msgid "Number of kernel events per second"
 msgstr "1秒あたりのカーネルイベントの数"
 
@@ -33342,6 +33424,14 @@ msgstr ""
 "合に限ります。<br><br>分散型の場合セットアップでは、ホストとそのすべての親が"
 "同じサイトによって監視されていることを確認してください。"
 
+#, fuzzy
+msgid "Partial backup"
+msgstr "最後の部分バックアップの経過日数"
+
+#, fuzzy
+msgid "Partial diff backup"
+msgstr "バックアップの期間"
+
 msgid "Partitions (XEN)"
 msgstr "パーティション(XEN)"
 
@@ -34571,9 +34661,9 @@ msgstr "拡張子は小文字でドットなしで指定してください。"
 msgid "Please specify the name of the status host."
 msgstr "ステータスホストの名前を指定してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Please specify the path to the export file. The text <tt><HOST></tt> will be "
+"Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
 "relative path then that will be relative to Check_MK's directory for "
 "variable data, which is <tt>%s</tt>."
@@ -35896,6 +35986,10 @@ msgstr "1秒あたりのブロック数の読み込み"
 msgid "Read bytes per operation"
 msgstr "操作ごとの読み取りバイト"
 
+#, fuzzy
+msgid "Read capacity"
+msgstr "読み取り容量"
+
 msgid "Read hits"
 msgstr "ヒットを読む"
 
@@ -36203,6 +36297,10 @@ msgstr "ホストエイリアスの正規表現"
 msgid "Regex for host name"
 msgstr "ホスト名の正規表現"
 
+#, fuzzy
+msgid "Regex sets"
+msgstr "ルールセット"
+
 msgid "Region name"
 msgstr "リージョン名"
 
@@ -36217,6 +36315,9 @@ msgstr "登録エージェント"
 
 msgid "Registered desktops"
 msgstr "登録済みデスクトップ"
+
+msgid "Registered instances per load balancer"
+msgstr ""
 
 msgid "Registered modems"
 msgstr "登録済みモデム"
@@ -36622,6 +36723,36 @@ msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
 
 msgid "Renaming Operations"
 msgstr "操作の名前変更"
+
+#, fuzzy
+msgid "Renaming WATO configuration..."
+msgstr "RRA構成"
+
+#, fuzzy
+msgid "Renaming host(s) in BI aggregations..."
+msgstr "単一ホストの集計"
+
+msgid "Renaming host(s) in base configuration, rrd, history files, etc."
+msgstr ""
+
+msgid "Renaming host(s) in cluster nodes..."
+msgstr ""
+
+#, fuzzy
+msgid "Renaming host(s) in folders..."
+msgstr "フォルダ内のホスト:%s"
+
+#, fuzzy
+msgid "Renaming host(s) in notification rules..."
+msgstr "新しい通知ルールを作成する"
+
+msgid "Renaming host(s) in parents..."
+msgstr ""
+
+#, fuzzy
+msgid "Renaming host(s) in rulesets..."
+msgstr ""
+"%d ルールセット内のホストの名前(フォルダ %s にあります)が変更されました"
 
 #, python-format
 msgid "Renaming of %s"
@@ -37378,6 +37509,10 @@ msgstr "ルールエディタ"
 msgid "Rule efficiency"
 msgstr "ルールの効率"
 
+#, fuzzy
+msgid "Rule groups"
+msgstr "ルール連絡先グループ"
+
 msgid "Rule hit ratio"
 msgstr "ルールヒット率"
 
@@ -37447,6 +37582,10 @@ msgstr "フォルダ内のルール"
 
 msgid "Rules matching pattern"
 msgstr "パターンマッチングパターン"
+
+#, fuzzy
+msgid "Rules of VPC security group"
+msgstr "DBセキュリティグループ"
 
 msgid ""
 "Rules that influence the discovery of services. These rules allow, for "
@@ -37550,6 +37689,33 @@ msgid "Runnable (Waiting for resource)"
 msgstr "実行可能(リソースを待機中)"
 
 msgid "Running"
+msgstr "ランニング"
+
+#, fuzzy
+msgid "Running On-Demand F instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Running On-Demand G instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Running On-Demand Inf instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Running On-Demand P instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+msgid "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"
+msgstr ""
+
+#, fuzzy
+msgid "Running On-Demand X instances"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Running VMs"
 msgstr "ランニング"
 
 msgid "Running as standby"
@@ -40044,8 +40210,8 @@ msgstr "<tt>root</tt>ユーザー用に予約されているスペースを表�
 msgid "Show stale hosts and services"
 msgstr "古いホストとサービスを表示する"
 
-#, fuzzy
-msgid "Show summary for not {cls._get_working_state().upper()} states"
+#, fuzzy, python-format
+msgid "Show summary for not %s states"
 msgstr "ホスト通知の概要"
 
 msgid ""
@@ -40496,7 +40662,8 @@ msgstr "単一ファイルのサイズと経過時間"
 msgid "Size delta"
 msgstr "サイズデルタ"
 
-msgid "Size filter specification must be of the format <operator><int>."
+#, fuzzy
+msgid "Size filter specification must be of the format [OPERATOR][INT]."
 msgstr "サイズフィルターの仕様は、<operator> <int>の形式である必要があります。"
 
 msgid "Size growth per minute"
@@ -41708,6 +41875,10 @@ msgstr "開始: %s"
 msgid "Starting"
 msgstr "起動"
 
+#, fuzzy
+msgid "Starting VMs"
+msgstr "起動"
+
 #, python-format
 msgid "Starting activation (Sites: %s)"
 msgstr "アクティベーションを開始しています(サイト: %s)"
@@ -42509,6 +42680,10 @@ msgstr "このジョブを停止する"
 msgid "Stopped"
 msgstr "停止"
 
+#, fuzzy
+msgid "Stopped VMs"
+msgstr "停止"
+
 msgid "Stopped acknowledgement"
 msgstr "確認応答を停止しました"
 
@@ -42523,6 +42698,9 @@ msgstr "停止したコンテナの下位レベル"
 
 msgid "Stopped containers upper levels"
 msgstr "停止したコンテナの上位レベル"
+
+msgid "Stopping VMs"
+msgstr ""
 
 msgid "Storage"
 msgstr "ストレージ"
@@ -42712,6 +42890,10 @@ msgid "Substitution"
 msgstr "置換"
 
 msgid "Succeeded"
+msgstr "成功"
+
+#, fuzzy
+msgid "Succeeded provionings"
 msgstr "成功"
 
 msgid "Success"
@@ -46949,9 +47131,10 @@ msgstr "ターゲットが削除されました"
 msgid "The target rule is no longer available"
 msgstr "ターゲットルールは現在使用できません"
 
+#, fuzzy
 msgid ""
 "The team secret of your SIGNL4 team. That is the last part of your webhook "
-"URL: https://connect.signl4.com/webhook/<team_secret>"
+"URL: https://connect.signl4.com/webhook/[TEAM_SECRET]"
 msgstr ""
 "SIGNL4チームのチームシークレット。これがwebhook URLの最後の部分です URL:  "
 "https://connect.signl4.com/webhook/<team_secret>"
@@ -48527,6 +48710,9 @@ msgid ""
 msgstr ""
 "これは、SSLで保護された接続を使用するときに、同期がSSL証明書の問題を受け入れ"
 "るようにするために必要になる場合があります。"
+
+msgid "This might take some time and involves a core restart..."
+msgstr ""
 
 msgid ""
 "This module can be used to define conditions for Check_MK rules in a central "
@@ -50902,17 +51088,19 @@ msgstr ""
 "これにより、完全なファイルパスが正規表現と一致しないすべてのファイルが却下さ"
 "れます。"
 
+#, fuzzy
 msgid ""
 "This will result in all files with ages not matching the specification being "
-"dismissed. Specifications are in the format <operator><age in seconds>, e.g. "
+"dismissed. Specifications are in the format [OPERATOR][AGE_IN_SECONDS], e.g. "
 "'>=3600'."
 msgstr ""
 "これにより、仕様に一致しない経過日数のすべてのファイルが却下されます。仕様"
 "は、<operator> <age in seconds>の形式です(例: '> = 3600')。"
 
+#, fuzzy
 msgid ""
 "This will result in all files with sizes not matching the specification "
-"being dismissed. Specifications are in the format <operator><size in bytes>, "
+"being dismissed. Specifications are in the format [OPERATOR][SIZE_IN_BYTES], "
 "e.g. '>=1024'."
 msgstr ""
 "これにより、サイズが仕様と一致しないすべてのファイルが却下されます。仕様の形"
@@ -51539,14 +51727,30 @@ msgstr "合計 %s vCPU"
 msgid "Total Active Sessions"
 msgstr "合計アクティブセッション"
 
+#, fuzzy
+msgid "Total Block store snapshots"
+msgstr "ストアスナップショットをブロックする"
+
+#, fuzzy
+msgid "Total Cold HDD space"
+msgstr "コールドHDDスペース"
+
 msgid "Total Data in relation to RAM"
 msgstr "RAMに関連する合計データ"
+
+#, fuzzy
+msgid "Total General Purpose SSD space"
+msgstr "汎用SSDスペース"
 
 msgid "Total IO operations per second"
 msgstr "1秒あたりの合計IO操作"
 
 msgid "Total Index Size"
 msgstr "インデックスの合計サイズ"
+
+#, fuzzy
+msgid "Total Magnetic volumes space"
+msgstr "磁気ボリュームスペース"
 
 msgid "Total Number of Cores"
 msgstr "コアの総数"
@@ -51575,11 +51779,27 @@ msgstr "最小総パケット数"
 msgid "Total Pending Mails"
 msgstr "保留中のメールの合計"
 
+#, fuzzy
+msgid "Total Provisioned IOPS SSD IO operations per seconds"
+msgstr "1秒あたりの合計IO操作"
+
+#, fuzzy
+msgid "Total Provisioned IOPS SSD space"
+msgstr "プロビジョニングされたIOPSSSDスペース"
+
 msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
 
 msgid "Total RAM installed"
 msgstr "インストールされているRAMの合計"
+
+#, fuzzy
+msgid "Total Running On-Demand Instances(Deprecated by AWS)"
+msgstr "実行中のオンデマンドインスタンスの合計"
+
+#, fuzzy
+msgid "Total Throughput Optimized HDD space"
+msgstr "スループットが最適化されたHDDスペース"
 
 msgid "Total Traffic Maximum"
 msgstr "最大総トラフィック"
@@ -51877,6 +52097,10 @@ msgstr "合計セッション"
 
 msgid "Total size"
 msgstr "全体の大きさ"
+
+#, fuzzy
+msgid "Total size of all indexes for the collection"
+msgstr "oplogの合計サイズ"
 
 msgid "Total size of all vaults"
 msgstr "すべてのボールトの合計サイズ"
@@ -52877,6 +53101,10 @@ msgstr "再生不可能なメモリ"
 
 msgid "Unregistered"
 msgstr "未登録"
+
+#, fuzzy
+msgid "Unspecific backup"
+msgstr "不特定。"
 
 msgid "Unspecified."
 msgstr "不特定。"
@@ -54636,6 +54864,10 @@ msgstr "VMallocアドレス空間"
 msgid "VMs"
 msgstr "VMs"
 
+#, fuzzy
+msgid "VMs in unknown state"
+msgstr "サービスが不明な状態になります"
+
 msgid "VMware Tools have never been installed"
 msgstr "VMwareToolsがインストールされたことはありません"
 
@@ -54661,6 +54893,13 @@ msgstr "VNXクォータとファイルシステムの検出"
 
 msgid "VPC Elastic IP Addresses"
 msgstr "VPC Elastic IPアドレス"
+
+#, fuzzy
+msgid "VPC security groups"
+msgstr "DBセキュリティグループ"
+
+msgid "VPC security groups of elastic network interface"
+msgstr ""
 
 msgid "VPN Tunnel"
 msgstr "VPNトンネル"
@@ -54817,6 +55056,10 @@ msgid "Varnish Worker thread ratio"
 msgstr "Varnishワーカースレッド比"
 
 msgid "Vault size"
+msgstr "ボールトサイズ"
+
+#, fuzzy
+msgid "Vaults"
 msgstr "ボールトサイズ"
 
 msgid "Veeam Backup Status (Windows)"
@@ -55536,6 +55779,10 @@ msgstr "Web ACLリクエスト"
 
 msgid "Web ACL capacity units (WCUs)"
 msgstr "Web ACLキャパシティユニット(WCUs)"
+
+#, fuzzy
+msgid "Web ACLs"
+msgstr "Web ACLリクエスト"
 
 msgid "Web API communication"
 msgstr "WebAPI通信"
@@ -57031,6 +57278,10 @@ msgstr "キャッシュ状態の書き込み"
 
 msgid "Write cache usage"
 msgstr "書き込みキャッシュの使用量"
+
+#, fuzzy
+msgid "Write capacity"
+msgstr "書き込み容量"
 
 msgid "Write latency"
 msgstr "書き込みレイテンシ"
@@ -59795,6 +60046,10 @@ msgstr "通常の接続"
 msgid "not"
 msgstr "ではない"
 
+#, fuzzy, python-format
+msgid "not %s states"
+msgstr "OKではない状態"
+
 msgid "not OK states"
 msgstr "OKではない状態"
 
@@ -59809,9 +60064,6 @@ msgstr "利用不可"
 
 msgid "not present"
 msgstr "現在ではない"
-
-msgid "not {cls._get_working_state().upper()} states"
-msgstr ""
 
 msgid "notif."
 msgstr "notif."
@@ -60555,6 +60807,14 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Currently there is one change to activate"
+#~ msgstr "現在、アクティブ化する変更が1つあります"
+
+#, fuzzy
+#~| msgid "Summary for host notifications"
+#~ msgid "Show summary for not {cls._get_working_state().upper()} states"
+#~ msgstr "ホスト通知の概要"
 
 #~ msgid "Additional context"
 #~ msgstr "追加のコンテキスト"

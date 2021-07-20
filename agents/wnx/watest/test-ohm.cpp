@@ -125,7 +125,7 @@ int CalcOhmCount() {
     return count;
 }
 
-TEST(SectionProviderOhm, DoubleStart) {
+TEST(SectionProviderOhm, DoubleStartIntegration) {
     using namespace cma::tools;
     if (!win::IsElevated()) {
         XLOG::l(XLOG::kStdio)
@@ -197,7 +197,7 @@ TEST(SectionProviderOhm, ResetOhm) {
     EXPECT_FALSE(x.empty());
 }
 
-TEST(SectionProviderOhm, StartStop) {
+TEST(SectionProviderOhm, StartStopIntegration) {
     namespace fs = std::filesystem;
     TheMiniProcess oprocess;
     EXPECT_EQ(oprocess.process_id_, 0);
@@ -228,7 +228,7 @@ TEST(SectionProviderOhm, StartStop) {
     EXPECT_TRUE(ret);
 }
 
-TEST(SectionProviderOhm, ConditionallyStartOhm) {
+TEST(SectionProviderOhm, ConditionallyStartOhmIntegration) {
     ServiceProcessor sp;
     wtools::KillProcess(cma::provider::ohm::kExeModuleWide, 1);
     auto found = wtools::FindProcess(cma::provider::ohm::kExeModuleWide);

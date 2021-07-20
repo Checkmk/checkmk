@@ -75,7 +75,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, StartStop);
+    FRIEND_TEST(SectionProviderOhm, StartStopIntegration);
 #endif
 };
 
@@ -681,7 +681,7 @@ private:
     FRIEND_TEST(ServiceProcessorTest, Generate);
 
     friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhm);
+    FRIEND_TEST(SectionProviderOhm, ConditionallyStartOhmIntegration);
 
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, RestartBinaries);

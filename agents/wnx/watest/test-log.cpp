@@ -449,9 +449,12 @@ TEST(LogTest, Functional) {
         EXPECT_NE(std::string::npos, result[2].find("[ERROR:CRITICAL]"));
 
         constexpr size_t start_position = 35;
-        EXPECT_LE(start_position, result[3].find("[Trace]  trace"));
-        EXPECT_LE(start_position, result[4].find("[Warn ]  warn"));
-        EXPECT_LE(start_position, result[5].find("[Err  ]  error"));
+        EXPECT_LE(start_position, result[3].find("[Trace]  trace"))
+            << "result=" << result[3];
+        EXPECT_LE(start_position, result[4].find("[Warn ]  warn"))
+            << "result=" << result[4];
+        EXPECT_LE(start_position, result[5].find("[Err  ]  error"))
+            << "result=" << result[5];
         EXPECT_LE(start_position, result[6].find(" info"));
         EXPECT_LE(
             start_position,

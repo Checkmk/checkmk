@@ -10,6 +10,7 @@
 #include "test_tools.h"
 
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 namespace fs = std::filesystem;
 
 namespace cma::details {
@@ -88,10 +89,11 @@ TEST_F(WtoolsKillProcFixture, KillProcByPid) {
     ASSERT_NE(pid, 0);
 
     EXPECT_TRUE(wtools::KillProcess(pid, 1));
+    cma::tools::sleep(500ms);
 
     auto [path_empty, pid_null] = FindExpectedProcess();
     EXPECT_TRUE(path_empty.empty());
-    EXPECT_TRUE(pid_null == 0);
+    EXPECT_EQ(pid_null, 0);
 
     EXPECT_FALSE(wtools::KillProcess(pid, 1));
 }
@@ -100,6 +102,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
 
     EXPECT_EQ(KillProcessesByDir(test_dir_), 2);
+    cma::tools::sleep(500ms);
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());

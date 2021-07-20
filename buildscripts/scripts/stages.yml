@@ -60,7 +60,7 @@ STAGES:
       ENV_VARS:
         JUNIT_XML: "--junit-xml ${RESULTS}/mypy.xml"
         MYPY_ADDOPTS: "--no-color-output"
-      COMMAND: 'make test-mypy-docker'
+      COMMAND: 'make --quiet test-mypy-docker'
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_TYPE: "MYPY"
       RESULT_CHECK_FILE_PATTERN: "results/mypy.xml"

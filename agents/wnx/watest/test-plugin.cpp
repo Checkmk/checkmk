@@ -2127,11 +2127,11 @@ PluginDescVector plugins_file_group = {{1, "local0_s.cmd", "local0_s"}};
 
 std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
     //       Async  Timeout CacheAge              Retry  Run
-    // clang-format off
     {"*.cmd",
-     "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\ngroup: Users\n"},
-    {"*",     "run: no"},
-    // clang-format on
+     fmt::format(
+         "async: no\ntimeout: 10\ncache_age: 120\nretry_count: 3\nrun: yes\ngroup: {}\n",
+         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup)))},
+    {"*", "run: no"},
 };
 
 // Check that plugin is started from the valid user in group

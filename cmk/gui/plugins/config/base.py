@@ -5,22 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
 
-from dataclasses import dataclass as _dataclass, field as _field
-from livestatus import SiteConfigurations as _SiteConfigurations
-from typing import (
-    Any as _Any,
-    Dict as _Dict,
-    List as _List,
-    Tuple as _Tuple,
-    Union as _Union,
-    Literal as _Literal,
-    Optional as _Optional,
-)
+from dataclasses import dataclass, field
+from livestatus import SiteConfigurations
+from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
-_CustomLinkSpec = _Tuple[str, bool, _List[_Tuple[str, str, _Optional[str], str]]]
+CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
 # Links for everyone
-_custom_links_guest: _List[_CustomLinkSpec] = [
+custom_links_guest: List[CustomLinkSpec] = [
     ("Addons", True, [
         ("NagVis", "../nagvis/", "icon_nagvis.png", "main"),
     ]),
@@ -28,7 +20,7 @@ _custom_links_guest: _List[_CustomLinkSpec] = [
 
 # The members of the role 'user' get the same links as the guests
 # but some in addition
-_custom_links_user: _List[_CustomLinkSpec] = [("Open Source Components", False, [
+custom_links_user: List[CustomLinkSpec] = [("Open Source Components", False, [
     ("CheckMK", "https://checkmk.com", None, "_blank"),
     ("Nagios", "https://www.nagios.org/", None, "_blank"),
     ("NagVis", "https://nagvis.org/", None, "_blank"),
@@ -36,14 +28,14 @@ _custom_links_user: _List[_CustomLinkSpec] = [("Open Source Components", False, 
 ])]
 
 # The admins yet get further links
-_custom_links_admin: _List[_CustomLinkSpec] = [("Support", False, [
+custom_links_admin: List[CustomLinkSpec] = [("Support", False, [
     ("CheckMK", "https://checkmk.com/", None, "_blank"),
     ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
     ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
 ])]
 
 
-def _make_default_user_profile() -> _Dict[str, _Any]:
+def make_default_user_profile() -> Dict[str, Any]:
     return {
         'contactgroups': [],
         'roles': ['user'],
@@ -51,10 +43,10 @@ def _make_default_user_profile() -> _Dict[str, _Any]:
     }
 
 
-_ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
+ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
 
 
-@_dataclass
+@dataclass
 class CREConfig:
     #.
     #   .--Generic-------------------------------------------------------------.
@@ -67,20 +59,20 @@ class CREConfig:
     #   '----------------------------------------------------------------------'
 
     # User supplied roles
-    roles: _Dict[str, _Any] = _field(default_factory=dict)
+    roles: Dict[str, Any] = field(default_factory=dict)
 
     # define default values for all settings
-    sites: _SiteConfigurations = _field(default_factory=dict)
+    sites: SiteConfigurations = field(default_factory=dict)
     debug: bool = False
     screenshotmode: bool = False
-    profile: _Union[bool, str] = False
-    users: _List[str] = _field(default_factory=list)
-    admin_users: _List[str] = _field(default_factory=lambda: ["omdadmin", "cmkadmin"])
-    guest_users: _List[str] = _field(default_factory=list)
+    profile: Union[bool, str] = False
+    users: List[str] = field(default_factory=list)
+    admin_users: List[str] = field(default_factory=lambda: ["omdadmin", "cmkadmin"])
+    guest_users: List[str] = field(default_factory=list)
     default_user_role: str = "user"
     user_online_maxage: int = 30  # seconds
 
-    log_levels: _Dict[str, int] = _field(
+    log_levels: Dict[str, int] = field(
         default_factory=lambda: {
             "cmk.web": 30,
             "cmk.web.ldap": 30,
@@ -93,10 +85,10 @@ class CREConfig:
 
     slow_views_duration_threshold: int = 60
 
-    multisite_users: _Dict = _field(default_factory=dict)
-    multisite_hostgroups: _Dict = _field(default_factory=dict)
-    multisite_servicegroups: _Dict = _field(default_factory=dict)
-    multisite_contactgroups: _Dict = _field(default_factory=dict)
+    multisite_users: Dict = field(default_factory=dict)
+    multisite_hostgroups: Dict = field(default_factory=dict)
+    multisite_servicegroups: Dict = field(default_factory=dict)
+    multisite_contactgroups: Dict = field(default_factory=dict)
 
     #    ____  _     _      _
     #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -105,7 +97,7 @@ class CREConfig:
     #   |____/|_|\__,_|\___|_.__/ \__,_|_|
     #
 
-    sidebar: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
+    sidebar: List[Tuple[str, str]] = field(default_factory=lambda: [
         ('tactical_overview', 'open'),
         ('bookmarks', 'open'),
         ('master_control', 'closed'),
@@ -124,7 +116,7 @@ class CREConfig:
     quicksearch_dropdown_limit: int = 80
 
     # Quicksearch search order
-    quicksearch_search_order: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
+    quicksearch_search_order: List[Tuple[str, str]] = field(default_factory=lambda: [
         ("menu", "continue"),
         ("h", "continue"),
         ("al", "continue"),
@@ -153,7 +145,7 @@ class CREConfig:
 
     sound_url: str = "sounds/"
     enable_sounds: bool = False
-    sounds: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
+    sounds: List[Tuple[str, str]] = field(default_factory=lambda: [
         ("down", "down.wav"),
         ("critical", "critical.wav"),
         ("unknown", "unknown.wav"),
@@ -168,13 +160,13 @@ class CREConfig:
     #      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
     #                                   |_|
 
-    view_option_refreshes: _List[int] = _field(default_factory=lambda: [30, 60, 90, 0])
-    view_option_columns: _List[int] = _field(default_factory=lambda: [1, 2, 3, 4, 5, 6, 8, 10, 12])
+    view_option_refreshes: List[int] = field(default_factory=lambda: [30, 60, 90, 0])
+    view_option_columns: List[int] = field(default_factory=lambda: [1, 2, 3, 4, 5, 6, 8, 10, 12])
 
     # MISC
     doculink_urlformat: str = "https://checkmk.com/checkmk_%s.html"
 
-    view_action_defaults: _Dict[str, bool] = _field(default_factory=lambda: {
+    view_action_defaults: Dict[str, bool] = field(default_factory=lambda: {
         "ack_sticky": True,
         "ack_notify": True,
         "ack_persistent": False,
@@ -188,11 +180,11 @@ class CREConfig:
     #
 
     # TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
-    custom_links: _Dict[str, _List[_CustomLinkSpec]] = _field(
+    custom_links: Dict[str, List[CustomLinkSpec]] = field(
         default_factory=lambda: {
-            "guest": _custom_links_guest,
-            "user": _custom_links_guest + _custom_links_user,
-            "admin": _custom_links_guest + _custom_links_user + _custom_links_admin,
+            "guest": custom_links_guest,
+            "user": custom_links_guest + custom_links_user,
+            "admin": custom_links_guest + custom_links_user + custom_links_admin,
         })
 
     #  __     __         _
@@ -213,16 +205,16 @@ class CREConfig:
 
     # Set this to a list in order to globally control which views are
     # being displayed in the sidebar snapin "Views"
-    visible_views: _Optional[_List[str]] = None
+    visible_views: Optional[List[str]] = None
 
     # Set this list in order to actively hide certain views
-    hidden_views: _Optional[_List[str]] = None
+    hidden_views: Optional[List[str]] = None
 
     # Patterns to group services in table views together
-    service_view_grouping: _List = _field(default_factory=list)
+    service_view_grouping: List = field(default_factory=list)
 
     # Custom user stylesheet to load (resides in htdocs/)
-    custom_style_sheet: _Optional[str] = None
+    custom_style_sheet: Optional[str] = None
 
     # UI theme to use
     ui_theme: str = "modern-dark"
@@ -236,7 +228,7 @@ class CREConfig:
     # Page heading for main frame set
     page_heading: str = "Checkmk %s"
 
-    login_screen: _Dict = _field(default_factory=dict)
+    login_screen: Dict = field(default_factory=dict)
 
     # Timeout for rescheduling of host- and servicechecks
     reschedule_timeout: float = 10.0
@@ -245,10 +237,10 @@ class CREConfig:
     filter_columns: int = 2
 
     # Default language for l10n
-    default_language: _Optional[str] = None
+    default_language: Optional[str] = None
 
     # Hide these languages from user selection
-    hide_languages: _List[str] = _field(default_factory=list)
+    hide_languages: List[str] = field(default_factory=list)
 
     # Default timestamp format to be used in multisite
     default_ts_format: str = 'mixed'
@@ -267,10 +259,10 @@ class CREConfig:
     multisite_draw_ruleicon: bool = True
 
     # Default downtime configuration
-    adhoc_downtime: _Dict = _field(default_factory=dict)
+    adhoc_downtime: Dict = field(default_factory=dict)
 
     # Display dashboard date
-    pagetitle_date_format: _Optional[_Literal["yyyy-mm-dd", "dd.mm.yyyy"]] = None
+    pagetitle_date_format: Optional[Literal["yyyy-mm-dd", "dd.mm.yyyy"]] = None
 
     # Value of the host_staleness/service_staleness field to make hosts/services
     # appear in a stale state
@@ -280,7 +272,7 @@ class CREConfig:
     escape_plugin_output: bool = True
 
     # Virtual host trees for the "Virtual Host Trees" snapin
-    virtual_host_trees: _List = _field(default_factory=list)
+    virtual_host_trees: List = field(default_factory=list)
 
     # Target URL for sending crash reports to
     crash_report_url: str = "https://crash.checkmk.com"
@@ -291,7 +283,7 @@ class CREConfig:
     guitests_enabled: bool = False
 
     # Bulk discovery default options
-    bulk_discovery_default_settings: _Dict[str, _Any] = _field(
+    bulk_discovery_default_settings: Dict[str, Any] = field(
         default_factory=lambda: {
             "mode": "new",
             "selection": (True, False, False, False),
@@ -301,7 +293,7 @@ class CREConfig:
 
     use_siteicons: bool = False
 
-    graph_timeranges: _List[_Dict[str, _Any]] = _field(default_factory=lambda: [
+    graph_timeranges: List[Dict[str, Any]] = field(default_factory=lambda: [
         {
             'title': "The last 4 hours",
             "duration": 4 * 60 * 60
@@ -334,23 +326,23 @@ class CREConfig:
     # This option can not be configured through WATO anymore. Config has been
     # moved to the sites configuration. This might have been configured in master/remote
     # in previous versions and is set on remote sites during WATO synchronization.
-    userdb_automatic_sync: _Optional[str] = "master"
+    userdb_automatic_sync: Optional[str] = "master"
 
     # Permission to login to the web gui of a site (can be changed in sites
     # configuration)
     user_login: bool = True
 
     # Holds dicts defining user connector instances and their properties
-    user_connections: _List = _field(default_factory=list)
+    user_connections: List = field(default_factory=list)
 
-    default_user_profile: _Dict[str, _Any] = _field(default_factory=_make_default_user_profile)
+    default_user_profile: Dict[str, Any] = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
     lock_on_logon_failures: bool = False
     user_idle_timeout: int = 5400
-    single_user_session: _Optional[int] = None
-    password_policy: _Dict = _field(default_factory=dict)
+    single_user_session: Optional[int] = None
+    password_policy: Dict = field(default_factory=dict)
 
-    user_localizations: _Dict[str, _Dict[str, str]] = _field(
+    user_localizations: Dict[str, Dict[str, str]] = field(
         default_factory=lambda: {
             u'Agent type': {
                 "de": u"Art des Agenten",
@@ -406,12 +398,12 @@ class CREConfig:
         })
 
     # Contains user specified icons and actions for hosts and services
-    user_icons_and_actions: _Dict = _field(default_factory=dict)
+    user_icons_and_actions: Dict = field(default_factory=dict)
 
     # Defintions of custom attributes to be used for services
-    custom_service_attributes: _Dict = _field(default_factory=dict)
+    custom_service_attributes: Dict = field(default_factory=dict)
 
-    user_downtime_timeranges: _List[_Dict[str, _Any]] = _field(default_factory=lambda: [
+    user_downtime_timeranges: List[Dict[str, Any]] = field(default_factory=lambda: [
         {
             'title': "2 hours",
             'end': 2 * 60 * 60
@@ -435,9 +427,9 @@ class CREConfig:
     ])
 
     # Override toplevel and sort_index settings of builtin icons
-    builtin_icon_visibility: _Dict = _field(default_factory=dict)
+    builtin_icon_visibility: Dict = field(default_factory=dict)
 
-    trusted_certificate_authorities: _Dict[str, _Any] = _field(default_factory=lambda: {
+    trusted_certificate_authorities: Dict[str, Any] = field(default_factory=lambda: {
         "use_system_wide_cas": True,
         "trusted_cas": [],
     })
@@ -456,13 +448,13 @@ class CREConfig:
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ''
     mkeventd_notify_facility: int = 16
-    mkeventd_notify_remotehost: _Optional[str] = None
+    mkeventd_notify_remotehost: Optional[str] = None
     mkeventd_connect_timeout: int = 10
     log_level: int = 0
     log_rulehits: bool = False
     rule_optimizer: bool = True
 
-    mkeventd_service_levels: _List[_Tuple[int, str]] = _field(default_factory=lambda: [
+    mkeventd_service_levels: List[Tuple[int, str]] = field(default_factory=lambda: [
         (0, "(no Service level)"),
         (10, "Silver"),
         (20, "Gold"),
@@ -480,10 +472,10 @@ class CREConfig:
     #   '----------------------------------------------------------------------'
 
     # Pre 1.6 tag configuration variables
-    wato_host_tags: _List = _field(default_factory=list)
-    wato_aux_tags: _List = _field(default_factory=list)
+    wato_host_tags: List = field(default_factory=list)
+    wato_aux_tags: List = field(default_factory=list)
     # Tag configuration variable since 1.6
-    wato_tags: _Dict[str, _List] = _field(default_factory=lambda: {
+    wato_tags: Dict[str, List] = field(default_factory=lambda: {
         "tag_groups": [],
         "aux_tags": [],
     })
@@ -501,19 +493,19 @@ class CREConfig:
     wato_activation_method: str = 'restart'
     wato_write_nagvis_auth: bool = False
     wato_use_git: bool = False
-    wato_hidden_users: _List = _field(default_factory=list)
-    wato_user_attrs: _List = _field(default_factory=list)
-    wato_host_attrs: _List = _field(default_factory=list)
-    wato_read_only: _Dict = _field(default_factory=dict)
+    wato_hidden_users: List = field(default_factory=list)
+    wato_user_attrs: List = field(default_factory=list)
+    wato_host_attrs: List = field(default_factory=list)
+    wato_read_only: Dict = field(default_factory=dict)
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False
-    wato_icon_categories: _List[_Tuple[str, str]] = _field(default_factory=lambda: [
+    wato_icon_categories: List[Tuple[str, str]] = field(default_factory=lambda: [
         ("logos", u"Logos"),
         ("parts", u"Parts"),
         ("misc", u"Misc"),
     ])
 
-    wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
+    wato_activate_changes_comment_mode: ActivateChangesCommentMode = "disabled"
 
     #.
     #   .--REST API------------------------------------------------------------.
@@ -537,24 +529,24 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    aggregation_rules: _Dict = _field(default_factory=dict)
-    aggregations: _List = _field(default_factory=list)
-    host_aggregations: _List = _field(default_factory=list)
-    bi_packs: _Dict = _field(default_factory=dict)
+    aggregation_rules: Dict = field(default_factory=dict)
+    aggregations: List = field(default_factory=list)
+    host_aggregations: List = field(default_factory=list)
+    bi_packs: Dict = field(default_factory=dict)
 
-    default_bi_layout: _Dict[str, str] = _field(default_factory=lambda: {
+    default_bi_layout: Dict[str, str] = field(default_factory=lambda: {
         "node_style": "builtin_hierarchy",
         "line_style": "straight",
     })
-    bi_layouts: _Dict[str, _Dict] = _field(default_factory=lambda: {
+    bi_layouts: Dict[str, Dict] = field(default_factory=lambda: {
         "templates": {},
         "aggregations": {},
     })
 
     # Deprecated. Kept for compatibility.
-    bi_compile_log: _Optional[str] = None
+    bi_compile_log: Optional[str] = None
     bi_precompile_on_demand: bool = False
     bi_use_legacy_compilation: bool = False
 
     # new in 2.1
-    config_storage_format: _Literal["standard", "raw"] = "standard"
+    config_storage_format: Literal["standard", "raw"] = "standard"

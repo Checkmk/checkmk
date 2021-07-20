@@ -83,7 +83,7 @@ class TestAuditLogStore:
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
-    def test_transport_html(self, store, register_builtin_html):
+    def test_transport_html(self, store, request_context):
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action",
                                     HTML("Mäss<b>ädsch</b>"), None)
         store.append(entry)
@@ -191,7 +191,7 @@ class TestSiteChanges:
         assert store.read()[0]["object"] == ObjectRef(ref_type, 'node1')
 
 
-def test_log_audit_with_object_diff(register_builtin_html):
+def test_log_audit_with_object_diff(request_context):
     old = {
         "a": "b",
         "b": "c",
@@ -222,7 +222,7 @@ def test_log_audit_with_object_diff(register_builtin_html):
     ]
 
 
-def test_log_audit_with_html_message(register_builtin_html):
+def test_log_audit_with_html_message(request_context):
     with on_time('2018-04-15 16:50', 'CET'):
         log_audit(
             object_ref=None,

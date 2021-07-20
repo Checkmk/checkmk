@@ -27,7 +27,7 @@ import cmk.gui.views
 
 
 @pytest.fixture(name="view")
-def view_fixture(register_builtin_html):
+def view_fixture(request_context):
     view_name = "allhosts"
     view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name].copy())
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
@@ -2471,7 +2471,7 @@ def test_view_row_limit(view):
     ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
     ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
 ])
-def test_gui_view_row_limit(register_builtin_html, monkeypatch, mocker, limit, permissions, result):
+def test_gui_view_row_limit(request_context, monkeypatch, mocker, limit, permissions, result):
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
 

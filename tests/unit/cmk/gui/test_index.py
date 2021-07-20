@@ -10,11 +10,11 @@ from cmk.gui.globals import html, user, local, config
 import cmk.gui.main
 
 
-def test_get_start_url_default(register_builtin_html):
+def test_get_start_url_default(request_context):
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 
 
-def test_get_start_url_default_config(monkeypatch, register_builtin_html):
+def test_get_start_url_default_config(request_context, monkeypatch):
     monkeypatch.setattr(config, "start_url", "bla.py")
     assert cmk.gui.main._get_start_url() == "bla.py"
 
@@ -32,7 +32,7 @@ def test_get_start_url_user_config(monkeypatch, module_wide_request_context):
     assert cmk.gui.main._get_start_url() == "user_url.py"
 
 
-def test_get_start_url(register_builtin_html):
+def test_get_start_url(request_context):
     start_url = "dashboard.py?name=mein_dashboard"
     html.request.set_var("start_url", start_url)
 

@@ -330,7 +330,7 @@ def _check_restored_bind_user(mocked_ldap):
     assert mocked_ldap._ldap_obj.whoami_s() == "dn:cn=sync-user,ou=users,dc=check-mk,dc=org"
 
 
-def test_check_credentials_success(register_builtin_html, mocked_ldap):
+def test_check_credentials_success(request_context, mocked_ldap):
     result = mocked_ldap.check_credentials("admin", "ldap-test")
     assert isinstance(result, str)
     assert result == "admin"
@@ -341,7 +341,7 @@ def test_check_credentials_success(register_builtin_html, mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_invalid(register_builtin_html, mocked_ldap):
+def test_check_credentials_invalid(request_context, mocked_ldap):
     assert mocked_ldap.check_credentials("admin", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
@@ -351,7 +351,7 @@ def test_check_credentials_not_existing(mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
+def test_check_credentials_enforce_conn_success(request_context, mocked_ldap):
     result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
     assert isinstance(result, str)
     assert result == "admin"

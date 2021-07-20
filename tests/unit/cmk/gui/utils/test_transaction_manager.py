@@ -24,7 +24,7 @@ def tm():
     return TransactionManager(request, MockLoggedInUser())
 
 
-def test_request_context_integration(register_builtin_html):
+def test_request_context_integration(request_context):
     assert callable(transactions.transaction_valid)
     assert callable(transactions.is_transaction)
     assert callable(transactions.check_transaction)

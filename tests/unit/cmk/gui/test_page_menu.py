@@ -45,7 +45,7 @@ def test_make_form_submit_link():
     assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_dropdown();'
 
 
-def test_simple_page_menu(register_builtin_html):
+def test_simple_page_menu(request_context):
     pm = PageMenu([
         PageMenuDropdown(
             name="hallo",

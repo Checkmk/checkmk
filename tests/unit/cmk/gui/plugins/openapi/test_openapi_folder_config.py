@@ -47,7 +47,7 @@ def test_folder_regexp(given, expected):
     assert bool(match) == expected, match
 
 
-def test_folder_schema(register_builtin_html):
+def test_folder_schema(request_context):
     class FolderSchema(BaseSchema):
         folder = FolderField(required=True)
 

@@ -314,7 +314,7 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
     return expected_paths
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login, remote_site):
     snapshot_data_collector_class = ("CMESnapshotDataCollector"
@@ -342,7 +342,7 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
     assert sorted(paths) == sorted(expected_paths)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, with_user_login,
                                        remote_site):
@@ -462,7 +462,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
             "Subtar %s has wrong files" % subtar.name
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("remote_site", ["unit_remote_1", "unit_remote_2"])
 def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_user_login,
                                     remote_site, fixture_disable_cmk_update_config):
@@ -597,7 +597,7 @@ def test_update_contacts_dict(master, slave, result):
 
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path, mocker):
     if edition_short == "cme":
         pytest.skip("Seems faked site environment is not 100% correct")
@@ -651,7 +651,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     snapshot_data_collector_class = ("CMESnapshotDataCollector"
                                      if edition_short == "cme" else "CRESnapshotDataCollector")

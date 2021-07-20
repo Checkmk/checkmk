@@ -29,7 +29,7 @@ def test_user_context(with_user):
     assert global_user.id is None
 
 
-def test_super_user_context(register_builtin_html):
+def test_super_user_context(request_context):
     assert global_user.id is None
     with SuperUserContext():
         assert global_user.role_ids == ["admin"]
@@ -109,7 +109,7 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
 
 
 @pytest.mark.parametrize('user', [LoggedInNobody(), LoggedInSuperUser()])
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_unauthenticated_users_language(mocker, user):
     mocker.patch.object(config, 'default_language', 'esperanto')
     assert user.language == 'esperanto'
@@ -143,7 +143,7 @@ def test_unauthenticated_users_authorized_login_sites(monkeypatch, user):
     assert user.authorized_login_sites() == {'slave_site': {}}
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_logged_in_nobody_permissions(mocker):
     user = LoggedInNobody()
 
@@ -155,7 +155,7 @@ def test_logged_in_nobody_permissions(mocker):
         user.need_permission('any_permission')
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_logged_in_super_user_permissions(mocker):
     user = LoggedInSuperUser()
 
@@ -213,7 +213,7 @@ MONITORING_USER_FAVORITES = ['heute;CPU load']
 
 
 @pytest.fixture(name="monitoring_user")
-def fixture_monitoring_user(register_builtin_html):
+def fixture_monitoring_user(request_context):
     """Returns a "Normal monitoring user" object."""
     user_dir = cmk.utils.paths.profile_dir / "test"
     user_dir.mkdir(parents=True)

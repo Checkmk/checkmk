@@ -15,7 +15,7 @@ from cmk.gui.htmllib.foldable_container import (
 from testlib import compare_html
 
 
-def test_foldable_container(register_builtin_html) -> None:
+def test_foldable_container(request_context) -> None:
     with output_funnel.plugged():
         with foldable_container(treename="name", id_="id", isopen=False, title="Title") as is_open:
             assert is_open is False

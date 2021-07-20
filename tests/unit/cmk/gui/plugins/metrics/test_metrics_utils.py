@@ -41,11 +41,11 @@ def test_split_perf_data(data_string, result):
         ("not_here", 6, u"M", 5.6, None, None, None),
     ], "test")),
 ])
-def test_parse_perf_data(register_builtin_html, perf_str, check_command, result):
+def test_parse_perf_data(request_context, perf_str, check_command, result):
     assert utils.parse_perf_data(perf_str, check_command) == result
 
 
-def test_parse_perf_data2(register_builtin_html, monkeypatch):
+def test_parse_perf_data2(request_context, monkeypatch):
     with pytest.raises(ValueError):
         monkeypatch.setattr(config, "debug", True)
         utils.parse_perf_data("hi ho", None)

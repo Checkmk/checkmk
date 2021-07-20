@@ -3727,7 +3727,7 @@ def test_registered_info_attributes():
     ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", "äää")]),
 ])
-def test_add_context_to_uri_vars(register_builtin_html, visual, expected_vars):
+def test_add_context_to_uri_vars(request_context, visual, expected_vars):
     with request.stashed_vars():
         visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"])
         assert sorted(list(request.itervars())) == sorted(expected_vars)
@@ -3752,7 +3752,7 @@ def test_add_context_to_uri_vars(register_builtin_html, visual, expected_vars):
     ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", u"äää")]),
 ])
-def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
+def test_get_context_uri_vars(request_context, visual, expected_vars):
     context_vars = visuals.get_context_uri_vars(visual["context"], visual["single_infos"])
     assert sorted(context_vars) == sorted(expected_vars)
 
@@ -3782,7 +3782,7 @@ def test_get_context_uri_vars(register_builtin_html, visual, expected_vars):
     (["service"], [], [("host", "aaa"), ("service_regex", "äbc")], {
         'serviceregex': {'service_regex': 'äbc'},}),
 ])
-def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, uri_vars,
+def test_get_context_from_uri_vars(request_context, infos, single_infos, uri_vars,
         expected_context):
     for key, val in uri_vars:
         request.set_var(key, val)
@@ -3805,7 +3805,7 @@ def test_get_context_from_uri_vars(register_builtin_html, infos, single_infos, u
     ([("host", "aaa")], {"infos": ["host", "service"], "single_infos": [], "context": {}},
         {"host": {"host": "aaa"},}),
 ])
-def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_context):
+def test_get_merged_context(request_context, uri_vars, visual, expected_context):
     for key, val in uri_vars:
         request.set_var(key, val)
 
@@ -3823,7 +3823,7 @@ def test_get_missing_single_infos_missing_context():
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
-def test_context_uri_vars(register_builtin_html):
+def test_context_uri_vars(request_context):
     visual: Visual = {
         "single_infos": ["host"],
         "context": {

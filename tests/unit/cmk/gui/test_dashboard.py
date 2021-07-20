@@ -100,7 +100,7 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval,
+def test_dashlet_refresh_intervals(request_context, type_name, expected_refresh_interval,
                                    monkeypatch):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
@@ -200,7 +200,7 @@ def test_old_dashlet_on_refresh():
     assert dashlet.on_refresh() == "xyz"
 
 
-def test_old_dashlet_iframe_render(mocker, register_builtin_html):
+def test_old_dashlet_iframe_render(mocker, request_context):
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type({
@@ -219,7 +219,7 @@ def test_old_dashlet_iframe_render(mocker, register_builtin_html):
         == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-def test_old_dashlet_iframe_urlfunc(mocker, register_builtin_html):
+def test_old_dashlet_iframe_urlfunc(mocker, request_context):
     dashlet_type = _legacy_dashlet_type({
         "iframe_urlfunc": lambda x: "blaurl",
     })
@@ -229,7 +229,7 @@ def test_old_dashlet_iframe_urlfunc(mocker, register_builtin_html):
         == "blaurl"
 
 
-def test_old_dashlet_render(mocker, register_builtin_html):
+def test_old_dashlet_render(mocker, request_context):
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type({
@@ -294,7 +294,7 @@ def test_old_dashlet_settings():
         assert getattr(dashlet, new_method)() == attr
 
 
-def test_dashlet_type_defaults(register_builtin_html):
+def test_dashlet_type_defaults(request_context):
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True
@@ -421,7 +421,7 @@ def test_refresh_interval():
     assert dashlet.refresh_interval() == 22
 
 
-def test_dashlet_context_inheritance(register_builtin_html):
+def test_dashlet_context_inheritance(request_context):
     HostStats = dashboard.dashlet_registry["hoststats"]
 
     # Set some context filter vars from URL

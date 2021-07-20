@@ -40,13 +40,13 @@ def test_http_request_allowed_vars():
 
 
 @pytest.fixture()
-def set_vars(register_builtin_html):
+def set_vars(request_context):
     html.request.set_var("xyz", "x")
     html.request.set_var("abc", "äbc")
 
 
 @pytest.fixture()
-def set_int_vars(register_builtin_html):
+def set_int_vars(request_context):
     html.request.set_var("number", "2")
     html.request.set_var("float", "2.2")
     html.request.set_var("not_a_number", "a")
@@ -258,7 +258,7 @@ def test_get_integer_input_mandatory_not_a_number():
     assert "is not an integer" in "%s" % e
 
 
-def test_cookie_handling(register_builtin_html, monkeypatch):
+def test_cookie_handling(request_context, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
     assert html.request.has_cookie("cookie1")
     assert not html.request.has_cookie("cookie2")
@@ -267,7 +267,7 @@ def test_cookie_handling(register_builtin_html, monkeypatch):
 
 
 # TODO: Write valid test
-def test_request_processing(register_builtin_html):
+def test_request_processing(request_context):
     global_request.set_var("varname", "1a")
     global_request.set_var("varname2", "1")
 
@@ -278,21 +278,21 @@ def test_request_processing(register_builtin_html):
     # html.parse_field_storage(["field1", "field2"], handle_uploads_as_file_obj = False)
 
 
-def test_response_set_http_cookie(register_builtin_html):
+def test_response_set_http_cookie(request_context):
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
     assert response.headers.getlist("Set-Cookie")[-1] == \
         "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
 
 
-def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
+def test_response_set_http_cookie_secure(request_context, monkeypatch):
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert response.headers.getlist("Set-Cookie")[-1] == \
             "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
 
 
-def test_response_del_cookie(register_builtin_html, monkeypatch):
+def test_response_del_cookie(request_context, monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 0)
 
     response.delete_cookie("auth_SITE")
@@ -375,7 +375,7 @@ def test_del_vars():
     "://localhost",
     "localhost:80/bla",
 ])
-def test_get_url_input_invalid_urls(register_builtin_html, invalid_url):
+def test_get_url_input_invalid_urls(request_context, invalid_url):
     html.request.set_var("varname", invalid_url)
 
     with pytest.raises(MKUserError) as e:
@@ -383,7 +383,7 @@ def test_get_url_input_invalid_urls(register_builtin_html, invalid_url):
     assert "not a valid URL" in "%s" % e
 
 
-def test_get_url_input(register_builtin_html):
+def test_get_url_input(request_context):
     global_request.set_var("url", "view.py?bla=blub")
     global_request.set_var("no_url", "2")
     global_request.set_var("invalid_url", "http://bla/")

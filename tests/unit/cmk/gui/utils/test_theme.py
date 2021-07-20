@@ -39,7 +39,7 @@ def fixture_my_theme(theme_dirs, monkeypatch):
     return my_dir
 
 
-def test_theme_request_context_integration(my_theme, register_builtin_html):
+def test_theme_request_context_integration(my_theme, request_context):
     theme.from_config("facelift")
 
     theme.set("")

@@ -51,14 +51,14 @@ HTTPMethod = Literal[
 
 
 @pytest.fixture()
-def register_builtin_html():
+def request_context():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     with application_and_request_context():
         yield
 
 
 @pytest.fixture()
-def monkeypatch(monkeypatch, register_builtin_html) -> Generator[MonkeyPatch, None, None]:
+def monkeypatch(monkeypatch, request_context) -> Generator[MonkeyPatch, None, None]:
     """Makes patch/undo of request globals possible
 
     In the GUI we often use the monkeypatch for patching request globals (e.g.
@@ -86,7 +86,7 @@ def module_wide_request_context():
 
 
 @pytest.fixture()
-def load_config(register_builtin_html, monkeypatch):
+def load_config(request_context):
     old_root_log_level = cmk.utils.log.logger.getEffectiveLevel()
     config_module.initialize()
     yield
@@ -94,7 +94,7 @@ def load_config(register_builtin_html, monkeypatch):
 
 
 @pytest.fixture()
-def load_plugins(register_builtin_html, monkeypatch, tmp_path):
+def load_plugins(request_context, monkeypatch, tmp_path):
     import cmk.gui.modules as modules
     monkeypatch.setattr(config, "roles", {'user': {}, 'admin': {}, 'guest': {}})
     modules.load_all_plugins()
@@ -109,7 +109,7 @@ def fixture_patch_json():
 
 
 @pytest.fixture(scope='function')
-def with_user(register_builtin_html, load_config):
+def with_user(request_context, load_config):
     with create_and_destroy_user(automation=False, role="user") as user:
         yield user
 
@@ -122,7 +122,7 @@ def with_user_login(with_user):
 
 
 @pytest.fixture(scope='function')
-def with_admin(register_builtin_html, load_config):
+def with_admin(request_context, load_config):
     with create_and_destroy_user(automation=False, role="admin") as user:
         yield user
 
@@ -198,7 +198,7 @@ def inline_background_jobs(mocker):
 
 
 @pytest.fixture(scope='function')
-def with_automation_user(register_builtin_html, load_config):
+def with_automation_user(request_context, load_config):
     with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
 
@@ -340,7 +340,7 @@ def _make_webtest(debug):
 
 
 @pytest.fixture(scope='function')
-def wsgi_app(monkeypatch, register_builtin_html):
+def wsgi_app(monkeypatch, request_context):
     return _make_webtest(debug=True)
 
 

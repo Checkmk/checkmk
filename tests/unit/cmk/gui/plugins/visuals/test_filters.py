@@ -69,7 +69,7 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(register_builtin_html, filter_ident, live):
+def test_filters_filter_with_empty_request(request_context, filter_ident, live):
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
     else:
@@ -563,7 +563,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(register_builtin_html, test, monkeypatch):
+def test_filters_filter(request_context, test, monkeypatch):
     # Needed for ABCFilterCustomAttribute
     monkeypatch.setattr(config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
 
@@ -1040,7 +1040,7 @@ filter_table_tests = [
 
 @pytest.mark.parametrize("test", filter_table_tests)
 @pytest.mark.usefixtures("load_plugins")
-def test_filters_filter_table(register_builtin_html, test, monkeypatch):
+def test_filters_filter_table(request_context, test, monkeypatch):
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -1078,7 +1078,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(register_builtin_html, live):
+def test_filters_display_with_empty_request(request_context, live):
     with live, request.stashed_vars():
         request.del_vars()
 

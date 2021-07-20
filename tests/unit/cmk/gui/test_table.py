@@ -43,7 +43,7 @@ def read_out_csv(text, separator):
     return data
 
 
-def test_basic(register_builtin_html):
+def test_basic(request_context):
     table_id = 0
     title = " TEST "
 
@@ -60,7 +60,7 @@ def test_basic(register_builtin_html):
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
 
 
-def test_cell_content_escaping(register_builtin_html):
+def test_cell_content_escaping(request_context):
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -75,7 +75,7 @@ def test_cell_content_escaping(register_builtin_html):
     assert "<b>C</b>" in written_text
 
 
-def test_cell_title_escaping(register_builtin_html):
+def test_cell_title_escaping(request_context):
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -90,7 +90,7 @@ def test_cell_title_escaping(register_builtin_html):
     assert "<b>C</b>" in written_text
 
 
-def test_plug(register_builtin_html):
+def test_plug(request_context):
     table_id = 0
     title = " TEST "
 
@@ -111,7 +111,7 @@ def test_plug(register_builtin_html):
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
 
 
-def test_context(register_builtin_html):
+def test_context(request_context):
     table_id = 0
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
@@ -130,7 +130,7 @@ def test_context(register_builtin_html):
     assert data == rows
 
 
-def test_nesting(register_builtin_html):
+def test_nesting(request_context):
     table_id = 0
     title = " TEST "
 
@@ -162,7 +162,7 @@ def test_nesting(register_builtin_html):
                             </table>'''), written_text
 
 
-def test_nesting_context(register_builtin_html):
+def test_nesting_context(request_context):
     table_id = 0
     title = " TEST "
 
@@ -199,8 +199,7 @@ def test_nesting_context(register_builtin_html):
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])
 @pytest.mark.parametrize("output_format", ["html", "csv"])
-def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable, limit,
-                       output_format):
+def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit, output_format):
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data

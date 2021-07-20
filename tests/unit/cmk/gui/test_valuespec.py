@@ -168,8 +168,7 @@ def test_dropdownchoice_validate_datatype(choices, deprecated_choices, value, is
         (25 * 60 * 60, "The last 25 hard hours"),  # defaults are idents
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ])
-def test_timerange_value_to_text_conversion(register_builtin_html, monkeypatch, value,
-                                            result_title):
+def test_timerange_value_to_text_conversion(request_context, monkeypatch, value, result_title):
     monkeypatch.setattr(config, "graph_timeranges", [{
         'title': "The last 4 fun hours",
         "duration": 4 * 60 * 60
@@ -184,7 +183,7 @@ def test_timerange_value_to_text_conversion(register_builtin_html, monkeypatch, 
     assert vs.Timerange().value_to_text(value) == result_title
 
 
-def test_timerange_value_to_json_conversion(register_builtin_html):
+def test_timerange_value_to_json_conversion(request_context):
     with on_time("2020-03-02", "UTC"):
         for ident, title, _vs in vs.Timerange().choices():
             choice_value: vs.CascadingDropdownChoiceValue = ident
@@ -338,7 +337,7 @@ def fixture_auth_secret():
         f.write(b"auth-secret")
 
 
-def test_password_from_html_vars_empty(register_builtin_html):
+def test_password_from_html_vars_empty(request_context):
     html.request.set_var("pw_orig", "")
     html.request.set_var("pw", "")
 
@@ -346,13 +345,13 @@ def test_password_from_html_vars_empty(register_builtin_html):
     assert pw.from_html_vars("pw") == ""
 
 
-def test_password_from_html_vars_not_set(register_builtin_html):
+def test_password_from_html_vars_not_set(request_context):
     pw = vs.Password()
     assert pw.from_html_vars("pw") == ""
 
 
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_initial_pw(register_builtin_html):
+def test_password_from_html_vars_initial_pw(request_context):
     html.request.set_var("pw_orig", "")
     html.request.set_var("pw", "abc")
     pw = vs.Password()
@@ -362,7 +361,7 @@ def test_password_from_html_vars_initial_pw(register_builtin_html):
 @pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
                     reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_unchanged_pw(register_builtin_html):
+def test_password_from_html_vars_unchanged_pw(request_context):
     html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
     html.request.set_var("pw", "")
     pw = vs.Password()
@@ -372,7 +371,7 @@ def test_password_from_html_vars_unchanged_pw(register_builtin_html):
 @pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
                     reason="OpenSSL version too old, must be >= 1.1")
 @pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_change_pw(register_builtin_html):
+def test_password_from_html_vars_change_pw(request_context):
     html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
     html.request.set_var("pw", "xyz")
     pw = vs.Password()

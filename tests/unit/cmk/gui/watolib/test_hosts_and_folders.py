@@ -142,7 +142,7 @@ def in_chdir(directory):
     os.chdir(cur)
 
 
-def test_create_nested_folders(register_builtin_html):
+def test_create_nested_folders(request_context):
     with in_chdir("/"):
         root = watolib.Folder.root_folder()
 
@@ -155,7 +155,7 @@ def test_create_nested_folders(register_builtin_html):
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
 
 
-def test_eq_operation(register_builtin_html):
+def test_eq_operation(request_context):
     with in_chdir("/"):
         root = watolib.Folder.root_folder()
         folder1 = watolib.Folder("folder1", parent_folder=root)

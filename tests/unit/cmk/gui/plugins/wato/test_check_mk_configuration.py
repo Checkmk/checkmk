@@ -29,7 +29,7 @@ def test_ui_theme_registration():
     assert valuespec.choices() == theme_choices()
 
 
-def test_ui_theme_default_value(register_builtin_html):
+def test_ui_theme_default_value(request_context):
     var = config_variable_registry["ui_theme"]()
 
     default_setting = var.domain()().default_globals()[var.ident()]

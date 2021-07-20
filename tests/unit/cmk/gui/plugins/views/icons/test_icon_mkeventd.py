@@ -147,7 +147,7 @@ IconRenderResult = NamedTuple("IconRenderResult", [
             ),
         ),
     ])
-def test_icon_options(args, result, register_builtin_html, monkeypatch):
+def test_icon_options(args, result, request_context, monkeypatch):
     """ Creation of title and url for links to event console entries of host """
     icon = icons.get_multisite_icons()["mkeventd"]
 

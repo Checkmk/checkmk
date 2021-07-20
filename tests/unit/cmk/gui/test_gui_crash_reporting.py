@@ -16,7 +16,7 @@ def test_gui_crash_report_registry():
             == crash_reporting.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(register_builtin_html):
+def test_gui_crash_report_get_packed(request_context):
     store = crash_reporting.CrashReportStore()
     try:
         raise ValueError("DINGELING")

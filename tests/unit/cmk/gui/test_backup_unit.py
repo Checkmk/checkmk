@@ -33,7 +33,7 @@ def test_is_canonical(monkeypatch, path, expected):
     assert backup.is_canonical(path) == expected
 
 
-def test_backup_key_create_web(register_builtin_html, site, monkeypatch):
+def test_backup_key_create_web(request_context, site, monkeypatch):
     store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
 
     assert not store_path.exists()

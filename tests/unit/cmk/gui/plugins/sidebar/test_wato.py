@@ -118,7 +118,7 @@ def expected_items() -> Dict[str, List[str]]:
     return expected_items
 
 
-@pytest.mark.usefixtures("register_builtin_html", "load_plugins", "with_admin_login")
+@pytest.mark.usefixtures("request_context", "load_plugins", "with_admin_login")
 def test_get_wato_menu_items():
     items_by_topic: Dict[str, List[str]] = {}
     for topic in get_wato_menu_items():

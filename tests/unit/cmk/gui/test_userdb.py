@@ -138,7 +138,7 @@ def test_on_succeeded_login(user_id):
     assert userdb._load_failed_logins(user_id) == 0
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_on_failed_login_no_locking(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
@@ -157,7 +157,7 @@ def test_on_failed_login_no_locking(user_id):
     assert userdb.user_locked(user_id) is False
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_on_failed_login_count_reset_on_succeeded_login(user_id):
     assert config.lock_on_logon_failures is False
     assert userdb._load_failed_logins(user_id) == 0
@@ -172,7 +172,7 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id):
     assert userdb.user_locked(user_id) is False
 
 
-@pytest.mark.usefixtures("lock_on_logon_failures_enabled", "register_builtin_html")
+@pytest.mark.usefixtures("lock_on_logon_failures_enabled", "request_context")
 def test_on_failed_login_with_locking(user_id):
     assert config.lock_on_logon_failures == 3
     assert userdb._load_failed_logins(user_id) == 0
@@ -334,11 +334,11 @@ def test_initialize_session_single_user_session(user_id):
     )
 
 
-def test_cleanup_old_sessions_no_existing(register_builtin_html):
+def test_cleanup_old_sessions_no_existing(request_context):
     assert userdb._cleanup_old_sessions({}) == {}
 
 
-def test_cleanup_old_sessions_remove_outdated(register_builtin_html):
+def test_cleanup_old_sessions_remove_outdated(request_context):
     assert list(
         userdb._cleanup_old_sessions({
             "outdated": userdb.SessionInfo(
@@ -356,7 +356,7 @@ def test_cleanup_old_sessions_remove_outdated(register_builtin_html):
         }).keys()) == ["keep"]
 
 
-def test_cleanup_old_sessions_too_many(register_builtin_html):
+def test_cleanup_old_sessions_too_many(request_context):
     sessions = {
         f"keep_{num}": userdb.SessionInfo(
             session_id=f"keep_{num}",
@@ -419,7 +419,7 @@ def test_get_last_activity(with_user, session_valid):
     assert userdb.get_last_activity(user_id, user) == time.time()
 
 
-def test_user_attribute_sync_plugins(register_builtin_html, monkeypatch):
+def test_user_attribute_sync_plugins(request_context, monkeypatch):
     monkeypatch.setattr(config, "wato_user_attrs", [{
         'add_custom_macro': False,
         'help': u'VIP attribute',
@@ -472,7 +472,7 @@ def test_check_credentials_local_user(with_user):
     assert userdb.check_credentials(username, password) == username
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
     user_id = UserId("sha256user")
     assert userdb.user_exists(user_id) is False

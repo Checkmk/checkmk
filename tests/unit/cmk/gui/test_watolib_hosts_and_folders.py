@@ -47,7 +47,7 @@ def test_next_network_scan_at(allowed, last_end, next_time):
         assert folder.next_network_scan_at() == next_time
 
 
-def test_folder_times(register_builtin_html):
+def test_folder_times(request_context):
     root = watolib.Folder.root_folder()
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):

@@ -7,7 +7,7 @@ from cmk.gui.plugins.views import RowTableLivestatus
 from cmk.gui.views import View
 
 
-def test_row_table_object(mock_livestatus, register_builtin_html):
+def test_row_table_object(mock_livestatus, request_context):
     live = mock_livestatus
     live.add_table(
         'hosts',

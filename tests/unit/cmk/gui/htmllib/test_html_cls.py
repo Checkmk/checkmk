@@ -14,7 +14,7 @@ from cmk.gui.exceptions import MKUserError
 from testlib import compare_html
 
 
-def test_render_help_empty(register_builtin_html):
+def test_render_help_empty(request_context):
     assert html.have_help is False
     assert html.render_help(None) == HTML("")
     assert isinstance(html.render_help(None), HTML)
@@ -26,7 +26,7 @@ def test_render_help_empty(register_builtin_html):
     assert isinstance(html.render_help("    "), HTML)
 
 
-def test_render_help_html(register_builtin_html):
+def test_render_help_html(request_context):
     assert html.have_help is False
     assert compare_html(html.render_help(HTML("<abc>")),
                         HTML("<div style=\"display:none\" class=\"help\"><abc></div>"))
@@ -34,19 +34,19 @@ def test_render_help_html(register_builtin_html):
     assert html.have_help is True  # type: ignore[comparison-overlap]
 
 
-def test_render_help_text(register_builtin_html):
+def test_render_help_text(request_context):
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
 
 
-def test_render_help_visible(module_wide_request_context, register_builtin_html, monkeypatch):
+def test_render_help_visible(module_wide_request_context, request_context, monkeypatch):
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(html.render_help(u"äbc"),
                         HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))
 
 
-def test_add_manual_link(register_builtin_html):
+def test_add_manual_link(request_context):
     assert user.language is None
     assert compare_html(
         html.render_help(u"[introduction_docker|docker]"),
@@ -73,14 +73,14 @@ def test_add_manual_link_anchor(module_wide_request_context, monkeypatch):
         ))
 
 
-def test_user_error(register_builtin_html):
+def test_user_error(request_context):
     with output_funnel.plugged():
         html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
         c = output_funnel.drain()
     assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
 
 
-def test_show_user_errors(register_builtin_html):
+def test_show_user_errors(request_context):
     assert not user_errors
     user_errors.add(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
     assert user_errors
@@ -91,7 +91,7 @@ def test_show_user_errors(register_builtin_html):
     assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
 
 
-def test_ABCHTMLGenerator(register_builtin_html):
+def test_ABCHTMLGenerator(request_context):
     with output_funnel.plugged():
 
         with output_funnel.plugged():
@@ -138,21 +138,21 @@ def test_ABCHTMLGenerator(register_builtin_html):
                 print(e)
 
 
-def test_multiclass_call(register_builtin_html):
+def test_multiclass_call(request_context):
     with output_funnel.plugged():
         html.div('', class_="1", css="3", cssclass="4", **{"class": "2"})
         written_text = "".join(output_funnel.drain())
     assert compare_html(written_text, "<div class=\"1 3 4 2\"></div>")
 
 
-def test_exception_handling(register_builtin_html):
+def test_exception_handling(request_context):
     try:
         raise Exception("Test")
     except Exception as e:
         assert compare_html(html.render_div(str(e)), "<div>%s</div>" % e)
 
 
-def test_text_input(register_builtin_html):
+def test_text_input(request_context):
     with output_funnel.plugged():
         html.text_input('tralala')
         written_text = "".join(output_funnel.drain())
@@ -180,7 +180,7 @@ def test_text_input(register_builtin_html):
             written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
 
 
-def test_render_a(register_builtin_html):
+def test_render_a(request_context):
     a = html.render_a("bla", href="blu", class_=["eee"], target="_blank")
     assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
 

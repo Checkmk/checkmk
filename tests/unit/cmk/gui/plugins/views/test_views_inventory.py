@@ -97,7 +97,7 @@ EXPECTED_INV_MULTI_KEYS = [
 ]
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
@@ -108,7 +108,7 @@ def test_query_row_table_inventory(monkeypatch):
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_unknown_columns(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
@@ -119,7 +119,7 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch):
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_add_columns(monkeypatch):
     row_table = inventory.RowTableInventory("invtesttable", ".foo.bar:")
     view = View("", {}, {})
@@ -130,7 +130,7 @@ def test_query_row_table_inventory_add_columns(monkeypatch):
         assert set(row) == set(EXPECTED_INV_KEYS + ['host_foo'])
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
     view = View("", {}, {})
@@ -141,7 +141,7 @@ def test_query_row_table_inventory_history(monkeypatch):
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
     view = View("", {}, {})
@@ -152,7 +152,7 @@ def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_table_inventory_history_add_columns(monkeypatch):
     row_table = inventory.RowTableInventoryHistory()
     view = View("", {}, {})
@@ -163,7 +163,7 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ['host_foo'])
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
@@ -175,7 +175,7 @@ def test_query_row_multi_table_inventory(monkeypatch):
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])
@@ -187,7 +187,7 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
 
-@pytest.mark.usefixtures("register_builtin_html")
+@pytest.mark.usefixtures("request_context")
 def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     sources = list(zip(["invtesttable1", "invtesttable2"], [".foo.bar:", "foo.baz:"]))
     row_table = inventory.RowMultiTableInventory(sources, ["sid"], [])

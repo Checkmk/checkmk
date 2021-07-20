@@ -165,7 +165,7 @@ def test_load_skip_not_existing(monkeypatch):
     ]
 
 
-def test_load_skip_not_permitted(monkeypatch, register_builtin_html):
+def test_load_skip_not_permitted(monkeypatch, request_context):
     monkeypatch.setattr(
         sidebar.UserSidebarConfig, "_user_config", lambda x: {
             "fold": False,
@@ -206,7 +206,7 @@ def test_save_user_config_denied(mocker, monkeypatch):
     save_user_file_mock.assert_not_called()
 
 
-def test_save_user_config_allowed(register_builtin_html, mocker, monkeypatch):
+def test_save_user_config_allowed(request_context, mocker, monkeypatch):
     monkeypatch.setattr(user, "may", lambda x: x == "general.configure_sidebar")
     save_user_file_mock = mocker.patch.object(user, "save_file")
     user_config = sidebar.UserSidebarConfig(user, config.sidebar)

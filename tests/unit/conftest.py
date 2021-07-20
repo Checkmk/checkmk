@@ -53,7 +53,7 @@ def fixture_edition_short(monkeypatch, request):
     yield edition_short
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
     monkeypatch.setenv("OMD_SITE", "NO_SITE")
     omd_site.cache_clear()
@@ -82,7 +82,7 @@ def _touch(path):
     Path(path).touch()
 
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(autouse=True)
 def cleanup_after_test():
     yield
 
@@ -269,7 +269,7 @@ def _mock_livestatus():
         yield live
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def use_fakeredis_client(monkeypatch):
     """Use fakeredis client instead of redis.Redis"""
     monkeypatch.setattr(
@@ -283,7 +283,7 @@ class _MockVSManager(NamedTuple):
     active_service_interface: Mapping[str, Any]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(

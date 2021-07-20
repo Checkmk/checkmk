@@ -93,32 +93,32 @@ def load_plugins(request_context, monkeypatch, tmp_path):
     monkeypatch.undo()
 
 
-@pytest.fixture(scope='function', name="patch_json", autouse=True)
+@pytest.fixture(name="patch_json", autouse=True)
 def fixture_patch_json():
     with patch_json(json):
         yield
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_user(request_context, load_config):
     with create_and_destroy_user(automation=False, role="user") as user:
         yield user
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_user_login(with_user):
     user_id = with_user[0]
     with login.UserSessionContext(user_id):
         yield user_id
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_admin(request_context, load_config):
     with create_and_destroy_user(automation=False, role="admin") as user:
         yield user
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_admin_login(with_admin):
     user_id = with_admin[0]
     with login.UserSessionContext(user_id):
@@ -188,7 +188,7 @@ def inline_background_jobs(mocker):
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_automation_user(request_context, load_config):
     with create_and_destroy_user(automation=True, role="admin") as user:
         yield user
@@ -330,17 +330,17 @@ def _make_webtest(debug):
     return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def wsgi_app(monkeypatch, request_context):
     return _make_webtest(debug=True)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def wsgi_app_debug_off(monkeypatch):
     return _make_webtest(debug=False)
 
 
-@pytest.fixture(scope='function', autouse=True)
+@pytest.fixture(autouse=True)
 def avoid_search_index_update_background(monkeypatch):
     monkeypatch.setattr(
         search,
@@ -349,17 +349,17 @@ def avoid_search_index_update_background(monkeypatch):
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def logged_in_wsgi_app(wsgi_app, with_user):
     return wsgi_app.login(with_user[0], with_user[1])
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def logged_in_admin_wsgi_app(wsgi_app, with_admin):
     return wsgi_app.login(with_admin[0], with_admin[1])
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_groups(request_context, with_admin_login, suppress_automation_calls):
     watolib.add_group('windows', 'host', {'alias': 'windows'})
     watolib.add_group('routers', 'service', {'alias': 'routers'})
@@ -370,7 +370,7 @@ def with_groups(request_context, with_admin_login, suppress_automation_calls):
     watolib.delete_group('admins', 'contact')
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture()
 def with_host(request_context, with_admin_login, suppress_automation_calls):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts([

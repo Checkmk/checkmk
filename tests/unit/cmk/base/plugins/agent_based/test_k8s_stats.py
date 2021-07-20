@@ -292,7 +292,10 @@ def test__check_k8s_stats_fs(section, expected_results):
 def test__check_k8s_stats_network(section, expected_results):
     vs: Dict[str, Any] = {}
     for _ in range(2):
-        section["timestamp"] = section["timestamp"] + 1
+        section = {
+            **section,
+            "timestamp": section["timestamp"] + 1,
+        }
         results = list(_check__k8s_stats_network__proxy_results(
             vs,
             "eth1",

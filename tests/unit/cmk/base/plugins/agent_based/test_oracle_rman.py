@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -13,39 +12,40 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
     State as state,
-    type_defs,
 )
 from cmk.base.plugins.agent_based import oracle_rman
 
-PARSED_SECTION: oracle_rman.SectionOracleRman = {
-    'AFIS11.ARCHIVELOG': {
-        'backupage': 103,
-        'backuplevel': '',
-        'backupscn': -1,
-        'backuptype': 'ARCHIVELOG',
-        'sid': 'AFIS11',
-        'status': 'COMPLETED',
-        'used_incr_0': False
-    },
-    'AFIS2.DB_INCR_0': {
-        'backupage': 460,
-        'backuplevel': '0',
-        'backupscn': 545791334,
-        'backuptype': 'DB_INCR',
-        'sid': 'AFIS2',
-        'status': 'COMPLETED',
-        'used_incr_0': False
-    },
-    'TUX2.DB_INCR': {
-        'backupage': 32,
-        'backuplevel': "-1",
-        'backupscn': -1,
-        'backuptype': 'DB_INCR',
-        'sid': 'TUX2',
-        'status': 'COMPLETED',
-        'used_incr_0': False
-    },
-}
+
+def get_parsed_section() -> oracle_rman.SectionOracleRman:
+    return {
+        'AFIS11.ARCHIVELOG': {
+            'backupage': 103,
+            'backuplevel': '',
+            'backupscn': -1,
+            'backuptype': 'ARCHIVELOG',
+            'sid': 'AFIS11',
+            'status': 'COMPLETED',
+            'used_incr_0': False
+        },
+        'AFIS2.DB_INCR_0': {
+            'backupage': 460,
+            'backuplevel': '0',
+            'backupscn': 545791334,
+            'backuptype': 'DB_INCR',
+            'sid': 'AFIS2',
+            'status': 'COMPLETED',
+            'used_incr_0': False
+        },
+        'TUX2.DB_INCR': {
+            'backupage': 32,
+            'backuplevel': "-1",
+            'backupscn': -1,
+            'backuptype': 'DB_INCR',
+            'sid': 'TUX2',
+            'status': 'COMPLETED',
+            'used_incr_0': False
+        },
+    }
 
 
 @pytest.mark.parametrize("string_table, parsed", [([
@@ -58,13 +58,13 @@ PARSED_SECTION: oracle_rman.SectionOracleRman = {
         '103', ''
     ],
     ["TUX2", "COMPLETED", "2014-07-08_17:27:59", "2014-07-08_17:29:35", "DB_INCR", "32"],
-], PARSED_SECTION)])
+], get_parsed_section())])
 def test_parse(string_table, parsed):
     assert oracle_rman.parse_oracle_rman(string_table) == parsed
 
 
 def test_discovery():
-    yielded_services = list(oracle_rman.discovery_oracle_rman(PARSED_SECTION))
+    yielded_services = list(oracle_rman.discovery_oracle_rman(get_parsed_section()))
     assert yielded_services == [
         Service(item="AFIS11.ARCHIVELOG", parameters={}, labels=[]),
         Service(item="AFIS2.DB_INCR_0", parameters={}, labels=[]),
@@ -78,7 +78,7 @@ def test_discovery():
         {
             "levels": (50, 60)
         },
-        PARSED_SECTION,
+        get_parsed_section(),
         [
             Result(
                 state=state.CRIT,
@@ -93,7 +93,7 @@ def test_discovery():
     (
         "AFIS11.ARCHIVELOG",
         {},
-        PARSED_SECTION,
+        get_parsed_section(),
         [
             Result(state=state.OK,
                    summary='Time since last backup: 1 hour 43 minutes',
@@ -104,7 +104,7 @@ def test_discovery():
     (
         "AFIS2.DB_INCR_1",
         {},
-        PARSED_SECTION,
+        get_parsed_section(),
         [
             Result(state=state.OK,
                    summary='Time since last backup: 7 hours 40 minutes',
@@ -124,17 +124,21 @@ def test_check(item, params, section, results):
 
 def test_check_raises():
     with pytest.raises(IgnoreResultsError) as exc:
-        list(oracle_rman.check_oracle_rman("NON-EXISTANT-ITEM", {}, PARSED_SECTION))
+        list(oracle_rman.check_oracle_rman("NON-EXISTANT-ITEM", {}, get_parsed_section()))
     assert "Login into database failed. Working on NON-EXISTANT-ITEM" in str(exc.value)
 
 
 def test_cluster_check():
     item = 'TUX2.DB_INCR'
-    PARSED_SECTION2 = copy.deepcopy(PARSED_SECTION)
-    PARSED_SECTION2[item]['backupage'] = 1
-    PARSED_SECTION3 = copy.deepcopy(PARSED_SECTION)
-    PARSED_SECTION3[item]['backupage'] = None
-    node_sections = {"node1": PARSED_SECTION, "node2": PARSED_SECTION2, "node3": PARSED_SECTION3}
+    parsed_section_2 = get_parsed_section()
+    parsed_section_2[item]['backupage'] = 1
+    parsed_section_3 = get_parsed_section()
+    parsed_section_3[item]['backupage'] = None
+    node_sections = {
+        "node1": get_parsed_section(),
+        "node2": parsed_section_2,
+        "node3": parsed_section_3
+    }
     yielded_results = list(oracle_rman.cluster_check_oracle_rman(item, {}, node_sections))
     assert [
         Result(state=state.OK,

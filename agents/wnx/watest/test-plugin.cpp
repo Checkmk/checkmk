@@ -386,14 +386,14 @@ TEST(PluginTest, PluginInfoCheck) {
 }  // namespace cfg
 TEST(PluginTest, ApplyConfig) {
     {
+        auto group_name = wtools::SidToName(L"S-1-5-32-545", SidTypeGroup);
         cma::PluginEntry pe("c:\\a\\x.cmd");
         ASSERT_TRUE(pe.iu_.first.empty());
         ASSERT_TRUE(pe.iu_.second.empty());
         pe.fillInternalUser();
         ASSERT_TRUE(pe.iu_.first.empty());
         ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ =
-            wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
+        pe.group_ = wtools::ToUtf8(group_name);
         pe.fillInternalUser();
         ASSERT_TRUE(!pe.iu_.first.empty());
         ASSERT_TRUE(!pe.iu_.second.empty());
@@ -401,16 +401,15 @@ TEST(PluginTest, ApplyConfig) {
         pe.fillInternalUser();
         ASSERT_TRUE(pe.iu_.first.empty());
         ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ =
-            wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
+        pe.group_ = wtools::ToUtf8(group_name);
         pe.user_ = "u p";
         pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first == L"cmk_TST_Users");
-        ASSERT_TRUE(!pe.iu_.second.empty());
+        EXPECT_EQ(pe.iu_.first, L"cmk_TST_"s + group_name);
+        EXPECT_TRUE(!pe.iu_.second.empty());
         pe.group_.clear();
         pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first == L"u");
-        ASSERT_TRUE(pe.iu_.second == L"p");
+        EXPECT_EQ(pe.iu_.first, L"u");
+        EXPECT_EQ(pe.iu_.second, L"p");
     }
     cma::PluginEntry pe("c:\\a\\x.cmd");
     EXPECT_EQ(pe.failures(), 0);

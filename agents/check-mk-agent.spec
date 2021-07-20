@@ -40,6 +40,7 @@ install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check_mk
 mkdir -p $R/etc/systemd/system
 install -m 644 cfg_examples/systemd/check_mk\@.service $R/etc/systemd/system
 install -m 644 cfg_examples/systemd/check_mk.socket $R/etc/systemd/system
+install -m 644 cfg_examples/systemd/check_mk-async.service $R/etc/systemd/system
 mkdir -p $R/etc/check_mk
 mkdir -p $R/usr/bin
 install -m 755 check_mk_agent.linux $R/usr/bin/check_mk_agent
@@ -59,6 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) /etc/xinetd.d/check_mk
 %config(noreplace) /etc/systemd/system/check_mk@.service
 %config(noreplace) /etc/systemd/system/check_mk.socket
+%config(noreplace) /etc/systemd/system/check_mk-async.service
 /etc/check_mk
 /usr/bin/*
 /usr/lib/check_mk_agent
@@ -70,7 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
-%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket ; systemctl restart sockets.target ; fi
+%define systemd_enable if which systemctl >/dev/null 2>&1 && ! which xinetd >/dev/null 2>&1 ; then echo "Enable Checkmk Agent in systemd..." ; systemctl enable check_mk.socket check_mk-async.service ; systemctl restart sockets.target multi-user.target; fi
 
 %pre
 if ! which xinetd >/dev/null 2>&1 && ! which systemctl >/dev/null 2>&1 ; then

@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: This agent has beed adapted from the Checkmk linux agent.
+# NOTE: This agent has been adapted from the Checkmk linux agent.
+
+: "${MK_RUN_SYNC_PARTS=true}"
+
+$MK_RUN_SYNC_PARTS || echo "Exclusive cache update and live-update (MK_RUN_SYNC_PARTS=false) is not suported on this system" >&2 && exit 1
 
 # Remove locale settings to eliminate localized outputs where possible
 # Author: Christian Zigotzky <info@xenosoft.de>

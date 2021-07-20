@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+: "${MK_RUN_ASYNC_PARTS=true}"
+: "${MK_RUN_SYNC_PARTS=true}"
+
+export MK_RUN_ASYNC_PARTS
+export MK_RUN_SYNC_PARTS
+
 # Make sure that locally installed binaries are found
 PATH=$PATH:/usr/local/bin
 
@@ -132,31 +138,33 @@ if inpath timeout; then
     export -f waitmax
 fi
 
-if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/encryption.cfg"
-fi
-
 if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
     # shellcheck source=/dev/null
     . "$MK_CONFDIR/exclude_sections.cfg"
 fi
 
-if [ "$ENCRYPTED" == "yes" ]; then
-    OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ "$OPENSSL_VERSION" -ge 10101 ]; then
-        echo -n "03"
-        # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
-        # always use key derivation here, as this is suitable for passwords of all lengths.
-        exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "$PASSPHRASE")
-    elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
-        echo -n "02"
-        exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
+set_up_encryption() {
+    # shellcheck source=/dev/null
+    [ -f "$MK_CONFDIR/encryption.cfg" ] && . "$MK_CONFDIR/encryption.cfg"
+
+    if [ "$ENCRYPTED" == "yes" ]; then
+        OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+        if [ "$OPENSSL_VERSION" -ge 10101 ]; then
+            echo -n "03"
+            # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
+            # always use key derivation here, as this is suitable for passwords of all lengths.
+            encrypt() { openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "$PASSPHRASE"; }
+        elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
+            echo -n "02"
+            encrypt() { openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt; }
+        else
+            echo -n "00"
+            encrypt() { openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt; }
+        fi
     else
-        echo -n "00"
-        exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
+        encrypt() { cat; }
     fi
-fi
+}
 
 RTC_PLUGINS=""
 if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
@@ -491,7 +499,7 @@ section_ipmitool() {
 
 section_ipmisensors() {
     if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
-        echo '<<<ipmi_sensors>>>'
+        $MK_RUN_SYNC_PARTS && echo '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grep -q legacy-output; then
             IPMI_FORMAT="--legacy-output"
@@ -745,6 +753,9 @@ section_mailqueue() {
 section_omd() {
     if inpath omd; then
         run_cached -s omd_status 60 "omd status --bare || true"
+
+        $MK_RUN_SYNC_PARTS || return
+
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
@@ -1090,7 +1101,7 @@ run_remote_plugin() {
                 fi
 
                 if [ -z "$interval" ]; then
-                    run_mrpe "$descr" "$cmdline"
+                    $MK_RUN_SYNC_PARTS && run_mrpe "$descr" "$cmdline"
                 else
                     run_cached "$args" "$descr" "$interval" "$cmdline"
                 fi
@@ -1136,7 +1147,7 @@ run_runas_executor() {
                                     cmdline="$PREFIX'$cmdline'"
                                 fi
                                 if [ -z "$interval" ]; then
-                                    run_mrpe "$descr" "$cmdline"
+                                    $MK_RUN_SYNC_PARTS && run_mrpe "$descr" "$cmdline"
                                 else
                                     run_cached -m "$descr" "$interval" "$cmdline"
                                 fi
@@ -1175,13 +1186,15 @@ is_valid_plugin() {
 
 run_local_checks() {
     # Local checks
-    echo '<<<local:sep(0)>>>'
     if cd "$LOCALDIR"; then
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                ./"$skript"
-            fi
-        done
+        if $MK_RUN_SYNC_PARTS; then
+            echo '<<<local:sep(0)>>>'
+            for skript in ./*; do
+                if is_valid_plugin "$skript"; then
+                    ./"$skript"
+                fi
+            done
+        fi
         # Call some plugins only every X'th second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
@@ -1193,11 +1206,13 @@ run_local_checks() {
 
 run_plugins() {
     if cd "$PLUGINSDIR"; then
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                run_agent_plugin "$skript"
-            fi
-        done
+        if $MK_RUN_SYNC_PARTS; then
+            for skript in ./*; do
+                if is_valid_plugin "$skript"; then
+                    run_agent_plugin "$skript"
+                fi
+            done
+        fi
         # Call some plugins only every Xth second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
@@ -1338,25 +1353,29 @@ run_cached() {
         local AGE
         AGE=$((NOW - MTIME))
         if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        if [ $append_age -eq 1 ]; then
-            # insert the cached-string before the pipe (first -e)
-            # or, if no pipe found (-e t) append it (third -e),
-            # but only once and on the second line (2!b) (first line is section header,
-            # all further lines are long output)
-            sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" <"$CACHEFILE"
-        else
-            CACHE_INFO="cached($MTIME,$MAXAGE)"
-            if [[ $NAME == local_* ]]; then
-                sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+        if $MK_RUN_SYNC_PARTS; then
+            # Output the file in any case, even if it is
+            # outdated. The new file will not yet be available
+            if [ $append_age -eq 1 ]; then
+                # insert the cached-string before the pipe (first -e)
+                # or, if no pipe found (-e t) append it (third -e),
+                # but only once and on the second line (2!b) (first line is section header,
+                # all further lines are long output)
+                sed -e "2s/|/ (Cached: ${AGE}\/${MAXAGE}s)|/" -e t -e "2s/$/ (Cached: ${AGE}\/${MAXAGE}s)/" <"$CACHEFILE"
             else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+                CACHE_INFO="cached($MTIME,$MAXAGE)"
+                if [[ $NAME == local_* ]]; then
+                    sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
+                else
+                    # insert the cache info in the section header (^= after '!'),
+                    # if none is present (^= before '!')
+                    sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+                fi
             fi
         fi
     fi
+
+    $MK_RUN_ASYNC_PARTS || return
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
@@ -1460,9 +1479,11 @@ section_timesyncd() {
     # The service is still enabled, but does not start timesyncd as the condition is not met.
     (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
     timedatectl timesync-status >/dev/null 2>&1 || return 1
-    echo "<<<timesyncd>>>"
-    timedatectl timesync-status
-    get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    if $MK_RUN_SYNC_PARTS; then
+        echo "<<<timesyncd>>>"
+        timedatectl timesync-status
+        get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    fi
     return 0 # intended not to execute section_ntp even in the case where get_file_mtime fails
 }
 
@@ -1523,206 +1544,233 @@ section_checkmk_failed_plugins() {
     fi
 }
 
-section_checkmk
+run_purely_synchronous_sections() {
 
-[ -z "$MK_SKIP_LABELS" ] && section_labels
+    section_checkmk
 
-[ -z "$MK_SKIP_DF" ] && section_df
+    [ -z "$MK_SKIP_LABELS" ] && section_labels
 
-[ -z "$MK_SKIP_SYSTEMD" ] && sections_systemd
+    [ -z "$MK_SKIP_DF" ] && section_df
 
-# Filesystem usage for ZFS
-[ -z "$MK_SKIP_ZFS" ] && section_zfs
+    [ -z "$MK_SKIP_SYSTEMD" ] && sections_systemd
 
-# Check NFS mounts by accessing them with stat -f (System
-# call statfs()). If this lasts more then 2 seconds we
-# consider it as hanging. We need waitmax.
-[ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
+    # Filesystem usage for ZFS
+    [ -z "$MK_SKIP_ZFS" ] && section_zfs
 
-# Check mount options. Filesystems may switch to 'ro' in case
-# of a read error.
-[ -z "$MK_SKIP_MOUNTS" ] && section_mounts
+    # Check NFS mounts by accessing them with stat -f (System
+    # call statfs()). If this lasts more then 2 seconds we
+    # consider it as hanging. We need waitmax.
+    [ -z "$MK_SKIP_NFS_MOUNTS" ] && section_nfs_mounts
 
-[ -z "$MK_SKIP_PS" ] && section_ps
+    # Check mount options. Filesystems may switch to 'ro' in case
+    # of a read error.
+    [ -z "$MK_SKIP_MOUNTS" ] && section_mounts
 
-# Memory usage
-[ -z "$MK_SKIP_MEM" ] && section_mem
+    [ -z "$MK_SKIP_PS" ] && section_ps
 
-# Load and number of processes
-[ -z "$MK_SKIP_CPU" ] && section_cpu
+    # Memory usage
+    [ -z "$MK_SKIP_MEM" ] && section_mem
 
-# Uptime
-[ -z "$MK_SKIP_UPTIME" ] && section_uptime
+    # Load and number of processes
+    [ -z "$MK_SKIP_CPU" ] && section_cpu
 
-# New variant: Information about speed and state in one section
-[ -z "$MK_SKIP_LNX_IF" ] && section_lnx_if
+    # Uptime
+    [ -z "$MK_SKIP_UPTIME" ] && section_uptime
 
-# Current state of bonding interfaces
-[ -z "$MK_SKIP_BONDING_IF" ] && section_bonding_interfaces
+    # New variant: Information about speed and state in one section
+    [ -z "$MK_SKIP_LNX_IF" ] && section_lnx_if
 
-# Same for Open vSwitch bonding
-[ -z "$MK_SKIP_VSWITCH_BONDING" ] && section_vswitch_bonding
+    # Current state of bonding interfaces
+    [ -z "$MK_SKIP_BONDING_IF" ] && section_bonding_interfaces
 
-# Number of TCP connections in the various states
-[ -z "$MK_SKIP_TCP" ] && section_tcp
+    # Same for Open vSwitch bonding
+    [ -z "$MK_SKIP_VSWITCH_BONDING" ] && section_vswitch_bonding
 
-# Linux Multipathing
-[ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
+    # Number of TCP connections in the various states
+    [ -z "$MK_SKIP_TCP" ] && section_tcp
 
-# Performancecounter Platten
-[ -z "$MK_SKIP_DISKSTAT" ] && section_diskstat
+    # Linux Multipathing
+    [ -z "$MK_SKIP_MULTIPATHING" ] && section_multipathing
 
-# Performancecounter Kernel
-[ -z "$MK_SKIP_KERNEL" ] && section_kernel
+    # Performancecounter Platten
+    [ -z "$MK_SKIP_DISKSTAT" ] && section_diskstat
 
-# Hardware sensors via IPMI (need ipmitool)
-[ -z "$MK_SKIP_IPMITOOL" ] && section_ipmitool
+    # Performancecounter Kernel
+    [ -z "$MK_SKIP_KERNEL" ] && section_kernel
 
-# IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
-# have installed freeipmi that IPMI is really support by your hardware.
-[ -z "$MK_SKIP_IPMISENSORS" ] && section_ipmisensors
+    # RAID status of Linux software RAID
+    [ -z "$MK_SKIP_MD" ] && section_md
 
-# RAID status of Linux software RAID
-[ -z "$MK_SKIP_MD" ] && section_md
+    # RAID status of Linux RAID via device mapper
+    [ -z "$MK_SKIP_DM_RAID" ] && section_dm_raid
 
-# RAID status of Linux RAID via device mapper
-[ -z "$MK_SKIP_DM_RAID" ] && section_dm_raid
+    # RAID status of LSI controllers via cfggen
+    [ -z "$MK_SKIP_CFGGEN" ] && section_cfggen
 
-# RAID status of LSI controllers via cfggen
-[ -z "$MK_SKIP_CFGGEN" ] && section_cfggen
+    # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
+    # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+    [ -z "$MK_SKIP_MEGARAID" ] && section_megaraid
 
-# RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
-# http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-[ -z "$MK_SKIP_MEGARAID" ] && section_megaraid
+    # RAID status of 3WARE disk controller (by Radoslaw Bak)
+    [ -z "$MK_SKIP_THREE_WARE_RAID" ] && section_3ware_raid
 
-# RAID status of 3WARE disk controller (by Radoslaw Bak)
-[ -z "$MK_SKIP_THREE_WARE_RAID" ] && section_3ware_raid
+    # VirtualBox Guests. Section must always been output. Otherwise the
+    # check would not be executed in case no guest additions are installed.
+    # And that is something the check wants to detect
+    [ -z "$MK_SKIP_VBOX_GUEST" ] && section_vbox_guest
 
-# RAID controllers from areca (Taiwan)
-# cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-[ -z "$MK_SKIP_ARECA" ] && section_areca_raid
+    # OpenVPN Clients. Currently we assume that the configuration # is in
+    # /etc/openvpn. We might find a safer way to find the configuration later.
+    [ -z "$MK_SKIP_OPENVPN" ] && section_openvpn
 
-# VirtualBox Guests. Section must always been output. Otherwise the
-# check would not be executed in case no guest additions are installed.
-# And that is something the check wants to detect
-[ -z "$MK_SKIP_VBOX_GUEST" ] && section_vbox_guest
+    [ -z "$MK_SKIP_NVIDIA" ] && section_nvidia
 
-# OpenVPN Clients. Currently we assume that the configuration # is in
-# /etc/openvpn. We might find a safer way to find the configuration later.
-[ -z "$MK_SKIP_OPENVPN" ] && section_openvpn
+    [ -z "$MK_SKIP_DRBD" ] && section_drbd
 
-if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
-    section_timesyncd || section_ntp
-fi
+    # Heartbeat monitoring
+    # Different handling for heartbeat clusters with and without CRM
+    # for the resource state
+    [ -z "$MK_SKIP_HEARTBEAT" ] && section_heartbeat
 
-# Time synchronization with Chrony
-[ -z "$MK_SKIP_CHRONY" ] && section_chrony
+    [ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
-[ -z "$MK_SKIP_NVIDIA" ] && section_nvidia
+    # Welcome the ZFS check on Linux
+    # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
+    # check zpool status
+    [ -z "$MK_SKIP_ZPOOL" ] && section_zpool
 
-[ -z "$MK_SKIP_DRBD" ] && section_drbd
+    # Veritas Cluster Server
+    # Software is always installed in /opt/VRTSvcs.
+    # Secure mode must be off to allow root to execute commands
+    [ -z "$MK_SKIP_VERITAS" ] && section_veritas_cluster
 
-# Heartbeat monitoring
-# Different handling for heartbeat clusters with and without CRM
-# for the resource state
-[ -z "$MK_SKIP_HEARTBEAT" ] && section_heartbeat
+    ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    [ -z "$MK_SKIP_FILEINFO" ] && run_fileinfo
 
-[ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
+    # Get stats about OMD monitoring cores running on this machine.
+    # Since cd is a shell builtin the check does not affect the performance
+    # on non-OMD machines.
+    [ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
-## Check status of OMD sites and Checkmk Notification spooler
-[ -z "$MK_SKIP_OMD" ] && section_omd
+    # Collect states of configured Checkmk site backup jobs
+    section_mkbackup
 
-# Welcome the ZFS check on Linux
-# We do not endorse running ZFS on linux if your vendor doesnt support it ;)
-# check zpool status
-[ -z "$MK_SKIP_ZPOOL" ] && section_zpool
+    # Get statistics about monitored jobs. Below the job directory there
+    # is a sub directory per user that ran a job. That directory must be
+    # owned by the user so that a symlink or hardlink attack for reading
+    # arbitrary files can be avoided.
+    [ -z "$MK_SKIP_JOB" ] && section_job
 
-# Veritas Cluster Server
-# Software is always installed in /opt/VRTSvcs.
-# Secure mode must be off to allow root to execute commands
-[ -z "$MK_SKIP_VERITAS" ] && section_veritas_cluster
+    # Gather thermal information provided e.g. by acpi
+    # At the moment only supporting thermal sensors
+    [ -z "$MK_SKIP_THERMAL" ] && section_thermal
 
-## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-[ -z "$MK_SKIP_FILEINFO" ] && run_fileinfo
+    # Libelle Business Shadow
+    [ -z "$MK_SKIP_LIBELLE" ] && section_libelle
 
-# Get stats about OMD monitoring cores running on this machine.
-# Since cd is a shell builtin the check does not affect the performance
-# on non-OMD machines.
-[ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
+    # HTTP Accelerator Statistics
+    [ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && section_http_accelerator
 
-# Collect states of configured Checkmk site backup jobs
-section_mkbackup
+    # Proxmox Cluster
+    [ -z "$MK_SKIP_PROXMOX" ] && section_proxmox
 
-# Get statistics about monitored jobs. Below the job directory there
-# is a sub directory per user that ran a job. That directory must be
-# owned by the user so that a symlink or hardlink attack for reading
-# arbitrary files can be avoided.
-[ -z "$MK_SKIP_JOB" ] && section_job
+    [ -z "$MK_SKIP_HAPROXY" ] && section_haproxy
 
-# Gather thermal information provided e.g. by acpi
-# At the moment only supporting thermal sensors
-[ -z "$MK_SKIP_THERMAL" ] && section_thermal
+}
 
-# Libelle Business Shadow
-[ -z "$MK_SKIP_LIBELLE" ] && section_libelle
+run_sections_with_run_cached() {
 
-# HTTP Accelerator Statistics
-[ -z "$MK_SKIP_HTTP_ACCELERATOR" ] && section_http_accelerator
+    # Hardware sensors via IPMI (need ipmitool)
+    [ -z "$MK_SKIP_IPMITOOL" ] && section_ipmitool
 
-# Proxmox Cluster
-[ -z "$MK_SKIP_PROXMOX" ] && section_proxmox
+    # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
+    # have installed freeipmi that IPMI is really support by your hardware.
+    [ -z "$MK_SKIP_IPMISENSORS" ] && section_ipmisensors
 
-[ -z "$MK_SKIP_HAPROXY" ] && section_haproxy
+    # RAID controllers from areca (Taiwan)
+    # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
+    [ -z "$MK_SKIP_ARECA" ] && section_areca_raid
 
-# Start new liveupdate process in background on each agent execution. Starting
-# a new live update process will terminate the old one automatically after
-# max. 1 sec.
-run_liveupdate
+    # Time synchronization with Chrony
+    [ -z "$MK_SKIP_CHRONY" ] && section_chrony
 
-# MK's Remote Plugin Executor
-run_remote_plugin
+    if [ -z "$MK_SKIP_TIMESYNCHRONISATION" ]; then
+        section_timesyncd || section_ntp
+    fi
 
-# MK's runas Executor
-run_runas_executor
+    ## Check status of OMD sites and Checkmk Notification spooler
+    [ -z "$MK_SKIP_OMD" ] && section_omd
 
-# Local checks
-run_local_checks
+}
 
-# Plugins
-run_plugins
+main() {
+    $MK_RUN_SYNC_PARTS && run_purely_synchronous_sections
 
-section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"
+    ($MK_RUN_SYNC_PARTS || $MK_RUN_ASYNC_PARTS) && run_sections_with_run_cached
 
-# Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
-    now=$(date +%s)
+    # Start new liveupdate process in background on each agent execution. Starting
+    # a new live update process will terminate the old one automatically after
+    # max. 1 sec.
+    $MK_RUN_ASYNC_PARTS && run_liveupdate
 
-    for file in *; do
-        test "$file" = "*" && break
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
+    # MK's Remote Plugin Executor
+    ($MK_RUN_SYNC_PARTS || $MK_RUN_ASYNC_PARTS) && run_remote_plugin
 
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]; do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
+    # MK's runas Executor
+    ($MK_RUN_SYNC_PARTS || $MK_RUN_ASYNC_PARTS) && run_runas_executor
 
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ]; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt "$maxage" ]; then
-                continue
+    # Local checks
+    ($MK_RUN_SYNC_PARTS || $MK_RUN_ASYNC_PARTS) && run_local_checks
+
+    # Plugins
+    ($MK_RUN_SYNC_PARTS || $MK_RUN_ASYNC_PARTS) && run_plugins
+
+    $MK_RUN_SYNC_PARTS && section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"
+
+    # Agent output snippets created by cronjobs, etc.
+    if $MK_RUN_SYNC_PARTS && [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
+        pushd "$SPOOLDIR" >/dev/null
+        now=$(date +%s)
+
+        for file in *; do
+            test "$file" = "*" && break
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
+
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt "$maxage" ]; then
+                    continue
+                fi
             fi
-        fi
 
-        # Output the file
-        cat "$file"
+            # Output the file
+            cat "$file"
+        done
+        popd >/dev/null
+    fi
+}
+
+set_up_encryption
+
+main | encrypt
+
+# if MK_LOOP_INTERVAL is set, we assume we're a 'simple' systemd service
+if [ -n "$MK_LOOP_INTERVAL" ]; then
+    while sleep "$MK_LOOP_INTERVAL"; do
+        # Note: this will not output anything if MK_RUN_SYNC_PARTS=false, which is the intended case.
+        # Anyway: rather send it to /dev/null than risk leaking unencrypted output.
+        MK_LOOP_INTERVAL="" main >/dev/null
     done
-    popd >/dev/null
 fi

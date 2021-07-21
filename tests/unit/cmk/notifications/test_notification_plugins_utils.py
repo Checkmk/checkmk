@@ -288,8 +288,8 @@ def test_api_endpoint_url(monkeypatch, value, result):
         ),
     ])
 def test_escape_context(input_context, expected_context):
-    utils.html_escape_context(input_context)
-    assert input_context == expected_context
+    escaped_context = utils.html_escape_context(input_context)
+    assert escaped_context == expected_context
 
 
 @pytest.mark.parametrize("response, result_map, expected_exit_msg, expected_exit_code", [

@@ -824,10 +824,10 @@ class BulkEmailContent(EmailContent):
 
         for i, c in enumerate(contexts, 1):
             c.update(parameters)
-            utils.html_escape_context(c)
-            extend_context(c)
+            escaped_context = utils.html_escape_context(c)
+            extend_context(escaped_context)
 
-            txt, html, att = construct_content(c, is_bulk=True, notification_number=i)
+            txt, html, att = construct_content(escaped_context, is_bulk=True, notification_number=i)
             content_txt += txt
             content_html += html
             attachments += att
@@ -858,21 +858,22 @@ class SingleEmailContent(EmailContent):
     def __init__(self, context_function):
         # gather all options from env
         context = context_function()
-        utils.html_escape_context(context)
-        extend_context(context)
-        content_txt, content_html, attachments = construct_content(context)
+        escaped_context = utils.html_escape_context(context)
+        extend_context(escaped_context)
+        content_txt, content_html, attachments = construct_content(escaped_context)
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
         super(SingleEmailContent, self).__init__(
-            context=context,
-            mailto=context['CONTACTEMAIL'],
-            subject=context['SUBJECT'],
+            context=escaped_context,
+            mailto=escaped_context['CONTACTEMAIL'],
+            subject=escaped_context['SUBJECT'],
             from_address=utils.format_address(
-                context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
-            reply_to=utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                          context.get("PARAMETER_REPLY_TO_ADDRESS", u"")),
+                escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
+            reply_to=utils.format_address(
+                escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+                escaped_context.get("PARAMETER_REPLY_TO_ADDRESS", u"")),
             content_txt=content_txt,
             content_html=content_html,
             attachments=attachments,

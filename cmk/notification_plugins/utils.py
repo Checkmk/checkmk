@@ -109,7 +109,7 @@ def format_plugin_output(output):
     return output
 
 
-def html_escape_context(context):
+def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
     unescaped_variables = {
         'CONTACTALIAS',
         'CONTACTNAME',
@@ -129,9 +129,10 @@ def html_escape_context(context):
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    for variable, value in context.items():
-        if variable not in unescaped_variables:
-            context[variable] = html_escape(value)
+    return {
+        variable: html_escape(value) if variable not in unescaped_variables else value
+        for variable, value in context.items()
+    }
 
 
 def add_debug_output(template, context):

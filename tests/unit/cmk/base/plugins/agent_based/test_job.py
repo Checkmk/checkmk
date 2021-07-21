@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from copy import copy
-import itertools
 from typing import List, Union
 import pytest
 
@@ -298,33 +297,24 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
             {
                 0: state.OK
             },
-            itertools.chain(
-                RESULTS_SHREK[0:5],
-                [
-                    Result(
-                        state=state.CRIT,
-                        summary='Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)',
-                    ),
-                ],
-                RESULTS_SHREK[6:],
-            ),
+            [
+                *RESULTS_SHREK[0:5],
+                Result(
+                    state=state.CRIT,
+                    summary='Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)',
+                ),
+                *RESULTS_SHREK[6:],
+            ],
         ),
-        (
-            SECTION_1['SHREK'],
-            (0, 0),
-            {
-                0: state.WARN
-            },
-            itertools.chain(
-                [
-                    Result(
-                        state=state.WARN,
-                        summary='Latest exit code: 0',
-                    ),
-                ],
-                RESULTS_SHREK[1:],
+        (SECTION_1['SHREK'], (0, 0), {
+            0: state.WARN
+        }, [
+            Result(
+                state=state.WARN,
+                summary='Latest exit code: 0',
             ),
-        ),
+            *RESULTS_SHREK[1:],
+        ]),
         (
             _modify_start_time(
                 SECTION_1['SHREK'],
@@ -334,24 +324,22 @@ RESULTS_SHREK: List[Union[Metric, Result]] = [
             {
                 0: state.OK
             },
-            itertools.chain(
-                RESULTS_SHREK[:3],
-                [
-                    Result(
-                        state=state.OK,
-                        notice=('6 jobs are currently running, started at'
-                                ' May 08 2019 09:41:01, May 08 2019 09:42:01,'
-                                ' May 08 2019 09:43:01, May 08 2019 09:44:01,'
-                                ' Sep 18 2018 22:11:41, May 08 2019 09:46:01'),
-                    ),
-                    Result(
-                        state=state.CRIT,
-                        summary=('Job age (currently running): '
-                                 '1 year 63 days (warn/crit at 1 second/2 seconds)'),
-                    ),
-                ],
-                RESULTS_SHREK[6:],
-            ),
+            [
+                *RESULTS_SHREK[:3],
+                Result(
+                    state=state.OK,
+                    notice=('6 jobs are currently running, started at'
+                            ' May 08 2019 09:41:01, May 08 2019 09:42:01,'
+                            ' May 08 2019 09:43:01, May 08 2019 09:44:01,'
+                            ' Sep 18 2018 22:11:41, May 08 2019 09:46:01'),
+                ),
+                Result(
+                    state=state.CRIT,
+                    summary=('Job age (currently running): '
+                             '1 year 63 days (warn/crit at 1 second/2 seconds)'),
+                ),
+                *RESULTS_SHREK[6:],
+            ],
         ),
     ],
 )

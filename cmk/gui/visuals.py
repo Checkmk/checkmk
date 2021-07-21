@@ -10,7 +10,6 @@ import sys
 import traceback
 import json
 from itertools import chain, starmap
-from contextlib import contextmanager
 from typing import (
     Any,
     Callable,
@@ -1378,32 +1377,6 @@ def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List
     return show_filters
 
 
-def add_context_to_uri_vars(context: VisualContext, single_infos: SingleInfos) -> None:
-    """Populate the HTML vars with missing context vars
-
-    The context vars set in single context are enforced (can not be overwritten by URL). The normal
-    filter vars in "multiple" context are not enforced."""
-    single_info_keys = get_single_info_keys(single_infos)
-
-    for filter_name, filter_vars in context.items():
-        # Enforce the single context variables that are available in the visual context
-        if filter_name in single_info_keys:
-            request.set_var(filter_name, str(filter_vars))
-            continue
-
-        if not isinstance(filter_vars, dict):
-            continue  # Skip invalid filter values
-
-        # This is a multi-context filter
-        # We add the filter only if *none* of its HTML variables are present on the URL. This is
-        # important because checkbox variables are not present if the box is not checked.
-        if any(request.has_var(uri_varname) for uri_varname in filter_vars):
-            continue
-
-        for uri_varname, value in filter_vars.items():
-            request.set_var(uri_varname, str(value))
-
-
 def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
     uri_vars: HTTPVariables = []
@@ -1422,14 +1395,6 @@ def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> H
             uri_vars.append((uri_varname, "%s" % value))
 
     return uri_vars
-
-
-@contextmanager
-def context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> Iterator[None]:
-    """Updates the current HTTP variable context"""
-    with request.stashed_vars():
-        add_context_to_uri_vars(context, single_infos)
-        yield
 
 
 # Vice versa: find all filters that belong to the current URI variables

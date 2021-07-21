@@ -3725,31 +3725,6 @@ def test_registered_info_attributes():
     ({"single_infos": ["host"], "context": {}}, []),
     # Single host + service context
     ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
-        [("host", "abc"), ("service", "äää")]),
-])
-def test_add_context_to_uri_vars(request_context, visual, expected_vars):
-    with request.stashed_vars():
-        visuals.add_context_to_uri_vars(visual["context"], visual["single_infos"])
-        assert sorted(list(request.itervars())) == sorted(expected_vars)
-
-
-@pytest.mark.parametrize("visual,expected_vars", [
-    # No single context, no filter
-    ({"single_infos": [], "context": {}}, []),
-    # No single context, ignore single filter
-    ({"single_infos": [], "context": {"aaa": "uuu"}}, []),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # No single context, use multi filter
-    ({"single_infos": [], "context": {"filter_name": {"filter_var": "eee"}}}, [('filter_var', 'eee')]),
-    # Single host context
-    ({"single_infos": ["host"], "context": {"host": "abc"}}, [("host", "abc")]),
-    # Single host context, and other filters
-    ({"single_infos": ["host"], "context": {"host": "abc", "bla": {"blub": "ble"}}}, [('blub', 'ble'), ('host', 'abc')]),
-    # Single host context, missing filter -> no failure
-    ({"single_infos": ["host"], "context": {}}, []),
-    # Single host + service context
-    ({"single_infos": ["host", "service"], "context": {"host": "abc", "service": u"äää"}},
         [("host", "abc"), ("service", u"äää")]),
 ])
 def test_get_context_uri_vars(request_context, visual, expected_vars):
@@ -3821,37 +3796,6 @@ def test_get_missing_single_infos_has_context():
 
 def test_get_missing_single_infos_missing_context():
     assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
-
-
-def test_context_uri_vars(request_context):
-    visual: Visual = {
-        "single_infos": ["host"],
-        "context": {
-            "host": "abc",
-            "blubl": {
-                "ag": "1"
-            },
-        },
-    }
-
-    visual2: Visual = {
-        "single_infos": [],
-        "context": {
-            "hu_filter": {"hu": "hu"},
-        },
-    }
-
-    request.set_var("bla", "blub")
-    assert request.var("bla") == "blub"
-
-    with visuals.context_uri_vars(visual["context"], visual["single_infos"]), \
-         visuals.context_uri_vars(visual2["context"], visual2["single_infos"]):
-        assert request.var("bla") == "blub"
-        assert request.var("host") == "abc"
-        assert request.var("ag") == "1"
-        assert request.var("hu") == "hu"
-
-    assert list(dict(request.itervars()).keys()) == ["bla"]
 
 
 @pytest.mark.parametrize("context, single_infos, expected_context", [

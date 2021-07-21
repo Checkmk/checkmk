@@ -53,10 +53,12 @@ node (NODE) {
         throw e
     } finally {
         stage("Analyse Issues") {
-            publishIssues(
-                issues: issues,
-                trendChartType: 'TOOLS_ONLY',
-                qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]])
+            if (issues) {
+                publishIssues(
+                    issues: issues,
+                    trendChartType: 'TOOLS_ONLY',
+                    qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]);
+            }
 
             xunit([Custom(
                 customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",

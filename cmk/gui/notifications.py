@@ -5,18 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import List
 
 from livestatus import MKLivestatusNotFoundError
 import cmk.utils.render
 
-from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.table import table_element
 import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions, user
+from cmk.gui.globals import html, request, transactions, user, config
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -29,15 +29,19 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
 )
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.pages import page_registry, Page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.utils.urls import make_confirm_link
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_link
 
-g_acknowledgement_time = {}
-g_modified_time = 0.0
-g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
+g_acknowledgement_time: dict = {}
+g_modified_time: float = 0.0
+g_columns: List[str] = [
+    "time", "contact_name", "type", "host_name", "service_description", "comment"
+]
 
 
 @permission_section_registry.register
@@ -67,13 +71,13 @@ def load_plugins(force):
                            ["admin", "user"])
 
 
-def acknowledge_failed_notifications(timestamp):
+def _acknowledge_failed_notifications(timestamp):
     g_acknowledgement_time[user.id] = timestamp
     user.acknowledged_notifications = int(g_acknowledgement_time[user.id])
-    set_modified_time()
+    _set_modified_time()
 
 
-def set_modified_time():
+def _set_modified_time():
     global g_modified_time
     g_modified_time = time.time()
 
@@ -82,21 +86,18 @@ def acknowledged_time():
     if g_acknowledgement_time.get(user.id) is None or\
             user.file_modified("acknowledged_notifications") > g_modified_time:
         g_acknowledgement_time[user.id] = user.acknowledged_notifications
-        set_modified_time()
+        _set_modified_time()
         if g_acknowledgement_time[user.id] == 0:
             # when this timestamp is first initialized, save the current timestamp as the acknowledge
             # date. This should considerably reduce the number of log files that have to be searched
             # when retrieving the list
-            acknowledge_failed_notifications(time.time())
+            _acknowledge_failed_notifications(time.time())
 
     return g_acknowledgement_time[user.id]
 
 
 def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
-    may_see_notifications =\
-        user.may("general.see_failed_notifications") or\
-        user.may("general.see_failed_notifications_24h")
-
+    may_see_notifications = _may_see_failed_notifications()
     if not may_see_notifications:
         return [0]
 
@@ -140,92 +141,106 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         if result[0] == 0 and not sites.live().dead_sites():
             # In case there are no errors and all sites are reachable:
             # advance the users acknowledgement time
-            acknowledge_failed_notifications(time.time())
+            _acknowledge_failed_notifications(time.time())
 
         return result
 
     return sites.live().query(query_txt)
 
 
-def render_notification_table(failed_notifications):
-    with table_element() as table:
-        header = {name: idx for idx, name in enumerate(g_columns)}
-        for row in failed_notifications:
-            table.row()
-            table.cell(_("Time"), cmk.utils.render.approx_age(time.time() - row[header['time']]))
-            table.cell(_("Contact"), row[header['contact_name']])
-            table.cell(_("Plugin"), row[header['type']])
-            table.cell(_("Host"), row[header['host_name']])
-            table.cell(_("Service"), row[header['service_description']])
-            table.cell(_("Output"), row[header['comment']])
+def _may_see_failed_notifications() -> bool:
+    return (user.may("general.see_failed_notifications") or
+            user.may("general.see_failed_notifications_24h"))
 
 
-# TODO: We should really recode this to use the view and a normal view command / action
-def render_page_confirm(acktime, failed_notifications):
-    title = _("Confirm failed notifications")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+@page_registry.register_page("clear_failed_notifications")
+class ClearFailedNotificationPage(Page):
+    def __init__(self) -> None:
+        if not _may_see_failed_notifications():
+            raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
-    confirm_url = make_simple_link(
-        make_confirm_link(
-            url=makeactionuri(request, transactions, [("acktime", str(acktime)),
-                                                      ("_confirm", "1")]),
-            message=_("Do you really want to acknowledge all failed notifications up to %s?") %
-            cmk.utils.render.date_and_time(acktime),
-        ))
+    def page(self) -> None:
+        acktime = request.get_float_input_mandatory('acktime', time.time())
+        if request.var('_confirm'):
+            _acknowledge_failed_notifications(acktime)
 
-    page_menu = PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="actions",
-                title=_("Actions"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Actions"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Confirm"),
-                                icon_name="save",
-                                item=confirm_url,
-                                is_shortcut=True,
-                                is_suggested=True,
-                                is_enabled=failed_notifications,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
-    html.header(title, breadcrumb, page_menu)
+            if user.authorized_login_sites():
+                watolib.init_wato_datastructures(with_wato_lock=True)
 
-    render_notification_table(failed_notifications)
+                title = _('Replicate user profile')
+                breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                                         title)
+                html.header(title, breadcrumb)
 
-    html.footer()
+                for message in get_flashed_messages():
+                    html.show_message(message)
+                # This local import is needed for the moment
+                import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
+                cmk.gui.wato.user_profile.user_profile_async_replication_page(
+                    back_url="clear_failed_notifications.py")
+                return
 
+        failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
+        self._show_page(acktime, failed_notifications)
+        if request.var('_confirm'):
+            html.reload_whole_page()
 
-@cmk.gui.pages.register("clear_failed_notifications")
-def page_clear():
-    acktime = request.get_float_input_mandatory('acktime', time.time())
-    if request.var('_confirm'):
-        acknowledge_failed_notifications(acktime)
+    # TODO: We should really recode this to use the view and a normal view command / action
+    def _show_page(self, acktime, failed_notifications):
+        title = _("Confirm failed notifications")
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
 
-        if user.authorized_login_sites():
-            watolib.init_wato_datastructures(with_wato_lock=True)
+        page_menu = self._page_menu(acktime, failed_notifications, breadcrumb)
 
-            title = _('Replicate user profile')
-            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-            html.header(title, breadcrumb)
+        html.header(title, breadcrumb, page_menu)
 
-            for message in get_flashed_messages():
-                html.show_message(message)
-            # This local import is needed for the moment
-            import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
-            cmk.gui.wato.user_profile.user_profile_async_replication_page(
-                back_url="clear_failed_notifications.py")
-            return
+        self._show_notification_table(failed_notifications)
 
-    failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
-    render_page_confirm(acktime, failed_notifications)
-    if request.var('_confirm'):
-        html.reload_whole_page()
+        html.footer()
+
+    def _show_notification_table(self, failed_notifications) -> None:
+        with table_element() as table:
+            header = {name: idx for idx, name in enumerate(g_columns)}
+            for row in failed_notifications:
+                table.row()
+                table.cell(_("Time"),
+                           cmk.utils.render.approx_age(time.time() - row[header['time']]))
+                table.cell(_("Contact"), row[header['contact_name']])
+                table.cell(_("Plugin"), row[header['type']])
+                table.cell(_("Host"), row[header['host_name']])
+                table.cell(_("Service"), row[header['service_description']])
+                table.cell(_("Output"), row[header['comment']])
+
+    def _page_menu(self, acktime, failed_notifications, breadcrumb) -> PageMenu:
+        confirm_url = make_simple_link(
+            make_confirm_link(
+                url=makeactionuri(request, transactions, [("acktime", str(acktime)),
+                                                          ("_confirm", "1")]),
+                message=_("Do you really want to acknowledge all failed notifications up to %s?") %
+                cmk.utils.render.date_and_time(acktime),
+            ))
+
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="actions",
+                    title=_("Actions"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Actions"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Confirm"),
+                                    icon_name="save",
+                                    item=confirm_url,
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                    is_enabled=failed_notifications,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )

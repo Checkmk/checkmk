@@ -159,8 +159,8 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
     ])
 def test_ac_check_mail_loop(check_mail_loop, warning, critical, expected_mails, fetched_mails,
                             expected_result):
-    state, info, perf = check_mail_loop.check_mails(warning, critical, expected_mails,
-                                                    fetched_mails)
+    state, info, perf = check_mail_loop.check_mails(warning, critical, expected_mails.copy(),
+                                                    fetched_mails.copy())
     e_state, e_info, e_perf = expected_result
     assert state == e_state
     assert info == e_info

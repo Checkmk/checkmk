@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Iterable, Union, Tuple, Sequence, Hashable, Dict, Literal, List
+from typing import Optional, Iterable, Union, Tuple, Sequence, Literal, List
 
 import cmk.utils.debug
 from cmk.utils.structured_data import StructuredDataNode
@@ -25,7 +25,6 @@ class TreeAggregator:
             inventory=StructuredDataNode(),
             status_data=StructuredDataNode(),
         )
-        self._index_cache = {}
         self._class_mutex = {}
 
     def aggregate_results(
@@ -81,56 +80,31 @@ class TreeAggregator:
             node = self.trees.status_data.setdefault_node(attributes.path)
             node.attributes.add_pairs(attributes.status_attributes)
 
-    @staticmethod
-    def _make_row_key(key_columns: AttrDict) -> Hashable:
-        return tuple(sorted(key_columns.items()))
-
-    def _get_table_rows(
+    def _add_row(
         self,
         path: List[str],
         tree_name: Literal["inventory", "status_data"],
         key_columns: AttrDict,
-    ) -> List[AttrDict]:
+        columns: AttrDict,
+    ) -> None:
         table = getattr(self.trees, tree_name).setdefault_node(path).table
         table.add_key_columns(sorted(key_columns))
-        return table.rows
-
-    def _get_row(
-        self,
-        rows: List[AttrDict],
-        path: List[str],
-        tree_name: Literal["inventory", "status_data"],
-        row_key: Hashable,
-        key_columns: AttrDict,
-    ) -> Dict[str, Union[None, int, float, str]]:
-        """Find matching table row or create one"""
-        new_row_index = len(rows)  # index should we need to create a new row
-        use_index = self._index_cache.setdefault((tuple(path), tree_name, row_key), new_row_index)
-
-        if use_index == new_row_index:
-            row = {**key_columns}
-            rows.append(row)
-
-        return rows[use_index]
+        table.add_rows([{**key_columns, **columns}])
 
     def _integrate_table_row(self, table_row: TableRow) -> None:
-        row_key = self._make_row_key(table_row.key_columns)
-
         # do this always, it sets key_columns!
-        self._get_row(
-            self._get_table_rows(table_row.path, "inventory", table_row.key_columns),
+        self._add_row(
             table_row.path,
             "inventory",
-            row_key,
             table_row.key_columns,
-        ).update(table_row.inventory_columns)
+            table_row.inventory_columns,
+        )
 
         # do this only if not empty:
         if table_row.status_columns:
-            self._get_row(
-                self._get_table_rows(table_row.path, "status_data", table_row.key_columns),
+            self._add_row(
                 table_row.path,
                 "status_data",
-                row_key,
                 table_row.key_columns,
-            ).update(table_row.status_columns)
+                table_row.status_columns,
+            )

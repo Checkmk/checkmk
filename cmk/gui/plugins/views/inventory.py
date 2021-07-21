@@ -33,7 +33,6 @@ from cmk.utils.structured_data import (
     SDRawPath,
     SDPath,
     SDKeys,
-    SDRows,
     StructuredDataNode,
     Table,
     Attributes,
@@ -44,6 +43,7 @@ import cmk.gui.pages
 from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
+from cmk.gui.inventory import InventoryRows
 from cmk.gui.inventory import InventoryDeltaData
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -923,7 +923,7 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> SDRows:
+    def _get_inv_data(self, hostrow: Row) -> InventoryRows:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -942,7 +942,7 @@ class RowTableInventory(ABCRowTable):
             return []
         return table
 
-    def _prepare_rows(self, inv_data: SDRows) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: InventoryRows) -> Iterable[Row]:
         # TODO check: hopefully there's only a table as input arg
         info_name = self._info_names[0]
         entries = []
@@ -1005,7 +1005,7 @@ def declare_invtable_view(
     _declare_views(infoname, title_plural, painters, filters, [invpath])
 
 
-MultiSDRows = Tuple[str, SDRows]
+InventorySourceRows = Tuple[str, InventoryRows]
 
 
 class RowMultiTableInventory(ABCRowTable):
@@ -1020,7 +1020,7 @@ class RowMultiTableInventory(ABCRowTable):
         self._match_by = match_by
         self._errors = errors
 
-    def _get_inv_data(self, hostrow: Row) -> List[MultiSDRows]:
+    def _get_inv_data(self, hostrow: Row) -> List[InventorySourceRows]:
         try:
             merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
         except inventory.LoadStructuredDataError:
@@ -1034,14 +1034,14 @@ class RowMultiTableInventory(ABCRowTable):
         if merged_tree is None:
             return []
 
-        multi_table: List[MultiSDRows] = []
+        multi_table: List[InventorySourceRows] = []
         for info_name, inventory_path in self._sources:
             table = inventory.get_inventory_table(merged_tree, inventory_path)
             if table is not None:
                 multi_table.append((info_name, table))
         return multi_table
 
-    def _prepare_rows(self, inv_data: List[MultiSDRows]) -> Iterable[Row]:
+    def _prepare_rows(self, inv_data: List[InventorySourceRows]) -> Iterable[Row]:
         joined_rows: Dict[Tuple[str, ...], Dict] = {}
         for this_info_name, this_inv_data in inv_data:
             for entry in this_inv_data:
@@ -1915,7 +1915,7 @@ class NodeRenderer:
         self,
         titles: List[Tuple[str, str]],
         invpath: SDRawPath,
-        data: List[Dict],
+        data: InventoryRows,
     ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")

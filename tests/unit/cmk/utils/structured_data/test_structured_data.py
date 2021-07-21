@@ -20,7 +20,6 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     StructuredDataStore,
     Table,
-    _NODES_KEY,
 )
 from cmk.utils.type_defs import HostName
 
@@ -175,16 +174,19 @@ def test_empty_but_different_structure():
 
     assert nt.attributes.pairs == {}
     assert nt.attributes.is_empty()
+    assert nt.table._rows == {}
     assert nt.table.rows == []
     assert nt.table.is_empty()
 
     assert na.attributes.pairs == {}
     assert na.attributes.is_empty()
+    assert na.table._rows == {}
     assert na.table.rows == []
     assert na.table.is_empty()
 
     assert ta.attributes.pairs == {}
     assert ta.attributes.is_empty()
+    assert ta.table._rows == {}
     assert ta.table.rows == []
     assert ta.table.is_empty()
 
@@ -202,6 +204,16 @@ def test_not_empty():
 
     assert nt.attributes.pairs == {}
     assert nt.attributes.is_empty()
+    assert nt.table._rows == {
+        ("NT 00",): {
+            "nt0": "NT 00",
+            "nt1": "NT 01"
+        },
+        ("NT 10",): {
+            "nt0": "NT 10",
+            "nt1": "NT 11"
+        },
+    }
     assert nt.table.rows == [
         {
             "nt0": "NT 00",
@@ -216,11 +228,22 @@ def test_not_empty():
 
     assert na.attributes.pairs == {"na0": "NA 0", "na1": "NA 1"}
     assert not na.attributes.is_empty()
+    assert na.table._rows == {}
     assert na.table.rows == []
     assert na.table.is_empty()
 
     assert ta.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
     assert not ta.attributes.is_empty()
+    assert ta.table._rows == {
+        ("TA 00",): {
+            "ta0": "TA 00",
+            "ta1": "TA 01"
+        },
+        ("TA 10",): {
+            "ta0": "TA 10",
+            "ta1": "TA 11"
+        },
+    }
     assert ta.table.rows == [
         {
             "ta0": "TA 00",
@@ -518,7 +541,7 @@ def test_attributes_compare_with(old_attributes_data, new_attributes_data, resul
     }, {
         "id": "3",
         "val": 1
-    }], (8, 0, 6)),
+    }], (2, 3, 0)),
 ])
 def test_table_compare_with(old_table_data, new_table_data, result):
     old_table = Table(key_columns=["id"])
@@ -553,6 +576,16 @@ def test_filtering_node_paths_no_keys():
     assert filtered_node.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
 
     assert not filtered_node.table.is_empty()
+    assert filtered_node.table._rows == {
+        ("TA 00",): {
+            "ta0": "TA 00",
+            "ta1": "TA 01"
+        },
+        ("TA 10",): {
+            "ta0": "TA 10",
+            "ta1": "TA 11"
+        },
+    }
     assert filtered_node.table.rows == [
         {
             "ta0": "TA 00",
@@ -567,20 +600,28 @@ def test_filtering_node_paths_no_keys():
 
 def test_filtering_node_paths_and_keys():
     filled_root = _create_filled_tree()
-    filters = _make_filters([(["path", "to", "nta", "ta"], ["ta0"])])
+    filters = _make_filters([(["path", "to", "nta", "ta"], ["ta1"])])
     filtered_node = filled_root.get_filtered_node(filters).get_node(["path", "to", "nta", "ta"])
     assert filtered_node is not None
 
     assert not filtered_node.attributes.is_empty()
-    assert filtered_node.attributes.pairs == {"ta0": "TA 0"}
+    assert filtered_node.attributes.pairs == {"ta1": "TA 1"}
 
     assert not filtered_node.table.is_empty()
+    assert filtered_node.table._rows == {
+        ("TA 00",): {
+            "ta1": "TA 01",
+        },
+        ("TA 10",): {
+            "ta1": "TA 11",
+        },
+    }
     assert filtered_node.table.rows == [
         {
-            "ta0": "TA 00",
+            "ta1": "TA 01",
         },
         {
-            "ta0": "TA 10",
+            "ta1": "TA 11",
         },
     ]
 
@@ -591,7 +632,7 @@ def test_filtering_node_mixed():
     another_node1.attributes.add_pairs({"ak11": "Another value 11", "ak12": "Another value 12"})
 
     another_node2 = filled_root.setdefault_node(["path", "to", "another", "node2"])
-    another_node2.table.add_key_columns(["ad21"])
+    another_node2.table.add_key_columns(["ak21"])
     another_node2.table.add_rows([
         {
             "ak21": "Another value 211",
@@ -792,9 +833,9 @@ def test_real_compare_with_self(tree):
                          list(
                              zip(trees_old, trees_new, [
                                  (3, 2, 1),
-                                 (0, 2, 1),
+                                 (5, 0, 6),
                                  (2, 0, 2),
-                                 (12, 3, 111),
+                                 (17, 0, 116),
                                  (1, 1, 1),
                                  (1, 1, 2),
                              ])))
@@ -890,7 +931,7 @@ TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
 ])
 def test_real_merge_with_table(tree_inv, tree_status):
     tree = tree_inv.merge_with(tree_status)
-    assert 'foobar' in tree.serialize()[_NODES_KEY]
+    assert 'foobar' in tree.serialize()["Nodes"]
     assert len(tree.get_table(['foobar']).rows) == 5
 
 
@@ -1187,30 +1228,36 @@ def test__is_table():
     idx_node_attr = tree.get_node(["path-to", "idx-node", "0"])
     assert idx_node_attr is not None
     assert idx_node_attr.attributes.pairs == {'idx-attr': 'value'}
+    assert idx_node_attr.table._rows == {}
     assert idx_node_attr.table.rows == []
 
     idx_sub_idx_node_attr = tree.get_node(
         ["path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node"])
     assert idx_sub_idx_node_attr is not None
     assert idx_sub_idx_node_attr.attributes.pairs == {'bar-attr': 'value'}
+    assert idx_sub_idx_node_attr.table._rows == {}
     assert idx_sub_idx_node_attr.table.rows == []
 
     idx_sub_node_attr = tree.get_node(["path-to", "idx-node", "0", "idx-sub-node", "foo-node"])
     assert idx_sub_node_attr is not None
     assert idx_sub_node_attr.attributes.pairs == {'foo-attr': 'value'}
+    assert idx_sub_node_attr.table._rows == {}
     assert idx_sub_node_attr.table.rows == []
 
     idx_table = tree.get_node(["path-to", "idx-node", "0", "idx-table"])
     assert idx_table is not None
     assert idx_table.attributes.pairs == {}
+    assert idx_table.table._rows == {("value",): {'idx-col': 'value'}}
     assert idx_table.table.rows == [{'idx-col': 'value'}]
 
     attr_node = tree.get_node(["path-to", "node"])
     assert attr_node is not None
     assert attr_node.attributes.pairs == {"attr": "value"}
+    assert attr_node.table._rows == {}
     assert attr_node.table.rows == []
 
     table_node = tree.get_node(["path-to", "table"])
     assert table_node is not None
     assert table_node.attributes.pairs == {}
+    assert table_node.table._rows == {("value",): {"col": "value"}}
     assert table_node.table.rows == [{"col": "value"}]

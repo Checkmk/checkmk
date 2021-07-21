@@ -23,7 +23,7 @@ from cmk.utils.structured_data import (
     SDRawPath,
     SDPath,
     SDKeys,
-    SDRows,
+    SDRow,
     StructuredDataNode,
     make_filter,
 )
@@ -62,9 +62,10 @@ from cmk.gui.valuespec import (
 
 InventoryValue = Union[None, str, int, float]
 InventoryDeltaData = Tuple[int, int, int, StructuredDataNode]
+InventoryRows = List[SDRow]
 
 
-def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[SDRows]:
+def get_inventory_table(tree: StructuredDataNode, raw_path: SDRawPath) -> Optional[InventoryRows]:
     parsed_path, attribute_keys = parse_tree_path(raw_path)
     if attribute_keys != []:
         return None

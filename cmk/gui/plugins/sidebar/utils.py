@@ -139,12 +139,14 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
         return instance.type_name()
 
     def registration_hook(self, instance: Type[SidebarSnapin]) -> None:
-        declare_permission(
-            "sidesnap.%s" % self.plugin_name(instance),
-            instance.title(),
-            instance.description(),
-            instance.allowed_roles(),
-        )
+        # Custom snapins have their own permissions "custom_snapin.*"
+        if not instance.is_custom_snapin():
+            declare_permission(
+                "sidesnap.%s" % self.plugin_name(instance),
+                instance.title(),
+                instance.description(),
+                instance.allowed_roles(),
+            )
 
         for path, page_func in instance().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
@@ -207,6 +209,10 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
                 @classmethod
                 def parameters(cls):
                     return cls._custom_snapin._["custom_snapin"][1]
+
+                @classmethod
+                def permission_name(cls) -> PermissionName:
+                    return "custom_snapin.%s" % cls.type_name()
 
             _it_is_really_used = CustomSnapin  # noqa: F841
 

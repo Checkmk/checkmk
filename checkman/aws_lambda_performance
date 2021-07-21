@@ -33,4 +33,4 @@ description:
  special agent {Amazon Web Services (AWS)}.
 
 item:
- Name of the region, AWS Lambda function name and account ID
+ Name of the region, AWS Lambda function name.

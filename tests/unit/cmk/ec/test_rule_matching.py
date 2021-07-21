@@ -239,7 +239,10 @@ def test_match_site(m, rule, result):
 ])
 def test_match_host(m, result, rule, event):
     if "match_host" in rule:
-        rule["match_host"] = EventServer._compile_matching_value("match_host", rule["match_host"])
+        rule = {
+            **rule, "match_host": EventServer._compile_matching_value("match_host",
+                                                                      rule["match_host"])
+        }
     assert m.event_rule_matches_host(rule, event) == result
 
 

@@ -174,16 +174,20 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Vars:
     """
     result: Dict[str, str] = dict(env_vars)
     for e in raw_vars:
-        # .setdefault() is used to ensure values once written do not get overwritten. This way
-        # we can start with variables provided on command line (and already using them)
-        cmd = replace_variables(e["SH"], result)
+        if e["NAME"] in result:
+            LOG.info("Trying to set existing variable %r", e["NAME"])
+            continue
 
-        assert "${" not in cmd # todo: remove
+        cmd = replace_variables(e["SH"], result)
+        if "${" in cmd:
+            raise RuntimeError(
+                f"There are still unexpanded variables in command: {cmd!r}."
+                " Did you forget to provide them with --env?")
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
         cmd_result = run_shell_command(cmd, bool(e.get("REPLACE_NEWLINES")))
         LOG.debug("set to %r", cmd_result)
-        result.setdefault(e["NAME"], cmd_result)
+        result[e["NAME"]] = cmd_result
 
     # todo: remove
     assert not any("${" in v for v in result.values())

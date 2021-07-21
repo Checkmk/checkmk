@@ -10,7 +10,6 @@ structured monitoring data of Check_MK.
 
 import io
 import gzip
-import re
 from pathlib import Path
 import pprint
 from typing import (
@@ -32,7 +31,6 @@ from collections import Counter
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
-from cmk.utils.exceptions import MKGeneralException
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO
@@ -257,8 +255,6 @@ class StructuredDataNode:
         self.table = Table(path=path)
         self._nodes: SDNodes = {}
 
-        self._legacy_rows: LegacyRows = []
-
     def _set_path(self, path: SDNodePath) -> None:
         self.path = path
         self.attributes._set_path(path)
@@ -375,14 +371,6 @@ class StructuredDataNode:
     def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.serialize()))
 
-    #   ---building tree from (legacy) plugins----------------------------------
-
-    def get_dict(self, tree_path: Optional[SDRawPath]) -> SDPairs:
-        return self.setdefault_node(_parse_tree_path(tree_path)).attributes.pairs
-
-    def get_list(self, tree_path: Optional[SDRawPath]) -> LegacyRows:
-        return self.setdefault_node(_parse_tree_path(tree_path))._legacy_rows
-
     #   ---de/serializing-------------------------------------------------------
 
     @classmethod
@@ -476,36 +464,6 @@ class StructuredDataNode:
             _TABLE_KEY: self.table.serialize(),
             _NODES_KEY: {edge: node.serialize() for edge, node in self._nodes.items()},
         }
-
-    def normalize_nodes(self):
-        """
-        After the execution of inventory we have to deal with nested tables, eg.
-        at paths like "hardware.memory.arrays:*.devices:" where
-        we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
-        In this case we have to convert this
-        'list-composed-of-dicts-containing-lists' structure into
-        indexed nodes ('arrays') containing real tables ('devices').
-        """
-        my_rows: SDRows = []
-        for idx, entry in enumerate(self._legacy_rows):
-            add_to_my_rows = True
-            for k, v in entry.items():
-                if isinstance(v, list):
-                    self.setdefault_node([str(idx), k]).add_table(
-                        Table._deserialize_legacy(path=self.path + (str(idx), k), legacy_rows=v))
-                    add_to_my_rows = False
-
-            if add_to_my_rows:
-                my_rows.append(entry)
-
-        self.add_table(Table._deserialize_legacy(path=self.path, legacy_rows=my_rows))
-
-        # normalize_nodes is executed after all plugins: clear legacy_table
-        # in order to avoid duplicate rows if executed multiple times (should not happen).
-        self._legacy_rows = []
-
-        for node in self._nodes.values():
-            node.normalize_nodes()
 
     #   ---delta----------------------------------------------------------------
 
@@ -878,7 +836,7 @@ class Attributes:
 
     #   ---attributes methods---------------------------------------------------
 
-    def add_pairs(self, pairs: SDPairs) -> None:
+    def add_pairs(self, pairs: Union[SDPairs, SDPairsFromPlugins]) -> None:
         self.pairs.update(pairs)
 
     #   ---de/serializing-------------------------------------------------------
@@ -1028,28 +986,6 @@ def _changed_delta_tree_node(old_value: SDValue, new_value: SDValue) -> Tuple[SD
 
 def _identical_delta_tree_node(value: SDValue) -> Tuple[SDValue, SDValue]:
     return (value, value)
-
-
-def _parse_tree_path(tree_path: Optional[SDRawPath]) -> SDPath:
-    if not tree_path:
-        raise MKGeneralException("Empty tree path or zero.")
-
-    if not isinstance(tree_path, str):
-        raise MKGeneralException("Wrong tree path format. Must be of type string.")
-
-    if not tree_path.endswith((":", ".")):
-        raise MKGeneralException("No valid tree path.")
-
-    if bool(re.compile('[^a-zA-Z0-9_.:-]').search(tree_path)):
-        raise MKGeneralException("Specified tree path contains unexpected characters.")
-
-    if tree_path.startswith("."):
-        tree_path = tree_path[1:]
-
-    if tree_path.endswith(":") or tree_path.endswith("."):
-        tree_path = tree_path[:-1]
-
-    return parse_visible_raw_path(tree_path)
 
 
 def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:

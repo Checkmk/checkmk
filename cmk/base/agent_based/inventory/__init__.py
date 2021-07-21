@@ -340,13 +340,10 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
     if not host_config.nodes:
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
-    inv_node = inventory_tree.get_list("software.applications.check_mk.cluster.nodes:")
-    for node_name in host_config.nodes:
-        inv_node.append({
-            "name": node_name,
-        })
+    node = inventory_tree.setdefault_node(
+        ["software", "applications", "check_mk", "cluster", "nodes"])
+    node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
 
-    inventory_tree.normalize_nodes()
     return InventoryTrees(inventory_tree, StructuredDataNode())
 
 
@@ -395,8 +392,6 @@ def _do_inv_for_realhost(
                 console.vverbose(": ok\n")
     console.verbose("\n")
 
-    tree_aggregator.trees.inventory.normalize_nodes()
-    tree_aggregator.trees.status_data.normalize_nodes()
     return tree_aggregator.trees
 
 
@@ -404,8 +399,8 @@ def _set_cluster_property(
     inventory_tree: StructuredDataNode,
     host_config: config.HostConfig,
 ) -> None:
-    inventory_tree.get_dict(
-        "software.applications.check_mk.cluster.")["is_cluster"] = host_config.is_cluster
+    node = inventory_tree.setdefault_node(["software", "applications", "check_mk", "cluster"])
+    node.attributes.add_pairs({"is_cluster": host_config.is_cluster})
 
 
 def _save_inventory_tree(

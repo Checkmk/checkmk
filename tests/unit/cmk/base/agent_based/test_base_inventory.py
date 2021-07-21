@@ -127,7 +127,6 @@ def test_integrate_table_row():
 
     tree_aggr = inventory.TreeAggregator()
     tree_aggr.aggregate_results(inventory_items)
-    tree_aggr.trees.inventory.normalize_nodes()
 
     assert tree_aggr.trees.inventory.serialize() == {
         'Attributes': {},

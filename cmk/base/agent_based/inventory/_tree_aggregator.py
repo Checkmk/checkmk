@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Iterable, Union, Tuple, Sequence, Hashable, Dict, Literal
+from typing import Optional, Iterable, Union, Tuple, Sequence, Hashable, Dict, Literal, List
 
 import cmk.utils.debug
 from cmk.utils.structured_data import StructuredDataNode
@@ -73,45 +73,51 @@ class TreeAggregator:
         self,
         attributes: Attributes,
     ) -> None:
-        leg_path = ".".join(attributes.path) + "."
         if attributes.inventory_attributes:
-            self.trees.inventory.get_dict(leg_path).update(attributes.inventory_attributes)
+            node = self.trees.inventory.setdefault_node(attributes.path)
+            node.attributes.add_pairs(attributes.inventory_attributes)
+
         if attributes.status_attributes:
-            self.trees.status_data.get_dict(leg_path).update(attributes.status_attributes)
+            node = self.trees.status_data.setdefault_node(attributes.path)
+            node.attributes.add_pairs(attributes.status_attributes)
 
     @staticmethod
     def _make_row_key(key_columns: AttrDict) -> Hashable:
         return tuple(sorted(key_columns.items()))
 
+    def _get_table_rows(
+        self,
+        path: List[str],
+        tree_name: Literal["inventory", "status_data"],
+        key_columns: AttrDict,
+    ) -> List[AttrDict]:
+        return getattr(self.trees, tree_name).setdefault_node(path).table.rows
+
     def _get_row(
         self,
-        path: str,
+        rows: List[AttrDict],
+        path: List[str],
         tree_name: Literal["inventory", "status_data"],
         row_key: Hashable,
         key_columns: AttrDict,
     ) -> Dict[str, Union[None, int, float, str]]:
         """Find matching table row or create one"""
-        table = getattr(self.trees, tree_name).get_list(path)
-
-        new_row_index = len(table)  # index should we need to create a new row
-        use_index = self._index_cache.setdefault((path, tree_name, row_key), new_row_index)
+        new_row_index = len(rows)  # index should we need to create a new row
+        use_index = self._index_cache.setdefault((tuple(path), tree_name, row_key), new_row_index)
 
         if use_index == new_row_index:
             row = {**key_columns}
-            table.append(row)
+            rows.append(row)
 
-        return table[use_index]
+        return rows[use_index]
 
-    def _integrate_table_row(
-        self,
-        table_row: TableRow,
-    ) -> None:
-        leg_path = ".".join(table_row.path) + ":"
+    def _integrate_table_row(self, table_row: TableRow) -> None:
         row_key = self._make_row_key(table_row.key_columns)
 
         # do this always, it sets key_columns!
         self._get_row(
-            leg_path,
+            self._get_table_rows(table_row.path, "inventory", table_row.key_columns),
+            table_row.path,
             "inventory",
             row_key,
             table_row.key_columns,
@@ -120,7 +126,8 @@ class TreeAggregator:
         # do this only if not empty:
         if table_row.status_columns:
             self._get_row(
-                leg_path,
+                self._get_table_rows(table_row.path, "status_data", table_row.key_columns),
+                table_row.path,
                 "status_data",
                 row_key,
                 table_row.key_columns,

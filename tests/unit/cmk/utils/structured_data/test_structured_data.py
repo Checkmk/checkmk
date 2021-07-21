@@ -7,13 +7,12 @@
 import gzip
 import shutil
 from pathlib import Path
-from typing import Dict, List, NamedTuple
+from typing import NamedTuple
 
 import pytest
 
 from testlib import cmk_path
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import (
     Attributes,
     make_filter,
@@ -653,54 +652,6 @@ new_trees = [
 ]
 
 
-def test_real_get_dict():
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_dict("")
-    assert 'Empty tree path or zero' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_dict(0)  # type: ignore[arg-type]
-    assert 'Empty tree path or zero' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_dict(100)  # type: ignore[arg-type]
-    assert 'Wrong tree path format' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_dict("a?")
-    assert 'No valid tree path' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_dict("a$.")
-    assert 'Specified tree path contains unexpected characters' in "%s" % e
-
-    assert StructuredDataNode().get_dict("a.") == {}
-
-
-def test_real_get_list():
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_list("")
-    assert 'Empty tree path or zero' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_list(0)  # type: ignore[arg-type]
-    assert 'Empty tree path or zero' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_list(100)  # type: ignore[arg-type]
-    assert 'Wrong tree path format' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_list("a?")
-    assert 'No valid tree path' in "%s" % e
-
-    with pytest.raises(MKGeneralException) as e:
-        StructuredDataNode().get_list("a$.")
-    assert 'Specified tree path contains unexpected characters' in "%s" % e
-
-    assert StructuredDataNode().get_list("a:") == []
-
-
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
 def test_structured_data_StructuredDataTree_load_from(tree_name: HostName):
     TEST_DATA_STORE.load(host_name=tree_name)
@@ -994,57 +945,6 @@ def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
     if amount_if_entries is not None:
         interfaces = filtered.get_table(['networking', 'interfaces'])
         assert interfaces.count_entries() == amount_if_entries
-
-
-def test_real_building_tree():
-    def plugin_dict():
-        node = struct_tree.get_dict("level0_0.level1_dict.")
-        for a, b in [("d1", "D1"), ("d2", "D2")]:
-            node.setdefault(a, b)
-
-    def plugin_list():
-        node = struct_tree.get_list("level0_1.level1_list:")
-        for a, b in [("l1", "L1"), ("l2", "L2")]:
-            node.append({a: b})
-
-    def plugin_nested_list():
-        node = struct_tree.get_list("level0_2.level1_nested_list:")
-        for index in range(10):
-            array: Dict[str, List[Dict[str, str]]] = {"foo": []}
-            for a, b in [("nl1", "NL1"), ("nl2", "NL2")]:
-                array["foo"].append({a: "%s-%s" % (b, index)})
-            node.append(array)
-
-    struct_tree = StructuredDataNode()
-    plugin_dict()
-    plugin_list()
-    plugin_nested_list()
-    struct_tree.normalize_nodes()
-
-    assert struct_tree.get_node(["level0_0"]) is not None
-    assert struct_tree.get_node(["level0_1"]) is not None
-    assert struct_tree.get_node(["level0_2"]) is not None
-    assert struct_tree.get_node(["foobar"]) is None
-
-    level1_dict = struct_tree.get_attributes(["level0_0", "level1_dict"])
-    level1_list = struct_tree.get_table(["level0_1", "level1_list"])
-    level1_nested_list_con = struct_tree.get_node(["level0_2", "level1_nested_list"])
-    level1_nested_list_num = struct_tree.get_table(["level0_2", "level1_nested_list"])
-    level1_nested_list_att = struct_tree.get_attributes(["level0_2", "level1_nested_list"])
-
-    assert isinstance(level1_dict, Attributes)
-    assert 'd1' in level1_dict.pairs
-    assert 'd2' in level1_dict.pairs
-
-    assert isinstance(level1_list, Table)
-    known_keys = [key for row in level1_list.rows for key in row]
-    assert 'l1' in known_keys
-    assert 'l2' in known_keys
-    assert level1_nested_list_num is not None and level1_nested_list_num.is_empty()
-    assert level1_nested_list_att is not None and level1_nested_list_att.is_empty()
-
-    assert isinstance(level1_nested_list_con, StructuredDataNode)
-    assert list(level1_nested_list_con._nodes) == ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))

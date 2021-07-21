@@ -390,6 +390,7 @@ def test_load_levels_wato():
     ],
 )
 def test_check_diskstat_dict(params, disk, exp_res):
+    exp_res = exp_res.copy()
     value_store: Dict[str, Any] = {}
 
     assert list(
@@ -399,8 +400,9 @@ def test_check_diskstat_dict(params, disk, exp_res):
                                      this_time=time.time())) == exp_res
 
     if exp_res:
-        exp_res.insert(
-            0, Result(state=state.OK, notice="All values averaged over 5 minutes 0 seconds"))
+        exp_res = [
+            Result(state=state.OK, notice="All values averaged over 5 minutes 0 seconds"), *exp_res
+        ]
 
     assert list(
         diskstat.check_diskstat_dict(

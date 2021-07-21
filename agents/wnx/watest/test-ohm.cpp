@@ -155,7 +155,7 @@ TEST(SectionProviderOhm, DoubleStartIntegration) {
     EXPECT_EQ(count, 0) << "OHM is not killed";
 }
 
-TEST(SectionProviderOhm, ErrorReporting) {
+TEST(SectionProviderOhm, ErrorReportingIntegration) {
     using namespace cma::provider;
     namespace fs = std::filesystem;
 

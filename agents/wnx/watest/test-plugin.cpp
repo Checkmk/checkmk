@@ -2135,7 +2135,7 @@ std::vector<cma::cfg::Plugins::ExeUnit> plugins_file_group_param = {
 };
 
 // Check that plugin is started from the valid user in group
-TEST(PluginTest, SyncPluginsGroup) {
+TEST(PluginTest, SyncPluginsGroupIntegration) {
     auto test_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs->loadFactoryConfig());
     test_fs->allowUserAccess();

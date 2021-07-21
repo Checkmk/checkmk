@@ -196,11 +196,13 @@ def test_default_config_from_plugins():
 
 
 def test_load_config():
-    assert config.quicksearch_dropdown_limit == 80
+    config_path = Path(cmk.utils.paths.default_config_dir, "multisite.mk")
+    config_path.unlink(missing_ok=True)
+
     cmk.gui.config.load_config()
     assert config.quicksearch_dropdown_limit == 80
 
-    with Path(cmk.utils.paths.default_config_dir, "multisite.mk").open("w") as f:
+    with config_path.open("w") as f:
         f.write("quicksearch_dropdown_limit = 1337\n")
     cmk.gui.config.load_config()
     assert config.quicksearch_dropdown_limit == 1337

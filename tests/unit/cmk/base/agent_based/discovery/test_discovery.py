@@ -485,7 +485,7 @@ def test__check_service_table(
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
-    rediscovery_parameters = parameters.get("inventory_rediscovery", {})
+    rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
     discovery_mode = rediscovery_parameters.pop('mode', "")
     (status, infotexts, long_infotexts,
      perfdata), need_rediscovery = discovery._check_service_lists(

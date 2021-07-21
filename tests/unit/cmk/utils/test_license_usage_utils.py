@@ -112,4 +112,4 @@ import cmk.utils.license_usage.samples as license_usage_samples
      )),
 ])
 def test__migrate_sample(prev_dump_version, sample, result):
-    assert license_usage_samples._migrate_sample(prev_dump_version, sample) == result
+    assert license_usage_samples._migrate_sample(prev_dump_version, sample.copy()) == result

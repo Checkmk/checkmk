@@ -141,6 +141,7 @@ def test_integrate_table_row():
                                 'Attributes': {},
                                 'Nodes': {},
                                 'Table': {
+                                    'KeyColumns': ['foo'],
                                     'Rows': [
                                         {
                                             'col1': 'baz '

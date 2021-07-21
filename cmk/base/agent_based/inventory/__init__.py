@@ -342,6 +342,7 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
 
     node = inventory_tree.setdefault_node(
         ["software", "applications", "check_mk", "cluster", "nodes"])
+    node.table.add_key_columns(["name"])
     node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
 
     return InventoryTrees(inventory_tree, StructuredDataNode())

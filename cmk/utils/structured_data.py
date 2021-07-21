@@ -58,6 +58,7 @@ LegacyPairs = Dict[SDKey, SDValue]
 
 # TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
 # adapt werk 12389 if inner table structure changes from List[SDRow] to Dict[SDRowIdent, SDRow]
+SDKeyColumns = List[SDKey]
 SDRow = Dict[SDKey, SDValue]
 SDRows = List[SDRow]
 LegacyRows = List[SDRow]
@@ -70,6 +71,7 @@ SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
 
 _PAIRS_KEY = "Pairs"
 _ATTRIBUTES_KEY = "Attributes"
+_KEY_COLUMNS_KEY = "KeyColumns"
 _ROWS_KEY = "Rows"
 _TABLE_KEY = "Table"
 _NODES_KEY = "Nodes"
@@ -347,6 +349,7 @@ class StructuredDataNode:
         self.attributes.add_pairs(attributes.pairs)
 
     def add_table(self, table: "Table") -> None:
+        self.table.add_key_columns(table.key_columns)
         self.table.add_rows(table.rows)
 
     def get_node(self, path: SDPath) -> Optional["StructuredDataNode"]:
@@ -372,6 +375,13 @@ class StructuredDataNode:
         return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self.serialize()))
 
     #   ---de/serializing-------------------------------------------------------
+
+    def serialize(self) -> SDRawTree:
+        return {
+            _ATTRIBUTES_KEY: self.attributes.serialize(),
+            _TABLE_KEY: self.table.serialize(),
+            _NODES_KEY: {name: node.serialize() for name, node in self._nodes.items()},
+        }
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawTree) -> "StructuredDataNode":
@@ -458,13 +468,6 @@ class StructuredDataNode:
         #   ]
         return all(not isinstance(v, (list, dict)) for row in entries for v in row.values())
 
-    def serialize(self) -> SDRawTree:
-        return {
-            _ATTRIBUTES_KEY: self.attributes.serialize(),
-            _TABLE_KEY: self.table.serialize(),
-            _NODES_KEY: {edge: node.serialize() for edge, node in self._nodes.items()},
-        }
-
     #   ---delta----------------------------------------------------------------
 
     def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
@@ -549,9 +552,9 @@ class StructuredDataNode:
                 node.attributes.get_filtered_attributes(f.filter_attributes))
             filtered_node.add_table(node.table.get_filtered_table(f.filter_columns))
 
-            for edge, sub_node in node._nodes.items():
+            for name, sub_node in node._nodes.items():
                 # From GUI::permitted_paths: We always get a list of strs.
-                if f.filter_nodes(str(edge)):
+                if f.filter_nodes(str(name)):
                     filtered_node.add_node(sub_node)
 
         return filtered
@@ -566,8 +569,8 @@ class StructuredDataNode:
         if not self.table.is_empty():
             renderer.show_table(self.table)
 
-        for edge in sorted(self._nodes):
-            renderer.show_node(self._nodes[edge])
+        for name in sorted(self._nodes):
+            renderer.show_node(self._nodes[name])
 
 
 #.
@@ -582,13 +585,28 @@ class StructuredDataNode:
 
 
 class Table:
-    def __init__(self, *, path: Optional[SDNodePath] = None) -> None:
+    def __init__(
+        self,
+        *,
+        path: Optional[SDNodePath] = None,
+        key_columns: Optional[SDKeyColumns] = None,
+    ) -> None:
         # Only root node has no path
         if path:
             self.path = path
         else:
             self.path = tuple()
+
+        if key_columns:
+            self.key_columns = key_columns
+        else:
+            self.key_columns = []
+
         self.rows: SDRows = []
+
+    def add_key_columns(self, key_columns: SDKeyColumns) -> None:
+        if not self.key_columns:
+            self.key_columns = key_columns
 
     def _set_path(self, path: SDNodePath) -> None:
         self.path = path
@@ -616,7 +634,8 @@ class Table:
         if not isinstance(other, Table):
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
-        table = Table(path=self.path)
+        key_columns = sorted(set(self.key_columns).intersection(other.key_columns))
+        table = Table(path=self.path, key_columns=key_columns)
 
         other_keys = other._get_table_keys()
         my_keys = self._get_table_keys()
@@ -655,6 +674,9 @@ class Table:
             self.add_row(row)
 
     def add_row(self, row: SDRow) -> None:
+        if not self.key_columns:
+            raise AttributeError("Cannot add row due to missing key_columns")
+
         if row:
             self.rows.append(row)
 
@@ -663,24 +685,32 @@ class Table:
     def serialize(self) -> SDRawTree:
         if self.rows:
             return {
+                _KEY_COLUMNS_KEY: self.key_columns,
                 _ROWS_KEY: self.rows,
             }
         return {}
 
     @classmethod
     def deserialize(cls, *, path: SDNodePath, raw_rows: SDRawTree) -> "Table":
-        # We don't need to set a path, table rows will be added to composite.
-        table = cls(path=path)
-        if _ROWS_KEY in raw_rows:
-            table.add_rows(raw_rows[_ROWS_KEY])
+        rows = raw_rows.get(_ROWS_KEY, [])
+        if _KEY_COLUMNS_KEY in raw_rows:
+            key_columns = raw_rows[_KEY_COLUMNS_KEY]
+        else:
+            key_columns = cls._get_default_key_columns(rows)
+
+        table = cls(path=path, key_columns=key_columns)
+        table.add_rows(rows)
         return table
 
     @classmethod
     def _deserialize_legacy(cls, *, path: SDNodePath, legacy_rows: LegacyRows) -> "Table":
-        # We don't need to set a path, table rows will be added to composite.
-        table = cls(path=path)
+        table = cls(path=path, key_columns=cls._get_default_key_columns(legacy_rows))
         table.add_rows(legacy_rows)
         return table
+
+    @staticmethod
+    def _get_default_key_columns(rows: List[SDRow]) -> SDKeyColumns:
+        return sorted(set(k for r in rows for k in r))
 
     #   ---delta----------------------------------------------------------------
 
@@ -689,7 +719,8 @@ class Table:
             raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
 
         counter: SDDeltaCounter = Counter()
-        delta_table = Table(path=self.path)
+        key_columns = sorted(set(self.key_columns).union(other.key_columns))
+        delta_table = Table(path=self.path, key_columns=key_columns)
 
         remaining_own_rows, remaining_other_rows, identical_rows = self._get_categorized_rows(other)
         new_rows: List = []
@@ -775,7 +806,7 @@ class Table:
     #   ---filtering------------------------------------------------------------
 
     def get_filtered_table(self, filter_func: SDFilterFunc) -> "Table":
-        table = Table(path=self.path)
+        table = Table(path=self.path, key_columns=self.key_columns)
         table.add_rows([
             filtered_row for row in self.rows
             if (filtered_row := _get_filtered_dict(row, filter_func))
@@ -848,7 +879,6 @@ class Attributes:
 
     @classmethod
     def deserialize(cls, *, path: SDNodePath, raw_pairs: SDRawTree) -> "Attributes":
-        # We don't need to set a path, attributes pairs will be added to composite.
         attributes = cls(path=path)
         if _PAIRS_KEY in raw_pairs:
             attributes.add_pairs(raw_pairs[_PAIRS_KEY])
@@ -856,7 +886,6 @@ class Attributes:
 
     @classmethod
     def _deserialize_legacy(cls, *, path: SDNodePath, legacy_pairs: LegacyPairs) -> "Attributes":
-        # We don't need to set a path, attributes pairs will be added to composite.
         attributes = cls(path=path)
         attributes.add_pairs(legacy_pairs)
         return attributes

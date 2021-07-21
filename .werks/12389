@@ -104,6 +104,7 @@ C:+
         "Pairs": {...},
     },
     "Table": {
+        "KeyColumns": [...],
         "Rows": [...],
     }
     "Nodes": {
@@ -112,6 +113,7 @@ C:+
                 "Pairs": {...},
             },
             "Table": {
+                "KeyColumns": [...],
                 "Rows": [...],
             },
             "Nodes": {
@@ -132,7 +134,7 @@ the de/serializing process is less error-prone. Also the role of paths is
 clearer than before.
 
 Example: On a Linux machine with installed {{mk_inventory}} and 16000 entries
-the raw tree file increases from 347977 bytes to 349179 bytes, ie. 1202 bytes.
+the raw tree file increases from 347977 bytes to 349904 bytes, ie. 1927 bytes.
 
 The file size of small raw trees strikingly increase but for medium or large
 raw trees the file size does not increase as much (see above example).

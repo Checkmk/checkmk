@@ -61,6 +61,7 @@ def _create_filled_tree():
     na = root.setdefault_node(["path", "to", "nta", "na"])
     ta = root.setdefault_node(["path", "to", "nta", "ta"])
 
+    nt.table.add_key_columns(["nt0"])
     nt.table.add_rows([
         {
             "nt0": "NT 00",
@@ -74,6 +75,7 @@ def _create_filled_tree():
 
     na.attributes.add_pairs({"na0": "NA 0", "na1": "NA 1"})
 
+    ta.table.add_key_columns(["ta0"])
     ta.table.add_rows([
         {
             "ta0": "TA 00",
@@ -240,6 +242,8 @@ def test_add_node():
 
     sub_node = StructuredDataNode(name="node")
     sub_node.attributes.add_pairs({"sn0": "SN 0", "sn1": "SN 1"})
+
+    sub_node.table.add_key_columns(["sn0"])
     sub_node.table.add_rows([
         {
             "sn0": "SN 00",
@@ -259,6 +263,8 @@ def test_add_node():
     assert sub_node.path == tuple()
 
     assert node.attributes.path == tuple(["path", "to", "nta", "node"])
+
+    assert node.table.key_columns == ["sn0"]
     assert node.table.path == tuple(["path", "to", "nta", "node"])
     assert node.path == tuple(["path", "to", "nta", "node"])
 
@@ -515,9 +521,9 @@ def test_attributes_compare_with(old_attributes_data, new_attributes_data, resul
     }], (8, 0, 6)),
 ])
 def test_table_compare_with(old_table_data, new_table_data, result):
-    old_table = Table()
+    old_table = Table(key_columns=["id"])
     old_table.add_rows(old_table_data)
-    new_table = Table()
+    new_table = Table(key_columns=["id"])
     new_table.add_rows(new_table_data)
     delta_result = new_table.compare_with(old_table)
     assert (delta_result.counter['new'], delta_result.counter['changed'],
@@ -585,6 +591,7 @@ def test_filtering_node_mixed():
     another_node1.attributes.add_pairs({"ak11": "Another value 11", "ak12": "Another value 12"})
 
     another_node2 = filled_root.setdefault_node(["path", "to", "another", "node2"])
+    another_node2.table.add_key_columns(["ad21"])
     another_node2.table.add_rows([
         {
             "ak21": "Another value 211",

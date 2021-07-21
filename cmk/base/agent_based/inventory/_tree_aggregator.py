@@ -91,7 +91,9 @@ class TreeAggregator:
         tree_name: Literal["inventory", "status_data"],
         key_columns: AttrDict,
     ) -> List[AttrDict]:
-        return getattr(self.trees, tree_name).setdefault_node(path).table.rows
+        table = getattr(self.trees, tree_name).setdefault_node(path).table
+        table.add_key_columns(sorted(key_columns))
+        return table.rows
 
     def _get_row(
         self,

@@ -6,7 +6,7 @@ FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
 def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
-    if (args.TARGET == "test_integration") {
+    if (args.TARGET == "test_integration" || args.TARGET == "test_unit") {
         download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
     }
 

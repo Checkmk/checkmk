@@ -20,7 +20,7 @@ def build(Map args) {
                     ARTIFACTS = 'python-3.8.cab,python-3.4.cab'
                 } else if (args.TARGET == "agent") {
                     bat 'cd agents\\wnx && call build_release.cmd'
-                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
+                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe"
                 } else if (args.TARGET == "test_unit") {
                     bat 'cd agents\\wnx && call call_unit_tests.cmd -*_Long:*Integration:*Flaky'
                 } else if (args.TARGET == "test_integration") {

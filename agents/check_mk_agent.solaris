@@ -592,11 +592,7 @@ add_failed_python_plugin() {
 }
 
 run_agent_plugin() {
-    if [ "${1:(0):(2)}" == "./" ]; then
-        agent_plugin="${1:2}"
-    else
-        agent_plugin="$1"
-    fi
+    agent_plugin="${1#./}"
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
 

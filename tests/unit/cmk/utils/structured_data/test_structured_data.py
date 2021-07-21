@@ -759,7 +759,7 @@ def test_real_equal_tables():
     assert tree_addresses_unordered.is_equal(tree_addresses_ordered)
 
 
-@pytest.mark.parametrize("tree", trees[:1])
+@pytest.mark.parametrize("tree", trees)
 def test_real_is_equal_save_and_load(tree, tmp_path):
     store = StructuredDataStore(tmp_path)
     try:

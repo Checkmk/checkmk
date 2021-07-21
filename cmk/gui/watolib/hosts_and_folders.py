@@ -994,12 +994,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                       "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
                       list(contact_groups))
             if use_for_services:
-                # Currently service_contactgroups requires single values. Lists are not supported
-                for cg in contact_groups:
-                    out.write(
-                        "\nservice_contactgroups.insert(0, \n"
-                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                        cg)
+                out.write(
+                    "\nservice_contactgroups.insert(0, \n"
+                    "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                    list(contact_groups))
 
         # Write information about all host attributes into special variable - even
         # values stored for check_mk as well.

@@ -42,8 +42,8 @@ set sec_param=%2
 if "%param%" == "" powershell Write-Host "Full and Looooooong test was requested." -Foreground Cyan && set sec_param=both
 
 %Print%{255;255;255}32-bit test\n
-call build_watest.cmd %sec_param%
-if not %errorlevel% == 0 echo "build failed" goto error
+::call build_watest.cmd %sec_param%
+::if not %errorlevel% == 0 echo "build failed" goto error
 
 set WNX_TEST_ROOT=%temp%\test_%random%
 mkdir %WNX_TEST_ROOT%

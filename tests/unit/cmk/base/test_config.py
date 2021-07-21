@@ -992,10 +992,18 @@ def test_host_config_hostgroups(monkeypatch, hostname, result):
     assert config_cache.get_host_config(hostname).hostgroups == result
 
 
-@pytest.mark.parametrize("hostname,result", [
-    ("testhost1", []),
-    ("testhost2", ["abc", "dingdong"]),
-])
+@pytest.mark.parametrize(
+    "hostname,result",
+    [
+        # No rule matches for this host
+        ("testhost1", []),
+        # Take the group from the ruleset (dingdong) and the definition from the nearest folder in
+        # the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
+        ("testhost2", ["abc", "dingdong"]),
+        # Take the group from all rulesets (dingdong, haha) and the definition from the nearest
+        # folder in the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
+        ("testhost3", ["abc", "dingdong", "haha"]),
+    ])
 def test_host_config_contactgroups(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
     ts.set_ruleset(
@@ -1003,9 +1011,10 @@ def test_host_config_contactgroups(monkeypatch, hostname, result):
         [
             # Seems both, a list of groups and a group name is allowed. We should clean
             # this up to be always a list of groups in the future...
-            ("dingdong", [], ["testhost2"], {}),
-            (["abc"], [], ["testhost2"], {}),
-            (["xyz"], [], ["testhost2"], {}),
+            ("dingdong", [], ["testhost2", "testhost3"], {}),
+            (["abc"], [], ["testhost2", "testhost3"], {}),
+            (["xyz"], [], ["testhost2", "testhost3"], {}),
+            ("haha", [], ["testhost3"], {}),
         ])
     config_cache = ts.apply(monkeypatch)
     assert sorted(config_cache.get_host_config(hostname).contactgroups) == sorted(result)
@@ -1576,17 +1585,33 @@ def test_config_cache_servicegroups_of_service(monkeypatch, hostname, result):
     assert config_cache.servicegroups_of_service(hostname, "CPU load") == result
 
 
-@pytest.mark.parametrize("hostname,result", [
-    ("testhost1", []),
-    ("testhost2", ["dingdong"]),
-])
+@pytest.mark.parametrize(
+    "hostname,result",
+    [
+        # No rule matches for this host
+        ("testhost1", []),
+        # Take the group from the ruleset (dingdong) and the definition from the nearest folder in
+        # the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
+        ("testhost2", ["abc", "dingdong"]),
+        # Take the group from all rulesets (dingdong, haha) and the definition from the nearest
+        # folder in the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
+        ("testhost3", ["abc", "dingdong", "haha"]),
+    ])
 def test_config_cache_contactgroups_of_service(monkeypatch, hostname, result):
     ts = Scenario().add_host(hostname)
-    ts.set_ruleset("service_contactgroups", [
-        ("dingdong", [], ["testhost2"], "CPU load", {}),
-    ])
+    ts.set_ruleset(
+        "service_contactgroups",
+        [
+            # Just like host_contactgroups, a list of groups and a group name is
+            # allowed. We should clean this up to be always a list of groups in the
+            # future...
+            ("dingdong", [], ["testhost2", "testhost3"], "CPU load", {}),
+            (["abc"], [], ["testhost2", "testhost3"], "CPU load", {}),
+            (["xyz"], [], ["testhost2", "testhost3"], "CPU load", {}),
+            ("haha", [], ["testhost3"], "CPU load", {}),
+        ])
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.contactgroups_of_service(hostname, "CPU load") == result
+    assert sorted(config_cache.contactgroups_of_service(hostname, "CPU load")) == sorted(result)
 
 
 @pytest.mark.parametrize("hostname,result", [

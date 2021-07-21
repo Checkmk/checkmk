@@ -603,12 +603,10 @@ class StandardHostsStorage(ABCHostsStorage):
                       "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
                       list(contact_groups))
             if use_for_services:
-                # Currently service_contactgroups requires single values. Lists are not supported
-                for cg in contact_groups:
-                    self.save(
-                        "\nservice_contactgroups.insert(0, \n"
-                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                        cg)
+                self.save(
+                    "\nservice_contactgroups.insert(0, \n"
+                    "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                    list(contact_groups))
 
     def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
         """Write information about all host attributes into special variable - even
@@ -688,12 +686,10 @@ class RawHostsStorage(ABCHostsStorage):
                       "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}}\n" %
                       list(contact_groups))
             if use_for_services:
-                # Currently service_contactgroups requires single values. Lists are not supported
-                for cg in contact_groups:
-                    self.save(
-                        "\nservice_contactgroups.insert(0, \n"
-                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                        cg)
+                self.save(
+                    "        'service_contactgroups':"
+                    "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}}\n" %
+                    list(contact_groups))
         self.save("    },\n")
 
     def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:

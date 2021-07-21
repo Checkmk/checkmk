@@ -7,6 +7,7 @@
 # yapf: disable
 # from collections import namedtuple
 # import datetime
+import copy
 import itertools
 from typing import List, Optional
 #
@@ -211,7 +212,7 @@ input_ids = [
     zip(generate_inputs(), result_parse),
 ), ids=input_ids)
 def test_parse_ps(capture, result):
-    cpu_core, lines = ps_section.parse_ps(capture)
+    cpu_core, lines = ps_section.parse_ps(copy.deepcopy(capture))
     assert cpu_core == result[0]  # cpu_cores
 
     for (ps_info_item, cmd_line), ref in itertools.zip_longest(lines, result[1]):

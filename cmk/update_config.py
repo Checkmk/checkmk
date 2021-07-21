@@ -74,6 +74,7 @@ from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
@@ -187,6 +188,8 @@ class UpdateConfig:
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._rename_discovered_host_label_files, "Rename discovered host label files"),
             (self._transform_groups, "Rewriting host, service or contact groups"),
+            (self._rewrite_servicenow_notification_config,
+             "Rewriting notification configuration for ServiceNow"),
         ]
 
     def _initialize_base_environment(self):
@@ -1010,6 +1013,38 @@ class UpdateConfig:
         params["nodes"] = "nothing"
 
         return params
+
+    def _rewrite_servicenow_notification_config(self) -> None:
+        # Management type "case" introduced with werk #13096 in 2.1.0i1
+        notification_rules = load_notification_rules()
+        for index, rule in enumerate(notification_rules):
+            plugin_name = rule["notify_plugin"][0]
+            if plugin_name != "servicenow":
+                continue
+
+            params = rule["notify_plugin"][1]
+            if "mgmt_types" in params:
+                continue
+
+            incident_params = {
+                key: params.pop(key) for key in [
+                    "caller",
+                    "host_short_desc",
+                    "svc_short_desc",
+                    "host_desc",
+                    "svc_desc",
+                    "urgency",
+                    "impact",
+                    "ack_state",
+                    "recovery_state",
+                    "dt_state",
+                ] if key in params
+            }
+            params["mgmt_type"] = ('incident', incident_params)
+
+            notification_rules[index]["notify_plugin"] = (plugin_name, params)
+
+        save_notification_rules(notification_rules)
 
 
 def _set_show_mode(users, user_id):

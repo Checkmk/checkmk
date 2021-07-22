@@ -47843,6 +47843,10 @@ msgstr ""
 msgid "This connection"
 msgstr "Conexiune Noua"
 
+#, fuzzy
+msgid "This connection is currently disabled"
+msgstr "Conexiune Noua"
+
 msgid "This connection is currently not being used for synchronization."
 msgstr ""
 

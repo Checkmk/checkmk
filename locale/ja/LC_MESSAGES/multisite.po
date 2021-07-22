@@ -48314,6 +48314,10 @@ msgstr ""
 msgid "This connection"
 msgstr "この接続"
 
+#, fuzzy
+msgid "This connection is currently disabled"
+msgstr "この集計は現在無効になっています。"
+
 msgid "This connection is currently not being used for synchronization."
 msgstr "この接続は現在、同期に使用されていません。"
 

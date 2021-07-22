@@ -50338,6 +50338,10 @@ msgstr ""
 msgid "This connection"
 msgstr "Deze verbinding"
 
+#, fuzzy
+msgid "This connection is currently disabled"
+msgstr "Deze aggregatie is momenteel uitgeschakeld."
+
 msgid "This connection is currently not being used for synchronization."
 msgstr "Deze verbinding wordt momenteel niet gebruikt voor synchronisatie."
 

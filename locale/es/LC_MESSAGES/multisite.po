@@ -50772,6 +50772,10 @@ msgstr ""
 msgid "This connection"
 msgstr "Esta conexión"
 
+#, fuzzy
+msgid "This connection is currently disabled"
+msgstr "Esta agregación está actualmente desactivada."
+
 msgid "This connection is currently not being used for synchronization."
 msgstr "Esta conexión no se utiliza actualmente para la sincronización."
 

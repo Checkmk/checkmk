@@ -104,7 +104,7 @@ ClearEvent = Literal[
 ClearEvents = Union[List[ClearEvent], ClearEvent]
 
 
-def scoped_memoize(
+def _scoped_memoize(
     clear_events: ClearEvents,
     maxsize: int = 128,
     typed: bool = False,
@@ -157,7 +157,7 @@ def request_memoize(maxsize: int = 128, typed: bool = False):
             See `functools.lru_cache`
 
     Returns:
-        A `scoped_memoize` decorator which clears on every request-start.
+        A `_scoped_memoize` decorator which clears on every request-start.
 
     """
-    return scoped_memoize(clear_events=['request-start'], maxsize=maxsize, typed=typed)
+    return _scoped_memoize(clear_events=['request-end'], maxsize=maxsize, typed=typed)

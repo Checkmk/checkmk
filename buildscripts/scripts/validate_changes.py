@@ -107,7 +107,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
         COMMAND=str(raw_stage["COMMAND"]),
         TEXT_ON_SKIP=str(raw_stage.get("TEXT_ON_SKIP", "")),
         RESULT_CHECK_TYPE=str(raw_stage.get("RESULT_CHECK_TYPE", "")),
-        RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_PATTERN", "")),
+        RESULT_CHECK_FILE_PATTERN=str(raw_stage.get("RESULT_CHECK_FILE_PATTERN", "")),
     )
 
 

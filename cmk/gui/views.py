@@ -482,8 +482,7 @@ class View:
         if "host" not in self.spec['single_infos'] or "host" in self.missing_single_infos:
             request_vars: HTTPVariables = [("view_name", self.name)]
             request_vars += list(
-                visuals.get_singlecontext_html_vars(self.context,
-                                                    self.spec["single_infos"]).items())
+                visuals.get_singlecontext_vars(self.context, self.spec["single_infos"]).items())
 
             breadcrumb = make_topic_breadcrumb(
                 mega_menu_registry.menu_monitoring(),
@@ -2421,8 +2420,8 @@ def _get_context_page_menu_dropdowns(view: View, rows: Rows,
     topics = pagetypes.PagetypeTopics.get_permitted_instances()
 
     # First gather a flat list of all visuals to be linked to
-    singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
-                                                                     view.spec["single_infos"])
+    singlecontext_request_vars = visuals.get_singlecontext_vars(view.context,
+                                                                view.spec["single_infos"])
     # Reports are displayed by separate dropdown (Export > Report)
     linked_visuals = list(
         _collect_linked_visuals(view,
@@ -2632,8 +2631,8 @@ def collect_context_links(view: View, rows: Rows, mobile: bool,
     """Collect all visuals that share a context with visual. For example
     if a visual has a host context, get all relevant visuals."""
     # compute collections of set single context related request variables needed for this visual
-    singlecontext_request_vars = visuals.get_singlecontext_html_vars(view.spec["context"],
-                                                                     view.spec["single_infos"])
+    singlecontext_request_vars = visuals.get_singlecontext_vars(view.context,
+                                                                view.spec["single_infos"])
 
     for visual_type, visual in _collect_linked_visuals(view, rows, singlecontext_request_vars,
                                                        mobile, visual_types):

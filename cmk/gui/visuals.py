@@ -1915,16 +1915,6 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
     return {key: var_value(key) for key in get_single_info_keys(single_infos)}
 
 
-def get_singlecontext_html_vars(context: VisualContext,
-                                single_infos: SingleInfos) -> Dict[str, str]:
-    vars_ = get_singlecontext_vars(context, single_infos)
-    for key in get_single_info_keys(single_infos):
-        val = request.get_unicode_input(key)
-        if val is not None:
-            vars_[key] = val
-    return vars_
-
-
 def may_add_site_hint(visual_name: str, info_keys: List[InfoName], single_info_keys: SingleInfos,
                       filter_names: List[FilterName]) -> bool:
     """Whether or not the site hint may be set when linking to a visual with the given details"""

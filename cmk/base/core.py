@@ -24,7 +24,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.core_config import MonitoringCore
+from cmk.base.core_config import MonitoringCore, HostsToActivate
 
 # suppress "Cannot find module" error from mypy
 import livestatus
@@ -53,10 +53,12 @@ def do_reload(core: MonitoringCore) -> None:
     do_restart(core, action=CoreAction.RELOAD)
 
 
-def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
+def do_restart(core: MonitoringCore,
+               action: CoreAction = CoreAction.RESTART,
+               hosts_to_activate: HostsToActivate = None) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
-            core_config.do_create_config(core)
+            core_config.do_create_config(core, hosts_to_activate=hosts_to_activate)
             do_core_action(action)
 
     except Exception as e:

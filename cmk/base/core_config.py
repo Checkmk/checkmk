@@ -63,6 +63,7 @@ ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
+HostsToActivate = Optional[List[HostName]]
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
@@ -72,7 +73,9 @@ class MonitoringCore(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_config(self, config_path: VersionedConfigPath) -> None:
+    def create_config(self,
+                      config_path: VersionedConfigPath,
+                      hosts_to_activate: HostsToActivate = None) -> None:
         raise NotImplementedError
 
 
@@ -274,7 +277,7 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 #   '----------------------------------------------------------------------'
 
 
-def do_create_config(core: MonitoringCore) -> None:
+def do_create_config(core: MonitoringCore, hosts_to_activate: HostsToActivate = None) -> None:
     """Creating the monitoring core configuration and additional files
 
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
@@ -282,7 +285,7 @@ def do_create_config(core: MonitoringCore) -> None:
     """
     out.output("Generating configuration for core (type %s)..." % core.name())
     try:
-        _create_core_config(core)
+        _create_core_config(core, hosts_to_activate=hosts_to_activate)
         out.output(tty.ok + "\n")
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -339,7 +342,8 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             os.remove(backup_path)
 
 
-def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
+def _create_core_config(core: MonitoringCore,
+                        hosts_to_activate: HostsToActivate = None) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
@@ -347,7 +351,7 @@ def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
 
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
-        core.create_config(config_path)
+        core.create_config(config_path, hosts_to_activate=hosts_to_activate)
 
     cmk.utils.password_store.save(config.stored_passwords)
 

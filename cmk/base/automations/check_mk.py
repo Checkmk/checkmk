@@ -76,6 +76,7 @@ from cmk.base.check_utils import Service
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.core import CoreAction, do_restart
+from cmk.base.core_config import HostsToActivate
 import cmk.base.core_config as core_config
 import cmk.base.sources as sources
 import cmk.base.ip_lookup as ip_lookup
@@ -866,11 +867,13 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
+    def execute(self, args: HostsToActivate) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
             log.setup_console_logging()
             try:
-                do_restart(create_core(config.monitoring_core), self._mode())
+                do_restart(create_core(config.monitoring_core),
+                           self._mode(),
+                           hosts_to_activate=args)
             except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))
 

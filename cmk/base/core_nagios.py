@@ -68,7 +68,9 @@ class NagiosCore(core_config.MonitoringCore):
     def name(cls) -> str:
         return "nagios"
 
-    def create_config(self, config_path: VersionedConfigPath) -> None:
+    def create_config(self,
+                      config_path: VersionedConfigPath,
+                      hosts_to_activate: core_config.HostsToActivate = None) -> None:
         self._create_core_config()
         self._precompile_hostchecks(config_path)
 

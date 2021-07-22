@@ -46,9 +46,9 @@ endif
 	test-gui-crawl test-gui-crawl-docker test-integration test-integration-docker \
 	test-integration-docker-debug test-mypy test-mypy-raw itest-mypy-docker \
 	test-packaging test-pipenv-deps test-pylint test-pylint-docker test-shellcheck \
-	test-unit test-unit-docker test-unit-coverage-html test-unit-sh test-unit-sh-docker \
-	test-tidy-livestatus \
-	test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
+	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
+	test-unit-sh test-unit-sh-docker \
+	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
 	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
 
 clean:
@@ -85,6 +85,8 @@ help:
 	@echo "test-shellcheck                     - Run shellcheck tests"
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
+	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
+	@echo "test-unit-resilience                - Run unit tests multiple times and in random order in docker"
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-sh		           - Run shell unit tests"
 	@echo "test-unit-sh-docker	           - Run shell unit tests in docker"
@@ -251,6 +253,22 @@ test-unit:
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
+
+test-unit-resilience:
+	$(PYTEST) \
+		--count=2 \
+		--random-order-bucket=global \
+		-T unit \
+		--doctest-modules \
+		../cmk/base \
+		../cmk/gui \
+		../cmk/special_agents \
+		../cmk/utils \
+	        -m "not non_resilient" \
+		unit
+
+test-unit-resilience-docker:
+	../scripts/run-in-docker.sh make test-unit-resilience
 
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)

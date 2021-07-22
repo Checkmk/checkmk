@@ -70,9 +70,13 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    """Register the type marker to pytest"""
+    """Registers custom markers to pytest"""
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
+    config.addinivalue_line(
+        "markers",
+        "non_resilient:"
+        " Tests marked as non-resilient are allowed to fail when run in resilience test.")
 
 
 def pytest_collection_modifyitems(items):

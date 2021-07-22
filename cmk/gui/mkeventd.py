@@ -21,10 +21,9 @@ import cmk.utils.paths
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.globals import config
+from cmk.gui.globals import config, g
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -141,23 +140,18 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     # to load them from the configuration.
     return ([("@NOTIFY", _("Send monitoring notification"))] +
             [(a["id"], a["title"])
-             for a in eventd_configuration().get("actions", [])
+             for a in _eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden")])
 
 
-cached_config = None
-
-
-def eventd_configuration() -> ec.ConfigFromWATO:
-    global cached_config
-    # TODO: Huh??? Why do we use html simply as a tag here???
-    if cached_config and cached_config[0] is html:
-        return cached_config[1]
+def _eventd_configuration() -> ec.ConfigFromWATO:
+    if "eventd_configuration" in g:
+        return g.eventd_configuration
 
     settings = ec.settings('', Path(cmk.utils.paths.omd_root),
                            Path(cmk.utils.paths.default_config_dir), [''])
     cfg = ec.load_config(settings)
-    cached_config = (html, cfg)
+    g.eventd_configuration = cfg
     return cfg
 
 

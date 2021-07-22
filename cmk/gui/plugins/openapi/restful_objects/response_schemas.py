@@ -313,16 +313,6 @@ class HostExtensions(BaseSchema):
     )
 
 
-class HostObject(DomainObject):
-    domainType = fields.Constant("host_config",
-                                 required=True,
-                                 description="The domain type of the object.")
-    extensions = fields.Nested(
-        HostExtensions,
-        description="All the data and metadata of this host.",
-    )
-
-
 class FolderMembers(BaseSchema):
     hosts = fields.Nested(
         ObjectCollectionMember(),
@@ -407,11 +397,15 @@ class HostMembers(BaseSchema):
         "`self`-link provided in the links array.")
 
 
-class HostConfigSchema(Linkable):
-    domainType = fields.Constant("host_config", required=True)
-    id = fields.String()
-    title = fields.String()
+class HostConfigSchema(DomainObject):
+    domainType = fields.Constant("host_config",
+                                 required=True,
+                                 description="The domain type of the object.")
     members = fields.Nested(HostMembers, description="All the members of the host object.")
+    extensions = fields.Nested(
+        HostExtensions,
+        description="All the data and metadata of this host.",
+    )
 
 
 class ObjectAction(Linkable):

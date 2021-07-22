@@ -255,6 +255,31 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
     )
 
 
+def test_openapi_host_collection(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    with_host,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/domain-types/host_config/collections/all",
+        status=200,
+    )
+    for host in resp.json['value']:
+        # Check that all entries are domain objects
+        assert 'extensions' in host
+        assert 'links' in host
+        assert 'members' in host
+        assert 'title' in host
+        assert 'id' in host
+
+
 def test_openapi_host_rename(
     wsgi_app,
     with_automation_user,

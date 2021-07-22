@@ -71,7 +71,7 @@ import cmk.gui.watolib.activate_changes as activate_changes
           method='post',
           etag='output',
           request_schema=request_schemas.CreateHost,
-          response_schema=response_schemas.HostObject)
+          response_schema=response_schemas.HostConfigSchema)
 def create_host(params):
     """Create a host"""
     body = params['body']
@@ -89,7 +89,7 @@ def create_host(params):
           method='post',
           etag='output',
           request_schema=request_schemas.CreateClusterHost,
-          response_schema=response_schemas.HostObject)
+          response_schema=response_schemas.HostConfigSchema)
 def create_cluster_host(params):
     """Create a cluster host
 
@@ -156,15 +156,7 @@ def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
     _hosts = {
         'id': 'host',
         'domainType': 'host_config',
-        'value': [
-            constructors.collection_item(
-                domain_type='host_config',
-                obj={
-                    'title': host.name(),
-                    'id': host.id()
-                },
-            ) for host in hosts
-        ],
+        'value': [serialize_host(host, effective_attributes=False) for host in hosts],
         'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
     }
     return constructors.serve_json(_hosts)
@@ -206,7 +198,7 @@ def update_nodes(params):
           path_params=[HOST_NAME],
           etag='both',
           request_schema=request_schemas.UpdateHost,
-          response_schema=response_schemas.HostObject)
+          response_schema=response_schemas.HostConfigSchema)
 def update_host(params):
     """Update a host"""
     host_name = params['host_name']
@@ -307,7 +299,7 @@ def bulk_update_hosts(params):
               422: 'The host could not be renamed.',
           },
           request_schema=request_schemas.RenameHost,
-          response_schema=response_schemas.HostObject)
+          response_schema=response_schemas.HostConfigSchema)
 def rename_host(params):
     """Rename a host"""
     if activate_changes.get_pending_changes_info():
@@ -338,7 +330,7 @@ def rename_host(params):
           path_params=[HOST_NAME],
           etag='both',
           request_schema=request_schemas.MoveHost,
-          response_schema=response_schemas.HostObject)
+          response_schema=response_schemas.HostConfigSchema)
 def move(params):
     """Move a host to another folder"""
     host_name = params['host_name']
@@ -411,7 +403,7 @@ def bulk_delete(params):
         )
     }],
     etag='output',
-    response_schema=response_schemas.HostObject)
+    response_schema=response_schemas.HostConfigSchema)
 def show_host(params):
     """Show a host"""
     host_name = params['host_name']

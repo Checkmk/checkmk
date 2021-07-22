@@ -1291,15 +1291,13 @@ def make_linked_visual_url(visual_type: VisualType, visual: Visual,
         filename = 'mobile_' + visual_type.show_url
 
     required_vars = [(visual_type.ident_attr, name)]
-    # Adding to this vars the _active flag is a long distance hack to be able to rebuild the
-    # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
 
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.
     if visual_type.multicontext_links:
-        if active_filters := request.get_str_input("_active"):
-            required_vars.append(("_active", active_filters))
-        return makeuri(request, required_vars, filename=filename)
+        # Keeping the _active flag is a long distance hack to be able to rebuild the
+        # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
+        return makeuri(request, required_vars, filename=filename, keep_vars=["_active"])
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
     # For views and dashboards currently the current filter settings

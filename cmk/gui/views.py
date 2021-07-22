@@ -890,20 +890,18 @@ class GUIViewRenderer(ABCViewRenderer):
         if not user.may("general.csv_export"):
             return
 
-        filters: HTTPVariables = []
-        if active_filters := request.get_str_input("_active"):
-            filters.append(("_active", active_filters))
-
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(makeuri(request, [("output_format", "csv_export"), *filters])),
+            item=make_simple_link(
+                makeuri(request, [("output_format", "csv_export")], keep_vars=['_active'])),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(makeuri(request, [("output_format", "json_export"), *filters])),
+            item=make_simple_link(
+                makeuri(request, [("output_format", "json_export")], keep_vars=['_active'])),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -913,14 +911,11 @@ class GUIViewRenderer(ABCViewRenderer):
         if not user.may("general.instant_reports"):
             return
 
-        filters: HTTPVariables = []
-        if active_filters := request.get_str_input("_active"):
-            filters.append(("_active", active_filters))
-
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(makeuri(request, filters, filename="report_instant.py")),
+            item=make_simple_link(
+                makeuri(request, [], filename="report_instant.py", keep_vars=['_active'])),
         )
 
         # Link related reports
@@ -2732,14 +2727,10 @@ def _get_availability_entry(view: View, info: VisualInfo,
     if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
-    httpvars: HTTPVariables = [("mode", "availability")]
-    if active_filters := request.get_str_input("_active"):
-        httpvars.append(("_active", active_filters))
-
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(makeuri(request, httpvars)),
+        item=make_simple_link(makeuri(request, [("mode", "availability")], keep_vars=["_active"])),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=_("Missing required context information")
         if view.missing_single_infos else None,
@@ -2774,14 +2765,8 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
         ("datasource", view.datasource.ident),
         ("view_title", view_title(view.spec, view.context)),
     ]
-    if active_filters := request.get_str_input("_active"):
-        httpvars.append(("_active", active_filters))
 
-    url = makeuri(
-        request,
-        httpvars,
-        filename="combined_graphs.py",
-    )
+    url = makeuri(request, httpvars, filename="combined_graphs.py", keep_vars=['_active'])
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",

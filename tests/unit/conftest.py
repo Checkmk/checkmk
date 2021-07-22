@@ -286,3 +286,26 @@ def initialised_item_state():
             mock_vs,
     ):
         yield
+
+
+@pytest.fixture
+def registry_reset(request):
+    """Fixture to reset a Registry to its default entries.
+
+    Tests using this fixture need a `registry_reset` marker with the registry to reset as argument.
+    >>> @pytest.mark.registry_reset(registry_to_reset)
+    >>> def test_foo(reset_registry):
+    ...     pass
+    """
+    marker = request.node.get_closest_marker("registry_reset")
+    if marker is None:
+        raise TypeError("registry_reset fixture needs reset_registry maker")
+    registry = marker.args[0]
+
+    default_entries = list(registry)
+    try:
+        yield registry
+    finally:
+        for entry in list(registry):
+            if entry not in default_entries:
+                registry.unregister(entry)

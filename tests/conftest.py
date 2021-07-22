@@ -74,9 +74,10 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
     config.addinivalue_line(
-        "markers",
-        "non_resilient:"
+        "markers", "non_resilient:"
         " Tests marked as non-resilient are allowed to fail when run in resilience test.")
+    config.addinivalue_line("markers",
+                            "registry_reset: Marker to add arguments to `registry_reset` fixture.")
 
 
 def pytest_collection_modifyitems(items):

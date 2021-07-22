@@ -18,7 +18,6 @@ from typing import (
     Callable,
     Generator,
     MutableMapping,
-    Optional,
 )
 
 import urllib3  # type: ignore[import]

@@ -7,14 +7,25 @@ DEBUG=false
 DISABLE_CACHING=false
 LOG_SECTION_TIME=false
 
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
+    : "${MK_CONFDIR:=/etc/check_mk}"
+    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
+    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
 preamble_1() { # TODO: split these up more meaningful
     # Make sure that locally installed binaries are found
     PATH=$PATH:/usr/local/bin
 
-    export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
-    export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
-    export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
-    export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk_agent}
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -596,7 +607,7 @@ section_ipmitool() {
 
 section_ipmisensors() {
     if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
-        echo '<<<ipmi_sensors>>>'
+        ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grep -q legacy-output; then
             IPMI_FORMAT="--legacy-output"
@@ -850,6 +861,9 @@ section_mailqueue() {
 section_omd() {
     if inpath omd; then
         run_cached -s omd_status 60 "omd status --bare || true"
+
+        ${MK_RUN_SYNC_PARTS} || return
+
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
@@ -1197,7 +1211,7 @@ run_remote_plugins() {
                     cmdline="$prefix'$cmdline'"
                 fi
                 if [ -z "$interval" ]; then
-                    run_mrpe "$descr" "$cmdline"
+                    ${MK_RUN_SYNC_PARTS} && run_mrpe "$descr" "$cmdline"
                 else
                     run_cached "$args" "$descr" "$interval" "$cmdline"
                 fi
@@ -1222,20 +1236,22 @@ run_runas_executor() {
 
                     # local and plugin includes
                     elif [ "$type" == "local" ] || [ "$type" == "plugin" ]; then
-                        if [ "$type" == "local" ]; then
-                            echo "<<<local:sep(0)>>>"
+                        if ${MK_RUN_SYNC_PARTS}; then
+                            if [ "$type" == "local" ]; then
+                                echo "<<<local:sep(0)>>>"
+                            fi
+
+                            find "$configfile" -executable -type f |
+                                while read -r filename; do
+                                    if [ -n "$prefix" ]; then
+                                        cmdline="$prefix\"$filename\""
+                                    else
+                                        cmdline=$filename
+                                    fi
+
+                                    _log_section_time "$cmdline"
+                                done
                         fi
-
-                        find "$configfile" -executable -type f |
-                            while read -r filename; do
-                                if [ -n "$prefix" ]; then
-                                    cmdline="$prefix\"$filename\""
-                                else
-                                    cmdline=$filename
-                                fi
-
-                                _log_section_time "$cmdline"
-                            done
                     fi
                 fi
             done
@@ -1256,20 +1272,23 @@ is_valid_plugin() {
 #
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR" 2>/dev/null; then
+    cd "$LOCALDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 _log_section_time "./$skript"
             fi
         done
-        # Call some local checks only every X'th second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
-            fi
-        done
     fi
+
+    # Call some local checks only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
+        fi
+    done
 }
 
 #
@@ -1277,19 +1296,22 @@ run_local_checks() {
 #
 
 run_plugins() {
-    if cd "$PLUGINSDIR"; then
+    cd "$PLUGINSDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 run_agent_plugin "$skript"
             fi
         done
-        # Call some plugins only every X'th second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
-            fi
-        done
     fi
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
+        fi
+    done
 }
 
 run_mrpe() {
@@ -1420,17 +1442,21 @@ run_cached() {
         local AGE
         AGE=$((NOW - MTIME))
         if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        CACHE_INFO="cached($MTIME,$MAXAGE)"
-        if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
-            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # Output the file even if it is outdated
+            CACHE_INFO="cached($MTIME,$MAXAGE)"
+            if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
+                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
+                # insert the cache info in the section header (^= after '!'),
+                # if none is present (^= before '!')
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+            fi
         fi
     fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
@@ -1570,6 +1596,9 @@ section_timesyncd() {
     # The service is still enabled, but does not start timesyncd as the condition is not met.
     (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
     timedatectl timesync-status >/dev/null 2>&1 || return 1
+
+    ${MK_RUN_SYNC_PARTS} || return 0
+
     echo "<<<timesyncd>>>"
     timedatectl timesync-status
     get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
@@ -1782,7 +1811,9 @@ run_partially_asynchronous_sections() {
     fi
 }
 
-main() {
+main_setup() {
+
+    set_variable_defaults
 
     preamble_1
     preamble_2_arguments "$@"
@@ -1796,15 +1827,18 @@ main() {
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
     fi
 
+}
+
+main_sync_parts() {
+
     run_purely_synchronous_sections
 
-    run_partially_asynchronous_sections
+    _log_section_time run_spooler
 
-    # Start new liveupdate process in background on each agent execution. Starting
-    # a new live update process will terminate the old one automatically after
-    # max. 1 sec.
-    # run_liveupdate -> run_real_time_checks -> run_agent_plugin -> _log_section_time CMD
-    run_liveupdate
+}
+
+main_mixed_parts() {
+    run_partially_asynchronous_sections
 
     # MK's Remote Plugin Executor
     # run_remote_plugins -> run_mrpe -> _log_section_time CMD
@@ -1825,17 +1859,42 @@ main() {
     # Plugins
     # run_plugins -> run_agent_plugin -> _log_section_time CMD
     run_plugins
+}
 
-    _log_section_time section_checkmk_failed_plugins
+main_async_parts() {
+    # Start new liveupdate process in background
+    # Starting a new live update process will terminate the old one automatically after
+    # max. 1 sec.
+    # run_liveupdate -> run_real_time_checks -> run_agent_plugin -> _log_section_time CMD
+    run_liveupdate
+}
 
-    _log_section_time run_spooler
+main_finalize_sync() {
+    log_section_time section_checkmk_failed_plugins
 
     if $LOG_SECTION_TIME; then
         profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
         agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
         echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
     fi
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    main_setup "$@"
+
+    ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+    (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+    ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+    ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
 }
 
-[ -z "$MK_SOURCE_AGENT" ] && main "$@"
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

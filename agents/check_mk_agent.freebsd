@@ -16,32 +16,43 @@
 # This might be a good source as description of sysctl output:
 # http://people.freebsd.org/~hmp/utilities/satbl/_sysctl.html
 
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/local/lib/check_mk_agent}"
+    : "${MK_CONFDIR:=/etc/check_mk}"
+    : "${MK_TMPDIR:=/var/lib/check_mk_agent}"  # TODO: rename to VARDIR
+    # unused: "${MK_LOGDIR:=/var/log/check_mk_agent}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
 preamble_1() {
     # Remove locale settings to eliminate localized outputs where possible
     export LC_ALL=C
     unset LANG
-    
-    export MK_LIBDIR="/usr/local/lib/check_mk_agent"
-    export MK_CONFDIR="/etc/check_mk"
-    export MK_TMPDIR="/var/run/check_mk"
-    
+
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_TMPDIR
+
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
-    
+
     # Make sure, locally installed binaries are found
     PATH=$PATH:/usr/local/bin:/usr/local/sbin
-    
+
     # All executables in PLUGINSDIR will simply be executed and their
     # ouput appended to the output of the agent. Plugins define their own
     # sections and must output headers with '<<<' and '>>>'
     PLUGINSDIR=$MK_LIBDIR/plugins
-    
+
     # All executables in LOCALDIR will by executabled and their
     # output inserted into the section <<<local>>>. Please refer
     # to online documentation for details.
     LOCALDIR=$MK_LIBDIR/local
-    
-    
+
+
     # close standard input (for security reasons) and stderr
     if [ "$1" = -d ]; then
         set -xv
@@ -87,17 +98,21 @@ run_cached() {
     if [ -s "$CACHEFILE" ]; then
         local MTIME=$(stat -f "%m" "$CACHEFILE")
         if [ $((NOW - MTIME)) -le $MAXAGE ]; then local USE_CACHEFILE=1; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        CACHE_INFO="cached($MTIME,$MAXAGE)"
-        if [[ $NAME == local_* ]]; then
-            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # Output the file even if it is outdated.
+            CACHE_INFO="cached($MTIME,$MAXAGE)"
+            if [[ $NAME == local_* ]]; then
+                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
+                # insert the cache info in the section header (^= after '!'),
+                # if none is present (^= before '!')
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+            fi
         fi
     fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]; then
@@ -389,20 +404,23 @@ is_valid_plugin() {
 #
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR" 2>/dev/null; then
+    cd "$LOCALDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 _log_section_time "./$skript"
             fi
         done
-        # Call some local checks only every X'th second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
-            fi
-        done
     fi
+
+    # Call some local checks only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
+        fi
+    done
 }
 
 #
@@ -411,28 +429,33 @@ run_local_checks() {
 
 run_partially_asynchronous_sections() {
     # kept to keep agents similar. Currently no section in this agent calls run_cached.
-    true
+    :
 }
 
 run_plugins() {
-# Plugins
-    if cd $PLUGINSDIR; then
-        for skript in $(ls); do
-            if is_valid_plugin "$skript"; then
-                ./$skript
-            fi
-        done
-        # Call some plugins only every X'th minute
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+    cd "${PLUGINSDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for skript in *; do
+            if is_valid_plugin "${skript}"; then
+                ./"${skript}"
             fi
         done
     fi
+
+    # Call some plugins only every X'th minute
+    for skript in [1-9]*/* ; do
+        if is_valid_plugin "${skript}"; then
+            run_cached plugins_"${skript//\//\\}" "${skript%/*}" "${skript}"
+        fi
+    done
 }
 
-
 run_mrpe_plugins() {
+
+    # currently caching is not supported:
+    ${MK_RUN_SYNC_PARTS} || return
+
     # MK's Remote Plugin Executor
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
@@ -446,12 +469,19 @@ run_mrpe_plugins() {
     fi
 }
 
-main() {
+main_setup() {
+
+    set_variable_defaults
 
     preamble_1 "$@"
 
-    run_purely_synchronous_sections
+}
 
+main_sync_parts() {
+    run_purely_synchronous_sections
+}
+
+main_mixed_parts() {
     run_partially_asynchronous_sections
 
     run_local_checks
@@ -461,4 +491,30 @@ main() {
     run_mrpe_plugins
 }
 
-[ -z ${MK_SOURCE_AGENT} ] && main "$@"
+main_async_parts() {
+    :
+}
+
+main_finalize_sync() {
+    :
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    main_setup "$@"
+
+    ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+    (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+    ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+    ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

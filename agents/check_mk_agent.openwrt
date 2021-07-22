@@ -3,14 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-setup() {
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
+    : "${MK_CONFDIR:=/etc/check_mk}"
+    : "${MK_VARDIR:=/var/lib/check_mk_agent}"
+    # unused: "${MK_LOGDIR:=/var/log/check_mk_agent}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+preamble_1() {
     # Remove locale settings to eliminate localized outputs where possible
     export LC_ALL=C
     unset LANG
 
-    export MK_LIBDIR="/usr/lib/check_mk_agent"
-    export MK_CONFDIR="/etc/check_mk"
-    export MK_VARDIR="/var/lib/check_mk_agent"
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -144,17 +155,21 @@ run_cached() {
         local MTIME=$(stat -c %Y "$CACHEFILE")
         local AGE=$((NOW - MTIME))
         if [ $AGE -le $MAXAGE ]; then local USE_CACHEFILE=1; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
-            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            CACHE_INFO=":cached($MTIME,$MAXAGE)"
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1'$CACHE_INFO'>>>/' "$CACHEFILE"
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # Output the file even if it is outdated.
+            if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
+                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
+                CACHE_INFO=":cached($MTIME,$MAXAGE)"
+                # insert the cache info in the section header (^= after '!'),
+                # if none is present (^= before '!')
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1'$CACHE_INFO'>>>/' "$CACHEFILE"
+            fi
         fi
     fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
@@ -447,7 +462,7 @@ section_ipmisensors() {
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
     if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
-        echo '<<<ipmi_sensors>>>'
+        ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grep -q legacy-output; then
             IPMI_FORMAT="--legacy-output"
@@ -883,20 +898,22 @@ is_valid_plugin() {
 }
 
 run_plugins() {
-    # Plugins
-    if cd $PLUGINSDIR; then
-        for skript in $(ls); do
+    cd "${PLUGINSDIR}" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for skript in *; do
             if is_valid_plugin "$skript"; then
-                ./$skript
-            fi
-        done
-        # Call some plugins only every Xth second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
+                "./$skript"
             fi
         done
     fi
+
+    # Call some plugins only every Xth second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached plugins_"${skript//\//\\}" "${skript%/*}" "$skript"
+        fi
+    done
 }
 
 #
@@ -904,20 +921,23 @@ run_plugins() {
 #
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR" 2>/dev/null; then
+    cd "$LOCALDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 _log_section_time "./$skript"
             fi
         done
-        # Call some local checks only every X'th second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
-            fi
-        done
     fi
+
+    # Call some local checks only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
+        fi
+    done
 }
 
 #
@@ -1018,21 +1038,58 @@ run_partially_asnchronous_sections() {
     section_chrony
 }
 
-main() {
+main_setup() {
 
-    setup
+    set_variable_defaults
+
+    preamble_1 "$@"
+
+}
+
+main_sync_parts() {
 
     run_purely_synchronous_sections
 
-    run_partially_asnchronous_sections
+    run_spooler
 
-    run_liveupdate
+}
+
+main_mixed_parts() {
+
+    run_partially_asnchronous_sections
 
     run_local_checks
 
     run_plugins
 
-    run_spooler
 }
 
-[ -z "${MK_SOURCE_AGENT}" ]  && main "$@"
+main_async_parts() {
+
+    run_liveupdate
+
+}
+
+main_finalize_sync(){
+    :
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    main_setup "$@"
+
+    ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+    (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+    ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+    ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

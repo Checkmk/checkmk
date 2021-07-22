@@ -5,6 +5,18 @@
 
 # force load of environment
 
+set_variable_defaults() {
+    : "${MK_LIBDIR:=/usr/check_mk/lib}"
+    : "${MK_CONFDIR:=/usr/check_mk/conf}"
+    : "${MK_VARDIR:=/tmp/check_mk}"
+    : "${MK_LOGDIR:=/var/log/check_mk}"
+
+    # some 'booleans'
+    [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
+    [ "${MK_RUN_ASYNC_PARTS}" = "false" ] || MK_RUN_ASYNC_PARTS=true
+}
+
+
 preamble_1() {  # TODO: split these up more meaningful
     if [ -e "${HOME}"/.profile ]; then
         . "${HOME}"/.profile >/dev/null 2>&1
@@ -14,10 +26,10 @@ preamble_1() {  # TODO: split these up more meaningful
     export LC_ALL=C
     unset LANG
 
-    export MK_LIBDIR=${MK_LIBDIR:-/usr/check_mk/lib}
-    export MK_CONFDIR=${MK_CONFDIR:-/usr/check_mk/conf}
-    export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
-    export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk}
+    export MK_LIBDIR
+    export MK_CONFDIR
+    export MK_VARDIR
+    export MK_LOGDIR
 
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
@@ -203,17 +215,23 @@ run_cached() {
         if (( $AGE < $MAXAGE )); then
             USE_CACHEFILE=1
         fi
-        # get file time for cache
-        MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
-        CACHE_INFO="cached($MTIME,$MAXAGE)"
-        if [[ $NAME == local_* ]]; then
-            sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-        else
-            # insert the cache info in the section header (^= after '!'),
-            # if none is present (^= before '!')
-            sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+
+        if ${MK_RUN_SYNC_PARTS}; then
+            # get file time for cache
+            MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
+            CACHE_INFO="cached($MTIME,$MAXAGE)"
+            if [[ $NAME == local_* ]]; then
+                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
+                # insert the cache info in the section header (^= after '!'),
+                # if none is present (^= before '!')
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+            fi
         fi
     fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
+
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]; then
         nohup sh -c "$CMDLINE" > "$CACHEFILE.new" 2> /dev/null && mv -f "$CACHEFILE.new" "$CACHEFILE" || rm -f "$CACHEFILE.new" "$CACHEFILE"  &
     fi
@@ -460,7 +478,9 @@ section_uptime() {
 }
 
 run_plugins() {
-    if cd "$PLUGINSDIR" 2>/dev/null; then
+    cd "$PLUGINSDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
         for skript in ./*; do
             if [ ! -d "$skript" ] && [ -x "$skript" ]; then
                 if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
@@ -468,15 +488,16 @@ run_plugins() {
                 fi
             fi
         done
-        # Call some plugins only every X'th second
-        for skript in [1-9]*/*; do
-            if [ -x "$skript" ]; then
-                if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
-                    run_cached plugins_${skript//\//\#} ${skript%/*} "$plugin_interpreter $skript"
-                fi
-            fi
-        done
     fi
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/*; do
+        if [ -x "$skript" ]; then
+            if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
+                run_cached plugins_${skript//\//\#} ${skript%/*} "$plugin_interpreter $skript"
+            fi
+        fi
+    done
 }
 
 section_fileinfo() {
@@ -557,20 +578,23 @@ is_valid_plugin() {
 #
 
 run_local_checks() {
-    echo '<<<local:sep(0)>>>'
-    if cd "$LOCALDIR" 2>/dev/null; then
+    cd "$LOCALDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
                 _log_section_time "./$skript"
             fi
         done
-        # Call some local checks only every X'th second
-        for skript in [1-9]*/*; do
-            if is_valid_plugin "$skript"; then
-                run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
-            fi
-        done
     fi
+
+    # Call some local checks only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
+        fi
+    done
 }
 
 #
@@ -578,6 +602,9 @@ run_local_checks() {
 #
 
 run_remote_plugins() {
+    # caching currently not supported
+    ${MK_RUN_SYNC_PARTS} || return
+
     # MK's Remote Plugin Executor
     if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
@@ -703,7 +730,7 @@ run_partially_asynchronous_sections() {
     :
 }
 
-main() {
+main_setup() {
     preamble_1 "$@"
     preamble_2
     preamble_3
@@ -711,11 +738,15 @@ main() {
     if $LOG_SECTION_TIME; then
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
     fi
+}
 
+main_sync_parts() {
     run_purely_synchronous_sections
 
     run_spooler
+}
 
+main_mixed_parts() {
     run_partially_asynchronous_sections
 
     # run_remote_plugins -> _log_section_time CMD
@@ -728,6 +759,14 @@ main() {
     # run_plugins -> _log_section_time CMD
     run_plugins
 
+}
+
+main_async_parts() {
+    # run_liveupdate not implemented in this agent
+    :
+}
+
+main_finalize_sync() {
     _log_section_time section_checkmk_failed_plugins
 
     if $LOG_SECTION_TIME; then
@@ -735,6 +774,24 @@ main() {
         agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
         printf "\nruntime %.4fs\n" "$((agent_end-agent_start))" >>"$profiling_logfile_check_mk_agent"
     fi
+}
+
+#
+# BEGIN COMMON AGENT CODE
+#
+
+main() {
+
+    main_setup "$@"
+
+    ${MK_RUN_SYNC_PARTS} && main_sync_parts
+
+    (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+
+    ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+    ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
 }
 
 [ -z "${MK_SOURCE_AGENT}" ] && main "$@"

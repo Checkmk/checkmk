@@ -1840,7 +1840,6 @@ class FilterAggrServiceUsed(FilterTristate):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         tri = self.tristate_value(value)
         if tri == -1:
             return rows
@@ -2362,7 +2361,6 @@ class FilterDiscoveryState(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         filter_options = context.get(self.ident, {})
-        assert not isinstance(filter_options, str)
         return [
             row for row in rows if filter_options.get("discovery_state_" + row["discovery_state"])
         ]
@@ -2390,7 +2388,6 @@ class FilterAggrGroup(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         if group := value.get(self.htmlvars[0], ""):
             return [row for row in rows if row[self.column] == group]
         return rows
@@ -2487,7 +2484,6 @@ class BITextFilter(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
-        assert not isinstance(values, str)
         val = values.get(self.htmlvars[0])
 
         if not val:
@@ -2564,7 +2560,6 @@ class FilterAggrHosts(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         values = context.get(self.ident, {})
-        assert not isinstance(values, str)
         if val := values.get(self.htmlvars[1]):
             return [row for row in rows if self.find_host(val, row["aggr_hosts"])]
         return rows
@@ -2650,7 +2645,6 @@ class BIStatusFilter(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         if not self._filter_used(value):
             return rows
 

@@ -6,7 +6,7 @@
 
 import abc
 from contextlib import contextmanager
-from typing import Any, List, Optional, Set, Tuple, Type, Union, Iterable
+from typing import Any, List, Optional, Set, Tuple, Type, Union, Iterable, Dict
 from pathlib import Path
 
 from livestatus import SiteId, LivestatusResponse, LivestatusOutputFormat, OnlySites
@@ -807,7 +807,8 @@ class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
     _mirror = True
 
 
-def compute_bi_aggregation_filter(context: VisualContext, all_active_filters: Iterable[Filter]):
+def compute_bi_aggregation_filter(context: VisualContext,
+                                  all_active_filters: Iterable[Filter]) -> BIAggregationFilter:
     only_hosts = []
     only_group = []
     only_service = []
@@ -816,9 +817,6 @@ def compute_bi_aggregation_filter(context: VisualContext, all_active_filters: It
 
     for active_filter in all_active_filters:
         conf = context.get(active_filter.ident, {})
-        # backwards compatible single_info, mostly to make mypy happy for VisualContext
-        if isinstance(conf, str):
-            conf = {active_filter.htmlvars[0]: conf}
 
         if active_filter.ident == "aggr_hosts":
             if (host_name := conf.get("aggr_host_host", "")) != "":
@@ -863,7 +861,7 @@ def table(
     only_sites: OnlySites,
     limit: Optional[int],
     all_active_filters: Iterable[Filter],
-):
+) -> List[Dict]:
     bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)

@@ -1870,7 +1870,7 @@ def _add_context_title(context: VisualContext, single_infos: List[str], title: s
 
         return filt.heading_info(filter_vars)
 
-    extra_titles = list(filter(None, get_singlecontext_vars(context, single_infos).values()))
+    extra_titles = [v for v in get_singlecontext_vars(context, single_infos).values() if v]
 
     # FIXME: Is this really only needed for visuals without single infos?
     if not single_infos:
@@ -1906,10 +1906,10 @@ def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
 
 
 def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
-    def var_value(filter_name: str) -> str:
-        if val := context.get(filter_name):
+    def var_value(filter_name: FilterName) -> str:
+        if filter_vars := context.get(filter_name):
             if filt := filter_registry.get(filter_name):
-                return val.get(filt.htmlvars[0], "")
+                return filter_vars.get(filt.htmlvars[0], "")
         return ""
 
     return {key: var_value(key) for key in get_single_info_keys(single_infos)}

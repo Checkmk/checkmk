@@ -2559,33 +2559,19 @@ class MultisiteBiDatasource:
             ])
 
     def _vs_filters(self):
-        return Transform(Dictionary(elements=[
-            ("aggr_name",
-             ListOf(TextAscii(title=_("Pattern")),
-                    title=_("By aggregation name (exact match)"),
-                    add_label=_("Add new aggregation"),
+        return Dictionary(elements=[
+            ("aggr_name_regex",
+             ListOf(RegExp(mode=RegExp.prefix, title=_("Pattern")),
+                    title=_("By regular expression"),
+                    add_label=_("Add new pattern"),
                     movable=False)),
-            ("aggr_group_prefix",
+            ("aggr_groups",
              ListOf(DropdownChoice(choices=bi.aggregation_group_choices),
-                    title=_("By aggregation group prefix"),
+                    title=_("By aggregation groups"),
                     add_label=_("Add new group"),
                     movable=False)),
         ],
-                                    title=_("Filter aggregations")),
-                         forth=self._transform_vs_filters_forth)
-
-    def _transform_vs_filters_forth(self, value):
-        # Version 2.0: Changed key
-        #              from aggr_name_regex -> aggr_name_prefix
-        #              from aggr_group -> aggr_group_prefix
-        #              This transform can be removed with Version 2.3
-        for replacement, old_name in (
-            ("aggr_name", "aggr_name_regex"),
-            ("aggr_group_prefix", "aggr_groups"),
-        ):
-            if old_name in value:
-                value[replacement] = value.pop(old_name)
-        return value
+                          title=_("Filter aggregations"))
 
     def _vs_options(self):
         return Dictionary(

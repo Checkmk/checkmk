@@ -6,18 +6,15 @@
 
 
 def agent_bi_arguments(params, hostname, ipaddress):
-    # There is an inconsistency between the WATO rule and the webapi.
-    # WATO <-> API
-    #  aggr_groups / aggr_group_prefix <-> groups
-    #  aggr_name_regex / aggr_name <-> names
+    # there is an inconsistency between the WATO rule and the webapi.
+    # the WATO rule says 'aggr_groups', the webapi looks for 'groups'
+    # We add a quickfix here, because its easy to pick to 1.6, easy to
+    # package in an MKP, and it won't mess with user config.
+    # CMK-5507 is supposed to deal with this properly.
     for param_set in params:
         filter_ = param_set.get('filter', {})
-        for replacement, name in (
-            ("groups", "aggr_group_prefix"),
-            ("names", "aggr_name"),
-        ):
-            if name in filter_:
-                filter_[replacement] = filter_.pop(name)
+        if filter_.get("aggr_groups"):
+            filter_["groups"] = filter_["aggr_groups"]
 
     # TODO: Cleanup this separation violation. This should be accessed through the check API
     import cmk.base.config

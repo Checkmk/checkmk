@@ -718,7 +718,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
 
         tree = self._get_tree()
         depth = status_tree_depth(tree)
-        leaves = self._gen_table(tree, depth, self._row["aggr_hosts"] > 1)
+        leaves = self._gen_table(tree, depth, len(self._row["aggr_hosts"]) > 1)
 
         html.open_table(class_=["aggrtree", "ltr"])
         odd = "odd"

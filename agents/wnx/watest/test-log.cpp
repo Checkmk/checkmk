@@ -448,7 +448,7 @@ TEST(LogTest, Functional) {
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));
         EXPECT_NE(std::string::npos, result[2].find("[ERROR:CRITICAL]"));
 
-        constexpr size_t start_position = 35;
+        constexpr size_t start_position = 32;
         EXPECT_LE(start_position, result[3].find("[Trace]  trace"))
             << "result=" << result[3];
         EXPECT_LE(start_position, result[4].find("[Warn ]  warn"))

@@ -15,16 +15,20 @@
 # P No-Text hirn=-8;-20
 import time
 
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union, Iterable
 
 from .agent_based_api.v1 import (
     check_levels,
     Metric,
+    get_value_store,
     register,
     Result,
     Service,
     State,
+    IgnoreResults,
 )
+from .agent_based_api.v1.render import timespan, datetime
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from .agent_based_api.v1.clusterize import make_node_notice_results
 from .utils.cache_helper import CacheInfo, render_cache_info
 
@@ -283,7 +287,7 @@ def discover_local(section):
         yield Service(item=key)
 
 
-def check_local(item, params, section):
+def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> CheckResult:
     local_result = section.data.get(item)
     if local_result is None:
         return
@@ -311,7 +315,32 @@ def check_local(item, params, section):
         yield from local_compute_state(local_result.perfdata)
 
     if local_result.cached is not None:
-        yield Result(state=State.OK, summary=render_cache_info(local_result.cached))
+        value_store = get_value_store()
+        if local_result.cached.elapsed_lifetime_percent > 100:
+            # normally we include the time-relative cache info in the check
+            # output but now the service should go stale, but we can not change
+            # the summary of a stale service. The last summary (before going
+            # stale) will be displayed until the service is fresh again.
+            # To get a valid result we first change the output text to an
+            # absolute information and afterwards mark the result as stale.
+            if "cache_expired" not in value_store:
+                value_store["cache_expired"] = True
+                yield Result(
+                    state=State.OK,
+                    summary=render_cache_info_absolute(local_result.cached),
+                )
+            else:
+                yield IgnoreResults("Cache expired.")
+        else:
+            value_store.pop("cache_expired", None)
+            yield Result(state=State.OK, summary=render_cache_info(local_result.cached))
+
+
+def render_cache_info_absolute(cacheinfo: CacheInfo) -> str:
+    cache_generated = datetime(time.time() - cacheinfo.age)
+    return (f"Cache generated {cache_generated}, "
+            f"cache interval: {timespan(cacheinfo.cache_interval)}, "
+            f"cache lifespan exceeded!")
 
 
 def cluster_check_local(
@@ -323,7 +352,7 @@ def cluster_check_local(
     # collect the result instances and yield the rest
     results_by_node: Dict[str, List[Union[Result, Metric]]] = {}
     for node, node_section in section.items():
-        node_results = list(check_local(item, {}, node_section))
+        node_results = _effective_check_result(check_local(item, {}, node_section))
         if node_results:
             results_by_node[node] = node_results
     if not results_by_node:
@@ -333,6 +362,16 @@ def cluster_check_local(
         yield from _aggregate_worst(results_by_node)
     else:
         yield from _aggregate_best(results_by_node)
+
+
+def _effective_check_result(
+    node_results: Iterable[Union[IgnoreResults, Metric, Result]],) -> List[Union[Result, Metric]]:
+    result: List[Union[Result, Metric]] = []
+    for item in node_results:
+        if isinstance(item, IgnoreResults):
+            return []
+        result.append(item)
+    return result
 
 
 def _aggregate_worst(

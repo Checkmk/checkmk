@@ -1,0 +1,13 @@
+Title: Local check with expired cache is now stale
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1626954055
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+A cached local check which cache is expired (more than the staleness threshold
+(defaults to 150%)) is now marked as stale. Before the latest cached result was
+shown as if it was reported recently.

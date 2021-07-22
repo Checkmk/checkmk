@@ -3,84 +3,87 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Remove locale settings to eliminate localized outputs where possible
 
-export LC_ALL=C
-unset LANG
+preamble_1() {
+    # Remove locale settings to eliminate localized outputs where possible
 
-export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
-export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
-export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
-export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk_agent}
+    export LC_ALL=C
+    unset LANG
 
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+    export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
+    export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
+    export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
+    export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk_agent}
 
-# Provide information about the remote host. That helps when data
-# is being sent only once to each remote host.
-if [ "$REMOTE_HOST" ] ; then
-    export REMOTE=$REMOTE_HOST
-elif [ "$SSH_CLIENT" ] ; then
-    export REMOTE=${SSH_CLIENT%% *}
-fi
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
 
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
+    # Provide information about the remote host. That helps when data
+    # is being sent only once to each remote host.
+    if [ "$REMOTE_HOST" ] ; then
+        export REMOTE=$REMOTE_HOST
+    elif [ "$SSH_CLIENT" ] ; then
+        export REMOTE=${SSH_CLIENT%% *}
+    fi
 
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please refer
-# to online documentation for details.
-LOCALDIR=$MK_LIBDIR/local
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=$MK_LIBDIR/plugins
 
-DEBUG=false
-LOG_SECTION_TIME=false
-while test -n "$1"; do
-    case "$1" in
-        -d)
-            DEBUG=true
-            shift
-            ;;
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please refer
+    # to online documentation for details.
+    LOCALDIR=$MK_LIBDIR/local
 
-        -p)
-            LOG_SECTION_TIME=true
-            shift
-            ;;
+    DEBUG=false
+    LOG_SECTION_TIME=false
+    while test -n "$1"; do
+        case "$1" in
+            -d)
+                DEBUG=true
+                shift
+                ;;
 
-        *)
-            shift
-            ;;
-    esac
-done
+            -p)
+                LOG_SECTION_TIME=true
+                shift
+                ;;
 
-# close standard input (for security reasons) and stderr
-if $DEBUG; then
-    set -xv
-else
-    exec </dev/null 2>/dev/null
-fi
+            *)
+                shift
+                ;;
+        esac
+    done
 
-DISABLE_CACHING=false
-PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
-if $LOG_SECTION_TIME; then
-    # If option '-p' is set disable caching in order to get the whole execution time
-    DISABLE_CACHING=true
-elif [ -e "$PROFILING_CONFIG" ]; then
-    # Config vars:
-    #   LOG_SECTION_TIME=true/false
-    #   DISABLE_CACHING=true/false
+    # close standard input (for security reasons) and stderr
+    if $DEBUG; then
+        set -xv
+    else
+        exec </dev/null 2>/dev/null
+    fi
 
-    # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
-    # to get the real execution time during operation.
-    # shellcheck disable=SC1090
-    . "$PROFILING_CONFIG"
-fi
+    DISABLE_CACHING=false
+    PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
+    if $LOG_SECTION_TIME; then
+        # If option '-p' is set disable caching in order to get the whole execution time
+        DISABLE_CACHING=true
+    elif [ -e "$PROFILING_CONFIG" ]; then
+        # Config vars:
+        #   LOG_SECTION_TIME=true/false
+        #   DISABLE_CACHING=true/false
 
-PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
-if $LOG_SECTION_TIME; then
-    mkdir -p "$PROFILING_LOGFILE_DIR"
-fi
+        # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+        # to get the real execution time during operation.
+        # shellcheck disable=SC1090
+        . "$PROFILING_CONFIG"
+    fi
+
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
+    if $LOG_SECTION_TIME; then
+        mkdir -p "$PROFILING_LOGFILE_DIR"
+    fi
+}
 
 _log_section_time() {
     local section_func="$*"
@@ -100,9 +103,11 @@ _log_section_time() {
     fi
 }
 
-export PROFILING_LOGFILE_DIR
-export LOG_SECTION_TIME
-export -f _log_section_time
+preamble_2() {
+    export PROFILING_LOGFILE_DIR
+    export LOG_SECTION_TIME
+    export -f _log_section_time
+}
 
 read_python_version() {
     if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
@@ -112,21 +117,23 @@ read_python_version() {
     return 1
 }
 
-PYTHON3=$(read_python_version python3 4)
-PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
-if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/python_path.cfg"
-fi
-export PYTHON2 PYTHON3
+preamble_3() {
+    PYTHON3=$(read_python_version python3 4)
+    PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+    if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "$MK_CONFDIR/python_path.cfg"
+    fi
+    export PYTHON2 PYTHON3
 
-if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
-    NO_PYTHON=true
-elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-fi
+    if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+        NO_PYTHON=true
+    elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    fi
+}
 
 file_age() {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
@@ -136,10 +143,12 @@ file_mtime () {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($mtime);' "$1"
 }
 
-if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/exclude_sections.cfg"
-fi
+preamble_4() {
+    if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "$MK_CONFDIR/exclude_sections.cfg"
+    fi
+}
 
 run_mrpe() {
     local descr=$1
@@ -176,7 +185,7 @@ run_cached() {
         return
     fi
 
-    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache ; fi
     if [ "$mrpe" = 1 ]; then
         CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
     else
@@ -187,7 +196,7 @@ run_cached() {
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
     if [ -e "$CACHEFILE.new" ] ; then
         AGE=$(file_age "$CACHEFILE.new")
-        if [ $AGE -ge $((MAXAGE * 2)) ] ; then
+        if [ "${AGE}" -ge $((MAXAGE * 2)) ] ; then
             fuser -k "$CACHEFILE.new" >/dev/null 2>&1
             rm -f "$CACHEFILE.new"
         fi
@@ -198,7 +207,7 @@ run_cached() {
         local MTIME
         MTIME=$(file_mtime "$CACHEFILE")
         AGE=$(file_age "$CACHEFILE")
-        if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        if [ "${AGE}" -le "${MAXAGE}" ] ; then local USE_CACHEFILE=1 ; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
         if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
@@ -210,7 +219,7 @@ run_cached() {
             else
                 # insert the cache info in the section header (^= after '!'),
                 # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
             fi
         fi
     fi
@@ -225,16 +234,18 @@ run_cached() {
     fi
 }
 
-# Find out what zone we are running in
-# Treat all pre-Solaris 10 systems as "global"
-if type zonename &>/dev/null
-then
-    zonename=$(zonename)
-    pszone="-z $zonename"
-else
-    zonename="global"
-    pszone="-A"
-fi
+preamble_5() {
+    # Find out what zone we are running in
+    # Treat all pre-Solaris 10 systems as "global"
+    if type zonename &>/dev/null
+    then
+        zonename=$(zonename)
+        pszone="-z $zonename"
+    else
+        zonename="global"
+        pszone="-A"
+    fi
+}
 
 section_checkmk() {
     echo "<<<check_mk>>>"
@@ -253,7 +264,7 @@ section_job() {
     # is a sub directory per user that ran a job. That directory must be
     # owned by the user so that a symlink or hardlink attack for reading
     # arbitrary files can be avoided.
-    if pushd $MK_VARDIR/job >/dev/null; then
+    if pushd "${MK_VARDIR}"/job >/dev/null; then
         echo '<<<job>>>'
         for username in *
         do
@@ -281,7 +292,7 @@ section_df() {
         df -l -k -F $fs 2>/dev/null | sed 1d | grep -v "^[^ ]*/lib/[^ ]*\.so\.1 " | \
         while read Filesystem kbytes used avail capacity Mountedon
         do
-            kbytes=$(($used + $avail))
+            kbytes=$((used + avail))
             echo "$Filesystem $fs $kbytes $used $avail $capacity $Mountedon"
         done
     done
@@ -292,10 +303,8 @@ section_zfs() {
     if type zfs &>/dev/null
     then
         echo '<<<zfsget>>>'
-        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null
-        if [ $? -ne 0  ] ; then
-            zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
-        fi
+        zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null \
+        || zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
         echo '[df]'
         df -l -k -F zfs 2>/dev/null | sed 1d
     fi
@@ -367,6 +376,7 @@ section_statgrab() {
             statgrab_sections="$statgrab_sections net"
         fi
 
+        # shellcheck disable=SC2086
         statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
         for s in $statgrab_sections
         do
@@ -419,7 +429,7 @@ section_uptime() {
     echo '<<<uptime>>>'
     ctime=`nawk 'BEGIN{print srand()}'`;
     btime=`kstat '-p' 'unix:::boot_time' 2>&1|grep 'boot_time'|awk '{print $2}'`;
-    echo $(($ctime - $btime));
+    echo $((ctime - btime));
     echo '[uptime_solaris_start]'
     uname -a
     zonename
@@ -429,13 +439,10 @@ section_uptime() {
 }
 
 section_ntp() {
-    # NTP
-    ps -o comm $pszone | grep -w .*ntpd &>/dev/null
-    if [ $? -eq 0 ]
-    then
-        echo '<<<ntp>>>'
-        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-    fi
+    ps -o comm $pszone | grep -w .*ntpd &>/dev/null || return
+
+    echo '<<<ntp>>>'
+    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 }
 
 section_solaris_prtg() {
@@ -723,33 +730,47 @@ run_partially_asynchronous_sections() {
     [ -z "$MK_SKIP_ZPOOL" ] && _log_section_time section_zpool
 }
 
-if $LOG_SECTION_TIME; then
-    agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
-fi
+setup(){
+    preamble_1 "$@"
+    preamble_2
+    preamble_3
+    preamble_4
+    preamble_5
 
-run_purely_synchronous_sections
+    if $LOG_SECTION_TIME; then
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+    fi
+}
 
-run_partially_asynchronous_sections
+main(){
+    setup "$@"
 
-# _log_section_time: log single commands not all at once
-# run_remote_plugins -> run_mrpe -> _log_section_time CMD
-#                    -> run_cached _log_section_time CMD
-run_remote_plugins
+    run_purely_synchronous_sections
 
-# _log_section_time: log single commands not all at once
-# run_local_checks -> _log_section_time CMD
-#                  -> run_cached _log_section_time CMD
-run_local_checks
+    run_partially_asynchronous_sections
 
-# _log_section_time: log single commands not all at once
-# run_plugins -> run_agent_plugin -> _log_section_time CMD
-#             -> run_cached _log_section_time CMD
-run_plugins
+    # _log_section_time: log single commands not all at once
+    # run_remote_plugins -> run_mrpe -> _log_section_time CMD
+    #                    -> run_cached _log_section_time CMD
+    run_remote_plugins
 
-_log_section_time section_checkmk_failed_plugins
+    # _log_section_time: log single commands not all at once
+    # run_local_checks -> _log_section_time CMD
+    #                  -> run_cached _log_section_time CMD
+    run_local_checks
 
-if $LOG_SECTION_TIME; then
-    profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
-    agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-    echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
-fi
+    # _log_section_time: log single commands not all at once
+    # run_plugins -> run_agent_plugin -> _log_section_time CMD
+    #             -> run_cached _log_section_time CMD
+    run_plugins
+
+    _log_section_time section_checkmk_failed_plugins
+
+    if $LOG_SECTION_TIME; then
+        profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+        agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+        echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
+    fi
+}
+
+[ -z "$MK_SOURCE_AGENT" ] && main "$@"

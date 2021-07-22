@@ -51,6 +51,7 @@ import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violat
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import transform_stats_dashlet  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # pylint: disable=cmk-module-layer-violation
@@ -157,7 +158,7 @@ class UpdateConfig:
 
     def _steps(self):
         return [
-            (self._migrate_topology_dashlet, "Migrate deprecated network topology dashlet"),
+            (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
@@ -753,7 +754,7 @@ class UpdateConfig:
         """Convert the bi configuration to the new (REST API compatible) format"""
         BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
-    def _migrate_topology_dashlet(self):
+    def _migrate_dashlets(self):
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
             full_config=True)
         filter_group = global_config.get("topology_default_filter_group", "")
@@ -764,6 +765,9 @@ class UpdateConfig:
             for dashlet in dashboard["dashlets"]:
                 if dashlet["type"] == "network_topology":
                     transform_topology_dashlet(dashlet, filter_group)
+                    modified_user_instances.add(owner)
+                elif dashlet["type"] in ("hoststats", "servicestats"):
+                    transform_stats_dashlet(dashlet)
                     modified_user_instances.add(owner)
 
         for user_id in modified_user_instances:

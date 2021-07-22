@@ -59,7 +59,7 @@ class Search {
 
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            remove_class(more_button, "hidden");
+            remove_class(more_button.parentNode, "hidden");
         }
         remove_class(document.getElementById(this.content_id), "hidden");
     }
@@ -71,7 +71,7 @@ class Search {
         // search in case it is available.
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            add_class(more_button, "hidden");
+            add_class(more_button.parentNode, "hidden");
         }
         add_class(document.getElementById(this.content_id), "hidden");
     }

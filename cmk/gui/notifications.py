@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, Optional
+from typing import List, Optional, NamedTuple
 
 from livestatus import MKLivestatusNotFoundError, LivestatusResponse
 import cmk.utils.render
@@ -16,7 +16,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions, user, config
+from cmk.gui.globals import html, request, transactions, user, config, g
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -37,8 +37,11 @@ from cmk.gui.utils.urls import make_confirm_link
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_link
 
-g_acknowledgement_time: dict = {}
-g_modified_time: float = 0.0
+FailedNotificationTimes = NamedTuple("FailedNotificationTimes", [
+    ("acknowledged_unitl", float),
+    ("modified", float),
+])
+
 g_columns: List[str] = [
     "time", "contact_name", "type", "host_name", "service_description", "comment"
 ]
@@ -71,29 +74,32 @@ def load_plugins(force: bool) -> None:
                            ["admin", "user"])
 
 
-def _acknowledge_failed_notifications(timestamp: float) -> None:
-    g_acknowledgement_time[user.id] = timestamp
-    user.acknowledged_notifications = int(g_acknowledgement_time[user.id])
-    _set_modified_time()
-
-
-def _set_modified_time() -> None:
-    global g_modified_time
-    g_modified_time = time.time()
+def _acknowledge_failed_notifications(timestamp: float, now: float) -> None:
+    """Set the acknowledgement time for the current user"""
+    g.failed_notification_times = FailedNotificationTimes(timestamp, now)
+    user.acknowledged_notifications = int(timestamp)
 
 
 def acknowledged_time() -> float:
-    if (g_acknowledgement_time.get(user.id) is None or
-            user.file_modified("acknowledged_notifications") > g_modified_time):
-        g_acknowledgement_time[user.id] = user.acknowledged_notifications
-        _set_modified_time()
-        if g_acknowledgement_time[user.id] == 0:
-            # when this timestamp is first initialized, save the current timestamp as the acknowledge
-            # date. This should considerably reduce the number of log files that have to be searched
-            # when retrieving the list
-            _acknowledge_failed_notifications(time.time())
+    """Returns the timestamp to start looking for failed notifications for the current user"""
+    times: Optional[FailedNotificationTimes] = g.get("failed_notification_times")
 
-    return g_acknowledgement_time[user.id]
+    # Initialize the request cache "g.failed_notification_times" from the user profile in case it is
+    # needed. Either on first call to this function or when the file on disk was modified.
+    if times is None or user.file_modified("acknowledged_notifications") > times.modified:
+        now = time.time()
+        user_time = user.acknowledged_notifications
+
+        if user_time == 0:
+            # When this timestamp is first initialized, save the current timestamp as the
+            # acknowledge date. This should considerably reduce the number of log files that have to
+            # be searched when retrieving the list
+            _acknowledge_failed_notifications(now, now)
+        else:
+            g.failed_notification_times = FailedNotificationTimes(user.acknowledged_notifications,
+                                                                  now)
+
+    return g.failed_notification_times.acknowledged_unitl
 
 
 def number_of_failed_notifications(after: Optional[float]) -> int:
@@ -113,7 +119,8 @@ def number_of_failed_notifications(after: Optional[float]) -> int:
     if result == 0 and not sites.live().dead_sites():
         # In case there are no errors and all sites are reachable:
         # advance the users acknowledgement time
-        _acknowledge_failed_notifications(time.time())
+        now = time.time()
+        _acknowledge_failed_notifications(now, now)
 
     return result
 
@@ -185,7 +192,7 @@ class ClearFailedNotificationPage(Page):
     def page(self) -> None:
         acktime = request.get_float_input_mandatory('acktime', time.time())
         if request.var('_confirm'):
-            _acknowledge_failed_notifications(acktime)
+            _acknowledge_failed_notifications(acktime, time.time())
 
             if user.authorized_login_sites():
                 watolib.init_wato_datastructures(with_wato_lock=True)

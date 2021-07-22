@@ -77,7 +77,7 @@ LEVELS_CRIT = {
     "magic_normsize": 20,
     "levels_low": (50.0, 60.0),
     "trend_range": 24,
-    "trend_mb": (10, 20),
+    "trend_bytes": (10485760, 20971520),
     "trend_perfdata": True,
     "show_levels": "onmagic",
     "inodes_levels": (10.0, 5.0),
@@ -180,7 +180,7 @@ def value_store_fixture(monkeypatch):
                summary='26.47% used (84.7 of 320 MiB, warn/crit at 10.00%/15.00%)'),
         Metric('growth', -4470.553049074118),
         Result(state=state.CRIT,
-               summary='trend per 1 day 0 hours: +621 TiB (warn/crit at +10 B/+20 B)'),
+               summary='trend per 1 day 0 hours: +621 TiB (warn/crit at +10.0 MiB/+20.0 MiB)'),
         Result(state=state.OK, summary='trend per 1 day 0 hours: +203357489.65%'),
         Metric(
             'trend',

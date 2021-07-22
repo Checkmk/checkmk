@@ -48,7 +48,7 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
       levels (dict): Level parameters for the trend computation. Items:
           "trend_range"      : 24,        # interval for the trend in hours
           "trend_perfdata    : True       # generate perfomance data for trends
-          "trend_mb"         : (10, 20),  # MB of change during trend_range
+          "trend_bytes"      : (10, 20),  # change during trend_range
           "trend_perc"       : (1, 2),    # percent change during trend_range
           "trend_timeleft"   : (72, 48)   # time left in hours until full
           "trend_showtimeleft: True       # display time left in infotext
@@ -100,19 +100,19 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
     # levels for performance data
     warn_perf, crit_perf = None, None
 
-    # apply levels for absolute growth in MB / interval
-    trend_mb = levels.get("trend_mb")
-    if trend_mb:
-        wa, cr = trend_mb
-        warn_perf, crit_perf = wa, cr
-        if trend >= wa:
+    # apply levels for absolute growth / interval
+    trend_bytes = levels.get("trend_bytes")
+    if trend_bytes:
+        wa, cr = trend_bytes
+        warn_perf, crit_perf = wa / MB, cr / MB
+        if trend * MB >= wa:
             problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
-                get_bytes_human_readable(wa * MB),
-                get_bytes_human_readable(cr * MB),
+                get_bytes_human_readable(wa),
+                get_bytes_human_readable(cr),
                 range_hours,
             ))
             state = max(1, state)
-            if trend >= cr:
+            if trend * MB >= cr:
                 state = 2
                 problems[-1] += "!"
             problems[-1] += ")"

@@ -368,7 +368,7 @@ checks = {
                 'show_reserved': False,
                 'perfdata': ['', 'nfs', 'cifs', 'san', 'fcp', 'iscsi'],
                 'magic': 0.8,
-                'trend_mb': (100, 200),
+                'trend_bytes': (104857600, 209715200),
                 'trend_perc': (5.0, 10.0),
                 'trend_timeleft': (12, 6),
                 'trend_showtimeleft': True
@@ -448,7 +448,7 @@ checks = {
                 'show_reserved': False,
                 'perfdata': ['', 'nfs', 'cifs', 'san', 'fcp', 'iscsi'],
                 'magic': 0.8,
-                'trend_mb': (100, 200),
+                'trend_bytes': (104857600, 209715200),
                 'trend_perc': (5.0, 10.0),
                 'trend_timeleft': (12, 6),
                 'trend_showtimeleft': True,

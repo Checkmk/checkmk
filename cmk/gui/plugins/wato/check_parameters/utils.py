@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple, Union
+from typing import Any, List, MutableMapping, Tuple as _Tuple, Union
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -280,6 +280,25 @@ def _transform_trend_range_not_none(params):
     return TREND_RANGE_DEFAULT if params is None else params
 
 
+def transform_trend_mb_to_trend_bytes(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+    """forth transform for trend_bytes and the former trend_mb
+    when changing the trend_mb field to a Filesize field the name was also changed.
+    Therefore the transform needs to be applied on several locations
+    In Version 2.1.0 trend_mb was substituted by trend_bytes. Therefore this transform was created.
+
+    >>> transform_trend_mb_to_trend_bytes({"trend_mb": (100, 200), "foo": "bar"})
+    {'foo': 'bar', 'trend_bytes': (104857600, 209715200)}
+    >>> transform_trend_mb_to_trend_bytes({"foo": "bar"})
+    {'foo': 'bar'}
+    """
+    transformed_params = {**params}
+    if "trend_mb" in params and "trend_bytes" not in params:
+        transformed_params["trend_bytes"] = (transformed_params["trend_mb"][0] * 1024**2,
+                                             transformed_params["trend_mb"][1] * 1024**2)
+        del transformed_params["trend_mb"]
+    return transformed_params
+
+
 size_trend_elements = [
     ("trend_range",
      Transform(Integer(title=_("Time Range for trend computation"),
@@ -287,11 +306,11 @@ size_trend_elements = [
                        minvalue=1,
                        unit=_("hours")),
                forth=_transform_trend_range_not_none)),
-    ("trend_mb",
-     Tuple(title=_("Levels on trends in MB per time range"),
+    ("trend_bytes",
+     Tuple(title=_("Levels on trends per time range"),
            elements=[
-               Integer(title=_("Warning at"), unit=_("MB / range"), default_value=100),
-               Integer(title=_("Critical at"), unit=_("MB / range"), default_value=200)
+               Filesize(title=_("Warning at"), default_value=100 * 1024**2),
+               Filesize(title=_("Critical at"), default_value=200 * 1024**2),
            ])),
     ("trend_perc",
      Tuple(title=_("Levels for the percentual growth per time range"),
@@ -349,6 +368,13 @@ def _transform_discovered_filesystem_params(params):
     return params
 
 
+def _forth_transform_vs_filesystem(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+    """wrapper for all the transforms on vs_filesystem"""
+    params = _transform_discovered_filesystem_params(params)
+    params = transform_trend_mb_to_trend_bytes(params)
+    return params
+
+
 def vs_filesystem(extra_elements=None):
     if extra_elements is None:
         extra_elements = []
@@ -365,7 +391,7 @@ def vs_filesystem(extra_elements=None):
                 "mountpoint_for_block_devices",
             ],
         ),
-        forth=_transform_discovered_filesystem_params,
+        forth=_forth_transform_vs_filesystem,
     )
 
 

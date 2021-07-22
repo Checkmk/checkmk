@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
+from typing import Any, List, MutableMapping
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -24,7 +24,15 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
-    size_trend_elements,)
+    size_trend_elements,
+    transform_trend_mb_to_trend_bytes,
+)
+
+
+def _transform_wrapper(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+    params = params if isinstance(params, dict) else {"levels": params}
+    params = transform_trend_mb_to_trend_bytes(params)
+    return params
 
 
 def _parameter_valuespec_cisco_mem():
@@ -61,7 +69,7 @@ def _parameter_valuespec_cisco_mem():
     ]
     return Transform(
         Dictionary(elements=elements + size_trend_elements),
-        forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},
+        forth=_transform_wrapper,
     )
 
 

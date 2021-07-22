@@ -943,7 +943,8 @@ def get_postgres_user_linux():
                 return user_id.rstrip()
         except subprocess.CalledProcessError:
             pass
-    raise ValueError("Could not determine postgres user!")
+    LOGGER.warning("Could not determine postgres user, using \"postgres\" as default")
+    return "postgres"
 
 
 def main(argv=None):

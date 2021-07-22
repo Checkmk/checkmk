@@ -65,14 +65,8 @@ class FailedNotificationsDashlet(Dashlet):
 }"""
 
     def show(self):
-        notdata = notifications.load_failed_notifications(after=notifications.acknowledged_time(),
-                                                          stat_only=True)
-
-        if notdata is None:
-            failed_notifications = 0
-        else:
-            failed_notifications = notdata[0]
-
+        failed_notifications = notifications.number_of_failed_notifications(
+            after=notifications.acknowledged_time())
         if not failed_notifications:
             return
 

@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List
+from typing import List, Optional
 
-from livestatus import MKLivestatusNotFoundError
+from livestatus import MKLivestatusNotFoundError, LivestatusResponse
 import cmk.utils.render
 
 import cmk.gui.sites as sites
@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
 from cmk.gui.utils.urls import make_confirm_link
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_link
@@ -47,22 +47,22 @@ g_columns: List[str] = [
 @permission_section_registry.register
 class PermissionSectionNotificationPlugins(PermissionSection):
     @property
-    def name(self):
+    def name(self) -> str:
         return "notification_plugin"
 
     @property
-    def title(self):
+    def title(self) -> str:
         return _("Notification plugins")
 
     @property
-    def do_sort(self):
+    def do_sort(self) -> bool:
         return True
 
 
 # The permissions need to be loaded dynamically on each page load instead of
 # only when the plugins need to be loaded because the user may have placed
 # new notification plugins in the local hierarchy.
-def load_plugins(force):
+def load_plugins(force: bool) -> None:
     for name, attrs in watolib.load_notification_scripts().items():
         if name[0] == ".":
             continue
@@ -71,20 +71,20 @@ def load_plugins(force):
                            ["admin", "user"])
 
 
-def _acknowledge_failed_notifications(timestamp):
+def _acknowledge_failed_notifications(timestamp: float) -> None:
     g_acknowledgement_time[user.id] = timestamp
     user.acknowledged_notifications = int(g_acknowledgement_time[user.id])
     _set_modified_time()
 
 
-def _set_modified_time():
+def _set_modified_time() -> None:
     global g_modified_time
     g_modified_time = time.time()
 
 
-def acknowledged_time():
-    if g_acknowledgement_time.get(user.id) is None or\
-            user.file_modified("acknowledged_notifications") > g_modified_time:
+def acknowledged_time() -> float:
+    if (g_acknowledgement_time.get(user.id) is None or
+            user.file_modified("acknowledged_notifications") > g_modified_time):
         g_acknowledgement_time[user.id] = user.acknowledged_notifications
         _set_modified_time()
         if g_acknowledgement_time[user.id] == 0:
@@ -96,11 +96,48 @@ def acknowledged_time():
     return g_acknowledgement_time[user.id]
 
 
-def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
+def number_of_failed_notifications(after: Optional[float]) -> int:
+    if not _may_see_failed_notifications():
+        return 0
+
+    query_txt = _failed_notification_query(before=None,
+                                           after=after,
+                                           extra_headers=None,
+                                           stat_only=True)
+
+    try:
+        result: int = sites.live().query_summed_stats(query_txt)[0]
+    except MKLivestatusNotFoundError:
+        result = 0  # Normalize the result when no site answered
+
+    if result == 0 and not sites.live().dead_sites():
+        # In case there are no errors and all sites are reachable:
+        # advance the users acknowledgement time
+        _acknowledge_failed_notifications(time.time())
+
+    return result
+
+
+def load_failed_notifications(
+    before: Optional[float] = None,
+    after: Optional[float] = None,
+    extra_headers: Optional[str] = None,
+) -> LivestatusResponse:
     may_see_notifications = _may_see_failed_notifications()
     if not may_see_notifications:
-        return [0]
+        return LivestatusResponse([])
 
+    return sites.live().query(
+        _failed_notification_query(before, after, extra_headers, stat_only=False))
+
+
+def _failed_notification_query(
+    before: Optional[float],
+    after: Optional[float],
+    extra_headers: Optional[str] = None,
+    *,
+    stat_only: bool,
+) -> str:
     query = ["GET log"]
     if stat_only:
         query.append("Stats: log_state != 0")
@@ -120,32 +157,18 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
     if after is not None:
         query.append("Filter: time >= %d" % after)
 
-    if may_see_notifications:
-        if user.may("general.see_failed_notifications"):
-            horizon = config.failed_notification_horizon
-        else:
-            horizon = 86400
-        query.append("Filter: time > %d" % (int(time.time()) - horizon))
+    if user.may("general.see_failed_notifications"):
+        horizon = config.failed_notification_horizon
+    else:
+        horizon = 86400
+    query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
     query_txt = "\n".join(query)
 
     if extra_headers is not None:
         query_txt += extra_headers
 
-    if stat_only:
-        try:
-            result = sites.live().query_summed_stats(query_txt)
-        except MKLivestatusNotFoundError:
-            result = [0]  # Normalize the result when no site answered
-
-        if result[0] == 0 and not sites.live().dead_sites():
-            # In case there are no errors and all sites are reachable:
-            # advance the users acknowledgement time
-            _acknowledge_failed_notifications(time.time())
-
-        return result
-
-    return sites.live().query(query_txt)
+    return query_txt
 
 
 def _may_see_failed_notifications() -> bool:
@@ -186,7 +209,7 @@ class ClearFailedNotificationPage(Page):
             html.reload_whole_page()
 
     # TODO: We should really recode this to use the view and a normal view command / action
-    def _show_page(self, acktime, failed_notifications):
+    def _show_page(self, acktime: float, failed_notifications: LivestatusResponse) -> None:
         title = _("Confirm failed notifications")
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
 
@@ -198,7 +221,7 @@ class ClearFailedNotificationPage(Page):
 
         html.footer()
 
-    def _show_notification_table(self, failed_notifications) -> None:
+    def _show_notification_table(self, failed_notifications: LivestatusResponse) -> None:
         with table_element() as table:
             header = {name: idx for idx, name in enumerate(g_columns)}
             for row in failed_notifications:
@@ -211,7 +234,8 @@ class ClearFailedNotificationPage(Page):
                 table.cell(_("Service"), row[header['service_description']])
                 table.cell(_("Output"), row[header['comment']])
 
-    def _page_menu(self, acktime, failed_notifications, breadcrumb) -> PageMenu:
+    def _page_menu(self, acktime: float, failed_notifications: LivestatusResponse,
+                   breadcrumb: Breadcrumb) -> PageMenu:
         confirm_url = make_simple_link(
             make_confirm_link(
                 url=makeactionuri(request, transactions, [("acktime", str(acktime)),
@@ -235,7 +259,7 @@ class ClearFailedNotificationPage(Page):
                                     item=confirm_url,
                                     is_shortcut=True,
                                     is_suggested=True,
-                                    is_enabled=failed_notifications,
+                                    is_enabled=bool(failed_notifications),
                                 ),
                             ],
                         ),

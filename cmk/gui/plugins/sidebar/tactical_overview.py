@@ -419,7 +419,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if not self.parameters()["show_failed_notifications"]:
             return
 
-        failed_notifications = self._get_failed_notification_stats()
+        failed_notifications = notifications.number_of_failed_notifications(
+            after=notifications.acknowledged_time())
         if not failed_notifications:
             return
 
@@ -438,15 +439,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
         html.close_div()
         html.close_div()
-
-    def _get_failed_notification_stats(self):
-        try:
-            return notifications.load_failed_notifications(
-                after=notifications.acknowledged_time(),
-                stat_only=True,
-            )[0]
-        except livestatus.MKLivestatusNotFoundError:
-            return None
 
     def _show_site_status(self):
         if not self.parameters().get("show_sites_not_connected"):

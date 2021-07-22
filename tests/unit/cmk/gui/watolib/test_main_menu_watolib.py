@@ -11,6 +11,7 @@ from cmk.gui.watolib.main_menu import main_module_registry
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
+@pytest.mark.non_resilient
 def test_registered_modules():
     expected_modules = [
         'folder',

@@ -73,6 +73,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     )
 
 
+@pytest.mark.non_resilient
 @managedtest
 @pytest.mark.parametrize("group_type", ['host', 'service', 'contact'])
 def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):

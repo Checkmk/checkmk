@@ -110,6 +110,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
+@pytest.mark.non_resilient
 def test_start_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)

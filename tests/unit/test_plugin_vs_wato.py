@@ -5,6 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing as t
+
+import pytest
+
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
@@ -231,6 +234,7 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
+@pytest.mark.non_resilient
 def test_plugin_vs_wato(fix_register: FixRegister) -> None:
     for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
         if plugin is None and wato is not None:

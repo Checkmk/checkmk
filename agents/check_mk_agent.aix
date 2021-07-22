@@ -5,95 +5,96 @@
 
 # force load of environment
 
-if [ -e $HOME/.profile ]
-then
-    . $HOME/.profile >/dev/null 2>&1
-fi
+preamble_1() {  # TODO: split these up more meaningful
+    if [ -e "${HOME}"/.profile ]; then
+        . "${HOME}"/.profile >/dev/null 2>&1
+    fi
 
-# Remove locale settings to eliminate localized outputs where possible
-export LC_ALL=C
-unset LANG
+    # Remove locale settings to eliminate localized outputs where possible
+    export LC_ALL=C
+    unset LANG
 
-export MK_LIBDIR=${MK_LIBDIR:-/usr/check_mk/lib}
-export MK_CONFDIR=${MK_CONFDIR:-/usr/check_mk/conf}
-export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
-export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk}
+    export MK_LIBDIR=${MK_LIBDIR:-/usr/check_mk/lib}
+    export MK_CONFDIR=${MK_CONFDIR:-/usr/check_mk/conf}
+    export MK_VARDIR=${MK_VARDIR:-/tmp/check_mk}
+    export MK_LOGDIR=${MK_LOGDIR:-/var/log/check_mk}
 
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
 
-# Provide information about the remote host. That helps when data
-# is being sent only once to each remote host.
-if [ "$REMOTE_HOST" ] ; then
-    export REMOTE=$REMOTE_HOST
-elif [ "$SSH_CLIENT" ] ; then
-    export REMOTE=${SSH_CLIENT%% *}
-fi
+    # Provide information about the remote host. That helps when data
+    # is being sent only once to each remote host.
+    if [ "$REMOTE_HOST" ] ; then
+        export REMOTE=$REMOTE_HOST
+    elif [ "$SSH_CLIENT" ] ; then
+        export REMOTE=${SSH_CLIENT%% *}
+    fi
 
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=$MK_LIBDIR/plugins
 
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please refer
-# to online documentation for details.
-LOCALDIR=$MK_LIBDIR/local
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please refer
+    # to online documentation for details.
+    LOCALDIR=$MK_LIBDIR/local
 
-# All files in SPOOLDIR will simply appended to the agent
-# output if they are not outdated (see below)
-SPOOLDIR=$MK_VARDIR/spool
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=$MK_VARDIR/spool
 
-#Avoid problems with wrong decimal separators in other language verions of aix
-export LC_NUMERIC="en_US"
+    #Avoid problems with wrong decimal separators in other language verions of aix
+    export LC_NUMERIC="en_US"
 
-DEBUG=false
-LOG_SECTION_TIME=false
-while test -n "$1"; do
-    case "$1" in
-        -d)
-            DEBUG=true
-            shift
-            ;;
+    DEBUG=false
+    LOG_SECTION_TIME=false
+    while test -n "$1"; do
+        case "$1" in
+            -d)
+                DEBUG=true
+                shift
+                ;;
 
-        -p)
-            LOG_SECTION_TIME=true
-            shift
-            ;;
+            -p)
+                LOG_SECTION_TIME=true
+                shift
+                ;;
 
-        *)
-            shift
-            ;;
-    esac
-done
+            *)
+                shift
+                ;;
+        esac
+    done
 
-# close standard input (for security reasons) and stderr
-if $DEBUG; then
-    set -xv
-else
-    exec </dev/null 2>/dev/null
-fi
+    # close standard input (for security reasons) and stderr
+    if $DEBUG; then
+        set -xv
+    else
+        exec </dev/null 2>/dev/null
+    fi
 
-DISABLE_CACHING=false
-PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
-if $LOG_SECTION_TIME; then
-    # If option '-p' is set disable caching in order to get the whole execution time
-    DISABLE_CACHING=true
-elif [ -e "$PROFILING_CONFIG" ]; then
-    # Config vars:
-    #   LOG_SECTION_TIME=true/false
-    #   DISABLE_CACHING=true/false
+    DISABLE_CACHING=false
+    PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
+    if $LOG_SECTION_TIME; then
+        # If option '-p' is set disable caching in order to get the whole execution time
+        DISABLE_CACHING=true
+    elif [ -e "$PROFILING_CONFIG" ]; then
+        # Config vars:
+        #   LOG_SECTION_TIME=true/false
+        #   DISABLE_CACHING=true/false
 
-    # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
-    # to get the real execution time during operation.
-    # shellcheck disable=SC1090
-    . "$PROFILING_CONFIG"
-fi
+        # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+        # to get the real execution time during operation.
+        # shellcheck disable=SC1090
+        . "$PROFILING_CONFIG"
+    fi
 
-PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
-if $LOG_SECTION_TIME; then
-    mkdir -p "$PROFILING_LOGFILE_DIR"
-fi
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
+    if $LOG_SECTION_TIME; then
+        mkdir -p "$PROFILING_LOGFILE_DIR"
+    fi
+}
 
 _log_section_time() {
     section_func="$*"
@@ -113,14 +114,16 @@ _log_section_time() {
     fi
 }
 
-export PROFILING_LOGFILE_DIR
-export LOG_SECTION_TIME
-export _log_section_time
+preamble_2() {
+    export PROFILING_LOGFILE_DIR
+    export LOG_SECTION_TIME
+    export _log_section_time
 
-if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/exclude_sections.cfg"
-fi
+    if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "$MK_CONFDIR/exclude_sections.cfg"
+    fi
+}
 
 read_python_version() {
     if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge "$2" ]; then
@@ -130,21 +133,23 @@ read_python_version() {
     return 1
 }
 
-PYTHON3=$(read_python_version python3 4)
-PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
-if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
-    # shellcheck source=/dev/null
-    . "$MK_CONFDIR/python_path.cfg"
-fi
-export PYTHON2 PYTHON3
+preamble_3() {
+    PYTHON3=$(read_python_version python3 4)
+    PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+    if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+        # shellcheck source=/dev/null
+        . "$MK_CONFDIR/python_path.cfg"
+    fi
+    export PYTHON2 PYTHON3
 
-if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
-    NO_PYTHON=true
-elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
-    WRONG_PYTHON_COMMAND=true
-fi
+    if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+        NO_PYTHON=true
+    elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+        WRONG_PYTHON_COMMAND=true
+    fi
+}
 
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code
@@ -152,7 +157,6 @@ fi
 # in time.
 waitmax() {
    TIMEOUT=${1}0
-   SIGNAL=9
    shift
 
    # Run command in background
@@ -160,8 +164,7 @@ waitmax() {
    PID=$!
 
    # Wait for termination within TIMOUT seconds
-   while [ $TIMEOUT -gt 0 ]
-   do
+   while [ "$TIMEOUT" -gt 0 ]; do
        TIMEOUT=$((TIMEOUT - 1))
        if [ ! -e /proc/$PID ] ; then
            return 0
@@ -605,40 +608,32 @@ run_remote_plugins() {
     fi
 }
 
-# Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    cd "$SPOOLDIR" > /dev/null
-    now=$(date +%s)
+run_spooler() {
+    (
+        cd "$SPOOLDIR" || return
 
-    for file in *
-    do
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
+        now=$(date +%s)
 
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]
-        do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
+        for file in *; do
+            [ "${file}" != '*' ] || return
 
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ] ; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt $maxage ] ; then
-                continue
+            # If the file name is prefixed with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage="${file%%[^0-9]*}"
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ] ; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt "$maxage" ] ; then
+                    continue
+                fi
             fi
-        fi
 
-        # Output the file
-        cat "$file"
-    done
-    cd - > /dev/null
-fi
+                # Output the file
+            cat "$file"
+        done
+    )
+}
 
 section_job() {
     # Get statistics about monitored jobs. Below the job directory there
@@ -725,28 +720,38 @@ run_partially_asynchronous_sections() {
     :
 }
 
-if $LOG_SECTION_TIME; then
-    agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
-fi
+main() {
+    preamble_1 "$@"
+    preamble_2
+    preamble_3
 
-run_purely_synchronous_sections
+    if $LOG_SECTION_TIME; then
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+    fi
 
-run_partially_asynchronous_sections
+    run_purely_synchronous_sections
 
-# run_remote_plugins -> _log_section_time CMD
-run_remote_plugins
+    run_spooler
 
-# run_local_checks -> _log_section_time CMD
-#                  -> run_cached _log_section_time CMD
-run_local_checks
+    run_partially_asynchronous_sections
 
-# run_plugins -> _log_section_time CMD
-run_plugins
+    # run_remote_plugins -> _log_section_time CMD
+    run_remote_plugins
 
-_log_section_time section_checkmk_failed_plugins
+    # run_local_checks -> _log_section_time CMD
+    #                  -> run_cached _log_section_time CMD
+    run_local_checks
 
-if $LOG_SECTION_TIME; then
-    profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
-    agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-    printf "\nruntime %.4fs\n" "$((agent_end-agent_start))" >>"$profiling_logfile_check_mk_agent"
-fi
+    # run_plugins -> _log_section_time CMD
+    run_plugins
+
+    _log_section_time section_checkmk_failed_plugins
+
+    if $LOG_SECTION_TIME; then
+        profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+        agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+        printf "\nruntime %.4fs\n" "$((agent_end-agent_start))" >>"$profiling_logfile_check_mk_agent"
+    fi
+}
+
+[ -z "${MK_SOURCE_AGENT}" ] && main "$@"

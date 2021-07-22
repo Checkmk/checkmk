@@ -3,52 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Remove locale settings to eliminate localized outputs where possible
-export LC_ALL=C
-unset LANG
+setup() {
+    # Remove locale settings to eliminate localized outputs where possible
+    export LC_ALL=C
+    unset LANG
 
-export MK_LIBDIR="/usr/lib/check_mk_agent"
-export MK_CONFDIR="/etc/check_mk"
-export MK_VARDIR="/var/lib/check_mk_agent"
+    export MK_LIBDIR="/usr/lib/check_mk_agent"
+    export MK_CONFDIR="/etc/check_mk"
+    export MK_VARDIR="/var/lib/check_mk_agent"
 
-# Optionally set a tempdir for all subsequent calls
-#export TMPDIR=
+    # Optionally set a tempdir for all subsequent calls
+    #export TMPDIR=
 
-# The package name gets patched for baked agents to either
-# "check-mk-agent" or the name set by the "name of agent packages" rule
-XINETD_SERVICE_NAME=check_mk
+    # The package name gets patched for baked agents to either
+    # "check-mk-agent" or the name set by the "name of agent packages" rule
+    XINETD_SERVICE_NAME=check_mk
 
-# Provide information about the remote host. That helps when data
-# is being sent only once to each remote host.
-if [ "$REMOTE_HOST" ]; then
-    export REMOTE=$REMOTE_HOST
-elif [ "$SSH_CLIENT" ]; then
-    export REMOTE=${SSH_CLIENT%% *}
-fi
+    # Provide information about the remote host. That helps when data
+    # is being sent only once to each remote host.
+    if [ "$REMOTE_HOST" ]; then
+        export REMOTE=$REMOTE_HOST
+    elif [ "$SSH_CLIENT" ]; then
+        export REMOTE=${SSH_CLIENT%% *}
+    fi
 
-# Make sure, locally installed binaries are found
-PATH=$PATH:/usr/local/bin
+    # Make sure, locally installed binaries are found
+    PATH=$PATH:/usr/local/bin
 
-# All executables in PLUGINSDIR will simply be executed and their
-# ouput appended to the output of the agent. Plugins define their own
-# sections and must output headers with '<<<' and '>>>'
-PLUGINSDIR=$MK_LIBDIR/plugins
+    # All executables in PLUGINSDIR will simply be executed and their
+    # ouput appended to the output of the agent. Plugins define their own
+    # sections and must output headers with '<<<' and '>>>'
+    PLUGINSDIR=$MK_LIBDIR/plugins
 
-# All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. Please
-# refer to online documentation for details about local checks.
-LOCALDIR=$MK_LIBDIR/local
+    # All executables in LOCALDIR will by executabled and their
+    # output inserted into the section <<<local>>>. Please
+    # refer to online documentation for details about local checks.
+    LOCALDIR=$MK_LIBDIR/local
 
-# All files in SPOOLDIR will simply appended to the agent
-# output if they are not outdated (see below)
-SPOOLDIR=$MK_VARDIR/spool
+    # All files in SPOOLDIR will simply appended to the agent
+    # output if they are not outdated (see below)
+    SPOOLDIR=$MK_VARDIR/spool
 
-# close standard input (for security reasons) and stderr
-if [ "$1" = -d ]; then
-    set -xv
-else
-    exec </dev/null 2>/dev/null
-fi
+    # close standard input (for security reasons) and stderr
+    if [ "$1" = -d ]; then
+        set -xv
+    else
+        exec </dev/null 2>/dev/null
+    fi
+}
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
@@ -60,7 +62,7 @@ if type timeout >/dev/null 2>&1; then
 fi
 
 _log_section_time() {  # dummy to be compatible to smarter agents
-    $*
+    "$@"
 }
 
 export -f _log_section_time
@@ -1018,14 +1020,21 @@ run_partially_asnchronous_sections() {
     section_chrony
 }
 
-run_purely_synchronous_sections
+main() {
 
-run_partially_asnchronous_sections
+    setup
 
-run_liveupdate
+    run_purely_synchronous_sections
 
-run_local_checks
+    run_partially_asnchronous_sections
 
-run_plugins
+    run_liveupdate
 
-run_spooler
+    run_local_checks
+
+    run_plugins
+
+    run_spooler
+}
+
+[ -z "${MK_SOURCE_AGENT}" ]  && main "$@"

@@ -880,6 +880,12 @@ def transform_topology_dashlet(dashlet_spec: DashletConfig,
     return dashlet_spec
 
 
+def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
+    # Stats dashlets in version 2.0 are no longer updated through the dashboard scheduler
+    dashlet_spec.pop("refresh", None)
+    return dashlet_spec
+
+
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.

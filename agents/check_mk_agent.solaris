@@ -790,15 +790,23 @@ main_finalize_sync() {
 
 main() {
 
-    main_setup "$@"
+    while true; do
 
-    ${MK_RUN_SYNC_PARTS} && main_sync_parts
+        main_setup "$@"
 
-    (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+        ${MK_RUN_SYNC_PARTS} && main_sync_parts
 
-    ${MK_RUN_ASYNC_PARTS} && main_async_parts
+        (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
 
-    ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+        ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+        ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+        [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
+
+        sleep "${MK_LOOP_INTERVAL}"
+
+    done
 
 }
 

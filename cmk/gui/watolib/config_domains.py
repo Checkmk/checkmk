@@ -199,7 +199,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
 
-    trusted_cas_file = cmk.utils.paths.cacert_dir
+    trusted_cas_file = cmk.utils.paths.trusted_ca_file
 
     # This is a list of directories that may contain .pem files of trusted CAs.
     # The contents of all .pem files will be contantenated together and written

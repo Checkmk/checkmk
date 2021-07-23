@@ -265,7 +265,7 @@ class LDAPUserConnector(UserConnector):
                 conn.set_option(ldap.OPT_REFERRALS, 0)
 
             if 'use_ssl' in self._config:
-                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, cmk.utils.paths.cacert_dir)
+                conn.set_option(ldap.OPT_X_TLS_CACERTFILE, cmk.utils.paths.trusted_ca_file)
 
                 # Caused trouble on older systems or systems with some special configuration or set of
                 # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and

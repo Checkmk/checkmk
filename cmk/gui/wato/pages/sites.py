@@ -1336,7 +1336,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
         # will then accept any certificate offered.
         #ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
-        ctx.load_verify_locations(cmk.utils.paths.omd_root + "/var/ssl/ca-certificates.crt")
+        ctx.load_verify_locations(cmk.utils.paths.cacert_dir)
 
         family_spec, address_spec = self._site["socket"]
         address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6

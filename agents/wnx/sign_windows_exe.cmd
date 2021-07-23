@@ -60,4 +60,5 @@ exit /b 1
 )
 
 %Print%{255;255;255}Signing %3 using key %1\n
-"C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe" sign /f %1 /p %2 %3
+@"C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe" sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3
+exit /b 0

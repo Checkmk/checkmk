@@ -18,7 +18,10 @@ def build(Map args) {
                 if (args.TARGET == "cached") {
                     bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
                     ARTIFACTS = 'python-3.8.zip,python-3.4.zip'
-                } else if (args.TARGET == "agent") {
+                } else if (args.TARGET == "agent_with_sign") {
+                    bat 'cd agents\\wnx && call build_release.cmd tribe29.pfx ' + args.PASSWORD
+                    ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
+                } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
                     ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
                 } else if (args.TARGET == "test_integration") {

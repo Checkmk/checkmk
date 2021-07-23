@@ -24,9 +24,9 @@ preamble_1() {  # TODO: split these up more meaningful
 
     # Provide information about the remote host. That helps when data
     # is being sent only once to each remote host.
-    if [ "$REMOTE_HOST" ] ; then
+    if [ "$REMOTE_HOST" ]; then
         export REMOTE=$REMOTE_HOST
-    elif [ "$SSH_CLIENT" ] ; then
+    elif [ "$SSH_CLIENT" ]; then
         export REMOTE=${SSH_CLIENT%% *}
     fi
 
@@ -166,7 +166,7 @@ waitmax() {
    # Wait for termination within TIMOUT seconds
    while [ "$TIMEOUT" -gt 0 ]; do
        TIMEOUT=$((TIMEOUT - 1))
-       if [ ! -e /proc/$PID ] ; then
+       if [ ! -e /proc/$PID ]; then
            return 0
        fi
        perl -e "select(undef, undef, undef, 0.1);"
@@ -193,15 +193,14 @@ run_cached() {
         return
     fi
 
-    if [ ! -e $MK_VARDIR/cache ] ; then mkdir -p $MK_VARDIR/cache ; fi
+    if [ ! -e $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache; fi
     CACHEFILE=$MK_VARDIR/cache/$NAME.cache
 
     USE_CACHEFILE=""
     # Check if file exists and is recent enough
-    if [ -s $CACHEFILE ]
-    then
+    if [ -s $CACHEFILE ]; then
         AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
-        if (( $AGE < $MAXAGE )) ; then
+        if (( $AGE < $MAXAGE )); then
             USE_CACHEFILE=1
         fi
         # get file time for cache
@@ -215,8 +214,7 @@ run_cached() {
             sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'$CACHE_INFO'>>>/' "$CACHEFILE"
         fi
     fi
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]
-    then
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]; then
         nohup sh -c "$CMDLINE" > "$CACHEFILE.new" 2> /dev/null && mv -f "$CACHEFILE.new" "$CACHEFILE" || rm -f "$CACHEFILE.new" "$CACHEFILE"  &
     fi
 }
@@ -294,7 +292,7 @@ section_checkmk() {
 
 section_df() {
     echo '<<<df>>>'
-    if [ -x /usr/opt/freeware/bin/df ] ; then
+    if [ -x /usr/opt/freeware/bin/df ]; then
         excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x cdrfs"
         # shellcheck disable=SC2086
         /usr/opt/freeware/bin/df -PTlk $excludefs | sed 1d
@@ -312,18 +310,13 @@ section_df() {
 
 section_nfs_mounts() {
     # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
-    if type stat >/dev/null 2>&1 ; then
+    if type stat >/dev/null 2>&1; then
         echo '<<<nfsmounts>>>'
-        mount | grep ' nfs' | awk '{print $3;}' | \
-            while read MP
-        do
-            waitmax 5 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-                echo "$MP hanging 0 0 0 0"
+        mount | grep ' nfs' | awk '{print $3;}' | while read MP; do
+            waitmax 5 stat -f -c '"'$MP' ok - - - -"' "$MP" || echo "$MP hanging 0 0 0 0"
         done
         echo '<<<cifsmounts>>>'
-        mount | grep ' cifs' | awk '{print $3;}' | \
-            while read MP
-        do
+        mount | grep ' cifs' | awk '{print $3;}' | while read MP; do
             if [ ! -r $MP ]; then
                 echo "$MP Permission denied"
             else
@@ -340,8 +333,7 @@ section_ps() {
 }
 
 section_lparstat_aix() {
-    if type lparstat >/dev/null 2>&1
-    then
+    if type lparstat >/dev/null 2>&1; then
       echo '<<<lparstat_aix>>>'
       lparstat 1 1
     fi
@@ -385,8 +377,7 @@ section_cpu() {
 
 section_aix_if() {
     echo "<<<aix_if>>>"
-    for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1)
-    do
+    for ent in $(ifconfig -a | grep '^en' | cut -d ":" -f 1); do
         echo "[$ent]"
         entstat "$ent" | grep -E "(^Hardware|^Bytes:|^Packets:|^Transmit|^Broadcast:|^Multicast:)"
         entstat "$ent" | grep -p "Driver Flags:"
@@ -394,8 +385,8 @@ section_aix_if() {
 }
 
 section_ntp() {
-    if which ntpq > /dev/null 2>&1 ; then
-        if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then
+    if which ntpq > /dev/null 2>&1; then
+        if [ $(lssrc -s xntpd|grep -c active) -gt 0 ]; then
             echo '<<<ntp>>>'
             ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
         fi
@@ -421,15 +412,14 @@ section_tcp() {
 
 section_libelle() {
     # Libelle Business Shadow
-    if type trd >/dev/null 2>&1
-    then
+    if type trd >/dev/null 2>&1; then
       echo '<<<libelle_business_shadow:sep(58)>>>'
       $(which trd) -s
     fi
 }
 
 section_mailqueue () {
-    if [ -x /usr/sbin/sendmail ] ; then
+    if [ -x /usr/sbin/sendmail ]; then
         echo '<<<postfix_mailq>>>';
         mailq 2>&1 | tail -n 6
     fi
@@ -472,7 +462,7 @@ section_uptime() {
 run_plugins() {
     if cd "$PLUGINSDIR" 2>/dev/null; then
         for skript in ./*; do
-            if [ ! -d "$skript" ] && [ -x "$skript" ] ; then
+            if [ ! -d "$skript" ] && [ -x "$skript" ]; then
                 if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
                     _log_section_time "$plugin_interpreter ./$skript"
                 fi
@@ -480,7 +470,7 @@ run_plugins() {
         done
         # Call some plugins only every X'th second
         for skript in [1-9]*/*; do
-            if [ -x "$skript" ] ; then
+            if [ -x "$skript" ]; then
                 if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
                     run_cached plugins_${skript//\//\#} ${skript%/*} "$plugin_interpreter $skript"
                 fi
@@ -526,32 +516,27 @@ foreach (@patterns) {
 
 section_aix_hacmp() {
     # powerHA
-    if type lslpp >/dev/null 2>&1
-    then
+    if type lslpp >/dev/null 2>&1; then
         cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
-        if ! echo $cluster_cmd_output | grep -q "not installed"
-        then
+        if ! echo $cluster_cmd_output | grep -q "not installed"; then
             # now the following commands should be available
             nodes=$(cllsnode | grep "NODE" | sed -e s/NODE//g -e s/://g)
             list_active_nodes=""
-            for node in $nodes
-            do
+            for node in $nodes; do
                 active_nodes=$(clgetactivenodes -n $node)
-                if echo $active_nodes | grep -q $node
-                then
+                if echo $active_nodes | grep -q $node; then
                     list_active_nodes=$list_active_nodes"\n$node"
                 fi
             done
 
-            if [ "$list_active_nodes" ]
-            then
+            if [ "$list_active_nodes" ]; then
                 echo '<<<aix_hacmp_nodes>>>'
                 printf "%s\n" "$list_active_nodes"
                 cllsnode
             fi
 
             echo '<<<aix_hacmp_services>>>'
-            if type clshowsrv ; then
+            if type clshowsrv; then
                 waitmax 5 clshowsrv -v
             else # fallback, hardcoded base installation path
                 waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v
@@ -594,12 +579,10 @@ run_local_checks() {
 
 run_remote_plugins() {
     # MK's Remote Plugin Executor
-    if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-    then
+    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-        while read descr cmdline
-        do
+        while read descr cmdline; do
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval _log_section_time "$cmdline")
             echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
@@ -622,9 +605,9 @@ run_spooler() {
             maxage="${file%%[^0-9]*}"
 
             # If there is at least one digit, than we honor that.
-            if [ "$maxage" ] ; then
+            if [ "$maxage" ]; then
                 mtime=$(stat -c %Y "$file")
-                if [ $((now - mtime)) -gt "$maxage" ] ; then
+                if [ $((now - mtime)) -gt "$maxage" ]; then
                     continue
                 fi
             fi

@@ -43,8 +43,7 @@ preamble_1() {
     
     
     # close standard input (for security reasons) and stderr
-    if [ "$1" = -d ]
-    then
+    if [ "$1" = -d ]; then
         set -xv
     else
         exec </dev/null 2>/dev/null
@@ -65,29 +64,29 @@ inpath() {
 
 # Runs a command asynchronous by use of a cache file
 run_cached() {
-    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    if [ "$1" = -s ]; then local section="echo '<<<$2>>>'; "; shift; fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
     local CMDLINE="$section$@"
 
-    if [ ! -d $MK_TMPDIR/cache ]; then mkdir -p $MK_TMPDIR/cache ; fi
+    if [ ! -d $MK_TMPDIR/cache ]; then mkdir -p $MK_TMPDIR/cache; fi
     CACHEFILE="$MK_TMPDIR/cache/$NAME.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
     local NOW=$(date +%s)
-    if [ -e "$CACHEFILE.new" ] ; then
+    if [ -e "$CACHEFILE.new" ]; then
         local CF_ATIME=$(stat -f "%a" "$CACHEFILE.new")
-        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ]; then
             return
         fi
     fi
 
     # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ] ; then
+    if [ -s "$CACHEFILE" ]; then
         local MTIME=$(stat -f "%m" "$CACHEFILE")
-        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        if [ $((NOW - MTIME)) -le $MAXAGE ]; then local USE_CACHEFILE=1; fi
         # Output the file in any case, even if it is
         # outdated. The new file will not yet be available
         CACHE_INFO="cached($MTIME,$MAXAGE)"
@@ -101,7 +100,7 @@ run_cached() {
     fi
 
     # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ]; then
         echo "$CMDLINE" | daemon /usr/local/bin/bash -o noclobber > $CACHEFILE.new && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new &
     fi
 }
@@ -128,7 +127,7 @@ run_purely_synchronous_sections() {
     echo '<<<df>>>'
     # no special zfs handling so far, the ZFS.pools plugin has been tested to
     # work on FreeBSD
-    if df -T > /dev/null ; then
+    if df -T > /dev/null; then
         df -kTP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)'
     else
         df -kP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)' | awk '{ print $1,"ufs",$2,$3,$4,$5,$6 }'
@@ -203,7 +202,7 @@ run_purely_synchronous_sections() {
 
     # Multipathing is supported in FreeBSD by now
     # http://www.mywushublog.com/2010/06/freebsd-and-multipath/
-    if kldstat -v | grep g_multipath > /dev/null ; then
+    if kldstat -v | grep g_multipath > /dev/null; then
         echo '<<<freebsd_multipath>>>'
         gmultipath status | grep -v ^Name
     fi
@@ -262,7 +261,7 @@ run_purely_synchronous_sections() {
 
     # OpenVPN Clients.
     # Correct log location unknown, sed call might also be broken
-    if [ -e /var/log/openvpn/openvpn-status.log ] ; then
+    if [ -e /var/log/openvpn/openvpn-status.log ]; then
         echo '<<<openvpn_clients:sep(44)>>>'
         sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /var/log/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d'
     fi
@@ -297,13 +296,12 @@ run_purely_synchronous_sections() {
         postfix_queue_dir=$(postconf -h queue_directory)
         postfix_count=$(find $postfix_queue_dir/deferred -type f | wc -l)
         postfix_size=$(du -ks $postfix_queue_dir/deferred | awk '{print $1 }')
-        if [ $postfix_count -gt 0 ]
-        then
+        if [ $postfix_count -gt 0 ]; then
            echo -- $postfix_size Kbytes in $postfix_count Requests.
         else
            echo Mail queue is empty
         fi
-    elif [ -x /usr/sbin/ssmtp ] ; then
+    elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
@@ -333,8 +331,7 @@ run_purely_synchronous_sections() {
         statgrab $statgrab_vars_mem 1>>/tmp/statgrab.$$
 
 
-        for s in $statgrab_sections
-        do
+        for s in $statgrab_sections; do
             echo "<<<statgrab_$s>>>"
             grep "^${s}\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
         done
@@ -420,13 +417,13 @@ run_partially_asynchronous_sections() {
 run_plugins() {
 # Plugins
     if cd $PLUGINSDIR; then
-        for skript in $(ls) ; do
+        for skript in $(ls); do
             if is_valid_plugin "$skript"; then
                 ./$skript
             fi
         done
         # Call some plugins only every X'th minute
-        for skript in [1-9]*/* ; do
+        for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
                 run_cached plugins_${skript//\//\\} ${skript%/*} "$skript"
             fi
@@ -437,12 +434,10 @@ run_plugins() {
 
 run_mrpe_plugins() {
     # MK's Remote Plugin Executor
-    if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-    then
+    if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-        while read descr cmdline
-        do
+        while read descr cmdline; do
             PLUGIN=${cmdline%% *}
             OUTPUT=$(eval "$cmdline")
             echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1

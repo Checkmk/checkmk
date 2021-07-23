@@ -17,8 +17,7 @@ export MK_CONFDIR="/to/be/changed"
 #export TMPDIR=
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
@@ -117,8 +116,7 @@ foreach (@patterns) {
 ' -- "$MK_CONFDIR"
 
 
-if type tmutil >/dev/null
-then
+if type tmutil >/dev/null; then
     echo '<<<timemachine>>>'
     tmutil latestbackup 2>&1
 fi
@@ -135,12 +133,10 @@ fi
 
 
 # MK's Remote Plugin Executor
-if [ -e "/etc/mrpe.cfg" ]
-then
+if [ -e "/etc/mrpe.cfg" ]; then
     echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" | \
-    while read descr cmdline
-    do
+    while read descr cmdline; do
         PLUGIN=${cmdline%% *}
         OUTPUT=$(eval "$cmdline")
         echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1

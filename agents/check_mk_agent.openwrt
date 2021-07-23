@@ -112,7 +112,7 @@ run_cached() {
     local mrpe=0
     local append_age=0
     if [ "$1" = -s ]; then
-        local section="echo '<<<$2:cached($NOW,$3)>>>' ; "
+        local section="echo '<<<$2:cached($NOW,$3)>>>'; "
         shift
     fi
     if [ "$1" = -m ]; then
@@ -162,9 +162,9 @@ run_cached() {
         # When the command fails, the output is throws away ignored
         if [ $mrpe -eq 1 ]; then
             # TODO: This won't work: run_mrpe is not exported. And do we have bash at all?
-            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; run_mrpe $NAME \"$CMDLINE\" && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; run_mrpe $NAME \"$CMDLINE\" && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
         else
-            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
         fi
     fi
 }
@@ -456,11 +456,10 @@ section_ipmisensors() {
             IPMI_FORMAT=""
         fi
         # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan
-        do
+        run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan; do
             ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g \"$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
             # In case of a timeout immediately leave loop.
-            if [ $? = 255 ] ; then break ; fi
+            if [ $? = 255 ]; then break; fi
         done"
     fi
 }

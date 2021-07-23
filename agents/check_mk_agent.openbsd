@@ -34,8 +34,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
@@ -77,10 +76,9 @@ SWAP_FREE=$(echo $SWAPCTL_OUTPUT | awk '{ print $7 }')
 SWAP_TOTAL=$(echo $SWAPCTL_OUTPUT | awk '{ print $2 }')
 
 # if there is no swap space swap values are 0
-if [ -z "$SWAPCTL_OUTPUT" ]
-        then
-        SWAP_FREE=0
-        SWAP_TOTAL=0
+if [ -z "$SWAPCTL_OUTPUT" ]; then
+    SWAP_FREE=0
+    SWAP_TOTAL=0
 fi
 
 echo "MemTotal:\t" $MEM_TOTAL kB
@@ -120,9 +118,8 @@ OFS=$IFS
 IFS='
 '
 # collect netstat values and interface number
-for NS in $NETSTAT_OUTPUT
-    do
-    NI=$(($NI+1))
+for NS in $NETSTAT_OUTPUT; do
+    NI=$((NI+1))
     INTERFACES[$NI]=$(echo $NS | awk '{print $1}')
     MC[$NI]=$(echo $NS | awk '{print $4}')
     PI[$NI]=$(echo $NS | awk '{print $5}')
@@ -134,9 +131,8 @@ done
 
 # need NIC counter again for byte values - reset it
 NI=0
-for NS in $NETSTAT_OUTPUT_BYTES
-    do
-    NI=$(($NI+1))
+for NS in $NETSTAT_OUTPUT_BYTES; do
+    NI=$((NI+1))
     BI[$NI]=$(echo $NS | awk '{print $5}')
     BO[$NI]=$(echo $NS | awk '{print $6}')
 done
@@ -145,49 +141,40 @@ done
 [ "${NI}" -ge 1 ] || NI=15
 
 # jot is OpenBSD "range"
-for i in $(jot $NI)
-    do
+for i in $(jot $NI); do
     echo "${INTERFACES[$i]}:${BI[$i]} ${PI[$i]} ${EI[$i]} 0 0 0 0 0 ${BO[$i]} ${PO[$i]} ${EO[$i]} 0 0 ${CO[$i]} 0 0"
 done
 
-for IF in $(jot $NI)
-	do
-	echo \[${INTERFACES[$IF]}\]
+for IF in $(jot $NI); do
+    echo \[${INTERFACES[$IF]}\]
 
-	IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
-	for IO in $IFCONFIG_OUTPUT
-		do
-		# Speed
-		SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
-		if [ "$SP" ]
-			then
-			echo "\tSpeed: "$SP"Mb/s"
-		fi
-		# Detect duplexity - in reality only available for physical devices but
-		# virtual ones like CARP devices will get at least a half duplex
-		if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]
-			then
-			echo "\tDuplex: Full"
-		elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]
-			then
-			echo "\tDuplex: Half"
-		fi
-		# Auto-negotiation
-		if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]
-			then
-			echo "\tAuto-negotiation: on"
-		elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]
-			then
-			echo "\tAuto-negotiation: off"
-		fi
-		# Detect detected link
-		if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]
-			then
-			echo "\tLink detected: yes"
-		fi
-	done
+    IFCONFIG_OUTPUT=$(ifconfig ${INTERFACES[$IF]})
+    for IO in $IFCONFIG_OUTPUT; do
+        # Speed
+        SP=$(echo "$IO" | egrep "media:.*base" | cut -d\( -f2 | cut -db -f1)
+        if [ "$SP" ]; then
+            echo "\tSpeed: "$SP"Mb/s"
+        fi
+        # Detect duplexity - in reality only available for physical devices but
+        # virtual ones like CARP devices will get at least a half duplex
+        if [ "$(echo "$IO" | egrep "media:.*full-duplex")" ]; then
+            echo "\tDuplex: Full"
+        elif [ "$(echo "$IO" | grep "media:" | grep -v "full-duplex")" ]; then
+            echo "\tDuplex: Half"
+        fi
+        # Auto-negotiation
+        if [ "$(echo "$IO" | egrep "media:.*autoselect")" ]; then
+            echo "\tAuto-negotiation: on"
+        elif [ "$(echo "$IO" | grep "media:" | grep -v "autoselect")" ]; then
+            echo "\tAuto-negotiation: off"
+        fi
+        # Detect detected link
+        if [ "$(echo "$IO" | grep "status:" | egrep "active|backup|master")" ]; then
+            echo "\tLink detected: yes"
+        fi
+    done
 
-	echo "\tAddress: "${MC[$IF]}
+    echo "\tAddress: "${MC[$IF]}
 
 done
 
@@ -196,7 +183,7 @@ IFS=$OFS
 
 # IPMI-Data (Fans, CPU, temperature, etc)
 # needs the sysutils/ipmitool and kldload ipmi.ko
-if which ipmitool >/dev/null ; then
+if which ipmitool >/dev/null; then
     echo '<<<ipmi>>>'
     ipmitool sensor list \
         | grep -v 'command failed' \
@@ -212,11 +199,9 @@ fi
 
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $PLUGINSDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
@@ -224,23 +209,19 @@ fi
 
 # Lokale Einzelchecks
 echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $LOCALDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
 fi
 
 # MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-then
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
     echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
+    while read descr cmdline; do
         PLUGIN=${cmdline%% *}
         OUTPUT=$(eval "$cmdline")
         echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1

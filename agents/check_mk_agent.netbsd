@@ -34,8 +34,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
@@ -80,8 +79,7 @@ Z1=1
 Z2=p
 
 date +%s
-while [ $Z1 -lt 15 ]
-  do
+while [ $Z1 -lt 15 ]; do
   BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
   PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
   EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
@@ -91,8 +89,7 @@ while [ $Z1 -lt 15 ]
   EO=$( netstat -in | egrep -v Name | grep Link | awk '{print $8}' | sed -ne $Z1$Z2 )
   CO=$( netstat -in | egrep -v Name | grep Link | awk '{print $9}' | sed -ne $Z1$Z2 )
   FF2="0 0"
-    if [ "$PI" -gt "0" ]
-      then
+    if [ "$PI" -gt "0" ]; then
         echo $BI $PI $EI $FF1 $BO $PO $EO $FF2 $CO $FF2
     fi
   Z1=$(($Z1+1))
@@ -100,7 +97,7 @@ done
 
 # IPMI-Data (Fans, CPU, temperature, etc)
 # needs the sysutils/ipmitool and kldload ipmi.ko
-if which ipmitool >/dev/null ; then
+if which ipmitool >/dev/null; then
     echo '<<<ipmi>>>'
     ipmitool sensor list \
         | grep -v 'command failed' \
@@ -116,11 +113,9 @@ fi
 
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $PLUGINSDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
@@ -128,23 +123,19 @@ fi
 
 # Lokale Einzelchecks
 echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $LOCALDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
 fi
 
 # MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
-then
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]; then
     echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
+    while read descr cmdline; do
         PLUGIN=${cmdline%% *}
         OUTPUT=$(eval "$cmdline")
         echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1

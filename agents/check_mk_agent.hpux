@@ -22,8 +22,7 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 # close standard input (for security reasons) and stderr
-if [ "$1" = -d ]
-then
+if [ "$1" = -d ]; then
     set -xv
 else
     exec </dev/null 2>/dev/null
@@ -72,8 +71,7 @@ netstat -f inet -n | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x
 
 # Network interfaces
 echo '<<<hpux_if>>>'
-for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'`
-do
+for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'`; do
     nwmgr -g --st mib -c $nic
 done
 
@@ -86,8 +84,7 @@ echo '<<<hpux_multipath>>>'
 scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
 
 echo '<<<hpux_serviceguard:sep(124)>>>'
-if type cmviewcl >/dev/null 2>&1
-then
+if type cmviewcl >/dev/null 2>&1; then
     cmviewcl -v -f line | grep summary
 fi
 
@@ -97,8 +94,7 @@ ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 
 
 # Kernel tunnables
-if type kcusage >/dev/null 2>&1
-then
+if type kcusage >/dev/null 2>&1; then
     echo '<<<hpux_tunables>>>'
     kcusage -l
 fi
@@ -107,26 +103,23 @@ fi
 # State of FC HBAs
 fcms_util=/opt/fcms/bin/fcdutil
 echo '<<<hpux_hbahealth:sep(61)>>>'
-for hba in /dev/fcd* ; do
+for hba in /dev/fcd*; do
     echo "$hba"
     $fcms_util $hba | grep -e "Driver state" -e "Topology" -e "Dump Available"\
                       -e "Code version" -e "Hardware Path" -e "Port World"
 done
 
 # Libelle Business Shadow
-if type trd >/dev/null 2>&1
-then
+if type trd >/dev/null 2>&1; then
   echo '<<<libelle_business_shadow:sep(58)>>>'
   trd -s
 fi
 
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $PLUGINSDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
@@ -135,11 +128,9 @@ fi
 
 # Lokale Einzelchecks
 echo '<<<local:sep(0)>>>'
-if cd $LOCALDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
+if cd $LOCALDIR; then
+  for skript in $(ls); do
+    if [ -x "$skript" ]; then
         ./$skript
     fi
   done
@@ -147,12 +138,10 @@ fi
 
 
 # MK's Remote Plugin Executor
-if [ -f "$MK_CONFDIR/mrpe.cfg" ]
-then
+if [ -f "$MK_CONFDIR/mrpe.cfg" ]; then
     echo '<<<mrpe>>>'
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
-    while read descr cmdline
-    do
+    while read descr cmdline; do
         PLUGIN=${cmdline%% *}
         OUTPUT=$(eval "$cmdline")
         echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1

@@ -69,7 +69,6 @@
     "d3-sankey": "^0.12.3",
     "dc": "^3.2.1",
     "element-closest-polyfill": "^1.0.0",
-    "is-svg": "^4.3.1",
     "jquery": "^3.5.0",
     "select2": "^4.0.13",
     "simplebar": "^5.2.0",

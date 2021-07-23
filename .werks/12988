@@ -1,0 +1,14 @@
+Title: Logging Level For Liveproxy Daemon
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1627046557
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p9
+
+Changing the logging level for the liveproxy Deamon in the global
+settings ("Livestatus Proxy logging") had no effect. This has been
+fixed.

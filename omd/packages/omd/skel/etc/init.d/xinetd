@@ -15,8 +15,8 @@ case "$1" in
 	if [ -e "$PIDFILE" ] ; then
 	    PID=$(cat $PIDFILE)
 	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "still running with pid $PID! Aborting!"
-		exit 1
+                echo 'Already running.'
+                exit 0
 	    fi
 	    echo "removing stale pid file..."
 	    rm -f $PIDFILE

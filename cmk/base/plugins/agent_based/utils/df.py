@@ -67,7 +67,7 @@ def _ungrouped_mountpoints_and_groups(
     for group_name, (patterns_include, patterns_exclude) in group_patterns.items():
         mp_groups = mountpoints_in_group(mount_points, patterns_include, patterns_exclude)
         if mp_groups:
-            groups[group_name] = mp_groups
+            groups[group_name] = set(mp_groups)
             ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
     return ungrouped_mountpoints, groups
 
@@ -218,8 +218,10 @@ def mountpoints_in_group(
     mplist: Dict[str, Dict],
     patterns_include: Sequence[str],
     patterns_exclude: Sequence[str],
-) -> Set[str]:
-    matching_mountpoints = set()
+) -> List[str]:
+    """Returns a list of mount points that are in patterns_include,
+    but not in patterns_exclude"""
+    matching_mountpoints = []
     for mountpoint in mplist:
         if any(
                 fnmatch.fnmatch(mountpoint, pattern_exclude)
@@ -228,7 +230,8 @@ def mountpoints_in_group(
         if any(
                 fnmatch.fnmatch(mountpoint, pattern_include)
                 for pattern_include in patterns_include):
-            matching_mountpoints.add(mountpoint)
+            if mountpoint not in matching_mountpoints:
+                matching_mountpoints.append(mountpoint)
     return matching_mountpoints
 
 

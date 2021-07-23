@@ -61,3 +61,39 @@ def test_df_check_filesystem_single(params, expected):
     result = tuple(df.df_check_filesystem_single(*params))
 
     assert result == expected
+
+
+@pytest.mark.parametrize("mplist,patterns_include,patterns_exclude,expected", [
+    ({
+        "fake1": {
+            "size_mb": None,
+            "avail_mb": None,
+            "reserved_mb": 0,
+        },
+        "fake2": {
+            "size_mb": None,
+            "avail_mb": None,
+            "reserved_mb": 0,
+        }
+    }, ['fake1', 'fake2'], [], ['fake1', 'fake2']),
+    ({
+        "fake_same_name": {
+            "size_mb": None,
+            "avail_mb": None,
+            "reserved_mb": 0,
+        },
+        "fake_same_name": {
+            "size_mb": None,
+            "avail_mb": None,
+            "reserved_mb": 0,
+        }
+    }, ['fake_same_name', 'fake_same_name'], [], ['fake_same_name']),
+],
+                         ids=["unique", "duplicates"])
+def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expected):
+    """Returns list of mountpoints without duplicates."""
+
+    result = df.mountpoints_in_group(mplist, patterns_include, patterns_exclude)
+
+    assert isinstance(result, list)
+    assert result == expected

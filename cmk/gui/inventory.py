@@ -7,6 +7,7 @@
 import ast
 import json
 import os
+import re
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
@@ -32,6 +33,7 @@ from cmk.utils.exceptions import (
     MKGeneralException,
 )
 import cmk.utils.store as store
+import cmk.utils.regex
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.type_defs import Row
@@ -125,15 +127,21 @@ def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
 
 
 def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: HostName) -> Row:
+    # hostname is unsanitized yet
+    sanitized_hostname = re.sub(
+        r"[^%s]" % cmk.utils.regex.REGEX_HOST_NAME_CHARS,
+        "",
+        hostname,
+    )
     query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % livestatus.lqencode(
-        hostname)
+        sanitized_hostname)
     try:
         sites.live().set_only_sites([site] if site else None)
         result = sites.live().query(query)
     finally:
         sites.live().set_only_sites()
 
-    row = {"host_name": hostname}
+    row = {"host_name": sanitized_hostname}
     if result and result[0]:
         row["host_structured_status"] = result[0][0]
     return row

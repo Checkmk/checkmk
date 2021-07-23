@@ -17,10 +17,10 @@ node ('windows') {
         bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
     }
     windows.build(
-        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
+        withCredentials([usernamePassword(credentialsId: 'win_sign', passwordVariable: 'WIN_SIGN_PASSWORD')]) {
             windows.build(
                 TARGET: 'agent_with_sign',
-                PASSWORD: NEXUS_PASSWORD,
+                PASSWORD: WIN_SIGN_PASSWORD,
             )
         }
     )

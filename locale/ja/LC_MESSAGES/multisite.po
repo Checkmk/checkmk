@@ -3241,6 +3241,10 @@ msgstr "新しいサービスを追加する"
 msgid "Add new action"
 msgstr "新しいアクションを追加する"
 
+#, fuzzy
+msgid "Add new aggregation"
+msgstr "集計を追加"
+
 msgid "Add new constant"
 msgstr "新しい定数を追加する"
 
@@ -6973,8 +6977,13 @@ msgstr ""
 "されます。少なくとも1つのルールを追加するとすぐに、一致するルールを持つホスト"
 "のみが監視されます。"
 
-msgid "By aggregation groups"
+#, fuzzy
+msgid "By aggregation group prefix"
 msgstr "集約グループ別"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr "集計名"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7308,9 +7317,6 @@ msgid ""
 "timeperiod as well."
 msgstr ""
 "このオプションを有効にすると、通知は定義された期間外にもまとめられます。"
-
-msgid "By regular expression"
-msgstr "正規表現による"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -28050,6 +28056,10 @@ msgstr "最大長"
 msgid "Max Perm used"
 msgstr "使用される最大パーマ"
 
+#, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "最も古いスナップショットの経過時間"
+
 msgid "Max file descriptors"
 msgstr "最大ファイル記述子"
 
@@ -35458,6 +35468,10 @@ msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VMバックアップ"
 
 msgid "Proxmox VE VM Info"
+msgstr "Proxmox VEVM情報"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Proxmox VEVM情報"
 
 msgid "Proxmox VE disk percentage used"
@@ -59129,9 +59143,6 @@ msgstr "ビット/秒"
 msgid "blocks/s"
 msgstr "ブロック/秒"
 
-msgid "both"
-msgstr "両方"
-
 msgid "broadcast"
 msgstr "ブロードキャスト"
 
@@ -59532,9 +59543,6 @@ msgstr "最大で柔軟。デュレーション"
 
 msgid "folder"
 msgstr "フォルダ"
-
-msgid "folders"
-msgstr "フォルダー"
 
 msgid "for"
 msgstr "ために"
@@ -60812,6 +60820,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "By regular expression"
+#~ msgstr "正規表現による"
+
+#~ msgid "both"
+#~ msgstr "両方"
+
+#~ msgid "folders"
+#~ msgstr "フォルダー"
 
 #~ msgid "Currently there is one change to activate"
 #~ msgstr "現在、アクティブ化する変更が1つあります"

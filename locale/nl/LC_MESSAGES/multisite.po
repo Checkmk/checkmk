@@ -3370,6 +3370,10 @@ msgstr "Nieuwe dienst toevoegen"
 msgid "Add new action"
 msgstr "Nieuwe actie toevoegen"
 
+#, fuzzy
+msgid "Add new aggregation"
+msgstr "Toevoegen aggregatie"
+
 msgid "Add new constant"
 msgstr "Nieuwe constante toevoegen"
 
@@ -7237,8 +7241,13 @@ msgstr ""
 "één regel toevoegt, zullen alleen hosts met een overeenstemmende regel "
 "gemonitord worden."
 
-msgid "By aggregation groups"
+#, fuzzy
+msgid "By aggregation group prefix"
 msgstr "Door aggregatiegroepen"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr "Naam aggregatie"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7626,9 +7635,6 @@ msgid ""
 msgstr ""
 "Door deze optie in te schakelen zullen meldingen ook buiten de gedefinieerde "
 "periode worden gebulkt."
-
-msgid "By regular expression"
-msgstr "Door reguliere expressie"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -29109,6 +29115,10 @@ msgstr "Max. lengte"
 msgid "Max Perm used"
 msgstr "Max. gebruikt Perm"
 
+#, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "Leeftijd van de oudste momentopname"
+
 msgid "Max file descriptors"
 msgstr "Max bestandsdescriptors"
 
@@ -36706,6 +36716,10 @@ msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM back-up"
 
 msgid "Proxmox VE VM Info"
+msgstr "Proxmox VE VM Info"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Proxmox VE VM Info"
 
 msgid "Proxmox VE disk percentage used"
@@ -62052,9 +62066,6 @@ msgstr "bits/s"
 msgid "blocks/s"
 msgstr "blokken/s"
 
-msgid "both"
-msgstr "beide"
-
 msgid "broadcast"
 msgstr "uitzending"
 
@@ -62457,9 +62468,6 @@ msgstr "flexibel met max. duur"
 
 msgid "folder"
 msgstr "map"
-
-msgid "folders"
-msgstr "mappen"
 
 msgid "for"
 msgstr "voor"
@@ -63744,6 +63752,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "By regular expression"
+#~ msgstr "Door reguliere expressie"
+
+#~ msgid "both"
+#~ msgstr "beide"
+
+#~ msgid "folders"
+#~ msgstr "mappen"
 
 #~ msgid "Currently there is one change to activate"
 #~ msgstr "Momenteel is er één wijziging te activeren"

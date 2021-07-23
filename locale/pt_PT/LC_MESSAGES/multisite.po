@@ -3370,6 +3370,10 @@ msgstr "Adicionar novo serviço"
 msgid "Add new action"
 msgstr "Adicionar nova ação"
 
+#, fuzzy
+msgid "Add new aggregation"
+msgstr "Adicionar agregação"
+
 msgid "Add new constant"
 msgstr "Adicionar nova constante"
 
@@ -7238,8 +7242,13 @@ msgstr ""
 "monitorados. Assim que você adicionar pelo menos uma regra, apenas os hosts "
 "com uma regra correspondente serão monitorados."
 
-msgid "By aggregation groups"
+#, fuzzy
+msgid "By aggregation group prefix"
 msgstr "Por grupos de agregação"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr "Nome da agregação"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7626,9 +7635,6 @@ msgid ""
 msgstr ""
 "Ao activar esta opção, as notificações serão também enviadas fora do período "
 "de tempo definido."
-
-msgid "By regular expression"
-msgstr "Por expressão regular"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -29126,6 +29132,10 @@ msgstr "Comprimento Máximo"
 msgid "Max Perm used"
 msgstr "Max Perm usado"
 
+#, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "Idade do retrato mais antigo"
+
 msgid "Max file descriptors"
 msgstr "Descritores máximos de ficheiros"
 
@@ -36743,6 +36753,10 @@ msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Backup"
 
 msgid "Proxmox VE VM Info"
+msgstr "Proxmox VE VM Info"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Proxmox VE VM Info"
 
 msgid "Proxmox VE disk percentage used"
@@ -62006,9 +62020,6 @@ msgstr "fragmentos"
 msgid "blocks/s"
 msgstr "blocos/s"
 
-msgid "both"
-msgstr "ambos"
-
 msgid "broadcast"
 msgstr "radiodifusão"
 
@@ -62411,9 +62422,6 @@ msgstr "flexível com duração máxima"
 
 msgid "folder"
 msgstr "pasta"
-
-msgid "folders"
-msgstr "folhetos"
 
 msgid "for"
 msgstr "para"
@@ -63697,6 +63705,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "By regular expression"
+#~ msgstr "Por expressão regular"
+
+#~ msgid "both"
+#~ msgstr "ambos"
+
+#~ msgid "folders"
+#~ msgstr "folhetos"
 
 #~ msgid "Currently there is one change to activate"
 #~ msgstr "Atualmente há uma mudança para ativar"

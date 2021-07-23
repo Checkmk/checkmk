@@ -3141,6 +3141,10 @@ msgid "Add new action"
 msgstr "Conexiune Noua"
 
 #, fuzzy
+msgid "Add new aggregation"
+msgstr "Agregare noua"
+
+#, fuzzy
 msgid "Add new constant"
 msgstr "Adaugă comentariu"
 
@@ -6918,8 +6922,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "By aggregation groups"
+msgid "By aggregation group prefix"
 msgstr "Agregare noua"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr " (potrivire exactă)"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7157,9 +7165,6 @@ msgstr ""
 msgid ""
 "By enabling this option notifications will be bulked outside of the defined "
 "timeperiod as well."
-msgstr ""
-
-msgid "By regular expression"
 msgstr ""
 
 msgid ""
@@ -27818,6 +27823,10 @@ msgid "Max Perm used"
 msgstr ""
 
 #, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "Optiuni tabel"
+
+#, fuzzy
 msgid "Max file descriptors"
 msgstr "foloseste descrierea"
 
@@ -35528,6 +35537,10 @@ msgstr "Cluster nou"
 
 #, fuzzy
 msgid "Proxmox VE VM Info"
+msgstr "Cluster nou"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Cluster nou"
 
 #, fuzzy
@@ -57602,9 +57615,6 @@ msgstr ""
 msgid "blocks/s"
 msgstr ""
 
-msgid "both"
-msgstr ""
-
 msgid "broadcast"
 msgstr ""
 
@@ -58027,10 +58037,6 @@ msgstr ""
 
 #, fuzzy
 msgid "folder"
-msgstr "Folder nou"
-
-#, fuzzy
-msgid "folders"
 msgstr "Folder nou"
 
 msgid "for"
@@ -59379,6 +59385,10 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "folders"
+#~ msgstr "Folder nou"
+
+#, fuzzy
 #~ msgid "Show summary for not {cls._get_working_state().upper()} states"
 #~ msgstr "(Nu primi notificări)"
 
@@ -59918,10 +59928,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Additional messages describing rule state"
 #~ msgstr "Linii de header adiționale"
-
-#, fuzzy
-#~ msgid "Aggregation name (exact match)"
-#~ msgstr " (potrivire exactă)"
 
 #, fuzzy
 #~ msgid "Aggregation output"

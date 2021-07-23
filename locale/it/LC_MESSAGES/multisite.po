@@ -3370,6 +3370,10 @@ msgstr "Aggiungere un nuovo servizio"
 msgid "Add new action"
 msgstr "Aggiungi una nuova azione"
 
+#, fuzzy
+msgid "Add new aggregation"
+msgstr "Aggiungere l'aggregazione"
+
 msgid "Add new constant"
 msgstr "Aggiungere una nuova costante"
 
@@ -7250,8 +7254,13 @@ msgstr ""
 "tutti gli host configurati saranno monitorati. Non appena si aggiunge almeno "
 "una regola, solo gli host con una regola corrispondente saranno monitorati."
 
-msgid "By aggregation groups"
+#, fuzzy
+msgid "By aggregation group prefix"
 msgstr "Per gruppi di aggregazione"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr "Nome dell'aggregazione"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7644,9 +7653,6 @@ msgid ""
 msgstr ""
 "Abilitando questa opzione le notifiche saranno raggruppate anche al di fuori "
 "del periodo di tempo definito."
-
-msgid "By regular expression"
-msgstr "Per espressione regolare"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -29175,6 +29181,10 @@ msgstr "Lunghezza massima"
 msgid "Max Perm used"
 msgstr "Max Perm usato"
 
+#, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "Età dell'istantanea più vecchia"
+
 msgid "Max file descriptors"
 msgstr "Descrittori di file massimi"
 
@@ -36820,6 +36830,10 @@ msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Backup"
 
 msgid "Proxmox VE VM Info"
+msgstr "Proxmox VE VM Info"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Proxmox VE VM Info"
 
 msgid "Proxmox VE disk percentage used"
@@ -62187,9 +62201,6 @@ msgstr "bit/s"
 msgid "blocks/s"
 msgstr "blocchi/s"
 
-msgid "both"
-msgstr "entrambi"
-
 msgid "broadcast"
 msgstr "trasmissione"
 
@@ -62592,9 +62603,6 @@ msgstr "flessibile con durata massima"
 
 msgid "folder"
 msgstr "cartella"
-
-msgid "folders"
-msgstr "cartelle"
 
 msgid "for"
 msgstr "per"
@@ -63881,6 +63889,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "By regular expression"
+#~ msgstr "Per espressione regolare"
+
+#~ msgid "both"
+#~ msgstr "entrambi"
+
+#~ msgid "folders"
+#~ msgstr "cartelle"
 
 #~ msgid "Currently there is one change to activate"
 #~ msgstr "Attualmente c'è una modifica da attivare"

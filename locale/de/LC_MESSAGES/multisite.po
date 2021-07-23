@@ -3351,6 +3351,10 @@ msgstr "Neuen Service hinzufügen"
 msgid "Add new action"
 msgstr "Aktion hinzufügen"
 
+#, fuzzy
+msgid "Add new aggregation"
+msgstr "Aggregation hinzufügen"
+
 msgid "Add new constant"
 msgstr "Neue Konstante hinzufügen"
 
@@ -7204,8 +7208,13 @@ msgstr ""
 "Regel leer ist, werden alle Hosts gemonitored. Sobald Sie mindestens 1 Regel "
 "angelegt haben, werden nur mit der Regel übereinstimmende Hosts geprüft."
 
-msgid "By aggregation groups"
+#, fuzzy
+msgid "By aggregation group prefix"
 msgstr "Nach Aggregationsgruppen"
+
+#, fuzzy
+msgid "By aggregation name (exact match)"
+msgstr "Aggregationsname (genaue Übereinstimmung)"
 
 msgid ""
 "By configuring this rule for a host - instead of the normal Check_MK agent "
@@ -7591,9 +7600,6 @@ msgid ""
 msgstr ""
 "Mit Hilfe dieser Option kann das Bulking auch außerhalb der ausgewählten "
 "Zeitperiode aktiviert werden."
-
-msgid "By regular expression"
-msgstr "Nach regulärem Ausdruck"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -29124,6 +29130,10 @@ msgstr "maximale Länge"
 msgid "Max Perm used"
 msgstr "Max Perm used"
 
+#, fuzzy
+msgid "Max age of the oldest snapshot"
+msgstr "Alter des ältesten Sicherungspunktes"
+
 msgid "Max file descriptors"
 msgstr "Maximale Dateideskriptoren"
 
@@ -36754,6 +36764,10 @@ msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Backup"
 
 msgid "Proxmox VE VM Info"
+msgstr "Proxmox VE VM Info"
+
+#, fuzzy
+msgid "Proxmox VE VM Snapshot Age"
 msgstr "Proxmox VE VM Info"
 
 msgid "Proxmox VE disk percentage used"
@@ -62031,9 +62045,6 @@ msgstr "bits/s"
 msgid "blocks/s"
 msgstr "Blöcke/Sek"
 
-msgid "both"
-msgstr "beide"
-
 msgid "broadcast"
 msgstr "an alle"
 
@@ -62436,9 +62447,6 @@ msgid "flexible with max. duration"
 msgstr "flexibel mit maximaler Dauer"
 
 msgid "folder"
-msgstr "Ordner"
-
-msgid "folders"
 msgstr "Ordner"
 
 msgid "for"
@@ -63726,6 +63734,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "By regular expression"
+#~ msgstr "Nach regulärem Ausdruck"
+
+#~ msgid "both"
+#~ msgstr "beide"
+
+#~ msgid "folders"
+#~ msgstr "Ordner"
 
 #~ msgid "Currently there is one change to activate"
 #~ msgstr "Derzeit gibt es eine Änderung zum Aktivieren"
@@ -65201,9 +65218,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Agents and Plugins"
 #~ msgstr "Agenten und Plugins"
-
-#~ msgid "Aggregation name (exact match)"
-#~ msgstr "Aggregationsname (genaue Übereinstimmung)"
 
 #~ msgid "Aggregation output"
 #~ msgstr "Aggregationsausgabe"

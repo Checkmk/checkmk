@@ -4,11 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils import memory
-from cmk.base.plugins.agent_based.mem_used import check_mem_used, discover_mem_used
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Metric, Service, State
+from typing import Sequence
 
 import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Attributes,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.base.plugins.agent_based.mem_used import (
+    check_mem_used,
+    discover_mem_used,
+    inventory_mem_used,
+)
+from cmk.base.plugins.agent_based.utils import memory
 
 state = State  # TODO: cleanup
 
@@ -516,3 +528,52 @@ def test_check_memory(params, meminfo, expected):
 
     assert result == expected
     assert copy_info == meminfo
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        pytest.param(
+            {
+                "Cached": 1024,
+                "MemFree": 10 * 1024**2,
+                "MemTotal": 20 * 1024**2,
+                "SwapFree": 1 * 1024**2,
+                "SwapTotal": 5 * 1024**2,
+            },
+            [
+                Attributes(
+                    path=['hardware', 'memory'],
+                    inventory_attributes={'total_ram_usable': 20971520},
+                    status_attributes={},
+                ),
+                Attributes(
+                    path=['hardware', 'memory'],
+                    inventory_attributes={'total_swap': 5242880},
+                    status_attributes={},
+                ),
+            ],
+            id="with_swap",
+        ),
+        pytest.param(
+            {
+                "Cached": 0,
+                "MemFree": 10 * 1024**2,
+                "MemTotal": 20 * 1024**2,
+            },
+            [
+                Attributes(
+                    path=['hardware', 'memory'],
+                    inventory_attributes={'total_ram_usable': 20971520},
+                    status_attributes={},
+                ),
+            ],
+            id="without_swap",
+        ),
+    ],
+)
+def test_inventory_memory(
+    section: memory.SectionMemUsed,
+    expected_result: Sequence[Attributes],
+) -> None:
+    assert list(inventory_mem_used(section)) == expected_result

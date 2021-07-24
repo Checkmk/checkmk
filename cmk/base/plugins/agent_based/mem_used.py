@@ -218,12 +218,14 @@ register.check_plugin(
 
 
 def inventory_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
-    yield Attributes(
-        path=["hardware", "memory"],
-        inventory_attributes={
-            "total_ram_usable": section["MemTotal"],
-            "total_swap": section["SwapTotal"],
-        },
+    yield from (  #
+        Attributes(
+            path=["hardware", "memory"],
+            inventory_attributes={key: value},
+        ) for key, value in (
+            ("total_ram_usable", section.get("MemTotal")),
+            ("total_swap", section.get("SwapTotal")),
+        ) if value is not None  #
     )
 
 

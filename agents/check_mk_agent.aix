@@ -645,36 +645,31 @@ run_local_checks() {
     done
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 run_spooler() {
     (
-        cd "$SPOOLDIR" || return
+        cd "${SPOOLDIR}" 2>/dev/null || return
 
         now=$(date +%s)
 
         for file in *; do
-            [ "${file}" != '*' ] || return
+            [ "${file}" != "*" ] || return
 
-            # If the file name is prefixed with a number, then that number is the maximum age of the
-            # file in seconds. If the file is older than that, it is ignored.
+            # If prefixed with a number, then that is the maximum age in seconds.
+            # If the file is older than that, it is ignored.
             maxage="${file%%[^0-9]*}"
-
-            # If there is at least one digit, than we honor that.
-            if [ "$maxage" ]; then
-                mtime=$(get_file_mtime "$file")
-                if [ $((now - mtime)) -gt "$maxage" ]; then
-                    continue
-                fi
+            if [ "${maxage}" ]; then
+                mtime=$(get_file_mtime "${file}")
+                [ $((now - mtime)) -le "${maxage}" ] || continue
             fi
 
-                # Output the file
-            cat "$file"
+            cat "${file}"
         done
     )
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_remote_plugins() {
     # caching currently not supported

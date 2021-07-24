@@ -442,6 +442,28 @@ run_local_checks() {
     done
 }
 
+run_spooler() {
+    (
+        cd "${SPOOLDIR}" 2>/dev/null || return
+
+        now=$(date +%s)
+
+        for file in *; do
+            [ "${file}" != "*" ] || return
+
+            # If prefixed with a number, then that is the maximum age in seconds.
+            # If the file is older than that, it is ignored.
+            maxage="${file%%[^0-9]*}"
+            if [ "${maxage}" ]; then
+                mtime=$(get_file_mtime "${file}")
+                [ $((now - mtime)) -le "${maxage}" ] || continue
+            fi
+
+            cat "${file}"
+        done
+    )
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -498,6 +520,8 @@ main_setup() {
 
 main_sync_parts() {
     run_purely_synchronous_sections
+
+    run_spooler
 }
 
 main_mixed_parts() {

@@ -51,7 +51,7 @@ def fixture_livestatus_test_config(mock_livestatus):
     return live
 
 
-@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.mark.usefixtures("load_config")
 def test_registered_painters():
     painters = painter_registry.keys()
     expected_painters = [
@@ -744,7 +744,7 @@ def test_registered_painters():
 
 # We only get all painters after the plugins and config have been loaded. Since there currently no
 # way to create test parameters while depending on a fixture we can not use pytests parametrization
-@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.mark.usefixtures("load_config")
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names():
     return sorted(list(painters_of_datasource("services").keys()))

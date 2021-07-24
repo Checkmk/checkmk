@@ -25,8 +25,6 @@ import cmk.gui.watolib.config_sync as config_sync
 import cmk.gui.watolib.utils as utils
 from cmk.gui.globals import config
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 
 @pytest.fixture(name="mocked_responses")
 def fixture_mocked_responses():

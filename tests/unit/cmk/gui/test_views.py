@@ -14,15 +14,11 @@ import pytest
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-from cmk.gui.globals import config
-from cmk.gui.plugins.visuals.utils import Filter
-
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 import cmk.gui.plugins.views
 import cmk.gui.views
-from cmk.gui.globals import html, user
+from cmk.gui.globals import config, html, user
 from cmk.gui.plugins.views.utils import transform_painter_spec
+from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.valuespec import ValueSpec
 

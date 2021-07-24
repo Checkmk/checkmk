@@ -17,7 +17,7 @@ from cmk.gui.watolib.utils import has_agent_bakery
 
 
 @pytest.fixture(autouse=True)
-def test_env(with_admin_login, load_config, load_plugins):
+def test_env(with_admin_login, load_config):
     # Ensure we have clean folder/host caches
     hosts_and_folders.Folder.invalidate_caches()
 

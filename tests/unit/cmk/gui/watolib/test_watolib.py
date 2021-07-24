@@ -18,8 +18,6 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.valuespec import ValueSpec
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 
 def test_registered_config_domains():
     expected_config_domains = [

@@ -214,7 +214,7 @@ def test_reverse_translation_metric_name(
         ),
     ],
 )
-def test_get_graph_templates(load_plugins, metric_names, check_command, graph_ids):
+def test_get_graph_templates(metric_names, check_command, graph_ids):
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
     assert set(graph_ids) == set(t["id"] for t in utils.get_graph_templates(translated_metrics))

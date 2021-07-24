@@ -27,8 +27,6 @@ from cmk.gui.permissions import (
     permission_section_registry,
 )
 
-pytestmark = pytest.mark.usefixtures("load_plugins")
-
 
 def test_default_config_from_plugins():
     expected = [

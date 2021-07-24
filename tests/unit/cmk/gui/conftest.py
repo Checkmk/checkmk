@@ -29,7 +29,7 @@ import cmk.utils.log
 import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
-from cmk.gui import watolib
+from cmk.gui import modules, watolib
 from cmk.gui.globals import config
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
@@ -89,14 +89,10 @@ def load_config(request_context):
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 
-@pytest.fixture()
-def load_plugins(request_context, monkeypatch, tmp_path):
-    import cmk.gui.modules as modules
-
-    monkeypatch.setattr(config, "roles", {"user": {}, "admin": {}, "guest": {}})
+@pytest.fixture(scope="session", autouse=True)
+def load_plugins():
+    modules.init_modules()
     modules.call_load_plugins_hooks()
-    yield
-    monkeypatch.undo()
 
 
 @pytest.fixture(name="patch_json", autouse=True)

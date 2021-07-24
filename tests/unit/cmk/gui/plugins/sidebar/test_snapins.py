@@ -4,13 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 import cmk.utils.version as cmk_version
 
 from cmk.gui.plugins.sidebar.utils import snapin_registry
-
-pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_registered_snapins():

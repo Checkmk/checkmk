@@ -20,6 +20,7 @@
 import copy
 import json
 import os
+from contextlib import suppress
 from typing import Any, Dict, Iterator, List
 from typing import Optional as _Optional
 from typing import Tuple
@@ -950,28 +951,29 @@ class Overridable(Base):
             cls.add_instance(("", name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
-        for profile_path in cmk.utils.paths.profile_dir.iterdir():
-            user_id = UserId(profile_path.name)
-            try:
-                path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
-                if not path.exists():
-                    continue
+        with suppress(FileNotFoundError):
+            for profile_path in cmk.utils.paths.profile_dir.iterdir():
+                user_id = UserId(profile_path.name)
+                try:
+                    path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
+                    if not path.exists():
+                        continue
 
-                if not userdb.user_exists(user_id):
-                    continue
+                    if not userdb.user_exists(user_id):
+                        continue
 
-                user_pages = store.load_object_from_file(path, default={})
-                for name, page_dict in user_pages.items():
-                    page_dict["owner"] = user_id
-                    page_dict["name"] = name
-                    page_dict = cls._transform_old_spec(page_dict)
+                    user_pages = store.load_object_from_file(path, default={})
+                    for name, page_dict in user_pages.items():
+                        page_dict["owner"] = user_id
+                        page_dict["name"] = name
+                        page_dict = cls._transform_old_spec(page_dict)
 
-                    cls.add_instance((user_id, name), cls(page_dict))
+                        cls.add_instance((user_id, name), cls(page_dict))
 
-            except SyntaxError as e:
-                raise MKGeneralException(
-                    _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
-                )
+                except SyntaxError as e:
+                    raise MKGeneralException(
+                        _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
+                    )
 
         cls._load()
         cls._declare_instance_permissions()

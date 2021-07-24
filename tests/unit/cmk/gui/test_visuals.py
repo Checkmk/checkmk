@@ -76,12 +76,10 @@ def _expected_visual_types():
     return expected_visual_types
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_types():
     assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_visual_type_attributes():
     for ident, plugin_class in utils.visual_type_registry.items():
         plugin = plugin_class()
@@ -3479,7 +3477,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-def test_registered_filters(load_plugins):
+def test_registered_filters():
     names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
@@ -3682,7 +3680,6 @@ expected_infos: Dict[str, Dict[str, Any]] = {
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_infos():
     assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
@@ -3690,7 +3687,6 @@ def test_registered_infos():
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
-@pytest.mark.usefixtures("load_plugins")
 def test_registered_info_attributes():
     for ident, cls in utils.visual_info_registry.items():
         info = cls()

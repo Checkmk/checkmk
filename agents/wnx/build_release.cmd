@@ -50,6 +50,7 @@ set VS_DEPLOY_MSI=YES
 set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
 set SKIP_MINOR_BINARIES=YES
+set build_dir=.\build
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
@@ -77,6 +78,12 @@ set exec=check_mk_service
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-32" -Foreground Red && exit /b 1
 %msbuild% wamain.sln /t:%exec% /p:Configuration=Release,Platform=x64
 if not %errorlevel% == 0 powershell Write-Host "Failed %exec%-64" -Foreground Red && exit /b 2
+
+if not "%2" == "" (
+powershell Write-Host "Signing Executables" -Foreground White
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
+)
 
 goto build_watest
 if "%SKIP_MINOR_BINARIES%" == "YES" powershell Write-Host "Skipping Minor Binaries!!!!" -Foreground Green goto build_watest
@@ -129,8 +136,8 @@ cscript.exe //nologo WiRunSQL.vbs %REMOTE_MACHINE%\check_mk_service.msi "UPDATE 
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 
 goto end
-@rem Unit Tests Phase: post processing/build special modules using make
-@rem this phase is skipped, there is no need to inculde unit tests in the build script
+:: Unit Tests Phase: post processing/build special modules using make
+:: this phase is skipped, there is no need to inculde unit tests in the build script
 powershell Write-Host "starting unit tests" -Foreground Cyan 
 
 pushd %REMOTE_MACHINE%
@@ -161,6 +168,12 @@ popd
 
 @rem Additional Phase: post processing/build special modules using make
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
+if not "%2" == "" (
+powershell Write-Host "Signing MSI" -Foreground White
+@call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
+)
+
+
 
 @rem BUILDING of frozen binaries is disabled, we do not have support from CI. And this support is not plnned
 @rem !make_exe! frozen_binaries || powershell Write-Host "Failed to build frozen binaries" -Foreground Red && exit /b 36

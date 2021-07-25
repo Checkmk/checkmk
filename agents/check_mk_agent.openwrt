@@ -110,7 +110,6 @@ run_cached() {
     local NOW=$(date +%s)
     local section=
     local mrpe=0
-    local append_age=0
     if [ "$1" = -s ]; then
         local section="echo '<<<$2:cached($NOW,$3)>>>'; "
         shift

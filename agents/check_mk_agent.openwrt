@@ -298,9 +298,9 @@ section_kernel() {
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
     if type ipmitool >/dev/null; then
-        run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
-        run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
+        run_cached "ipmi_discrete" 300 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
@@ -316,11 +316,12 @@ section_ipmisensors() {
             IPMI_FORMAT=""
         fi
         # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan; do
-            ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g \"$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+        run_cached "ipmi_sensors" 300 "echo <<<ipmi_sensors>>>
+            for class in Temperature Power_Unit Fan; do
+                ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g \"$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
             # In case of a timeout immediately leave loop.
-            if [ $? = 255 ]; then break; fi
-        done"
+                if [ $? = 255 ]; then break; fi
+            done"
     fi
 }
 
@@ -409,7 +410,7 @@ section_arc_raid_status() {
     # RAID controllers from areca (Taiwan)
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
     if type cli64 >/dev/null; then
-        run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
+        run_cached "arc_raid_status" 300 "echo <<<arc_raid_status>>>; cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
 
@@ -426,7 +427,7 @@ section_ntp() {
     # Time synchronization with NTP
     if type ntpq >/dev/null 2>&1; then
         # remove heading, make first column space separated
-        run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+        run_cached "ntp" 30 "echo <<<ntp>>>; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
     fi
 }
 
@@ -434,7 +435,7 @@ section_chrony() {
     # Time synchronization with Chrony
     if type chronyc >/dev/null 2>&1; then
         # Force successful exit code. Otherwise section will be missing if daemon not running
-        run_cached -s chrony 30 "waitmax 5 chronyc tracking || true"
+        run_cached "chrony" 30 "echo <<<chrony>>>; waitmax 5 chronyc tracking || true"
     fi
 }
 
@@ -483,7 +484,7 @@ section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups
                 fi
             }
             # Use cups_queues function with run_cached and cache time of 5 mins
-            run_cached -s cups_queues 300 "cups_queues"
+            run_cached "cups_queues" 300 "echo <<<cups_queues>>>; cups_queues"
         fi
     fi
 }
@@ -558,7 +559,7 @@ section_nullmailer() {
 section_mknotify() {
     # Check status of OMD sites and Checkmk Notification spooler
     if type omd >/dev/null; then
-        run_cached -s omd_status 60 "omd status --bare --auto || true"
+        run_cached "omd_status" 60 "echo <<<omd_status>>>; omd status --bare --auto || true"
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
         for statefile in /omd/sites/*/var/log/mknotifyd.state; do
@@ -824,17 +825,10 @@ run_plugins() {
 }
 
 # Runs a command asynchronous by use of a cache file. Usage:
-# run_cached [-s] NAME MAXAGE
-#   -s creates the section header <<<$NAME>>>
-#   NAME is the name of the section (also used as cache file name)
+# run_cached NAME MAXAGE COMMAND
+#   NAME is the cache file name
 #   MAXAGE is the maximum cache livetime in seconds
 run_cached() {
-    local NOW=$(date +%s)
-    local section=
-    if [ "$1" = -s ]; then
-        local section="echo '<<<$2:cached($NOW,$3)>>>'; "
-        shift
-    fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
@@ -842,6 +836,8 @@ run_cached() {
 
     if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache; fi
     CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+
+    local NOW=$(date +%s)
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE

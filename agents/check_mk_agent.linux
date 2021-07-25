@@ -599,7 +599,7 @@ section_chrony() {
         # The "| cat" has been added for some kind of regression in RedHat 7.5. The
         # SELinux rules shipped with that release were denying the chronyc call
         # without cat.
-        run_cached -s chrony 30 "waitmax 5 chronyc -n tracking | cat || true"
+        run_cached "chrony" 30 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
     fi
 }
 
@@ -613,9 +613,9 @@ section_kernel() {
 
 section_ipmitool() {
     if inpath ipmitool; then
-        run_cached -s "ipmi:sep(124)" 300 "waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -E -v '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
-        run_cached -s "ipmi_discrete:sep(124)" 300 "waitmax 300 ipmitool sdr elist compact"
+        run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
@@ -635,7 +635,7 @@ section_ipmisensors() {
         fi
 
         # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-        run_cached -s ipmi_sensors 300 "for class in Temperature Power_Unit Fan; do
+        run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
             ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache $IPMI_GROUP_OPT \"\$class\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
             # In case of a timeout immediately leave loop.
             if [ $? = 255 ]; then break; fi
@@ -723,7 +723,7 @@ section_3ware_raid() {
 
 section_areca_raid() {
     if inpath cli64; then
-        run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
+        run_cached "arc_raid_status" 300 "echo '<<<arc_raid_status>>>'; cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
 
@@ -874,7 +874,7 @@ section_mailqueue() {
 
 section_omd() {
     if inpath omd; then
-        run_cached -s omd_status 60 "omd status --bare || true"
+        run_cached "omd_status" 60 "echo '<<<omd_status>>>'; omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -1186,7 +1186,7 @@ section_fileinfo() {
 
 get_ntpq() {
     inpath ntpq || return 1
-    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+    run_cached "ntp" 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 }
 
 section_timesyncd() {
@@ -1357,18 +1357,10 @@ is_valid_plugin() {
 #   NAME is the name of the section (also used as cache file name)
 #   MAXAGE is the maximum cache livetime in seconds
 run_cached() {
-    local NOW
-    NOW=$(date +%s)
-    local section=
-    if [ "$1" = -s ]; then
-        # shellcheck disable=SC2089
-        local section="echo '<<<$2:cached($NOW,$3)>>>'; "
-        shift
-    fi
     local NAME=$1
     local MAXAGE=$2
     shift 2
-    local CMDLINE=$section$*
+    local CMDLINE=$*
 
     if $DISABLE_CACHING; then
         # shellcheck disable=SC2090
@@ -1378,6 +1370,9 @@ run_cached() {
 
     if [ ! -d "$MK_VARDIR/cache" ]; then mkdir -p "$MK_VARDIR/cache"; fi
     CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+
+    local NOW
+    NOW=$(date +%s)
 
     # Check if the creation of the cache takes suspiciously long and kill the
     # process if the age (access time) of $CACHEFILE.new is twice the MAXAGE.

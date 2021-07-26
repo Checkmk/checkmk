@@ -306,4 +306,6 @@ def cmk_graph_url(row, what):
     else:
         urivars.append(("view_name", "host_graphs"))
 
+    urivars.append(("_active", ";".join(set(["siteopt", "host", what]))))
+
     return makeuri_contextless(request, urivars, filename="view.py")

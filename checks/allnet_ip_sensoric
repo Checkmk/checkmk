@@ -201,7 +201,8 @@ allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
 def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in sensor_data and sensor_data["function"] == "2":
+        if (("function" in sensor_data and sensor_data["function"] == "2") or
+                sensor_data.get("unit") == "%"):
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
     return inventory

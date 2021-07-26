@@ -239,42 +239,6 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
 
 @host_attribute_registry.register
-class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
-    def topic(self):
-        return HostAttributeTopicDataSources
-
-    @classmethod
-    def sort_index(cls):
-        return 64  # after agent, before snmp
-
-    def name(self):
-        return "cmk_agent_connection"
-
-    def show_in_table(self):
-        return False
-
-    def show_in_folder(self):
-        return True
-
-    def depends_on_tags(self):
-        return ["checkmk-agent"]
-
-    def valuespec(self):
-        return DropdownChoice(
-            title=_('Checkmk agent connection mode'),
-            choices=[
-                ('pull-agent', _('Pull: Checkmk server contacts the agent')),
-                ('push-agent', _('Push: Checkmk agent contacts the server')),
-            ],
-            help=_(  #
-                "By default the server will try to contact the monitored host and pull the"
-                " data by initializing a TCP connection. You can configure a push"
-                " configuration, where the monitored host is expected to send the data to"
-                " the monitoring server without being actively triggered."),
-        )
-
-
-@host_attribute_registry.register
 class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def topic(self):
         return HostAttributeTopicDataSources

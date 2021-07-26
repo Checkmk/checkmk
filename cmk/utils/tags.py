@@ -588,12 +588,12 @@ class BuiltinTagConfig(TagConfig):
                     {
                         'id': 'cmk-agent',
                         'title': _('API integrations if configured, else Checkmk agent'),
-                        'aux_tags': ['tcp', 'checkmk-agent'],
+                        'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'all-agents',
                         'title': _('Configured API integrations and Checkmk agent'),
-                        'aux_tags': ['tcp', 'checkmk-agent'],
+                        'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'special-agents',
@@ -707,11 +707,6 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'tcp',
-                'topic': _('Monitoring agents'),
-                'title': _('Monitor via Checkmk Agent or special agent'),
-            },
-            {
-                'id': 'checkmk-agent',
                 'topic': _('Monitoring agents'),
                 'title': _('Monitor via Checkmk Agent'),
             },

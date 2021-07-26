@@ -173,16 +173,11 @@ class _Builder:
                 template=datasource_program,
             )
 
-        connection_mode = self.host_config.agent_connection_mode()
-        if connection_mode == "push-agent":
-            return PushAgentSource(self.hostname)
-        if connection_mode == "pull-agent":
-            return TCPSource(
-                self.hostname,
-                self.ipaddress,
-                main_data_source=main_data_source,
-            )
-        raise NotImplementedError(f"connection mode {connection_mode!r}")
+        return PushAgentSource(self.hostname) if self.host_config.push_config() else TCPSource(
+            self.hostname,
+            self.ipaddress,
+            main_data_source=main_data_source,
+        )
 
     def _get_special_agents(self) -> Sequence[Source]:
         return [

@@ -125,7 +125,6 @@ def test_config_cache_tag_to_group_map(monkeypatch):
         'all-agents': 'agent',
         'auto-piggyback': 'piggyback',
         'cmk-agent': 'agent',
-        'checkmk-agent': 'checkmk-agent',
         'dong': 'dingeling',
         'ip-v4': 'ip-v4',
         'ip-v4-only': 'address_family',
@@ -1309,8 +1308,8 @@ def test_config_cache_tag_list_of_host(monkeypatch):
     print(config_cache._hosttags["test-host"])
     print(config_cache._hosttags["xyz"])
     assert config_cache.tag_list_of_host("xyz") == {
-        '/wato/', 'lan', 'ip-v4', 'checkmk-agent', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback',
-        'ip-v4-only', 'site:unit', 'prod'
+        '/wato/', 'lan', 'ip-v4', 'cmk-agent', 'no-snmp', 'tcp', 'auto-piggyback', 'ip-v4-only',
+        'site:unit', 'prod'
     }
 
 
@@ -1344,7 +1343,6 @@ def test_host_tags_of_host(monkeypatch):
         'site': 'unit',
         'snmp_ds': 'no-snmp',
         'tcp': 'tcp',
-        'checkmk-agent': 'checkmk-agent',
     }
     assert config_cache.tags_of_host("xyz") == cfg.tag_groups
 
@@ -1387,7 +1385,6 @@ def test_tags_of_service(monkeypatch):
         'site': 'unit',
         'snmp_ds': 'no-snmp',
         'tcp': 'tcp',
-        'checkmk-agent': 'checkmk-agent',
     }
     assert config_cache.tags_of_service("xyz", "CPU load") == {}
 

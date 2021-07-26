@@ -270,18 +270,6 @@ expected_attributes = {
         'show_inherited_value': True,
         'topic': u'Monitoring agents'
     },
-    'cmk_agent_connection': {
-        'depends_on_roles': [],
-        'depends_on_tags': ['checkmk-agent'],
-        'editable': True,
-        'from_config': False,
-        'show_in_folder': True,
-        'show_in_form': True,
-        'show_in_host_search': True,
-        'show_in_table': False,
-        'show_inherited_value': True,
-        'topic': u'Monitoring agents'
-    },
     'tag_snmp_ds': {
         'depends_on_roles': [],
         'depends_on_tags': [],
@@ -496,7 +484,6 @@ def test_host_attributes(for_what, new):
         ],
         "monitoring_agents": [
             'tag_agent',
-            'cmk_agent_connection',
             'tag_snmp_ds',
             'snmp_community',
             'tag_piggyback',

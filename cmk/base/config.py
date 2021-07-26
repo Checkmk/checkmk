@@ -2503,8 +2503,11 @@ class HostConfig:
 
         return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
 
-    def agent_connection_mode(self) -> str:
-        return cmk_agent_connection.get(self.hostname, "pull-agent")
+    def push_config(self) -> bool:
+        # This is not yet implemented (clearly).
+        # But we need to start somewhere, so we provide this (dev-only) option to clandestine
+        # configure the push data source:
+        return host_labels.get(self.hostname, {}).get("cmk/dev/push-agent") == "yes"
 
     def snmp_config(self, ip_address: HostAddress) -> SNMPHostConfig:
         return SNMPHostConfig(

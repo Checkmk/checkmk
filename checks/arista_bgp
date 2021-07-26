@@ -140,6 +140,8 @@ def parse_arista_bgp(
         info: typing.Sequence[typing.Sequence[typing.Any]]) -> typing.Dict[str, typing.Any]:
     def convert(name: str, value: str) -> typing.Any:
         if name in {"Local address", "Local identifier", "Remote identifier"}:
+            if value == []:
+                return "empty()"
             return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
         if name == "Admin state":
             return {

@@ -63,6 +63,14 @@ def is_windows(monkeypatch, mk_postgres):
     monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', True)
     monkeypatch.setattr(mk_postgres, 'IS_LINUX', False)
     monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
+    monkeypatch.setattr(
+        mk_postgres.PostgresWin,
+        "_call_wmic_logicaldisk",
+        staticmethod(
+            lambda:
+            "DeviceID  \r\r\nC:        \r\r\nD:        \r\r\nH:        \r\r\nI:        \r\r\nR:        \r\r\n\r\r\n"
+        ),
+    )
 
 
 def test_postgres_linux_config_without_instance(mk_postgres, monkeypatch, is_linux):

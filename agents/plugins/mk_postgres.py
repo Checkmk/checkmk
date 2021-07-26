@@ -23,7 +23,7 @@ import logging
 import optparse  # pylint: disable=W0402
 
 try:
-    from typing import Any, Dict, List, Optional, Tuple
+    from typing import Any, Dict, Iterable, List, Optional, Tuple
 except ImportError:
     # We need typing only for testing
     pass
@@ -359,16 +359,44 @@ class PostgresWin(PostgresBase):
         out = ensure_str(proc.communicate()[0])
         return out.rstrip()
 
+    @staticmethod
+    def _call_wmic_logicaldisk():
+        # type: () -> str
+        return ensure_str(subprocess_check_output([
+            "wmic",
+            "logicaldisk",
+            "get",
+            "deviceid",
+        ]))
+
+    @staticmethod
+    def _parse_wmic_logicaldisk(wmic_output):
+        # type: (str) -> Iterable[str]
+        for drive in wmic_output.replace('DeviceID', '').split(':')[:-1]:
+            yield drive.strip()
+
+    @classmethod
+    def _logical_drives(cls):
+        # type: () -> Iterable[str]
+        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
+            yield drive
+
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         """This method returns the system specific psql interface binary as callable string"""
 
         # TODO: Make this more clever...
-        for pg_ver in self._supported_pg_versions:
-            bin_path = "C:\\Program Files\\PostgreSQL\\%s\\bin" % pg_ver
-            psql_path = "%s\\psql.exe" % bin_path
-            if os.path.isfile(psql_path):
-                return psql_path, bin_path
+        for drive in self._logical_drives():
+            for pg_ver in self._supported_pg_versions:
+                for bin_path_pattern in (
+                        "%s:\\Program Files\\PostgreSQL\\%s\\bin",
+                        "%s:\\Program Files (x86)\\PostgreSQL\\%s\\bin",
+                        "%s:\\PostgreSQL\\%s\\bin",
+                ):
+                    bin_path = bin_path_pattern % (drive, pg_ver)
+                    psql_path = "%s\\psql.exe" % bin_path
+                    if os.path.isfile(psql_path):
+                        return psql_path, bin_path
 
         raise IOError("Could not determine psql bin and its path.")
 

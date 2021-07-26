@@ -9,7 +9,7 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
-__version__ = "2.1.0i1"
+__version__ = "2.0.0p7"
 
 import io
 import subprocess
@@ -21,6 +21,7 @@ import sys
 import logging
 # optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
 import optparse  # pylint: disable=W0402
+import win32api
 
 try:
     from typing import Any, Dict, List, Optional, Tuple
@@ -362,13 +363,25 @@ class PostgresWin(PostgresBase):
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         """This method returns the system specific psql interface binary as callable string"""
-
+        drives = win32api.GetLogicalDriveStrings()
+        drives = drives.split('\000')[:-1]
         # TODO: Make this more clever...
-        for pg_ver in self._supported_pg_versions:
-            bin_path = "C:\\Program Files\\PostgreSQL\\%s\\bin" % pg_ver
-            psql_path = "%s\\psql.exe" % bin_path
-            if os.path.isfile(psql_path):
-                return psql_path, bin_path
+        for drive in drives:
+            for pg_ver in self._supported_pg_versions:
+                bin_path = "%sProgram Files\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
+                psql_path = "%s\\psql.exe" % bin_path
+                if os.path.isfile(psql_path):
+                    return psql_path, bin_path
+                    
+                bin_path = "%sProgram Files (x86)\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
+                psql_path = "%s\\psql.exe" % bin_path
+                if os.path.isfile(psql_path):
+                    return psql_path, bin_path
+                
+                bin_path = "%sPostgreSQL\\%s\\bin" % (drive, pg_ver)
+                psql_path = "%s\\psql.exe" % bin_path
+                if os.path.isfile(psql_path):
+                    return psql_path, bin_path
 
         raise IOError("Could not determine psql bin and its path.")
 
@@ -943,8 +956,7 @@ def get_postgres_user_linux():
                 return user_id.rstrip()
         except subprocess.CalledProcessError:
             pass
-    LOGGER.warning("Could not determine postgres user, using \"postgres\" as default")
-    return "postgres"
+    raise ValueError("Could not determine postgres user!")
 
 
 def main(argv=None):

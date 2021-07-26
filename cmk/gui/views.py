@@ -1750,7 +1750,7 @@ def show_filter_form(view: View, show_filters: List[Filter]) -> None:
 
 class ABCAjaxInitialFilters(AjaxPage):
     @abc.abstractmethod
-    def _get_context(self, page_name: str) -> Dict:
+    def _get_context(self, page_name: str) -> VisualContext:
         raise NotImplementedError()
 
     def page(self) -> Dict[str, str]:
@@ -1768,7 +1768,7 @@ class ABCAjaxInitialFilters(AjaxPage):
 
 @page_registry.register_page("ajax_initial_view_filters")
 class AjaxInitialViewFilters(ABCAjaxInitialFilters):
-    def _get_context(self, page_name: str) -> Dict:
+    def _get_context(self, page_name: str) -> VisualContext:
         # Obtain the visual filters and the view context
         view_name = page_name
         try:

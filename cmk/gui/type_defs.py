@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Text,
@@ -41,11 +42,11 @@ UserSpec = Dict[str, Any]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str
-FilterHTTPVariables = Dict[str, str]
+FilterHTTPVariables = Mapping[str, str]
 Visual = Dict[str, Any]
 VisualName = str
 VisualTypeName = str
-VisualContext = Dict[FilterName, FilterHTTPVariables]
+VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
 SingleInfos = List[InfoName]
 VisualLinkSpec = NamedTuple("VisualLinkSpec", [

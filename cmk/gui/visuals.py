@@ -871,7 +871,7 @@ def visual_spec_multi(info_key):
 
 
 def process_context_specs(context_specs) -> VisualContext:
-    context: VisualContext = {}
+    context = {}
     for info_key, spec in context_specs:
         ident = 'context_' + info_key
 
@@ -1400,12 +1400,12 @@ def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> H
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
 def get_context_from_uri_vars(only_infos: Optional[List[InfoName]] = None) -> VisualContext:
-    context: VisualContext = {}
+    context = {}
     for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
             continue  # Skip filters related to not relevant infos
 
-        this_filter_vars: FilterHTTPVariables = {}
+        this_filter_vars = {}
         for varname in filter_object.htmlvars:
             if not request.has_var(varname):
                 continue  # Variable to set in environment
@@ -1432,10 +1432,7 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
     2. Dashboard context
     3. Dashlet context
     """
-    merged_context = {}
-    for c in contexts:
-        merged_context.update(c)
-    return merged_context
+    return {key: value for context in contexts for key, value in context.items()}
 
 
 # Compute Livestatus-Filters based on a given context. Returns
@@ -1774,10 +1771,7 @@ def pack_context_for_editing(visual: Visual,
 
 
 def unpack_context_after_editing(packed_context: Dict) -> VisualContext:
-    context: VisualContext = {}
-    for _info_type, its_context in packed_context.items():
-        context.update(its_context)
-    return context
+    return get_merged_context(*(its_context for _info_type, its_context in packed_context.items()))
 
 
 #.
@@ -2035,7 +2029,9 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuD
     ]
 
 
-def _encode_page_context(page_context: VisualContext) -> VisualContext:
+# TODO: VisualContext can't be part of the types, VisualContext has neither
+# None nor str on the values. Thus unhelpfully set to Dict
+def _encode_page_context(page_context: Dict) -> Dict:
     return {k: "" if v is None else v for k, v in page_context.items()}
 
 

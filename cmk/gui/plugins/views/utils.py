@@ -1748,7 +1748,7 @@ def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
             single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
-            context: VisualContext = {}
+            context: Dict[str, Dict[str, str]]= {} # VisualContext, but we are mutating to create it
             filtervars = dict(view['hard_filtervars'])
             all_vars = {}
             for filter_name in view['show_filters']:

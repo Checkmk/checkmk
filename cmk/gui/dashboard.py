@@ -998,14 +998,18 @@ def _dashboard_related_entries(
         )
 
 
+def _minimal_context(mandatory_filters: Iterable[str],
+                     known_context: VisualContext) -> VisualContext:
+    filter_context: VisualContext = {name: {} for name in mandatory_filters}
+    return visuals.get_merged_context(filter_context, known_context)
+
+
 def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,
                              unconfigured_single_infos: Set[str]) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
-    mandatory_context: VisualContext = {
-        name: {} for name in _get_mandatory_filters(board, unconfigured_single_infos)
-    }
-    mandatory_context.update(board_context)
+    minimal_context = _minimal_context(_get_mandatory_filters(board, unconfigured_single_infos),
+                                       board_context)
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
 
@@ -1017,7 +1021,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
                               title=_("Filter"),
                               icon_name="filter",
                               item=PageMenuSidePopup(
-                                  visuals.render_filter_form(info_list, mandatory_context,
+                                  visuals.render_filter_form(info_list, minimal_context,
                                                              board["name"],
                                                              "ajax_initial_dashboard_filters")),
                               name="filters",
@@ -1029,7 +1033,7 @@ def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_conte
 
 @page_registry.register_page("ajax_initial_dashboard_filters")
 class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
-    def _get_context(self, page_name: str) -> Dict:
+    def _get_context(self, page_name: str) -> VisualContext:
         dashboard_name = page_name
         board = _load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
         board = _add_context_to_dashboard(board)
@@ -1041,11 +1045,7 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
                 f.ident: board["context"].get(f.ident, {}) for f in show_filters if f.available()
             }
 
-        mandatory_context: VisualContext = {
-            name: {} for name in _get_mandatory_filters(board, set())
-        }
-        mandatory_context.update(board["context"])
-        return mandatory_context
+        return _minimal_context(_get_mandatory_filters(board, set()), board['context'])
 
 
 @dataclass

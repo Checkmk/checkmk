@@ -42,10 +42,11 @@ from typing import (
     Dict,
     Final,
     Generic,
-    Iterable,
     ItemsView,
+    Iterable,
     List,
     Literal,
+    Mapping,
     NamedTuple,
     Optional as _Optional,
     Pattern,
@@ -2013,7 +2014,7 @@ class ListOfMultiple(ValueSpec):
                                                             json.dumps(ident))
         html.icon_button("#", self._del_label, "close", onclick=js, class_="delete_button")
 
-    def render_input(self, varprefix: str, value: Dict[str, Any]) -> None:
+    def render_input(self, varprefix: str, value: Mapping[str, Any]) -> None:
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
         # ignore 'value' but reuse the input from the HTML variables -
@@ -2074,14 +2075,14 @@ class ListOfMultiple(ValueSpec):
                 json.dumps(self._choice_page_name),
                 json.dumps(self._page_request_vars)))
 
-    def show_choice_row(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
+    def show_choice_row(self, varprefix: str, ident: str, value: Mapping[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_tr(id_="%s_row" % prefix)
         self._show_del_button(varprefix, ident)
         self._show_content(varprefix, ident, value)
         html.close_tr()
 
-    def _show_content(self, varprefix: str, ident: str, value: Dict[str, Any]) -> None:
+    def _show_content(self, varprefix: str, ident: str, value: Mapping[str, Any]) -> None:
         prefix = varprefix + '_' + ident
         html.open_td(class_=["vlof_content"])
         vs = self._choice_dict[ident]

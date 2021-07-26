@@ -1686,7 +1686,7 @@ class FilterLogContactName(FilterText):
     list contains comma-separated contact names (user ids), but it is of type string."""
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         if current_value := value.get(self.htmlvars[0]):
-            new_value = value.copy()
+            new_value = dict(value.items())
             new_value[self.htmlvars[0]] = "(,|^)" + current_value.replace(".", "\\.") + "(,|$)"
             return self._filter(new_value)
         return ""

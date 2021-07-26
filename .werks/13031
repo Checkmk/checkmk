@@ -1,0 +1,13 @@
+Title: arista_bgp: handle empty addresses
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1627297253
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p9
+
+The discovery showed a warning that parsing arista_bgp could not be
+performed. This happened when the local address was empty. The check can now
+handle empty addresses.

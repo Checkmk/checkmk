@@ -1,0 +1,15 @@
+Title: LDAP: Fix handling of groups containing "#" in Active Directory
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1627295949
+Class: fix
+
+The Active Directory allows users to use "#" characters in group names
+and distinguished names (DNs). Previous version of Checkmk were not able to
+use these groups for the roles attribute synchronization.
+
+With this change it is now possible to use group DNs like this:
+"CN=#abc,OU=xyz,DC=corp,DC=com".

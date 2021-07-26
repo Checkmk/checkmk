@@ -38,6 +38,7 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
+import cmk.utils.regex
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -387,6 +388,23 @@ def _get_permitted_inventory_paths():
 #   '----------------------------------------------------------------------'
 
 
+def check_for_valid_hostname(hostname):
+    """test hostname for invalid chars, raises MKUserError if invalid chars are found
+    >>> check_for_valid_hostname("klappspaten")
+    >>> check_for_valid_hostname("../../etc/passwd")
+    Traceback (most recent call last):
+    cmk.gui.exceptions.MKUserError: You need to provide a valid "hostname". Only letters, digits, dash, underscore and dot are allowed.
+    """
+    hostname_regex = cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME)
+    if hostname_regex.match(str(hostname)):
+        return
+    raise MKUserError(
+        None,
+        _(
+            "You need to provide a valid \"hostname\". "
+            "Only letters, digits, dash, underscore and dot are allowed.",))
+
+
 @cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api():
     # The response is always a top level dict with two elements:
@@ -401,12 +419,14 @@ def page_host_inv_api():
         if hosts:
             result = {}
             for host_name in hosts:
+                check_for_valid_hostname(host_name)
                 result[host_name] = inventory_of_host(host_name, request)
 
         else:
             host_name = request.get("host")
             if host_name is None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
+            check_for_valid_hostname(host_name)
 
             result = inventory_of_host(host_name, request)
 

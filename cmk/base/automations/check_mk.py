@@ -86,7 +86,6 @@ from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.check_utils import Service
 from cmk.base.core import CoreAction, do_restart
-from cmk.base.core_config import HostsToActivate
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import (
@@ -872,13 +871,13 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    def execute(self, args: HostsToActivate) -> core_config.ConfigurationWarnings:
+    def execute(self, args: List[str]) -> core_config.ConfigurationWarnings:
         with redirect_stdout(open(os.devnull, "w")):
             log.setup_console_logging()
             try:
                 do_restart(create_core(config.monitoring_core),
                            self._mode(),
-                           hosts_to_activate=args)
+                           hosts_to_update=None if not args else set(args))
             except (MKBailOut, MKGeneralException) as e:
                 raise MKAutomationError(str(e))
 

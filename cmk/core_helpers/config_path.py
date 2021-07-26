@@ -76,6 +76,9 @@ class VersionedConfigPath(ConfigPath, Iterator):
         store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
         return VersionedConfigPath(serial)
 
+    def previous_config_path(self) -> VersionedConfigPath:
+        return VersionedConfigPath(self.serial - 1)
+
     @contextmanager
     def create(self, *, is_cmc: bool) -> Iterator[None]:
         if not is_cmc:

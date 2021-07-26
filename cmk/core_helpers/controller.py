@@ -11,6 +11,7 @@ import os
 import signal
 import sys
 import traceback
+from functools import lru_cache
 from pathlib import Path
 from types import FrameType
 from typing import Any, Iterator, List, Mapping, NamedTuple, Optional
@@ -36,7 +37,12 @@ def make_global_config_path(config_path: ConfigPath) -> Path:
 
 
 def make_local_config_path(config_path: ConfigPath, host_name: HostName) -> Path:
-    return Path(config_path) / "fetchers" / "hosts" / f"{host_name}.json"
+    return make_local_config_dir(config_path) / f"{host_name}.json"
+
+
+@lru_cache
+def make_local_config_dir(config_path: ConfigPath) -> Path:
+    return Path(config_path) / "fetchers" / "hosts"
 
 
 class GlobalConfig(NamedTuple):

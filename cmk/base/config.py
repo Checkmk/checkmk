@@ -19,6 +19,7 @@ import socket
 import struct
 import sys
 from collections import Counter, OrderedDict
+from functools import lru_cache
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -757,7 +758,11 @@ class PackedConfigStore:
 
     @classmethod
     def from_serial(cls, config_path: ConfigPath) -> "PackedConfigStore":
-        return cls(Path(config_path) / "precompiled_check_config.mk")
+        return cls(cls.make_packed_config_store_path(config_path))
+
+    @classmethod
+    def make_packed_config_store_path(cls, config_path: ConfigPath):
+        return Path(config_path) / "precompiled_check_config.mk"
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -771,12 +776,22 @@ class PackedConfigStore:
             return pickle.load(f)
 
 
+@lru_cache
 def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
     return Path(config_path) / "autochecks"
 
 
+def make_core_autochecks_file(config_path: ConfigPath, hostname: HostName) -> Path:
+    return make_core_autochecks_dir(Path(config_path)) / f"%{hostname}.mk"
+
+
+@lru_cache
 def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
     return Path(config_path) / "discovered_host_labels"
+
+
+def make_core_discovered_host_labels_file(config_path: ConfigPath, hostname: HostName) -> Path:
+    return make_core_discovered_host_labels_dir(config_path) / f"%{hostname}.mk"
 
 
 @contextlib.contextmanager

@@ -27,7 +27,7 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
-from cmk.base.core_config import HostsToActivate, MonitoringCore
+from cmk.base.core_config import HostsToUpdate, MonitoringCore
 
 #.
 #   .--Control-------------------------------------------------------------.
@@ -55,10 +55,10 @@ def do_reload(core: MonitoringCore) -> None:
 
 def do_restart(core: MonitoringCore,
                action: CoreAction = CoreAction.RESTART,
-               hosts_to_activate: HostsToActivate = None) -> None:
+               hosts_to_update: HostsToUpdate = None) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
-            core_config.do_create_config(core, hosts_to_activate=hosts_to_activate)
+            core_config.do_create_config(core, hosts_to_update=hosts_to_update)
             do_core_action(action)
 
     except Exception as e:

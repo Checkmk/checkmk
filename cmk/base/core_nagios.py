@@ -69,7 +69,8 @@ class NagiosCore(core_config.MonitoringCore):
 
     def create_config(self,
                       config_path: VersionedConfigPath,
-                      hosts_to_activate: core_config.HostsToActivate = None) -> None:
+                      config_cache: ConfigCache,
+                      hosts_to_update: core_config.HostsToUpdate = None) -> None:
         self._create_core_config()
         self._precompile_hostchecks(config_path)
 

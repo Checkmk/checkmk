@@ -21,6 +21,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Union,
 )
@@ -28,7 +29,6 @@ from typing import (
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
@@ -63,7 +63,7 @@ ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
-HostsToActivate = Optional[List[HostName]]
+HostsToUpdate = Optional[Set[HostName]]
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
@@ -75,7 +75,8 @@ class MonitoringCore(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def create_config(self,
                       config_path: VersionedConfigPath,
-                      hosts_to_activate: HostsToActivate = None) -> None:
+                      config_cache: ConfigCache,
+                      hosts_to_update: HostsToUpdate = None) -> None:
         raise NotImplementedError
 
 
@@ -277,16 +278,20 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 #   '----------------------------------------------------------------------'
 
 
-def do_create_config(core: MonitoringCore, hosts_to_activate: HostsToActivate = None) -> None:
+def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None) -> None:
     """Creating the monitoring core configuration and additional files
 
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    out.output("Generating configuration for core (type %s)..." % core.name())
+    out.output("Generating configuration for core (type %s)...\n" % core.name())
+    if hosts_to_update is not None:
+        out.output(
+            "Reuse old configuration, create new configuration for %s and dependant hosts\n" %
+            ", ".join(hosts_to_update))
+
     try:
-        _create_core_config(core, hosts_to_activate=hosts_to_activate)
-        out.output(tty.ok + "\n")
+        _create_core_config(core, hosts_to_update=hosts_to_update)
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
@@ -343,15 +348,16 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 
 
 def _create_core_config(core: MonitoringCore,
-                        hosts_to_activate: HostsToActivate = None) -> ConfigurationWarnings:
+                        hosts_to_update: HostsToUpdate = None) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
 
     config_path = next(VersionedConfigPath.current())
+    config_cache = config.get_config_cache()
     with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
-        core.create_config(config_path, hosts_to_activate=hosts_to_activate)
+        core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
     cmk.utils.password_store.save(config.stored_passwords)
 

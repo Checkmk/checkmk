@@ -57,6 +57,17 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # system.devicetype;ALL5000
 # system.sys;114854
 # system.time;16:08:48
+# [...]
+#sensor105.max_abs_float;70.06
+#sensor105.max_day_float;61.47
+#sensor105.min_abs_float;51.29
+#sensor105.min_day_float;59.93
+#sensor105.name;Feuchtigkeit
+#sensor105.unit;%
+#sensor105.value_display;60.62 %
+#sensor105.value_float;60.62
+#sensor105.value_int;6061
+#sensor105.value_string;60.62
 
 
 def parse_allnet_ip_sensoric(info):
@@ -201,7 +212,8 @@ allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
 def inventory_allnet_ip_sensoric_humidity(parsed):
     inventory = []
     for sensor, sensor_data in parsed.items():
-        if "function" in sensor_data and sensor_data["function"] == "2":
+        if "function" in sensor_data and sensor_data["function"] == "2" \
+            or (sensor_data.get('unit') and sensor_data['unit'] == u'%'):
             item = allnet_ip_sensoric_compose_item(sensor, sensor_data)
             inventory.append((item, "allnet_ip_sensoric_humidity_default_levels"))
     return inventory

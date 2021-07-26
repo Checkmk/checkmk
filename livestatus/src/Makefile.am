@@ -16,7 +16,7 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-18-0
+ASIO_VERSION := asio-asio-1-18-2
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.2

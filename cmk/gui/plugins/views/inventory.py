@@ -1924,7 +1924,7 @@ class DeltaNodeRenderer(NodeRenderer):
 @cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree():
     site_id = html.request.var("site")
-    hostname = html.request.var("host")
+    hostname = request.get_ascii_input_mandatory("hostname")
     inventory.verify_permission(hostname, site_id)
 
     invpath = html.request.var("path")

@@ -7,7 +7,6 @@
 import ast
 import json
 import os
-import re
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
@@ -127,21 +126,15 @@ def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
 
 
 def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: HostName) -> Row:
-    # hostname is unsanitized yet
-    sanitized_hostname = re.sub(
-        r"[^%s]" % cmk.utils.regex.REGEX_HOST_NAME_CHARS,
-        "",
-        hostname,
-    )
     query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % livestatus.lqencode(
-        sanitized_hostname)
+        hostname)
     try:
         sites.live().set_only_sites([site] if site else None)
         result = sites.live().query(query)
     finally:
         sites.live().set_only_sites()
 
-    row = {"host_name": sanitized_hostname}
+    row = {"host_name": hostname}
     if result and result[0]:
         row["host_structured_status"] = result[0][0]
     return row
@@ -450,6 +443,23 @@ def _get_permitted_inventory_paths():
 #   '----------------------------------------------------------------------'
 
 
+def check_for_valid_hostname(hostname: HostName) -> None:
+    """test hostname for invalid chars, raises MKUserError if invalid chars are found
+    >>> check_for_valid_hostname("klappspaten")
+    >>> check_for_valid_hostname("../../etc/passwd")
+    Traceback (most recent call last):
+    cmk.gui.exceptions.MKUserError: You need to provide a valid "hostname". Only letters, digits, dash, underscore and dot are allowed.
+    """
+    hostname_regex = cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME)
+    if hostname_regex.match(str(hostname)):
+        return
+    raise MKUserError(
+        None,
+        _(
+            "You need to provide a valid \"hostname\". "
+            "Only letters, digits, dash, underscore and dot are allowed.",))
+
+
 @cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api() -> None:
     # The response is always a top level dict with two elements:
@@ -464,12 +474,14 @@ def page_host_inv_api() -> None:
         if hosts:
             result = {}
             for a_host_name in hosts:
+                check_for_valid_hostname(a_host_name)
                 result[a_host_name] = inventory_of_host(a_host_name, api_request)
 
         else:
             host_name = api_request.get("host")
             if host_name is None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
+            check_for_valid_hostname(host_name)
 
             result = inventory_of_host(host_name, api_request)
 

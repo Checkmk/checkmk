@@ -784,7 +784,8 @@ class LDAPUserConnector(UserConnector):
 
             member_filter_items = []
             for member in self._get_filter_group_members(filter_group_dn):
-                member_filter_items.append('(%s=%s)' % (user_cmp_attr, member))
+                member_filter_items.append('(%s=%s)' %
+                                           (user_cmp_attr, ldap.filter.escape_filter_chars(member)))
             add_filter += '(|%s)' % ''.join(member_filter_items)
 
         if add_filter:
@@ -812,7 +813,8 @@ class LDAPUserConnector(UserConnector):
             # When using AD, the groups can be filtered by the DN attribute. With
             # e.g. OpenLDAP this is not possible. In that case, change the DN.
             if self.is_active_directory():
-                filt = '(&%s(distinguishedName=%s))' % (filt, specific_dn)
+                filt = '(&%s(distinguishedName=%s))' % (
+                    filt, ldap.filter.escape_filter_chars(specific_dn))
             else:
                 dn = specific_dn
 
@@ -870,7 +872,8 @@ class LDAPUserConnector(UserConnector):
 
         if self.is_active_directory() or filt_attr != 'distinguishedname':
             if filters:
-                add_filt = '(|%s)' % ''.join(['(%s=%s)' % (filt_attr, f) for f in filters])
+                add_filt = '(|%s)' % ''.join(
+                    ['(%s=%s)' % (filt_attr, ldap.filter.escape_filter_chars(f)) for f in filters])
                 filt = '(&%s%s)' % (filt, add_filt)
 
             for dn, obj in self._ldap_search(self.get_group_dn(), filt, ['cn', member_attr],
@@ -918,7 +921,8 @@ class LDAPUserConnector(UserConnector):
             # to contact groups plugin).
             if filt_attr == 'cn':
                 result = self._ldap_search(
-                    self.get_group_dn(), '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
+                    self.get_group_dn(), '(&%s(cn=%s))' %
+                    (self.ldap_filter('groups'), ldap.filter.escape_filter_chars(filter_val)),
                     ['dn', 'cn'], self._config['group_scope'])
                 if not result:
                     continue  # Skip groups which can not be found
@@ -952,7 +956,7 @@ class LDAPUserConnector(UserConnector):
                     if group:
                         cn = group[0][1]["cn"][0]
 
-                filt = '(memberof=%s)' % dn
+                filt = '(memberof=%s)' % ldap.filter.escape_filter_chars(dn)
                 groups[dn] = {
                     'members': [],
                     'cn': cn,

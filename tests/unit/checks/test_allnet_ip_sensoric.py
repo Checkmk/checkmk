@@ -187,5 +187,7 @@ def test_parse_allnet_ip_sensoric() -> None:
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_allnet_ip_sensoric_humidity() -> None:
     assert Check("allnet_ip_sensoric.humidity").run_discovery(_SECTION) == [
+        ('Feuchtigkeit Sensor 105', 'allnet_ip_sensoric_humidity_default_levels'),
+        ('Serverraum Sensor 113', 'allnet_ip_sensoric_humidity_default_levels'),
         ('Humidity1 Sensor 2', 'allnet_ip_sensoric_humidity_default_levels'),
     ]

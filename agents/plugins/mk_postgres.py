@@ -9,7 +9,7 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
-__version__ = "2.0.0p7"
+__version__ = "2.1.0i1"
 
 import io
 import subprocess
@@ -956,7 +956,8 @@ def get_postgres_user_linux():
                 return user_id.rstrip()
         except subprocess.CalledProcessError:
             pass
-    raise ValueError("Could not determine postgres user!")
+    LOGGER.warning("Could not determine postgres user, using \"postgres\" as default")
+    return "postgres"
 
 
 def main(argv=None):

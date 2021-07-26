@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Callable, List, Tuple
 
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 
 def is_executable(path: Path) -> bool:

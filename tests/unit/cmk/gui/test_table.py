@@ -14,7 +14,7 @@ from cmk.gui.table import table_element
 from cmk.gui.globals import html, output_funnel, response
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import LoggedInNobody
-from testlib import compare_html
+from tests.testlib import compare_html
 
 
 def read_out_simple_table(text):

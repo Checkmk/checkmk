@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 
 @pytest.fixture(autouse=True, scope="session")

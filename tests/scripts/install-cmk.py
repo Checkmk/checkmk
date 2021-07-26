@@ -16,15 +16,15 @@ from pathlib import Path
 
 import requests
 
-# Make the testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from testlib.utils import (
+from tests.testlib.utils import (
     current_base_branch_name,
     add_python_paths,
 )
-from testlib.version import CMKVersion
-from testlib.utils import get_cmk_download_credentials
+from tests.testlib.version import CMKVersion
+from tests.testlib.utils import get_cmk_download_credentials
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()

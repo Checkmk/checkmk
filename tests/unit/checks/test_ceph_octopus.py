@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import Check
+from tests.testlib import Check
 from typing import List, Mapping, Tuple
 
 octopus_info = [['---', 'RAW', 'STORAGE', '---'],

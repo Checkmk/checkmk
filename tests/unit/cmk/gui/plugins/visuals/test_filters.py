@@ -21,7 +21,7 @@ from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 import cmk.gui.views
 import cmk.gui.visuals
 
-from testlib import on_time
+from tests.testlib import on_time
 
 
 # mock_livestatus does not support Stats queries at the moment. We need to mock the function away

@@ -12,7 +12,7 @@ from typing import Any, Mapping, Optional, Tuple
 
 import pytest
 
-from testlib import on_time
+from tests.testlib import on_time
 
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,

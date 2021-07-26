@@ -7,7 +7,7 @@
 import pytest
 from pytest_mock import MockerFixture
 from typing import MutableMapping, Any
-from testlib import get_value_store_fixture
+from tests.testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,

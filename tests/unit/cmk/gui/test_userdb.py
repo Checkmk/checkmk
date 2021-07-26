@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 from dataclasses import asdict
 
-from testlib import on_time, is_managed_repo
+from tests.testlib import on_time, is_managed_repo
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId

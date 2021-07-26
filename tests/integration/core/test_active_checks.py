@@ -8,7 +8,7 @@ import logging
 import collections
 import pytest
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 

@@ -8,12 +8,12 @@ from ast import literal_eval
 from contextlib import contextmanager
 import freezegun
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
+from ..checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
                          MockHostExtraConf, mock_item_state, \
                          Immutables, assertEqual
-from testlib import MissingCheckInfoError, Check
-from generictests.checkhandler import checkhandler
+from tests.testlib import MissingCheckInfoError, Check
+from .checkhandler import checkhandler
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName

@@ -14,7 +14,7 @@ from collections import defaultdict
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import AgentRawData, SectionName
 

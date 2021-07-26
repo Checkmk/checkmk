@@ -12,7 +12,7 @@ import time
 
 import pytest
 
-from testlib import CMKEventConsole
+from tests.testlib import CMKEventConsole
 import cmk.utils.paths
 import cmk.ec.history
 import cmk.ec.main

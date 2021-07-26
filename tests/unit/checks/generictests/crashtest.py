@@ -44,10 +44,10 @@ from typing import Any, Dict
 
 import pytest
 
-import generictests
-from generictests.regression import WritableDataset
-from testlib import Check
-from checktestlib import CheckResult
+from .run import run
+from .regression import WritableDataset
+from tests.testlib import Check
+from ..checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
 
@@ -166,7 +166,7 @@ class CrashReportList(list):
 
 def test_crashreport(fix_plugin_legacy, crashdata):
     try:
-        generictests.run(fix_plugin_legacy.check_info, crashdata)
+        run(fix_plugin_legacy.check_info, crashdata)
         check = Check(crashdata.full_checkname)
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']

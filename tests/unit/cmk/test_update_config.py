@@ -11,7 +11,7 @@ import io
 from pathlib import Path
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.log
 import cmk.update_config as update_config

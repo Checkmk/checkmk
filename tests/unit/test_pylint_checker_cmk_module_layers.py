@@ -9,7 +9,7 @@
 import itertools
 import pytest
 
-from testlib.pylint_checker_cmk_module_layers import (
+from tests.testlib.pylint_checker_cmk_module_layers import (
     _get_absolute_importee,
     CMKModuleLayerChecker,
     _COMPONENTS,

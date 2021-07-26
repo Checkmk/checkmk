@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib import on_time
+from tests.testlib import on_time
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inv_if import Interface, inventory_if, parse_inv_if, SectionInvIf
 from cmk.base.plugins.agent_based.utils import uptime

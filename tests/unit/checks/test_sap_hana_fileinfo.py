@@ -7,8 +7,8 @@
 import pytest
 import collections
 
-from testlib import Check
-from checktestlib import MockHostExtraConf
+from tests.testlib import Check
+from .checktestlib import MockHostExtraConf
 from cmk.utils.type_defs import CheckPluginName
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric

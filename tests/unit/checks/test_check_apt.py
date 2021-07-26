@@ -8,7 +8,7 @@ from typing import Any, Sequence, Tuple
 
 import pytest
 
-from testlib import Check
+from tests.testlib import Check
 
 from cmk.base.plugins.agent_based.apt import parse_apt, Section
 

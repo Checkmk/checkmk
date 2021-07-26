@@ -8,7 +8,7 @@ from typing import Sequence, Tuple
 
 import pytest
 
-from testlib import Check
+from tests.testlib import Check
 
 from cmk.base.check_api import MKCounterWrapped
 

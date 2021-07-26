@@ -8,7 +8,7 @@ import socket
 import time
 from typing import Any, Dict
 
-from testlib.web_session import CMKWebSession
+from tests.testlib.web_session import CMKWebSession
 
 
 class CMKEventConsole:

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from six import ensure_binary, ensure_str
 
-import testlib
+import tests.testlib as testlib
 
 import cmk.utils.version as cmk_version
 import cmk.utils.werks

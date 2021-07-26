@@ -23,12 +23,12 @@ import argparse
 from pathlib import Path
 from typing import List
 
-# Make the testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Make the tests.testlib available
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from testlib.utils import current_base_branch_name
-from testlib.version import CMKVersion
-from testlib.containers import execute_tests_in_container
+from tests.testlib.utils import current_base_branch_name
+from tests.testlib.version import CMKVersion
+from tests.testlib.containers import execute_tests_in_container
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()

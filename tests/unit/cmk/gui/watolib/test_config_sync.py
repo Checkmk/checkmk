@@ -23,7 +23,7 @@ import cmk.gui.watolib.utils as utils
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 
-from testlib.utils import is_enterprise_repo
+from tests.testlib.utils import is_enterprise_repo
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

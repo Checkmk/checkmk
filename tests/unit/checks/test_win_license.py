@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from testlib import Check
+from tests.testlib import Check
 
 import pytest
 
-from checktestlib import CheckResult, assertCheckResultsEqual
+from .checktestlib import CheckResult, assertCheckResultsEqual
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
-from testlib import Check
+from tests.testlib import Check
 
 
 @pytest.mark.parametrize("info, item, expected_item_data", [

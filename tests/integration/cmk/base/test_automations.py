@@ -11,8 +11,8 @@ import subprocess
 
 import pytest
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
 from cmk.utils.type_defs import SetAutochecksTable

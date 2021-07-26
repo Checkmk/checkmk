@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from testlib.utils import cmk_path
+from tests.testlib.utils import cmk_path
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName

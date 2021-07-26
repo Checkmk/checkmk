@@ -16,7 +16,7 @@ import subprocess
 
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
 
-from testlib import repo_path, cmk_path, is_enterprise_repo
+from tests.testlib import repo_path, cmk_path, is_enterprise_repo
 
 
 def check_files(base_dir):

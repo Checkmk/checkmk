@@ -6,8 +6,8 @@
 
 import subprocess
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
-from testlib import create_linux_test_host
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import create_linux_test_host
 import cmk.base.config as config
 import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks

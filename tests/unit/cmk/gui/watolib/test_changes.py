@@ -8,7 +8,7 @@ import time
 import ast
 import pytest
 
-from testlib import on_time
+from tests.testlib import on_time
 
 from cmk.utils.type_defs import UserId
 

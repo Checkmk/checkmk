@@ -73,7 +73,7 @@ from typing import Any, Iterable
 
 import yapf  # type: ignore[import]
 
-import generictests.run
+from .run import run
 
 YAPF_STYLE = {
     'dedent_closing_brackets': 1,
@@ -213,6 +213,6 @@ def test_main(fix_plugin_legacy, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(fix_plugin_legacy.check_info, regression, write=True)
+    run(fix_plugin_legacy.check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

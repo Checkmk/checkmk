@@ -7,7 +7,7 @@
 from typing import Dict
 from pathlib import Path
 
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.base.config as config
 import cmk.base.autochecks as autochecks

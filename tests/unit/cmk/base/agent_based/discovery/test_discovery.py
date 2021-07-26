@@ -11,8 +11,8 @@ from typing import Dict, NamedTuple, Sequence, Set, Tuple
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from testlib.base import Scenario
-from testlib.debug_utils import cmk_debug_enabled
+from tests.testlib.base import Scenario
+from tests.testlib.debug_utils import cmk_debug_enabled
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore

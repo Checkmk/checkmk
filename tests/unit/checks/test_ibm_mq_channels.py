@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List, Tuple
-from testlib import Check
+from tests.testlib import Check
 import pytest
 from cmk.base.check_api import MKCounterWrapped
-from test_ibm_mq_include import parse_info
+from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 

@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import set_timezone
+from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based.kaspersky_av_kesl_updates import check_kaspersky_av_kesl_updates
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result

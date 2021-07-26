@@ -27,8 +27,8 @@ from cmk.utils.site import omd_site
 import cmk.gui.default_permissions
 
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from testlib import is_managed_repo, is_enterprise_repo
-from testlib.debug_utils import cmk_debug_enabled
+from tests.testlib import is_managed_repo, is_enterprise_repo
+from tests.testlib.debug_utils import cmk_debug_enabled
 
 logger = logging.getLogger(__name__)
 

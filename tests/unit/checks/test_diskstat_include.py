@@ -8,7 +8,7 @@ import os
 import re  # noqa: F401 # pylint: disable=unused-import
 import pytest
 
-from checktestlib import CheckResult, assertCheckResultsEqual
+from .checktestlib import CheckResult, assertCheckResultsEqual
 from cmk.base.check_api import (  # noqa: F401 # pylint: disable=unused-import
     get_bytes_human_readable, check_levels,
 )

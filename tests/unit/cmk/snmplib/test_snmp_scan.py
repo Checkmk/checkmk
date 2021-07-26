@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import logger

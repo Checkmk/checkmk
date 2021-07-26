@@ -21,7 +21,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import webtest  # type: ignore[import]
 from mock import MagicMock
 
-from testlib.users import create_and_destroy_user
+from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 

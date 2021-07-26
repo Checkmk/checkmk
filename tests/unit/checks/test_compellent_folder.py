@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import Check
+from tests.testlib import Check
 
 
 @pytest.mark.parametrize("info, expected_result",

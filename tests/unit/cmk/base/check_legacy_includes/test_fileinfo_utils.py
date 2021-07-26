@@ -6,14 +6,13 @@
 
 import pytest
 import collections
-from testlib import on_time, Check
+from tests.testlib import on_time, Check
 
-from checktestlib import MockHostExtraConf
+from tests.unit.checks.checktestlib import MockHostExtraConf
 from cmk.base.check_legacy_includes.fileinfo import (
     _cast_value,
     _get_field,
     _parse_single_legacy_row,
-    parse_fileinfo,
     parse_fileinfo,
     fileinfo_groups_get_group_name,
     fileinfo_check_timeranges,

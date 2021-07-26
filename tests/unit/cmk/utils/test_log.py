@@ -6,7 +6,7 @@
 
 import logging
 
-from testlib import on_time
+from tests.testlib import on_time
 
 import cmk.utils.log as log
 

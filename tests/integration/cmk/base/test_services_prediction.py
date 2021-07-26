@@ -16,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.base import prediction
 
-from testlib import web, repo_path, create_linux_test_host, on_time  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import web, repo_path, create_linux_test_host, on_time  # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture(name="cfg_setup", scope="module")

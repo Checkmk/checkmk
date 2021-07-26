@@ -6,7 +6,7 @@
 
 import json
 import pytest
-from testlib import SpecialAgent
+from tests.testlib import SpecialAgent
 
 from cmk.base.sources.programs import SpecialAgentConfiguration
 

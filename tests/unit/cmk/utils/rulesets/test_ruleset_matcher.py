@@ -9,7 +9,7 @@ from typing import Sequence
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
 from cmk.utils.tags import TagConfig

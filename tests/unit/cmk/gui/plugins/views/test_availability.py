@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import on_time
+from tests.testlib import on_time
 
 import cmk.utils.render
 import cmk.gui.plugins.views.availability as availability

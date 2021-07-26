@@ -17,7 +17,7 @@ from pathlib import Path
 
 from six import ensure_binary
 import pytest
-from testlib import import_module, wait_until
+from tests.testlib import import_module, wait_until
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException

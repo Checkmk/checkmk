@@ -23,8 +23,8 @@ regression test dataset as described in ''checks/generictests/regression.py''
 from importlib import import_module
 import pytest
 
-from testlib import on_time
-import generictests
+from tests.testlib import on_time
+from . import generictests
 
 pytestmark = pytest.mark.checks
 
@@ -44,5 +44,5 @@ def fixture_mock_time():
 @pytest.mark.usefixtures("mock_time")
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
 def test_dataset(datasetname, fix_plugin_legacy):
-    dataset = import_module("generictests.datasets.%s" % datasetname)
+    dataset = import_module("tests.unit.checks.generictests.datasets.%s" % datasetname)
     generictests.run(fix_plugin_legacy.check_info, dataset)

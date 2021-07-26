@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import on_time
+from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,

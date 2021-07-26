@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import Check
+from tests.testlib import Check
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
+from .checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

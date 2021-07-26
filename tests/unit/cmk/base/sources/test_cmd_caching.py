@@ -13,9 +13,9 @@ from functools import partial
 
 import pytest
 
-from testlib.base import Scenario
-from testlib.debug_utils import cmk_debug_enabled
-from testlib.utils import is_enterprise_repo
+from tests.testlib.base import Scenario
+from tests.testlib.debug_utils import cmk_debug_enabled
+from tests.testlib.utils import is_enterprise_repo
 
 import cmk.utils.paths
 from cmk.utils.log import logger

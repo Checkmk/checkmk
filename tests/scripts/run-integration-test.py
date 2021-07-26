@@ -22,15 +22,13 @@ import subprocess
 import logging
 from pathlib import Path
 
-# Make the testlib available
+# Make the tests.testlib available
 script_path = Path(__file__).resolve()
 sys.path.insert(0, str(script_path.parent.parent))
-# Make the repo directory available (cmk/livestatus lib)
-sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from testlib.utils import is_running_as_site_user, cmk_path
-from testlib.site import get_site_factory
-from testlib.version import CMKVersion
+from tests.testlib.utils import is_running_as_site_user, cmk_path
+from tests.testlib.site import get_site_factory
+from tests.testlib.version import CMKVersion
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()

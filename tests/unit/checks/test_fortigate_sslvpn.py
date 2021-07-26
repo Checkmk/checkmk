@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from testlib import Check
+from tests.testlib import Check
 import pytest
 
 

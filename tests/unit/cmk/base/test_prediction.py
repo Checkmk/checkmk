@@ -10,7 +10,7 @@ from pprint import pprint
 import pytest
 
 from cmk.base import prediction
-from testlib import on_time
+from tests.testlib import on_time
 
 
 @pytest.mark.parametrize("group_by, timestamp, result", [

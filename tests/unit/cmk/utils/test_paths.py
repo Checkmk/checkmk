@@ -7,7 +7,7 @@
 import os
 from pathlib import Path
 
-from testlib import import_module, repo_path
+from tests.testlib import import_module, repo_path
 
 system_paths = [
     "mkbackup_lock_dir",

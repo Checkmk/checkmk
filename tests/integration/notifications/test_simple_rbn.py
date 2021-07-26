@@ -8,8 +8,8 @@ import time
 import os
 import pytest
 
-from testlib import WatchLog
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import WatchLog
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture(name="fake_sendmail")

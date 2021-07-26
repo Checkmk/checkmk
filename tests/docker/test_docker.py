@@ -14,9 +14,9 @@ import requests
 import requests.exceptions
 import docker  # type: ignore[import]
 
-import testlib
-import testlib.utils
-from testlib.utils import cmk_path
+import tests.testlib as testlib
+from tests.testlib.utils import (cmk_path, get_cmk_download_credentials_file,
+                                 get_cmk_download_credentials)
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
@@ -69,12 +69,10 @@ def _build(request, client, version, add_args=None):
         command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
         detach=True,
         remove=True,
-        volumes={
-            testlib.utils.get_cmk_download_credentials_file(): {
-                "bind": "/files/secret",
-                "mode": "ro"
-            }
-        },
+        volumes={get_cmk_download_credentials_file(): {
+                     "bind": "/files/secret",
+                     "mode": "ro"
+                 }},
     )
     request.addfinalizer(lambda: secret_container.remove(force=True))
 
@@ -87,7 +85,7 @@ def _build(request, client, version, add_args=None):
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
+                "CMK_DL_CREDENTIALS": ":".join(get_cmk_download_credentials()),
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )

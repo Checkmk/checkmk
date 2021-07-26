@@ -22,15 +22,15 @@ from typing import Union
 
 from six import ensure_str
 
-from testlib.utils import (
+from tests.testlib.utils import (
     cmk_path,
     cme_path,
     cmc_path,
     virtualenv_path,
     current_base_branch_name,
 )
-from testlib.web_session import CMKWebSession
-from testlib.version import CMKVersion
+from tests.testlib.web_session import CMKWebSession
+from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger(__name__)
 

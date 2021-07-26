@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import on_time
+from tests.testlib import on_time
 
 import cmk.utils.version as cmk_version
 from cmk.utils.structured_data import StructuredDataNode

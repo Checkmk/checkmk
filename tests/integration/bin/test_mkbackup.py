@@ -15,7 +15,7 @@ import pytest
 import fcntl
 from contextlib import contextmanager
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.utils.python_printer import pformat
 from cmk.utils.paths import mkbackup_lock_dir

@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import Check
-from checktestlib import BasicCheckResult
+from tests.testlib import Check
+from .checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
 

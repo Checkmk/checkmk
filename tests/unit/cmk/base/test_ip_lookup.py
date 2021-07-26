@@ -10,7 +10,7 @@ import socket
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

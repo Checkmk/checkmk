@@ -6,9 +6,9 @@
 
 import os
 import pytest
-from testlib.site import SiteFactory
-from testlib.utils import current_branch_name
-from testlib.version import CMKVersion
+from tests.testlib.site import SiteFactory
+from tests.testlib.utils import current_branch_name
+from tests.testlib.version import CMKVersion
 
 
 # Disable this. We have a site_factory instead.

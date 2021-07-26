@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from six import ensure_str
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback

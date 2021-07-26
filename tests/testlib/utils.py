@@ -168,8 +168,6 @@ def is_running_as_site_user():
 
 
 def add_python_paths():
-    # make the testlib available to the test modules
-    sys.path.insert(0, os.path.dirname(__file__))
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
 

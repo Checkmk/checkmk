@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from testlib import wait_until
+from tests.testlib import wait_until
 
 import cmk.utils.debug as debug
 import cmk.utils.log as log

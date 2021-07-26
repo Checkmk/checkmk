@@ -62,6 +62,6 @@ Some more advanced ones are
                            `mock_item_state`
                        as defined in checktestlib module.
 """
-from generictests.checkhandler import checkhandler
-from generictests.run import run
-from generictests.utils import DATASET_NAMES, DATASET_FILES
+from .checkhandler import checkhandler
+from .run import run
+from .utils import DATASET_NAMES, DATASET_FILES

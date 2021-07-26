@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
 from cmk.gui.watolib.utils import may_edit_ruleset
 
-from testlib.users import create_and_destroy_user
+from tests.testlib.users import create_and_destroy_user
 
 
 def test_user_context(with_user):

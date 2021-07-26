@@ -12,7 +12,7 @@ import cmk.base.check_api as check_api
 import cmk.base.config as config
 import cmk.utils.version as cmk_version
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 
 def test_base_crash_report_registry():

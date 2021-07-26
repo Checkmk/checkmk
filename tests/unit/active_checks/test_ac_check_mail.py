@@ -8,7 +8,7 @@
 import email
 import pytest
 from argparse import Namespace as Args
-from testlib import import_module
+from tests.testlib import import_module
 
 from cmk.utils.mailbox import _active_check_main_core
 

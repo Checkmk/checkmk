@@ -1,7 +1,7 @@
 import pytest
 
-from testlib import Check
-from checktestlib import (
+from tests.testlib import Check
+from .checktestlib import (
     CheckResult,
     BasicCheckResult,
     PerfValue,

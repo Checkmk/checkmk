@@ -11,7 +11,7 @@ from typing import NamedTuple
 
 import pytest
 
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 from cmk.utils.structured_data import (
     Attributes,

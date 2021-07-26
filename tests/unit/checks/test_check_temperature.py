@@ -7,13 +7,13 @@
 # coding=utf-8
 # yapf: disable
 import collections
-from testlib import Check
+from tests.testlib import Check
 import datetime as dt
 
 import freezegun
 import pytest
 
-from checktestlib import mock_item_state, assertCheckResultsEqual, CheckResult
+from .checktestlib import mock_item_state, assertCheckResultsEqual, CheckResult
 
 
 @pytest.mark.parametrize(

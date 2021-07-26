@@ -20,8 +20,8 @@ import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
 
-import testlib
-from testlib.version import CMKVersion
+import tests.testlib as testlib
+from tests.testlib.version import CMKVersion
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY

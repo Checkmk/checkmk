@@ -15,8 +15,8 @@ import tempfile
 
 import pytest
 
-import testlib.pylint_cmk as pylint_cmk
-from testlib import is_enterprise_repo, repo_path
+import tests.testlib.pylint_cmk as pylint_cmk
+from tests.testlib import repo_path
 
 
 @pytest.fixture(scope="function")

@@ -9,7 +9,7 @@ from collections import Counter
 
 import pytest  # type: ignore[import]
 
-from testlib import Check  # type: ignore[import]
+from tests.testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
 

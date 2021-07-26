@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 from cmk.core_helpers.cache import MaxAge
 from cmk.core_helpers.agent import AgentSummarizerDefault

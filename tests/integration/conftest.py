@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib.site import get_site_factory
+from tests.testlib.site import get_site_factory
 
 
 # Session fixtures must be in conftest.py to work properly

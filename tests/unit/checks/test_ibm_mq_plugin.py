@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from testlib import Check
-from test_ibm_mq_include import parse_info
+from tests.testlib import Check
+from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks
 

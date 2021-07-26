@@ -18,8 +18,8 @@ import pytest
 from PIL import Image  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from testlib import web, APIError, wait_until  # noqa: F401 # pylint: disable=unused-import
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib import web, APIError, wait_until  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="local_test_hosts")

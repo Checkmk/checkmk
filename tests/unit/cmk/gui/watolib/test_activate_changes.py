@@ -18,7 +18,7 @@ import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
 
-import testlib
+import tests.testlib as testlib
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 logger = logging.getLogger(__name__)

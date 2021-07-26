@@ -12,7 +12,7 @@ import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 from dataclasses import asdict
 
-from testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

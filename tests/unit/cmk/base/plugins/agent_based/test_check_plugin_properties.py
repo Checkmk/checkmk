@@ -13,7 +13,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 from cmk.base.plugin_contexts import current_host
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 
 def _section_permutations(

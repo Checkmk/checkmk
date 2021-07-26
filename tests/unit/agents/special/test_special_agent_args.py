@@ -11,7 +11,7 @@ from typing import Dict, List
 from importlib import import_module
 
 import pytest
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 # TODO: Actually fix this stuff.
 NOT_TESTED_YET = {

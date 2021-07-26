@@ -8,7 +8,7 @@
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot

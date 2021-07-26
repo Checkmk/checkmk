@@ -8,7 +8,7 @@
 from typing import Dict, List, Tuple
 
 import pytest
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets

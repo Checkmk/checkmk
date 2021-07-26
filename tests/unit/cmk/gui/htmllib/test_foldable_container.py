@@ -12,7 +12,7 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container_onclick,
 )
 
-from testlib import compare_html
+from tests.testlib import compare_html
 
 
 def test_foldable_container(request_context) -> None:

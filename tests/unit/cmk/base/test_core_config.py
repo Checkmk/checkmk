@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

@@ -11,7 +11,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.exceptions import MKUserError
 
-from testlib import compare_html
+from tests.testlib import compare_html
 
 
 def test_render_help_empty(request_context):

@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
-from testlib import on_time
+from tests.testlib import on_time
 
 pytestmark = pytest.mark.checks
 

@@ -11,7 +11,7 @@ import sys
 
 import pytest
 
-import testlib
+import tests.testlib as testlib
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths

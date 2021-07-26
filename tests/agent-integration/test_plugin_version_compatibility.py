@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 import docker  # type: ignore[import]
 
-import testlib
-import testlib.pylint_cmk
+import tests.testlib as testlib
+from tests.testlib.pylint_cmk import is_python_file
 
 
 @pytest.fixture(scope="module")
@@ -41,8 +41,7 @@ def _get_python_plugins():
     return [
         "agents/plugins/%s" % p.name
         for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
-        if testlib.pylint_cmk.is_python_file(str(p), "python") or
-        testlib.pylint_cmk.is_python_file(str(p), "python3")
+        if is_python_file(str(p), "python") or is_python_file(str(p), "python3")
     ]
 
 

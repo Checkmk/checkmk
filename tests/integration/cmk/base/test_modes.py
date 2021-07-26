@@ -11,8 +11,8 @@ from typing import List
 
 import pytest
 
-from testlib import web  # noqa: F401 # pylint: disable=unused-import
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="test_cfg", scope="module")

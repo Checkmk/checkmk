@@ -1,8 +1,8 @@
 import pytest
 
 from collections import namedtuple
-from testlib import Check
-from checktestlib import (
+from tests.testlib import Check
+from .checktestlib import (
     CheckResult,
     BasicCheckResult,
     PerfValue,

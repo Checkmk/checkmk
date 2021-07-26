@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
 from cmk.gui.globals import html, config
 
-from testlib import on_time
+from tests.testlib import on_time
 
 
 @pytest.mark.parametrize("entry, result", [

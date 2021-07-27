@@ -17,14 +17,30 @@ def upload(Map args) {
     }
 }
 
-def download(DOWNLOAD_DEST, PORT, CMK_VERSION) {
-    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-        sh """
-            rsync -av --relative \
-                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                ${DOWNLOAD_DEST}/./${CMK_VERSION}/* \
-                .
-        """
+def download_version_dir(DOWNLOAD_DEST, PORT, CMK_VERSION) {
+    stage('Download from shared storage') {
+        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+            sh """
+                rsync -av --relative \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                    ${DOWNLOAD_DEST}/./${CMK_VERSION}/* \
+                    .
+            """
+        }
+    }
+}
+
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
+{
+    stage('Upload to download server') {
+        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+            sh """
+                rsync -av \
+                    -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                    ${SOURCE_PATH} \
+                    ${UPLOAD_DEST}
+            """
+        }
     }
 }
 
@@ -52,18 +68,10 @@ def via_rsync(ARCHIVE_BASE, CMK_VERS, FILE_NAME, UPLOAD_DEST, PORT) {
     }
 }
 
-def create_and_upload_hashes(ARCHIVE_DIR, scm, UPLOAD_DEST, PORT, CMK_VERS) {
-    stage("Create and upload file hashes") {
+def create_hashes(ARCHIVE_DIR) {
+    stage("Create file hashes") {
         def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
         sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
-        upload(
-            NAME: "hashes",
-            FILE_PATH: HASHES_PATH,
-            FILE_NAME: "HASHES",
-            CMK_VERS: CMK_VERS,
-            UPLOAD_DEST: UPLOAD_DEST,
-            PORT: PORT,
-        )
     }
 }
 

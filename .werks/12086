@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0p7
+Version: 2.0.0p9
 
 Some {{alcatel_power_aos7}} seem to provide an empty string rather than one of '0', '1' or '2'.
 This change will take an empty element as '0', i.e. {{"no power supply"}}.

@@ -545,7 +545,11 @@ class LDAPUserConnector(UserConnector):
         while True:
             # issue the ldap search command (async)
             assert self._ldap_obj is not None
-            msgid = self._ldap_obj.search_ext(base, scope, filt, columns, serverctrls=[lc])
+            msgid = self._ldap_obj.search_ext(_escape_dn(base),
+                                              scope,
+                                              filt,
+                                              columns,
+                                              serverctrls=[lc])
 
             unused_code, response, unused_msgid, serverctrls = self._ldap_obj.result3(
                 msgid=msgid, timeout=self._config.get('response_timeout', 5))
@@ -770,8 +774,11 @@ class LDAPUserConnector(UserConnector):
 
             member_filter_items = []
             for member in self._get_filter_group_members(filter_group_dn):
-                member_filter_items.append('(%s=%s)' %
-                                           (user_cmp_attr, ldap.filter.escape_filter_chars(member)))
+                member_filter_items.append(
+                    '(%s=%s)' %
+                    (user_cmp_attr,
+                     ldap.filter.escape_filter_chars(
+                         _escape_dn(member) if member_attr == "distinguishedname" else member)))
             add_filter += '(|%s)' % ''.join(member_filter_items)
 
         if add_filter:
@@ -800,7 +807,7 @@ class LDAPUserConnector(UserConnector):
             # e.g. OpenLDAP this is not possible. In that case, change the DN.
             if self.is_active_directory():
                 filt = '(&%s(distinguishedName=%s))' % (
-                    filt, ldap.filter.escape_filter_chars(specific_dn))
+                    filt, ldap.filter.escape_filter_chars(_escape_dn(specific_dn)))
             else:
                 dn = specific_dn
 
@@ -858,13 +865,17 @@ class LDAPUserConnector(UserConnector):
 
         if self.is_active_directory() or filt_attr != 'distinguishedname':
             if filters:
-                add_filt = '(|%s)' % ''.join(
-                    ['(%s=%s)' % (filt_attr, ldap.filter.escape_filter_chars(f)) for f in filters])
+                add_filt = '(|%s)' % ''.join([
+                    '(%s=%s)' % (filt_attr,
+                                 ldap.filter.escape_filter_chars(
+                                     _escape_dn(f) if filt_attr == "distinguishedname" else f))
+                    for f in filters
+                ])
                 filt = '(&%s%s)' % (filt, add_filt)
 
             for dn, obj in self._ldap_search(self.get_group_dn(), filt, ['cn', member_attr],
                                              self._config['group_scope']):
-                groups[dn] = {
+                groups[_unescape_dn(dn)] = {
                     'cn': obj['cn'][0],
                     'members': sorted([m.lower() for m in obj.get(member_attr, [])]),
                 }
@@ -942,7 +953,7 @@ class LDAPUserConnector(UserConnector):
                     if group:
                         cn = group[0][1]["cn"][0]
 
-                filt = '(memberof=%s)' % ldap.filter.escape_filter_chars(dn)
+                filt = '(memberof=%s)' % ldap.filter.escape_filter_chars(_escape_dn(dn))
                 groups[dn] = {
                     'members': [],
                     'cn': cn,
@@ -1295,6 +1306,23 @@ class LDAPUserConnector(UserConnector):
         for _key, _params, plugin in self.active_sync_plugins():
             attrs.update(plugin.non_contact_attributes)
         return list(attrs)
+
+
+def _escape_dn(dn):
+    """Handle "#" in DNs (as allowed by Active Directory)
+
+    This is obviously not a full featured escaping function for the DNs. This
+    might be ldap.dn.escape_dn_chars for the single component parts of the DN.
+    It might also be a good way to use ldap.dn.str2dn/dn2str to really parse
+    the DN and ensure it is a valid one. But this is nothing for a small bug
+    fix in the current stable.
+    """
+    return dn.replace("#", r"\#")
+
+
+def _unescape_dn(dn):
+    """Inverse of _escape_dn()"""
+    return dn.replace(r"\#", "#")
 
 
 #.

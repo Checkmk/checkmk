@@ -11,7 +11,7 @@ import os
 import platform
 import re
 import win32evtlog  # type: ignore
-from local import (
+from .local import (
     assert_subprocess,
     user_dir,
     local_test,

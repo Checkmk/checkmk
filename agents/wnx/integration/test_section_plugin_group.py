@@ -13,7 +13,7 @@ import re
 import sys
 import time
 import shutil
-from local import (
+from .local import (
     local_test,
     user_dir,
 )

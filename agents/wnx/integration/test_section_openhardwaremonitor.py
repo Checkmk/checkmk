@@ -11,8 +11,8 @@ import pytest  # type: ignore[import]
 import re
 import shutil
 import time
-import it_utils
-from local import (
+from . import it_utils
+from .local import (
     local_test,
     user_dir,
 )

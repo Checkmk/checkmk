@@ -6,7 +6,7 @@
 
 import os
 import pytest  # type: ignore[import]
-from local import local_test
+from .local import local_test
 
 
 @pytest.fixture(name="testfile")

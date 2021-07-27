@@ -8,7 +8,7 @@ import os
 import platform
 import pytest  # type: ignore
 import re
-from local import (
+from .local import (
     local_test,
     user_dir,
 )

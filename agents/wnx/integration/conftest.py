@@ -10,7 +10,7 @@ import subprocess
 import time
 import telnetlib  # nosec
 
-from local import (DEFAULT_CONFIG, port, user_yaml_config, run_agent, main_exe, host)
+from .local import (DEFAULT_CONFIG, port, user_yaml_config, run_agent, main_exe, host)
 
 
 @pytest.fixture

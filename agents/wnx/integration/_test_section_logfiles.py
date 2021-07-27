@@ -11,7 +11,7 @@ import re
 import sys
 
 import pytest  # type: ignore
-from local import (local_test, run_subprocess, test_dir, user_dir)
+from .local import (local_test, run_subprocess, test_dir, user_dir)
 
 
 # ugly hacks to get to know the make_ini_config param and utf encoding in use:

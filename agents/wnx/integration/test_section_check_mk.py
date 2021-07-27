@@ -8,7 +8,7 @@ import os
 import pytest  # type: ignore
 import re
 from typing import Optional
-from local import (
+from .local import (
     local_test,
     root_dir,
     user_dir,

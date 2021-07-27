@@ -11,7 +11,7 @@ import os
 import platform
 from typing import List
 import pytest  # type: ignore
-from local import (
+from .local import (
     local_test,
     run_subprocess,
     main_exe,

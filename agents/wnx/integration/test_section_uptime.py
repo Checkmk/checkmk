@@ -7,7 +7,7 @@
 import os
 import pytest  # type: ignore[import]
 import re
-from local import local_test
+from .local import local_test
 
 
 class Globals(object):

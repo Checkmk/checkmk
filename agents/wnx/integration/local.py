@@ -13,7 +13,7 @@ import subprocess
 import sys
 import platform
 import yaml
-import it_utils
+from . import it_utils
 
 DEFAULT_CONFIG = """
 global:

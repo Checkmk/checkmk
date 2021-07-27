@@ -7,8 +7,8 @@
 import os
 import pytest  # type: ignore[import]
 import re
-from local import local_test
-import it_utils
+from .local import local_test
+from . import it_utils
 
 
 class Globals(object):

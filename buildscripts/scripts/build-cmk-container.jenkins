@@ -61,9 +61,9 @@ node (NODE) {
                     } else {
                         CREDENTIALS_ID = "registry.checkmk.com"
                     }
-                    dir ("${PACKAGE_DIR}/${CMK_VERS}") {
-                        upload.download(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
-                    }
+
+                    upload.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR)
+
                     withCredentials([
                         usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                         usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {

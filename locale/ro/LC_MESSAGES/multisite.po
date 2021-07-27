@@ -7037,6 +7037,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"By default the server will try to contact the monitored host and pull the "
+"data by initializing a TCP connection. You can configure a push "
+"configuration, where the monitored host is expected to send the data to the "
+"monitoring server without being actively triggered."
+msgstr ""
+
+msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
@@ -8565,6 +8572,10 @@ msgstr "Acces la Agenți"
 
 #, fuzzy
 msgid "Checkmk agent / API integrations"
+msgstr "Perioada de timp Noua"
+
+#, fuzzy
+msgid "Checkmk agent connection mode"
 msgstr "Perioada de timp Noua"
 
 msgid "Checkmk agent network service (Linux)"
@@ -25699,12 +25710,6 @@ msgstr ""
 msgid "Levels on the time left until limit is reached"
 msgstr ""
 
-msgid "Levels on the time left until the filesystem gets full"
-msgstr ""
-
-msgid "Levels on the time left until the lun filesystem gets full"
-msgstr ""
-
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
@@ -25720,11 +25725,12 @@ msgstr ""
 msgid "Levels on transaction count"
 msgstr ""
 
-msgid "Levels on trends in MB per time range"
-msgstr ""
-
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr ""
+
+#, fuzzy
+msgid "Levels on trends per time range"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels on used capacity in bytes"
@@ -26959,9 +26965,6 @@ msgstr "Adresă"
 msgid "MB"
 msgstr ""
 
-msgid "MB / range"
-msgstr ""
-
 msgid "MB/s"
 msgstr ""
 
@@ -27189,9 +27192,6 @@ msgid "Magic factor (automatic level adaptation for large filesystems)"
 msgstr ""
 
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
-msgstr ""
-
-msgid "Magic factor (automatic level adaptation for large volumes)"
 msgstr ""
 
 msgid "Magnetic volumes space"
@@ -29158,6 +29158,10 @@ msgstr ""
 msgid "Monitor via Checkmk Agent"
 msgstr " pe siteul de monitorizare: "
 
+#, fuzzy
+msgid "Monitor via Checkmk Agent or special agent"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Monitor via SNMP"
 msgstr ""
 
@@ -30863,12 +30867,6 @@ msgid ""
 "Normally, the time left until the disk is full is only displayed when the "
 "configured levels have been breached. If you set this option the check "
 "always reports this information"
-msgstr ""
-
-msgid ""
-"Normally, the time left until the lun filesystem is full is only displayed "
-"when the configured levels have been breached. If you set this option the "
-"check always reports this information"
 msgstr ""
 
 msgid "Not"
@@ -35607,6 +35605,9 @@ msgstr "Adaugă model mesaj"
 msgid "Publisher"
 msgstr ""
 
+msgid "Pull: Checkmk server contacts the agent"
+msgstr ""
+
 #, fuzzy
 msgid "Pulse Secure IVE memory utilization"
 msgstr "Dezactiveaza Notificarile"
@@ -35620,6 +35621,9 @@ msgid "Pulse Secure users"
 msgstr "Sterge Elementul"
 
 msgid "Push configuration to this site"
+msgstr ""
+
+msgid "Push: Checkmk agent contacts the server"
 msgstr ""
 
 msgid "Pushover"
@@ -47183,11 +47187,6 @@ msgid ""
 "have the permission to share it."
 msgstr ""
 
-msgid ""
-"The volume levels will never fall below these values, when using the magic "
-"factor and the volume is very small."
-msgstr ""
-
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
 msgstr ""
@@ -50116,12 +50115,6 @@ msgid "Time MTR waits between sending pings"
 msgstr ""
 
 msgid "Time Range"
-msgstr ""
-
-msgid "Time Range for filesystem trend computation"
-msgstr ""
-
-msgid "Time Range for lun filesystem trend computation"
 msgstr ""
 
 msgid "Time Range for trend computation"
@@ -56212,6 +56205,9 @@ msgid "You are not allowed to use the notification module."
 msgstr ""
 
 msgid "You are not allowed to use the setup."
+msgstr ""
+
+msgid "You are not allowed to view the failed notifications."
 msgstr ""
 
 msgid "You are not authenticated."

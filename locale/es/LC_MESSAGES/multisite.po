@@ -7475,6 +7475,13 @@ msgstr ""
 "(con diferentes configuraciones)."
 
 msgid ""
+"By default the server will try to contact the monitored host and pull the "
+"data by initializing a TCP connection. You can configure a push "
+"configuration, where the monitored host is expected to send the data to the "
+"monitoring server without being actively triggered."
+msgstr ""
+
+msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
@@ -9148,6 +9155,10 @@ msgstr "Agente Checkmk"
 
 msgid "Checkmk agent / API integrations"
 msgstr "Agente Checkmk / integraciones API"
+
+#, fuzzy
+msgid "Checkmk agent connection mode"
+msgstr "Versión del agente Checkmk"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Servicio de red del agente Checkmk (Linux)"
@@ -27258,14 +27269,6 @@ msgstr "Niveles sobre el tiempo que queda hasta que se llene"
 msgid "Levels on the time left until limit is reached"
 msgstr "Niveles sobre el tiempo que falta para alcanzar el límite"
 
-msgid "Levels on the time left until the filesystem gets full"
-msgstr ""
-"Niveles en el tiempo que falta para que el sistema de archivos se llene"
-
-msgid "Levels on the time left until the lun filesystem gets full"
-msgstr ""
-"Niveles en el tiempo que falta para que el sistema de archivos lun se llene"
-
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
@@ -27282,11 +27285,12 @@ msgstr "Niveles de utilización total de la CPU"
 msgid "Levels on transaction count"
 msgstr "Niveles en el recuento de transacciones"
 
-msgid "Levels on trends in MB per time range"
-msgstr "Niveles sobre la evolución de los MB por intervalo de tiempo"
-
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr "Niveles sobre las tendencias en grados Celsius por rango de tiempo"
+
+#, fuzzy
+msgid "Levels on trends per time range"
+msgstr "Niveles sobre la evolución de los MB por intervalo de tiempo"
 
 msgid "Levels on used capacity in bytes"
 msgstr "Niveles de capacidad utilizada en bytes"
@@ -28501,9 +28505,6 @@ msgstr "Dirección MAC"
 msgid "MB"
 msgstr "MB"
 
-msgid "MB / range"
-msgstr "MB / gama"
-
 msgid "MB/s"
 msgstr "MB/s"
 
@@ -28730,9 +28731,6 @@ msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Factor mágico (adaptación automática del nivel para espacios de tablas "
 "grandes)"
-
-msgid "Magic factor (automatic level adaptation for large volumes)"
-msgstr "Factor mágico (adaptación automática del nivel para grandes volúmenes)"
 
 msgid "Magnetic volumes space"
 msgstr "Espacio de volúmenes magnéticos"
@@ -30617,6 +30615,10 @@ msgstr "Controlar las cuotas de los usuarios"
 msgid "Monitor via Checkmk Agent"
 msgstr "Monitorización a través del agente Checkmk"
 
+#, fuzzy
+msgid "Monitor via Checkmk Agent or special agent"
+msgstr "Monitorización a través del agente Checkmk"
+
 msgid "Monitor via SNMP"
 msgstr "Monitorización vía SNMP"
 
@@ -32296,15 +32298,6 @@ msgstr ""
 "Normalmente, el tiempo que falta para que el disco esté lleno sólo se "
 "muestra cuando se han superado los niveles configurados. Si se establece "
 "esta opción, el control siempre informa de esta información"
-
-msgid ""
-"Normally, the time left until the lun filesystem is full is only displayed "
-"when the configured levels have been breached. If you set this option the "
-"check always reports this information"
-msgstr ""
-"Normalmente, el tiempo que falta para que el sistema de archivos lun esté "
-"lleno sólo se muestra cuando se han superado los niveles configurados. Si "
-"establece esta opción, la comprobación siempre informa de esta información"
 
 msgid "Not"
 msgstr "No"
@@ -37101,6 +37094,9 @@ msgstr "Mensajes publicados"
 msgid "Publisher"
 msgstr "Editorial"
 
+msgid "Pull: Checkmk server contacts the agent"
+msgstr ""
+
 msgid "Pulse Secure IVE memory utilization"
 msgstr "Utilización de la memoria de Pulse Secure IVE"
 
@@ -37112,6 +37108,9 @@ msgstr "Usuarios de Pulse Secure"
 
 msgid "Push configuration to this site"
 msgstr "Configuración de empuje a este sitio"
+
+msgid "Push: Checkmk agent contacts the server"
+msgstr ""
 
 msgid "Pushover"
 msgstr "Pushover"
@@ -49826,13 +49825,6 @@ msgstr ""
 "La vista sólo es visible para ti. No puedes compartirla, porque no tienes "
 "permiso para compartirla."
 
-msgid ""
-"The volume levels will never fall below these values, when using the magic "
-"factor and the volume is very small."
-msgstr ""
-"Los niveles de volumen nunca caerán por debajo de estos valores, cuando se "
-"utiliza el factor mágico y el volumen es muy pequeño."
-
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
 msgstr "Hay %d cambios pendientes que se perderían. Los más recientes son: "
@@ -54078,14 +54070,6 @@ msgstr "Tiempo de espera de MTR entre el envío de pings"
 
 msgid "Time Range"
 msgstr "Rango de tiempo"
-
-msgid "Time Range for filesystem trend computation"
-msgstr ""
-"Rango de tiempo para el cálculo de la tendencia del sistema de archivos"
-
-msgid "Time Range for lun filesystem trend computation"
-msgstr ""
-"Rango de tiempo para el cálculo de la tendencia del sistema de archivos lun"
 
 msgid "Time Range for trend computation"
 msgstr "Rango de tiempo para el cálculo de la tendencia"
@@ -60752,6 +60736,10 @@ msgstr "No está permitido utilizar el módulo de notificación."
 msgid "You are not allowed to use the setup."
 msgstr "No está permitido utilizar la configuración."
 
+#, fuzzy
+msgid "You are not allowed to view the failed notifications."
+msgstr "No está permitido utilizar el módulo de notificación."
+
 msgid "You are not authenticated."
 msgstr "No está autentificado."
 
@@ -64290,6 +64278,47 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Levels on the time left until the filesystem gets full"
+#~ msgstr ""
+#~ "Niveles en el tiempo que falta para que el sistema de archivos se llene"
+
+#~ msgid "Levels on the time left until the lun filesystem gets full"
+#~ msgstr ""
+#~ "Niveles en el tiempo que falta para que el sistema de archivos lun se "
+#~ "llene"
+
+#~ msgid "MB / range"
+#~ msgstr "MB / gama"
+
+#~ msgid "Magic factor (automatic level adaptation for large volumes)"
+#~ msgstr ""
+#~ "Factor mágico (adaptación automática del nivel para grandes volúmenes)"
+
+#~ msgid ""
+#~ "Normally, the time left until the lun filesystem is full is only "
+#~ "displayed when the configured levels have been breached. If you set this "
+#~ "option the check always reports this information"
+#~ msgstr ""
+#~ "Normalmente, el tiempo que falta para que el sistema de archivos lun esté "
+#~ "lleno sólo se muestra cuando se han superado los niveles configurados. Si "
+#~ "establece esta opción, la comprobación siempre informa de esta información"
+
+#~ msgid ""
+#~ "The volume levels will never fall below these values, when using the "
+#~ "magic factor and the volume is very small."
+#~ msgstr ""
+#~ "Los niveles de volumen nunca caerán por debajo de estos valores, cuando "
+#~ "se utiliza el factor mágico y el volumen es muy pequeño."
+
+#~ msgid "Time Range for filesystem trend computation"
+#~ msgstr ""
+#~ "Rango de tiempo para el cálculo de la tendencia del sistema de archivos"
+
+#~ msgid "Time Range for lun filesystem trend computation"
+#~ msgstr ""
+#~ "Rango de tiempo para el cálculo de la tendencia del sistema de archivos "
+#~ "lun"
 
 #~ msgid "By regular expression"
 #~ msgstr "Por expresión regular"

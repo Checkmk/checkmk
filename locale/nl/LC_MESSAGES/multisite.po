@@ -7424,6 +7424,13 @@ msgstr ""
 "verschillende configuraties) te kunnen installeren."
 
 msgid ""
+"By default the server will try to contact the monitored host and pull the "
+"data by initializing a TCP connection. You can configure a push "
+"configuration, where the monitored host is expected to send the data to the "
+"monitoring server without being actively triggered."
+msgstr ""
+
+msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
@@ -9082,6 +9089,10 @@ msgstr "Checkmk agent"
 
 msgid "Checkmk agent / API integrations"
 msgstr "Checkmk agent / API integraties"
+
+#, fuzzy
+msgid "Checkmk agent connection mode"
+msgstr "Checkmk Agent Versie"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmk agent netwerkdienst (Linux)"
@@ -27046,12 +27057,6 @@ msgstr "Niveaus op de resterende tijd tot vol"
 msgid "Levels on the time left until limit is reached"
 msgstr "Niveaus op de resterende tijd tot de limiet is bereikt"
 
-msgid "Levels on the time left until the filesystem gets full"
-msgstr "Niveaus op de tijd die rest tot het bestandssysteem vol is"
-
-msgid "Levels on the time left until the lun filesystem gets full"
-msgstr "Niveaus op de tijd die rest tot het lun bestandssysteem vol is"
-
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
@@ -27068,11 +27073,12 @@ msgstr "Niveaus op totaal CPU-gebruik"
 msgid "Levels on transaction count"
 msgstr "Niveaus voor het aantal transacties"
 
-msgid "Levels on trends in MB per time range"
-msgstr "Niveaus voor trends in MB per tijdspanne"
-
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr "Niveaus voor trends in graden Celsius per tijdschaal"
+
+#, fuzzy
+msgid "Levels on trends per time range"
+msgstr "Niveaus voor trends in MB per tijdspanne"
 
 msgid "Levels on used capacity in bytes"
 msgstr "Niveaus op gebruikte capaciteit in bytes"
@@ -28267,9 +28273,6 @@ msgstr "MAC-adres"
 msgid "MB"
 msgstr "MB"
 
-msgid "MB / range"
-msgstr "MB / bereik"
-
 msgid "MB/s"
 msgstr "MB/s"
 
@@ -28495,9 +28498,6 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Magische factor (automatische niveau-aanpassing voor grote tablespaces)"
-
-msgid "Magic factor (automatic level adaptation for large volumes)"
-msgstr "Magische factor (automatische niveau-aanpassing voor grote volumes)"
 
 msgid "Magnetic volumes space"
 msgstr "Magnetische volumes ruimte"
@@ -30356,6 +30356,10 @@ msgstr "Gebruikersquota bewaken"
 msgid "Monitor via Checkmk Agent"
 msgstr "Monitor via Checkmk Agent"
 
+#, fuzzy
+msgid "Monitor via Checkmk Agent or special agent"
+msgstr "Monitor via Checkmk Agent"
+
 msgid "Monitor via SNMP"
 msgstr "Bewaking via SNMP"
 
@@ -32020,15 +32024,6 @@ msgstr ""
 "Normaal gesproken wordt de tijd die nog rest tot de schijf vol is alleen "
 "weergegeven als de geconfigureerde niveaus zijn overschreden. Als u deze "
 "optie instelt, rapporteert de controle deze informatie altijd"
-
-msgid ""
-"Normally, the time left until the lun filesystem is full is only displayed "
-"when the configured levels have been breached. If you set this option the "
-"check always reports this information"
-msgstr ""
-"Normaal gesproken wordt de tijd die nog rest tot het Lun-bestandssysteem vol "
-"is alleen weergegeven als de geconfigureerde niveaus zijn overschreden. Als "
-"u deze optie instelt, rapporteert de controle deze informatie altijd"
 
 msgid "Not"
 msgstr "Niet"
@@ -36778,6 +36773,9 @@ msgstr "Gepubliceerde berichten"
 msgid "Publisher"
 msgstr "Uitgever"
 
+msgid "Pull: Checkmk server contacts the agent"
+msgstr ""
+
 msgid "Pulse Secure IVE memory utilization"
 msgstr "Pulse Secure IVE geheugengebruik"
 
@@ -36789,6 +36787,9 @@ msgstr "Pulse Secure gebruikers"
 
 msgid "Push configuration to this site"
 msgstr "Push configuratie naar deze site"
+
+msgid "Push: Checkmk agent contacts the server"
+msgstr ""
 
 msgid "Pushover"
 msgstr "Pushover"
@@ -49395,13 +49396,6 @@ msgstr ""
 "Het uitzicht is alleen voor u zichtbaar. Je kunt het niet delen, omdat je "
 "geen toestemming hebt om het te delen."
 
-msgid ""
-"The volume levels will never fall below these values, when using the magic "
-"factor and the volume is very small."
-msgstr ""
-"Het volume zal nooit onder deze waarden komen, wanneer de magische factor "
-"wordt gebruikt en het volume zeer klein is."
-
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
 msgstr ""
@@ -53607,13 +53601,6 @@ msgstr "Tijd dat MTR wacht tussen het verzenden van pings"
 
 msgid "Time Range"
 msgstr "Tijd Bereik"
-
-msgid "Time Range for filesystem trend computation"
-msgstr "Tijdsspanne voor de berekening van bestandssysteemtrends"
-
-msgid "Time Range for lun filesystem trend computation"
-msgstr ""
-"Tijdsspanne voor de berekening van de trend van het lun-bestandssysteem"
 
 msgid "Time Range for trend computation"
 msgstr "Tijdsspanne voor trendberekening"
@@ -60241,6 +60228,10 @@ msgstr "U mag de kennisgevingsmodule niet gebruiken."
 msgid "You are not allowed to use the setup."
 msgstr "Je mag de opstelling niet gebruiken."
 
+#, fuzzy
+msgid "You are not allowed to view the failed notifications."
+msgstr "U mag de kennisgevingsmodule niet gebruiken."
+
 msgid "You are not authenticated."
 msgstr "U bent niet geauthenticeerd."
 
@@ -63752,6 +63743,42 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Levels on the time left until the filesystem gets full"
+#~ msgstr "Niveaus op de tijd die rest tot het bestandssysteem vol is"
+
+#~ msgid "Levels on the time left until the lun filesystem gets full"
+#~ msgstr "Niveaus op de tijd die rest tot het lun bestandssysteem vol is"
+
+#~ msgid "MB / range"
+#~ msgstr "MB / bereik"
+
+#~ msgid "Magic factor (automatic level adaptation for large volumes)"
+#~ msgstr "Magische factor (automatische niveau-aanpassing voor grote volumes)"
+
+#~ msgid ""
+#~ "Normally, the time left until the lun filesystem is full is only "
+#~ "displayed when the configured levels have been breached. If you set this "
+#~ "option the check always reports this information"
+#~ msgstr ""
+#~ "Normaal gesproken wordt de tijd die nog rest tot het Lun-bestandssysteem "
+#~ "vol is alleen weergegeven als de geconfigureerde niveaus zijn "
+#~ "overschreden. Als u deze optie instelt, rapporteert de controle deze "
+#~ "informatie altijd"
+
+#~ msgid ""
+#~ "The volume levels will never fall below these values, when using the "
+#~ "magic factor and the volume is very small."
+#~ msgstr ""
+#~ "Het volume zal nooit onder deze waarden komen, wanneer de magische factor "
+#~ "wordt gebruikt en het volume zeer klein is."
+
+#~ msgid "Time Range for filesystem trend computation"
+#~ msgstr "Tijdsspanne voor de berekening van bestandssysteemtrends"
+
+#~ msgid "Time Range for lun filesystem trend computation"
+#~ msgstr ""
+#~ "Tijdsspanne voor de berekening van de trend van het lun-bestandssysteem"
 
 #~ msgid "By regular expression"
 #~ msgstr "Door reguliere expressie"

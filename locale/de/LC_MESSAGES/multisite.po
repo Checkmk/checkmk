@@ -7393,6 +7393,13 @@ msgstr ""
 "Konfigurationen) zu installieren."
 
 msgid ""
+"By default the server will try to contact the monitored host and pull the "
+"data by initializing a TCP connection. You can configure a push "
+"configuration, where the monitored host is expected to send the data to the "
+"monitoring server without being actively triggered."
+msgstr ""
+
+msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
@@ -9054,6 +9061,10 @@ msgstr "Checkmk Agent"
 
 #, fuzzy
 msgid "Checkmk agent / API integrations"
+msgstr "Checkmk Agent Version"
+
+#, fuzzy
+msgid "Checkmk agent connection mode"
 msgstr "Checkmk Agent Version"
 
 msgid "Checkmk agent network service (Linux)"
@@ -27053,13 +27064,6 @@ msgstr "Schwellwerte für die Zeit bis das Limit erreicht ist"
 msgid "Levels on the time left until limit is reached"
 msgstr "Schwellwert für Zeitspanne bis das Limit erreicht ist"
 
-msgid "Levels on the time left until the filesystem gets full"
-msgstr "Schwellwert für Zeitspanne bis das Dateisystem voll läuft"
-
-msgid "Levels on the time left until the lun filesystem gets full"
-msgstr ""
-"Schwellwerte für die verbleibende Zeit bis das LUN vollständig belegt ist"
-
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
@@ -27076,11 +27080,12 @@ msgstr "Schwellwerte für die gesamte CPU-Auslastung"
 msgid "Levels on transaction count"
 msgstr "Schwellwerte für die Anzahl an Transaktionen"
 
-msgid "Levels on trends in MB per time range"
-msgstr "Schwellwerte für Trends in MB pro Zeitspanne"
-
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr "Schwellwerte für Trends in Grad Celsius pro Zeitspanne"
+
+#, fuzzy
+msgid "Levels on trends per time range"
+msgstr "Schwellwerte für Trends in MB pro Zeitspanne"
 
 msgid "Levels on used capacity in bytes"
 msgstr "Schwellwerte für benutzte Kapazität in Bytes"
@@ -28280,9 +28285,6 @@ msgstr "MAC-Addresse"
 msgid "MB"
 msgstr "MB"
 
-msgid "MB / range"
-msgstr "MB pro Zeitspanne"
-
 msgid "MB/s"
 msgstr "MB/s"
 
@@ -28508,10 +28510,6 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Magic Faktor (automatische Schwellwert-Anpassung für große Tablespaces)"
-
-msgid "Magic factor (automatic level adaptation for large volumes)"
-msgstr ""
-"Magischer Faktor (automatische Schwellwert-Anpassung für große Dateisysteme)"
 
 msgid "Magnetic volumes space"
 msgstr "Magnetischer Datenträgerplatz"
@@ -30379,6 +30377,10 @@ msgstr "Benutzerquotas überwachen"
 msgid "Monitor via Checkmk Agent"
 msgstr "Per Checkmk-Agent überwachen"
 
+#, fuzzy
+msgid "Monitor via Checkmk Agent or special agent"
+msgstr "Per Checkmk-Agent überwachen"
+
 msgid "Monitor via SNMP"
 msgstr "Per SNMP überwachen"
 
@@ -32054,15 +32056,6 @@ msgstr ""
 "Normalerweise zeigt der Check die Zeit bis Vollwerden der Platte nur dann "
 "an, wenn die Schwellwerte gerissen wurden. Mit dieser Option wird der Wert "
 "immer angezeigt."
-
-msgid ""
-"Normally, the time left until the lun filesystem is full is only displayed "
-"when the configured levels have been breached. If you set this option the "
-"check always reports this information"
-msgstr ""
-"Normalerweise zeigt der Check die Zeit bis Vollwerden des LUNs nur dann an, "
-"wenn die Schwellwerte gerissen wurden. Mit dieser Option wird der Wert immer "
-"angezeigt."
 
 msgid "Not"
 msgstr "Nicht"
@@ -36826,6 +36819,9 @@ msgstr "Veröffentlichte Meldungen"
 msgid "Publisher"
 msgstr "Publisher"
 
+msgid "Pull: Checkmk server contacts the agent"
+msgstr ""
+
 msgid "Pulse Secure IVE memory utilization"
 msgstr "Pulse Secure IVE Speichernutzung"
 
@@ -36837,6 +36833,9 @@ msgstr "Pulse Secure Benutzer"
 
 msgid "Push configuration to this site"
 msgstr "Konfiguration auf diese Instanz übertragen"
+
+msgid "Push: Checkmk agent contacts the server"
+msgstr ""
 
 msgid "Pushover"
 msgstr "Pushover"
@@ -49402,13 +49401,6 @@ msgstr ""
 "Diese Ansicht ist nur für dich sichtbar. Du kannst sie nicht teilen, weil du "
 "keine Rechte zum Teilen hast."
 
-msgid ""
-"The volume levels will never fall below these values, when using the magic "
-"factor and the volume is very small."
-msgstr ""
-"Schwellwerte für das Volume werden niemals unter diese Werte fallen, wenn "
-"Sie den Magiefaktor benutzen und das Volume sehr klein ist."
-
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
 msgstr "Es gibt %d offene Änderungen die verlorengehen würden. Die neueste: "
@@ -53593,12 +53585,6 @@ msgstr "Zeit die das Plugin zwischen den einzelnen Pings wartet"
 
 msgid "Time Range"
 msgstr "Zeitbereich"
-
-msgid "Time Range for filesystem trend computation"
-msgstr "Zeitspanne für Trendberechnung im Dateisystem"
-
-msgid "Time Range for lun filesystem trend computation"
-msgstr "Zeitspanne für Trendberechnung des LUN Dateisystems"
 
 msgid "Time Range for trend computation"
 msgstr "Zeitspanne für Trendberechnung im Dateisystem"
@@ -60201,6 +60187,10 @@ msgstr "Sie haben keine Berechtigung für das Alarmierungsmodul."
 msgid "You are not allowed to use the setup."
 msgstr "Sie dürfen das Setup nicht verwenden."
 
+#, fuzzy
+msgid "You are not allowed to view the failed notifications."
+msgstr "Sie haben keine Berechtigung für das Alarmierungsmodul."
+
 msgid "You are not authenticated."
 msgstr "Sie sind nicht authentifiziert."
 
@@ -63734,6 +63724,43 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Levels on the time left until the filesystem gets full"
+#~ msgstr "Schwellwert für Zeitspanne bis das Dateisystem voll läuft"
+
+#~ msgid "Levels on the time left until the lun filesystem gets full"
+#~ msgstr ""
+#~ "Schwellwerte für die verbleibende Zeit bis das LUN vollständig belegt ist"
+
+#~ msgid "MB / range"
+#~ msgstr "MB pro Zeitspanne"
+
+#~ msgid "Magic factor (automatic level adaptation for large volumes)"
+#~ msgstr ""
+#~ "Magischer Faktor (automatische Schwellwert-Anpassung für große "
+#~ "Dateisysteme)"
+
+#~ msgid ""
+#~ "Normally, the time left until the lun filesystem is full is only "
+#~ "displayed when the configured levels have been breached. If you set this "
+#~ "option the check always reports this information"
+#~ msgstr ""
+#~ "Normalerweise zeigt der Check die Zeit bis Vollwerden des LUNs nur dann "
+#~ "an, wenn die Schwellwerte gerissen wurden. Mit dieser Option wird der "
+#~ "Wert immer angezeigt."
+
+#~ msgid ""
+#~ "The volume levels will never fall below these values, when using the "
+#~ "magic factor and the volume is very small."
+#~ msgstr ""
+#~ "Schwellwerte für das Volume werden niemals unter diese Werte fallen, wenn "
+#~ "Sie den Magiefaktor benutzen und das Volume sehr klein ist."
+
+#~ msgid "Time Range for filesystem trend computation"
+#~ msgstr "Zeitspanne für Trendberechnung im Dateisystem"
+
+#~ msgid "Time Range for lun filesystem trend computation"
+#~ msgstr "Zeitspanne für Trendberechnung des LUN Dateisystems"
 
 #~ msgid "By regular expression"
 #~ msgstr "Nach regulärem Ausdruck"

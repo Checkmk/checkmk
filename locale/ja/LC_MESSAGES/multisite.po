@@ -7149,6 +7149,13 @@ msgstr ""
 "成で)インストールできるようにするためです。"
 
 msgid ""
+"By default the server will try to contact the monitored host and pull the "
+"data by initializing a TCP connection. You can configure a push "
+"configuration, where the monitored host is expected to send the data to the "
+"monitoring server without being actively triggered."
+msgstr ""
+
+msgid ""
 "By default the snapshot summary service is displayed on the vCenter. Users "
 "who run an ESX host on its own or do not include their vCenter in the "
 "monitoring can choose to display the snapshot summary on the ESX host itself."
@@ -8728,6 +8735,10 @@ msgstr "Checkmkエージェント"
 
 msgid "Checkmk agent / API integrations"
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk agent connection mode"
+msgstr "Checkmkエージェントバージョン"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr "Checkmkエージェントネットワークサービス(Linux)"
@@ -26032,12 +26043,6 @@ msgstr "満杯になるまでの残り時間のレベル"
 msgid "Levels on the time left until limit is reached"
 msgstr "制限に達するまでの残り時間のレベル"
 
-msgid "Levels on the time left until the filesystem gets full"
-msgstr "ファイルシステムがいっぱいになるまでの残り時間のレベル"
-
-msgid "Levels on the time left until the lun filesystem gets full"
-msgstr "lunファイルシステムがいっぱいになるまでの残り時間のレベル"
-
 msgid ""
 "Levels on the total bandwidth will act the same way as they do for in/out "
 "bandwidth."
@@ -26052,11 +26057,12 @@ msgstr "総CPU使用率のレベル"
 msgid "Levels on transaction count"
 msgstr "トランザクション数のレベル"
 
-msgid "Levels on trends in MB per time range"
-msgstr "時間範囲ごとのMBの傾向のレベル"
-
 msgid "Levels on trends in degrees Celsius per time range"
 msgstr ""
+
+#, fuzzy
+msgid "Levels on trends per time range"
+msgstr "時間範囲ごとのMBの傾向のレベル"
 
 msgid "Levels on used capacity in bytes"
 msgstr "バイト単位の使用済み容量のレベル"
@@ -27225,9 +27231,6 @@ msgstr "Macアドレス"
 msgid "MB"
 msgstr "MB"
 
-msgid "MB / range"
-msgstr ""
-
 msgid "MB/s"
 msgstr "MB/s"
 
@@ -27449,9 +27452,6 @@ msgstr "マジックファクター(大規模なファイルシステムの自�
 
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr "マジックファクター(大規模なテーブルスペースの自動レベル適応)"
-
-msgid "Magic factor (automatic level adaptation for large volumes)"
-msgstr "マジックファクター(大容量の場合の自動レベル調整)"
 
 msgid "Magnetic volumes space"
 msgstr "磁気ボリュームスペース"
@@ -29281,6 +29281,10 @@ msgstr "ユーザークォータを監視する"
 msgid "Monitor via Checkmk Agent"
 msgstr "Checkmkエージェントを介して監視する"
 
+#, fuzzy
+msgid "Monitor via Checkmk Agent or special agent"
+msgstr "Checkmkエージェントを介して監視する"
+
 msgid "Monitor via SNMP"
 msgstr "SNMP経由で監視する"
 
@@ -30917,15 +30921,6 @@ msgstr ""
 "通常、ディスクがいっぱいになるまでの残り時間は、構成されたレベルに違反した場"
 "合にのみ表示されます。このオプションを設定すると、チェックは常にこの情報を報"
 "告します"
-
-msgid ""
-"Normally, the time left until the lun filesystem is full is only displayed "
-"when the configured levels have been breached. If you set this option the "
-"check always reports this information"
-msgstr ""
-"通常、lunファイルシステムがいっぱいになるまでの残り時間は、構成されたレベルに"
-"違反した場合にのみ表示されます。このオプションを設定すると、チェックは常にこ"
-"の情報を報告します"
 
 msgid "Not"
 msgstr "ない"
@@ -35530,6 +35525,9 @@ msgstr "公開されたメッセージ"
 msgid "Publisher"
 msgstr "パブリッシャー"
 
+msgid "Pull: Checkmk server contacts the agent"
+msgstr ""
+
 msgid "Pulse Secure IVE memory utilization"
 msgstr "Pulse Secure IVEメモリ使用率"
 
@@ -35541,6 +35539,9 @@ msgstr "パルスセキュアユーザー"
 
 msgid "Push configuration to this site"
 msgstr "このサイトに設定をプッシュする"
+
+msgid "Push: Checkmk agent contacts the server"
+msgstr ""
 
 msgid "Pushover"
 msgstr "Pushover"
@@ -47464,13 +47465,6 @@ msgid ""
 msgstr ""
 "ビューはあなただけに表示されます。共有する権限がないため、共有できません。"
 
-msgid ""
-"The volume levels will never fall below these values, when using the magic "
-"factor and the volume is very small."
-msgstr ""
-"マジックファクターを使用していて音量が非常に小さい場合、音量レベルがこれらの"
-"値を下回ることはありません。"
-
 #, python-format
 msgid "There are %d pending changes that would get lost. The most recent are: "
 msgstr ""
@@ -51206,12 +51200,6 @@ msgstr "MTRがpingの送信間で待機する時間"
 
 msgid "Time Range"
 msgstr "時間範囲"
-
-msgid "Time Range for filesystem trend computation"
-msgstr "ファイルシステムトレンド計算の時間範囲"
-
-msgid "Time Range for lun filesystem trend computation"
-msgstr "lunファイルシステムの傾向計算の時間範囲"
 
 msgid "Time Range for trend computation"
 msgstr "トレンド計算の時間範囲"
@@ -57494,6 +57482,10 @@ msgstr "通知モジュールの使用は許可されていません。"
 msgid "You are not allowed to use the setup."
 msgstr "セットアップの使用は許可されていません。"
 
+#, fuzzy
+msgid "You are not allowed to view the failed notifications."
+msgstr "通知モジュールの使用は許可されていません。"
+
 msgid "You are not authenticated."
 msgstr "あなたは認証されていません。"
 
@@ -60820,6 +60812,37 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Levels on the time left until the filesystem gets full"
+#~ msgstr "ファイルシステムがいっぱいになるまでの残り時間のレベル"
+
+#~ msgid "Levels on the time left until the lun filesystem gets full"
+#~ msgstr "lunファイルシステムがいっぱいになるまでの残り時間のレベル"
+
+#~ msgid "Magic factor (automatic level adaptation for large volumes)"
+#~ msgstr "マジックファクター(大容量の場合の自動レベル調整)"
+
+#~ msgid ""
+#~ "Normally, the time left until the lun filesystem is full is only "
+#~ "displayed when the configured levels have been breached. If you set this "
+#~ "option the check always reports this information"
+#~ msgstr ""
+#~ "通常、lunファイルシステムがいっぱいになるまでの残り時間は、構成されたレベ"
+#~ "ルに違反した場合にのみ表示されます。このオプションを設定すると、チェックは"
+#~ "常にこの情報を報告します"
+
+#~ msgid ""
+#~ "The volume levels will never fall below these values, when using the "
+#~ "magic factor and the volume is very small."
+#~ msgstr ""
+#~ "マジックファクターを使用していて音量が非常に小さい場合、音量レベルがこれら"
+#~ "の値を下回ることはありません。"
+
+#~ msgid "Time Range for filesystem trend computation"
+#~ msgstr "ファイルシステムトレンド計算の時間範囲"
+
+#~ msgid "Time Range for lun filesystem trend computation"
+#~ msgstr "lunファイルシステムの傾向計算の時間範囲"
 
 #~ msgid "By regular expression"
 #~ msgstr "正規表現による"

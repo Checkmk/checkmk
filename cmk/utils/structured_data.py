@@ -171,7 +171,7 @@ class StructuredDataStore:
         target_dir.mkdir(parents=True, exist_ok=True)
 
         filepath = self._host_file(host_name)
-        filepath.rename(target_dir / str(filepath.stat().st_mtime))
+        filepath.rename(target_dir / str(int(filepath.stat().st_mtime)))
 
 
 #.

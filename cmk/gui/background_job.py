@@ -553,7 +553,7 @@ class JobStatus:
                 # Repair broken/invalid files
                 if "state" not in data:
                     data["state"] = JobStatusStates.INITIALIZED
-                    data["started"] = time.time()
+                    data["started"] = os.path.getctime(str(self._jobstatus_path))
             finally:
                 store.release_lock(str(self._jobstatus_path))
 

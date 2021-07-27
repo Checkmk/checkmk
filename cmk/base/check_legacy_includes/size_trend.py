@@ -4,15 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
-from cmk.base.check_api import RAISE
 import time
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
+from typing import List, Optional, Tuple, Union
+
+from cmk.base.check_api import (
+    get_average,
+    get_bytes_human_readable,
+    get_rate,
+    MKCounterWrapped,
+    RAISE,
+)
 
 # ===========================================================================================
 # THIS FUNCTION DEFINED HERE IS IN THE PROCESS OF OR HAS ALREADY BEEN MIGRATED TO
@@ -30,7 +33,15 @@ from cmk.base.check_api import get_rate
 # IF YOU CANNOT FIND THE MIGRATED COUNTERPART OF A FUNCTION, PLEASE TALK TO TIMI BEFORE DOING
 # ANYTHING ELSE.
 # ==================================================================================================
-def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):  # pylint: disable=function-redefined
+def size_trend(
+    check,
+    item,
+    resource,
+    levels,
+    used_mb,
+    size_mb: float,
+    timestamp=None,
+):  # pylint: disable=function-redefined
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
@@ -65,6 +76,9 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
       returned.
     """
 
+    perfdata: List[Union[  #
+        Tuple[str, float],  #
+        Tuple[str, float, Optional[float], Optional[float], Optional[float], Optional[float]]]]
     state, infotext, perfdata, problems = 0, '', [], []
 
     MB = 1024.0 * 1024.0
@@ -98,7 +112,8 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
         (sign, get_bytes_human_readable(trend * MB), range_hours)
 
     # levels for performance data
-    warn_perf, crit_perf = None, None
+    warn_perf: Optional[float] = None
+    crit_perf: Optional[float] = None
 
     # apply levels for absolute growth / interval
     trend_bytes = levels.get("trend_bytes")
@@ -118,12 +133,13 @@ def size_trend(check, item, resource, levels, used_mb, size_mb, timestamp=None):
             problems[-1] += ")"
 
     # apply levels for growth relative to filesystem size
-    trend_perc = levels.get("trend_perc")
+    trend_perc: Optional[Tuple[float, float]] = levels.get("trend_perc")
     if trend_perc:
         wa_perc, cr_perc = trend_perc
         wa = wa_perc / 100.0 * size_mb
         cr = cr_perc / 100.0 * size_mb
         if warn_perf is not None:
+            assert crit_perf is not None
             warn_perf = min(warn_perf, wa)
             crit_perf = min(crit_perf, cr)
         else:

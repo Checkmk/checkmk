@@ -49,7 +49,7 @@ node (NODE) {
     }
     notify = load 'buildscripts/scripts/lib/notify.groovy'
     versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-
+    upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
     try {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "buildscripts/docker_image_aliases/IMAGE_TESTING")
@@ -60,6 +60,9 @@ node (NODE) {
                         CREDENTIALS_ID = '11fb3d5f-e44e-4f33-a651-274227cc48ab'
                     } else {
                         CREDENTIALS_ID = "registry.checkmk.com"
+                    }
+                    dir ("${PACKAGE_DIR}/${CMK_VERS}") {
+                        upload.download(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
                     }
                     withCredentials([
                         usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),

@@ -15,6 +15,12 @@
 @echo off
 SETLOCAL EnableExtensions EnableDelayedExpansion
 
+echo -logging-
+echo path is %path%
+where git
+if exist "C:\Program Files\Git\cmd\git.exe" echo git exists
+echo -end of logging-
+
 if "%3"=="" powershell "Invalid parameters - url should be defined" && exit /B 9
 if "%4"=="" powershell "Invalid parameters - version should be defined" && exit /B 10
 if "%5"=="" powershell "Invalid parameters - subversion should be defined" && exit /B 10

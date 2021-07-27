@@ -37,7 +37,7 @@ import cmk.gui.plugins.config
 from cmk.gui.plugins.config.base import CREConfig
 
 if not cmk_version.is_raw_edition():
-    from cmk.gui.cee.plugins.config.cee import CEEConfig
+    from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
 else:
     # Stub needed for non enterprise edition
     class CEEConfig:  # type: ignore[no-redef]
@@ -45,7 +45,7 @@ else:
 
 
 if cmk_version.is_managed_edition():
-    from cmk.gui.cme.plugins.config.cme import CMEConfig
+    from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
 else:
 
     # Stub needed for non managed services edition

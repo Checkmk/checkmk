@@ -18,7 +18,7 @@ def get_ntop_connection() -> Optional[Dict]:
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
         return config.ntop_connection  # type: ignore[attr-defined]
-    except NameError:
+    except AttributeError:
         return None
 
 

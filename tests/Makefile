@@ -174,7 +174,7 @@ test-format-python: ../.style.yapf
 	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
-	exit $${PIPESTATUS[0]}
+	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
@@ -212,8 +212,8 @@ test-mypy:
 	grep -v $$(realpath '../checks') | \
 	grep -v $$(realpath '../inventory') | \
 	`: files are only needed for pylint to understand the module hierarchy` \
-	grep -v $$(realpath '../enterprise/cmk/__init__.py') | \
-	grep -v $$(realpath '../enterprise/cmk/base/__init__.py') \
+	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
+	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') \
 	) ; \
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$PYTHON_FILES
 

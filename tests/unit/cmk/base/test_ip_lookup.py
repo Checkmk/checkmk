@@ -365,9 +365,6 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, res
     assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
-@pytest.mark.skipif(
-    os.environ.get('TRAVIS') == 'true',
-    reason="Travis may not resolve localhost -> IPv6 (https://github.com/njh/travis-ipv6-test)")
 @pytest.mark.parametrize("hostname, result_address", [
     ("localhost", "::1"),
     ("::1", "::1"),

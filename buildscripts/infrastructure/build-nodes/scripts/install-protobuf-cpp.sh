@@ -23,23 +23,24 @@ VERIFY_INSTALL=1
 
 # option parsing ###############################################################
 
-OPTIONS=$(getopt -o 'u' --long 'user' -n "$(basename $0)" -- "$@")
+OPTIONS=$(getopt -o us --long user,system -- "$@")
 if [[ $? -ne 0 ]]; then
     echo "error parsing options"
     exit 1
 fi
 eval set -- "$OPTIONS"
 unset OPTIONS
-
 while true; do
     case "$1" in
     '-u' | '--user')
         INSTALL_PREFIX="${HOME}/.local"
         TARGET_DIR=${INSTALL_PREFIX}${TARGET_DIR}
         USE_BUILD_CACHE=
-        VERIFY_INSTALL=
-        shift
-        continue
+        break
+        ;;
+    '-s' | '--system')
+        USE_BUILD_CACHE=
+        break
         ;;
     '--')
         shift
@@ -51,7 +52,6 @@ while true; do
         ;;
     esac
 done
-
 
 # build/install ################################################################
 
@@ -86,6 +86,9 @@ install() {
 
     if [ -z "$INSTALL_PREFIX" ]; then
         ldconfig
+    else
+        # The method is by definition not consistent, still it is good enough for development locally.
+        ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${INSTALL_PREFIX}/bin/"
     fi
 
     mkdir -p "${INSTALL_PREFIX}/usr/include"
@@ -115,6 +118,12 @@ verify_install() {
     if [ "$(protoc --version)" != "libprotoc ${PROTOBUF_VERSION}" ]; then
         echo "ERROR: protoc version invalid (expected ${PROTOBUF_VERSION})"
         exit 1
+    fi
+
+    if [ -d "$INSTALL_PREFIX" ]; then
+        # Based on https://autotools.io/
+        export PKG_CONFIG_PATH=$INSTALL_PREFIX/usr/lib/pkgconfig
+        export PKG_CONFIG_LIBDIR=$INSTALL_PREFIX/usr/lib/pkgconfig
     fi
 
     pkg-config --cflags protobuf

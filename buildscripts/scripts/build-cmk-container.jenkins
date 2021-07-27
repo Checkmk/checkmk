@@ -50,6 +50,7 @@ timeout(time: 12, unit: 'HOURS') {
         }
         notify = load 'buildscripts/scripts/lib/notify.groovy'
         versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+        upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
         try {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")

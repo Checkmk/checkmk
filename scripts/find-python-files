@@ -35,6 +35,7 @@ if [ -d "enterprise" ]; then
     PRUNE+=" -path $(realpath enterprise/cmk/base/cee) -prune -o"                   # cmk/base/cee symlink points here
     PRUNE+=" -path $(realpath enterprise/cmk/base/default_config/cee.py) -prune -o" # cmk/base/default_config/cme.py symlink points here
     PRUNE+=" -path $(realpath enterprise/cmk/base/modes/cee.py) -prune -o"          # cmk/base/modes/cee.py symlink points here
+    PRUNE+=" -path $(realpath enterprise/agents/plugins/cmk_update_agent.py) -prune -o" # cmk_update_agent.py checked directly
 fi
 SEARCH+=" inventory"
 SEARCH+=" livestatus/api/python"

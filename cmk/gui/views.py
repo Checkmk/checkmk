@@ -669,7 +669,9 @@ class GUIViewRenderer(ABCViewRenderer):
             ):  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
-                    backurl = makeuri(request, [], delvars=['filled_in', 'actions'])
+                    backurl = makeuri(request, [],
+                                      delvars=['filled_in', 'actions'],
+                                      keep_vars=['_active'])
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
@@ -1026,6 +1028,8 @@ class GUIViewRenderer(ABCViewRenderer):
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
             html.begin_form("actions")
+            if active_filters := request.get_str_input("_active"):
+                html.hidden_field("_active", active_filters)
             # TODO: Are these variables still needed
             html.hidden_field("_do_actions", "yes")
             html.hidden_field("actions", "yes")

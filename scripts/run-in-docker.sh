@@ -15,6 +15,7 @@ REPO_DIR=$(git rev-parse --show-toplevel)
 echo "Running in Docker container from $IMAGE_TESTING (workdir $PWD)"
 
 docker run -t -a stdout -a stderr \
+    --rm \
     --init \
     -u "$UID:$(id -g)" \
     -v "$REPO_DIR:$REPO_DIR" \

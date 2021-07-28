@@ -557,6 +557,9 @@ format-python:
 format-shell:
 	$(MAKE)	-C tests format-shell
 
+what-gerrit-makes:
+	$(MAKE)	-C tests what-gerrit-makes
+
 format-js:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
 
@@ -612,14 +615,3 @@ Pipfile.lock: Pipfile
 # %MAKEFILE% is updated before considering the am--refresh target.
 am--refresh: config.status
 	./config.status
-
-# Run `validate_changes` in live-mode i.e. not creating a JSON file 
-# containing build steps to be executed by Jenkins but directly running
-# them.
-what-gerrit-makes:
-	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
-	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
-	    -e BASE_COMMIT_ID=origin/master \
-	    -e WORKSPACE="$$WORKSPACE" \
-	    -e RESULTS="$$WORKSPACE"
-

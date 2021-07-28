@@ -322,3 +322,14 @@ test-unit-livestatus:
 
 test-unit-core:
 	cd ../enterprise/core/src && ./.f12 $(REDIRECT) $(RESULTS)/core-neb-cmc.txt
+
+# Run `validate_changes` in live-mode i.e. not creating a JSON file 
+# containing build steps to be executed by Jenkins but directly running
+# them.
+what-gerrit-makes:
+	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
+	cd "$$WORKSPACE" ; \
+	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
+	    -e BASE_COMMIT_ID=origin/master \
+	    -e WORKSPACE="$$WORKSPACE" \
+	    -e RESULTS="$$WORKSPACE"

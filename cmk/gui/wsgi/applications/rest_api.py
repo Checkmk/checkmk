@@ -32,7 +32,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data, add_once
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
 from cmk.gui.wsgi.type_defs import RFC7662
@@ -401,6 +401,8 @@ class CheckmkRESTAPI:
             # function at setup-time.
             environ[ARGS_KEY] = path_args
             return wsgi_app(environ, start_response)
+        except ProblemException as exc:
+            return exc(environ, start_response)
         except HTTPException as exc:
             # We don't want to log explicit HTTPExceptions as these are intentional.
             assert isinstance(exc.code, int)

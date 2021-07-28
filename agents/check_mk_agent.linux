@@ -7,6 +7,20 @@ DEBUG=false
 DISABLE_CACHING=false
 LOG_SECTION_TIME=false
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
+get_file_mtime() {
+    stat -c %Y "${1}" 2>/dev/null ||
+        stat -f %m "${1}" 2>/dev/null ||
+        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
+}
+
+#
+# END COMMON AGENT CODE
+#
+
 set_variable_defaults() {
     : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
     : "${MK_CONFDIR:=/etc/check_mk}"
@@ -1397,7 +1411,7 @@ run_cached() {
     # Check if cache file exists and is recent enough
     if [ -s "$CACHEFILE" ]; then
         local MTIME
-        MTIME=$(stat -c %Y "$CACHEFILE")
+        MTIME=$(get_file_mtime "$CACHEFILE")
         local AGE
         AGE=$((NOW - MTIME))
         if [ "$AGE" -le "$MAXAGE" ]; then local USE_CACHEFILE=1; fi
@@ -1483,7 +1497,7 @@ run_spooler() {
 
             # If there is at least one digit, than we honor that.
             if [ "$maxage" ]; then
-                mtime=$(stat -c %Y "$file")
+                mtime=$(get_file_mtime "$file")
                 if [ $((now - mtime)) -gt "$maxage" ]; then
                     continue
                 fi
@@ -1647,12 +1661,6 @@ run_real_time_checks() {
         sleep 1
         RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
     done
-}
-
-get_file_mtime() {
-    stat -c %Y "${1}" 2>/dev/null ||
-        stat -f %m "${1}" 2>/dev/null ||
-        perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
 run_purely_synchronous_sections() {

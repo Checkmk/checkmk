@@ -178,7 +178,10 @@ def _rename_hosts_in_check_mk(
         # The sync is automatically done by the remote automation call
         add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
 
-        new_counts = check_mk_automation(site_id, "rename-hosts", [], name_pairs)
+        new_counts = check_mk_automation(site_id,
+                                         "rename-hosts", [],
+                                         name_pairs,
+                                         non_blocking_http=True)
 
         _merge_action_counts(action_counts, new_counts)
     return action_counts

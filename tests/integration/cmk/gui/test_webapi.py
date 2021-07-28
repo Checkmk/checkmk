@@ -1515,8 +1515,8 @@ def test_get_combined_graph_identifications(
             "datasource": "services",
             "context": {
                 "service": {"service": "CPU load"},
-                "site": {"site": web.site.id},
-                "host": "test-host-get-graph",
+                "siteopt": {"site": web.site.id},
+                "host": {"host": "test-host-get-graph"},
             },
         }
     )
@@ -1527,9 +1527,9 @@ def test_get_combined_graph_identifications(
                 "combined",
                 {
                     "context": {
-                        "host": "test-host-get-graph",
+                        "host": {"host": "test-host-get-graph"},
                         "service": {"service": "CPU load"},
-                        "site": {
+                        "siteopt": {
                             "site": web.site.id,
                         },
                     },

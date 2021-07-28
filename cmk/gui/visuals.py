@@ -1625,23 +1625,15 @@ def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List
     return show_filters
 
 
-def get_context_uri_vars(context: VisualContext, single_infos: SingleInfos) -> HTTPVariables:
+def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
+    # return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
+    # During CMK 2.1 beta look for things to break. If no bugs are found use line above
     uri_vars: HTTPVariables = []
-    single_info_keys = get_single_info_keys(single_infos)
-
-    for filter_name, filter_vars in context.items():
-        # Enforce the single context variables that are available in the visual context
-        if filter_name in single_info_keys:
-            uri_vars.append((filter_name, str(filter_vars)))
-
-        if not isinstance(filter_vars, dict):
-            continue  # Skip invalid filter values
-
-        # This is a multi-context filter
+    for filter_vars in context.values():
         for uri_varname, value in filter_vars.items():
-            uri_vars.append((uri_varname, "%s" % value))
-
+            assert isinstance(value, str)
+            uri_vars.append((uri_varname, value))
     return uri_vars
 
 

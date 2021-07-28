@@ -6,7 +6,7 @@
 
 import pytest
 
-from testlib import Check
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 

@@ -263,7 +263,13 @@ async def run_cmd(cmd: str, cwd: Optional[str], check: bool,
 
 async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, verbosity: int) -> None:
     """Not yet implementd: run all stages by executing each command"""
-    code_red, code_green, code_bold, code_reset = "\033[1;31m", "\033[1;32m", "\033[0;37m", "\033[0;0m"
+    col = {
+        'red': "\033[1;31m",
+        'purple': "\033[1;35m",
+        'green': "\033[1;32m",
+        'bold': "\033[0;37m",
+        'reset': "\033[0;0m",
+    }
     results = {}
     for stage in stages:
         name = stage['NAME']
@@ -277,31 +283,35 @@ async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, ve
             print(f"Stage {name!r}: {results[name]}")
             continue
 
-        print(f"RUN stage ======== {code_bold}{name}{code_reset} ============")
+        print(f"RUN stage ======== {col['bold']}{name}{col['reset']} ============")
 
         for key, value in stage.items():
             LOG.debug("%s: %s", key, value)
+
+        output: List[str] = []
 
         t_before = time.time()
         cmd_successful = await run_cmd(
             cmd=stage["COMMAND"],
             cwd=stage["DIR"] or None,
             check=exitfirst,
-            stdout_fn=(
-                (lambda l, name=name: print(f"{code_bold}{name}: {code_reset}{l}"))
-                if verbosity else
-                (lambda l, name=name: None)),
-            stderr_fn=lambda l, name=name: print(f"{code_bold}{name}: {code_red}{l}{code_reset}"),
+            stdout_fn=(lambda l, name=name: (output.append if verbosity == 0 else print)(
+                f"{col['bold']}{name}: {col['reset']}{l}")),
+            stderr_fn=(lambda l, name=name: (output.append if verbosity == 0 else print)(
+                f"{col['bold']}{name}: {col['purple']}stderr:{col['reset']} {l}")),
         )
         duration = time.time() - t_before
 
+        for line in output:
+            print(line)
+
         if cmd_successful:
-            results[name] = f"{code_green}SUCCESSFUL{code_reset} ({duration:.2f}s)"
+            results[name] = f"{col['green']}SUCCESSFUL{col['reset']} ({duration:.2f}s)"
         else:
-            results[name] = f"{code_red}FAILED{code_reset} ({duration:.2f}s)"
+            results[name] = f"{col['red']}FAILED{col['reset']} ({duration:.2f}s)"
             if exitfirst:
-                print(f"{code_red}Stage {name!r} returned non-zero"
-                      f" and you told me to stop if that happens.{code_reset}")
+                print(f"{col['red']}Stage {name!r} returned non-zero"
+                      f" and you told me to stop if that happens.{col['reset']}")
                 break
         print(f"Stage {name!r}: {results[name]}")
 
@@ -352,8 +362,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # kommt weg
-    import doctest
-    assert not doctest.testmod().failed
-
     main()

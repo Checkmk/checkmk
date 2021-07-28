@@ -57202,6 +57202,11 @@ msgid "You need to provide a text."
 msgstr ""
 
 msgid ""
+"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"underscore and dot are allowed."
+msgstr ""
+
+msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
 "target=\"_blank\">Pushover</a>, thn create your Check_MK installation as "

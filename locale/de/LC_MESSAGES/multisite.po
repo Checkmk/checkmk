@@ -61584,6 +61584,14 @@ msgstr "Sie müssen eine Schlüssel-Datei wählen."
 msgid "You need to provide a text."
 msgstr "Bitte geben Sie einen Text an."
 
+#, fuzzy
+msgid ""
+"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"underscore and dot are allowed."
+msgstr ""
+"Bitte geben Sie einen gültigen Hostnamen oder eine IPv4-Adresse an. Nur "
+"Buchstaben, Zahlen, Minus, Unterstrich und Punkt sind erlaubt."
+
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "

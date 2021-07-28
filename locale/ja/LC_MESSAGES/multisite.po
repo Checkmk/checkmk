@@ -58708,6 +58708,14 @@ msgstr "キーファイルを提供する必要があります。"
 msgid "You need to provide a text."
 msgstr "テキストを提供する必要があります。"
 
+#, fuzzy
+msgid ""
+"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"underscore and dot are allowed."
+msgstr ""
+"有効なホスト名またはIPv4アドレスを入力してください。文字、数字、ダッシュ、ア"
+"ンダースコア、ドットのみが許可されます。"
+
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "

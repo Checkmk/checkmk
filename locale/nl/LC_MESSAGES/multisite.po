@@ -61614,6 +61614,14 @@ msgstr "U moet een sleutelbestand opgeven."
 msgid "You need to provide a text."
 msgstr "Je moet een tekst geven."
 
+#, fuzzy
+msgid ""
+"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"underscore and dot are allowed."
+msgstr ""
+"Voer een geldige hostnaam of IPv4-adres in. Alleen letters, cijfers, "
+"streepje, underscore en punt zijn toegestaan."
+
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "

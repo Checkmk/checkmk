@@ -61743,6 +61743,14 @@ msgstr "È necessario fornire un file chiave."
 msgid "You need to provide a text."
 msgstr "È necessario fornire un testo."
 
+#, fuzzy
+msgid ""
+"You need to provide a valid \"hostname\". Only letters, digits, dash, "
+"underscore and dot are allowed."
+msgstr ""
+"Inserisci un hostname o un indirizzo IPv4 valido. Sono ammesse solo lettere, "
+"cifre, trattini, underscore e punti."
+
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "

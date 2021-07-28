@@ -24,7 +24,7 @@ from pathlib import Path
 
 # Make the tests.testlib available
 script_path = Path(__file__).resolve()
-sys.path.insert(0, str(script_path.parent.parent))
+sys.path.insert(0, str(script_path.parent.parent.parent))
 
 from tests.testlib.utils import is_running_as_site_user, cmk_path
 from tests.testlib.site import get_site_factory

@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import List
 
 # Make the tests.testlib available
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.insert(0, os.path.dirname((os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
 import os
 import copy
 import sys
@@ -1279,21 +1280,16 @@ def get_filter(name: str) -> Filter:
     return filter_registry[name]
 
 
-def filters_allowed_for_info(info: str) -> Dict[str, Filter]:
+def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
-    allowed = {}
     for fname, filt in filter_registry.items():
         if filt.info is None or info == filt.info:
-            allowed[fname] = filt
-    return allowed
+            yield fname, filt
 
 
 def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
     """Same as filters_allowed_for_info() but for multiple infos"""
-    filters = {}
-    for info in info_list:
-        filters.update(filters_allowed_for_info(info))
-    return filters
+    return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
 # For all single_infos which are configured for a view which datasource
@@ -1484,25 +1480,17 @@ class VisualFilterList(ListOfMultiple):
     filter is rendered and the user can provide a default value.
     """
     @classmethod
-    def get_choices(cls, info):
-        return sorted(cls._get_filter_specs([info]).items(),
+    def get_choices(cls, info: str) -> Sequence[Tuple[str, VisualFilter]]:
+        return sorted(cls._get_filter_specs(info),
                       key=lambda x: (x[1]._filter.sort_index, x[1].title()))
 
     @classmethod
-    def _get_filters(cls, infos):
-        return {fname: fspec._filter for fname, fspec in cls._get_filter_specs(infos).items()}
-
-    @classmethod
-    def _get_filter_specs(cls, infos):
-        fspecs: Dict[str, VisualFilter] = {}
-        for info in infos:
-            for fname, filter_ in filters_allowed_for_info(info).items():
-                if fname not in fspecs:
-                    fspecs[fname] = VisualFilter(fname, title=filter_.title)
-        return fspecs
+    def _get_filter_specs(cls, info: str) -> Iterator[Tuple[str, VisualFilter]]:
+        for fname, filter_ in filters_allowed_for_info(info):
+            yield fname, VisualFilter(fname, title=filter_.title)
 
     def __init__(self, info_list, **kwargs):
-        self._filters = self._get_filters(info_list)
+        self._filters = filters_allowed_for_infos(info_list)
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))

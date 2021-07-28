@@ -1956,7 +1956,7 @@ class ListOf(ValueSpec):
         return self._valuespec.has_show_more()
 
 
-ListOfMultipleChoices = List[_Tuple[str, ValueSpec]]
+ListOfMultipleChoices = Sequence[_Tuple[str, ValueSpec]]
 
 ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
     ("title", str),
@@ -1987,14 +1987,13 @@ class ListOfMultiple(ValueSpec):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         # Normalize all to grouped choice structure
-        grouped: GroupedListOfMultipleChoices = []
-        ungrouped_group = ListOfMultipleChoiceGroup(title="", choices=[])
-        grouped.append(ungrouped_group)
-        for e in choices:
-            if not isinstance(e, ListOfMultipleChoiceGroup):
-                ungrouped_group.choices.append(e)
-            else:
-                grouped.append(e)
+        ungrouped_group = ListOfMultipleChoiceGroup(
+            title="",
+            choices=[c for c in choices if not isinstance(c, ListOfMultipleChoiceGroup)],
+        )
+        grouped: GroupedListOfMultipleChoices = [ungrouped_group] + [
+            e for e in choices if isinstance(e, ListOfMultipleChoiceGroup)
+        ]
 
         self._grouped_choices = grouped
         self._choice_dict = {choice[0]: choice[1] for group in grouped for choice in group.choices}

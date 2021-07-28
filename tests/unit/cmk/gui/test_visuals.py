@@ -16,7 +16,6 @@ import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 import cmk.gui.plugins.visuals.filters
-from cmk.gui.type_defs import Visual
 
 
 def test_get_filter():
@@ -30,7 +29,7 @@ def test_get_not_existing_filter():
 
 
 def test_filters_allowed_for_info():
-    allowed = visuals.filters_allowed_for_info("host")
+    allowed = dict(visuals.filters_allowed_for_info("host"))
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
     assert "service" not in allowed
 

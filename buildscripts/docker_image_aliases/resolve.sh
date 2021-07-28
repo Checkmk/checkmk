@@ -6,7 +6,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-DOCKER_RESULT=$(docker build "${SCRIPT_DIR}/$1" 2>docker-image-alias-resolve-error.txt)
+DOCKER_RESULT=$(docker build --pull "${SCRIPT_DIR}/$1" 2>docker-image-alias-resolve-error.txt)
 RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
 
 if [ -n "$RESULT_IMAGE_ID" ] ; then

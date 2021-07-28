@@ -293,9 +293,13 @@ def registry_reset(request):
     """Fixture to reset a Registry to its default entries.
 
     Tests using this fixture need a `registry_reset` marker with the registry to reset as argument.
-    >>> @pytest.mark.registry_reset(registry_to_reset)
-    >>> def test_foo(reset_registry):
+
+    >>> import pytest
+    >>> import cmk.gui.dashboard
+    >>> @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+    ... def test_foo(reset_registry):
     ...     pass
+
     """
     marker = request.node.get_closest_marker("registry_reset")
     if marker is None:

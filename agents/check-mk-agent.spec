@@ -37,7 +37,7 @@ rm -rf $R
 mkdir -p $R/etc/xinetd.d
 install -m 644 cfg_examples/xinetd.conf $R/etc/xinetd.d/check_mk
 # Systemd
-mkdir -p $R/etc/systemd/system
+mkdir -p $R/usr/lib/systemd/system
 install -m 644 cfg_examples/systemd/check_mk\@.service $R/usr/lib/systemd/system
 install -m 644 cfg_examples/systemd/check_mk.socket $R/usr/lib/systemd/system
 mkdir -p $R/etc/check_mk

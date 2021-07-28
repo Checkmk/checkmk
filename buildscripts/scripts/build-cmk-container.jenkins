@@ -21,14 +21,8 @@ properties([
 def BRANCH = scm.branches[0].name.replaceAll("/","-")
 def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 
-def PACKAGE_DIR = '/bauwelt/download'
-def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
-
-// Workaround to build arbitrary version: Copy the CMK package to /bauwelt/download/
-def ARCHIVE_DIR = '/bauwelt/download/' + CMK_VERS
-
 // Duplicate code with nightly-build.jenkins
-def get_cmk_version(BRANCH, VERSION) {
+def get_cmk_version(BRANCH, VERSION){
     def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
     def DATE = new Date()
 
@@ -45,6 +39,7 @@ def get_cmk_version(BRANCH, VERSION) {
 
 timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
+        def PACKAGE_DIR = WORKSPACE + '/download'
         stage('checkout sources') {
             checkout(scm)
         }
@@ -79,7 +74,7 @@ timeout(time: 12, unit: 'HOURS') {
                                 --exclude '*dbgsym*.deb' \
                                 -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p 52022" \
                                 ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                                ${UPLOAD_DEST}
+                                ${WEB_DEPLOY_DEST}
                         """
                         }
                     }

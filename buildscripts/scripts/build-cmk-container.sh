@@ -56,8 +56,10 @@ else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi
 
-mkdir -p /bauwelt/tmp
-TMP_PATH=$(mktemp --directory -p /bauwelt/tmp --suffix=.cmk-docker)
+BASE_PATH=$(pwd)/tmp
+mkdir -p "$BASE_PATH"
+TMP_PATH=$(mktemp --directory -p $BASE_PATH --suffix=.cmk-docker)
+PACKAGE_PATH=$(pwd)/download
 DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}/docker"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}${DEMO}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}${DEMO}"
@@ -66,16 +68,16 @@ PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
 trap "rm -rf \"$TMP_PATH\"" SIGTERM SIGHUP SIGINT
 
 log "Unpack source tar to $TMP_PATH"
-tar -xz -C "$TMP_PATH" -f "/bauwelt/download/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
+tar -xz -C "$TMP_PATH" -f "$PACKAGE_PATH/${VERSION}/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}.tar.gz"
 
 log "Copy debian package..."
-cp "/bauwelt/download/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
+cp "$PACKAGE_PATH/${VERSION}/${PKG_FILE}" "$DOCKER_PATH/"
 
 log "Building container image"
 make -C "$DOCKER_PATH" "$DOCKER_IMAGE_ARCHIVE"
 
 log "Verschiebe Image-Tarball..."
-mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "/bauwelt/download/${VERSION}/"
+mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "$PACKAGE_PATH/${VERSION}/"
 
 if [ $EDITION = raw ]; then
     docker_push "" "checkmk"

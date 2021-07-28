@@ -43,7 +43,7 @@ class HostStats(NamedTuple):
                 "downtime",
                 self.downtime,
                 view_url(general_url_vars +
-                         [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")]),
+                         [("search", "1"), ("is_host_scheduled_downtime_depth", "1")]),
             ),
             (
                 _("Unreachable"),

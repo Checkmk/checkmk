@@ -2817,7 +2817,7 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
                      (info_name, datasource.ident))
 
 
-def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
+def _page_menu_host_setup_topic(view: View) -> List[PageMenuTopic]:
     if "host" not in view.spec['single_infos'] or "host" in view.missing_single_infos:
         return []
 
@@ -2830,7 +2830,7 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     if not user.may("wato.hosts") and not user.may("wato.seeall"):
         return []
 
-    host_name = view.context["host"]  # old str: single_info host
+    host_name = view.context["host"]["host"]
 
     return [
         PageMenuTopic(
@@ -2840,7 +2840,7 @@ def _page_menu_host_setup_topic(view) -> List[PageMenuTopic]:
     ]
 
 
-def page_menu_entries_host_setup(host_name) -> Iterator[PageMenuEntry]:
+def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Host configuration"),
         icon_name={

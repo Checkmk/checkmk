@@ -6,7 +6,13 @@
 # - some variables are not needed
 
 VARIABLES:
+    - NAME: PATCHSET_REVISION
+      # Will be used if not provided by Jenkins
+      SH: "git rev-parse HEAD"
+
     - NAME: BASE_COMMIT_ID
+      # Can be provided directly instead of PATCHSET_REVISION in order to compare HEAD against
+      # arbitrary refs like `origin/master`
       SH: "git rev-parse ${PATCHSET_REVISION}^"
 
     - NAME: CHANGED_FILES_REL

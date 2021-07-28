@@ -406,7 +406,7 @@ section_df() {
     fi
 }
 
-sections_systemd() {
+section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
@@ -1168,6 +1168,77 @@ section_fileinfo() {
     ' -- "$MK_CONFDIR"
 }
 
+# ntpq helper function
+
+get_ntpq() {
+    inpath ntpq || return 1
+    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
+}
+
+section_timesyncd() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
+    inpath systemctl || return 1
+    inpath timedatectl || return 1
+    systemctl is-enabled systemd-timesyncd.service >/dev/null 2>&1 || return 1
+    # debian 10.8 uses ConditionFileIsExecutable to "disable" systemd-timedatectl when ntp is installed.
+    # The service is still enabled, but does not start timesyncd as the condition is not met.
+    (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
+    timedatectl timesync-status >/dev/null 2>&1 || return 1
+
+    ${MK_RUN_SYNC_PARTS} || return 0
+
+    echo "<<<timesyncd>>>"
+    timedatectl timesync-status
+    get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    return 0 # intended not to execute section_ntp even in the case where get_file_mtime fails
+}
+
+section_ntp() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
+    # First we try to identify if we're beholden to systemd
+    if inpath systemctl; then
+        # shellcheck disable=SC2016
+        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
+            # remove heading, make first column space separated
+            get_ntpq
+            return
+        fi
+    fi
+
+    # If we get to this point, we attempt via classic ntp daemons (ntpq required)
+    if inpath ntpq; then
+        # Try to determine status via /etc/init.d
+        # This might also be appropriate for AIX, Solaris and others
+        for _ntp_daemon in ntp ntpd openntpd; do
+            # Check for a service script
+            if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
+                # If the status returns 0, we assume we have a running service
+                if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
+                    get_ntpq
+                    return
+                fi
+            fi
+        done
+        unset -v _ntp_daemon
+    fi
+}
+
+section_checkmk_failed_plugins() {
+    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
+        echo "<<<check_mk>>>"
+        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+        if [ -n "$NO_PYTHON" ]; then
+            echo "FailedPythonReason: No suitable python installation found."
+        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            echo "FailedPythonReason: Configured python command not found."
+        fi
+    fi
+}
+
 run_liveupdate() {
     if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
         if [ -z "$REMOTE" ]; then
@@ -1267,118 +1338,6 @@ is_valid_plugin() {
     esac
 }
 
-#
-# BEGIN COMMON AGENT CODE
-#
-
-run_local_checks() {
-    cd "$LOCALDIR" || return
-
-    if ${MK_RUN_SYNC_PARTS}; then
-        echo '<<<local:sep(0)>>>'
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                _log_section_time "./$skript"
-            fi
-        done
-    fi
-
-    # Call some local checks only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
-        fi
-    done
-}
-
-#
-# END COMMON AGENT CODE
-#
-
-run_plugins() {
-    cd "$PLUGINSDIR" || return
-
-    if ${MK_RUN_SYNC_PARTS}; then
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                run_agent_plugin "$skript"
-            fi
-        done
-    fi
-
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
-        fi
-    done
-}
-
-run_mrpe() {
-    local descr=$1
-    shift
-    local cmdline=$*
-
-    echo '<<<mrpe>>>'
-
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval _log_section_time "$cmdline")
-
-    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-    echo
-}
-
-export -f run_mrpe
-
-add_failed_python_plugin() {
-    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-        FAILED_PYTHON_PLUGINS=("$1")
-    else
-        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
-    fi
-}
-
-run_agent_plugin() {
-    agent_plugin="${1#./}"
-    extension="${agent_plugin##*.}"
-    filename="${agent_plugin%.*}"
-
-    # Execute all non python plugins with ./foo
-    if [ "$extension" != "py" ]; then
-        _log_section_time "./$agent_plugin"
-        return
-    fi
-
-    if [ "${filename:(-2):(2)}" != "_2" ]; then
-        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            add_failed_python_plugin "$agent_plugin"
-            return
-        fi
-        if [ -n "$PYTHON3" ]; then
-            _log_section_time "$PYTHON3 $agent_plugin"
-            return
-        fi
-        if [ ! -e "${filename}_2.py" ]; then
-            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
-            return
-        fi
-        return
-    fi
-
-    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
-        return
-    fi
-
-    if [ -n "$PYTHON2" ]; then
-        _log_section_time "$PYTHON2 $agent_plugin"
-        return
-    fi
-
-    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
-}
-
-export -f run_agent_plugin
-
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
 #   -s creates the section header <<<$NAME>>>
@@ -1472,6 +1431,154 @@ run_cached() {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
+run_local_checks() {
+    cd "$LOCALDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        echo '<<<local:sep(0)>>>'
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                _log_section_time "./$skript"
+            fi
+        done
+    fi
+
+    # Call some local checks only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "local_${skript//\//\_}" "${skript%/*}" "_log_section_time './$skript'"
+        fi
+    done
+}
+
+#
+# END COMMON AGENT CODE
+#
+
+# Agent output snippets created by cronjobs, etc.
+run_spooler() {
+    (
+        cd "$SPOOLDIR" 2>/dev/null || return
+        test -r "$SPOOLDIR" || return
+        now=$(date +%s)
+
+        for file in *; do
+            test "$file" = "*" && break
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
+
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
+
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt "$maxage" ]; then
+                    continue
+                fi
+            fi
+
+            # Output the file
+            cat "$file"
+        done
+    )
+}
+
+run_plugins() {
+    cd "$PLUGINSDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                run_agent_plugin "$skript"
+            fi
+        done
+    fi
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
+        fi
+    done
+}
+
+run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline=$*
+
+    echo '<<<mrpe>>>'
+
+    PLUGIN=${cmdline%% *}
+    OUTPUT=$(eval _log_section_time "$cmdline")
+
+    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
+
+add_failed_python_plugin() {
+    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+        FAILED_PYTHON_PLUGINS=("$1")
+    else
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+    fi
+}
+
+run_agent_plugin() {
+    agent_plugin="${1#./}"
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        _log_section_time "./$agent_plugin"
+        return
+    fi
+
+    if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            add_failed_python_plugin "$agent_plugin"
+            return
+        fi
+        if [ -n "$PYTHON3" ]; then
+            _log_section_time "$PYTHON3 $agent_plugin"
+            return
+        fi
+        if [ ! -e "${filename}_2.py" ]; then
+            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
+            return
+        fi
+        return
+    fi
+
+    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+
+    if [ -n "$PYTHON2" ]; then
+        _log_section_time "$PYTHON2 $agent_plugin"
+        return
+    fi
+
+    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
+}
+
+export -f run_agent_plugin
+
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
@@ -1542,117 +1649,10 @@ run_real_time_checks() {
     done
 }
 
-# Agent output snippets created by cronjobs, etc.
-run_spooler() {
-    (
-        cd "$SPOOLDIR" 2>/dev/null || return
-        test -r "$SPOOLDIR" || return
-        now=$(date +%s)
-
-        for file in *; do
-            test "$file" = "*" && break
-            # output every file in this directory. If the file is prefixed
-            # with a number, then that number is the maximum age of the
-            # file in seconds. If the file is older than that, it is ignored.
-            maxage=""
-            part="$file"
-
-            # Each away all digits from the front of the filename and
-            # collect them in the variable maxage.
-            while [ "${part/#[0-9]/}" != "$part" ]; do
-                maxage=$maxage${part:0:1}
-                part=${part:1}
-            done
-
-            # If there is at least one digit, than we honor that.
-            if [ "$maxage" ]; then
-                mtime=$(stat -c %Y "$file")
-                if [ $((now - mtime)) -gt "$maxage" ]; then
-                    continue
-                fi
-            fi
-
-            # Output the file
-            cat "$file"
-        done
-    )
-}
-
-# ntpq helper function
-
-get_ntpq() {
-    inpath ntpq || return 1
-    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
-}
-
-section_timesyncd() {
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
-        return 0
-    fi
-    inpath systemctl || return 1
-    inpath timedatectl || return 1
-    systemctl is-enabled systemd-timesyncd.service >/dev/null 2>&1 || return 1
-    # debian 10.8 uses ConditionFileIsExecutable to "disable" systemd-timedatectl when ntp is installed.
-    # The service is still enabled, but does not start timesyncd as the condition is not met.
-    (inpath ntpd || inpath openntpd) && return 1 # we check the same condition as the systemd condition
-    timedatectl timesync-status >/dev/null 2>&1 || return 1
-
-    ${MK_RUN_SYNC_PARTS} || return 0
-
-    echo "<<<timesyncd>>>"
-    timedatectl timesync-status
-    get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
-    return 0 # intended not to execute section_ntp even in the case where get_file_mtime fails
-}
-
-section_ntp() {
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
-        return 0
-    fi
-    # First we try to identify if we're beholden to systemd
-    if inpath systemctl; then
-        # shellcheck disable=SC2016
-        if [ "$(systemctl | awk '/ntp.service|ntpd.service/{print $3; exit}')" = "active" ]; then
-            # remove heading, make first column space separated
-            get_ntpq
-            return
-        fi
-    fi
-
-    # If we get to this point, we attempt via classic ntp daemons (ntpq required)
-    if inpath ntpq; then
-        # Try to determine status via /etc/init.d
-        # This might also be appropriate for AIX, Solaris and others
-        for _ntp_daemon in ntp ntpd openntpd; do
-            # Check for a service script
-            if [ -x /etc/init.d/"${_ntp_daemon}" ]; then
-                # If the status returns 0, we assume we have a running service
-                if /etc/init.d/"${_ntp_daemon}" status >/dev/null 2>&1; then
-                    get_ntpq
-                    return
-                fi
-            fi
-        done
-        unset -v _ntp_daemon
-    fi
-}
-
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
-}
-
-section_checkmk_failed_plugins() {
-    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
-        echo "<<<check_mk>>>"
-        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
-        if [ -n "$NO_PYTHON" ]; then
-            echo "FailedPythonReason: No suitable python installation found."
-        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            echo "FailedPythonReason: Configured python command not found."
-        fi
-    fi
 }
 
 run_purely_synchronous_sections() {
@@ -1662,7 +1662,7 @@ run_purely_synchronous_sections() {
 
     [ -z "$MK_SKIP_DF" ] && _log_section_time section_df
 
-    [ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time sections_systemd
+    [ -z "$MK_SKIP_SYSTEMD" ] && _log_section_time section_systemd
 
     # Filesystem usage for ZFS
     [ -z "$MK_SKIP_ZFS" ] && _log_section_time section_zfs

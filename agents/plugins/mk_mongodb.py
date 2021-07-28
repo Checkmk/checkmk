@@ -18,6 +18,9 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
 
 __version__ = "2.1.0i1"
 
+import argparse
+import configparser
+import logging
 import os
 import sys
 import time
@@ -32,11 +35,12 @@ except ImportError:
 
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
+    import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
-        "error\tpymongo library is not installed. Please install it on the monitored system (for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n"
-    )
+        "error\tpymongo library is not installed. Please install it on the monitored system "
+        "(for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n")
     sys.exit(1)
 
 from bson.json_util import dumps  # type: ignore[import]
@@ -621,14 +625,103 @@ def section_logwatch(client):
     update_statefile(state_file, startup_warnings)
 
 
-def main():
-    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY)
+DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), 'mk_mongodb.cfg')
+
+LOGGER = logging.getLogger(__name__)
+
+
+def parse_arguments(argv):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug",
+                        action="store_true",
+                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument("-v",
+                        "--verbose",
+                        action="count",
+                        default=0,
+                        help='''Verbose mode (for even more output use -vvv)''')
+    parser.add_argument("-c",
+                        "--config-file",
+                        default=DEFAULT_CFG_FILE,
+                        help='''Read config file (default: %(default)s)''')
+
+    return parser.parse_args(argv)
+
+
+def setup_logging(verbosity):
+    fmt = "%%(levelname)5s: %s%%(message)s"
+    if verbosity == 0:
+        logging.basicConfig(level=logging.WARNING, format=fmt % "")
+    elif verbosity == 1:
+        logging.basicConfig(level=logging.INFO, format=fmt % "")
+    else:
+        logging.basicConfig(level=logging.DEBUG, format=fmt % "(line %(lineno)3d) ")
+
+
+def get_config(cfg_file):
+    config = configparser.ConfigParser()
+    cfg_file = os.path.abspath(cfg_file)
+    LOGGER.debug("trying to read %r", cfg_file)
+    if not os.path.exists(cfg_file):
+        LOGGER.warning("config file does not exist!")
+        return config
+    with open(cfg_file, 'r') as cfg:
+        config.read_file(cfg)
+    LOGGER.info("read configuration file %r", cfg_file)
+    return config
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
+
+    args = parse_arguments(argv)
+    setup_logging(args.verbose)
+    LOGGER.debug("parsed args: %r", args)
+    config = get_config(args.config_file)
+
+    tls_enable = config.getboolean('MONGODB', 'tls_enable', fallback=False)
+    auth_mechanism = config.get('MONGODB', 'auth_mechanism', fallback=None)
+    auth_source = config.get('MONGODB', 'auth_source', fallback=None)
+    host = config.get('MONGODB', 'host', fallback=None)
+
+    pymongo_config = dict(
+        username=config.get('MONGODB', 'username', fallback=None),
+        password=config.get('MONGODB', 'password', fallback=None),
+        tls=tls_enable,
+    )
+    if tls_enable:
+        pymongo_config['tlsInsecure'] = not config.getboolean(
+            'MONGODB', 'tls_verify', fallback=True)
+        ca_file = config.get('MONGODB', 'tls_ca_file', fallback=None)
+        if ca_file is not None:
+            pymongo_config['tlsCAFile'] = ca_file
+    if auth_mechanism is not None:
+        pymongo_config['authMechanism'] = auth_mechanism
+    if auth_source is not None:
+        pymongo_config['authSource'] = auth_source
+    if host is not None:
+        pymongo_config['host'] = host
+
+    LOGGER.info("pymongo configuration:")
+    if LOGGER.isEnabledFor(logging.INFO):
+        config = pymongo_config.copy()
+        if 'password' in config and config['password'] is not None:
+            config['password'] = '******'
+        LOGGER.info(config)
+
+    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")
-    except pymongo.errors.ConnectionFailure:
+    except (pymongo.errors.OperationFailure, pymongo.errors.ConnectionFailure) as e:
         sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
-        sys.stdout.write("error\tInstance is down\n")
+        sys.stdout.write("error\tFailed to connect\n")
+        # TLS issues are thrown as pymongo.errors.ServerSelectionTimeoutError
+        # (e.g. config with enabled TLS, but mongodb is plaintext only)
+        # Give the user some hints what the issue could be:
+        sys.stdout.write("details\t%s\n" % str(e))
         return
 
     section_instance(server_status)

@@ -161,91 +161,6 @@ preamble_4() {
     fi
 }
 
-run_mrpe() {
-    local descr=$1
-    shift
-    local cmdline="$@"
-
-    echo '<<<mrpe>>>'
-
-    OUTPUT=$(eval _log_section_time "$cmdline")
-
-    echo -n "$descr $? $OUTPUT" | tr \\n \\1
-    echo
-}
-
-export -f run_mrpe
-
-# Runs a command asynchronous by use of a cache file
-run_cached() {
-    local mrpe=0
-    # TODO: this function is unable to handle mulitple args at once
-    #       for example: -s -m won't work, it is read as single token "-s -m"
-
-    if [ "$1" = -s ]; then local section="echo '<<<$2>>>'; "; shift; fi
-    if [ "$1" = -m ]; then local mrpe=1; shift; fi
-    local NAME=$1
-    local MAXAGE=$2
-    shift 2
-    local CMDLINE="$section$@"
-    local AGE
-
-    if $DISABLE_CACHING; then
-        # shellcheck disable=SC2090
-        $CMDLINE
-        return
-    fi
-
-    if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
-    if [ "$mrpe" = 1 ]; then
-        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
-    else
-        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
-    fi
-
-    # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    if [ -e "$CACHEFILE.new" ]; then
-        AGE=$(file_age "$CACHEFILE.new")
-        if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
-            fuser -k "$CACHEFILE.new" >/dev/null 2>&1
-            rm -f "$CACHEFILE.new"
-        fi
-    fi
-
-    # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ]; then
-        local MTIME
-        MTIME=$(file_mtime "$CACHEFILE")
-        AGE=$(file_age "$CACHEFILE")
-        if [ "${AGE}" -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
-        if ${MK_RUN_SYNC_PARTS}; then
-            # Output the file even if it is outdated.
-            # The new file will not yet be available.
-            CACHE_INFO="cached($MTIME,$MAXAGE)"
-            if [ "${NAME%%_*}" = "local" ] || [ "$mrpe" = 1 ]; then
-                # insert the cache info at the beginning of every non-header line
-                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
-            else
-                # insert the cache info in the section header (^= after '!'),
-                # if none is present (^= before '!')
-                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
-            fi
-        fi
-    fi
-
-    ${MK_RUN_ASYNC_PARTS} || return
-
-    # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
-        if [ $mrpe -eq 1 ]; then
-            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; run_mrpe $NAME \"$CMDLINE\" && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
-        else
-            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
-        fi
-    fi
-}
-
 preamble_5() {
     # Find out what zone we are running in
     # Treat all pre-Solaris 10 systems as "global"
@@ -538,6 +453,18 @@ section_solaris_services() {
     fi
 }
 
+section_checkmk_failed_plugins() {
+    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
+        echo "<<<check_mk>>>"
+        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+        if [ -n "$NO_PYTHON" ]; then
+            echo "FailedPythonReason: No suitable python installation found."
+        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            echo "FailedPythonReason: Configured python command not found."
+        fi
+    fi
+}
+
 run_remote_plugins() {
     # MK's Remote Plugin Executor
     if test -f "$MK_CONFDIR/mrpe.cfg"; then
@@ -573,6 +500,91 @@ run_remote_plugins() {
 
 is_valid_plugin() {
     [ -x "$1" ]
+}
+
+run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline="$@"
+
+    echo '<<<mrpe>>>'
+
+    OUTPUT=$(eval _log_section_time "$cmdline")
+
+    echo -n "$descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
+
+# Runs a command asynchronous by use of a cache file
+run_cached() {
+    local mrpe=0
+    # TODO: this function is unable to handle mulitple args at once
+    #       for example: -s -m won't work, it is read as single token "-s -m"
+
+    if [ "$1" = -s ]; then local section="echo '<<<$2>>>'; "; shift; fi
+    if [ "$1" = -m ]; then local mrpe=1; shift; fi
+    local NAME=$1
+    local MAXAGE=$2
+    shift 2
+    local CMDLINE="$section$@"
+    local AGE
+
+    if $DISABLE_CACHING; then
+        # shellcheck disable=SC2090
+        $CMDLINE
+        return
+    fi
+
+    if [ ! -d "${MK_VARDIR}"/cache ]; then mkdir -p "${MK_VARDIR}"/cache; fi
+    if [ "$mrpe" = 1 ]; then
+        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
+    else
+        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    fi
+
+    # Check if the creation of the cache takes suspiciously long and return
+    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    if [ -e "$CACHEFILE.new" ]; then
+        AGE=$(file_age "$CACHEFILE.new")
+        if [ "${AGE}" -ge $((MAXAGE * 2)) ]; then
+            fuser -k "$CACHEFILE.new" >/dev/null 2>&1
+            rm -f "$CACHEFILE.new"
+        fi
+    fi
+
+    # Check if cache file exists and is recent enough
+    if [ -s "$CACHEFILE" ]; then
+        local MTIME
+        MTIME=$(file_mtime "$CACHEFILE")
+        AGE=$(file_age "$CACHEFILE")
+        if [ "${AGE}" -le "${MAXAGE}" ]; then local USE_CACHEFILE=1; fi
+        if ${MK_RUN_SYNC_PARTS}; then
+            # Output the file even if it is outdated.
+            # The new file will not yet be available.
+            CACHE_INFO="cached($MTIME,$MAXAGE)"
+            if [ "${NAME%%_*}" = "local" ] || [ "$mrpe" = 1 ]; then
+                # insert the cache info at the beginning of every non-header line
+                sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
+            else
+                # insert the cache info in the section header (^= after '!'),
+                # if none is present (^= before '!')
+                sed -e '/^<<<.*\(:cached(\).*>>>/!s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "$CACHEFILE"
+            fi
+        fi
+    fi
+
+    ${MK_RUN_ASYNC_PARTS} || return
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
+        if [ $mrpe -eq 1 ]; then
+            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; run_mrpe $NAME \"$CMDLINE\" && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
+        else
+            echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
+        fi
+    fi
 }
 
 #
@@ -668,18 +680,6 @@ run_plugins() {
             run_cached plugins_"${skript//\//\#}" "${skript%/*}" "_log_section_time './$skript'"
         fi
     done
-}
-
-section_checkmk_failed_plugins() {
-    if [ -n "${FAILED_PYTHON_PLUGINS[*]}" ]; then
-        echo "<<<check_mk>>>"
-        echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
-        if [ -n "$NO_PYTHON" ]; then
-            echo "FailedPythonReason: No suitable python installation found."
-        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            echo "FailedPythonReason: Configured python command not found."
-        fi
-    fi
 }
 
 run_purely_synchronous_sections() {

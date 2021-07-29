@@ -88,6 +88,7 @@ install() {
         ldconfig
     else
         # The method is by definition not consistent, still it is good enough for development locally.
+        mkdir -p "${INSTALL_PREFIX}/bin"
         ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${INSTALL_PREFIX}/bin/"
     fi
 

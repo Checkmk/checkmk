@@ -336,8 +336,7 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
         cfg_files.emplace_back(yml);
     }
 
-    auto ret =
-        cma::cfg::InitializeMainConfig(cfg_files, cma::YamlCacheOp::nothing);
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::nothing);
     if (ret) {
         cma::cfg::ProcessKnownConfigGroups();
         cma::cfg::SetupEnvironmentFromGroups();

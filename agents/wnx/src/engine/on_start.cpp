@@ -114,7 +114,7 @@ static AppType CalcAppType(AppType app_type) {
 
 bool ReloadConfig() {
     //
-    return LoadConfig(AppDefaultType(), {});
+    return LoadConfigFull({});
 }
 
 UninstallAlert g_uninstall_alert;
@@ -138,16 +138,9 @@ void UninstallAlert::set() noexcept {
     set_ = true;
 }
 
-bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
-    cfg::details::KillDefaultConfig();
-    // load config is here
-    auto cfg_files = cfg::DefaultConfigArray();
-    if (!ConfigFile.empty()) {
-        cfg_files.clear();
-        cfg_files.push_back(ConfigFile);
-    }
-
-    S_ConfigLoaded = cfg::InitializeMainConfig(cfg_files, YamlCacheOp::update);
+bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
+                    YamlCacheOp cache_op) {
+    S_ConfigLoaded = cfg::InitializeMainConfig(config_filenames, cache_op);
 
     if (S_ConfigLoaded) {
         cfg::ProcessKnownConfigGroups();
@@ -159,11 +152,23 @@ bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
     return true;
 }
 
+bool LoadConfigFull(const std::wstring& ConfigFile) {
+    cfg::details::KillDefaultConfig();
+    // load config is here
+    auto cfg_files = cfg::DefaultConfigArray();
+    if (!ConfigFile.empty()) {
+        cfg_files.clear();
+        cfg_files.push_back(ConfigFile);
+    }
+
+    return LoadConfigBase(cfg_files, YamlCacheOp::update);
+}
+
 bool OnStartCore(AppType type, const std::wstring& config_file) {
     if (!cfg::FindAndPrepareWorkingFolders(type)) return false;
     wtools::InitWindowsCom();
 
-    return LoadConfig(type, config_file);
+    return LoadConfigFull(config_file);
 }
 
 // must be called on start

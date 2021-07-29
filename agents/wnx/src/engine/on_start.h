@@ -27,7 +27,9 @@ AppType AppDefaultType();  // defined by main
 bool OnStart(AppType Type = AppType::automatic,
              const std::wstring& ConfigFile = L"");
 
-bool LoadConfig(AppType Type, const std::wstring& ConfigFile);
+bool LoadConfigFull(const std::wstring& ConfigFile);
+bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
+                    YamlCacheOp cache_op);
 bool ReloadConfig();
 inline bool OnStartApp() { return OnStart(AppType::automatic); }
 

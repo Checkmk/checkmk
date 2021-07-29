@@ -174,6 +174,8 @@ TEST(LogTest, RotationFile) {
 }
 
 TEST(LogTest, All) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     // tests of log:
     // stream OUT
     // e

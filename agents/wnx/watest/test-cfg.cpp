@@ -402,7 +402,7 @@ TEST(CmaCfg, ReloadCfg) {
     cma::OnStartTest();
     auto id = GetCfg().uniqId();
     EXPECT_TRUE(id > 0);
-    cma::LoadConfig(AppType::test, {});
+    cma::LoadConfigFull({});
     auto id2 = GetCfg().uniqId();
     EXPECT_TRUE(id2 > id);
 }

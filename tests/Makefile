@@ -168,7 +168,8 @@ test-format-python: ../.style.yapf
 # There are some mixed up lines on stdout caused by the --parallel option.
 # Nevertheless, we keep that option to get a big performance boost. GitHub issue
 # opened for this problem: https://github.com/google/yapf/issues/644.
-	@if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	@if test -z "$${PYTHON_FILES}" && test ! -z "$${PYTHON_FILES+X}"; then exit 0; fi; \
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \

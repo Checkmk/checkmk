@@ -422,7 +422,7 @@ class TestRealisticSearch:
         # if the search index did not internally use the super user while building, this item would
         # be missing, because the match item generator for the setup menu only yields entries which
         # the current user is allowed to see
-        assert list(searcher.search("dynamic host management"))
+        assert list(searcher.search("custom host attributes"))
 
     @pytest.mark.usefixtures(
         "load_plugins",
@@ -440,7 +440,7 @@ class TestRealisticSearch:
     ):
         """
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
-        build as a super user, the entry "Dynamic host management" is not found.
+        build as a super user, the entry "Custom host attributes" is not found.
         """
         @contextmanager
         def SuperUserContext() -> Iterator[None]:
@@ -459,4 +459,4 @@ class TestRealisticSearch:
 
         searcher = IndexSearcher()
         searcher._redis_client = builder._redis_client
-        assert not list(searcher.search("dynamic host management"))
+        assert not list(searcher.search("custom host attributes"))

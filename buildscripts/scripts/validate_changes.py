@@ -8,7 +8,7 @@ This list can either be executed directly or returned (JSON encoded on stdout or
 to be read and handled later by a Jenkins pipelined job.
 """
 
-from typing import Callable, TypedDict, Tuple, Dict, Mapping, Sequence, Any, Optional
+from typing import Callable, TypedDict, Tuple, Dict, Mapping, Sequence, Any, Optional, List
 import asyncio
 import sys
 import os
@@ -233,7 +233,7 @@ def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> Tupl
     )
 
 
-async def run_cmd(cmd: str, cwd: Optional[str], check: bool,
+async def run_cmd(cmd: str, env: Mapping[str, str], cwd: Optional[str], check: bool,
               stdout_fn: Callable[[str], None],
               stderr_fn: Callable[[str], None]) -> bool:
     """Run a command while continuously capturing its stdout/stdin and printing it out in a
@@ -250,7 +250,7 @@ async def run_cmd(cmd: str, cwd: Optional[str], check: bool,
         # This is to make Python scripts behave, i.e. not buffer stdout.
         # this works only for Python of course but a general solution would be nice of course.
         # If someone knows a better way to deactivate buffering, drop me a line please.
-        env={**os.environ, **{'PYTHONUNBUFFERED': '1'}},
+        env={**os.environ, **{'PYTHONUNBUFFERED': '1'}, **env},
     )
 
     assert process.stdout and process.stderr
@@ -293,6 +293,7 @@ async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, ve
         t_before = time.time()
         cmd_successful = await run_cmd(
             cmd=stage["COMMAND"],
+            env=dict(v.split("=", 1) for v in stage['ENV_VAR_LIST']),
             cwd=stage["DIR"] or None,
             check=exitfirst,
             stdout_fn=(lambda l, name=name: (output.append if verbosity == 0 else print)(

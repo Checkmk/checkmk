@@ -4,13 +4,7 @@
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.
 
-from typing import Any, Mapping, Sequence, Tuple
-
-import pytest
-
-from tests.testlib import Check
-
-pytestmark = pytest.mark.checks
+from cmk.base.plugins.agent_based.cisco_vpn_tunnel import parse_cisco_vpn_tunnel
 
 _STRING_TABLE = [
     [
@@ -127,97 +121,4 @@ _SECTION = {
 
 
 def test_parse_cisco_vpn_tunnel() -> None:
-    assert Check("cisco_vpn_tunnel").run_parse(_STRING_TABLE) == _SECTION
-
-
-def test_inventory_cisco_vpn_tunnel() -> None:
-    assert Check("cisco_vpn_tunnel").run_discovery(_SECTION) == [(ip, {}) for ip in _SECTION]
-
-
-@pytest.mark.parametrize(
-    "item, params, expected_result",
-    [
-        pytest.param(
-            "110.173.49.157",
-            {},
-            (
-                0,
-                "Phase 1: in: 0.00 B/s, out: 0.00 B/s, Phase 2: in: 0.00 B/s, out: 0.00 B/s",
-                [("if_in_octets", 0.0), ("if_out_octets", 0.0)],
-            ),
-            id="standard case",
-        ),
-        pytest.param(
-            "211.167.210.107",
-            {},
-            (
-                0,
-                "Phase 1: in: 0.00 B/s, out: 0.00 B/s, Phase 2 missing",
-                [("if_in_octets", 0.0), ("if_out_octets", 0.0)],
-            ),
-            id="phase 2 missing",
-        ),
-        pytest.param(
-            "110.173.49.157",
-            {
-                "tunnels": [
-                    ("110.173.49.157", "herbert", 1),
-                    ("110.173.49.157", "hansi", 2),
-                    ("158.244.78.71", "fritz", 3),
-                ],
-            },
-            (
-                0,
-                "[herbert] [hansi] Phase 1: in: 0.00 B/s, out: 0.00 B/s, Phase 2: in: 0.00 B/s, out: 0.00 B/s",
-                [("if_in_octets", 0.0), ("if_out_octets", 0.0)],
-            ),
-            id="with aliases",
-        ),
-        pytest.param(
-            "1.2.3.4",
-            {},
-            (
-                2,
-                "Tunnel is missing",
-                [("if_in_octets", 0), ("if_out_octets", 0)],
-            ),
-            id="tunnel missing, no params",
-        ),
-        pytest.param(
-            "1.2.3.4",
-            {"state": 3},
-            (
-                3,
-                "Tunnel is missing",
-                [("if_in_octets", 0), ("if_out_octets", 0)],
-            ),
-            id="tunnel missing, default missing state configured",
-        ),
-        pytest.param(
-            "1.2.3.4",
-            {
-                "tunnels": [
-                    ("110.173.49.157", "herbert", 1),
-                    ("1.2.3.4", "annegret", 1),
-                ],
-                "state": 3,
-            },
-            (
-                1,
-                "[annegret] Tunnel is missing",
-                [("if_in_octets", 0), ("if_out_octets", 0)],
-            ),
-            id="tunnel missing, default and tunnel-specific missing state configured",
-        ),
-    ],
-)
-def test_check_cisco_vpn_tunnel(
-    item: str,
-    params: Mapping[str, Any],
-    expected_result: Tuple[int, str, Sequence[Tuple[str, float]]],
-) -> None:
-    assert Check("cisco_vpn_tunnel").run_check(
-        item,
-        params,
-        _SECTION,
-    ) == expected_result
+    assert parse_cisco_vpn_tunnel(_STRING_TABLE) == _SECTION

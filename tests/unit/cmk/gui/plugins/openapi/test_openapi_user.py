@@ -715,7 +715,7 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
 
-    resp = wsgi_app.call_method('get', base + f"/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
 
     assert resp.json_body["extensions"]["attributes"] == {
         'auth_option': {
@@ -831,7 +831,7 @@ def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, mon
         content_type='application/json',
     )
 
-    resp = wsgi_app.call_method('get', base + f"/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
     assert resp.json_body["extensions"]["attributes"] == {
         'auth_option': {
             'auth_type': 'password',
@@ -885,7 +885,7 @@ def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monk
             status=200,
             content_type='application/json',
         )
-    resp = wsgi_app.call_method('get', base + f"/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
     assert resp.json_body["extensions"]["attributes"] == {
         'auth_option': {},
         'contact_options': {

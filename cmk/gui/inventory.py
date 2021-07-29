@@ -302,7 +302,7 @@ def vs_inventory_path_and_keys() -> ValueSpec:
                      "Via <tt>Display options > Show internal tree paths</tt>"
                      " on the HW/SW Inventory page of a host the internal tree paths leading"
                      " to subcategories, the keys of singles values and table column names"
-                     " become visible. See"
+                     " become visible. Key columns of tables are marked with '*'. See"
                      " <a href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</a>."
                      " for more details about the HW/SW Inventory system."),
              )),

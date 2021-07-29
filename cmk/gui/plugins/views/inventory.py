@@ -16,7 +16,6 @@ from typing import (
     Callable,
     Any,
     Optional,
-    Set,
     Iterable,
     TYPE_CHECKING,
 )
@@ -1788,6 +1787,9 @@ def _sort_by_index(keyorder, item):
         return len(keyorder) + 1
 
 
+TableTitles = List[Tuple[str, str, bool]]
+
+
 class NodeRenderer:
     def __init__(
         self,
@@ -1871,23 +1873,21 @@ class NodeRenderer:
         data = table.rows
 
         # Add titles for those keys
-        titles = []
+        titles: TableTitles = []
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
             _icon, title = _inv_titleinfo(sub_invpath)
             sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
-            titles.append((short_title, key))
+            titles.append((short_title, key, key in table.key_columns))
 
         # Determine *all* keys, in order to find unknown ones
-        keys = self._get_table_keys(data)
-
         # Order not well-known keys alphabetically
-        extratitles = []
-        for key in keys:
+        extratitles: TableTitles = []
+        for key in set(key for row in data for key in row):
             if key not in keyorder:
                 _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key))
-                extratitles.append((title, key))
+                extratitles.append((title, key, key in table.key_columns))
         titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
@@ -1905,27 +1905,22 @@ class NodeRenderer:
 
         self._show_table_data(titles, invpath, data)
 
-    def _get_table_keys(self, data: Iterable) -> Set[str]:
-        keys = set([])
-        for entry in data:
-            keys.update(entry.keys())
-        return keys
-
     def _show_table_data(
         self,
-        titles: List[Tuple[str, str]],
+        titles: TableTitles,
         invpath: SDRawPath,
         data: InventoryRows,
     ) -> None:
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
-        for title, key in titles:
-            html.th(self._get_header(title, key, "#DDD"))
+        for title, key, is_key_column in titles:
+            html.th(self._get_header(title, key, "#DDD", is_key_column=is_key_column))
+
         html.close_tr()
         for index, entry in enumerate(data):
             html.open_tr(class_="even0")
-            for title, key in titles:
+            for title, key, _is_key_column in titles:
                 value = entry.get(key)
                 sub_invpath = "%s%d.%s" % (invpath, index, key)
                 hint = _inv_display_hint(sub_invpath)
@@ -1985,10 +1980,17 @@ class NodeRenderer:
         raw_path = ".".join(map(str, path)) if path else self._invpath
         return raw_path.strip(".")
 
-    def _get_header(self, title: str, key: str, hex_color: str) -> HTML:
+    def _get_header(
+        self,
+        title: str,
+        key: str,
+        hex_color: str,
+        is_key_column: bool = False,
+    ) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += " " + html.render_span("(%s)" % key, style="color: %s" % hex_color)
+            key_info = "%s*" % key if is_key_column else key
+            header += " " + html.render_span("(%s)" % key_info, style="color: %s" % hex_color)
         return header
 
     def _show_child_value(self, value: Any, hint: Dict) -> None:

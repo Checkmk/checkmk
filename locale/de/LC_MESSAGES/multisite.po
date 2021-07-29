@@ -26932,6 +26932,10 @@ msgstr "Schwellwerte für die Anzahl der aktuell inaktiven Sitzungen"
 msgid "Levels for the percentual growth per time range"
 msgstr "Schwellwert für prozentuales Wachstum pro Zeitspanne"
 
+#, fuzzy
+msgid "Levels for the percentual shrinking per time range"
+msgstr "Schwellwert für prozentuales Wachstum pro Zeitspanne"
+
 msgid "Levels for the queue length"
 msgstr "Schwellwerte für die Längen der Schlange"
 
@@ -27014,6 +27018,10 @@ msgstr "Schwellwerte für die Verfügbarkeit in Prozent"
 
 msgid "Levels on average usage"
 msgstr "Schwellwerte für die durchschnittliche Nutzung"
+
+#, fuzzy
+msgid "Levels on decreasing trends in MB per time range"
+msgstr "Schwellwerte für Trends in MB pro Zeitspanne"
 
 msgid "Levels on egress data in bytes"
 msgstr "Schwellwerte für die Ausgangscontroller-Daten in Bytes"

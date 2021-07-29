@@ -26924,6 +26924,10 @@ msgstr "Niveaus voor het aantal sessies die momenteel inactief zijn"
 msgid "Levels for the percentual growth per time range"
 msgstr "Niveaus voor de percentuele groei per tijdspanne"
 
+#, fuzzy
+msgid "Levels for the percentual shrinking per time range"
+msgstr "Niveaus voor de percentuele groei per tijdspanne"
+
 msgid "Levels for the queue length"
 msgstr "Niveaus voor de lengte van de wachtrij"
 
@@ -27006,6 +27010,10 @@ msgstr "Niveaus op beschikbaarheid in procenten"
 
 msgid "Levels on average usage"
 msgstr "Niveaus voor gemiddeld gebruik"
+
+#, fuzzy
+msgid "Levels on decreasing trends in MB per time range"
+msgstr "Niveaus voor trends in MB per tijdspanne"
 
 msgid "Levels on egress data in bytes"
 msgstr "Niveaus op egress data in bytes"

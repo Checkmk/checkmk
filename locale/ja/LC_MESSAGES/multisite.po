@@ -25912,6 +25912,10 @@ msgstr "現在非アクティブなセッション数のレベル"
 msgid "Levels for the percentual growth per time range"
 msgstr "時間範囲ごとのパーセント成長のレベル"
 
+#, fuzzy
+msgid "Levels for the percentual shrinking per time range"
+msgstr "時間範囲ごとのパーセント成長のレベル"
+
 msgid "Levels for the queue length"
 msgstr "キューの長さのレベル"
 
@@ -25994,6 +25998,10 @@ msgstr "可用性のレベル(パーセント)"
 
 msgid "Levels on average usage"
 msgstr "平均使用量のレベル"
+
+#, fuzzy
+msgid "Levels on decreasing trends in MB per time range"
+msgstr "時間範囲ごとのMBの傾向のレベル"
 
 msgid "Levels on egress data in bytes"
 msgstr "出力データのレベル(バイト単位)"

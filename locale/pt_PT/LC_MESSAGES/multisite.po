@@ -26920,6 +26920,10 @@ msgstr "Níveis para o número de sessões que estão actualmente inactivas"
 msgid "Levels for the percentual growth per time range"
 msgstr "Níveis para o crescimento percentual por intervalo de tempo"
 
+#, fuzzy
+msgid "Levels for the percentual shrinking per time range"
+msgstr "Níveis para o crescimento percentual por intervalo de tempo"
+
 msgid "Levels for the queue length"
 msgstr "Níveis para o comprimento da fila"
 
@@ -27002,6 +27006,10 @@ msgstr "Níveis de disponibilidade em percentagem"
 
 msgid "Levels on average usage"
 msgstr "Níveis de utilização média"
+
+#, fuzzy
+msgid "Levels on decreasing trends in MB per time range"
+msgstr "Níveis de tendências em MB por intervalo de tempo"
 
 msgid "Levels on egress data in bytes"
 msgstr "Níveis de saída de dados em bytes"

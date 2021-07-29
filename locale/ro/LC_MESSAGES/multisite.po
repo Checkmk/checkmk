@@ -25560,6 +25560,10 @@ msgstr ""
 msgid "Levels for the percentual growth per time range"
 msgstr ""
 
+#, fuzzy
+msgid "Levels for the percentual shrinking per time range"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Levels for the queue length"
 msgstr ""
 
@@ -25654,6 +25658,10 @@ msgstr "Nivelurile maxime pentru incarcare in procente"
 
 #, fuzzy
 msgid "Levels on average usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels on decreasing trends in MB per time range"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy

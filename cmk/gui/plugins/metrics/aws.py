@@ -858,6 +858,30 @@ metric_info['aws_lambda_provisioned_concurrency_utilization'] = {
     'color': '31/a',
 }
 
+metric_info['aws_lambda_code_size_in_percent'] = {
+    'title': _('Code Size in percent'),
+    'unit': '%',
+    'color': '41/a',
+}
+
+metric_info['aws_lambda_code_size_absolute'] = {
+    'title': _('Code Size'),
+    'unit': 'bytes',
+    'color': '42/a',
+}
+
+metric_info['aws_lambda_memory_size_in_percent'] = {
+    'title': _('Memory Size in percent'),
+    'unit': '%',
+    'color': '43/a',
+}
+
+metric_info['aws_lambda_memory_size_absolute'] = {
+    'title': _('Memory Size'),
+    'unit': 'bytes',
+    'color': '44/a',
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

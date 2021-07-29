@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 import sys
 from datetime import datetime, timedelta
+from time import sleep
 from typing import (
     Any,
     Dict,
@@ -155,6 +156,84 @@ AWSStrings = Union[bytes, str]
 # '-- WAFV2Summary
 #     |
 #     '-- WAFV2WebACL
+
+
+class AWSConfig:
+    def __init__(self, hostname, sys_argv, overall_tags):
+        self.hostname = hostname
+        self._overall_tags = self._prepare_tags(overall_tags)
+        self.service_config = {}
+        self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
+        self._current_config_hash = self._compute_config_hash(sys_argv)
+
+    def add_service_tags(self, tags_key, tags):
+        """Convert commandline input
+        from
+            ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
+        to
+            Filters=[{'Name': 'tag:foo', 'Values': ['bar', 'baz']},
+                     {'Name': 'tag:aaa', 'Values': ['bbb', 'ccc']}, ...]
+        as we need in API methods if and only if keys AND values are set.
+        """
+        self.service_config.setdefault(tags_key, None)
+        keys, values = tags
+        if keys and values:
+            self.service_config[tags_key] = self._prepare_tags(tags)
+        elif self._overall_tags:
+            self.service_config[tags_key] = self._overall_tags
+
+    def _prepare_tags(self, tags):
+        if all(tags):
+            keys, values = tags
+            return [{
+                'Name': 'tag:%s' % k,
+                'Values': v
+            } for k, v in zip([k[0] for k in keys], values)]
+        return
+
+    def add_single_service_config(self, key, value):
+        self.service_config.setdefault(key, value)
+
+    def _compute_config_hash(self, sys_argv):
+        filtered_sys_argv = [
+            arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
+        ]
+        # Be careful to use a hashing mechanism that generates the same hash across
+        # different python processes! Otherwise the config file will always be
+        # out-of-date
+        return hashlib.sha256(''.join(sorted(filtered_sys_argv)).encode()).hexdigest()
+
+    def is_up_to_date(self):
+        old_config_hash = self._load_config_hash()
+        if old_config_hash is None:
+            logging.info("AWSConfig: %s: New config: '%s'", self.hostname,
+                         self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        if old_config_hash != self._current_config_hash:
+            logging.info("AWSConfig: %s: Config has changed: '%s' -> '%s'", self.hostname,
+                         old_config_hash, self._current_config_hash)
+            self._write_config_hash()
+            return False
+
+        logging.info("AWSConfig: %s: Config is up-to-date: '%s'", self.hostname,
+                     self._current_config_hash)
+        return True
+
+    def _load_config_hash(self):
+        try:
+            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
+                return f.read().strip()
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                # No such file or directory
+                raise
+            return None
+
+    def _write_config_hash(self):
+        store.save_text_to_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+
 
 #.
 #   .--helpers-------------------------------------------------------------.
@@ -3803,6 +3882,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 #   |              |_____\__,_|_| |_| |_|_.__/ \__,_|\__,_|                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 class LambdaRegionLimits(AWSSectionLimits):
@@ -3896,14 +3976,21 @@ class LambdaSummary(AWSSectionGeneric):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        functions = raw_content.content
         return AWSComputedContent(
-            functions,
+            raw_content.content,
             raw_content.cache_timestamp,
         )
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", computed_content.content)]
+
+
+def _function_arn_to_function_name_dim(function_arn: str) -> str:
+    """
+    >>> _function_arn_to_function_name_dim("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function")
+    'my_python_test_function'
+    """
+    return function_arn.split(":")[6]
 
 
 class LambdaCloudwatch(AWSSectionCloudwatch):
@@ -3938,13 +4025,6 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
             return function_arns
 
         def _create_dimensions(function_arn):
-            def _function_arn_to_function_name_dim(function_arn: str) -> str:
-                """
-                >>> _function_arn_to_function_name_dim("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function")
-                'my_python_test_function'
-                """
-                return function_arn.split(":")[6]
-
             def _function_arn_to_resource_dim(function_arn: str) -> Optional[str]:
                 """
                 >>> _function_arn_to_resource_dim("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:AliasOrVersionNumber")
@@ -4035,7 +4115,7 @@ class LambdaProvisionedConcurrency(AWSSection):
             for config in self._get_response_content(page, 'ProvisionedConcurrencyConfigs')
         ]
 
-    def get_live_data(self, *args):
+    def get_live_data(self, *args: AWSComputedContent) -> ProvisionedConcurrencyConfigs:
         (colleague_contents,) = args
         return {
             lambda_function['FunctionArn']:
@@ -4043,16 +4123,118 @@ class LambdaProvisionedConcurrency(AWSSection):
             for lambda_function in colleague_contents.content
         }
 
-    def _compute_content(self, raw_content, colleague_contents):
+    def _compute_content(self, raw_content: AWSRawContent,
+                         colleague_contents: AWSColleagueContents):
         return AWSComputedContent(
             raw_content.content,
             raw_content.cache_timestamp,
         )
 
-    def _create_results(self, computed_content):
+    def _create_results(self, computed_content: AWSComputedContent):
         return [AWSSectionResult("", computed_content.content)]
 
     def _validate_result_content(self, content):
+        assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
+
+
+LambdaMetricStats = Sequence[Mapping[str, str]]
+
+
+class LambdaCloudwatchInsights(AWSSection):
+    def __init__(self,
+                 client,
+                 region: str,
+                 config: AWSConfig,
+                 distributor: Optional[ResultDistributor] = None):
+        super().__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['lambda_names']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['lambda_tags'])
+
+    @property
+    def name(self) -> str:
+        return "lambda_cloudwatch_insights"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        # lambda_provisioned_concurrency has to be used, because some metrics for provisioned concurrency will only
+        # be reported if the ARN for the provisioned concurrency configuration is used.
+        # lambda_provisioned_concurrency contains also the ARNs for lambda functions without provisioned conurrency.
+        colleague = self._received_results.get('lambda_provisioned_concurrency')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    @staticmethod
+    def query_results(*,
+                      client,
+                      query_id: str,
+                      timeout_seconds: float,
+                      sleep_duration=0.1) -> Optional[LambdaMetricStats]:
+        "Synchronous wrapper for asynchronous query API with timeout checking. (agent should not be blocked)."
+        response_results: Mapping[str, Any] = {'status': 'Scheduled'}
+        query_start = datetime.now().timestamp()
+        while response_results['status'] != 'Complete':
+            response_results = client.get_query_results(queryId=query_id)
+            if datetime.now().timestamp() - query_start >= timeout_seconds:
+                client.stop_query(queryId=query_id)
+                logging.error(
+                    "LambdaCloudwatchInsights: query_results failed"
+                    " or timed out with the following results: %s ", response_results['results'])
+                break
+            sleep(sleep_duration)
+        # stat metrics are always in the first element of the results or an empty list
+        return response_results['results'][
+            0] if response_results['results'] and response_results['status'] == 'Complete' else None
+
+    def _query_with_cloudwatch_insights(self, *, log_group_name: str, query_string: str,
+                                        timeout_seconds: int) -> Optional[LambdaMetricStats]:
+        end_time_seconds = int(NOW.timestamp())
+        start_time_seconds = int(end_time_seconds - self.period)
+        response_query_id = self._client.start_query(
+            logGroupName=log_group_name,
+            startTime=start_time_seconds,
+            endTime=end_time_seconds,
+            queryString=query_string,
+        )
+        return self.query_results(client=self._client,
+                                  query_id=response_query_id['queryId'],
+                                  timeout_seconds=timeout_seconds)
+
+    def get_live_data(self,
+                      *args: AWSColleagueContents) -> Mapping[str, Optional[LambdaMetricStats]]:
+        (colleague_contents,) = args
+        return {
+            function_arn: results
+            for function_arn in colleague_contents.content.keys()
+            if (results := self._query_with_cloudwatch_insights(
+                log_group_name=f"/aws/lambda/{_function_arn_to_function_name_dim(function_arn)}",
+                query_string='filter @type = "REPORT"'
+                '| stats '
+                'max(@maxMemoryUsed) as max_memory_used_bytes,'
+                'max(@initDuration) as max_init_duration_ms,'
+                'sum(strcontains(@message, "Init Duration")) as count_cold_starts',
+                timeout_seconds=30,
+            ))
+        }
+
+    def _compute_content(self, raw_content: AWSRawContent,
+                         colleague_contents: AWSColleagueContents) -> AWSComputedContent:
+        return AWSComputedContent(
+            raw_content.content,
+            raw_content.cache_timestamp,
+        )
+
+    def _create_results(self, computed_content: AWSComputedContent) -> List[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+    def _validate_result_content(self, content: AWSSectionResult) -> None:
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
@@ -4218,8 +4400,9 @@ class AWSSectionsUSEast(AWSSections):
 
 
 def create_lamdba_sections(
-    lambda_client, cloudwatch_client, region, config
-) -> Tuple[LambdaRegionLimits, LambdaSummary, LambdaProvisionedConcurrency, LambdaCloudwatch,]:
+    lambda_client, cloudwatch_client, cloudwatch_logs_client, region: str, config: AWSConfig
+) -> Tuple[LambdaRegionLimits, LambdaSummary, LambdaProvisionedConcurrency, LambdaCloudwatch,
+           LambdaCloudwatchInsights]:
     lambda_limits_distributor = ResultDistributor()
     lambda_limits = LambdaRegionLimits(lambda_client,
                                        region,
@@ -4243,7 +4426,23 @@ def create_lamdba_sections(
     lambda_summary_distributor.add(lambda_provisioned_concurrency_configuration)
     lambda_cloudwatch = LambdaCloudwatch(cloudwatch_client, region, config)
     lambda_provisioned_concurrency_configuration_distributor.add(lambda_cloudwatch)
-    return lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, lambda_cloudwatch
+    lambda_cloudwatch_insights = LambdaCloudwatchInsights(
+        cloudwatch_logs_client,
+        region,
+        config,
+        lambda_provisioned_concurrency_configuration_distributor,
+    )
+    lambda_provisioned_concurrency_configuration_distributor.add(lambda_cloudwatch_insights)
+    lambda_limits_distributor = ResultDistributor()
+    lambda_summary_distributor = ResultDistributor()
+    lambda_provisioned_concurrency_configuration_distributor = ResultDistributor()
+
+    lambda_limits = LambdaRegionLimits(lambda_client,
+                                       region,
+                                       config,
+                                       distributor=lambda_limits_distributor)
+
+    return lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, lambda_cloudwatch, lambda_cloudwatch_insights
 
 
 class AWSSectionsGeneric(AWSSections):
@@ -4264,6 +4463,7 @@ class AWSSectionsGeneric(AWSSections):
         glacier_client = self._init_client('glacier')
         rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
+        cloudwatch_logs_client = self._init_client('logs')
         dynamodb_client = self._init_client('dynamodb')
         wafv2_client = self._init_client('wafv2')
         lambda_client = self._init_client('lambda')
@@ -4502,9 +4702,10 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(wafv2_web_acl)
 
         if 'lambda' in services:
-            lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, lambda_cloudwatch = create_lamdba_sections(
+            lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, lambda_cloudwatch, lambda_cloudwatch_insights = create_lamdba_sections(
                 lambda_client,
                 cloudwatch_client,
+                cloudwatch_logs_client,
                 region,
                 config,
             )
@@ -4513,6 +4714,7 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(lambda_summary)
             self._sections.append(lambda_provisioned_concurrency_configuration)
             self._sections.append(lambda_cloudwatch)
+            self._sections.append(lambda_cloudwatch_insights)
 
 
 #.
@@ -4738,83 +4940,6 @@ def sts_assume_role(access_key_id, secret_access_key, role_arn, external_id, reg
                                      region_name=region)
     except Exception as e:
         raise AwsAccessError(e)
-
-
-class AWSConfig:
-    def __init__(self, hostname, sys_argv, overall_tags):
-        self.hostname = hostname
-        self._overall_tags = self._prepare_tags(overall_tags)
-        self.service_config = {}
-        self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
-        self._current_config_hash = self._compute_config_hash(sys_argv)
-
-    def add_service_tags(self, tags_key, tags):
-        """Convert commandline input
-        from
-            ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
-        to
-            Filters=[{'Name': 'tag:foo', 'Values': ['bar', 'baz']},
-                     {'Name': 'tag:aaa', 'Values': ['bbb', 'ccc']}, ...]
-        as we need in API methods if and only if keys AND values are set.
-        """
-        self.service_config.setdefault(tags_key, None)
-        keys, values = tags
-        if keys and values:
-            self.service_config[tags_key] = self._prepare_tags(tags)
-        elif self._overall_tags:
-            self.service_config[tags_key] = self._overall_tags
-
-    def _prepare_tags(self, tags):
-        if all(tags):
-            keys, values = tags
-            return [{
-                'Name': 'tag:%s' % k,
-                'Values': v
-            } for k, v in zip([k[0] for k in keys], values)]
-        return
-
-    def add_single_service_config(self, key, value):
-        self.service_config.setdefault(key, value)
-
-    def _compute_config_hash(self, sys_argv):
-        filtered_sys_argv = [
-            arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
-        ]
-        # Be careful to use a hashing mechanism that generates the same hash across
-        # different python processes! Otherwise the config file will always be
-        # out-of-date
-        return hashlib.sha256(''.join(sorted(filtered_sys_argv)).encode()).hexdigest()
-
-    def is_up_to_date(self):
-        old_config_hash = self._load_config_hash()
-        if old_config_hash is None:
-            logging.info("AWSConfig: %s: New config: '%s'", self.hostname,
-                         self._current_config_hash)
-            self._write_config_hash()
-            return False
-
-        if old_config_hash != self._current_config_hash:
-            logging.info("AWSConfig: %s: Config has changed: '%s' -> '%s'", self.hostname,
-                         old_config_hash, self._current_config_hash)
-            self._write_config_hash()
-            return False
-
-        logging.info("AWSConfig: %s: Config is up-to-date: '%s'", self.hostname,
-                     self._current_config_hash)
-        return True
-
-    def _load_config_hash(self):
-        try:
-            with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
-                return f.read().strip()
-        except IOError as e:
-            if e.errno != errno.ENOENT:
-                # No such file or directory
-                raise
-            return None
-
-    def _write_config_hash(self):
-        store.save_text_to_file(self._config_hash_file, "%s\n" % self._current_config_hash)
 
 
 def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_services=()):

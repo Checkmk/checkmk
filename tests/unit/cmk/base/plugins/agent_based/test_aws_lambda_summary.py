@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.aws import (
+    LambdaFunctionConfiguration,
+    LambdaSummarySection,
+)
 from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_summary
 import pytest
 
@@ -36,10 +41,13 @@ _STRING_TABLE_AWS_LAMBDA_SUMMARY = [
 
 
 @pytest.mark.parametrize("string_table_aws_lambda_summary, results", [
-    (
-        _STRING_TABLE_AWS_LAMBDA_SUMMARY,
-        ['eu-central-1 my_python_test_function', 'eu-north-1 myLambdaTestFunction'],
-    ),
+    (_STRING_TABLE_AWS_LAMBDA_SUMMARY, {
+        'eu-central-1 my_python_test_function': LambdaFunctionConfiguration(
+            Timeout=1.0, MemorySize=128.0, CodeSize=375.0),
+        'eu-north-1 myLambdaTestFunction': LambdaFunctionConfiguration(
+            Timeout=1.0, MemorySize=128.0, CodeSize=299.0),
+    }),
 ])
-def test_parse_aws_lambda_summary(string_table_aws_lambda_summary, results):
-    assert list(parse_aws_lambda_summary(string_table_aws_lambda_summary)) == results
+def test_parse_aws_lambda_summary(string_table_aws_lambda_summary: StringTable,
+                                  results: LambdaSummarySection) -> None:
+    assert parse_aws_lambda_summary(string_table_aws_lambda_summary) == results

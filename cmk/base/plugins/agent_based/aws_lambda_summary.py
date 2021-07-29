@@ -8,6 +8,7 @@ import json
 from typing import Sequence, MutableMapping
 from .agent_based_api.v1 import register
 from .utils.aws import (
+    LambdaFunctionConfiguration,
     function_arn_to_item,
     parse_aws,
     LambdaSummarySection,
@@ -18,10 +19,12 @@ from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_aws_lambda_summary(string_table: StringTable) -> LambdaSummarySection:
-    parsed = parse_aws(string_table)
     return {
-        function_arn_to_item(lambda_function["FunctionArn"]): float(lambda_function["Timeout"])
-        for lambda_function in parsed
+        function_arn_to_item(lambda_function["FunctionArn"]): LambdaFunctionConfiguration(
+            Timeout=float(lambda_function["Timeout"]),
+            MemorySize=float(lambda_function["MemorySize"]),
+            CodeSize=float(lambda_function["CodeSize"]),
+        ) for lambda_function in parse_aws(string_table)
     }
 
 

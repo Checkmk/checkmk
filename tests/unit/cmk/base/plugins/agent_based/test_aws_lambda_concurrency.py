@@ -3,7 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import Optional
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
@@ -14,13 +15,17 @@ from cmk.base.plugins.agent_based.aws_lambda_performance import parse_aws_lambda
 from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_region_limits
 
 from cmk.base.plugins.agent_based.utils.aws import (
-    LambdaCloudwatchMetrics,)
+    LambdaCloudwatchMetrics,
+    LambdaRegionLimitsSection,
+)
 
 from cmk.base.plugins.agent_based.aws_lambda_concurrency import (
     _DEFAULT_PARAMETERS,
-    parse_aws_lambda_provisioned_concurrency,
     check_aws_lambda_concurrency,
     discover_aws_lambda_concurrency,
+    LambdaCloudwatchSection,
+    parse_aws_lambda_provisioned_concurrency,
+    SectionProvisionedConcurrencyAliases,
 )
 
 import pytest
@@ -555,7 +560,8 @@ _PARAMETERS_WITH_ABSOLUTE_LEVELS["levels_unreserved_concurrent_executions_absolu
     ])
 def test_end_to_end_parsing_and_check(item, params, string_table_aws_lambda_provisioned_concurrency,
                                       string_table_aws_lambda,
-                                      string_table_aws_lambda_region_limits, results):
+                                      string_table_aws_lambda_region_limits,
+                                      results: CheckResult) -> None:
     assert list(
         check_aws_lambda_concurrency(
             item,
@@ -614,8 +620,12 @@ _SECTION_AWS_LAMBDA = {
             ],
         ),
     ])
-def test_discover_aws_lambda(section_aws_lambda_provisioned_concurrency, section_aws_lambda,
-                             section_aws_lambda_region_limits, results):
+def test_discover_aws_lambda(
+    section_aws_lambda_provisioned_concurrency: Optional[SectionProvisionedConcurrencyAliases],
+    section_aws_lambda: Optional[LambdaCloudwatchSection],
+    section_aws_lambda_region_limits: Optional[LambdaRegionLimitsSection],
+    results: DiscoveryResult,
+) -> None:
     assert list(
         discover_aws_lambda_concurrency(section_aws_lambda_provisioned_concurrency,
                                         section_aws_lambda,

@@ -7,9 +7,18 @@
 # pylint: disable=redefined-outer-name
 
 import pytest
-from typing import Any, Mapping
+from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
+from typing import (
+    Any,
+    Generator,
+    Mapping,
+    Sequence,
+    Tuple,
+)
 from .agent_aws_fake_clients import (
+    FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
+    FakeCloudwatchClientLogsClient,
     LambdaListFunctionsIB,
     LambdaListProvisionedConcurrencyConfigsIB,
     LambdaListTagsInstancesIB,
@@ -18,11 +27,16 @@ from .agent_aws_fake_clients import (
 from cmk.special_agents.agent_aws import (
     AWSConfig,
     create_lamdba_sections,
+    LambdaCloudwatch,
+    LambdaCloudwatchInsights,
+    LambdaProvisionedConcurrency,
+    LambdaRegionLimits,
+    LambdaSummary,
 )
 
 
 class PaginatorListFunctions:
-    def paginate(self):
+    def paginate(self) -> Generator[Mapping[str, Any], None, None]:
         yield {'Functions': LambdaListFunctionsIB.create_instances(2)}
 
 
@@ -39,19 +53,19 @@ class FakeLambdaClient:
     def __init__(self, skip_entities=None):
         self._skip_entities = {} if not skip_entities else skip_entities
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> Any:
         if operation_name == 'list_functions':
             return PaginatorListFunctions()
         if operation_name == 'list_provisioned_concurrency_configs':
             return PaginatorProvisionedConcurrencyConfigs()
 
-    def list_tags(self, Resource: str):
+    def list_tags(self, Resource: str) -> Mapping[str, Any]:
         tags: Mapping[str, Any] = {}
         if Resource == 'arn:aws:lambda:eu-central-1:123456789:function:FunctionName-0':
             tags = LambdaListTagsInstancesIB.create_instances(amount=1)
         return {'Tags': tags}
 
-    def get_account_settings(self):
+    def get_account_settings(self) -> Mapping[str, Any]:
         return {
             'AccountLimit': {
                 'TotalCodeSize': 123,
@@ -67,23 +81,24 @@ class FakeLambdaClient:
         }
 
 
-@pytest.fixture()
-def get_lambda_sections():
-    def _create_lambda_sections(names, tags, *, skip_entities=None):
-        region = 'region'
-        config = AWSConfig('hostname', [], (None, None))
-        config.add_single_service_config('lambda_names', names)
-        config.add_service_tags('lambda_tags', tags)
-        fake_lambda_client = FakeLambdaClient(skip_entities)
-        fake_cloudwatch_client = FakeCloudwatchClient()
-        return create_lamdba_sections(
-            fake_lambda_client,
-            fake_cloudwatch_client,
-            region,
-            config,
-        )
+def create_config(names: Sequence[str], tags: Sequence[Tuple[str, str]]) -> AWSConfig:
+    config = AWSConfig('hostname', [], (None, None))
+    config.add_single_service_config('lambda_names', names)
+    config.add_service_tags('lambda_tags', tags)
+    return config
 
-    return _create_lambda_sections
+
+def get_lambda_sections(
+    names: Sequence[str], tags: Sequence[Tuple[str, str]]
+) -> Tuple[LambdaRegionLimits, LambdaSummary, LambdaProvisionedConcurrency, LambdaCloudwatch,
+           LambdaCloudwatchInsights,]:
+    return create_lamdba_sections(
+        FakeLambdaClient(False),
+        FakeCloudwatchClient(),
+        FakeCloudwatchClientLogsClient(),
+        'region',
+        create_config(names, tags),
+    )
 
 
 no_tags_or_names_params = [
@@ -105,8 +120,11 @@ summary_params = [
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_agent_aws_lambda_region_limits(get_lambda_sections, names, tags):
-    lambda_limits, _lambda_summary, _lambda_provisioned_concurrency_configuration, _lambda_cloudwatch = get_lambda_sections(
+def test_agent_aws_lambda_region_limits(
+    names: Sequence[str],
+    tags: Sequence[Tuple[str, str]],
+) -> None:
+    lambda_limits, _lambda_summary, _lambda_provisioned_concurrency_configuration, _lambda_cloudwatch, _lambda_cloudwatch_insights = get_lambda_sections(
         names, tags)
     lambda_limits_results = lambda_limits.run()
     assert lambda_limits.cache_interval == 300
@@ -116,8 +134,9 @@ def test_agent_aws_lambda_region_limits(get_lambda_sections, names, tags):
 
 
 @pytest.mark.parametrize("names,tags,expected", summary_params)
-def test_agent_aws_lambda_summary(get_lambda_sections, names, tags, expected):
-    _lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, _lambda_cloudwatch = get_lambda_sections(
+def test_agent_aws_lambda_summary(names: Sequence[str], tags: Sequence[Tuple[str, str]],
+                                  expected: Sequence[str]) -> None:
+    _lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, _lambda_cloudwatch, _lambda_cloudwatch_insights = get_lambda_sections(
         names, tags)
     lambda_provisioned_concurrency_configuration.run()
     lambda_summary_results = lambda_summary.run().results
@@ -132,9 +151,11 @@ def test_agent_aws_lambda_summary(get_lambda_sections, names, tags, expected):
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_agent_aws_lambda_cloudwatch(get_lambda_sections, names, tags):
-    _lambda_limits, _lambda_summary, _lambda_provisioned_concurrency_configuration, lambda_cloudwatch = get_lambda_sections(
-        names, tags)
+def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: Sequence[Tuple[str, str]]) -> None:
+    _lambda_limits, _lambda_summary, _lambda_provisioned_concurrency_configuration, lambda_cloudwatch, _lambda_cloudwatch_insights = get_lambda_sections(
+        names,
+        tags,
+    )
     _lambda_cloudwatch_results = lambda_cloudwatch.run().results
 
     assert lambda_cloudwatch.cache_interval == 300
@@ -145,9 +166,12 @@ def test_agent_aws_lambda_cloudwatch(get_lambda_sections, names, tags):
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_agent_aws_lambda_provisioned_concurrency_configuration(get_lambda_sections, names, tags):
-    _lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, _lambda_cloudwatch = get_lambda_sections(
-        names, tags)
+def test_agent_aws_lambda_provisioned_concurrency_configuration(
+        names: Sequence[str], tags: Sequence[Tuple[str, str]]) -> None:
+    _lambda_limits, lambda_summary, lambda_provisioned_concurrency_configuration, _lambda_cloudwatch, _lambda_cloudwatch_insights = get_lambda_sections(
+        names,
+        tags,
+    )
     lambda_summary.run()
     lambda_provisioned_concurrency_configuration_results = lambda_provisioned_concurrency_configuration.run(
     ).results
@@ -156,3 +180,35 @@ def test_agent_aws_lambda_provisioned_concurrency_configuration(get_lambda_secti
         for _, provisioned_concurrency_config in result.content.items():
             for alias in provisioned_concurrency_config:
                 assert alias["FunctionArn"].find("Alias") != -1
+
+
+@pytest.mark.parametrize("names,tags", no_tags_or_names_params)
+def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str],
+                                              tags: Sequence[Tuple[str, str]]) -> None:
+    _lambda_limits, _lambda_summary, _lambda_provisioned_concurrency_configuration, _lambda_cloudwatch, lambda_cloudwatch_insights = get_lambda_sections(
+        names,
+        tags,
+    )
+    lambda_cloudwatch_logs_results = lambda_cloudwatch_insights.run().results
+
+    assert lambda_cloudwatch_insights.cache_interval == 300
+    assert lambda_cloudwatch_insights.period == 600
+    assert lambda_cloudwatch_insights.name == "lambda_cloudwatch_insights"
+    for result in lambda_cloudwatch_logs_results:
+        assert len(result.content) == 3  # all metrics
+
+
+def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPatch) -> None:
+    client = FakeCloudwatchClientLogsClient()
+    # disable warning: "Argument 1 to "setitem" of "MonkeyPatch" has incompatible type "QueryResults"; expected "MutableMapping[str, str]"mypy(error)"
+    monkeypatch.setitem(
+        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,  # type: ignore
+        "status",
+        "Running",
+    )
+    assert LambdaCloudwatchInsights.query_results(
+        client=client,
+        query_id="FakeQueryId",
+        timeout_seconds=0.001,
+        sleep_duration=0.001,
+    ) == None

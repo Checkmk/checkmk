@@ -22,7 +22,24 @@ from ..agent_based_api.v1 import Service
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
-LambdaSummarySection = Mapping[str, float]
+
+
+@dataclass
+class LambdaFunctionConfiguration:
+    Timeout: float  # limit of the timeout
+    MemorySize: float  # limit of the memory size
+    CodeSize: float  # current code size
+
+
+LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
+
+
+def discover_lambda_functions(
+    section_aws_lambda_summary: Optional[LambdaSummarySection],) -> DiscoveryResult:
+    if section_aws_lambda_summary is None:
+        return
+    for lambda_function in section_aws_lambda_summary:
+        yield Service(item=lambda_function)
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:
@@ -109,6 +126,14 @@ def function_arn_to_item(function_arn: str) -> str:
         splitted) == 8 else f"{splitted[3]} {splitted[6]}"
 
 
+def get_region_from_item(item: str) -> str:
+    """
+    >>> get_region_from_item("eu-central-1 my_python_test_function")
+    'eu-central-1'
+    """
+    return item.split(" ")[0]
+
+
 @dataclass
 class LambdaCloudwatchMetrics:
     Duration: float
@@ -146,3 +171,20 @@ class LambdaRegionLimits:
 
 
 LambdaRegionLimitsSection = Mapping[str, LambdaRegionLimits]
+
+LambdaQueryStats = Sequence[Mapping[str, str]]
+
+
+@dataclass
+class LambdaInsightMetrics:
+    max_memory_used_bytes: float
+    count_cold_starts: float
+    max_init_duration_ms: Optional[float] = None
+
+    @staticmethod
+    def from_metrics(query_stats: LambdaQueryStats) -> 'LambdaInsightMetrics':
+        return LambdaInsightMetrics(
+            **{metric["field"]: float(metric["value"]) for metric in query_stats})
+
+
+CloudwatchInsightsSection = Mapping[str, LambdaInsightMetrics]

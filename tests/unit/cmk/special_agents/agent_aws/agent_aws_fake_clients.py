@@ -6,7 +6,7 @@
 
 import abc
 import random
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence, TypedDict
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
@@ -2184,6 +2184,44 @@ class FakeCloudwatchClient:
                 'Value': 'string'
             },]
         }
+
+
+class QueryResults(TypedDict):
+    status: str
+    results: Mapping[str, Sequence[Mapping[str, str]]]
+
+
+FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
+    "status": "Complete",
+    "results": {
+        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [{
+            "field": "max_memory_used_bytes",
+            "value": "52000000"
+        }, {
+            "field": "max_init_duration_ms",
+            "value": "1702.11"
+        }, {
+            "field": "count_cold_starts",
+            "value": "2"
+        }]
+    }
+}
+
+
+class QueryId(TypedDict):
+    queryId: str
+
+
+class FakeCloudwatchClientLogsClient:
+    def start_query(self, logGroupName: str, startTime: int, endTime: int,
+                    queryString: str) -> QueryId:
+        return {"queryId": "MY_QUERY_ID"}
+
+    def get_query_results(self, queryId: str) -> QueryResults:
+        return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
+
+    def stop_query(self, queryId: str):
+        pass
 
 
 class FakeServiceQuotasClient:

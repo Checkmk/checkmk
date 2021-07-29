@@ -28,8 +28,14 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from .utils.aws import (function_arn_to_item, LambdaCloudwatchMetrics, LambdaCloudwatchSection,
-                        LambdaRegionLimits, LambdaRegionLimitsSection)
+from .utils.aws import (
+    get_region_from_item,
+    function_arn_to_item,
+    LambdaCloudwatchMetrics,
+    LambdaCloudwatchSection,
+    LambdaRegionLimits,
+    LambdaRegionLimitsSection,
+)
 
 SectionProvisionedConcurrencyAliases = Mapping[str, Sequence[str]]
 
@@ -65,14 +71,6 @@ def discover_aws_lambda_concurrency(
         yield Service(item=lambda_function)
         for provisioned_lambda_function in provisioned_concurrency_function_arns:
             yield Service(item=provisioned_lambda_function)
-
-
-def _get_region_from_item(item: str) -> str:
-    """
-    >>> _get_region_from_item("eu-central-1 my_python_test_function")
-    'eu-central-1'
-    """
-    return item.split(" ")[0]
 
 
 def _check_concurrent_executions_in_percent(
@@ -123,7 +121,7 @@ def check_aws_lambda_concurrency(
         return
 
     region_limits: Optional[LambdaRegionLimits] = section_aws_lambda_region_limits[
-        _get_region_from_item(item)] if section_aws_lambda_region_limits else None
+        get_region_from_item(item)] if section_aws_lambda_region_limits else None
     if region_limits:
         if metrics.ConcurrentExecutions:
             yield from _check_concurrent_executions_in_percent(

@@ -1486,3 +1486,51 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_aws_lambda_concurrency,
         title=lambda: _("AWS/Lambda Concurrency"),
     ))
+
+
+def _parameter_valuespec_aws_lambda_memory() -> Dictionary:
+    return Dictionary(elements=[
+        ('levels_code_size_in_percent',
+         Tuple(
+             title=_("Upper levels for code size in percent of the region limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_code_size_absolute',
+         Tuple(
+             title=_("Upper levels for code size"),
+             elements=[
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
+             ],
+         )),
+        ('levels_memory_used_in_percent',
+         Tuple(
+             title=_("Upper levels for memory used in percent of the Lambda function limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_memory_size_absolute',
+         Tuple(
+             title=_("Upper levels for memory used"),
+             elements=[
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
+             ],
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_memory",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_memory,
+        title=lambda: _("AWS/Lambda Memory"),
+    ))

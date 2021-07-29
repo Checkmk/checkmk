@@ -17,13 +17,13 @@ from .agent_based_api.v1 import (
     register,
     render,
     Result,
-    Service,
 )
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
 from .utils.aws import (
+    discover_lambda_functions,
     extract_aws_metrics_by_labels,
     function_arn_to_item,
     LambdaCloudwatchMetrics,
@@ -67,10 +67,9 @@ def discover_aws_lambda(
     section_aws_lambda_summary: Optional[LambdaSummarySection],
     section_aws_lambda: Optional[LambdaCloudwatchSection],
 ) -> DiscoveryResult:
-    if section_aws_lambda_summary is None or section_aws_lambda is None:
+    if section_aws_lambda is None:
         return
-    for lambda_function in section_aws_lambda_summary:
-        yield Service(item=lambda_function)
+    yield from discover_lambda_functions(section_aws_lambda_summary)
 
 
 def check_invocations(invocations: float, params) -> Generator[Union[Result, Metric], None, None]:
@@ -101,7 +100,7 @@ def check_aws_lambda_performance(
         return
 
     metrics: LambdaCloudwatchMetrics = section_aws_lambda[item]
-    lambda_limits_timeout = section_aws_lambda_summary[item]
+    lambda_limits_timeout = section_aws_lambda_summary[item].Timeout
     yield from check_levels(
         metrics.Duration / lambda_limits_timeout * 100.0,
         levels_upper=params['levels_duration_percent'],

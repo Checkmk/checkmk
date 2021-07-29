@@ -10,6 +10,7 @@ DOCKER_RESULT=$(docker build --pull "${SCRIPT_DIR}/$1" 2>docker-image-alias-reso
 RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
 
 if [ -n "$RESULT_IMAGE_ID" ] ; then
+    rm docker-image-alias-resolve-error.txt
     echo $RESULT_IMAGE_ID
 else
     echo "Could not resolve $1, error was:" 1>&2

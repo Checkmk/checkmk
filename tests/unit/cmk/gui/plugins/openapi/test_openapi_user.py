@@ -11,6 +11,8 @@ import string
 import pytest
 from freezegun import freeze_time
 
+from cmk.utils import version
+
 from cmk.gui.plugins.openapi.endpoints.user_config import (
     _api_to_internal_format,
     _internal_to_api_format,
@@ -19,7 +21,7 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
 
-from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest

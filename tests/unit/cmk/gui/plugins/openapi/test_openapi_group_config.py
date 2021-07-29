@@ -10,7 +10,9 @@ import string
 
 import pytest
 
-from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
+from cmk.utils import version
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest

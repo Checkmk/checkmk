@@ -1,0 +1,13 @@
+Title: API: modification of acknowledgement endpoint to allow management in distributed setup
+Class: feature
+Compatible: compat
+Component: core
+Date: 1627554823
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p9
+
+In the previous version, acknowledgements were restricted to a non distributed
+monitoring setup. This werk resolves this restriction and allows the user to equally
+handle acknowledgements in a distributed setup.

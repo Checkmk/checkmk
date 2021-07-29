@@ -398,20 +398,34 @@ def check_cisco_vpn_tunnel(item, params, parsed):
 
     if item in parsed:
         now = time.time()
-        data = parsed[item]
+        vpn_tunnel = parsed[item]
 
-        phase1_in, phase1_out = data['phase_1']
-        phase1_in_rate = get_rate('cisco_vpn_tunnel_phase_1_in.%s' % item, now, phase1_in)
-        phase1_out_rate = get_rate('cisco_vpn_tunnel_phase_1_out.%s' % item, now, phase1_out)
+        phase1_in_rate = get_rate(
+            'cisco_vpn_tunnel_phase_1_in.%s' % item,
+            now,
+            vpn_tunnel.phase_1.input,
+        )
+        phase1_out_rate = get_rate(
+            'cisco_vpn_tunnel_phase_1_out.%s' % item,
+            now,
+            vpn_tunnel.phase_1.output,
+        )
 
         infotexts = ['%sPhase 1: in: %s/s, out: %s/s' % \
                      (alias, get_bytes_human_readable(phase1_in_rate),
                       get_bytes_human_readable(phase1_out_rate))]
 
-        if 'phase_2' in data:
-            phase2_in, phase2_out = data['phase_2']
-            phase2_in_rate = get_rate('cisco_vpn_tunnel_phase_2_in.%s' % item, now, phase2_in)
-            phase2_out_rate = get_rate('cisco_vpn_tunnel_phase_2_out.%s' % item, now, phase2_out)
+        if vpn_tunnel.phase_2:
+            phase2_in_rate = get_rate(
+                'cisco_vpn_tunnel_phase_2_in.%s' % item,
+                now,
+                vpn_tunnel.phase_2.input,
+            )
+            phase2_out_rate = get_rate(
+                'cisco_vpn_tunnel_phase_2_out.%s' % item,
+                now,
+                vpn_tunnel.phase_2.output,
+            )
 
             infotexts.append('Phase 2: in: %s/s, out: %s/s' % \
                              (get_bytes_human_readable(phase2_in_rate),

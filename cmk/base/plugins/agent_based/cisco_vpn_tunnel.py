@@ -4,37 +4,59 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Mapping, Optional
 
 from .agent_based_api.v1 import any_of, contains, OIDEnd, register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import StringTable
 
-VPNTunnel = Dict[str, Tuple[float, float]]
+
+@dataclass
+class Phase():
+    input: float
+    output: float
+
+
+@dataclass
+class VPNTunnel:
+    phase_1: Phase
+    phase_2: Optional[Phase] = None
+
+
 Section = Mapping[str, VPNTunnel]
 
 
+def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:
+    phase_2_data: Dict[str, Phase] = {}
+    for index, state, phase_2_in, phase_2_out in table_phase_2:
+        if state == "2":
+            continue
+        phase_2 = phase_2_data.setdefault(
+            index,
+            Phase(0, 0),
+        )
+        if phase_2_in:
+            phase_2.input += float(phase_2_in)
+        if phase_2_out:
+            phase_2.output += float(phase_2_out)
+    return phase_2_data
+
+
 def parse_cisco_vpn_tunnel(string_table: List[StringTable]) -> Section:
-    pre_parsed: Dict[str, Dict[str, float]] = {}
-    for index, state, phase_2_in, phase_2_out in string_table[1]:
-        if state != "2":
-            pre_parsed.setdefault(index, {"in": 0, "out": 0})
-            if phase_2_in:
-                pre_parsed[index]["in"] += float(phase_2_in)
-            if phase_2_out:
-                pre_parsed[index]["out"] += float(phase_2_out)
+    phase_2_data = _parse_phase_2(string_table[1])
 
-    parsed: Dict[str, VPNTunnel] = {}
+    section: Dict[str, VPNTunnel] = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in string_table[0]:
-        parsed.setdefault(remote_ip, {
-            "phase_1": (float(phase_1_in), float(phase_1_out)),
-        })
+        tunnel = section.setdefault(
+            remote_ip,
+            VPNTunnel(Phase(float(phase_1_in), float(phase_1_out))),
+        )
+        tunnel.phase_2 = phase_2_data.get(
+            oid_end,
+            tunnel.phase_2,
+        )
 
-        if oid_end in pre_parsed:
-            parsed[remote_ip].update({
-                "phase_2": (pre_parsed[oid_end]["in"], pre_parsed[oid_end]["out"]),
-            })
-
-    return parsed
+    return section
 
 
 register.snmp_section(

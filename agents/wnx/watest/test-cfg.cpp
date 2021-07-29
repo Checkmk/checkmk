@@ -494,24 +494,17 @@ namespace cma::cfg {
 class CmaCfg_F : public ::testing::Test {
 protected:
     void SetUp() override {
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
-        cap_base_ = cma::cfg::GetUserDir();
-        cap_base_ /= "plugins.test.cap";
+        temp_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs_->loadFactoryConfig());
+        cap_base_ = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
-        auto [r, u] = tst::CreateInOut();
-        root_ = r.wstring();
-        user_ = u.wstring();
-        GetCfg().pushFolders(root_, user_);
+        root_ = temp_fs_->root().wstring();
+        user_ = temp_fs_->data().wstring();
     }
 
-    void TearDown() override {
-        GetCfg().popFolders();
-        tst::SafeCleanTempDir();
-    }
+    void TearDown() override {}
 
     auto prepareAll() {
-        namespace fs = std::filesystem;
         fs::path pd = GetUserDir();
         details::CreateTree(pd);
         auto table = details::AllDirTable();
@@ -529,10 +522,11 @@ protected:
     std::wstring user_;
     std::filesystem::path cap_base_;
     size_t user_folders_count_ = 0;
+
+    tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CmaCfg_F, CreateTree) {
-    namespace fs = std::filesystem;
     ASSERT_TRUE(GetRootDir() == root_);
     ASSERT_TRUE(GetUserDir() == user_);
     fs::path pd = GetUserDir();
@@ -544,8 +538,6 @@ TEST_F(CmaCfg_F, CreateTree) {
 }
 
 TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
-    namespace fs = std::filesystem;
-
     // prepare damaged folder
     fs::path user_dir = cma::cfg::GetUserDir();
     fs::remove_all(user_dir / dirs::kBakery);
@@ -557,9 +549,6 @@ TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::none));
@@ -584,14 +573,15 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     details::CleanDataFolder(details::CleanMode::smart);
 
     for (auto& n : table) {
-        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean);
+        if (n == dirs::kLog) {
+            continue;
+        }
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
+            << (pd / n).string();
     }
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderSmart) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     // test additional preparation

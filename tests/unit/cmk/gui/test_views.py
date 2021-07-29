@@ -2354,7 +2354,6 @@ def test_register_sorter(monkeypatch):
     assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
-@pytest.mark.non_resilient
 def test_get_needed_regular_columns(view):
     class SomeFilter(Filter):
         def display(self):
@@ -2414,7 +2413,6 @@ def test_get_needed_regular_columns(view):
     ])
 
 
-@pytest.mark.non_resilient
 def test_get_needed_join_columns(view):
     view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(PainterSpec('service_description', None, None, u'CPU load'))

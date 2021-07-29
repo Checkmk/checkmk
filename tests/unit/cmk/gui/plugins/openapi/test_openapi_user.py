@@ -593,7 +593,6 @@ def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, mon
     }
 
 
-@pytest.mark.non_resilient
 @managedtest
 def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",

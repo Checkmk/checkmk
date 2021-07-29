@@ -195,7 +195,6 @@ def test_default_config_from_plugins():
     assert sorted(default_config2.keys()) == sorted(expected)
 
 
-@pytest.mark.non_resilient
 def test_load_config():
     config_path = Path(cmk.utils.paths.default_config_dir, "multisite.mk")
     config_path.unlink(missing_ok=True)

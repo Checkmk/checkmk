@@ -6,11 +6,27 @@
 
 # pylint: disable=protected-access
 
-from typing import Callable, Iterable
+from typing import (
+    Callable,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+)
 
 import pytest
 
-from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
+from _pytest.monkeypatch import MonkeyPatch
+
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostKey,
+    HostName,
+    ParsedSectionName,
+    SectionName,
+    SourceType,
+)
 
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
@@ -108,10 +124,10 @@ NODE_2: AgentRawDataSection = [
         "node": "node1",
     }),
 ])
-def test_get_parsed_section(node_sections, expected_result):
+def test_get_parsed_section(node_sections: AgentHostSections, expected_result: Mapping) -> None:
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): (
+        HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST): (
             ParsedSectionsResolver(
                 section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
             SectionsParser(host_sections=node_sections),
@@ -119,14 +135,14 @@ def test_get_parsed_section(node_sections, expected_result):
     })
 
     content = parsed_sections_broker.get_parsed_section(
-        HostKey("node1", "127.0.0.1", SourceType.HOST),
+        HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
         ParsedSectionName("parsed"),
     )
 
     assert expected_result == content
 
 
-def _get_parser():
+def _get_parser() -> SectionsParser:
     return SectionsParser(
         AgentHostSections(sections={
             SectionName("one"): NODE_1,
@@ -134,13 +150,13 @@ def _get_parser():
         }),)
 
 
-def test_parse_sections_unsuperseded(monkeypatch):
+def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
 
     assert ParsedSectionsResolver(section_plugins=(SECTION_ONE, SECTION_THREE),).resolve(
         _get_parser(), ParsedSectionName("parsed")) is not None
 
 
-def test_parse_sections_superseded(monkeypatch):
+def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
 
     assert ParsedSectionsResolver(
         section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),).resolve(
@@ -151,28 +167,46 @@ def test_parse_sections_superseded(monkeypatch):
     "hostname,host_entries,cluster_node_keys,expected_result",
     [
         # No clusters
-        ("heute", [
-            ('heute', NODE_1),
-        ], None, NODE_1),
+        (
+            HostName("heute"),
+            [
+                (HostName('heute'), NODE_1),
+            ],
+            None,
+            NODE_1,
+        ),
         # Clusters: host_of_clustered_service returns cluster name. That means that
         # the service is assigned to the cluster
-        ("cluster", [
-            ('node1', NODE_1),
-            ('node2', NODE_2),
-        ], [
-            HostKey("node1", "127.0.0.1", SourceType.HOST),
-            HostKey("node2", "127.0.0.1", SourceType.HOST),
-        ], NODE_1 + NODE_2),
+        (
+            HostName("cluster"),
+            [
+                (HostName('node1'), NODE_1),
+                (HostName('node2'), NODE_2),
+            ],
+            [
+                HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
+                HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST),
+            ],
+            NODE_1 + NODE_2,
+        ),
         # host_of_clustered_service returns either the cluster or node name.
         # That means that the service is assigned to the cluster resp. not to the cluster
-        ("cluster", [
-            ('node1', NODE_1),
-            ('node2', NODE_2),
-        ], [
-            HostKey("node2", "127.0.0.1", SourceType.HOST),
-        ], NODE_2),
+        (
+            HostName("cluster"),
+            [
+                (HostName('node1'), NODE_1),
+                (HostName('node2'), NODE_2),
+            ],
+            [
+                HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST),
+            ],
+            NODE_2,
+        ),
     ])
-def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
+def test_get_section_content(hostname: HostName, host_entries: List[Tuple[HostName,
+                                                                          AgentRawDataSection]],
+                             cluster_node_keys: Optional[List[HostKey]],
+                             expected_result: AgentRawDataSection) -> None:
 
     parsed_sections_broker = ParsedSectionsBroker({
         HostKey(nodename, "127.0.0.1", SourceType.HOST): (

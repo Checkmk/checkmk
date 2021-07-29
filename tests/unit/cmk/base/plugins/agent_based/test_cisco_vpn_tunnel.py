@@ -4,7 +4,19 @@
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.
 
-from cmk.base.plugins.agent_based.cisco_vpn_tunnel import parse_cisco_vpn_tunnel, Phase, VPNTunnel
+from typing import Sequence, Union
+
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.cisco_vpn_tunnel import (
+    check_cisco_vpn_tunnel,
+    CheckParameters,
+    discover_cisco_vpn_tunnel,
+    parse_cisco_vpn_tunnel,
+    Phase,
+    VPNTunnel,
+)
 
 _STRING_TABLE = [
     [
@@ -124,3 +136,120 @@ _SECTION = {
 
 def test_parse_cisco_vpn_tunnel() -> None:
     assert parse_cisco_vpn_tunnel(_STRING_TABLE) == _SECTION
+
+
+def test_discover_cisco_vpn_tunnel() -> None:
+    assert list(discover_cisco_vpn_tunnel(_SECTION)) == [
+        Service(item="110.173.49.157"),
+        Service(item="211.167.210.107"),
+        Service(item='176.210.155.217'),
+        Service(item='62.111.62.165'),
+        Service(item='158.244.78.71'),
+        Service(item='107.36.151.171'),
+        Service(item='13.232.54.46'),
+        Service(item='158.8.11.214'),
+        Service(item='237.39.169.243'),
+        Service(item='99.155.108.155'),
+        Service(item='88.40.117.192'),
+        Service(item='211.26.203.53'),
+    ]
+
+
+@pytest.mark.parametrize(
+    "item, params, expected_result",
+    [
+        pytest.param(
+            "110.173.49.157",
+            {},
+            [
+                Result(state=State.OK, summary='Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Result(state=State.OK, summary='Phase 2: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Metric('if_in_octets', 0.0),
+                Metric('if_out_octets', 0.0),
+            ],
+            id="standard case",
+        ),
+        pytest.param(
+            "211.167.210.107",
+            {},
+            [
+                Result(state=State.OK, summary='Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Result(state=State.OK, summary='Phase 2 missing'),
+                Metric('if_in_octets', 0.0),
+                Metric('if_out_octets', 0.0),
+            ],
+            id="phase 2 missing",
+        ),
+        pytest.param(
+            "110.173.49.157",
+            {
+                "tunnels": [
+                    ("110.173.49.157", "herbert", 1),
+                    ("110.173.49.157", "hansi", 2),
+                    ("158.244.78.71", "fritz", 3),
+                ],
+            },
+            [
+                Result(state=State.OK,
+                       summary='[herbert] [hansi] Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Result(state=State.OK, summary='Phase 2: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Metric('if_in_octets', 0.0),
+                Metric('if_out_octets', 0.0),
+            ],
+            id="with aliases",
+        ),
+        pytest.param(
+            "1.2.3.4",
+            {},
+            [
+                Result(state=State.CRIT, summary="Tunnel is missing"),
+                Metric("if_in_octets", 0.0),
+                Metric("if_out_octets", 0.0),
+            ],
+            id="tunnel missing, no params",
+        ),
+        pytest.param(
+            "1.2.3.4",
+            {"state": 3},
+            [
+                Result(state=State.UNKNOWN, summary="Tunnel is missing"),
+                Metric("if_in_octets", 0.0),
+                Metric("if_out_octets", 0.0),
+            ],
+            id="tunnel missing, default missing state configured",
+        ),
+        pytest.param(
+            "1.2.3.4",
+            {
+                "tunnels": [
+                    ("110.173.49.157", "herbert", 1),
+                    ("1.2.3.4", "annegret", 1),
+                ],
+                "state": 3,
+            },
+            [
+                Result(state=State.WARN, summary="[annegret] Tunnel is missing"),
+                Metric("if_in_octets", 0.0),
+                Metric("if_out_octets", 0.0),
+            ],
+            id="tunnel missing, default and tunnel-specific missing state configured",
+        ),
+    ],
+)
+def test_check_cisco_vpn_tunnel(
+    item: str,
+    params: CheckParameters,
+    expected_result: Sequence[Union[Result, Metric]],
+) -> None:
+    # initialize counters
+    list(check_cisco_vpn_tunnel(
+        item,
+        params,
+        _SECTION,
+    ))
+
+    assert list(check_cisco_vpn_tunnel(
+        item,
+        params,
+        _SECTION,
+    )) == expected_result

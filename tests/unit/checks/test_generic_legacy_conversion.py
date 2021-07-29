@@ -1327,7 +1327,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'cisco_ucs_temp_env',
         'cisco_ucs_temp_mem',
         'cisco_vpn_sessions',
-        'cisco_vpn_tunnel',
         'cisco_vss',
         'citrix_controller.services',
         'citrix_controller.registered',

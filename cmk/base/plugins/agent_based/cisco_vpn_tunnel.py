@@ -4,11 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict
 
-from .agent_based_api.v1 import any_of, contains, OIDEnd, register, SNMPTree, startswith
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import (
+    any_of,
+    contains,
+    get_rate,
+    get_value_store,
+    GetRateError,
+    IgnoreResults,
+    Metric,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
+from .agent_based_api.v1.render import networkbandwidth
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass
@@ -88,4 +105,133 @@ register.snmp_section(
             ],
         )
     ],
+)
+
+
+class CheckParameters(
+        TypedDict,
+        total=False,
+):
+    state: int
+    tunnels: Sequence[Tuple[str, str, int]]
+
+
+def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
+    yield from (Service(item=ip) for ip in section)
+
+
+def check_cisco_vpn_tunnel(
+    item: str,
+    params: CheckParameters,
+    section: Section,
+) -> CheckResult:
+
+    tunnel_not_found_state = params.get("state", 2)
+    alias = ""
+    for tunnel_ip, tunnel_alias, not_found_state in params.get("tunnels", []):
+        if item == tunnel_ip:
+            if tunnel_alias:
+                alias += "[%s] " % tunnel_alias
+            tunnel_not_found_state = not_found_state
+
+    if item in section:
+        now = time.time()
+        value_store = get_value_store()
+        vpn_tunnel = section[item]
+        try:
+            phase1_in_rate = get_rate(
+                value_store,
+                "cisco_vpn_tunnel_phase_1_in.%s" % item,
+                now,
+                vpn_tunnel.phase_1.input,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            phase1_in_rate = 0
+            yield IgnoreResults("Initialzing counters")
+        try:
+            phase1_out_rate = get_rate(
+                value_store,
+                "cisco_vpn_tunnel_phase_1_out.%s" % item,
+                now,
+                vpn_tunnel.phase_1.output,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            phase1_out_rate = 0
+            yield IgnoreResults("Initialzing counters")
+        yield Result(
+            state=State.OK,
+            summary="%sPhase 1: in: %s, out: %s" % (
+                alias,
+                networkbandwidth(phase1_in_rate),
+                networkbandwidth(phase1_out_rate),
+            ),
+        )
+
+        if vpn_tunnel.phase_2:
+            try:
+                phase2_in_rate = get_rate(
+                    value_store,
+                    "cisco_vpn_tunnel_phase_2_in.%s" % item,
+                    now,
+                    vpn_tunnel.phase_2.input,
+                    raise_overflow=True,
+                )
+            except GetRateError:
+                phase2_in_rate = 0
+                yield IgnoreResults("Initialzing counters")
+            try:
+                phase2_out_rate = get_rate(
+                    value_store,
+                    "cisco_vpn_tunnel_phase_2_out.%s" % item,
+                    now,
+                    vpn_tunnel.phase_2.output,
+                    raise_overflow=True,
+                )
+            except GetRateError:
+                phase2_out_rate = 0
+                yield IgnoreResults("Initialzing counters")
+            yield Result(
+                state=State.OK,
+                summary="Phase 2: in: %s, out: %s" % (
+                    networkbandwidth(phase2_in_rate),
+                    networkbandwidth(phase2_out_rate),
+                ),
+            )
+
+        else:
+            phase2_in_rate, phase2_out_rate = 0, 0
+            yield Result(
+                state=State.OK,
+                summary="Phase 2 missing",
+            )
+
+        in_rate = phase1_in_rate + phase2_in_rate
+        out_rate = phase1_out_rate + phase2_out_rate
+
+    else:
+        yield Result(
+            state=State(tunnel_not_found_state),
+            summary="%sTunnel is missing" % alias,
+        )
+        in_rate = out_rate = 0
+
+    yield Metric(
+        name="if_in_octets",
+        value=in_rate,
+    )
+    yield Metric(
+        name="if_out_octets",
+        value=out_rate,
+    )
+
+
+register.check_plugin(
+    name="cisco_vpn_tunnel",
+    service_name="VPN Tunnel %s",
+    discovery_function=discover_cisco_vpn_tunnel,
+    check_function=check_cisco_vpn_tunnel,
+    check_default_parameters={},
+    check_ruleset_name="vpn_tunnel",
 )

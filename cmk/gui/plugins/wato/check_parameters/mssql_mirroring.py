@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    TextAscii,
+    TextInput,
     MonitoringState,
 )
 
@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _item_spec_mssql_mirroring():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("You can set explicit databases to which you want to apply "
                "criticalities of the mirroring state."),

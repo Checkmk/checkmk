@@ -18,7 +18,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
     RegExp,
-    TextAscii,
+    TextInput,
 )
 
 _DEFAULT_DATADOG_AND_CHECKMK_STATES = (
@@ -67,7 +67,7 @@ rulespec_registry.register(
 
 
 def _item_spec_datadog_monitors():
-    return TextAscii(
+    return TextInput(
         title=_("Datadog monitor"),
         help=_("The name of the Datadog monitor."),
     )

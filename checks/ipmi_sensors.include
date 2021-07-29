@@ -210,6 +210,7 @@ def freeipmi_status_txt_mapping(status_txt):
         "entity present", "battery presence detected",
         "drive presence", "transition to running", "device enabled",
         "system full operational, working", "system restart", "present",
+        "transition to ok",
         ] or \
        status_txt.startswith("Fully Redundant") or \
        status_txt.endswith("is connected") or \

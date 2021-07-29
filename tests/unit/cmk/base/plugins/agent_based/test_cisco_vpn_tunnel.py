@@ -4,7 +4,7 @@
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.
 
-from cmk.base.plugins.agent_based.cisco_vpn_tunnel import parse_cisco_vpn_tunnel
+from cmk.base.plugins.agent_based.cisco_vpn_tunnel import parse_cisco_vpn_tunnel, Phase, VPNTunnel
 
 _STRING_TABLE = [
     [
@@ -70,53 +70,54 @@ _STRING_TABLE = [
 ]
 
 _SECTION = {
-    "110.173.49.157": {
-        "phase_1": (57872.0, 60680.0),
-        "phase_2": (4275671278.0, 552070119.0),
-    },
-    "211.167.210.107": {
-        "phase_1": (1564.0, 1600.0)
-    },
-    "176.210.155.217": {
-        "phase_1": (3176.0, 2424.0),
-        "phase_2": (805509.0, 996792.0),
-    },
-    "62.111.62.165": {
-        "phase_1": (1828836.0, 540776.0),
-        "phase_2": (418226309.0, 2404964353.0),
-    },
-    "158.244.78.71": {
-        "phase_1": (77536.0, 77632.0),
-        "phase_2": (1445263205.0, 1124929982.0),
-    },
-    "107.36.151.171": {
-        "phase_1": (13120.0, 13120.0),
-        "phase_2": (0.0, 0.0),
-    },
-    "13.232.54.46": {
-        "phase_1": (12400.0, 12464.0),
-        "phase_2": (729386986.0, 181978684.0),
-    },
-    "158.8.11.214": {
-        "phase_1": (86240.0, 86720.0),
-        "phase_2": (9139545.0, 86286920.0),
-    },
-    "237.39.169.243": {
-        "phase_1": (618480.0, 619920.0),
-        "phase_2": (15890696.0, 83560204.0),
-    },
-    "99.155.108.155": {
-        "phase_1": (18944.0, 18992.0),
-        "phase_2": (0.0, 0.0),
-    },
-    "88.40.117.192": {
-        "phase_1": (4720.0, 4720.0),
-        "phase_2": (0.0, 0.0),
-    },
-    "211.26.203.53": {
-        "phase_1": (6048.0, 6080.0),
-        "phase_2": (0.0, 0.0),
-    },
+    "110.173.49.157": VPNTunnel(
+        phase_1=Phase(input=57872.0, output=60680.0),
+        phase_2=Phase(input=4275671278.0, output=552070119.0),
+    ),
+    "211.167.210.107": VPNTunnel(
+        phase_1=Phase(input=1564.0, output=1600.0),
+        phase_2=None,
+    ),
+    "176.210.155.217": VPNTunnel(
+        phase_1=Phase(input=3176.0, output=2424.0),
+        phase_2=Phase(input=805509.0, output=996792.0),
+    ),
+    "62.111.62.165": VPNTunnel(
+        phase_1=Phase(input=1828836.0, output=540776.0),
+        phase_2=Phase(input=418226309.0, output=2404964353.0),
+    ),
+    "158.244.78.71": VPNTunnel(
+        phase_1=Phase(input=77536.0, output=77632.0),
+        phase_2=Phase(input=1445263205.0, output=1124929982.0),
+    ),
+    "107.36.151.171": VPNTunnel(
+        phase_1=Phase(input=13120.0, output=13120.0),
+        phase_2=Phase(input=0.0, output=0.0),
+    ),
+    "13.232.54.46": VPNTunnel(
+        phase_1=Phase(input=12400.0, output=12464.0),
+        phase_2=Phase(input=729386986.0, output=181978684.0),
+    ),
+    "158.8.11.214": VPNTunnel(
+        phase_1=Phase(input=86240.0, output=86720.0),
+        phase_2=Phase(input=9139545.0, output=86286920.0),
+    ),
+    "237.39.169.243": VPNTunnel(
+        phase_1=Phase(input=618480.0, output=619920.0),
+        phase_2=Phase(input=15890696.0, output=83560204.0),
+    ),
+    "99.155.108.155": VPNTunnel(
+        phase_1=Phase(input=18944.0, output=18992.0),
+        phase_2=Phase(input=0.0, output=0.0),
+    ),
+    "88.40.117.192": VPNTunnel(
+        phase_1=Phase(input=4720.0, output=4720.0),
+        phase_2=Phase(input=0.0, output=0.0),
+    ),
+    "211.26.203.53": VPNTunnel(
+        phase_1=Phase(input=6048.0, output=6080.0),
+        phase_2=Phase(input=0.0, output=0.0),
+    ),
 }
 
 

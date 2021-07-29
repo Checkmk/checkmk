@@ -10,26 +10,29 @@ import pytest
 
 from testlib import Check
 
+from cmk.base.plugins.agent_based.cisco_vpn_tunnel import Phase, VPNTunnel
+
 _SECTION = {
-    "110.173.49.157": {
-        "phase_1": (57872.0, 60680.0),
-        "phase_2": (4275671278.0, 552070119.0),
-    },
-    "211.167.210.107": {
-        "phase_1": (1564.0, 1600.0)
-    },
-    "176.210.155.217": {
-        "phase_1": (3176.0, 2424.0),
-        "phase_2": (805509.0, 996792.0),
-    },
-    "62.111.62.165": {
-        "phase_1": (1828836.0, 540776.0),
-        "phase_2": (418226309.0, 2404964353.0),
-    },
-    "158.244.78.71": {
-        "phase_1": (77536.0, 77632.0),
-        "phase_2": (1445263205.0, 1124929982.0),
-    },
+    "110.173.49.157": VPNTunnel(
+        phase_1=Phase(input=57872.0, output=60680.0),
+        phase_2=Phase(input=4275671278.0, output=552070119.0),
+    ),
+    "211.167.210.107": VPNTunnel(
+        phase_1=Phase(input=1564.0, output=1600.0),
+        phase_2=None,
+    ),
+    "176.210.155.217": VPNTunnel(
+        phase_1=Phase(input=3176.0, output=2424.0),
+        phase_2=Phase(input=805509.0, output=996792.0),
+    ),
+    "62.111.62.165": VPNTunnel(
+        phase_1=Phase(input=1828836.0, output=540776.0),
+        phase_2=Phase(input=418226309.0, output=2404964353.0),
+    ),
+    "158.244.78.71": VPNTunnel(
+        phase_1=Phase(input=77536.0, output=77632.0),
+        phase_2=Phase(input=1445263205.0, output=1124929982.0),
+    ),
 }
 
 

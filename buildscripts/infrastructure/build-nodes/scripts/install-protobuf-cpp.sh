@@ -80,13 +80,7 @@ install() {
     mkdir -p "${INSTALL_PREFIX}/usr/bin"
     ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${INSTALL_PREFIX}/usr/bin/"
 
-    log "Register library"
-    mkdir -p "${INSTALL_PREFIX}/etc/ld.so.conf.d"
-    echo "${TARGET_DIR}/${DIR_NAME}/lib" >"${INSTALL_PREFIX}/etc/ld.so.conf.d/${PACKAGE_NAME}.conf"
-
-    if [ -z "$INSTALL_PREFIX" ]; then
-        ldconfig
-    else
+    if [[ -n "${INSTALL_PREFIX}" ]]; then
         # The method is by definition not consistent, still it is good enough for development locally.
         mkdir -p "${INSTALL_PREFIX}/bin"
         ln -sf "${TARGET_DIR}/${DIR_NAME}/bin/"* "${INSTALL_PREFIX}/bin/"

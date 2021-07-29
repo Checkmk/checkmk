@@ -257,6 +257,7 @@ async def run_cmd(cmd: str, env: Mapping[str, str], cwd: Optional[str], check: b
     await asyncio.gather(
         process_lines(process.stdout, stdout_fn),
         process_lines(process.stderr, stderr_fn))
+    await process.wait()
 
     return process.returncode == 0
 

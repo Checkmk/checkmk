@@ -1134,7 +1134,7 @@ def update_config_based_user_attributes() -> None:
     _clear_config_based_user_attributes()
 
     for attr in config.wato_user_attrs:
-        if attr["type"] == "TextInput":
+        if attr["type"] == "TextAscii":
             vs = TextInput(title=attr['title'], help=attr['help'])
         else:
             raise NotImplementedError()

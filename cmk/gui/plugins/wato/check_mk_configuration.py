@@ -1214,7 +1214,7 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                          DropdownChoice(
                              title=_("Data type"),
                              choices=[
-                                 ('TextInput', _('Simple Text')),
+                                 ('TextAscii', _('Simple Text')),
                              ],
                          )),
                     ],
@@ -1298,7 +1298,7 @@ def _custom_service_attributes_validate_unique_entries(value, varprefix):
 def _custom_service_attributes_custom_service_attribute_choices():
     choices = []
     for ident, attr_spec in config.custom_service_attributes.items():
-        if attr_spec["type"] == "TextInput":
+        if attr_spec["type"] == "TextAscii":
             vs = TextInput()
         else:
             raise NotImplementedError()

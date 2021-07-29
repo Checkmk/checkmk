@@ -432,7 +432,7 @@ def test_custom_host_attribute_transform(old, new):
         'show_in_table': True,
         'title': u'Attribute 1',
         'topic': old,
-        'type': 'TextInput',
+        'type': 'TextAscii',
     }]
 
     transformed_attributes = attrs.transform_pre_16_host_topics(attributes)

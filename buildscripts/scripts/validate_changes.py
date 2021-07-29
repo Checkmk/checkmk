@@ -302,12 +302,12 @@ async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, ve
         )
         duration = time.time() - t_before
 
-        for line in output:
-            print(line)
-
         if cmd_successful:
             results[name] = f"{col['green']}SUCCESSFUL{col['reset']} ({duration:.2f}s)"
         else:
+            for line in output:
+                print(line)
+
             results[name] = f"{col['red']}FAILED{col['reset']} ({duration:.2f}s)"
             if exitfirst:
                 print(f"{col['red']}Stage {name!r} returned non-zero"

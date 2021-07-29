@@ -36,7 +36,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 	    export PATH="$(PACKAGE_PYTHON3_BIN):$(PACKAGE_POSTGRESQL_BIN):$$PATH" ; \
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
 	    `: rrdtool module is built with rrdtool omd package` \
-		pipenv lock -r | grep -v rrdtool > requirements-dist.txt ; \
+	    `: protobuf module is built with protobuf omd package` \
+		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' > requirements-dist.txt ; \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

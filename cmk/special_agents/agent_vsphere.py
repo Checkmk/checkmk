@@ -1371,6 +1371,12 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
     for vml_id, xml_paths in multipath_infos:
         # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
         lun_id = vml_id[10:-12]
+
+        # Some devices (e.g. Marvell Processor or local devices) may not have a LUN ID.
+        # It should be ok to skip them, see SUP-7220
+        if not lun_id:
+            continue
+
         for path_name, path_state in get_pattern("<name>(.*?)</name>.*?<state>(.*?)</state>",
                                                  xml_paths):
             properties.setdefault(current_propname,

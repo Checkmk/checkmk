@@ -5,7 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest
+import pytest
+
+from cmk.utils import version
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @managedtest

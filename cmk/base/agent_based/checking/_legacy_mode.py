@@ -44,6 +44,7 @@ import cmk.base.item_state as item_state
 import cmk.base.plugin_contexts as plugin_contexts
 
 from cmk.base.api.agent_based import register as agent_based_register
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent
 from cmk.base.check_utils import (
@@ -63,6 +64,11 @@ from .utils import (
 )
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
+
+
+def is_applicable(is_cluster: bool, plugin: Optional[CheckPlugin]) -> bool:
+    return (is_cluster and plugin is not None and plugin.cluster_check_function is not None and
+            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell")
 
 
 def get_aggregated_result(

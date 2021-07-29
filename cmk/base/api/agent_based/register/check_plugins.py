@@ -19,7 +19,6 @@ from cmk.base.api.agent_based.checking_classes import (
     Metric,
     Result,
     Service,
-    State,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
@@ -152,20 +151,6 @@ def _validate_kwargs(
     )
 
 
-def unfit_for_clustering_wrapper(check_function):
-    """Return a cluster_check_function that displays a generic warning"""
-    # copy signature of check_function
-    @functools.wraps(check_function, ("__attributes__",))
-    def unfit_for_clustering(*args, **kwargs):
-        yield Result(
-            state=State.UNKNOWN,
-            summary=("This service is not ready to handle clustered data. "
-                     "Please change your configuration."),
-        )
-
-    return unfit_for_clustering
-
-
 def create_check_plugin(
     *,
     name: str,
@@ -213,9 +198,8 @@ def create_check_plugin(
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
-    cluster_check_function = (unfit_for_clustering_wrapper(check_function)
-                              if cluster_check_function is None else
-                              _filter_check(cluster_check_function))
+    cluster_check_function = None if cluster_check_function is None else _filter_check(
+        cluster_check_function)
 
     return CheckPlugin(
         name=plugin_name,

@@ -156,10 +156,8 @@ def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
 def test_find_missing_manpages_cluster_section(fix_register, all_pages):
     missing_cluster_description = set()
     for plugin in fix_register.check_plugins.values():
-        if plugin.cluster_check_function.__name__ in (
-                "unfit_for_clustering",
-                "cluster_legacy_mode_from_hell",
-        ):
+        if (plugin.cluster_check_function is None or
+                plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
             continue
         man_page = all_pages[str(plugin.name)]
         assert man_page

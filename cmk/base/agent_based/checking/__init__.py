@@ -71,7 +71,7 @@ from cmk.base.api.agent_based import value_store
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
-from . import _legacy_mode, _submit_to_core
+from . import _cluster_modes, _legacy_mode, _submit_to_core
 from .utils import (
     AggregatedResult,
     CHECK_NOT_IMPLEMENTED,
@@ -407,8 +407,7 @@ def _execute_check(
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
 
     # check if we must use legacy mode. remove this block entirely one day
-    if (plugin is not None and host_config.is_cluster and
-            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
+    if _legacy_mode.is_applicable(host_config.is_cluster, plugin):
         submittable = _legacy_mode.get_aggregated_result(
             parsed_sections_broker,
             host_config.hostname,
@@ -468,8 +467,11 @@ def get_aggregated_result(
             cache_info=None,
         )
 
-    check_function = (plugin.cluster_check_function
-                      if host_config.is_cluster else plugin.check_function)
+    check_function = _cluster_modes.get_cluster_check_function(
+        mode='native',
+        clusterization_parameters={},
+        plugin=plugin,
+    ) if host_config.is_cluster else plugin.check_function
 
     source_type = (SourceType.MANAGEMENT
                    if service.check_plugin_name.is_management_name() else SourceType.HOST)

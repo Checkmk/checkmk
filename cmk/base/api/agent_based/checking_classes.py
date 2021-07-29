@@ -464,5 +464,5 @@ class CheckPlugin(NamedTuple):
     check_function: CheckFunction
     check_default_parameters: Optional[ParametersTypeAlias]
     check_ruleset_name: Optional[RuleSetName]
-    cluster_check_function: CheckFunction
+    cluster_check_function: Optional[CheckFunction]
     module: Optional[str]  # not available for auto migrated plugins.

@@ -21,7 +21,6 @@ import sys
 import logging
 # optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
 import optparse  # pylint: disable=W0402
-import win32api
 
 try:
     from typing import Any, Dict, List, Optional, Tuple
@@ -360,25 +359,31 @@ class PostgresWin(PostgresBase):
         out = ensure_str(proc.communicate()[0])
         return out.rstrip()
 
+    def _parse_wmic_logicaldisk(self, wmic_output):
+        return [drive.strip() for drive in wmic_output.replace('DeviceID', '').split(':')[:-1]]
+
+    def _logical_drives(self):
+        return self._parse_wmic_logicaldisk(ensure_str(subprocess_check_output(["wmic", "logicaldisk", "get", "deviceid"])))
+    
+    
     def get_psql_and_bin_path(self):
         # type: () -> Tuple[str, str]
         """This method returns the system specific psql interface binary as callable string"""
-        drives = win32api.GetLogicalDriveStrings()
-        drives = drives.split('\000')[:-1]
+        
         # TODO: Make this more clever...
-        for drive in drives:
+        for drive in self._logical_drives():
             for pg_ver in self._supported_pg_versions:
-                bin_path = "%sProgram Files\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
+                bin_path = "%s:\\Program Files\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
                 psql_path = "%s\\psql.exe" % bin_path
                 if os.path.isfile(psql_path):
                     return psql_path, bin_path
                     
-                bin_path = "%sProgram Files (x86)\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
+                bin_path = "%s:\\Program Files (x86)\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
                 psql_path = "%s\\psql.exe" % bin_path
                 if os.path.isfile(psql_path):
                     return psql_path, bin_path
                 
-                bin_path = "%sPostgreSQL\\%s\\bin" % (drive, pg_ver)
+                bin_path = "%s:\\PostgreSQL\\%s\\bin" % (drive, pg_ver)
                 psql_path = "%s\\psql.exe" % bin_path
                 if os.path.isfile(psql_path):
                     return psql_path, bin_path

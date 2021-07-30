@@ -162,7 +162,9 @@ test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker docker
 
-test-format-python: ../.style.yapf
+test-format-python: test-format-python-yapf test-format-python-isort
+
+test-format-python-yapf: ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
@@ -174,6 +176,11 @@ test-format-python: ../.style.yapf
 	xargs -n 1500 $(YAPF) --parallel --style ../.style.yapf --verbose --diff | \
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
+	exit $${PIPESTATUS[1]}
+
+test-format-python-isort: ../pyproject.toml
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
 	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:
@@ -325,7 +332,7 @@ test-unit-livestatus:
 test-unit-core:
 	cd ../enterprise/core/src && ./.f12 $(REDIRECT) $(RESULTS)/core-neb-cmc.txt
 
-# Run `validate_changes` in live-mode i.e. not creating a JSON file 
+# Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running
 # them.
 what-gerrit-makes:

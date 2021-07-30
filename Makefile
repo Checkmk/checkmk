@@ -544,7 +544,10 @@ format: format-python format-c format-shell format-js format-css
 format-c:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
-format-python:
+
+format-python: format-python-yapf format-python-isort
+
+format-python-yapf:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories
 # for each file specified via command line
 #
@@ -553,6 +556,9 @@ format-python:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(PIPENV) run yapf --parallel --style .style.yapf --verbose -i
 
+format-python-isort:
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(PIPENV) run isort --settings-path pyproject.toml
 
 format-shell:
 	$(MAKE)	-C tests format-shell

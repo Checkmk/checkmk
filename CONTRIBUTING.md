@@ -242,7 +242,7 @@ Normally you only change a small set of files in your commits. If you execute
 `yapf -i [filename]` to format the changed code, this should be enough and you
 don't need to execute the formatting test at all.
 
-> We highly recommend to integrate yapf, pylint and mypy into the editor you
+> We highly recommend to integrate yapf, isort, pylint and mypy into the editor you
 > work with. Most editors will notify you about issues in the moment you edit
 > the code.
 
@@ -471,6 +471,7 @@ understand which names are really available and needed in the current namespace.
   install [one of the available plugins](https://editorconfig.org/#download).
 * We use YAPF for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
+* We use isort for automatic sorting of imports in Python code.
 * Multi line imports: Use braces instead of continuation character
 
     ```python
@@ -489,30 +490,51 @@ understand which names are really available and needed in the current namespace.
     )
     ```
 
-### Automatic formatting
+### Automatic formatting with yapf and isort
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
 a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
-`make format-python` or `scripts/run-pipenv run yapf`.
+`make format-python-yapf` or `scripts/run-pipenv run yapf`.
 
-#### Manual invocation: Single file
+The imports are also sorted with isort. Configuration is in `pyproject.toml`
+file in the root directory of the project repository. If you have isort installed
+in you virtualenv you can run it with `make format-python-isort`
+
+#### Manual yapf invocation: Single file
 
 ```console
 $ yapf -i [the_file.py]
 ```
 
-#### Manual invocation: Whole code base
-
-If you want to format all Python files in the repository, you can run:
+#### Manual isort invocation: Single file
 
 ```console
-$ make format-python
+$ isort [the_file.py]
+
+# or with pre-commit installed
+$ pre-commit run isort
+```
+
+#### Manual yapf invocation: Whole code base
+
+If you want to yapf format all Python files in the repository, you can run:
+
+```console
+$ make format-python-yapf
+```
+
+#### Manual isort invocation: Whole code base
+
+If you want to isort format all Python files in the repository, you can run:
+
+```console
+$ make format-python-isort
 ```
 
 #### Integration with CI
 
-Our CI executes the following formatting test on the whole code base:
+Our CI executes yapf and isort formatting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python

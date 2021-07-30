@@ -1676,12 +1676,18 @@ class ListOfStrings(ValueSpec):
         return self._valuespec.has_show_more()
 
 
-# TODO: Spread use of this valuespec
-def NetworkPort(title: _Optional[str], default_value: Union[object, int] = DEF_VALUE) -> Integer:
+def NetworkPort(  # pylint: disable=redefined-builtin
+    title: _Optional[str],
+    help: _Optional[str] = None,
+    minvalue: int = 1,
+    maxvalue: int = 65535,
+    default_value: Union[object, int] = DEF_VALUE,
+) -> Integer:
     return Integer(
         title=title,
-        minvalue=1,
-        maxvalue=65535,
+        help=help,
+        minvalue=minvalue,
+        maxvalue=maxvalue,
         default_value=default_value,
     )
 

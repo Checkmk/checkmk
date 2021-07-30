@@ -15,9 +15,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Filesize,
     FixedValue,
-    Integer,
     ListOf,
     ListOfStrings,
+    NetworkPort,
     RegExp,
     TextInput,
     Transform,
@@ -279,12 +279,9 @@ def _parameter_valuespec_logwatch_ec():
                                                              allow_empty=False,
                                                          )),
                                                         ("port",
-                                                         Integer(
+                                                         NetworkPort(
                                                              title=_("Port"),
                                                              default_value=514,
-                                                             minvalue=1,
-                                                             maxvalue=65535,
-                                                             size=6,
                                                          )),
                                                         (
                                                             "spool",
@@ -342,12 +339,9 @@ def _parameter_valuespec_logwatch_ec():
                                                           allow_empty=False,
                                                       )),
                                                      ("port",
-                                                      Integer(
+                                                      NetworkPort(
                                                           title=_("Port"),
                                                           default_value=514,
-                                                          minvalue=1,
-                                                          maxvalue=65535,
-                                                          size=6,
                                                       )),
                                                  ],
                                                  optional_keys=[],

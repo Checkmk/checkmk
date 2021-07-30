@@ -8,6 +8,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
+    NetworkPort,
     Integer,
     IPv4Address,
     TextInput,
@@ -60,17 +61,9 @@ def _parameter_valuespec_tcp_connections():
                                ]),
             ),
             ("local_ip", IPv4Address(title=_("Local IP address"))),
-            ("local_port", Integer(
-                title=_("Local port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
+            ("local_port", NetworkPort(title=_("Local port number"))),
             ("remote_ip", IPv4Address(title=_("Remote IP address"))),
-            ("remote_port", Integer(
-                title=_("Remote port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
+            ("remote_port", NetworkPort(title=_("Remote port number"))),
             ("max_states",
              Tuple(
                  title=_("Maximum number of connections or listeners"),

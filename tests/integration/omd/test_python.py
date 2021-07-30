@@ -85,6 +85,7 @@ def test_03_pip_interpreter_version(site):
     "boto3",
     "kubernetes",
     "numpy",
+    "google.protobuf",
 ])
 def test_python_modules(site, module_name):
     import importlib  # pylint: disable=import-outside-toplevel

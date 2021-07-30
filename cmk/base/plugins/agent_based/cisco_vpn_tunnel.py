@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from dataclasses import dataclass
+from time import time
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
@@ -135,7 +135,7 @@ def check_cisco_vpn_tunnel(
             tunnel_not_found_state = not_found_state
 
     if item in section:
-        now = time.time()
+        now = time()
         value_store = get_value_store()
         vpn_tunnel = section[item]
         try:

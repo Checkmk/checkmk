@@ -7,7 +7,9 @@
 from typing import Sequence, Union
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
+from cmk.base.plugins.agent_based import cisco_vpn_tunnel
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cisco_vpn_tunnel import (
     check_cisco_vpn_tunnel,
@@ -155,6 +157,27 @@ def test_discover_cisco_vpn_tunnel() -> None:
     ]
 
 
+def _patch_time_and_value_store(
+    monkeypatch: MonkeyPatch,
+    item: str,
+) -> None:
+    monkeypatch.setattr(
+        cisco_vpn_tunnel,
+        "time",
+        lambda: 1,
+    )
+    monkeypatch.setattr(
+        cisco_vpn_tunnel,
+        "get_value_store",
+        lambda: {
+            f"cisco_vpn_tunnel_phase_1_in.{item}": (0, 0),
+            f"cisco_vpn_tunnel_phase_1_out.{item}": (0, 0),
+            f"cisco_vpn_tunnel_phase_2_in.{item}": (0, 0),
+            f"cisco_vpn_tunnel_phase_2_out.{item}": (0, 0),
+        },
+    )
+
+
 @pytest.mark.parametrize(
     "item, params, expected_result",
     [
@@ -162,10 +185,10 @@ def test_discover_cisco_vpn_tunnel() -> None:
             "110.173.49.157",
             {},
             [
-                Result(state=State.OK, summary='Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
-                Result(state=State.OK, summary='Phase 2: in: 0.00 Bit/s, out: 0.00 Bit/s'),
-                Metric('if_in_octets', 0.0),
-                Metric('if_out_octets', 0.0),
+                Result(state=State.OK, summary='Phase 1: in: 463 kBit/s, out: 485 kBit/s'),
+                Result(state=State.OK, summary='Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s'),
+                Metric('if_in_octets', 4275729150.0),
+                Metric('if_out_octets', 552130799.0),
             ],
             id="standard case",
         ),
@@ -173,10 +196,10 @@ def test_discover_cisco_vpn_tunnel() -> None:
             "211.167.210.107",
             {},
             [
-                Result(state=State.OK, summary='Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
+                Result(state=State.OK, summary='Phase 1: in: 12.5 kBit/s, out: 12.8 kBit/s'),
                 Result(state=State.OK, summary='Phase 2 missing'),
-                Metric('if_in_octets', 0.0),
-                Metric('if_out_octets', 0.0),
+                Metric('if_in_octets', 1564.0),
+                Metric('if_out_octets', 1600.0),
             ],
             id="phase 2 missing",
         ),
@@ -191,10 +214,10 @@ def test_discover_cisco_vpn_tunnel() -> None:
             },
             [
                 Result(state=State.OK,
-                       summary='[herbert] [hansi] Phase 1: in: 0.00 Bit/s, out: 0.00 Bit/s'),
-                Result(state=State.OK, summary='Phase 2: in: 0.00 Bit/s, out: 0.00 Bit/s'),
-                Metric('if_in_octets', 0.0),
-                Metric('if_out_octets', 0.0),
+                       summary='[herbert] [hansi] Phase 1: in: 463 kBit/s, out: 485 kBit/s'),
+                Result(state=State.OK, summary='Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s'),
+                Metric('if_in_octets', 4275729150.0),
+                Metric('if_out_octets', 552130799.0),
             ],
             id="with aliases",
         ),
@@ -237,17 +260,15 @@ def test_discover_cisco_vpn_tunnel() -> None:
     ],
 )
 def test_check_cisco_vpn_tunnel(
+    monkeypatch: MonkeyPatch,
     item: str,
     params: CheckParameters,
     expected_result: Sequence[Union[Result, Metric]],
 ) -> None:
-    # initialize counters
-    list(check_cisco_vpn_tunnel(
+    _patch_time_and_value_store(
+        monkeypatch,
         item,
-        params,
-        _SECTION,
-    ))
-
+    )
     assert list(check_cisco_vpn_tunnel(
         item,
         params,

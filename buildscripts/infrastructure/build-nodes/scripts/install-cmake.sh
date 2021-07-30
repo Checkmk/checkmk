@@ -25,6 +25,8 @@ build_package() {
 
     # TODO: Shouldn't we compile it on our own?
     tar xf "${ARCHIVE_NAME}"
+    # NOTE: Upper/lower case seems to be mixed up in recent versions. :-/
+    test ! -e "${DIR_NAME}" && mv "${DIR_NAME/-Linux-/-linux-}" "${DIR_NAME}"
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"

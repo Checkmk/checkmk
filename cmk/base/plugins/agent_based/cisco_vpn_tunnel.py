@@ -148,96 +148,92 @@ def check_cisco_vpn_tunnel(
         params,
     )
 
-    if item in section:
-        now = time()
-        value_store = get_value_store()
-        vpn_tunnel = section[item]
-        try:
-            phase1_in_rate = get_rate(
-                value_store,
-                "cisco_vpn_tunnel_phase_1_in.%s" % item,
-                now,
-                vpn_tunnel.phase_1.input,
-                raise_overflow=True,
-            )
-        except GetRateError:
-            phase1_in_rate = 0
-            yield IgnoreResults("Initialzing counters")
-        try:
-            phase1_out_rate = get_rate(
-                value_store,
-                "cisco_vpn_tunnel_phase_1_out.%s" % item,
-                now,
-                vpn_tunnel.phase_1.output,
-                raise_overflow=True,
-            )
-        except GetRateError:
-            phase1_out_rate = 0
-            yield IgnoreResults("Initialzing counters")
-        yield Result(
-            state=State.OK,
-            summary="%sPhase 1: in: %s, out: %s" % (
-                aliases + " " if aliases else "",
-                networkbandwidth(phase1_in_rate),
-                networkbandwidth(phase1_out_rate),
-            ),
-        )
-
-        if vpn_tunnel.phase_2:
-            try:
-                phase2_in_rate = get_rate(
-                    value_store,
-                    "cisco_vpn_tunnel_phase_2_in.%s" % item,
-                    now,
-                    vpn_tunnel.phase_2.input,
-                    raise_overflow=True,
-                )
-            except GetRateError:
-                phase2_in_rate = 0
-                yield IgnoreResults("Initialzing counters")
-            try:
-                phase2_out_rate = get_rate(
-                    value_store,
-                    "cisco_vpn_tunnel_phase_2_out.%s" % item,
-                    now,
-                    vpn_tunnel.phase_2.output,
-                    raise_overflow=True,
-                )
-            except GetRateError:
-                phase2_out_rate = 0
-                yield IgnoreResults("Initialzing counters")
-            yield Result(
-                state=State.OK,
-                summary="Phase 2: in: %s, out: %s" % (
-                    networkbandwidth(phase2_in_rate),
-                    networkbandwidth(phase2_out_rate),
-                ),
-            )
-
-        else:
-            phase2_in_rate, phase2_out_rate = 0, 0
-            yield Result(
-                state=State.OK,
-                summary="Phase 2 missing",
-            )
-
-        in_rate = phase1_in_rate + phase2_in_rate
-        out_rate = phase1_out_rate + phase2_out_rate
-
-    else:
+    if not (vpn_tunnel := section.get(item)):
         yield Result(
             state=state_missing,
             summary="%sTunnel is missing" % (aliases + " " if aliases else ""),
         )
-        in_rate = out_rate = 0
+        return
+
+    now = time()
+    value_store = get_value_store()
+
+    try:
+        phase1_in_rate = get_rate(
+            value_store,
+            "cisco_vpn_tunnel_phase_1_in.%s" % item,
+            now,
+            vpn_tunnel.phase_1.input,
+            raise_overflow=True,
+        )
+    except GetRateError:
+        phase1_in_rate = 0
+        yield IgnoreResults("Initialzing counters")
+    try:
+        phase1_out_rate = get_rate(
+            value_store,
+            "cisco_vpn_tunnel_phase_1_out.%s" % item,
+            now,
+            vpn_tunnel.phase_1.output,
+            raise_overflow=True,
+        )
+    except GetRateError:
+        phase1_out_rate = 0
+        yield IgnoreResults("Initialzing counters")
+    yield Result(
+        state=State.OK,
+        summary="%sPhase 1: in: %s, out: %s" % (
+            aliases + " " if aliases else "",
+            networkbandwidth(phase1_in_rate),
+            networkbandwidth(phase1_out_rate),
+        ),
+    )
+
+    if vpn_tunnel.phase_2:
+        try:
+            phase2_in_rate = get_rate(
+                value_store,
+                "cisco_vpn_tunnel_phase_2_in.%s" % item,
+                now,
+                vpn_tunnel.phase_2.input,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            phase2_in_rate = 0
+            yield IgnoreResults("Initialzing counters")
+        try:
+            phase2_out_rate = get_rate(
+                value_store,
+                "cisco_vpn_tunnel_phase_2_out.%s" % item,
+                now,
+                vpn_tunnel.phase_2.output,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            phase2_out_rate = 0
+            yield IgnoreResults("Initialzing counters")
+        yield Result(
+            state=State.OK,
+            summary="Phase 2: in: %s, out: %s" % (
+                networkbandwidth(phase2_in_rate),
+                networkbandwidth(phase2_out_rate),
+            ),
+        )
+
+    else:
+        phase2_in_rate, phase2_out_rate = 0, 0
+        yield Result(
+            state=State.OK,
+            summary="Phase 2 missing",
+        )
 
     yield Metric(
         name="if_in_octets",
-        value=in_rate,
+        value=phase1_in_rate + phase2_in_rate,
     )
     yield Metric(
         name="if_out_octets",
-        value=out_rate,
+        value=phase1_out_rate + phase2_out_rate,
     )
 
 

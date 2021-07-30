@@ -226,8 +226,6 @@ def _patch_time_and_value_store(
             {},
             [
                 Result(state=State.CRIT, summary="Tunnel is missing"),
-                Metric("if_in_octets", 0.0),
-                Metric("if_out_octets", 0.0),
             ],
             id="tunnel missing, no params",
         ),
@@ -236,8 +234,6 @@ def _patch_time_and_value_store(
             {"state": 3},
             [
                 Result(state=State.UNKNOWN, summary="Tunnel is missing"),
-                Metric("if_in_octets", 0.0),
-                Metric("if_out_octets", 0.0),
             ],
             id="tunnel missing, default missing state configured",
         ),
@@ -252,8 +248,6 @@ def _patch_time_and_value_store(
             },
             [
                 Result(state=State.WARN, summary="[annegret] Tunnel is missing"),
-                Metric("if_in_octets", 0.0),
-                Metric("if_out_octets", 0.0),
             ],
             id="tunnel missing, default and tunnel-specific missing state configured",
         ),

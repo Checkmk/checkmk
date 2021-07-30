@@ -2540,6 +2540,10 @@ msgid "AWS/Glacier Vaults"
 msgstr "Chambres fortes AWS/Glacier"
 
 #, fuzzy
+msgid "AWS/Lambda Concurrency"
+msgstr "Performance"
+
+#, fuzzy
 msgid "AWS/Lambda Performance"
 msgstr "Performance"
 
@@ -10312,6 +10316,14 @@ msgstr "Calculer la portée en fonction des données affichées"
 
 msgid "Computing differences"
 msgstr "Différences de calcul"
+
+#, fuzzy
+msgid "Concurrent executions"
+msgstr "Nombre maximum d'exécutions simultanées"
+
+#, fuzzy
+msgid "Concurrent executions in percent"
+msgstr "Nombre maximum d'exécutions simultanées"
 
 msgid "Condition type"
 msgstr "Type de condition"
@@ -37183,6 +37195,20 @@ msgstr "IOPS provisionnées Opérations d'E/S SSD par seconde"
 msgid "Provisioned IOPS SSD space"
 msgstr "Espace SSD IOPS provisionné"
 
+#, fuzzy
+msgid "Provisioned concurrency executions"
+msgstr "Nombre maximum d'exécutions simultanées"
+
+msgid "Provisioned concurrency invocations"
+msgstr ""
+
+msgid "Provisioned concurrency spillover invocations"
+msgstr ""
+
+#, fuzzy
+msgid "Provisioned concurrency utilization"
+msgstr "Utilisation par cœur"
+
 msgid "Provisioned filesystem space"
 msgstr "Espace de système de fichiers provisionné"
 
@@ -43644,6 +43670,16 @@ msgid ""
 "1.0/3600)."
 msgstr ""
 "Niveaux supérieurs pour le nombre de connexions actives à la base de données"
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the number of invocations per second that are "
+"run on non-provisioned concurrency (spillover invocations) when all "
+"provisioned concurrency is in use. Default is CRIT for more than one "
+"spillover invocation per hour (ca. 1.0/3600)."
+msgstr ""
+"Vous pouvez spécifier ici des niveaux supérieurs pour le nombre d'infections "
+"détectées par le moteur antimalware de McAfee Gateway."
 
 #, fuzzy
 msgid ""
@@ -56275,6 +56311,14 @@ msgid "Unregistered"
 msgstr "Non enregistré"
 
 #, fuzzy
+msgid "Unreserved concurrent executions"
+msgstr "Nombre maximum d'exécutions simultanées"
+
+#, fuzzy
+msgid "Unreserved concurrent executions in percent"
+msgstr "Nombre maximum d'exécutions simultanées"
+
+#, fuzzy
 msgid "Unspecific backup"
 msgstr "Non spécifié."
 
@@ -56687,6 +56731,14 @@ msgstr "Niveaux supérieurs pour les connexions bloquées"
 msgid "Upper levels for clients"
 msgstr "Niveaux supérieurs pour les clients"
 
+#, fuzzy
+msgid "Upper levels for concurrent executions"
+msgstr "Niveaux supérieurs pour les exceptions rencontrées"
+
+#, fuzzy
+msgid "Upper levels for concurrent executions in percent of the region limit"
+msgstr "Niveaux supérieurs en pourcentage de la limite"
+
 msgid "Upper levels for connections in use"
 msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
 
@@ -56775,6 +56827,19 @@ msgstr "Niveaux supérieurs pour les activations en attente"
 msgid "Upper levels for physical capacity in percent"
 msgstr "Niveaux supérieurs de capacité physique en pourcentage"
 
+#, fuzzy
+msgid ""
+"Upper levels for provisioned concurrency spillover invocations per second"
+msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
+#, fuzzy
+msgid "Upper levels for provisioned concurrent executions per second"
+msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
+#, fuzzy
+msgid "Upper levels for provisioned concurrent invocations per second"
+msgstr "Niveaux supérieurs d'erreurs de connexion au backend par seconde"
+
 msgid "Upper levels for rate of server errors"
 msgstr "Niveaux supérieurs pour le taux d'erreurs de serveur"
 
@@ -56840,6 +56905,16 @@ msgstr "Niveaux supérieurs pour la taille totale des données non comprimées"
 msgid "Upper levels for unblended costs"
 msgstr "Niveaux supérieurs pour les coûts non mélangés"
 
+#, fuzzy
+msgid "Upper levels for unreserved concurrent executions"
+msgstr "Niveaux supérieurs pour les connexions bloquées"
+
+#, fuzzy
+msgid ""
+"Upper levels for unreserved concurrent executions in percent of the region "
+"limit"
+msgstr "Niveaux supérieurs en pourcentage de la limite"
+
 msgid "Upper levels for unused space"
 msgstr "Niveaux supérieurs pour les espaces inutilisés"
 
@@ -56877,6 +56952,10 @@ msgstr "Niveaux supérieurs sur le décalage de la réplique"
 
 msgid "Upper levels on total request latency"
 msgstr "Niveaux supérieurs de latence totale des demandes"
+
+#, fuzzy
+msgid "Upper levels provisioned concurrency utilization"
+msgstr "Niveaux supérieurs d'utilisation des disques"
 
 msgid "Upper limits in percent"
 msgstr "Limites supérieures en pourcentage"
@@ -58480,9 +58559,10 @@ msgstr "Hôtes virtuels"
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
 "Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values and table column names become visible. See <a "
-"href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</"
-"a>. for more details about the HW/SW Inventory system."
+"the keys of singles values and table column names become visible. Key "
+"columns of tables are marked with '*'. See <a href=\"https://docs.checkmk."
+"com/latest/de/inventory.html\">HW/SW Inventory</a>. for more details about "
+"the HW/SW Inventory system."
 msgstr ""
 
 msgid "Vibrate only"

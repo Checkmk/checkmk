@@ -30,14 +30,6 @@ SHELL_FILES := \
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
- # Optionally forward the job result to a result file when executed via CI
-REDIRECT =
-ifdef RESULTS
-REDIRECT = &>
-else
-REDIRECT = \#
-endif
-
 .PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
@@ -312,28 +304,28 @@ test-unit-sh-docker:
 	../scripts/run-in-docker.sh make RESULTS=$(RESULTS) GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
 
 test-tidy-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-tidy.txt
+	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-tidy.txt
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-docker:
 	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-iwyu-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/livestatus-iwyu.txt
+	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION) $(REDIRECT) $(RESULTS)/core-iwyu.txt
+	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-docker:
 	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-unit-livestatus:
-	cd ../livestatus/src && ./.f12 $(REDIRECT) $(RESULTS)/livestatus-neb-cmc.txt
+	cd ../livestatus/src && ./.f12
 
 test-unit-core:
-	cd ../enterprise/core/src && ./.f12 $(REDIRECT) $(RESULTS)/core-neb-cmc.txt
+	cd ../enterprise/core/src && ./.f12
 
 # Run `validate_changes` in live-mode i.e. not creating a JSON file
 # containing build steps to be executed by Jenkins but directly running
@@ -341,7 +333,8 @@ test-unit-core:
 what-gerrit-makes:
 	WORKSPACE="$$(git rev-parse --show-toplevel)" ; \
 	cd "$$WORKSPACE" ; \
+	mkdir -p "$$WORKSPACE/results" ; \
 	scripts/run-pipenv run buildscripts/scripts/validate_changes.py \
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
-	    -e RESULTS="$$WORKSPACE"
+	    -e RESULTS="$$WORKSPACE/results"

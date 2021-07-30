@@ -86,6 +86,8 @@ STAGES:
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
       COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-format.txt"
       TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
     - NAME: 'Python Unit Test'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_FILES
@@ -94,6 +96,7 @@ STAGES:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-unit-junit.xml --color=no"
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
 
     - NAME: 'Python Linting'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES
@@ -106,33 +109,38 @@ STAGES:
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
       TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
       RESULT_CHECK_TYPE: "PYLINT"
-      RESULT_CHECK_FILE_PATTERN: "results/pylint.xml"
+      RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
 
     - NAME: 'Shell Format'
       DIR: 'tests'
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
     - NAME: 'Shell Unit'
       DIR: 'tests'
       COMMAND: "make test-unit-sh-docker &> ${RESULTS}/shell-unit.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
     - NAME: 'JavaScript Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
       DIR: 'tests'
       COMMAND: "make --quiet test-format-js-docker &> ${RESULTS}/js-prettier.txt"
       TEXT_ON_SKIP: 'No JavaScript files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
     - NAME: 'CSS Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES
       DIR: 'tests'
       COMMAND: "make --quiet test-format-css-docker &> ${RESULTS}/css-prettier.txt"
       TEXT_ON_SKIP: 'No CSS files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/css-prettier.txt"
 
     - NAME: 'Agent Plugin Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_AGENT_PLUGINS,CHANGED_AGENT_PLUGINS_TESTS
       DIR: 'tests'
       COMMAND: "make test-agent-plugin-docker > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: 'No agent files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
     - NAME: 'NEB/CMC Compile'
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
@@ -145,7 +153,7 @@ STAGES:
       ENV_VARS:
         RESULTS: "${RESULTS}"
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-tidy-livestatus-docker"
+      COMMAND: "make test-tidy-livestatus-docker &> ${RESULTS}/livestatus-tidy.txt"
       TEXT_ON_SKIP: 'No core files changed'
       RESULT_CHECK_TYPE: "CLANG"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
@@ -156,7 +164,7 @@ STAGES:
       ENV_VARS:
         RESULTS: "${RESULTS}"
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-tidy-core-docker"
+      COMMAND: "make test-tidy-core-docker &> ${RESULTS}/core-tidy.txt"
       TEXT_ON_SKIP: 'No core files changed'
       RESULT_CHECK_TYPE: "CLANG"
       RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
@@ -167,7 +175,7 @@ STAGES:
       ENV_VARS:
         RESULTS: "${RESULTS}"
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-iwyu-livestatus-docker"
+      COMMAND: "make test-iwyu-livestatus-docker &> ${RESULTS}/livestatus-iwyu.txt"
       TEXT_ON_SKIP: 'No core files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
@@ -178,7 +186,7 @@ STAGES:
       ENV_VARS:
         RESULTS: "${RESULTS}"
         GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-iwyu-core-docker"
+      COMMAND: "make test-iwyu-core-docker &> ${RESULTS}/core-iwyu.txt"
       TEXT_ON_SKIP: 'No core files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
@@ -207,4 +215,4 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES
       COMMAND: "make sw-documentation-docker &> ${RESULTS}/sw-documentation.txt"
       TEXT_ON_SKIP: 'No SW Documentation files changed'
-
+      RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"

@@ -309,10 +309,21 @@ async def run_locally(stages: Stages, exitfirst: bool, filter_substring: str, ve
         if cmd_successful:
             results[name] = f"{col['green']}SUCCESSFUL{col['reset']} ({duration:.2f}s)"
         else:
+            print("The stage failed and here is, what was captured:")
             for line in output:
                 print(line)
-
-            results[name] = f"{col['red']}FAILED{col['reset']} ({duration:.2f}s)"
+            result_file_hint = (f" ({stage['RESULT_CHECK_FILE_PATTERN']})"
+                                if "RESULT_CHECK_FILE_PATTERN" in stage else "")
+            results[name] = f"{col['red']}FAILED{col['reset']} ({duration:.2f}s){result_file_hint}"
+            if "RESULT_CHECK_FILE_PATTERN" in stage:
+                print(f"Also a result file '{stage['RESULT_CHECK_FILE_PATTERN']}' has been captured:")
+                if stage['RESULT_CHECK_FILE_PATTERN'].endswith(".txt"):
+                    with open(stage['RESULT_CHECK_FILE_PATTERN']) as err_file:
+                        for l in err_file.readlines():
+                            print(f"   {col['purple']}>>>{col['reset']} {l.rstrip()}")
+                else:
+                    # in case we're dealing with an unknown file format we just print the file name
+                    print(f"   {col['bold']}{stage['RESULT_CHECK_FILE_PATTERN']}{col['reset']}")
             if exitfirst:
                 print(f"{col['red']}Stage {name!r} returned non-zero"
                       f" and you told me to stop if that happens.{col['reset']}")

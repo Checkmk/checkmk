@@ -70,3 +70,4 @@ tags
 tests/web/data/*
 tests/var/*
 web/htdocs/js/*_min.js.map
+/results

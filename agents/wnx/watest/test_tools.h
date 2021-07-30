@@ -161,7 +161,6 @@ const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();
 
-void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
 inline std::vector<std::string> ReadFileAsTable(
     const std::filesystem::path& name) {
@@ -208,6 +207,7 @@ public:
     TempCfgFs& operator=(TempCfgFs&&) = delete;
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+    [[nodiscard]] bool reloadConfig();
     [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view config);
 

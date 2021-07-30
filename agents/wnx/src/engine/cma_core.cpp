@@ -370,14 +370,6 @@ static void ApplyEverythingLogResult(const std::string& format,
     XLOG::t(format, file, local ? "[local]" : "[plugins]");
 }
 
-static void PrintNode(const YAML::Node& node, std::string_view S) {  // NOLINT
-    if (tgt::IsDebug()) {
-        YAML::Emitter emit;
-        emit << node;
-        XLOG::l("{}:\n{}", S, emit.c_str());
-    }
-}
-
 std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
     const std::vector<std::filesystem::path>& found_files, bool local) {
     std::set<std::string> cache;

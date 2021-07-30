@@ -71,8 +71,10 @@ public:
     }
 
     void TearDown() override {
-        if (temp_dir_.u8string().find(temp_test_prefix_))
+        if (temp_dir_.u8string().find(temp_test_prefix_)) {
             fs::remove_all(temp_dir_);
+            fs::remove(temp_dir_);
+        }
     }
 
     [[nodiscard]] fs::path getTempDir() const noexcept { return temp_dir_; }
@@ -137,14 +139,6 @@ std::filesystem::path MakePathToCapTestFiles(const std::wstring& root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionCapTestFilesFolderName;
     return r.lexically_normal();
-}
-
-void PrintNode(YAML::Node node, std::string_view S) {
-    if (tgt::IsDebug()) {
-        YAML::Emitter emit;
-        emit << node;
-        XLOG::l("{}:\n{}", S, emit.c_str());
-    }
 }
 
 void SafeCleanTempDir() {
@@ -337,6 +331,24 @@ bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {
     }
 
     auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::nothing);
+    if (ret) {
+        cma::cfg::ProcessKnownConfigGroups();
+        cma::cfg::SetupEnvironmentFromGroups();
+    }
+
+    return ret;
+}
+
+bool TempCfgFs::reloadConfig() {
+    std::vector<std::wstring> cfg_files;
+    if (mode_ == Mode::standard) {
+        cfg_files.emplace_back(cma::cfg::files::kDefaultMainConfig);
+    } else {
+        XLOG::l("No io mode doesnt allow reloading");
+        return false;
+    }
+
+    auto ret = cma::LoadConfigBase(cfg_files, cma::YamlCacheOp::update);
     if (ret) {
         cma::cfg::ProcessKnownConfigGroups();
         cma::cfg::SetupEnvironmentFromGroups();

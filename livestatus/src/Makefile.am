@@ -234,7 +234,7 @@ $(LIBS_DIR)/libgtest_main.a: $(LIBS_DIR)/libgtest.a
 
 $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
 	@cd $(GOOGLETEST_VERSION) && \
-	cmake -DCMAKE_CXX_COMPILER=$(CXX) \
+	cmake -DCMAKE_CXX_COMPILER=$$(echo "$(CXX)" | sed 's/ -.*//') \
         -DCMAKE_INSTALL_PREFIX=.. \
         -DCMAKE_INSTALL_INCLUDEDIR=$(GOOGLETEST_INCLUDE) \
         -DCMAKE_INSTALL_LIBDIR=libs \

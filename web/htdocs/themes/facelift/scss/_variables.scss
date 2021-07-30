@@ -9,23 +9,7 @@
 // -----------------------------------------------------------------------------
 // Colors
 // -----------------------------------------------------------------------------
-$white: rgb(255, 255, 255);
-$black: rgb(0, 0, 0);
-$warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
-$danger: rgb(255, 50, 50);
-$success: rgb(19, 211, 137);
-$info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
-$grey-1: rgb(250, 250, 250);
-$grey-2: rgb(189, 189, 189);
-$grey-3: rgb(68, 68, 68);
-$grey-4: rgb(51, 51, 51);
-$grey-5: rgb(50, 50, 50);
-$grey-6: rgb(40, 40, 40);
-$grey-7: rgb(33, 33, 33);
-$shadow: rgba(33, 33, 33, 0.35);
-$darkgrey: rgb(131, 131, 131); // dark grey
 $yellow: rgb(255, 208, 0); // yellow
-
 $lightgrey: $grey-1; // light grey
 
 // NOTE: These helper variables are only used in the light theme
@@ -55,22 +39,6 @@ $color-background: $bg-color;
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
-$font-family-sans-serif: "Lato", "Roboto", Helvetica, Arial, sans-serif;
-$font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-  monospace;
-$font-family-default: $font-family-sans-serif;
-
-$font-size-page-title: 18px;
-$font-size-large: 14px;
-$font-size-normal: 12px;
-$font-size-small: 10px;
-
-$font-weight-default: 400;
-$font-weight-bold: 700;
-
-$letter-spacing-default: 0.5px;
-$letter-spacing-table: 1px;
-
 $primary-font-color: $black;
 $secondary-font-color: $grey-6;
 $primary-hover-font-color: $black;
@@ -86,17 +54,6 @@ $bg-color-secondary: $base-color;
 $button-background-hover: rgb(247, 247, 247);
 $button-border: rgb(217, 217, 217);
 $button-height: 28px;
-
-// -----------------------------------------------------------------------------
-// General
-// -----------------------------------------------------------------------------
-$theme-border-radius: 4px;
-$spacing: 10px;
-$spacing-half: (0.5 * $spacing);
-$spacing-quarter: (0.25 * $spacing);
-$spacing-double: (2 * $spacing);
-$menu-item-spacing: (2.2 * $spacing);
-$single-column-mega-menu-width: 340px;
 
 // -----------------------------------------------------------------------------
 // States
@@ -142,32 +99,6 @@ $color-table-background-dark: rgb(28, 37, 40); // dark grey
 $color-table-border-dark-2: rgb(49, 54, 56); // dark grey
 
 // -----------------------------------------------------------------------------
-// Sidebar
-// -----------------------------------------------------------------------------
-$theme-snapin-width: 240px;
-
-// -----------------------------------------------------------------------------
-// Nuances (Colors only used once)
-// -----------------------------------------------------------------------------
-$color-nuance-1: rgb(175, 178, 198); // blue grey
-$color-nuance-2: rgb(170, 255, 187); // light green
-$color-nuance-3: rgb(130, 136, 166); // dark grey
-$color-nuance-4: rgb(246, 247, 248); // light grey
-$color-nuance-5: rgb(197, 197, 197); // grey
-$color-nuance-6: rgb(255, 235, 131); // yellow
-$color-nuance-7: rgb(51, 51, 51); // dark grey
-$color-nuance-8: rgb(215, 215, 215); // grey
-$color-nuance-9: rgb(207, 207, 207); // grey
-$color-nuance-10: rgb(25, 28, 29); // grey
-$color-nuance-11: rgb(34, 47, 51); // dark grey
-$color-nuance-12: rgb(158, 226, 115); // green
-$color-nuance-13: rgb(243, 245, 246); // light grey
-$color-nuance-14: rgba(37, 41, 42, 0.3); // transparent grey
-$color-nuance-15: rgb(247, 197, 197); // light red
-$color-nuance-16: rgb(255, 150, 68); // orange
-$color-nuance-17: rgb(161, 230, 248); // light blue
-
-// -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
@@ -189,21 +120,16 @@ $checkbox-shadow: rgb(136, 136, 136);
 $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: rgb(221, 221, 221);
 
-$toggle-switch-on-bg-color: rgb(19, 211, 137);
+$toggle-switch-on-bg-color: $success;
 $toggle-switch-off-bg-color: rgba(173, 178, 183, 0.5);
 $toggle-switch-font-color-on: $black;
 $toggle-switch-font-color-off: rgba($font-color, 0.8);
-$toggle-switch-height: 13px;
-$toggle-switch-width: 30px;
-$toggle-switch-font-weight: 700;
 
 $toggle-button-off-border: null;
 $toggle-button-down-bg-color: $ux-theme-4;
 $toggle-button-down-border-color: $button-border;
 $toggle-button-down-hover-bg-color: $button-border;
 $toggle-button-search-img-filter: null;
-
-$success-bg-color: rgb(157, 190, 205);
 
 $color-div-border-color: $black;
 
@@ -219,8 +145,6 @@ $input-button-color: $grey-5;
 $odd-tr-bg-color: $ux-theme-3;
 $even-tr-bg-color: $ux-theme-1;
 
-$tr-data-border-bottom: null;
-
 $floatfilter-bg-color: rgba($white, 0.2);
 
 $select2-search-field-color: $ux-theme-3;
@@ -232,16 +156,11 @@ $wato-a-hover-bg-color: $color-table-background;
 
 $td-unused-color: rgb(34, 85, 102);
 
-$color-div-box-shadow: 0.5px 0.5px 1px rgb(136, 136, 136);
-
 $graph-legend-color: null;
 
 $dark-font-color: null;
 
 $dashlet-body-bg-color: $base-color;
-$dashlet-bg-color: null;
-
-$body-side-bg-color: $color-table-border-dark;
 
 $td-gap-bg-color: $color-background;
 
@@ -249,7 +168,6 @@ $td-text-overflow: null;
 
 $span-dots-color: $grey-3;
 
-$graph-bg-color: null;
 $graph-legend-th-border-bottom: null;
 $graph-time-color: null;
 
@@ -320,12 +238,6 @@ $nform-vlof-border-color: $color-table-border;
 
 $duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
 
-$side-content-top: 66px;
-$snapin-margin: 8px 0;
-
-$main-body-padding: 0 0 0 $spacing;
-
-$snapin-cmc-table-width: 100%;
 $snapin-list-color: $font-color-sidebar;
 
 $performance-table-shared-padding: 8px;
@@ -335,7 +247,6 @@ $logwatch-text-color-2: $darkgrey;
 // -----------------------------------------------------------------------------
 // Tags
 // -----------------------------------------------------------------------------
-$tag-padding: 0.1em 0.3em;
 $tag-font-color: $font-color;
 $tag-opacity: 1;
 $tag-discovered-opacity: 1;
@@ -424,7 +335,6 @@ $scatterdot-hilite-color: rgb(0, 185, 255);
 
 /* TODO:  move variables defined for the UX project to the correct place */
 /* TODO:  adapt variables to modern theme */
-$page-header-height: 58px;
 $popup-shadow-color: rgba(255, 255, 255, 0.2);
 $button-font-color-default: $font-color;
 $button-bg-color-default: $inpage-highlight-color;
@@ -435,7 +345,6 @@ $snapin-bg-color: $navbar-color;
 $sidebar-border-color: rgba(51, 51, 51, 0.2);
 $form-font-color: $font-color;
 $filter-group-title-font-color: $black;
-$popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: null;
 $tactical-overview-th-font-color: rgba($font-color, 0.8);
 $tactical-overview-td-bg-color: $ux-theme-5;
@@ -443,26 +352,15 @@ $server-time-div-bg-color: $sidebar-border-color;
 $snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
 $simplebar-scrollbar-color: rgb(78, 93, 105);
-$simplebar-scrollbar-width: 5px;
 $popup-border: 4px solid $success;
 $popup-inner-border: 1px solid rgba(51, 51, 51, 0.2);
 $filter-add-button-hover-brightness: brightness(0);
 $floatfilter-legend-border: 1px solid rgba($black, 0.2);
 $wato-h3-font-color: $font-color;
-$megamenu-navbar-height: 60px;
-$megamenu-spacing-bottom: 20px;
 $log-output-color: $bg-color;
-$dashlet-anchor-size: 26px;
-$dashlet-anchor-on-size: 40px;
-$dashlet-anchor-size-slim: 20px;
 $dashlet-editor-free: rgb(80, 88, 98);
-$dashlet-editor-icon-size: 22px;
 $dark-image-invert: null;
 $ntop-protocol-painter-padding-top: null;
-$dashlet-resize-handle-width: 32px;
-$dashlet-resize-handle-height: 16px;
-$dashlet-resize-handle-width-slim: 12px;
-$dashlet-resize-handle-height-slim: 6px;
 $hexagon-critical-color: $danger;
 $hexagon-unknown-color: rgb(255, 136, 0);
 $hexagon-warning-color: $color-state-1-background;
@@ -473,5 +371,3 @@ $hexagon-default-fill-opacity: 0.4;
 $hexagon-default-stroke-color: rgb(210, 212, 214);
 $hexagon-default-stroke-opacity: 1;
 $host-hexagon-ok-stroke-color: $grey-2;
-$input-field-height: 21px; // also for tactical overview
-$input-field-margin: 0 $spacing-half $spacing-half 0;

@@ -77,7 +77,7 @@ body {
     flex-direction: column;
     flex-wrap: nowrap;
     height: 100%;
-    padding: $main-body-padding;
+    padding: 0 0 0 $spacing;
     margin: 0;
     font-family: $font-family-default;
     font-weight: $font-weight-default;
@@ -1430,6 +1430,7 @@ div.popup_trigger {
   }
 }
 
+/* TODO: Can we remove PNP4Nagios styling? */
 div.pnp_graph a {
   &.popup_trigger {
     position: absolute;
@@ -1451,6 +1452,7 @@ div.pnp_graph a {
   }
 }
 
+/* TODO: Can we remove PNP4Nagios styling? */
 table.data tr.data td.pnpgraph {
   padding: 0;
 

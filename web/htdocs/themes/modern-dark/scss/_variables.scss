@@ -9,23 +9,7 @@
 // -----------------------------------------------------------------------------
 // Colors
 // -----------------------------------------------------------------------------
-$white: rgb(255, 255, 255);
-$black: rgb(0, 0, 0);
-$warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
-$danger: rgb(255, 50, 50);
-$success: rgb(19, 211, 137);
-$info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
-$grey-1: rgb(250, 250, 250);
-$grey-2: rgb(189, 189, 189);
-$grey-3: rgb(68, 68, 68);
-$grey-4: rgb(51, 51, 51);
-$grey-5: rgb(50, 50, 50);
-$grey-6: rgb(40, 40, 40);
-$grey-7: rgb(33, 33, 33);
-$shadow: rgba(33, 33, 33, 0.35);
-$darkgrey: rgb(131, 131, 131); // dark grey
 $yellow: rgb(255, 215, 3); // yellow
-
 $lightgrey: rgb(220, 220, 220); // light grey
 
 // UX colors
@@ -45,22 +29,6 @@ $color-background: $bg-color;
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
-$font-family-sans-serif: "Lato", "Roboto", Helvetica, Arial, sans-serif;
-$font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-  monospace;
-$font-family-default: $font-family-sans-serif;
-
-$font-size-page-title: 18px;
-$font-size-large: 14px;
-$font-size-normal: 12px;
-$font-size-small: 10px;
-
-$font-weight-default: 400;
-$font-weight-bold: 700;
-
-$letter-spacing-default: 0.5px;
-$letter-spacing-table: 1px;
-
 $primary-font-color: $font-color;
 $secondary-font-color: $font-color;
 $primary-hover-font-color: $grey-1;
@@ -76,17 +44,6 @@ $bg-color-secondary: $base-color;
 $button-background-hover: lighten($grey-7, 10%);
 $button-border: rgb(217, 217, 217);
 $button-height: 28px;
-
-// -----------------------------------------------------------------------------
-// General
-// -----------------------------------------------------------------------------
-$theme-border-radius: 4px;
-$spacing: 10px;
-$spacing-half: (0.5 * $spacing);
-$spacing-quarter: (0.25 * $spacing);
-$spacing-double: (2 * $spacing);
-$menu-item-spacing: (2.2 * $spacing);
-$single-column-mega-menu-width: 340px;
 
 // -----------------------------------------------------------------------------
 // States
@@ -132,32 +89,6 @@ $color-table-background-dark: $grey-7; // dark grey
 $color-table-border-dark-2: rgb(49, 54, 56); // dark grey
 
 // -----------------------------------------------------------------------------
-// Sidebar
-// -----------------------------------------------------------------------------
-$theme-snapin-width: 240px;
-
-// -----------------------------------------------------------------------------
-// Nuances (Colors only used once)
-// -----------------------------------------------------------------------------
-$color-nuance-1: rgb(175, 178, 198); // blue grey
-$color-nuance-2: rgb(170, 255, 187); // light green
-$color-nuance-3: rgb(130, 136, 166); // dark grey
-$color-nuance-4: rgb(246, 247, 248); // light grey
-$color-nuance-5: rgb(197, 197, 197); // grey
-$color-nuance-6: rgb(255, 235, 131); // == $info; yellow
-$color-nuance-7: rgb(51, 51, 51); // dark grey
-$color-nuance-8: rgb(215, 215, 215); // grey
-$color-nuance-9: rgb(207, 207, 207); // grey
-$color-nuance-10: rgb(25, 28, 29); // grey
-$color-nuance-11: rgb(34, 47, 51); // dark grey
-$color-nuance-12: rgb(158, 226, 115); // green
-$color-nuance-13: rgb(243, 244, 246); // light grey
-$color-nuance-14: rgba(37, 41, 42, 0.3); // transparent grey
-$color-nuance-15: rgb(130, 50, 50); // dark red
-$color-nuance-16: rgb(255, 150, 68); // orange
-$color-nuance-17: rgb(161, 230, 248); // light blue
-
-// -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
@@ -179,21 +110,16 @@ $checkbox-shadow: $grey-3;
 $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: $grey-3;
 
-$toggle-switch-on-bg-color: rgb(19, 211, 137);
+$toggle-switch-on-bg-color: $success;
 $toggle-switch-off-bg-color: rgb(38, 47, 56);
 $toggle-switch-font-color-on: $black;
 $toggle-switch-font-color-off: rgba($font-color, 0.8);
-$toggle-switch-height: 13px;
-$toggle-switch-width: 30px;
-$toggle-switch-font-weight: 400;
 
 $toggle-button-off-border: 1px solid $grey-7;
 $toggle-button-down-bg-color: $grey-3;
 $toggle-button-down-border-color: null;
 $toggle-button-down-hover-bg-color: lighten($grey-3, 10%);
 $toggle-button-search-img-filter: invert(20%);
-
-$success-bg-color: $bg-color;
 
 $color-div-border-color: $grey-7;
 
@@ -209,8 +135,6 @@ $input-button-color: $font-color;
 $odd-tr-bg-color: $bg-color-secondary;
 $even-tr-bg-color: $table-highlight-color;
 
-$tr-data-border-bottom: 1.8px solid $grey-7;
-
 $floatfilter-bg-color: null;
 
 $select2-search-field-color: rgb(63, 75, 93);
@@ -222,16 +146,11 @@ $wato-a-hover-bg-color: mix($white, $grey-6, 10%);
 
 $td-unused-color: $grey-2;
 
-$color-div-box-shadow: null;
-
 $graph-legend-color: $font-color !important;
 
 $dark-font-color: $grey-7 !important;
 
 $dashlet-body-bg-color: $bg-color-secondary;
-$dashlet-bg-color: $bg-color-secondary;
-
-$body-side-bg-color: $bg-color;
 
 $td-gap-bg-color: $bg-color-secondary;
 
@@ -239,7 +158,6 @@ $td-text-overflow: ellipsis;
 
 $span-dots-color: $grey-1;
 
-$graph-bg-color: null;
 $graph-legend-th-border-bottom: 1px solid $grey-1;
 $graph-time-color: $font-color;
 
@@ -310,12 +228,6 @@ $nform-vlof-border-color: rgb(60, 60, 60);
 
 $duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
 
-$side-content-top: null;
-$snapin-margin: 4px 0;
-
-$main-body-padding: 0 0 0 $spacing;
-
-$snapin-cmc-table-width: 100%;
 $snapin-list-color: $font-color-sidebar;
 
 $performance-table-shared-padding: 8px 0;
@@ -325,7 +237,6 @@ $logwatch-text-color-2: $white;
 // -----------------------------------------------------------------------------
 // Tags
 // -----------------------------------------------------------------------------
-$tag-padding: 0.1em 0.3em;
 $tag-font-color: $font-color;
 $tag-opacity: 0.6;
 $tag-discovered-opacity: 0.7;
@@ -400,10 +311,10 @@ $dashlet-inner-bg-color: $bg-color-secondary;
 $states-font-color: $grey-7;
 $statep-font-color: $grey-1;
 
-$bar-fill-color: #3cc2ff;
-$bar-hover-fill-color: #3cc2ff;
-$barbar-fill-color: #0e3a63;
-$barbar-hover-fill-color: #0e3a63;
+$bar-fill-color: rgb(60, 194, 255);
+$bar-hover-fill-color: rgb(60, 194, 255);
+$barbar-fill-color: rgb(14, 58, 99);
+$barbar-hover-fill-color: rgb(14, 58, 99);
 $tooltip-border: $primary-border;
 
 $dc-graph-color-0: $success;
@@ -413,7 +324,6 @@ $timeseries-legend-bg-color: $darkgrey;
 $scatterdot-hilite-color: $yellow;
 
 /* TODO:  move variables defined for the UX project to the correct place */
-$page-header-height: 58px;
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
 $button-bg-color-default: $input-button-hover-bg-color;
@@ -424,7 +334,6 @@ $snapin-bg-color: $navbar-color;
 $sidebar-border-color: $headline-color;
 $form-font-color: rgb(234, 234, 234);
 $filter-group-title-font-color: $white;
-$popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: $base-color;
 $tactical-overview-th-font-color: $font-color;
 $tactical-overview-td-bg-color: $button-bg-color-default;
@@ -432,26 +341,15 @@ $server-time-div-bg-color: $button-bg-color-default;
 $snapin-heading-border-color: rgba(255, 255, 255, 0.2);
 $snapin-description-font-color: $color-nuance-8;
 $simplebar-scrollbar-color: $inpage-highlight-color;
-$simplebar-scrollbar-width: 5px;
 $popup-border: 4px solid $success;
 $popup-inner-border: 1px solid $headline-color;
 $filter-add-button-hover-brightness: brightness(100);
 $floatfilter-legend-border: 1px solid rgba($white, 0.2);
 $wato-h3-font-color: rgb(170, 170, 170);
-$megamenu-navbar-height: 60px;
-$megamenu-spacing-bottom: 20px;
 $log-output-color: $navbar-color;
-$dashlet-anchor-size: 26px;
-$dashlet-anchor-on-size: 40px;
-$dashlet-anchor-size-slim: 20px;
 $dashlet-editor-free: rgb(78, 93, 105);
-$dashlet-editor-icon-size: 22px;
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
-$dashlet-resize-handle-width: 32px;
-$dashlet-resize-handle-height: 16px;
-$dashlet-resize-handle-width-slim: 12px;
-$dashlet-resize-handle-height-slim: 6px;
 $hexagon-critical-color: rgb(255, 50, 50);
 $hexagon-unknown-color: rgb(255, 136, 0);
 $hexagon-warning-color: $color-state-1-background;
@@ -462,5 +360,3 @@ $hexagon-default-fill-opacity: 0.03;
 $hexagon-default-stroke-color: $white;
 $hexagon-default-stroke-opacity: 0.1;
 $host-hexagon-ok-stroke-color: rgb(58, 69, 80);
-$input-field-height: 21px; // also for tactical overview
-$input-field-margin: 0 $spacing-half $spacing-half 0;

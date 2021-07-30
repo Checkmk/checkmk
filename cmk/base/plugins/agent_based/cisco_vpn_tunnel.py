@@ -120,19 +120,33 @@ def discover_cisco_vpn_tunnel(section: Section) -> DiscoveryResult:
     yield from (Service(item=ip) for ip in section)
 
 
+def _state_missing_and_aliases(
+    item: str,
+    params: CheckParameters,
+) -> Tuple[State, str]:
+    revelant_tunnel_settings = [(
+        alias,
+        state_missing,
+    ) for ip, alias, state_missing in params.get("tunnels", []) if ip == item]
+    return (
+        State(revelant_tunnel_settings[-1][1] if revelant_tunnel_settings else params.get(
+            "state",
+            2,
+        )),
+        " ".join(f"[{alias}]" for alias, _state_missing in revelant_tunnel_settings),
+    )
+
+
 def check_cisco_vpn_tunnel(
     item: str,
     params: CheckParameters,
     section: Section,
 ) -> CheckResult:
 
-    tunnel_not_found_state = params.get("state", 2)
-    alias = ""
-    for tunnel_ip, tunnel_alias, not_found_state in params.get("tunnels", []):
-        if item == tunnel_ip:
-            if tunnel_alias:
-                alias += "[%s] " % tunnel_alias
-            tunnel_not_found_state = not_found_state
+    state_missing, aliases = _state_missing_and_aliases(
+        item,
+        params,
+    )
 
     if item in section:
         now = time()
@@ -163,7 +177,7 @@ def check_cisco_vpn_tunnel(
         yield Result(
             state=State.OK,
             summary="%sPhase 1: in: %s, out: %s" % (
-                alias,
+                aliases + " " if aliases else "",
                 networkbandwidth(phase1_in_rate),
                 networkbandwidth(phase1_out_rate),
             ),
@@ -212,8 +226,8 @@ def check_cisco_vpn_tunnel(
 
     else:
         yield Result(
-            state=State(tunnel_not_found_state),
-            summary="%sTunnel is missing" % alias,
+            state=state_missing,
+            summary="%sTunnel is missing" % (aliases + " " if aliases else ""),
         )
         in_rate = out_rate = 0
 

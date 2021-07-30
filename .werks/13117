@@ -1,0 +1,14 @@
+Title: <tt>cisco_vpn_tunnel</tt>: Fix <tt>ValueError: could not convert string to float: ''</tt>
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p25
+Date: 1627569613
+
+The check plugin  <tt>cisco_vpn_tunnel</tt> crashed with
+<tt>ValueError: could not convert string to float: ''</tt>
+at irregular intervals. This has been fixed.

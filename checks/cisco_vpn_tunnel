@@ -415,6 +415,8 @@ def parse_cisco_vpn_tunnel(info):
 
     parsed = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in info[0]:
+        if not remote_ip:
+            continue
         parsed.setdefault(remote_ip, {
             'phase_1': (float(phase_1_in), float(phase_1_out)),
         })

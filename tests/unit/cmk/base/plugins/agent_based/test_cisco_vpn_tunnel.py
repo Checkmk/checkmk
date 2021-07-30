@@ -10,7 +10,13 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.base.plugins.agent_based import cisco_vpn_tunnel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.cisco_vpn_tunnel import (
     check_cisco_vpn_tunnel,
     CheckParameters,
@@ -157,10 +163,8 @@ def test_discover_cisco_vpn_tunnel() -> None:
     ]
 
 
-def _patch_time_and_value_store(
-    monkeypatch: MonkeyPatch,
-    item: str,
-) -> None:
+@pytest.fixture(name="time_and_value_store")
+def fixture_time_and_value_store(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         cisco_vpn_tunnel,
         "time",
@@ -170,10 +174,10 @@ def _patch_time_and_value_store(
         cisco_vpn_tunnel,
         "get_value_store",
         lambda: {
-            f"cisco_vpn_tunnel_phase_1_in.{item}": (0, 0),
-            f"cisco_vpn_tunnel_phase_1_out.{item}": (0, 0),
-            f"cisco_vpn_tunnel_phase_2_in.{item}": (0, 0),
-            f"cisco_vpn_tunnel_phase_2_out.{item}": (0, 0),
+            "phase_1_input": (0, 0),
+            "phase_1_output": (0, 0),
+            "phase_2_input": (0, 0),
+            "phase_2_output": (0, 0),
         },
     )
 
@@ -253,18 +257,28 @@ def _patch_time_and_value_store(
         ),
     ],
 )
+@pytest.mark.usefixtures("time_and_value_store")
 def test_check_cisco_vpn_tunnel(
-    monkeypatch: MonkeyPatch,
     item: str,
     params: CheckParameters,
     expected_result: Sequence[Union[Result, Metric]],
 ) -> None:
-    _patch_time_and_value_store(
-        monkeypatch,
-        item,
-    )
     assert list(check_cisco_vpn_tunnel(
         item,
         params,
         _SECTION,
     )) == expected_result
+
+
+def test_check_cisco_vpn_tunnel_counter_init() -> None:
+    with pytest.raises(IgnoreResultsError):
+        list(check_cisco_vpn_tunnel(
+            "110.173.49.157",
+            {},
+            _SECTION,
+        ))
+    list(check_cisco_vpn_tunnel(
+        "110.173.49.157",
+        {},
+        _SECTION,
+    ))

@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 from time import time
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
     any_of,
@@ -14,7 +14,7 @@ from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
     GetRateError,
-    IgnoreResults,
+    IgnoreResultsError,
     Metric,
     OIDEnd,
     register,
@@ -33,11 +33,67 @@ class Phase():
     input: float
     output: float
 
+    def rates(
+        self,
+        value_store: MutableMapping[str, Any],
+        value_store_key_prefix: str,
+        now: float,
+    ) -> Optional['Phase']:
+        try:
+            rate_input: Optional[float] = get_rate(
+                value_store,
+                f"{value_store_key_prefix}_input",
+                now,
+                self.input,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            rate_input = None
+        try:
+            rate_output: Optional[float] = get_rate(
+                value_store,
+                f"{value_store_key_prefix}_output",
+                now,
+                self.output,
+                raise_overflow=True,
+            )
+        except GetRateError:
+            rate_output = None
+        return None if rate_input is None or rate_output is None else Phase(
+            rate_input,
+            rate_output,
+        )
+
 
 @dataclass
 class VPNTunnel:
     phase_1: Phase
     phase_2: Optional[Phase] = None
+
+    def rates(
+        self,
+        value_store: MutableMapping[str, Any],
+        now: float,
+    ) -> 'VPNTunnel':
+        rates_phase_1 = self.phase_1.rates(
+            value_store,
+            "phase_1",
+            now,
+        )
+        if self.phase_2:
+            rates_phase_2 = self.phase_2.rates(
+                value_store,
+                "phase_2",
+                now,
+            )
+        else:
+            rates_phase_2 = None
+        if rates_phase_1 is None or (self.phase_2 and rates_phase_2 is None):
+            raise IgnoreResultsError("Initializing counters")
+        return VPNTunnel(
+            rates_phase_1,
+            rates_phase_2,
+        )
 
 
 Section = Mapping[str, VPNTunnel]
@@ -155,73 +211,30 @@ def check_cisco_vpn_tunnel(
         )
         return
 
-    now = time()
-    value_store = get_value_store()
+    rates = vpn_tunnel.rates(
+        get_value_store(),
+        time(),
+    )
 
-    try:
-        phase1_in_rate = get_rate(
-            value_store,
-            "cisco_vpn_tunnel_phase_1_in.%s" % item,
-            now,
-            vpn_tunnel.phase_1.input,
-            raise_overflow=True,
-        )
-    except GetRateError:
-        phase1_in_rate = 0
-        yield IgnoreResults("Initialzing counters")
-    try:
-        phase1_out_rate = get_rate(
-            value_store,
-            "cisco_vpn_tunnel_phase_1_out.%s" % item,
-            now,
-            vpn_tunnel.phase_1.output,
-            raise_overflow=True,
-        )
-    except GetRateError:
-        phase1_out_rate = 0
-        yield IgnoreResults("Initialzing counters")
     yield Result(
         state=State.OK,
         summary="%sPhase 1: in: %s, out: %s" % (
             aliases + " " if aliases else "",
-            networkbandwidth(phase1_in_rate),
-            networkbandwidth(phase1_out_rate),
+            networkbandwidth(rates.phase_1.input),
+            networkbandwidth(rates.phase_1.output),
         ),
     )
 
-    if vpn_tunnel.phase_2:
-        try:
-            phase2_in_rate = get_rate(
-                value_store,
-                "cisco_vpn_tunnel_phase_2_in.%s" % item,
-                now,
-                vpn_tunnel.phase_2.input,
-                raise_overflow=True,
-            )
-        except GetRateError:
-            phase2_in_rate = 0
-            yield IgnoreResults("Initialzing counters")
-        try:
-            phase2_out_rate = get_rate(
-                value_store,
-                "cisco_vpn_tunnel_phase_2_out.%s" % item,
-                now,
-                vpn_tunnel.phase_2.output,
-                raise_overflow=True,
-            )
-        except GetRateError:
-            phase2_out_rate = 0
-            yield IgnoreResults("Initialzing counters")
+    if rates.phase_2:
         yield Result(
             state=State.OK,
             summary="Phase 2: in: %s, out: %s" % (
-                networkbandwidth(phase2_in_rate),
-                networkbandwidth(phase2_out_rate),
+                networkbandwidth(rates.phase_2.input),
+                networkbandwidth(rates.phase_2.output),
             ),
         )
 
     else:
-        phase2_in_rate, phase2_out_rate = 0, 0
         yield Result(
             state=State.OK,
             summary="Phase 2 missing",
@@ -229,11 +242,11 @@ def check_cisco_vpn_tunnel(
 
     yield Metric(
         name="if_in_octets",
-        value=phase1_in_rate + phase2_in_rate,
+        value=rates.phase_1.input + (rates.phase_2.input if rates.phase_2 else 0),
     )
     yield Metric(
         name="if_out_octets",
-        value=phase1_out_rate + phase2_out_rate,
+        value=rates.phase_1.output + (rates.phase_2.output if rates.phase_2 else 0),
     )
 
 

@@ -8,7 +8,7 @@
 
 import pytest
 from typing import Any, Mapping
-from agent_aws_fake_clients import (
+from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
     LambdaListFunctionsIB,
     LambdaListProvisionedConcurrencyConfigsIB,

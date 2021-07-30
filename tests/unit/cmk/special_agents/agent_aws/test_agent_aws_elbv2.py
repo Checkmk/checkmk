@@ -8,7 +8,7 @@
 
 import pytest
 
-from agent_aws_fake_clients import (
+from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
     ELBv2DescribeLoadBalancersIB,
     ELBv2DescribeTargetGroupsIB,

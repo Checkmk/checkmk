@@ -9,7 +9,7 @@
 import pytest
 from cmk.utils.bi.bi_aggregation import BIAggregation
 from cmk.utils.bi.bi_actions import BICallARuleAction
-import bi_test_data.sample_config as sample_config
+from .bi_test_data import sample_config
 
 
 def test_load_aggregation_integrity(bi_packs_sample_config):

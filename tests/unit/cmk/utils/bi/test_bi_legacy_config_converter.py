@@ -7,7 +7,7 @@
 import pytest
 
 import cmk.utils.bi.bi_legacy_config_converter
-import bi_test_data.sample_config as sample_config
+from .bi_test_data import sample_config
 import logging
 
 from cmk.gui.utils.script_helpers import application_and_request_context

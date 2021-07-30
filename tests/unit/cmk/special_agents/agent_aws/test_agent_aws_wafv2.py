@@ -8,8 +8,8 @@
 
 import pytest
 
-from agent_aws_fake_clients import (FakeCloudwatchClient, WAFV2ListOperationIB, WAFV2GetWebACLIB,
-                                    WAFV2ListTagsForResourceIB)
+from .agent_aws_fake_clients import (FakeCloudwatchClient, WAFV2ListOperationIB, WAFV2GetWebACLIB,
+                                     WAFV2ListTagsForResourceIB)
 
 from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, WAFV2Limits, WAFV2Summary,
                                           WAFV2WebACL)

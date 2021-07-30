@@ -9,7 +9,7 @@
 import pytest
 
 from datetime import datetime as dt
-from agent_aws_fake_clients import (
+from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
     S3ListBucketsIB,
     S3BucketTaggingIB,

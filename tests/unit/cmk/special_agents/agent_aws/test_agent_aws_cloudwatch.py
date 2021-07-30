@@ -8,7 +8,7 @@
 
 import pytest
 from typing import List, Optional, Tuple
-from agent_aws_fake_clients import (
+from .agent_aws_fake_clients import (
     FakeCloudwatchClient,)
 
 from cmk.special_agents.agent_aws import (

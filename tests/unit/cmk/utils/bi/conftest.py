@@ -14,7 +14,7 @@ from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
 from cmk.utils.bi.bi_lib import SitesCallback
 from cmk.utils.bi.bi_packs import BIAggregationPacks
 
-import bi_test_data.sample_config as sample_config
+from .bi_test_data import sample_config
 
 
 @pytest.fixture(scope="function")

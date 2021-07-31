@@ -5829,6 +5829,10 @@ msgstr "Authenticatie mislukkingen"
 msgid "Authentication Mode"
 msgstr "Authenticatie modus"
 
+#, fuzzy
+msgid "Authentication Source"
+msgstr "Authenticatie modus"
+
 msgid "Authentication System Errors"
 msgstr "Authenticatie systeemfouten"
 
@@ -5840,6 +5844,10 @@ msgstr "Authenticatie mislukkingen (laatste 5 minuten)"
 
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Authenticatie mislukt in de laatste 5 minuten"
+
+#, fuzzy
+msgid "Authentication mechanism"
+msgstr "Authenticatiemethode"
 
 msgid "Authentication method"
 msgstr "Authenticatiemethode"
@@ -5875,6 +5883,9 @@ msgstr "Autorisaties per DB-beveiligingsgroep"
 
 msgid "Authorized sites"
 msgstr "Toegestane sites"
+
+msgid "Auto (DEFAULT)"
+msgstr ""
 
 msgid "Auto - adjust to actual values"
 msgstr "Auto - aanpassen aan werkelijke waarden"
@@ -13614,9 +13625,6 @@ msgstr "Implementeer Mailman plugin"
 msgid "Deploy MegaRAID plugin"
 msgstr "Inzet MegaRAID plugin"
 
-msgid "Deploy MongoDB plugin"
-msgstr "MongoDB plugin uitrollen"
-
 msgid "Deploy NFS4 exports plugin"
 msgstr "Implementeer NFS4 export plugin"
 
@@ -13682,6 +13690,12 @@ msgstr "Implementeer legacy omgeving (Python 3.4 + standaard set van modules)"
 
 msgid "Deploy logged in users plugin"
 msgstr "Ingelogde gebruikers plugin implementeren"
+
+msgid "Deploy mk_mongodb.py wihtout authentication."
+msgstr ""
+
+msgid "Deploy mk_mongodb.py with authentication."
+msgstr ""
 
 msgid "Deploy mtr plugin"
 msgstr "Implementeer mtr plugin"
@@ -13797,9 +13811,6 @@ msgstr "De TSM plugin implementeren"
 msgid "Deploy the Zypper plugin"
 msgstr "Zet de Zypper plugin in"
 
-msgid "Deploy the agent plugin <tt>mk_mongodb</tt>."
-msgstr "Implementeer de agent plugin <tt>mk_mongodb</tt>."
-
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
 "neccessary for all <tt>postgres_*</tt> checks"
@@ -13827,6 +13838,10 @@ msgstr "Implementeer de netstat plugin"
 
 msgid "Deploy the plesk plugins"
 msgstr "Implementeer de plesk plugins"
+
+#, fuzzy
+msgid "Deploy without authentication."
+msgstr "Wachtwoord verificatie toestaan"
 
 #, python-format
 msgid ""
@@ -14885,9 +14900,6 @@ msgstr "Linux bestandssysteem quota plugin niet implementeren"
 msgid "Do not deploy Mailman plugin"
 msgstr "Mailman plugin niet implementeren"
 
-msgid "Do not deploy MongoDB plugin"
-msgstr "Niet implementeren MongoDB plugin"
-
 msgid "Do not deploy NFS4 exports plugin"
 msgstr "Implementeer geen NFS4 export plugin"
 
@@ -14935,6 +14947,10 @@ msgstr "Geen iptables plugin implementeren"
 
 msgid "Do not deploy logged in users plugin"
 msgstr "Gebruik de plugin voor ingelogde gebruikers niet"
+
+#, fuzzy
+msgid "Do not deploy mk_mongodb.py plugin"
+msgstr "Niet implementeren MongoDB plugin"
 
 msgid "Do not deploy mtr plugin"
 msgstr "Gebruik de mtr plugin niet"
@@ -15081,6 +15097,10 @@ msgstr "Gebruik de netstat plugin niet"
 
 msgid "Do not deploy the plesk plugins"
 msgstr "Implementeer de plesk plugins niet"
+
+#, fuzzy
+msgid "Do not deploy."
+msgstr "Plugin niet implementeren"
 
 msgid "Do not discover single interfaces"
 msgstr "Geen afzonderlijke interfaces ontdekken"
@@ -16510,6 +16530,10 @@ msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
+
+#, fuzzy
+msgid "Enable TLS"
+msgstr "Activeer"
 
 msgid "Enable a login session idle timeout"
 msgstr "Inschakelen van een idle timeout voor aanmeldsessies"
@@ -20395,6 +20419,11 @@ msgstr "Is nooit geactiveerd geweest"
 msgid "Has title line"
 msgstr "Heeft titelregel"
 
+msgid ""
+"Has to contain a single or a bundle of 'certification authority' "
+"certificates."
+msgstr ""
+
 msgid "Hash"
 msgstr "Hash"
 
@@ -24038,6 +24067,10 @@ msgstr "Negeer TLS fouten"
 
 msgid "Ignore acknowledged events"
 msgstr "Negeer bevestigde gebeurtenissen"
+
+#, fuzzy
+msgid "Ignore certificate errors (insecure)"
+msgstr "Negeer certificaatfouten (onveilig)"
 
 msgid "Ignore certificate errors (unsecure)"
 msgstr "Negeer certificaatfouten (onveilig)"
@@ -30296,6 +30329,15 @@ msgstr "MongoDB Replica Set"
 msgid "MongoDB database connections"
 msgstr "MongoDB database verbindingen"
 
+msgid "Mongodb < 3.0 (MONGODB-CR)"
+msgstr ""
+
+msgid "Mongodb >= 3.0 (SCRAM-SHA-1)"
+msgstr ""
+
+msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
+msgstr ""
+
 msgid "Monitor"
 msgstr "Monitor"
 
@@ -34700,6 +34742,10 @@ msgstr "Pad naar .pgpass bestand"
 
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr "Pad naar <tt>MegaCLI.exe</tt>"
+
+#, fuzzy
+msgid "Path to CA File"
+msgstr "Pad naar .env bestand"
 
 msgid "Path to a CA certificate"
 msgstr "Pad naar een CA-certificaat"
@@ -45687,6 +45733,10 @@ msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 "De Groep Base DN is niet geconfigureerd, er worden geen groepen opgehaald."
 
+#, fuzzy
+msgid "The Hostname of the MongoDB Server."
+msgstr "Hostnaam van het apparaat"
+
 msgid "The ID is already used by another role"
 msgstr "De ID wordt al door een andere rol gebruikt"
 
@@ -46847,6 +46897,10 @@ msgstr ""
 
 msgid "The database name on the Mailbox Server."
 msgstr "De naam van de database op de Mailbox Server."
+
+#, fuzzy
+msgid "The database to authenticate on."
+msgstr "U bent niet geauthenticeerd."
 
 msgid "The datasource of a view cannot be changed."
 msgstr "De databron van een view kan niet worden gewijzigd."
@@ -53489,6 +53543,10 @@ msgstr ""
 "a> in te stellen om naambotsingen te voorkomen als containers met dezelfde "
 "naam bestaan op meerdere docker nodes."
 
+#, fuzzy
+msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
+msgstr "Implementeer de agent plugin <tt>mk_mongodb</tt>."
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
@@ -57713,6 +57771,14 @@ msgstr "Verbose logging (ook spooled meldingen)"
 
 msgid "Verbosity of logging"
 msgstr "Bepaaldheid van logboekregistratie"
+
+#, fuzzy
+msgid "Verfiy Certificates"
+msgstr "Verifieer het certificaat"
+
+#, fuzzy
+msgid "Verify certificates"
+msgstr "Verifieer het certificaat"
 
 msgid "Verify server certificate"
 msgstr "Verifieer server certificaat"
@@ -63839,6 +63905,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Deploy MongoDB plugin"
+#~ msgstr "MongoDB plugin uitrollen"
 
 #~ msgid "Levels on the time left until the filesystem gets full"
 #~ msgstr "Niveaus op de tijd die rest tot het bestandssysteem vol is"

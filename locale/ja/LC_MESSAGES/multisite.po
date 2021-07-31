@@ -5601,6 +5601,10 @@ msgstr "認証の失敗"
 msgid "Authentication Mode"
 msgstr "認証モード"
 
+#, fuzzy
+msgid "Authentication Source"
+msgstr "認証モード"
+
 msgid "Authentication System Errors"
 msgstr "認証システムエラー"
 
@@ -5612,6 +5616,10 @@ msgstr ""
 
 msgid "Authentication failures within the last 5 minutes"
 msgstr ""
+
+#, fuzzy
+msgid "Authentication mechanism"
+msgstr "認証方法"
 
 msgid "Authentication method"
 msgstr "認証方法"
@@ -5647,6 +5655,9 @@ msgstr "DBセキュリティグループごとの承認"
 
 msgid "Authorized sites"
 msgstr "認定サイト"
+
+msgid "Auto (DEFAULT)"
+msgstr ""
 
 msgid "Auto - adjust to actual values"
 msgstr "自動 - 実際の値に調整"
@@ -13133,9 +13144,6 @@ msgstr "Mailmanプラグインをデプロイする"
 msgid "Deploy MegaRAID plugin"
 msgstr "MegaRAIDプラグインをデプロイする"
 
-msgid "Deploy MongoDB plugin"
-msgstr "MongoDBプラグインをデプロイする"
-
 msgid "Deploy NFS4 exports plugin"
 msgstr "NFS4エクスポートプラグインをデプロイする"
 
@@ -13201,6 +13209,12 @@ msgstr "レガシー環境をデプロイする(Python 3.4 + モジュールの�
 
 msgid "Deploy logged in users plugin"
 msgstr "ログインしたユーザーのプラグインをデプロイする"
+
+msgid "Deploy mk_mongodb.py wihtout authentication."
+msgstr ""
+
+msgid "Deploy mk_mongodb.py with authentication."
+msgstr ""
 
 msgid "Deploy mtr plugin"
 msgstr "mtrプラグインをデプロイする"
@@ -13314,9 +13328,6 @@ msgstr "TSMプラグインをデプロイします"
 msgid "Deploy the Zypper plugin"
 msgstr "Zypperプラグインをデプロイします"
 
-msgid "Deploy the agent plugin <tt>mk_mongodb</tt>."
-msgstr "エージェントプラグイン<tt>mk_mongodb</tt>をデプロイします"
-
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
 "neccessary for all <tt>postgres_*</tt> checks"
@@ -13345,6 +13356,10 @@ msgstr "netstatプラグインをデプロイします"
 
 msgid "Deploy the plesk plugins"
 msgstr "pleskプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy without authentication."
+msgstr "パスワード認証を許可する"
 
 #, python-format
 msgid ""
@@ -14370,9 +14385,6 @@ msgstr "Linuxファイルシステムクォータプラグインをデプロイ�
 msgid "Do not deploy Mailman plugin"
 msgstr "Mailmanプラグインをデプロイしないでください"
 
-msgid "Do not deploy MongoDB plugin"
-msgstr "MongoDBプラグインをデプロイしないでください"
-
 msgid "Do not deploy NFS4 exports plugin"
 msgstr "NFS4エクスポートプラグインをデプロイしないでください"
 
@@ -14420,6 +14432,10 @@ msgstr "iptablesプラグインをデプロイしないでください"
 
 msgid "Do not deploy logged in users plugin"
 msgstr "ログインしたユーザーのプラグインをデプロイしない"
+
+#, fuzzy
+msgid "Do not deploy mk_mongodb.py plugin"
+msgstr "MongoDBプラグインをデプロイしないでください"
 
 msgid "Do not deploy mtr plugin"
 msgstr "mtrプラグインをデプロイしないでください"
@@ -14566,6 +14582,10 @@ msgstr "netstatプラグインをデプロイしないでください"
 
 msgid "Do not deploy the plesk plugins"
 msgstr "pleskプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy."
+msgstr "LVMプラグインをデプロイしないでください"
 
 msgid "Do not discover single interfaces"
 msgstr "単一のインターフェースを発見しないでください"
@@ -15975,6 +15995,10 @@ msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にす
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
+
+#, fuzzy
+msgid "Enable TLS"
+msgstr "有効にする"
 
 msgid "Enable a login session idle timeout"
 msgstr "ログインセッションのアイドルタイムアウトを有効にする"
@@ -19764,6 +19788,11 @@ msgstr "アクティベートされたことがない"
 msgid "Has title line"
 msgstr "タイトル行あり"
 
+msgid ""
+"Has to contain a single or a bundle of 'certification authority' "
+"certificates."
+msgstr ""
+
 msgid "Hash"
 msgstr "ハッシュ"
 
@@ -23141,6 +23170,10 @@ msgstr "TLSエラーを無視する"
 
 msgid "Ignore acknowledged events"
 msgstr "確認済みのイベントを無視する"
+
+#, fuzzy
+msgid "Ignore certificate errors (insecure)"
+msgstr "証明書エラーを無視する(安全でない)"
 
 msgid "Ignore certificate errors (unsecure)"
 msgstr "証明書エラーを無視する(安全でない)"
@@ -29222,6 +29255,15 @@ msgstr "MongoDBレプリカセット"
 msgid "MongoDB database connections"
 msgstr "MongoDBデータベース接続"
 
+msgid "Mongodb < 3.0 (MONGODB-CR)"
+msgstr ""
+
+msgid "Mongodb >= 3.0 (SCRAM-SHA-1)"
+msgstr ""
+
+msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
+msgstr ""
+
 msgid "Monitor"
 msgstr "モニター"
 
@@ -33528,6 +33570,10 @@ msgstr ".pgpassファイルへのパス"
 
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr "<tt>MegaCLI.exe</tt>へのパス"
+
+#, fuzzy
+msgid "Path to CA File"
+msgstr ".envファイルへのパス"
 
 msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
@@ -44134,6 +44180,10 @@ msgstr "グループベースDNが見つかりませんでした。"
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr "グループベースDNは構成されておらず、グループをフェッチしていません。"
 
+#, fuzzy
+msgid "The Hostname of the MongoDB Server."
+msgstr "デバイスのホスト名"
+
 msgid "The ID is already used by another role"
 msgstr "IDはすでに別の役割で使用されています。"
 
@@ -45163,6 +45213,10 @@ msgstr "値のデータ型が、許可されているどの選択肢とも一致
 
 msgid "The database name on the Mailbox Server."
 msgstr "メールボックスサーバー上のデータベース名"
+
+#, fuzzy
+msgid "The database to authenticate on."
+msgstr "あなたは認証されていません。"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "ビューのデータソースは変更できません"
@@ -51099,6 +51153,10 @@ msgid ""
 "name exist on multiple docker nodes."
 msgstr ""
 
+#, fuzzy
+msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
+msgstr "エージェントプラグイン<tt>mk_mongodb</tt>をデプロイします"
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
@@ -55179,6 +55237,14 @@ msgstr "詳細ログ(スプール通知も)"
 
 msgid "Verbosity of logging"
 msgstr "ロギングの冗長性"
+
+#, fuzzy
+msgid "Verfiy Certificates"
+msgstr "証明書を確認する"
+
+#, fuzzy
+msgid "Verify certificates"
+msgstr "証明書を確認する"
 
 msgid "Verify server certificate"
 msgstr "サーバー証明書を確認する"
@@ -60908,6 +60974,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Deploy MongoDB plugin"
+#~ msgstr "MongoDBプラグインをデプロイする"
 
 #~ msgid "Levels on the time left until the filesystem gets full"
 #~ msgstr "ファイルシステムがいっぱいになるまでの残り時間のレベル"

@@ -5793,6 +5793,10 @@ msgstr "Authentifizierungsfehler"
 msgid "Authentication Mode"
 msgstr "Modus zur Authentifizierung"
 
+#, fuzzy
+msgid "Authentication Source"
+msgstr "Modus zur Authentifizierung"
+
 msgid "Authentication System Errors"
 msgstr "Fehler im Authentifizierungssystem"
 
@@ -5806,6 +5810,10 @@ msgstr "Authentifizierungsfehler"
 #, fuzzy
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Logswitche in den letzten 60 Sekunden"
+
+#, fuzzy
+msgid "Authentication mechanism"
+msgstr "Methode zur Authentifizierung"
 
 msgid "Authentication method"
 msgstr "Methode zur Authentifizierung"
@@ -5841,6 +5849,9 @@ msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
 
 msgid "Authorized sites"
 msgstr "Berechtigte Instanzen"
+
+msgid "Auto (DEFAULT)"
+msgstr ""
 
 msgid "Auto - adjust to actual values"
 msgstr "Auto - an tatsächliche Werte anpassen"
@@ -13613,9 +13624,6 @@ msgstr "Das Mailman Plugin ausrollen"
 msgid "Deploy MegaRAID plugin"
 msgstr "MegaRAID-Plugin ausrollen"
 
-msgid "Deploy MongoDB plugin"
-msgstr "Plugin für MongoDB ausrollen"
-
 msgid "Deploy NFS4 exports plugin"
 msgstr "Das NFS4 exports Plugin ausrollen"
 
@@ -13683,6 +13691,12 @@ msgstr ""
 
 msgid "Deploy logged in users plugin"
 msgstr "Plugin für eingeloggte Benutzer ausrollen"
+
+msgid "Deploy mk_mongodb.py wihtout authentication."
+msgstr ""
+
+msgid "Deploy mk_mongodb.py with authentication."
+msgstr ""
 
 msgid "Deploy mtr plugin"
 msgstr "Das MTR-Plugin ausrollen"
@@ -13799,9 +13813,6 @@ msgstr "Das TSM Plugin ausrollen"
 msgid "Deploy the Zypper plugin"
 msgstr "Das Zypper Plugin ausrollen"
 
-msgid "Deploy the agent plugin <tt>mk_mongodb</tt>."
-msgstr "Das Agentenplugin <tt>mk_mongodb</tt> ausrollen"
-
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
 "neccessary for all <tt>postgres_*</tt> checks"
@@ -13830,6 +13841,10 @@ msgstr "Bereitstellen des netstat-Plugins"
 
 msgid "Deploy the plesk plugins"
 msgstr "Die plesk Plugins ausrollen"
+
+#, fuzzy
+msgid "Deploy without authentication."
+msgstr "Passwortauthentifizierung erlauben"
 
 #, python-format
 msgid ""
@@ -14894,9 +14909,6 @@ msgstr "Das Linux filesystem quota Plugin nicht ausrollen"
 msgid "Do not deploy Mailman plugin"
 msgstr "Das Mailman Plugin nicht ausrollen"
 
-msgid "Do not deploy MongoDB plugin"
-msgstr "MongoDB-Plugin nicht ausrollen"
-
 msgid "Do not deploy NFS4 exports plugin"
 msgstr "Das NFS4 exports Plugin nicht ausrollen"
 
@@ -14944,6 +14956,10 @@ msgstr "Das iptables Plugin nicht ausrollen"
 
 msgid "Do not deploy logged in users plugin"
 msgstr "Plugins für angemeldete Benutzer nicht ausrollen"
+
+#, fuzzy
+msgid "Do not deploy mk_mongodb.py plugin"
+msgstr "MongoDB-Plugin nicht ausrollen"
 
 msgid "Do not deploy mtr plugin"
 msgstr "Das MTR-Plugin nicht ausrollen"
@@ -15091,6 +15107,10 @@ msgstr "Das Netstat-Plugin nicht bereitstellen"
 
 msgid "Do not deploy the plesk plugins"
 msgstr "Die plesk Plugins nicht ausrollen"
+
+#, fuzzy
+msgid "Do not deploy."
+msgstr "Das LVM-Plugin nicht ausrollen"
 
 msgid "Do not discover single interfaces"
 msgstr "Einzelne Interfaces nicht erkennen"
@@ -16521,6 +16541,10 @@ msgstr "Livestatus über das Netzwerk (TCP) verfügbar machen"
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) ein"
+
+#, fuzzy
+msgid "Enable TLS"
+msgstr "Einschalten"
 
 msgid "Enable a login session idle timeout"
 msgstr "Einen Inaktivitätstimeout für Loginsitzungen festlegen"
@@ -20423,6 +20447,11 @@ msgstr "Wurde nicht aktiviert"
 msgid "Has title line"
 msgstr "Hat Titelzeile"
 
+msgid ""
+"Has to contain a single or a bundle of 'certification authority' "
+"certificates."
+msgstr ""
+
 msgid "Hash"
 msgstr "Hash"
 
@@ -24052,6 +24081,10 @@ msgstr "TLS-Fehler ignorieren"
 
 msgid "Ignore acknowledged events"
 msgstr "Quittierte Ereignisse ignorieren"
+
+#, fuzzy
+msgid "Ignore certificate errors (insecure)"
+msgstr "Ignoriere SSL Zertifikatfehler (unsicher)"
 
 msgid "Ignore certificate errors (unsecure)"
 msgstr "Ignoriere SSL Zertifikatfehler (unsicher)"
@@ -30316,6 +30349,15 @@ msgstr "MongoDB Replica Set"
 msgid "MongoDB database connections"
 msgstr "MongoDB Datenbank Verbindungen"
 
+msgid "Mongodb < 3.0 (MONGODB-CR)"
+msgstr ""
+
+msgid "Mongodb >= 3.0 (SCRAM-SHA-1)"
+msgstr ""
+
+msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
+msgstr ""
+
 msgid "Monitor"
 msgstr "Überwachen"
 
@@ -34724,6 +34766,10 @@ msgstr "Pfad zur .pgpass-Datei"
 
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr "Pfad zu <tt>MegaCLI.exe</tt>"
+
+#, fuzzy
+msgid "Path to CA File"
+msgstr "Pfad zur .env-Datei"
 
 msgid "Path to a CA certificate"
 msgstr "CA-Zertifikat hinzufügen"
@@ -45723,6 +45769,10 @@ msgstr ""
 "Der Basis-DN für die Gruppen ist nicht konfiguriert, ich werde keine Gruppen "
 "holen."
 
+#, fuzzy
+msgid "The Hostname of the MongoDB Server."
+msgstr "Hostname des Ereignisses"
+
 msgid "The ID is already used by another role"
 msgstr "ID wird bereits von anderer Rolle verwendet"
 
@@ -46876,6 +46926,10 @@ msgstr "Typ passt auf keine möglichen Alternativen."
 
 msgid "The database name on the Mailbox Server."
 msgstr "Der Datenbankname auf dem Mailbox-Server"
+
+#, fuzzy
+msgid "The database to authenticate on."
+msgstr "Sie sind nicht authentifiziert."
 
 msgid "The datasource of a view cannot be changed."
 msgstr "Datenquelle einer Ansicht kann nicht geändert werden."
@@ -53474,6 +53528,10 @@ msgstr ""
 "vermeiden, wenn Container mit demselben Namen auf mehreren Docker-Knoten "
 "existieren."
 
+#, fuzzy
+msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
+msgstr "Das Agentenplugin <tt>mk_mongodb</tt> ausrollen"
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
@@ -57711,6 +57769,14 @@ msgstr "Verboses Logging (auch gespoolte Alarme)"
 
 msgid "Verbosity of logging"
 msgstr "Log-Verbosität"
+
+#, fuzzy
+msgid "Verfiy Certificates"
+msgstr "Zertifikat überprüfen"
+
+#, fuzzy
+msgid "Verify certificates"
+msgstr "Zertifikat überprüfen"
 
 msgid "Verify server certificate"
 msgstr "Serverzertifikat überprüfen"
@@ -63821,6 +63887,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Deploy MongoDB plugin"
+#~ msgstr "Plugin für MongoDB ausrollen"
+
 #~ msgid "Levels on the time left until the filesystem gets full"
 #~ msgstr "Schwellwert für Zeitspanne bis das Dateisystem voll läuft"
 
@@ -64826,9 +64895,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Host Name"
 #~ msgstr "Hostname"
-
-#~ msgid "The host name of the event"
-#~ msgstr "Hostname des Ereignisses"
 
 #~ msgid ""
 #~ "When quering the event status you can either use the monitoring host "

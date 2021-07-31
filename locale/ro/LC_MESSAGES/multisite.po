@@ -5494,6 +5494,10 @@ msgstr ""
 msgid "Authentication Mode"
 msgstr ""
 
+#, fuzzy
+msgid "Authentication Source"
+msgstr "trimite notificare"
+
 msgid "Authentication System Errors"
 msgstr ""
 
@@ -5505,6 +5509,10 @@ msgstr ""
 
 msgid "Authentication failures within the last 5 minutes"
 msgstr ""
+
+#, fuzzy
+msgid "Authentication mechanism"
+msgstr "Adaugă notificare"
 
 msgid "Authentication method"
 msgstr ""
@@ -5539,6 +5547,9 @@ msgid "Authorizations per DB security group"
 msgstr ""
 
 msgid "Authorized sites"
+msgstr ""
+
+msgid "Auto (DEFAULT)"
 msgstr ""
 
 msgid "Auto - adjust to actual values"
@@ -13109,9 +13120,6 @@ msgstr ""
 msgid "Deploy MegaRAID plugin"
 msgstr ""
 
-msgid "Deploy MongoDB plugin"
-msgstr ""
-
 msgid "Deploy NFS4 exports plugin"
 msgstr ""
 
@@ -13179,6 +13187,12 @@ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 msgstr ""
 
 msgid "Deploy logged in users plugin"
+msgstr ""
+
+msgid "Deploy mk_mongodb.py wihtout authentication."
+msgstr ""
+
+msgid "Deploy mk_mongodb.py with authentication."
 msgstr ""
 
 msgid "Deploy mtr plugin"
@@ -13292,9 +13306,6 @@ msgstr ""
 msgid "Deploy the Zypper plugin"
 msgstr ""
 
-msgid "Deploy the agent plugin <tt>mk_mongodb</tt>."
-msgstr ""
-
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
 "neccessary for all <tt>postgres_*</tt> checks"
@@ -13320,6 +13331,10 @@ msgstr ""
 
 msgid "Deploy the plesk plugins"
 msgstr ""
+
+#, fuzzy
+msgid "Deploy without authentication."
+msgstr "Confirma Parola"
 
 #, python-format
 msgid ""
@@ -14406,9 +14421,6 @@ msgstr ""
 msgid "Do not deploy Mailman plugin"
 msgstr ""
 
-msgid "Do not deploy MongoDB plugin"
-msgstr ""
-
 msgid "Do not deploy NFS4 exports plugin"
 msgstr ""
 
@@ -14456,6 +14468,10 @@ msgstr ""
 
 msgid "Do not deploy logged in users plugin"
 msgstr ""
+
+#, fuzzy
+msgid "Do not deploy mk_mongodb.py plugin"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Do not deploy mtr plugin"
 msgstr ""
@@ -14602,6 +14618,10 @@ msgstr ""
 
 msgid "Do not deploy the plesk plugins"
 msgstr ""
+
+#, fuzzy
+msgid "Do not deploy."
+msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 msgid "Do not discover single interfaces"
@@ -16028,6 +16048,10 @@ msgstr ""
 
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr ""
+
+#, fuzzy
+msgid "Enable TLS"
+msgstr "Tabel"
 
 msgid "Enable a login session idle timeout"
 msgstr ""
@@ -19868,6 +19892,11 @@ msgstr ""
 msgid "Has title line"
 msgstr ""
 
+msgid ""
+"Has to contain a single or a bundle of 'certification authority' "
+"certificates."
+msgstr ""
+
 msgid "Hash"
 msgstr ""
 
@@ -22772,6 +22801,9 @@ msgid "Ignore TLS errors"
 msgstr ""
 
 msgid "Ignore acknowledged events"
+msgstr ""
+
+msgid "Ignore certificate errors (insecure)"
 msgstr ""
 
 msgid "Ignore certificate errors (unsecure)"
@@ -29091,6 +29123,15 @@ msgstr ""
 msgid "MongoDB database connections"
 msgstr "Conexiuni Active"
 
+msgid "Mongodb < 3.0 (MONGODB-CR)"
+msgstr ""
+
+msgid "Mongodb >= 3.0 (SCRAM-SHA-1)"
+msgstr ""
+
+msgid "Mongodb >= 4.0 (SCRAM-SHA-256)"
+msgstr ""
+
 #, fuzzy
 msgid "Monitor"
 msgstr " pe siteul de monitorizare: "
@@ -33574,6 +33615,10 @@ msgstr ""
 
 msgid "Path to <tt>MegaCLI.exe</tt>"
 msgstr ""
+
+#, fuzzy
+msgid "Path to CA File"
+msgstr "Adaugă notificare"
 
 #, fuzzy
 msgid "Path to a CA certificate"
@@ -44375,6 +44420,10 @@ msgstr ""
 msgid "The Group Base DN is not configured, not fetching any groups."
 msgstr ""
 
+#, fuzzy
+msgid "The Hostname of the MongoDB Server."
+msgstr "Numele elementului pentru eveniment"
+
 msgid "The ID is already used by another role"
 msgstr ""
 
@@ -45190,6 +45239,10 @@ msgstr ""
 #, fuzzy
 msgid "The database name on the Mailbox Server."
 msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "The database to authenticate on."
+msgstr "trimite notificare"
 
 msgid "The datasource of a view cannot be changed."
 msgstr ""
@@ -50027,6 +50080,9 @@ msgid ""
 "name exist on multiple docker nodes."
 msgstr ""
 
+msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
+msgstr ""
+
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
@@ -54202,6 +54258,14 @@ msgstr ""
 
 msgid "Verbosity of logging"
 msgstr ""
+
+#, fuzzy
+msgid "Verfiy Certificates"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Verify certificates"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Verify server certificate"
 msgstr ""
@@ -59806,9 +59870,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "On selected services"
 #~ msgstr "Afectat de serviciu"
-
-#~ msgid "The host name of the event"
-#~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 #~ msgid "Absolute levels{abs_detail}"

@@ -27,18 +27,6 @@ AppType AppDefaultType() { return AppType::test; }
 
 }  // namespace cma
 
-namespace cma::cfg::details {
-TEST(StartTest, CheckStatus) {
-    OnStart(cma::AppType::test);
-    auto& info = GetCfg();
-    ASSERT_TRUE(!info.exe_command_paths_.empty());
-    ASSERT_TRUE(!info.config_dirs_.empty());
-    ASSERT_TRUE(!info.getDataDir().empty());
-    ASSERT_TRUE(!info.getRootDir().empty());
-    ASSERT_TRUE(info.getConfig().IsMap());
-}
-}  // namespace cma::cfg::details
-
 namespace {
 struct WatestMailSlot {
     ~WatestMailSlot() {

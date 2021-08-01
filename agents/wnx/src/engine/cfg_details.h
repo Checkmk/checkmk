@@ -441,7 +441,6 @@ private:
 
     std::wstring path_to_msi_exec_;
 
-    // #TODO
     void GenerateDefaultConfig() {}
     mutable std::mutex lock_;
 
@@ -468,9 +467,6 @@ private:
     static std::atomic<uint64_t> g_uniq_id;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class StartTest;
-    FRIEND_TEST(StartTest, CheckStatus);
-
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, LogFileLocation);
     FRIEND_TEST(CmaCfg, InitEnvironment);

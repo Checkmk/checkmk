@@ -23,9 +23,9 @@ constexpr const std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
 
 AppType AppDefaultType();  // defined by main
 
-// must be called on start
-bool OnStart(AppType Type = AppType::automatic,
-             const std::wstring& ConfigFile = L"");
+bool OnStart(AppType type, const std::wstring& config_file);
+inline bool OnStart() { return OnStart(AppType::automatic, L""); }
+inline bool OnStart(AppType type) { return OnStart(type, L""); }
 
 bool LoadConfigFull(const std::wstring& ConfigFile);
 bool LoadConfigBase(const std::vector<std::wstring>& config_filenames,
@@ -35,8 +35,8 @@ inline bool OnStartApp() { return OnStart(AppType::automatic); }
 
 inline bool OnStartTest() { return OnStart(AppType::test); }
 
-// recommended to be called on exit. BUT, PLEASE WAIT FOR ALL THREADS/ ASYNC
-void OnExit();  // #VIP will stop WMI and all services(in the future)
+/// Must be called on exit to stop WMI and all services if possible
+void OnExit();
 
 bool ConfigLoaded();
 

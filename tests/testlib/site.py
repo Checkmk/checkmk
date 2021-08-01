@@ -421,8 +421,7 @@ class Site:
         # starts.
         self._update_cmk_core_config()
 
-        if not os.path.exists(self.result_dir()):
-            os.makedirs(self.result_dir())
+        self.makedirs(self.result_dir())
 
     def _update_with_f12_files(self):
         paths = [

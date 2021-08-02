@@ -23,6 +23,12 @@ $grey-6: rgb(40, 40, 40);
 $grey-7: rgb(33, 33, 33);
 $darkgrey: rgb(131, 131, 131); // dark grey
 
+$color-nuance-1: rgb(170, 255, 187); // light green
+$color-nuance-2: rgb(130, 136, 166); // dark grey
+$color-nuance-3: rgb(247, 197, 197); // light red
+$color-nuance-4: rgb(255, 150, 68); // orange
+$color-nuance-5: rgb(161, 230, 248); // light blue
+
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
@@ -70,12 +76,3 @@ $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
 $input-field-height: 21px; // also for tactical overview
 $input-field-margin: 0 $spacing-half $spacing-half 0;
-
-// -----------------------------------------------------------------------------
-// Nuances (Colors only used once)
-// -----------------------------------------------------------------------------
-$color-nuance-2: rgb(170, 255, 187); // light green
-$color-nuance-3: rgb(130, 136, 166); // dark grey
-$color-nuance-15: rgb(247, 197, 197); // light red
-$color-nuance-16: rgb(255, 150, 68); // orange
-$color-nuance-17: rgb(161, 230, 248); // light blue

@@ -21,15 +21,12 @@ $grey-4: rgb(51, 51, 51);
 $grey-5: rgb(50, 50, 50);
 $grey-6: rgb(40, 40, 40);
 $grey-7: rgb(33, 33, 33);
-$shadow: rgba(33, 33, 33, 0.35);
 $darkgrey: rgb(131, 131, 131); // dark grey
 
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
 $font-family-sans-serif: "Lato", "Roboto", Helvetica, Arial, sans-serif;
-$font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
-  monospace;
 $font-family-default: $font-family-sans-serif;
 
 $font-size-page-title: 18px;
@@ -77,20 +74,8 @@ $input-field-margin: 0 $spacing-half $spacing-half 0;
 // -----------------------------------------------------------------------------
 // Nuances (Colors only used once)
 // -----------------------------------------------------------------------------
-$color-nuance-1: rgb(175, 178, 198); // blue grey
 $color-nuance-2: rgb(170, 255, 187); // light green
 $color-nuance-3: rgb(130, 136, 166); // dark grey
-$color-nuance-4: rgb(246, 247, 248); // light grey
-$color-nuance-5: rgb(197, 197, 197); // grey
-$color-nuance-6: rgb(255, 235, 131); // yellow
-$color-nuance-7: rgb(51, 51, 51); // dark grey
-$color-nuance-8: rgb(215, 215, 215); // grey
-$color-nuance-9: rgb(207, 207, 207); // grey
-$color-nuance-10: rgb(25, 28, 29); // grey
-$color-nuance-11: rgb(34, 47, 51); // dark grey
-$color-nuance-12: rgb(158, 226, 115); // green
-$color-nuance-13: rgb(243, 245, 246); // light grey
-$color-nuance-14: rgba(37, 41, 42, 0.3); // transparent grey
 $color-nuance-15: rgb(247, 197, 197); // light red
 $color-nuance-16: rgb(255, 150, 68); // orange
 $color-nuance-17: rgb(161, 230, 248); // light blue

@@ -3,27 +3,23 @@
 //
 // Precompiled
 #include "pch.h"
-// system C
-// system C++
-#include <chrono>
-#include <filesystem>
-#include <iostream>
-#include <string>
-#include <thread>
 
-#include "common/yaml.h"
-
-// Project
-#include "common/cmdline_info.h"
-#include "install_api.h"
-#include "windows_service_api.h"
-
-// Personal
-#include "cfg.h"
 #include "check_mk_service.h"
+
+#include <process.h>  // for exit
+
+#include <iostream>
+
+#include "cfg.h"
 #include "cma_core.h"
+#include "common/cmdline_info.h"
+#include "common/yaml.h"
+#include "install_api.h"
 #include "logger.h"
+#include "on_start.h"  // for AppType, OnStartApp, AppType::exe, AppType::srv
 #include "providers/perf_counters_cl.h"
+#include "stdint.h"  // for int64_t, uint32_t, uint64_t
+#include "windows_service_api.h"
 
 using namespace std::chrono_literals;
 using XLOG::Colors;

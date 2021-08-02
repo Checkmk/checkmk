@@ -4,20 +4,15 @@
 //
 #include "pch.h"
 
-#include <filesystem>
-#include <iostream>
+#include <processthreadsapi.h>  // for GetCurrentProcess, SetPriorityClass
+#include <winbase.h>            // for HIGH_PRIORITY_CLASS
 
-#include "carrier.h"
-#include "cfg.h"
-#include "cfg_details.h"
-#include "common/cfg_info.h"
-#include "common/mailslot_transport.h"
-#include "common/wtools.h"
-#include "common/yaml.h"
-#include "read_file.h"
-#include "tools/_misc.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
+#include "carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
+#include "common/mailslot_transport.h"  // for MailSlot
+#include "common/wtools.h"  // for SecurityLevel, SecurityLevel::admin, SecurityLevel::standard
+#include "gtest/gtest.h"  // for InitGoogleTest, RUN_ALL_TESTS
+#include "logger.h"       // for ColoredOutputOnStdio
+#include "on_start.h"     // for OnStart, AppType, AppType::test
 
 using namespace std::chrono_literals;
 namespace carrier = cma::carrier;

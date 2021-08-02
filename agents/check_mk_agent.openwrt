@@ -865,7 +865,7 @@ run_cached() {
         if ${MK_RUN_SYNC_PARTS}; then
             # Output the file even if it is outdated.
             CACHE_INFO="cached($MTIME,$MAXAGE)"
-            if [[ $NAME == local_* ]] || [ "$mrpe" = 1 ]; then
+            if [ "${NAME%%_*}" = "local" ]; then
                 sed -e "/^<<</! s/^/$CACHE_INFO /" "$CACHEFILE"
             else
                 # insert the cache info in the section header (^= after '!'),

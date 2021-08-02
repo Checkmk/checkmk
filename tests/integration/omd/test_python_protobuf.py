@@ -11,7 +11,7 @@ from tests.testlib import import_module
 
 def test_protobuf_api_implementation_is_cpp():
     from google.protobuf.internal import api_implementation  # type: ignore[attr-defined]
-    assert api_implementation._default_implementation_type == "cpp"
+    assert api_implementation.Type() == "cpp"
 
 
 @pytest.fixture(name="test_dir")

@@ -12,36 +12,40 @@
 $yellow: rgb(255, 215, 3); // yellow
 $lightgrey: rgb(220, 220, 220); // light grey
 
+// Helper variables for this theme that should be used in all color definitions below
+$ux-theme-0: rgb(17, 24, 29);
+$ux-theme-1: rgb(28, 34, 40);
+$ux-theme-2: rgb(32, 39, 46);
+$ux-theme-3: rgb(38, 47, 56);
+$ux-theme-4: rgb(38, 45, 52);
+$ux-theme-5: rgb(48, 57, 70);
+$ux-theme-6: rgb(53, 63, 74);
+
 // UX colors
-$navbar-color: rgb(17, 24, 29);
-$bg-color: rgb(28, 34, 40);
-$base-color: rgb(32, 39, 46);
-$headline-color: rgb(38, 47, 56);
-$table-highlight-color: rgb(38, 45, 52);
-$inpage-highlight-color: rgb(48, 57, 70);
+$navbar-color: $ux-theme-0;
+$bg-color: $ux-theme-1;
+$bg-color-secondary: $ux-theme-2;
+$base-color: $ux-theme-2;
+$headline-color: $ux-theme-3;
+$table-highlight-color: $ux-theme-4;
+$inpage-highlight-color: $ux-theme-5;
 
 $font-color: $white;
 $font-color-disabled: rgb(124, 124, 128);
 $font-color-sidebar: $white;
-$color-background: $bg-color;
+$color-background: $ux-theme-1;
 
 // -----------------------------------------------------------------------------
 // Fonts
 // -----------------------------------------------------------------------------
-$primary-font-color: $font-color;
-$secondary-font-color: $font-color;
+$primary-font-color: $white;
+$secondary-font-color: $white;
 $primary-hover-font-color: $grey-1;
-
-// -----------------------------------------------------------------------------
-// Body
-// -----------------------------------------------------------------------------
-$bg-color-secondary: $base-color;
 
 // -----------------------------------------------------------------------------
 // Buttons
 // -----------------------------------------------------------------------------
 $button-background-hover: lighten($grey-7, 10%);
-$button-border: rgb(217, 217, 217);
 
 // -----------------------------------------------------------------------------
 // States
@@ -78,15 +82,13 @@ $color-perfometer-title: $grey-7;
 // -----------------------------------------------------------------------------
 $color-table-border: $grey-7; // grey
 $color-table-background: $grey-6; // light grey
-
 $color-table-border-dark: $grey-7; // dark grey
 
 // -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
-
-$table-secondary-font-color: rgba($font-color, 0.4);
+$table-secondary-font-color: rgba($white, 0.4);
 
 $primary-border: 1px solid $grey-7;
 
@@ -97,47 +99,45 @@ $primary-box-shadow: none;
 
 $dashboard-stats-bg-color: transparent;
 
-$checkbox-checked-color: $primary-font-color;
+$checkbox-checked-color: $white;
 
 $toggle-switch-font-color-on: $black;
-$toggle-switch-font-color-off: rgba($font-color, 0.8);
+$toggle-switch-font-color-off: rgba($white, 0.8);
 
 $toggle-button-search-img-filter: invert(20%);
 
-$data-container-bg-color: $bg-color-secondary;
+$data-container-bg-color: $ux-theme-2;
 
-$input-button-bg-color: $navbar-color;
-$input-button-hover-bg-color: rgb(53, 63, 74);
-$input-button-color: $font-color;
+$input-button-bg-color: $ux-theme-0;
+$input-button-hover-bg-color: $ux-theme-6;
+$input-button-color: $white;
 
-$odd-tr-bg-color: $bg-color-secondary;
-$even-tr-bg-color: $table-highlight-color;
+$odd-tr-bg-color: $ux-theme-2;
+$even-tr-bg-color: $ux-theme-4;
 
 $floatfilter-bg-color: null;
 
 $select2-search-field-color: rgb(63, 75, 93);
-$select2-border-color: $input-button-hover-bg-color;
-$select2-rendered-color: $font-color;
+$select2-border-color: $ux-theme-6;
+$select2-rendered-color: $white;
 $select2-search-field-border: none;
-
-$wato-a-hover-bg-color: mix($white, $grey-6, 10%);
 
 $td-unused-color: $grey-2;
 
-$graph-legend-color: $font-color !important;
+$graph-legend-color: $white !important;
 
 $dark-font-color: $grey-7 !important;
 
-$dashlet-body-bg-color: $bg-color-secondary;
+$dashlet-body-bg-color: $ux-theme-2;
 
-$td-gap-bg-color: $bg-color-secondary;
+$td-gap-bg-color: $ux-theme-2;
 
 $td-text-overflow: ellipsis;
 
 $span-dots-color: $grey-1;
 
 $graph-legend-th-border-bottom: 1px solid $grey-1;
-$graph-time-color: $font-color;
+$graph-time-color: $white;
 
 $dashlet-stats-border-top-color: $grey-6;
 
@@ -147,7 +147,7 @@ $wato-a-border: 1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color: $grey-2;
 
-$footnote-link-color: rgba($font-color, 0.8);
+$footnote-link-color: rgba($white, 0.8);
 
 $host-diag-success-bg-color: rgb(50, 80, 50);
 $host-diag-failed-bg-color: $color-nuance-3;
@@ -175,9 +175,9 @@ $nform-table-hr-color: rgba($white, 0.1);
 
 $iconbutton-filter: invert(40%);
 
-$popup-menu-select-bg-color: $bg-color;
+$popup-menu-select-bg-color: $ux-theme-1;
 
-$dragging-bg-color: $bg-color;
+$dragging-bg-color: $ux-theme-1;
 
 $invtree-th-bg-color: $grey-3;
 $invtree-td-bg-color: rgb(100, 100, 100);
@@ -188,9 +188,9 @@ $hostdown-bg-color: rgb(0, 102, 170);
 
 $nform-vlof-border-color: rgb(60, 60, 60);
 
-$duallist-control-a-hover-bg-color: $wato-a-hover-bg-color;
+$duallist-control-a-hover-bg-color: mix($white, $grey-6, 10%);
 
-$snapin-list-color: $font-color-sidebar;
+$snapin-list-color: $white;
 
 $performance-table-shared-padding: 8px 0;
 $logwatch-text-color: rgb(11, 5, 5);
@@ -199,14 +199,14 @@ $logwatch-text-color-2: $white;
 // -----------------------------------------------------------------------------
 // Tags
 // -----------------------------------------------------------------------------
-$tag-font-color: $font-color;
+$tag-font-color: $white;
 $tag-opacity: 0.6;
 $tag-discovered-opacity: 0.7;
 $tag-hover-opacity: 0.8;
 
-$tag-input-bg-color: $inpage-highlight-color;
-$tag-dropdown-hover-bg-color: $inpage-highlight-color;
-$tag-dropdown-hover-border-color: $select2-border-color;
+$tag-input-bg-color: $ux-theme-5;
+$tag-dropdown-hover-bg-color: $ux-theme-5;
+$tag-dropdown-hover-border-color: $ux-theme-6;
 $tag-dropdown-hover-font-color: $success;
 
 // -----------------------------------------------------------------------------
@@ -220,20 +220,20 @@ $node-vis-search-field-border-color: $grey-3;
 $node-vis-box-shadow: none;
 $node-vis-box-border: 1px solid $grey-3;
 $node-vis-toggle-down-bg-color: null;
-$node-vis-menu-bg-color: $bg-color;
+$node-vis-menu-bg-color: $ux-theme-1;
 $node-vis-history-bg-color: $grey-1;
 $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
-$node-vis-growth-root-color: $node-vis-darkgrey; // blue
-$topology-filter-bg-color: $bg-color;
+$node-vis-growth-root-color: rgb(169, 169, 169);
+$topology-filter-bg-color: $ux-theme-1;
 $topology-filter-border-color: $grey-7;
 
-$host-folder-font-color: $font-color;
+$host-folder-font-color: $white;
 
 $if-state-up-font-color: $grey-7;
 
-$agent-config-inner-title-bg-color: $bg-color;
-$agent-config-td-color: $font-color;
+$agent-config-inner-title-bg-color: $ux-theme-1;
+$agent-config-td-color: $white;
 
 $pnp4nagios-img-filter: invert(84%);
 
@@ -248,18 +248,18 @@ $minority-font-color: $grey-7;
 $button-spacer-color: rgb(90, 90, 90);
 
 $timeline-hilite-border: 2px solid rgb(220, 220, 220);
-$timetable-hilite-bg-color: lighten($bg-color, 15%);
+$timetable-hilite-bg-color: lighten($ux-theme-1, 15%);
 
 $pnp-graph-img-border-color: rgb(240, 240, 240);
-$graph-hover-popup-font-color: $font-color;
-$graph-hover-popup-bg-color: $base-color;
+$graph-hover-popup-font-color: $white;
+$graph-hover-popup-bg-color: $ux-theme-2;
 $graph-hover-popup-border: 1px solid $grey-3;
 $graph-hover-popup-box-shadow: none;
 
 $globalvars-modified-box-shadow: null;
 $globalvars-modified-globally-box-shadow: null;
 
-$dashlet-inner-bg-color: $bg-color-secondary;
+$dashlet-inner-bg-color: $ux-theme-2;
 
 $statep-font-color: $grey-1;
 
@@ -276,30 +276,30 @@ $scatterdot-hilite-color: $yellow;
 /* TODO:  move variables defined for the UX project to the correct place */
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
-$button-bg-color-default: $input-button-hover-bg-color;
-$button-bg-color-suggestions: $navbar-color;
-$navigation-bg-color: $navbar-color;
-$page-menu-bg-color: $navbar-color;
-$snapin-bg-color: $navbar-color;
-$sidebar-border-color: $headline-color;
+$button-bg-color-default: $ux-theme-6;
+$button-bg-color-suggestions: $ux-theme-0;
+$navigation-bg-color: $ux-theme-0;
+$page-menu-bg-color: $ux-theme-0;
+$snapin-bg-color: $ux-theme-0;
+$sidebar-border-color: $ux-theme-3;
 $filter-group-title-font-color: $white;
-$popup-trigger-active-bg-color: $base-color;
-$tactical-overview-th-font-color: $font-color;
-$tactical-overview-td-bg-color: $button-bg-color-default;
-$server-time-div-bg-color: $button-bg-color-default;
-$snapin-heading-border-color: rgba(255, 255, 255, 0.2);
-$simplebar-scrollbar-color: $inpage-highlight-color;
+$popup-trigger-active-bg-color: $ux-theme-2;
+$tactical-overview-th-font-color: $white;
+$tactical-overview-td-bg-color: $ux-theme-6;
+$server-time-div-bg-color: $ux-theme-6;
+$snapin-heading-border-color: rgba($white, 0.2);
+$simplebar-scrollbar-color: $ux-theme-5;
 $popup-border: 4px solid $success;
-$popup-inner-border: 1px solid $headline-color;
+$popup-inner-border: 1px solid $ux-theme-3;
 $filter-add-button-hover-brightness: brightness(100);
 $floatfilter-legend-border: 1px solid rgba($white, 0.2);
-$log-output-color: $navbar-color;
+$log-output-color: $ux-theme-0;
 $dashlet-editor-free: rgb(78, 93, 105);
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
 $hexagon-critical-color: rgb(255, 50, 50);
 $hexagon-unknown-color: rgb(255, 136, 0);
-$hexagon-warning-color: $color-state-1-background;
+$hexagon-warning-color: $yellow;
 $hexagon-downtime-color: rgb(60, 194, 255);
 $hexagon-host-down-color: rgb(16, 99, 176);
 $hexagon-default-color: $white;

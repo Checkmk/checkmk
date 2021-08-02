@@ -29,9 +29,10 @@ def test_aggregator_raises_collision():
     ]
 
     result = inventory.TreeAggregator().aggregate_results(
-        inventory_items,
-        RetentionsTracker([]),
-        None,
+        inventory_generator=inventory_items,
+        retentions_tracker=RetentionsTracker([]),
+        raw_cache_info=None,
+        is_legacy_plugin=False,
     )
 
     assert isinstance(result, TypeError)
@@ -76,9 +77,10 @@ def test_integrate_attributes():
 
     tree_aggr = inventory.TreeAggregator()
     tree_aggr.aggregate_results(
-        inventory_items,
-        RetentionsTracker([]),
-        None,
+        inventory_generator=inventory_items,
+        retentions_tracker=RetentionsTracker([]),
+        raw_cache_info=None,
+        is_legacy_plugin=False,
     )
 
     assert tree_aggr.trees.inventory.serialize() == {
@@ -142,9 +144,10 @@ def test_integrate_table_row():
 
     tree_aggr = inventory.TreeAggregator()
     tree_aggr.aggregate_results(
-        inventory_items,
-        RetentionsTracker([]),
-        None,
+        inventory_generator=inventory_items,
+        retentions_tracker=RetentionsTracker([]),
+        raw_cache_info=None,
+        is_legacy_plugin=False,
     )
 
     assert tree_aggr.trees.inventory.serialize() == {

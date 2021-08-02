@@ -35,9 +35,11 @@ class TreeAggregator:
 
     def aggregate_results(
         self,
+        *,
         inventory_generator: InventoryResult,
         retentions_tracker: RetentionsTracker,
         raw_cache_info: Optional[RawCacheInfo],
+        is_legacy_plugin: bool,
     ) -> Optional[Exception]:
 
         try:
@@ -51,7 +53,7 @@ class TreeAggregator:
         for tabr in table_rows:
             self._integrate_table_row(tabr)
 
-            if not set(tabr.inventory_columns):
+            if is_legacy_plugin:
                 # For old, legacy table plugins the retention intervals feature for HW/SW entries
                 # is not supported because we do not have a clear, defined row identifier.
                 # The consequences would be incomprehensible and non-transparent, eg. additional

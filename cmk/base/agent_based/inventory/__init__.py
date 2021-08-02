@@ -401,9 +401,10 @@ def _do_inv_for_realhost(
                 }
 
             exception = tree_aggregator.aggregate_results(
-                inventory_plugin.inventory_function(**kwargs),
-                retentions_tracker,
-                parsed_sections_broker.get_cache_info(inventory_plugin.sections),
+                inventory_generator=inventory_plugin.inventory_function(**kwargs),
+                retentions_tracker=retentions_tracker,
+                raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
+                is_legacy_plugin=inventory_plugin.module is None,
             )
 
             if exception:

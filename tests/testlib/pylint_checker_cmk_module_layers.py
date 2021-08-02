@@ -92,6 +92,24 @@ def _allow_default_plus_fetchers_and_snmplib(
     ))
 
 
+def _allow_default_plus_gui_and_base(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """
+    Allow import of `cmk.gui` and `cmk.base`.
+
+    The `gui` and `base` are different components, but for specific cases, like `cmk_update_config`
+    and `post_rename_site` it is allowed to import both.
+    """
+    return any((
+        _is_default_allowed_import(imported=imported, component=component),
+        _in_component(imported, Component("cmk.base")),
+        _in_component(imported, Component("cmk.gui")),
+    ))
+
+
 def _is_allowed_for_agent_based_api(
         *,
         imported: ModuleName,
@@ -131,13 +149,14 @@ _COMPONENTS = (
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
-    (Component("cmk.update_config"), _is_default_allowed_import),
+    (Component("cmk.update_config"), _allow_default_plus_gui_and_base),
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),
     (Component("cmk.cee.mknotifyd"), _is_default_allowed_import),
     (Component("cmk.cee.snmp_backend"), _is_default_allowed_import),
     (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
+    (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -145,6 +164,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/update_rrd_fs_names.py"): Component("cmk.base"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),

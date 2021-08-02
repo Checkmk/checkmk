@@ -2175,6 +2175,9 @@ def main_mv_or_cp(version_info: VersionInfo, old_site: SiteContext, global_opts:
     if not reuse:
         add_to_fstab(new_site, tmpfs_size=options.get('tmpfs-size'))
 
+    # Needed by the post-rename-site script
+    putenv("OLD_OMD_SITE", old_site.name)
+
     finalize_site(version_info, new_site, what, "apache-reload" in options)
 
 
@@ -2853,6 +2856,9 @@ def main_restore(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)
     set_environment(site)
+
+    # Needed by the post-rename-site script
+    putenv("OLD_OMD_SITE", sitename)
 
     if is_root():
         postprocess_restore_as_root(version_info, site, options)

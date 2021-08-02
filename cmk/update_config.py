@@ -13,7 +13,7 @@ be called manually.
 import re
 from pathlib import Path, PureWindowsPath
 import errno
-from typing import List, Tuple, Any, Dict, Set, Optional
+from typing import List, Tuple, Any, Dict, Set, Optional, Callable
 import argparse
 import logging
 import copy
@@ -22,7 +22,6 @@ import time
 import ast
 import gzip
 import multiprocessing
-import itertools
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -149,9 +148,8 @@ class UpdateConfig:
                 VERBOSE, f"{tty.red}ATTENTION: Some steps may take a long time depending "
                 f"on your installation, e.g. during major upgrades.{tty.normal}")
             total = len(self._steps())
-            count = itertools.count(1)
-            for step_func, title in self._steps():
-                self._logger.log(VERBOSE, " %i/%i %s..." % (next(count), total, title))
+            for count, (step_func, title) in enumerate(self._steps(), start=1):
+                self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, title))
                 try:
                     step_func()
                 except Exception:
@@ -163,7 +161,7 @@ class UpdateConfig:
         self._logger.log(VERBOSE, "Done")
         return self._has_errors
 
-    def _steps(self):
+    def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),

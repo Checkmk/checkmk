@@ -55,6 +55,7 @@ sphinxcontrib-spelling = "*"
 3to2 = "*"  # used for converting agent plugins from py3 to 2
 fakeredis = {extras = ["lua"],version = "1.4.5"}  # used for testing code which uses Redis (freeze version due to dependency on redis, which is fixed to some version, lua is needed for faking features like "lock")
 python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
+mypy-protobuf = "*" # for mypy
 mypy-ls = "*"  # mypy-plugin for the above
 
 [packages]

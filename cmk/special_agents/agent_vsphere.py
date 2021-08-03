@@ -866,7 +866,7 @@ class SoapTemplates:
     # yapf: enable
 
     def __init__(self, system_fields):
-        super(SoapTemplates, self).__init__()
+        super().__init__()
         self.login = SoapTemplates.LOGIN % system_fields
         self.systemtime = SoapTemplates.SYSTEMTIME % system_fields
         self.hostsystems = SoapTemplates.HOSTSYSTEMS % system_fields
@@ -1027,7 +1027,7 @@ class ESXSession(requests.Session):
                 '</SOAP-ENV:Envelope>')
 
     def __init__(self, address, port, no_cert_check=False):
-        super(ESXSession, self).__init__()
+        super().__init__()
         if no_cert_check:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
@@ -1045,7 +1045,7 @@ class ESXSession(requests.Session):
         soapdata = ESXSession.ENVELOPE % request
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
-        return super(ESXSession, self).post(self._post_url, data=soapdata, verify=self.verify)
+        return super().post(self._post_url, data=soapdata, verify=self.verify)
 
 
 class ESXConnection:
@@ -1069,7 +1069,7 @@ class ESXConnection:
             raise ESXCookieInvalid("No longer authenticated")
 
     def __init__(self, address, port, opt):
-        super(ESXConnection, self).__init__()
+        super().__init__()
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
 

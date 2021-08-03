@@ -23,7 +23,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class AggregationData:
     def __init__(self, bi_rawdata, config, error):
-        super(AggregationData, self).__init__()
+        super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
 
@@ -130,7 +130,7 @@ class RawdataException(MKException):
 
 class AggregationRawdataGenerator:
     def __init__(self, config):
-        super(AggregationRawdataGenerator, self).__init__()
+        super().__init__()
         self._config = config
 
         self._credentials = config["credentials"]

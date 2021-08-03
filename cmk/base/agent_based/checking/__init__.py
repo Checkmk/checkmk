@@ -468,9 +468,13 @@ def get_aggregated_result(
             cache_info=None,
         )
 
+    config_cache = config.get_config_cache()
+
     check_function = _cluster_modes.get_cluster_check_function(
-        mode='native',
-        clusterization_parameters={},
+        *config_cache.get_clustered_service_configuration(
+            host_config.hostname,
+            service.description,
+        ),
         plugin=plugin,
         service_id=service.id(),
         persist_value_store_changes=persist_value_store_changes,
@@ -478,8 +482,6 @@ def get_aggregated_result(
 
     source_type = (SourceType.MANAGEMENT
                    if service.check_plugin_name.is_management_name() else SourceType.HOST)
-
-    config_cache = config.get_config_cache()
 
     try:
         kwargs = get_section_cluster_kwargs(

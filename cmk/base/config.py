@@ -75,6 +75,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
+    ClusterMode,
     ContactgroupName,
     ExitSpec,
     HostAddress,
@@ -3848,6 +3849,32 @@ class ConfigCache:
             return the_clusters[0]
 
         return hostname
+
+    def get_clustered_service_configuration(
+        self,
+        host_name: HostName,
+        service_descr: str,
+    ) -> Tuple[ClusterMode, Mapping[str, Any]]:
+        matching_rules = self.service_extra_conf(
+            host_name,
+            service_descr,
+            clustered_services_configuration,
+        )
+
+        effective_mode = matching_rules[0][0] if matching_rules else "native"
+
+        merged_cfg = {
+            k: v for mode, cfg in reversed(matching_rules) if mode == effective_mode
+            for k, v in cfg.items()
+        }
+
+        if effective_mode == "worst":
+            return "worst", merged_cfg
+
+        if effective_mode == "native":
+            return "native", merged_cfg
+
+        raise NotImplementedError(effective_mode)
 
     def get_clustered_service_node_keys(
         self,

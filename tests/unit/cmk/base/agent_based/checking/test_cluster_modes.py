@@ -72,11 +72,8 @@ def test_get_cluster_check_function_native_missing():
         persist_value_store_changes=False,
     )
 
-    assert list(cc_function()) == [
-        Result(state=State.UNKNOWN,
-               summary=("This service is not ready to handle clustered data. "
-                        "Please change your configuration.")),
-    ]
+    result = list(cc_function())[0]
+    assert isinstance(result, Result) and result.state == State.UNKNOWN
 
 
 def test_get_cluster_check_function_native_ok():

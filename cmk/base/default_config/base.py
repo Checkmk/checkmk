@@ -209,6 +209,7 @@ clustered_services: _List = []
 clustered_services_of: _Dict = {}
 # new for 1.2.5i1 Wato Rule
 clustered_services_mapping: _List = []
+clustered_services_configuration: _List = []
 datasource_programs: _List = []
 service_dependencies: _List = []
 # mapping from hostname to IPv4 address

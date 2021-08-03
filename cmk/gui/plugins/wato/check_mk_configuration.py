@@ -3827,6 +3827,37 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_clustered_services_config():
+    return CascadingDropdown(
+        title=_("Aggreation options for clustered services"),
+        help="%s <ul><li>%s</li></ul>" % (
+            _("You can choose from different aggregation modes of clustered services:"),
+            "</li><li>".join((
+                _("Native: Use the cluster check function implemented by the check plugin. "
+                  "If it is available, it is probably the best choice, as it implements logic "
+                  "specifically designed for the check plugin in question. Implementing it is "
+                  "optional however, so this might not be available (a warning will be displayed). "
+                  "Consult the plugins manpage for details about its cluster behaviour."),
+                _("Worst: The check function of the plugin will be applied to each individual node. "
+                  "The worst outcome will determine the overall state of the clustered service."),
+            )),
+        ),
+        choices=[
+            ("native", _("Native cluster mode"), Dictionary(elements=[])),
+            ("worst", _("Worst node wins"), Dictionary(elements=[])),
+        ],
+    )
+
+
+rulespec_registry.register(
+    ServiceRulespec(
+        group=RulespecGroupMonitoringConfigurationVarious,
+        item_type="service",
+        name="clustered_services_configuration",
+        valuespec=_valuespec_clustered_services_config,
+    ))
+
+
 def _valuespec_clustered_services_mapping():
     return TextInput(
         title=_("Clustered services for overlapping clusters"),

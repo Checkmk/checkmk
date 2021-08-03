@@ -12,7 +12,6 @@ from typing import (
     Callable,
     Final,
     Iterable,
-    Literal,
     Mapping,
     Sequence,
     Set,
@@ -20,7 +19,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import state_markers as STATE_MARKERS
+from cmk.utils.type_defs import ClusterMode, state_markers as STATE_MARKERS
 from cmk.base.api.agent_based.value_store import load_host_value_store
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -43,15 +42,16 @@ def _unfit_for_clustering(**_kw) -> CheckResult:
     """A cluster_check_function that displays a generic warning"""
     yield Result(
         state=State.UNKNOWN,
-        summary=("This service is not ready to handle clustered data. "
-                 "Please change your configuration."),
+        summary=("This service does not implement a native cluster mode. Please change your "
+                 "configuration using the rule 'Aggreation options for clustered services', "
+                 "and select one of the other available aggregation modes."),
     )
 
 
 def get_cluster_check_function(
-    *,
-    mode=Literal['native', 'worst'],  # TODO: 'failover', 'best'],
+    mode: ClusterMode,
     clusterization_parameters: Mapping[str, Any],
+    *,
     service_id: ServiceID,
     plugin: CheckPlugin,
     persist_value_store_changes: bool,

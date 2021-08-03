@@ -12,6 +12,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     NewType,
@@ -91,6 +92,8 @@ ServiceAdditionalDetails = str
 MetricName = str
 MetricTuple = Tuple[MetricName, float, Optional[float], Optional[float], Optional[float],
                     Optional[float],]
+
+ClusterMode = Literal["native", "failover", "worst", "best"]
 
 ServiceCheckResult = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 

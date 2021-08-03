@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<netapp_api_fan:sep(9)>>>
 # cooling-element-list 20 cooling-element-number 1    rpm 3000    cooling-element-is-error false
 # cooling-element-list 20 cooling-element-number 2    rpm 3000    cooling-element-is-error false

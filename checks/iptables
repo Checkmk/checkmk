@@ -34,8 +34,8 @@
 #-A RH-Firewall-1-INPUT -j REJECT --reject-with icmp-host-prohibited
 #COMMIT
 
-import hashlib
 import difflib
+import hashlib
 
 
 def iptables_hash(config):

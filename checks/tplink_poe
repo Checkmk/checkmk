@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.poe import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Maps poe power status to faulty status detail string.
 # See tpPoePowerStatus in TPLINK-POWER-OVER-ETHERNET-MIB
 poe_faulty_status_to_string = {

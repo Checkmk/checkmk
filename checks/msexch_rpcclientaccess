@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_rpcclientaccess_defaultlevels'] = {

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_license>>>
 # {"status": [{"violated": true,"expired": false,"expiration_upcoming":
 # false,"expired_since": "PT0S","expires_in": "PT550H17.849S","trial":
@@ -26,8 +27,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "PT720H","allowed_traffic_violations": 5,"expiration_warning_range":
 # "PT240H"},"expired": false},"traffic_exceeded": false,"cluster_not_covered":
 # false,"nodes_exceeded": false,"remote_checks_failed": true,"valid": false}]}
-
-import json
 
 
 def inventory_graylog_license(parsed):

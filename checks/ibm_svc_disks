@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.filerdisks import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
 # 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::

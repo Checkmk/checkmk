@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_system>>>
 # system 1 system-name IMSAKO2B1
 # system 1 system-contact cia@cgm.com

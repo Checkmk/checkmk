@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_load import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hpux_cpu>>>
 #  2:23pm  up 196 days,  4:47,  5 users,  load average: 0.05, 0.04, 0.04
 #      8 logical processors (2 per socket)

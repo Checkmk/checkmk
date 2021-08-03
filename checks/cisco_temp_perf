@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_sensor_item import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # normal(1):         the environment is good, such as low
 #                    temperature.
 # warning(2):        the environment is bad, such as temperature

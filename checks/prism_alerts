@@ -10,9 +10,9 @@
 [1594857282558164, "kCritical", "File Server space usage for tk2sydafs1 is at 100%.", {}]
 [1594776768272094, "kWarning", "The CVM is not synchronizing time with any external servers. [check_cvm_ntp_sync][3026]NTP leader is not synchronizing to an external NTP server", {"vm_type": "CVM"}]
 """
-from typing import Sequence, Mapping, Dict, Tuple, Any
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, Mapping, Sequence, Tuple
 
 Section = Sequence[Dict[Any, Any]]
 StringMap = Mapping[str, str]

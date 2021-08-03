@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_sidecars>>>
 # {"sort": "node_name", "pagination": {"count": 1, "per_page": 50, "total": 1,
 # "page": 1}, "sidecars": [{"co  llectors": null, "node_name": "testserver",

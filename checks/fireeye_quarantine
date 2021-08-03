@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fireeye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
 factory_settings['quarantine_levels'] = {'usage': (70, 80)}

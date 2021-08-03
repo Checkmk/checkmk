@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_proliant import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .2 cpqHePowerMeterStatus
 #    Description:        This value specifies whether Power Meter reading is supported by this Server .
 #    The following values are supported:

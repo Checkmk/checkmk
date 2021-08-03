@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
 # 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000

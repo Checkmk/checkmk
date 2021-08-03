@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_streams>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
 # "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
@@ -46,8 +49,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "content_pack": null, "matching_type": "AND", "creator_user_id": "admin",
 # "alert_receivers": {"emails": [], "users": []}, "id":
 # "000000000000000000000003"}]}
-
-import json
 
 
 def parse_graylog_streams(info):

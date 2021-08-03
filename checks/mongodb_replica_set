@@ -7,8 +7,8 @@
 # <<<mongodb_replica_status>>>
 # <json>
 
-import json
 import datetime
+import json
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}

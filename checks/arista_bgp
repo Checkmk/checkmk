@@ -95,7 +95,8 @@ This is the data we can extract
 """
 
 import typing
-from cmk.base.check_legacy_includes.ip_format import clean_v4_address, clean_v6_address  # pylint: disable=wildcard-import,unused-wildcard-import
+
+from cmk.base.check_legacy_includes.ip_format import clean_v4_address, clean_v6_address
 
 names = [
     # "Local address type",  #        2.1.2,

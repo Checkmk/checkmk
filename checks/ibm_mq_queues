@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dateutil.parser
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
 # 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -37,8 +40,6 @@ from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-
 # 2 MQSC commands read.
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
-
-import dateutil.parser
 
 factory_settings["ibm_mq_queues_default_levels"] = {}
 

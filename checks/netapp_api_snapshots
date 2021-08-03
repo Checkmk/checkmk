@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...

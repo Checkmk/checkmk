@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_fan>>>
 # fan 1 durable-id fan_1.1
 # fan 1 name Fan Loc:left-PSU 1

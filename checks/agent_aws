@@ -6,6 +6,7 @@
 
 import json
 from typing import Any, Mapping, Tuple, Union
+
 from cmk.utils import password_store
 
 

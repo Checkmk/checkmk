@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of
 # Rittal). Need to rewrite an make *one* check with subchecks.

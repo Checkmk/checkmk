@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+
 # TODO: Cleanup this separation violation. This should be accessed through the check API
 import cmk.base.config
 

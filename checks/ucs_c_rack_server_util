@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
 #<<<ucs_c_rack_server_util:sep(9)>>>

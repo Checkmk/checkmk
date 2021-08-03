@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fjdarye import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # 1: fjdaryCaIndex, 3: fjdaryCaStatus
 
 check_info["fjdarye60_cadaps"] = {

@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.memory as memory
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
 #   |           _ __ ___   ___ _ __ ___   | (_)_ __  _   ___  __           |
@@ -20,8 +23,6 @@ from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-imp
 #   |  Specialized memory check for Linux that takes into account          |
 #   |  all of its specific information in /proc/meminfo.                   |
 #   '----------------------------------------------------------------------'
-
-import cmk.base.plugins.agent_based.utils.memory as memory
 
 factory_settings["mem_linux_default_levels"] = {
     "levels_virtual": ("perc_used", (80.0, 90.0)),

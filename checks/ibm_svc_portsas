@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example agent output:
 # <<<ibm_svc_portsas:sep(58)>>>
 # 0:1:6Gb:1:node1:500507680305D3C0:online::host:host_controller:0:1

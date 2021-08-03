@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<db2_bp_hitratios>>>
 # [[[db2taddm:CMDBS1]]]
 # BP_NAME        TOTAL_HIT_RATIO_PERCENT DATA_HIT_RATIO_PERCENT INDEX_HIT_RATIO_PERCENT XDA_HIT_RATIO_PERCENT

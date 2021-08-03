@@ -33,12 +33,12 @@ std::string unsafe_toupper(const std::string &str) {
 }
 #endif
 
-bool starts_with(const std::string &input, const std::string &test) {
+bool starts_with(std::string_view input, std::string_view test) {
     return input.size() >= test.size() &&
            input.compare(0, test.size(), test) == 0;
 }
 
-bool ends_with(const std::string &input, const std::string &test) {
+bool ends_with(std::string_view input, std::string_view test) {
     return input.size() >= test.size() &&
            input.compare(input.size() - test.size(), std::string::npos, test) ==
                0;

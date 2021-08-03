@@ -39,6 +39,25 @@ $secondary-font-color: $grey-6;
 $primary-hover-font-color: $black;
 $font-color-light-bg: $grey-4;
 
+// TODO: merge common variable definitions
+$table-secondary-font-color: rgba($grey-4, 0.8);
+$toggle-switch-font-color-on: $black;
+$toggle-switch-font-color-off: rgba($grey-4, 0.8);
+$dark-font-color: null;
+$hot-font-color: $grey-5;
+$unmonitored-font-color: rgb(102, 102, 102);
+$tag-font-color: $grey-4;
+$tag-dropdown-hover-font-color: $success;
+$host-folder-font-color: rgb(187, 221, 238);
+$if-state-up-font-color: null;
+$matches-search-font-color: null;
+$minority-font-color: null;
+$graph-hover-popup-font-color: $grey-4;
+$statep-font-color: $white;
+$button-font-color-default: $grey-4;
+$filter-group-title-font-color: $black;
+$tactical-overview-th-font-color: rgba($grey-4, 0.8);
+
 // -----------------------------------------------------------------------------
 // Buttons
 // -----------------------------------------------------------------------------
@@ -69,8 +88,6 @@ $color-table-border-dark: rgb(13, 15, 15); // dark grey
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
-$table-secondary-font-color: rgba($grey-4, 0.8);
-
 $primary-border: null;
 
 $primary-th-bg-color: rgb(245, 245, 245);
@@ -81,9 +98,6 @@ $primary-box-shadow: 0.5px 0.5px 1px rgb(204, 204, 204);
 $dashboard-stats-bg-color: $white;
 
 $checkbox-checked-color: $black;
-
-$toggle-switch-font-color-on: $black;
-$toggle-switch-font-color-off: rgba($grey-4, 0.8);
 
 $toggle-button-search-img-filter: null;
 
@@ -106,8 +120,6 @@ $select2-search-field-border: none;
 $td-unused-color: rgb(34, 85, 102);
 
 $graph-legend-color: null;
-
-$dark-font-color: null;
 
 $dashlet-body-bg-color: $ux-theme-1;
 
@@ -136,7 +148,6 @@ $host-diag-failed-bg-color: rgb(255, 238, 238);
 $wato-inherited-color: $grey-3;
 
 $hot-bg-color: rgb(255, 160, 66);
-$hot-font-color: $grey-5;
 
 $input-hover-bg-color: $ux-theme-4;
 
@@ -162,7 +173,6 @@ $dragging-bg-color: $grey-1;
 $invtree-th-bg-color: rgb(245, 245, 245);
 $invtree-td-bg-color: $grey-1;
 
-$unmonitored-font-color: rgb(102, 102, 102);
 $unmonitored-bg-color: rgb(202, 202, 202);
 $hostdown-bg-color: rgb(0, 102, 170);
 
@@ -179,7 +189,6 @@ $logwatch-text-color-2: $darkgrey;
 // -----------------------------------------------------------------------------
 // Tags
 // -----------------------------------------------------------------------------
-$tag-font-color: $grey-4;
 $tag-opacity: 1;
 $tag-discovered-opacity: 1;
 $tag-hover-opacity: 0.5;
@@ -187,7 +196,6 @@ $tag-hover-opacity: 0.5;
 $tag-input-bg-color: $ux-theme-5;
 $tag-dropdown-hover-bg-color: $ux-theme-5;
 $tag-dropdown-hover-border-color: rgb(217, 217, 217);
-$tag-dropdown-hover-font-color: $success;
 
 // -----------------------------------------------------------------------------
 // Node visualization
@@ -208,21 +216,14 @@ $node-vis-growth-root-color: rgb(25, 90, 230); // blue
 $topology-filter-bg-color: null;
 $topology-filter-border-color: null;
 
-$host-folder-font-color: rgb(187, 221, 238);
-
-$if-state-up-font-color: null;
-
 $agent-config-inner-title-bg-color: $grey-1;
 $agent-config-td-color: rgb(42, 42, 42);
 
 $pnp4nagios-img-filter: null;
 
 $matches-search-bg-color: $color-nuance-1;
-$matches-search-font-color: null;
 
 $help-bg-color: rgb(255, 255, 204);
-
-$minority-font-color: null;
 
 $button-spacer-color: rgb(180, 180, 180);
 
@@ -230,7 +231,6 @@ $timeline-hilite-border: null;
 $timetable-hilite-bg-color: darken($ux-theme-0, 15%);
 
 $pnp-graph-img-border-color: $ux-theme-6;
-$graph-hover-popup-font-color: $grey-4;
 $graph-hover-popup-bg-color: $ux-theme-0;
 $graph-hover-popup-border: 1px solid rgb(204, 207, 219);
 $graph-hover-popup-box-shadow: 0.5px 0.5px 2px rgb(204, 204, 204);
@@ -239,8 +239,6 @@ $globalvars-modified-box-shadow: 3px 3px 5px rgb(238, 238, 238) inset;
 $globalvars-modified-globally-box-shadow: 3px 3px 5px rgb(139, 199, 229) inset;
 
 $dashlet-inner-bg-color: $ux-theme-1;
-
-$statep-font-color: $white;
 
 $bar-fill-color: rgba(0, 185, 255, 0.95);
 $bar-hover-fill-color: rgba(0, 220, 255, 0.9);
@@ -255,16 +253,13 @@ $scatterdot-hilite-color: rgb(0, 185, 255);
 /* TODO:  move variables defined for the UX project to the correct place */
 /* TODO:  adapt variables to modern theme */
 $popup-shadow-color: rgba($white, 0.2);
-$button-font-color-default: $grey-4;
 $button-bg-color-default: $ux-theme-5;
 $button-bg-color-suggestions: $ux-theme-4;
 $navigation-bg-color: $ux-theme-2;
 $page-menu-bg-color: $ux-theme-4;
 $snapin-bg-color: $ux-theme-2;
 $sidebar-border-color: rgba($grey-4, 0.2);
-$filter-group-title-font-color: $black;
 $popup-trigger-active-bg-color: null;
-$tactical-overview-th-font-color: rgba($grey-4, 0.8);
 $tactical-overview-td-bg-color: $ux-theme-5;
 $server-time-div-bg-color: rgba($grey-4, 0.2);
 $snapin-heading-border-color: rgba($grey-4, 0.2);

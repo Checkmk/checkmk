@@ -7,6 +7,7 @@
 import logging
 from typing import List
 import argparse
+from itertools import chain
 
 from livestatus import SiteId
 import cmk.utils.site
@@ -54,7 +55,9 @@ def main(args: List[str]) -> int:
 
 
 def load_plugins() -> None:
-    for plugin, exc in load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"):
+    for plugin, exc in chain(
+            load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
+            load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc

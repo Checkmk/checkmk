@@ -83,4 +83,5 @@ def test_load_plugins():
     assert sorted(rename_action_registry.keys()) == sorted([
         "sites",
         "hosts_and_folders",
+        "dcd_connections",
     ])

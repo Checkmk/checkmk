@@ -363,7 +363,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         return _("Diagnostics dump")
 
     def __init__(self) -> None:
-        super(DiagnosticsDumpBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=self.gui_title(),
             lock_wato=False,

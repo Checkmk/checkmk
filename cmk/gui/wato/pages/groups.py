@@ -76,7 +76,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def __init__(self) -> None:
-        super(ModeGroups, self).__init__()
+        super().__init__()
         self._groups = self._load_groups()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -387,7 +387,7 @@ class ModeContactgroups(ModeGroups):
                 self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
     def _show_row_cells(self, table, name, group):
-        super(ModeContactgroups, self)._show_row_cells(table, name, group)
+        super()._show_row_cells(table, name, group)
         table.cell(_("Members"))
         html.write_html(
             HTML(", ").join([
@@ -479,7 +479,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
         return _("Edit contact group")
 
     def _determine_additional_group_data(self):
-        super(ModeEditContactgroup, self)._determine_additional_group_data()
+        super()._determine_additional_group_data()
 
         permitted_inventory_paths = self._vs_inventory_paths_and_keys().from_html_vars(
             'inventory_paths')
@@ -494,7 +494,7 @@ class ModeEditContactgroup(ABCModeEditGroup):
             self.group["nagvis_maps"] = permitted_maps
 
     def _show_extra_page_elements(self):
-        super(ModeEditContactgroup, self)._show_extra_page_elements()
+        super()._show_extra_page_elements()
 
         forms.header(_("Permissions"))
         forms.section(_("Permitted HW/SW inventory paths"))

@@ -77,7 +77,7 @@ class FetchAgentOutputRequest:
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(Page, metaclass=abc.ABCMeta):
     def __init__(self) -> None:
-        super(AgentOutputPage, self).__init__()
+        super().__init__()
         self._from_vars()
 
     def _from_vars(self) -> None:
@@ -244,7 +244,7 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
                                  self._request.agent_type)
         title = _("Fetching %s of %s / %s") % (self._request.agent_type, host.site_id(),
                                                host.name())
-        super(FetchAgentOutputBackgroundJob, self).__init__(job_id, title=title)
+        super().__init__(job_id, title=title)
 
         self.set_function(self._fetch_agent_output)
 

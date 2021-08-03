@@ -62,8 +62,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     def __init__(self):
         self._value = {}
-        super(ModeActivateChanges, self).__init__()
-        super(ModeActivateChanges, self).load()
+        super().__init__()
+        super().load()
 
     def title(self):
         return _("Activate pending changes")

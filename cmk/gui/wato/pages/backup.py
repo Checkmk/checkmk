@@ -26,7 +26,7 @@ from cmk.gui.plugins.wato import (
 
 class SiteBackupTargets(backup.Targets):
     def __init__(self):
-        super(SiteBackupTargets, self).__init__(backup.site_config_path())
+        super().__init__(backup.site_config_path())
 
 
 @mode_registry.register
@@ -194,8 +194,7 @@ class ModeAjaxBackupJobState(AjaxPage):
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
-        super(SiteBackupKeypairStore,
-              self).__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
+        super().__init__(cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
 @mode_registry.register
@@ -247,7 +246,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
 
     def _upload_key(self, key_file, value):
         watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
-        super(ModeBackupUploadKey, self)._upload_key(key_file, value)
+        super()._upload_key(key_file, value)
 
 
 @mode_registry.register
@@ -300,7 +299,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
             return backup.SystemBackupTargetsReadOnly().get(target_ident)
 
     def _show_target_list(self) -> None:
-        super(ModeBackupRestore, self)._show_target_list()
+        super()._show_target_list()
         backup.SystemBackupTargetsReadOnly().show_list(editable=False,
                                                        title=_("System global targets"))
 

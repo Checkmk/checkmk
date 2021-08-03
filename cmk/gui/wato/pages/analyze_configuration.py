@@ -64,7 +64,7 @@ class ModeAnalyzeConfig(WatoMode):
         return []
 
     def __init__(self):
-        super(ModeAnalyzeConfig, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 

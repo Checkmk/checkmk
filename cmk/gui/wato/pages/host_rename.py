@@ -67,7 +67,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
 
     def __init__(self, title=None):
         last_job_status = watolib.WatoBackgroundJob(self.job_prefix).get_status()
-        super(RenameHostsBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=title or self.gui_title(),
             lock_wato=True,
@@ -85,7 +85,7 @@ class RenameHostsBackgroundJob(watolib.WatoBackgroundJob):
 @gui_background_job.job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
     def __init__(self, host, title=None):
-        super(RenameHostBackgroundJob, self).__init__(title)
+        super().__init__(title)
         self._host = host
 
     def _back_url(self):
@@ -107,7 +107,7 @@ class ModeBulkRenameHost(WatoMode):
         return ModeFolder
 
     def __init__(self):
-        super(ModeBulkRenameHost, self).__init__()
+        super().__init__()
 
         if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))

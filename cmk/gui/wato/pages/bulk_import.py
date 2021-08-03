@@ -77,7 +77,7 @@ class ModeBulkImport(WatoMode):
         return ModeFolder
 
     def __init__(self) -> None:
-        super(ModeBulkImport, self).__init__()
+        super().__init__()
         self._params: Optional[Dict[str, Any]] = None
         self._has_title_line = True
 

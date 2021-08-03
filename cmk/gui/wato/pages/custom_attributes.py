@@ -406,7 +406,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ModeCustomAttrs, self).__init__()
+        super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.

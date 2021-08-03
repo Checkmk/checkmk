@@ -1557,7 +1557,7 @@ table.data.job_table td {
       position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      color: $tag-font-color;
+      color: $font-color;
     }
 
     x {
@@ -1592,7 +1592,7 @@ table.data.job_table td {
   }
 
   &__tag-text {
-    color: $tag-font-color;
+    color: $font-color;
   }
 
   tag,

@@ -926,7 +926,7 @@ div#hover_menu {
     display: block;
     float: left;
     margin: 0 2px 2px 0;
-    color: $graph-hover-popup-font-color;
+    color: $font-color;
     background-color: $graph-hover-popup-bg-color;
     border: $graph-hover-popup-border;
     box-shadow: $graph-hover-popup-box-shadow;
@@ -1323,7 +1323,7 @@ div.graph {
 }
 
 div.graph_hover_popup {
-  color: $graph-hover-popup-font-color;
+  color: $font-color;
   background-color: $graph-hover-popup-bg-color;
   border: $graph-hover-popup-border;
   box-shadow: $graph-hover-popup-box-shadow;

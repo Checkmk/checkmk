@@ -456,7 +456,7 @@ div#top_heading {
           padding: 0 8px;
           font-weight: $font-weight-bold;
           line-height: 16px;
-          color: $button-font-color-default;
+          color: $font-color;
           text-decoration: none;
           background-color: $button-bg-color-suggestions;
           border-radius: 4px;
@@ -781,7 +781,7 @@ div#page_menu_popups div.side_popup {
       display: block;
       padding: 8px 10px;
       font-weight: bold;
-      color: $filter-group-title-font-color;
+      color: $font-color;
       cursor: pointer;
     }
 

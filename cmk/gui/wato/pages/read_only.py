@@ -51,7 +51,7 @@ class ModeManageReadOnly(WatoMode):
         return ["set_read_only"]
 
     def __init__(self):
-        super(ModeManageReadOnly, self).__init__()
+        super().__init__()
         self._settings = config.wato_read_only
 
     def title(self):

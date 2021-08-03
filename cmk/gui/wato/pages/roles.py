@@ -69,7 +69,7 @@ from cmk.gui.type_defs import Choices
 class RoleManagement:
     def __init__(self):
         self._roles = userdb_utils.load_roles()
-        super(RoleManagement, self).__init__()
+        super().__init__()
 
     def _save_roles(self):
         # Reflect the data in the roles dict kept in the config module Needed
@@ -266,7 +266,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         return ModeRoles
 
     def __init__(self):
-        super(ModeEditRole, self).__init__()
+        super().__init__()
 
         # Make sure that all dynamic permissions are available (e.g. those for custom
         # views)

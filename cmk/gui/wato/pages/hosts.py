@@ -58,7 +58,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
         self._host = self._init_host()
         self._mode = "edit"
-        super(ABCHostMode, self).__init__()
+        super().__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Host"), breadcrumb)

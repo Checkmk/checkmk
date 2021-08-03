@@ -62,7 +62,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         return _("Parent scan")
 
     def __init__(self):
-        super(ParentScanBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=_("Parent scan"),
             lock_wato=False,

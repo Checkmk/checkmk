@@ -139,8 +139,7 @@ class LDAPConnectionValuespec(Transform):
             validate=self._validate_ldap_connection,
         )
 
-        super(LDAPConnectionValuespec, self).__init__(valuespec,
-                                                      forth=LDAPUserConnector.transform_config)
+        super().__init__(valuespec, forth=LDAPUserConnector.transform_config)
 
     def _general_elements(self) -> List[DictionaryEntry]:
         general_elements: List[DictionaryEntry] = []

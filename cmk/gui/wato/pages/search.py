@@ -50,7 +50,7 @@ class ModeSearch(WatoMode):
         return ModeFolder
 
     def __init__(self):
-        super(ModeSearch, self).__init__()
+        super().__init__()
         self._folder = watolib.Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

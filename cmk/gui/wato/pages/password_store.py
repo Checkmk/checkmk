@@ -58,7 +58,7 @@ class ModePasswords(SimpleListMode):
         return ["passwords"]
 
     def __init__(self):
-        super(ModePasswords, self).__init__(
+        super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
@@ -74,7 +74,7 @@ class ModePasswords(SimpleListMode):
         return " ".join([
             _("The password may be used in checks. If you delete the password, "
               "the checks won't be able to authenticate with this password anymore."),
-            super(ModePasswords, self)._delete_confirm_message()
+            super()._delete_confirm_message()
         ])
 
     def page(self):
@@ -87,7 +87,7 @@ class ModePasswords(SimpleListMode):
               "including this password store, are needed in plain text to contact remote systems "
               "for monitoring. So all those passwords have to be stored readable by the monitoring."
              ))
-        super(ModePasswords, self).page()
+        super().page()
 
     def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), entry["title"])
@@ -123,7 +123,7 @@ class ModeEditPassword(SimpleEditMode):
         return ModePasswords
 
     def __init__(self):
-        super(ModeEditPassword, self).__init__(
+        super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )

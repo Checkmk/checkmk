@@ -83,7 +83,7 @@ class ModePredefinedConditions(SimpleListMode):
         return ["rulesets"]
 
     def __init__(self):
-        super(ModePredefinedConditions, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -114,10 +114,10 @@ class ModePredefinedConditions(SimpleListMode):
               "You can then refer to these conditions from different rulesets. Using these predefined "
               "conditions may save you a lot of redundant conditions when you need them in multiple "
               "rulesets."))
-        super(ModePredefinedConditions, self).page()
+        super().page()
 
     def _show_action_cell(self, table, ident):
-        super(ModePredefinedConditions, self)._show_action_cell(table, ident)
+        super()._show_action_cell(table, ident)
 
         html.icon_button(self._search_url(ident),
                          _("Show rules using this %s") % self._mode_type.name_singular(), "search")
@@ -176,7 +176,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         return ModePredefinedConditions
 
     def __init__(self):
-        super(ModeEditPredefinedCondition, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -236,7 +236,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super(ModeEditPredefinedCondition, self)._save(entries)
+        super()._save(entries)
 
         conditions = RuleConditions("").from_config(entries[self._ident]["conditions"])
 

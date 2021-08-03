@@ -76,7 +76,7 @@ from cmk.gui.plugins.wato import (
 
 class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ABCTagMode, self).__init__()
+        super().__init__()
         self._tag_config_file = TagConfigFile()
         self._load_effective_config()
 
@@ -412,7 +412,7 @@ class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
         return ["hosttags"]
 
     def __init__(self):
-        super(ABCEditTagMode, self).__init__()
+        super().__init__()
         self._id = self._get_id()
         self._new = self._is_new_tag()
 
@@ -588,7 +588,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         return ModeTags
 
     def __init__(self):
-        super(ModeEditAuxtag, self).__init__()
+        super().__init__()
 
         if self._new:
             self._aux_tag = cmk.utils.tags.AuxTag()
@@ -670,7 +670,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         return ModeTags
 
     def __init__(self) -> None:
-        super(ModeEditTagGroup, self).__init__()
+        super().__init__()
 
         tg = self._tag_config.get_tag_group(self._id)
         self._untainted_tag_group = cmk.utils.tags.TagGroup() if tg is None else tg

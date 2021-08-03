@@ -85,7 +85,7 @@ class ModeFolder(WatoMode):
         return ["hosts"]
 
     def __init__(self):
-        super(ModeFolder, self).__init__()
+        super().__init__()
         self._folder = watolib.Folder.current()
 
         if request.has_var("_show_host_tags"):
@@ -1072,7 +1072,7 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
         return ModeFolder
 
     def __init__(self):
-        super(ABCFolderMode, self).__init__()
+        super().__init__()
         self._folder = self._init_folder()
 
     @abc.abstractmethod

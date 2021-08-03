@@ -94,7 +94,7 @@ class ModeUsers(WatoMode):
         return ["users"]
 
     def __init__(self):
-        super(ModeUsers, self).__init__()
+        super().__init__()
         self._job = userdb.UserSyncBackgroundJob()
         self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()
 
@@ -551,7 +551,7 @@ class ModeEditUser(WatoMode):
         return self.mode_url(edit=self._user_id)
 
     def __init__(self):
-        super(ModeEditUser, self).__init__()
+        super().__init__()
 
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.

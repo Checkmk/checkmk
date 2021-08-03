@@ -11,22 +11,22 @@ import abc
 import base64
 import contextlib
 import inspect
-from itertools import islice
 import json
-from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
-import uuid
 import urllib.parse
+import uuid
+from itertools import islice
+from pathlib import Path
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
 
 @contextlib.contextmanager

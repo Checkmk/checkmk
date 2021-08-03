@@ -5,35 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from functools import partial
 from typing import (
-    Callable,
-    Protocol,
-    TypeVar,
     Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
     NamedTuple,
     Optional,
-    Union,
+    Protocol,
     Set,
-    List,
-    Dict,
-    Type,
     Tuple,
-    Iterable,
+    Type,
+    TypeVar,
+    Union,
 )
+
+from marshmallow.fields import Boolean, Constant
+from marshmallow.fields import Dict as MDict
+from marshmallow.fields import Integer
+from marshmallow.fields import List as MList
+from marshmallow.fields import Nested, String
+
+from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.utils.bi.bi_schema import Schema
-from livestatus import SiteId, LivestatusOutputFormat, LivestatusResponse
-from marshmallow.fields import (
-    List as MList,
-    Dict as MDict,
-    Constant,
-    Integer,
-    String,
-    Nested,
-    Boolean,
-)
-
-from functools import partial
 
 ReqList = partial(MList, required=True)
 ReqDict = partial(MDict, required=True)
@@ -49,22 +46,19 @@ ActionArgument = Tuple[str, ...]
 ActionArguments = List[ActionArgument]
 
 import cmk.utils.plugin_registry as plugin_registry
-from cmk.utils.macros import (
-    MacroMapping,
-    replace_macros_in_str,
-)
 from cmk.utils.bi.type_defs import (
     ActionConfig,
     ComputationConfigDict,
     GroupConfigDict,
     SearchConfig,
 )
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import (
     HostName,
-    ServiceName,
     HostState,
-    ServiceState,
     ServiceDetails,
+    ServiceName,
+    ServiceState,
     TaggroupID,
     TaggroupIDToTagCondition,
     TagID,

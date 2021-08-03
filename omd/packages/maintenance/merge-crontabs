@@ -2,8 +2,8 @@
 # This script is part of OMD
 # Joerg Linge 2010
 #
-import sys
 import os
+import sys
 from typing import Dict
 
 omd_config: Dict[str, str] = {}

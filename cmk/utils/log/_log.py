@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import logging
+import sys
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import IO, Optional, Union

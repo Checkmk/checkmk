@@ -4,33 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict, dataclass
-from contextlib import suppress
 import json
 import logging
-from pathlib import Path
 import time
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Literal,
-    NewType,
-    Optional,
-    Tuple,
-)
+from contextlib import suppress
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, NewType, Optional, Tuple
 
 from six import ensure_str
 
 import livestatus
-from cmk.utils.exceptions import MKGeneralException
+
 import cmk.utils.debug
-from cmk.utils.log import VERBOSE
 import cmk.utils.paths
-from cmk.utils.type_defs import Timestamp, Seconds, MetricName, ServiceName, HostName
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import HostName, MetricName, Seconds, ServiceName, Timestamp
 
 logger = logging.getLogger("cmk.prediction")
 

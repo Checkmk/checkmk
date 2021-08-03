@@ -12,12 +12,12 @@
 # TODO: The refactoring is mandatory.
 
 import os
-from pathlib import Path
 import re
 import shutil
 import sys
 import tempfile
 import uuid
+from pathlib import Path
 
 from cmk.utils import msi_patch
 

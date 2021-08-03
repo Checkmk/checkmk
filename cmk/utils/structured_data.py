@@ -9,27 +9,27 @@ structured monitoring data of Check_MK.
 """
 
 from __future__ import annotations
-import io
+
 import gzip
-from pathlib import Path
+import io
 import pprint
+from collections import Counter
+from pathlib import Path
+from typing import Any, Callable
+from typing import Counter as TCounter
 from typing import (
     Dict,
-    List,
-    Optional,
-    Any,
-    Union,
-    Tuple,
-    Set,
-    Callable,
-    NamedTuple,
-    Literal,
-    Counter as TCounter,
-    Sequence,
-    Mapping,
     Iterable,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
 )
-from collections import Counter
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName

@@ -21,6 +21,7 @@ try:
     import configparser
 except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore
+
 import glob
 import os
 import re
@@ -30,7 +31,7 @@ import time
 from unicodedata import normalize
 
 try:
-    from typing import Dict, Any
+    from typing import Any, Dict
 except ImportError:
     pass
 

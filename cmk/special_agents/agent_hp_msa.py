@@ -6,16 +6,16 @@
 
 import argparse
 import hashlib
-from html.parser import HTMLParser
 import logging
 import sys
+import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
 from typing import Dict
 from urllib.parse import urljoin
-import xml.etree.ElementTree as ET
 
 import requests
-from requests.structures import CaseInsensitiveDict
 import urllib3  # type: ignore[import]
+from requests.structures import CaseInsensitiveDict
 
 LOGGER = logging.getLogger(__name__)
 

@@ -8,31 +8,22 @@
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions
 
-import math
-import json
 import datetime as dt
-from pathlib import Path
+import json
 import logging
-from typing import Sequence, Generator, Any, Optional, Callable, Tuple
+import math
+from pathlib import Path
+from typing import Any, Callable, Generator, Optional, Sequence, Tuple
+
 import urllib3  # type: ignore[import]
-from requests_oauthlib import OAuth2Session  # type: ignore[import]
 from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
+from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths
-from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
-)
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
-from cmk.special_agents.utils.request_helper import (
-    Requester,
-    StringMap,
-    TokenDict,
-    to_token_dict,
-)
+
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.request_helper import Requester, StringMap, to_token_dict, TokenDict
 
 AnyGenerator = Generator[Any, None, None]
 ResultFn = Callable[..., AnyGenerator]

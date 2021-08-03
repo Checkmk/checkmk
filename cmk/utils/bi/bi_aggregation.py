@@ -4,26 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Type, Optional, Any, List, Set
+from typing import Any, Dict, List, Optional, Set, Type
 
 from cmk.utils.bi.bi_lib import (
-    String,
-    ReqString,
+    ABCBISearcher,
+    BIAggregationComputationOptions,
+    BIAggregationGroups,
     create_nested_schema,
     create_nested_schema_for_class,
+    ReqString,
+    String,
 )
-
-from cmk.utils.bi.bi_lib import (
-    BIAggregationGroups,
-    BIAggregationComputationOptions,
-    ABCBISearcher,
-)
-
+from cmk.utils.bi.bi_node_generator import BINodeGenerator
+from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 from cmk.utils.bi.bi_rule import BIRule
 from cmk.utils.bi.bi_schema import Schema
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
-from cmk.utils.bi.bi_node_vis import BIAggregationVisualizationSchema
 from cmk.utils.bi.type_defs import AggrConfigDict
 
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)

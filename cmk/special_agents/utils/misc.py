@@ -16,12 +16,12 @@ import errno
 import getopt
 import json
 import logging
-from pathlib import Path
 import pprint
 import sys
 import time
-from typing import Any, Dict, List, Generator, Callable
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Callable, Dict, Generator, List
 
 import requests
 

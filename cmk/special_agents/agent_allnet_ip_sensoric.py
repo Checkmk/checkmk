@@ -7,13 +7,13 @@
 # This agent uses UPNP API calls to the Fritz!Box to gather information
 # about connection configuration and status.
 
-import re
-import sys
 import getopt
 import pprint
+import re
 import socket
-import urllib.request
+import sys
 import traceback
+import urllib.request
 
 from cmk.utils.exceptions import MKException
 

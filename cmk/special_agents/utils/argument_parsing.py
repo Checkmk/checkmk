@@ -12,8 +12,9 @@ Current responsibilities include:
 * logging
 """
 
-from typing import Optional
 import argparse
+from typing import Optional
+
 from cmk.special_agents.utils import vcrtrace  # pylint: disable=cmk-module-layer-violation
 
 Args = argparse.Namespace

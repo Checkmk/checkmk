@@ -14,14 +14,14 @@ from six import ensure_str
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.tty as tty
 import cmk.utils.paths
+import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
 
 from . import snmp_cache
-from .type_defs import SNMPBackend, OID, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
+from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]

@@ -11,16 +11,17 @@ agent without any arguments.
 
 __version__ = "2.1.0i1"
 
-import io
-import subprocess
-import re
-import os
 import abc
-import platform
-import sys
+import io
 import logging
+
 # optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
 import optparse  # pylint: disable=W0402
+import os
+import platform
+import re
+import subprocess
+import sys
 
 try:
     from typing import Any, Dict, Iterable, List, Optional, Tuple

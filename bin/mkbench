@@ -57,15 +57,15 @@ import time
 import traceback
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-from psutil._common import sdiskusage  # type: ignore[import]
-from psutil._pslinux import svmem, sdiskio  # type: ignore[import]
-import psutil  # type: ignore[import]
 import npyscreen  # type: ignore[import]  # pylint: disable=import-error
+import psutil  # type: ignore[import]
+from psutil._common import sdiskusage  # type: ignore[import]
+from psutil._pslinux import sdiskio, svmem  # type: ignore[import]
 
 import livestatus
 
-from cmk.utils.render import fmt_bytes
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.render import fmt_bytes
 
 #.
 #   .--Helpers-------------------------------------------------------------.

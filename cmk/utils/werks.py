@@ -8,14 +8,13 @@ so it's best place is in the central library."""
 
 import itertools
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any, Dict
 
 from six import ensure_str
 
 import cmk.utils.paths
-
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 

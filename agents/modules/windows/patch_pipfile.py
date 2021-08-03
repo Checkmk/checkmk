@@ -8,7 +8,8 @@
 # Deprecated now
 
 import sys
-from colorama import init, Fore, Style  # type: ignore[import]  # pylint: disable=import-error
+
+from colorama import Fore, init, Style  # type: ignore[import]  # pylint: disable=import-error
 
 init()
 

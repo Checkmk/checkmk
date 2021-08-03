@@ -15,7 +15,7 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
 
-from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 

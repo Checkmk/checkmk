@@ -9,7 +9,17 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Container, Dict, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import (
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import cmk.utils
 import cmk.utils.paths

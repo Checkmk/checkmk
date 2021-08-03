@@ -6,23 +6,25 @@
 """
 Special agent for monitoring Prometheus with Checkmk.
 """
-import ast
-import sys
 import argparse
+import ast
 import json
-import time
 import logging
+import math
+import sys
+import time
 import traceback
-from typing import List, Dict, Any, Mapping, DefaultDict, Optional, Iterator, Tuple, Callable, Union
-from collections import OrderedDict, defaultdict
+from collections import defaultdict, OrderedDict
+from typing import Any, Callable, DefaultDict, Dict, Iterator, List, Mapping, Optional, Tuple, Union
+from urllib.parse import quote
+
+import requests
+
 from cmk.special_agents.utils.request_helper import (
     create_api_connect_session,
-    parse_api_url,
     parse_api_custom_url,
+    parse_api_url,
 )
-import math
-from urllib.parse import quote
-import requests
 
 PromQLMetric = Dict[str, Any]
 

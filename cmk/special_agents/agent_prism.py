@@ -4,23 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Tuple, Generator, Optional, Sequence
-import sys
 import csv
 import logging
+import sys
+from typing import Any, Generator, Optional, Sequence, Tuple
 
-from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
-)
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
-from cmk.special_agents.utils.request_helper import (
-    Requester,
-    HTTPSAuthRequester,
-)
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.utils.request_helper import HTTPSAuthRequester, Requester
 
 SectionLine = Tuple[Any, ...]
 

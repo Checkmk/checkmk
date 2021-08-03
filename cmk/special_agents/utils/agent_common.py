@@ -12,18 +12,13 @@ Current responsibilities include:
 * logging
 """
 
-from typing import (
-    Sequence,
-    List,
-    Any,
-    Callable,
-    Optional,
-)
-from types import GeneratorType
 import argparse
 import json
-import sys
 import logging
+import sys
+from types import GeneratorType
+from typing import Any, Callable, List, Optional, Sequence
+
 from requests.packages import urllib3
 
 import cmk.utils.password_store

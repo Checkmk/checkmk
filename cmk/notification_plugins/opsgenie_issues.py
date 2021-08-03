@@ -5,19 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Optional
-from six import ensure_str
+from typing import Dict, List, Optional
 
 # ignore mypy error: "found module but no type hints or library stubs"
 from opsgenie_sdk.api.alert import AlertApi  # type: ignore
-from opsgenie_sdk.api_client import ApiClient  # type: ignore
-from opsgenie_sdk.configuration import Configuration  # type: ignore
 from opsgenie_sdk.api.alert.acknowledge_alert_payload import AcknowledgeAlertPayload  # type: ignore
-from opsgenie_sdk.rest import ApiException  # type: ignore
 from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type: ignore
 from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore
+from opsgenie_sdk.api_client import ApiClient  # type: ignore
+from opsgenie_sdk.configuration import Configuration  # type: ignore
+from opsgenie_sdk.rest import ApiException  # type: ignore
+from six import ensure_str
 
-from typing import Dict, List
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 

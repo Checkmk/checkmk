@@ -11,10 +11,8 @@ import fnmatch
 import getopt
 import glob
 import grp
-from hashlib import md5
 import json
 import os
-from pathlib import Path
 import pwd
 import re
 import shutil
@@ -23,29 +21,42 @@ import socket
 import subprocess
 import sys
 import syslog
-from tarfile import TarFile, ReadError
 import tempfile
 import textwrap
 import threading
 import time
 import traceback
 from contextlib import contextmanager, ExitStack
-from semver import VersionInfo  # type: ignore[import]
-from typing import Any, Callable, Dict, Iterator, IO, List, NamedTuple, NoReturn, Optional, Tuple, Generator
+from hashlib import md5
+from pathlib import Path
+from tarfile import ReadError, TarFile
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    IO,
+    Iterator,
+    List,
+    NamedTuple,
+    NoReturn,
+    Optional,
+    Tuple,
+)
 
-from six import ensure_str
-
-from OpenSSL import crypto  # type: ignore[import]
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
 from Cryptodome.PublicKey import RSA
+from OpenSSL import crypto  # type: ignore[import]
+from semver import VersionInfo  # type: ignore[import]
+from six import ensure_str
 
 import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.exceptions import MKTerminate, MKGeneralException
 
 VERSION = "2.1.0i1"
 

@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 import re
 import sys
-from typing import Optional, Tuple
 import uuid
+from pathlib import Path
+from typing import Optional, Tuple
 
 import yaml
 

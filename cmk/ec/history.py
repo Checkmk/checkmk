@@ -84,10 +84,11 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    from pymongo.connection import Connection  # type: ignore[import]
-    from pymongo import DESCENDING  # type: ignore[import]
-    from pymongo.errors import OperationFailure  # type: ignore[import]
     import datetime
+
+    from pymongo import DESCENDING  # type: ignore[import]
+    from pymongo.connection import Connection  # type: ignore[import]
+    from pymongo.errors import OperationFailure  # type: ignore[import]
 except ImportError:
     Connection = None
 

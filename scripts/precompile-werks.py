@@ -6,6 +6,7 @@
 
 import sys
 from pathlib import Path
+
 import cmk.utils.werks
 
 werk_dir = Path(sys.argv[1])

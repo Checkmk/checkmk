@@ -4,16 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import abc
 import logging
-from typing import Optional, Final, Dict
+import sys
+from typing import Dict, Final, Optional
 
-from cmk.utils.log import VERBOSE
-from cmk.utils.caching import config_cache
-from cmk.utils.caching import runtime_cache
-import cmk.utils.render as render
 import cmk.utils.misc
+import cmk.utils.render as render
+from cmk.utils.caching import config_cache, runtime_cache
+from cmk.utils.log import VERBOSE
 
 __all__ = [
     "ABCResourceObserver",

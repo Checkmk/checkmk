@@ -32,11 +32,10 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    from urllib2 import Request, urlopen  # pylint: disable=import-error
-    from urllib2 import URLError, HTTPError  # pylint: disable=import-error
+    from urllib2 import HTTPError, Request, URLError, urlopen  # pylint: disable=import-error
 else:
+    from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
     from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
-    from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
 
 
 def get_config():
@@ -162,9 +161,13 @@ def urlopen_with_ssl(request, timeout):
         result = urlopen(request, context=get_ssl_no_verify_context(), timeout=timeout)
     else:
         if sys.version_info[0] == 2:
-            from urllib2 import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error
+            from urllib2 import (  # pylint: disable=import-error
+                build_opener, HTTPSHandler, install_opener,
+            )
         else:
-            from urllib.request import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error,no-name-in-module
+            from urllib.request import (  # pylint: disable=import-error,no-name-in-module
+                build_opener, HTTPSHandler, install_opener,
+            )
         install_opener(build_opener(HTTPSHandler()))
         result = urlopen(request, timeout=timeout)
     return result

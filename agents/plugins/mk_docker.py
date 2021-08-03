@@ -37,7 +37,7 @@ import sys
 import time
 
 try:
-    from typing import Dict, Union, Tuple
+    from typing import Dict, Tuple, Union
 except ImportError:
     pass
 

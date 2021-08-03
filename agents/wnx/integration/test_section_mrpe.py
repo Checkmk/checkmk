@@ -6,13 +6,12 @@
 
 import os
 import platform
-import pytest  # type: ignore
 import re
 import shutil
-from .local import (
-    local_test,
-    user_dir,
-)
+
+import pytest  # type: ignore
+
+from .local import local_test, user_dir
 
 
 class Globals():

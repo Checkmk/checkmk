@@ -6,13 +6,12 @@
 
 import os
 import platform
-import pytest  # type: ignore
 import re
-from .local import (
-    local_test,
-    user_dir,
-)
 import shutil
+
+import pytest  # type: ignore
+
+from .local import local_test, user_dir
 
 
 class TestPaths():

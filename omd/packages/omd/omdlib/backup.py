@@ -24,16 +24,16 @@
 # Boston, MA 02110-1301 USA.
 """Cares about backing up the files of a site"""
 
-import os
-import sys
 import errno
-import socket
-import tarfile
 import fnmatch
-from typing import cast, List, Tuple, BinaryIO
+import os
+import socket
+import sys
+import tarfile
+from typing import BinaryIO, cast, List, Tuple
 
-from omdlib.type_defs import CommandOptions
 from omdlib.contexts import SiteContext
+from omdlib.type_defs import CommandOptions
 
 
 def backup_site_to_tarfile(site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions,

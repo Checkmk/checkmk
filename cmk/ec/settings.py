@@ -9,10 +9,10 @@
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog
 # at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
 
-from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 import sys
-from typing import List, NamedTuple, Optional, Union
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import List, NamedTuple, Optional, Union
 
 
 class AnnotatedPath(NamedTuple):
@@ -219,8 +219,8 @@ def settings(version: str, omd_root: Path, default_config_dir: Path, argv: List[
 
 
 if __name__ == "__main__":
-    import cmk.utils.version as cmk_version
     import cmk.utils.paths
+    import cmk.utils.version as cmk_version
     print(
         settings(str(cmk_version.__version__), Path(cmk.utils.paths.omd_root),
                  Path(cmk.utils.paths.default_config_dir), sys.argv))

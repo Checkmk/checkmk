@@ -8,8 +8,8 @@
 
 from os import environ
 
-from cmk.notification_plugins.utils import StateInfo
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
+from cmk.notification_plugins.utils import StateInfo
 
 RESULT_MAP = {
     (200, 299): StateInfo(0, 'json', 'eventId'),

@@ -21,11 +21,12 @@ import requests
 
 from cmk.utils import paths, store
 
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket, SyslogMessage,
-)
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    SyslogForwarderUnixSocket, SyslogMessage,
+)
 
 Tags = Sequence[str]
 DatadogAPIResponse = Mapping[str, Any]

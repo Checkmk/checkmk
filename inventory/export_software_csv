@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.paths
 
 
 def inv_export_software_csv(hostname, params, tree):

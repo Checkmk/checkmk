@@ -10,11 +10,11 @@ import collections
 import datetime
 import errno
 import json
-from pathlib import Path
 import re
 import socket
 import sys
 import time
+from pathlib import Path
 from typing import Any, Counter, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 

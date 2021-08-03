@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
 """
+from pathlib import Path
 from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
 
-from pathlib import Path
 from six import ensure_binary
 
 import cmk.utils.debug
@@ -17,14 +17,14 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import HostName, SectionName
 
 from .type_defs import (
-    SNMPBackend,
+    BackendSNMPTree,
     OID,
+    SNMPBackend,
     SNMPDecodedValues,
     SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
-    BackendSNMPTree,
     SNMPValueEncoding,
     SpecialColumn,
 )

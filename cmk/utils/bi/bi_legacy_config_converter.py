@@ -16,17 +16,21 @@
 # Welcome to the old world. Avoid adding any new features here.
 # This code will be abandoned with the version following 2.0
 
-from typing import Dict, Union, List, Any, Tuple
-from pathlib import Path
 import logging
 import re
-from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_tag_to_group_map)
-from cmk.gui.globals import config  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.rulesets.ruleset_matcher import get_tag_to_group_map, RulesetToDictTransformer
+
+import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.globals import config  # pylint: disable=cmk-module-layer-violation
+
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
+
 from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.exceptions import MKGeneralException
 

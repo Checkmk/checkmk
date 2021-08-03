@@ -7,7 +7,8 @@
 from datetime import datetime
 from logging import Logger
 from re import findall
-from time import localtime, mktime, strptime, time as _time
+from time import localtime, mktime, strptime
+from time import time as _time
 from typing import Iterable, Mapping, Optional, Tuple, TypedDict
 
 from dateutil.parser import isoparse

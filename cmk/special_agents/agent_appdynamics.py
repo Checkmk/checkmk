@@ -8,9 +8,9 @@ import getopt
 import json
 import socket
 import sys
-from typing import Any, Dict
 from base64 import b64encode
 from http.client import HTTPConnection
+from typing import Any, Dict
 
 from six import ensure_binary, ensure_str
 

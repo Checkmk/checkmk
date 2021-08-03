@@ -6,12 +6,11 @@
 
 import os
 import platform
-import pytest  # type: ignore[import]
 import re
-from .local import (
-    local_test,
-    user_dir,
-)
+
+import pytest  # type: ignore[import]
+
+from .local import local_test, user_dir
 
 
 class Globals():

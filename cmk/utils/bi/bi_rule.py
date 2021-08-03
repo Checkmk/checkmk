@@ -13,39 +13,39 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from typing import List, Dict, Type, Sequence, Optional, Any
+from typing import Any, Dict, List, Optional, Sequence, Type
+
 from marshmallow import fields
 
-from cmk.utils.macros import MacroMapping
+from cmk.utils.bi.bi_aggregation_functions import (
+    BIAggregationFunctionBest,
+    BIAggregationFunctionSchema,
+)
 from cmk.utils.bi.bi_lib import (
+    ABCBICompiledNode,
+    ABCBISearcher,
+    ABCWithSchema,
+    ActionArgument,
     bi_aggregation_function_registry,
     BIParams,
+    create_nested_schema,
+    create_nested_schema_for_class,
+    get_schema_default_config,
     replace_macros,
     ReqList,
     ReqString,
-    ABCBICompiledNode,
-    get_schema_default_config,
-    create_nested_schema,
-    create_nested_schema_for_class,
-    ABCWithSchema,
-    ABCBISearcher,
-    ActionArgument,
 )
-
+from cmk.utils.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
+from cmk.utils.bi.bi_node_vis import BINodeVisBlockStyleSchema, BINodeVisLayoutStyleSchema
 from cmk.utils.bi.bi_rule_interface import (
     ABCBIRule,
     bi_rule_id_registry,
     BIRuleComputationOptions,
     BIRuleProperties,
 )
-from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema, BIAggregationFunctionBest
-from cmk.utils.bi.bi_node_vis import BINodeVisLayoutStyleSchema, BINodeVisBlockStyleSchema
-from cmk.utils.bi.bi_node_generator import BINodeGenerator, BINodeGeneratorSchema
 from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.bi.bi_trees import (
-    BICompiledRule,
-    BICompiledLeaf,
-)
+from cmk.utils.bi.bi_trees import BICompiledLeaf, BICompiledRule
+from cmk.utils.macros import MacroMapping
 
 
 class BIRule(ABCBIRule, ABCWithSchema):

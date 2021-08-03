@@ -7,7 +7,7 @@
 import importlib
 import pkgutil
 import sys
-from typing import Tuple, Optional, List, Generator
+from typing import Generator, List, Optional, Tuple
 
 
 def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exception], None, None]:

@@ -13,7 +13,6 @@ import itertools
 import struct
 import sys
 import termios
-
 from typing import Dict, Iterable, List, Tuple
 
 # TODO: Implementing the colors below as simple global variables is a bad idea,

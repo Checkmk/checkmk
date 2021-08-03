@@ -7,8 +7,8 @@
 from typing import (
     Any,
     Dict,
-    Literal,
     Iterable,
+    Literal,
     Mapping,
     Optional,
     Sequence,

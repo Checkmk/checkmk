@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import NamedTuple, List, Tuple, Set, Dict, Optional, Iterator
+from typing import Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import cmk.utils.plugin_registry
-from cmk.utils.type_defs import ServiceName, HostName
 from cmk.utils.bi.bi_lib import RequiredBIElement
-from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledAggregation, NodeResultBundle
+from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
+from cmk.utils.type_defs import HostName, ServiceName
 
 BIAggregationFilter = NamedTuple("BIAggregationFilter", [
     ("hosts", List[HostName]),

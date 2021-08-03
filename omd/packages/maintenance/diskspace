@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import glob
 import os
+import random
+import subprocess
 import sys
 import time
-import random
-import glob
 import traceback
-import subprocess
 
 from cmk.utils.render import fmt_bytes
 

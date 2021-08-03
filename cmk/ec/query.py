@@ -7,8 +7,8 @@
 from logging import Logger
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from cmk.utils.exceptions import MKException
 import cmk.utils.regex
+from cmk.utils.exceptions import MKException
 
 
 class MKClientError(MKException):

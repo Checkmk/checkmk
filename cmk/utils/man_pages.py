@@ -10,12 +10,12 @@ used as base for the list of supported checks and catalogs of checks.
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
 
-from io import StringIO
 import os
 import re
-import sys
-from pathlib import Path
 import subprocess
+import sys
+from io import StringIO
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from six import ensure_str
@@ -23,7 +23,6 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _

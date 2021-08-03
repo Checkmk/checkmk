@@ -10,63 +10,77 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
 
-import re
-from pathlib import Path, PureWindowsPath
-import errno
-from typing import List, Tuple, Any, Dict, Set, Optional, Callable
 import argparse
-import logging
+import ast
 import copy
+import errno
+import gzip
+import logging
+import multiprocessing
+import re
 import subprocess
 import time
-import ast
-import gzip
-import multiprocessing
+from pathlib import Path, PureWindowsPath
+from typing import Any, Dict, List, Optional, Set, Tuple, Callable
+
+import cmk.utils
+import cmk.utils.debug
+import cmk.utils.log as log
+import cmk.utils.paths
+import cmk.utils.tty as tty
+from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
+from cmk.utils.check_utils import maincheckify
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import VERBOSE
+from cmk.utils.regex import unescape
+from cmk.utils.type_defs import CheckPluginName, UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
 import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 import cmk.base.check_api  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
+import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
 
-import cmk.utils.log as log
-from cmk.utils.regex import unescape
-from cmk.utils.log import VERBOSE
-import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
-import cmk.utils.paths
-import cmk.utils
-from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import CheckPluginName, UserId
-from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
-from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.tty as tty
-
+import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.groups  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.sites import is_wato_slave_site  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboards, transform_topology_dashlet  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.dashboard.utils import transform_stats_dashlet  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.groups  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.groups  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation
+    transform_stats_dashlet,  # pylint: disable=cmk-module-layer-violation
+)
+from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation
+    builtin_dashboards, get_all_dashboards, transform_topology_dashlet,
+)
+from cmk.gui.plugins.userdb.utils import (  # pylint: disable=cmk-module-layer-violation
+    load_connection_config, save_connection_config, USER_SCHEME_SERIAL,
+)
+from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.watolib.utils import (
+    filter_unknown_settings,  # pylint: disable=cmk-module-layer-violation
+)
+from cmk.gui.sites import is_wato_slave_site  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.logged_in import SuperUserContext  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.groups  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.script_helpers import (  # pylint: disable=cmk-module-layer-violation
+    application_and_request_context, initialize_gui_environment,
+)
+from cmk.gui.watolib.changes import (  # pylint: disable=cmk-module-layer-violation
+    AuditLogStore, ObjectRef, ObjectRefType,
+)
+from cmk.gui.watolib.sites import (  # pylint: disable=cmk-module-layer-violation
+    site_globals_editable, SiteManagementFactory,
+)
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
 

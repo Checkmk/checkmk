@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Collection, Iterable, Tuple, Set
+from typing import Collection, Iterable, Set, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError

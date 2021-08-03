@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Optional
-from functools import lru_cache
 
 from livestatus import SiteId
 
 import cmk.utils.paths
-from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 OMDConfig = Dict[str, str]
 

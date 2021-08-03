@@ -4,51 +4,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Any, Set, Dict, Tuple, Union, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from livestatus import SiteId
 
-from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.defines
-from cmk.utils.type_defs import (
-    HostName,
-    ServiceName,
-    HostState,
-    ServiceState,
-)
-
+from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_lib import (
-    BIStates,
-    BIServiceWithFullState,
-    BIHostStatusInfoRow,
-    BIHostSpec,
-    ReqConstant,
-    ReqNested,
-    ReqString,
-    ReqList,
-    create_nested_schema_for_class,
-    ABCBICompiledNode,
     ABCBIAggregationFunction,
-    ABCBIStatusFetcher,
+    ABCBICompiledNode,
     ABCBISearcher,
-    BIAggregationGroups,
+    ABCBIStatusFetcher,
     BIAggregationComputationOptions,
-    RequiredBIElement,
+    BIAggregationGroups,
+    BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStates,
+    create_nested_schema_for_class,
     NodeComputeResult,
     NodeResultBundle,
+    ReqConstant,
+    ReqList,
+    ReqNested,
+    ReqString,
+    RequiredBIElement,
 )
-from cmk.utils.bi.bi_rule_interface import BIRuleProperties
-from cmk.utils.caching import instance_method_lru_cache
-
-from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_node_vis import (
-    BINodeVisLayoutStyleSchema,
     BIAggregationVisualizationSchema,
     BINodeVisBlockStyleSchema,
+    BINodeVisLayoutStyleSchema,
 )
+from cmk.utils.bi.bi_rule_interface import BIRuleProperties
 from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.caching import instance_method_lru_cache
+from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
+
+from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
 
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |

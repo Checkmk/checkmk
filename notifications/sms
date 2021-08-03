@@ -11,8 +11,8 @@
 # and restart the site
 
 import os
-import sys
 import shutil
+import sys
 import tempfile
 
 send_path = None

@@ -15,9 +15,7 @@ import abc
 import ast
 import errno
 import json
-from logging import Logger, getLogger
 import os
-from pathlib import Path
 import pprint
 import re
 import select
@@ -27,6 +25,8 @@ import sys
 import threading
 import time
 import traceback
+from logging import getLogger, Logger
+from pathlib import Path
 from types import FrameType
 from typing import (
     Any,
@@ -51,33 +51,34 @@ from typing import (
 
 from six import ensure_binary
 
-import cmk.utils.version as cmk_version
 import cmk.utils.daemon
+import cmk.utils.debug
 import cmk.utils.defines
-from cmk.utils.iterables import partition
 import cmk.utils.log as log
-from cmk.utils.log import VERBOSE
 import cmk.utils.paths
 import cmk.utils.profile
-import cmk.utils.render
 import cmk.utils.regex
-import cmk.utils.debug
+import cmk.utils.render
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
+from cmk.utils.iterables import partition
+from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
-import cmk.utils.store as store
+from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
-from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
-from .config import ConfigFromWATO, Config, Rule
+from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
+from .config import Config, ConfigFromWATO, Rule
 from .core_queries import query_hosts_scheduled_downtime_depth, query_timeperiods_in
-from .crash_reporting import ECCrashReport, CrashReportStore
-from .event import Event, create_event_from_line
-from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
+from .crash_reporting import CrashReportStore, ECCrashReport
+from .event import create_event_from_line, Event
+from .history import ActiveHistoryPeriod, get_logfile, History, quote_tab, scrub_string
 from .host_config import HostConfig, HostInfo
-from .query import MKClientError, Query, QueryGET, filter_operator_in
+from .query import filter_operator_in, MKClientError, Query, QueryGET
 from .rule_packs import load_config as load_config_using
-from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
+from .settings import FileDescriptor, PortNumber, Settings
+from .settings import settings as create_settings
 from .snmp import SNMPTrapEngine
 
 

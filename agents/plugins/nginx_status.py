@@ -28,14 +28,13 @@ if sys.version_info < (2, 6):
     sys.exit(1)
 
 if sys.version_info[0] == 2:
-    from urllib2 import Request, urlopen  # pylint: disable=import-error
-    from urllib2 import URLError, HTTPError  # pylint: disable=import-error
     import urllib2  # pylint: disable=import-error
+    from urllib2 import HTTPError, Request, URLError, urlopen  # pylint: disable=import-error
     urllib2.getproxies = lambda: {}
 else:
-    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
-    from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
     import urllib
+    from urllib.error import HTTPError, URLError  # pylint: disable=import-error,no-name-in-module
+    from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
     urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
 
 PY2 = sys.version_info[0] == 2

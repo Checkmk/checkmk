@@ -6,9 +6,10 @@
 
 from typing import Any
 
-from cmk.utils.i18n import _
 from deepdiff import DeepDiff  # type: ignore[import]
 from deepdiff.helper import get_type  # type: ignore[import]
+
+from cmk.utils.i18n import _
 
 __all__ = [
     "make_object_diff",

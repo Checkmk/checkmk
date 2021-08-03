@@ -4,32 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import marshal
 import os
 import time
-import marshal
-import cmk.utils.paths
-from typing import (
-    Dict,
-    Set,
-    Tuple,
-    List,
-    Optional,
-)
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
-from cmk.utils.type_defs import HostName
+from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
+
+import cmk.utils.paths
 from cmk.utils.bi.bi_lib import (
-    RequiredBIElement,
-    SitesCallback,
     ABCBIStatusFetcher,
-    BIStatusInfo,
     BIHostData,
-    BIServiceData,
-    BIServiceWithFullState,
     BIHostSpec,
     BIHostStatusInfoRow,
+    BIServiceData,
+    BIServiceWithFullState,
+    BIStatusInfo,
+    RequiredBIElement,
+    SitesCallback,
 )
-from livestatus import SiteId, LivestatusResponse, LivestatusColumn, LivestatusOutputFormat
-from pathlib import Path
+from cmk.utils.type_defs import HostName
 
 SiteProgramStart = Tuple[SiteId, int]
 

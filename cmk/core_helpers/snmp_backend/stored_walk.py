@@ -16,7 +16,7 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPBackend, OID, SNMPContextName, SNMPRawValue, SNMPRowInfo
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPContextName, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 

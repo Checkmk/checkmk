@@ -14,7 +14,7 @@ import datetime
 import time
 
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrule, DAILY, WEEKLY, MONTHLY
+from dateutil.rrule import DAILY, MONTHLY, rrule, WEEKLY
 
 
 class Schedule(metaclass=abc.ABCMeta):

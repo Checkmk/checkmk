@@ -5,14 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
-from builtins import zip
-from pathlib import Path
+
 import os
+import platform
 import re
 import subprocess
 import sys
-import platform
+from builtins import zip
+from pathlib import Path
+
 import yaml
+
 from . import it_utils
 
 DEFAULT_CONFIG = """

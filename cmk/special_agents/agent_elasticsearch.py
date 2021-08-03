@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
 import sys
+from typing import Optional, Sequence
+
 import requests
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
 from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
 def agent_elasticsearch_main(args: Args) -> None:

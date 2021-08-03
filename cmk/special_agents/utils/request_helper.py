@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common module request related stuff"""
 
-from typing import (
-    Optional,
-    Any,
-    Dict,
-    Union,
-    TypedDict,
-)
 import abc
-import os
 import base64
 import json
+import os
 import ssl
 import urllib
-
-from http.client import HTTPConnection, HTTPSConnection, HTTPResponse
+from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
+from typing import Any, Dict, Optional, TypedDict, Union
 from urllib.request import build_opener, HTTPSHandler, Request
+
 from requests import Session
 
 StringMap = Dict[str, str]  # should be Mapping[] but we're not ready yet..

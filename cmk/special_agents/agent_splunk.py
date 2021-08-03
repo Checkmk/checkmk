@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
 import argparse
 import sys
+from collections import namedtuple
+
 import requests
 import urllib3  # type: ignore[import]
+
 import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

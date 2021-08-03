@@ -24,66 +24,100 @@
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
 
-import os
-import re
-import sys
 import abc
-import pwd
-import time
 import errno
 import fcntl
-import random
-import shutil
-import string
-import tarfile
-import traceback
-import subprocess
-import signal
 import io
 import logging
+import os
+import pwd
+import random
+import re
+import shutil
+import signal
+import string
+import subprocess
+import sys
+import tarfile
+import time
+import traceback
 from pathlib import Path
-from typing import NoReturn, IO, cast, Iterable, Union, Tuple, Optional, Callable, List, NamedTuple, Dict
+from typing import (
+    Callable,
+    cast,
+    Dict,
+    IO,
+    Iterable,
+    List,
+    NamedTuple,
+    NoReturn,
+    Optional,
+    Tuple,
+    Union,
+)
 
-from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
+from passlib.hash import sha256_crypt  # type: ignore[import]
 from six import ensure_str
+
+import omdlib
+import omdlib.backup
+import omdlib.certs
+import omdlib.utils
+from omdlib.config_hooks import (
+    call_hook,
+    ConfigHook,
+    ConfigHooks,
+    create_config_environment,
+    hook_exists,
+    load_config_hooks,
+    load_hook_dependencies,
+    save_site_conf,
+    sort_hooks,
+)
+from omdlib.contexts import AbstractSiteContext, RootContext, SiteContext
+from omdlib.dialog import (
+    ask_user_choices,
+    dialog_menu,
+    dialog_message,
+    dialog_regex,
+    dialog_yesno,
+    user_confirms,
+)
+from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
+from omdlib.tmpfs import (
+    add_to_fstab,
+    mark_tmpfs_initialized,
+    prepare_tmpfs,
+    remove_from_fstab,
+    restore_tmpfs_dump,
+    save_tmpfs_dump,
+    tmpfs_mounted,
+    unmount_tmpfs,
+)
+from omdlib.type_defs import CommandOptions, Config, Replacements
+from omdlib.users_and_groups import (
+    find_processes_of_user,
+    group_exists,
+    group_id,
+    groupdel,
+    switch_to_site_user,
+    user_exists,
+    user_id,
+    user_logged_in,
+    user_verify,
+    useradd,
+    userdel,
+)
+from omdlib.utils import chdir, delete_user_file, ok
+from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-
-import omdlib
-import omdlib.certs
-import omdlib.backup
-import omdlib.utils
-from omdlib.utils import chdir, ok, delete_user_file
-from omdlib.version_info import VersionInfo
-from omdlib.dialog import (
-    dialog_menu,
-    dialog_regex,
-    dialog_yesno,
-    dialog_message,
-    user_confirms,
-    ask_user_choices,
-)
-from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext
-from omdlib.type_defs import Config, CommandOptions, Replacements
-from omdlib.skel_permissions import (
-    Permissions,
-    read_skel_permissions,
-    skel_permissions_file_path,
-)
-from omdlib.config_hooks import (create_config_environment, save_site_conf, load_config_hooks,
-                                 load_hook_dependencies, sort_hooks, hook_exists, call_hook,
-                                 ConfigHook, ConfigHooks)
-from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, userdel, user_id,
-                                     user_exists, group_exists, group_id, user_logged_in,
-                                     switch_to_site_user, user_verify)
-from omdlib.tmpfs import (tmpfs_mounted, prepare_tmpfs, mark_tmpfs_initialized, unmount_tmpfs,
-                          add_to_fstab, remove_from_fstab, restore_tmpfs_dump, save_tmpfs_dump)
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]

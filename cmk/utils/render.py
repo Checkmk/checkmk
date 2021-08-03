@@ -10,8 +10,8 @@ are just for optical output purposes."""
 
 # THIS IS STILL EXPERIMENTAL
 
-import time
 import math
+import time
 from datetime import timedelta
 from typing import Optional, Tuple, Union
 

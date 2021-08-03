@@ -7,16 +7,17 @@
 __version__ = "2.1.0i1"
 
 import os
+import signal
 import sys
 import time
-import signal
+
 try:
     import configparser
 except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore
 
 try:
-    from typing import Dict, List, Any, Set
+    from typing import Any, Dict, List, Set
 except ImportError:
     pass
 

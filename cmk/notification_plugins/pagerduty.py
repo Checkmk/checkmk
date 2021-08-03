@@ -10,7 +10,11 @@ Send notification messages to PagerDuty
 """
 from typing import Dict
 
-from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context, retrieve_from_passwordstore
+from cmk.notification_plugins.utils import (
+    host_url_from_context,
+    retrieve_from_passwordstore,
+    service_url_from_context,
+)
 
 
 def pagerduty_event_type(event):

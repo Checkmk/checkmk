@@ -56,13 +56,13 @@ import argparse
 import re
 import sys
 import time
-from typing import Any, Dict, List
 import warnings
+from typing import Any, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
-from six import ensure_str
 import urllib3  # type: ignore[import]
+from six import ensure_str
 
 from cmk.special_agents.utils import vcrtrace
 

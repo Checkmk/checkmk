@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager
 import ctypes
 import ctypes.util
 import os
-from pathlib import Path
 import sys
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Generator
 
 import cmk.utils.store as store

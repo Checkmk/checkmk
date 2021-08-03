@@ -6,9 +6,9 @@
 
 import math
 from typing import List, Optional
-from cmk.utils.exceptions import MKGeneralException
 
 import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import AgentRawData
 
 

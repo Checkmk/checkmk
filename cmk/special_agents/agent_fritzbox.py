@@ -26,14 +26,14 @@
 # http://fritz.box:49000/igddslSCPD.xml
 #get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
 
-import re
-import sys
 import getopt
 import pprint
+import re
 import socket
+import sys
+import traceback
 import urllib.error
 import urllib.request
-import traceback
 
 from cmk.utils.exceptions import MKException
 

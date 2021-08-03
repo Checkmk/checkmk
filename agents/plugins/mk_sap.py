@@ -36,15 +36,16 @@ __version__ = "2.1.0i1"
 # Make sure to remove said patch if the plugin is python 2/3 compatible!
 #
 
-import os
 import ast
-import sys
-import time
+import datetime
 import fcntl
 import fnmatch
-import datetime
+import os
+import sys
+import time
+
 try:
-    from typing import Tuple, List, Dict, Union, Any
+    from typing import Any, Dict, List, Tuple, Union
 except ImportError:
     pass
 

@@ -8,12 +8,12 @@
 import abc
 import os
 from pathlib import Path
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, ServiceName, Labels, LabelSources
+from cmk.utils.type_defs import HostName, Labels, LabelSources, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
 

@@ -4,28 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Type, Any, Union, Set
+from typing import Any, Dict, List, Set, Type, Union
 
-from marshmallow import validate, fields
+from marshmallow import fields, validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.utils.macros import MacroMapping
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_lib import (
-    replace_macros,
-    bi_search_registry,
     ABCBISearch,
-    ReqConstant,
-    ReqDict,
-    ReqList,
-    ReqString,
-    ReqNested,
     ABCBISearcher,
+    bi_search_registry,
     BIHostData,
     BIHostSearchMatch,
     BIServiceSearchMatch,
+    replace_macros,
+    ReqConstant,
+    ReqDict,
+    ReqList,
+    ReqNested,
+    ReqString,
 )
+from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.macros import MacroMapping
+from cmk.utils.type_defs import HostName
 
 
 class BIAllHostsChoiceSchema(Schema):

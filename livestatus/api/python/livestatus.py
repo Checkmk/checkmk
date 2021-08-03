@@ -13,8 +13,8 @@ import socket
 import ssl
 import threading
 import time
-from io import BytesIO
 from enum import Enum
+from io import BytesIO
 from typing import Any, AnyStr, Dict, List, NewType, Optional, Pattern, Set, Tuple, Type, Union
 
 # TODO: Find a better solution for this issue. Astroid 2.x bug prevents us from using NewType :(

@@ -8,37 +8,27 @@ functionality is the locked file opening realized with the File() context
 manager."""
 import abc
 import enum
-import pickle
-from contextlib import nullcontext
 import logging
+import pickle
 import pprint
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
-
-from cmk.utils.store._file import (
-    BytesSerializer,
-    TextSerializer,
-    DimSerializer,
-    ObjectStore,
-)
-
+from cmk.utils.store._file import BytesSerializer, DimSerializer, ObjectStore, TextSerializer
+from cmk.utils.store._locks import aquire_lock, cleanup_locks, configuration_lockfile, have_lock
+from cmk.utils.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 from cmk.utils.store._locks import (
-    MKConfigLockTimeout,
-    configuration_lockfile,
     lock_checkmk_configuration,
     lock_exclusive,
     locked,
-    aquire_lock,
-    try_locked,
-    try_aquire_lock,
-    release_lock,
-    have_lock,
+    MKConfigLockTimeout,
     release_all_locks,
-    cleanup_locks,
-    leave_locked_unless_exception as _leave_locked_unless_exception,
+    release_lock,
+    try_aquire_lock,
+    try_locked,
 )
 
 logger = logging.getLogger("cmk.store")

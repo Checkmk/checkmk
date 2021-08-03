@@ -26,20 +26,21 @@ information about VMs and nodes:
 
 import logging
 import re
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Any, Mapping, Iterable, Dict, Union, Optional, Tuple, Sequence
+from pathlib import Path
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import requests
 
 from cmk.utils.paths import tmp_dir
+
 from cmk.special_agents.utils.agent_common import (
-    special_agent_main,
-    SectionWriter,
     ConditionalPiggybackSection,
+    SectionWriter,
+    special_agent_main,
 )
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.utils.misc import to_bytes, JsonCachedData
+from cmk.special_agents.utils.misc import JsonCachedData, to_bytes
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 

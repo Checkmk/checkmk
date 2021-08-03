@@ -5,21 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-from itertools import chain, repeat
 import math
 import os
 import platform
 import re
-import win32evtlog  # type: ignore
-from .local import (
-    assert_subprocess,
-    user_dir,
-    local_test,
-    host,
-)
+import winreg  # type: ignore
+from itertools import chain, repeat
 
 import pytest  # type: ignore
-import winreg  # type: ignore
+import win32evtlog  # type: ignore
+
+from .local import assert_subprocess, host, local_test, user_dir
 
 
 class Globals():

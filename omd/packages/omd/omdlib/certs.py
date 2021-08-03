@@ -24,10 +24,10 @@
 # Boston, MA 02110-1301 USA.
 """Management of the site local CA and certificates issued by it"""
 
-import sys
-from typing import List, Tuple
 import random
+import sys
 from pathlib import Path
+from typing import List, Tuple
 
 from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL.SSL import FILETYPE_PEM  # type: ignore[import]

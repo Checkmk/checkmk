@@ -3,18 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from pathlib import Path
-from subprocess import check_output
-from typing import BinaryIO, cast
-from cmk.utils import packaging
-import cmk.utils.version as cmk_version
-import json
 """Create a ntop mkp
 
 This script creates a mkp from all ntop relevant files, which will be excluded
 from the enterprise builds.
 
 """
+
+import json
+from pathlib import Path
+from subprocess import check_output
+from typing import BinaryIO, cast
+
+import cmk.utils.version as cmk_version
+from cmk.utils import packaging
 
 REPO_PATH = Path(__file__).resolve().parent.parent
 GIT_HASH_SHORT = check_output(["git", "rev-parse", "--short", "HEAD"], encoding="utf-8").strip()

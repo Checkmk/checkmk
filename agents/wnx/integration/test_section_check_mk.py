@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore
 import re
 from typing import Optional
-from .local import (
-    local_test,
-    root_dir,
-    user_dir,
-    get_main_yaml_name,
-    get_user_yaml_name,
-)
+
+import pytest  # type: ignore
+
+from .local import get_main_yaml_name, get_user_yaml_name, local_test, root_dir, user_dir
 
 
 class Globals():

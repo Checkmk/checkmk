@@ -13,43 +13,40 @@ import errno
 import hashlib
 import json
 import logging
-from pathlib import Path
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from time import sleep
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Mapping,
     NamedTuple,
-    Set,
+    Optional,
     Sequence,
+    Set,
     Tuple,
     Union,
-    Callable,
-    Optional,
 )
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
 
-import cmk.utils.store as store
-from cmk.utils.paths import tmp_dir
 import cmk.utils.password_store
-from cmk.utils.exceptions import MKException
-from cmk.special_agents.utils import (
-    datetime_serializer,
-    DataCache,
-    get_seconds_since_midnight,
-)
+import cmk.utils.store as store
 from cmk.utils.aws_constants import (
-    AWSRegions,
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
+    AWSRegions,
 )
+from cmk.utils.exceptions import MKException
+from cmk.utils.paths import tmp_dir
+
+from cmk.special_agents.utils import DataCache, datetime_serializer, get_seconds_since_midnight
 
 NOW = datetime.now()
 

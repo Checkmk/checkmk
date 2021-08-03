@@ -7,12 +7,13 @@
 main change is that all strings get a prefix. Basically a dumbed-down version
 of Python's own pprint module plus the prefix change."""
 
-from io import StringIO as StrIO
 import sys
-from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
-from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
+from io import StringIO as StrIO
+from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple
 
 from cmk.utils.type_defs import EvalableFloat
+
+from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 _bytes = bytes
 _str = str

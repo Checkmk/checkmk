@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from builtins import range
-
-import sys
 import os
 import platform
+import sys
+from builtins import range
 from typing import List
+
 import pytest  # type: ignore
-from .local import (
-    local_test,
-    run_subprocess,
-    main_exe,
-)
+
+from .local import local_test, main_exe, run_subprocess
 
 
 class Globals():

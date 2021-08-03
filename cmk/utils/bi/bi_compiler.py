@@ -6,35 +6,23 @@
 
 import pickle
 import time
-import cmk
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Set,
-    Optional,
-    TypedDict,
-    List,
-)
-
-from cmk.utils.log import logger
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_searcher import BISearcher
-from cmk.utils.bi.bi_data_fetcher import (
-    BIStructureFetcher,
-    get_cache_dir,
-    SiteProgramStart,
-)
+from typing import Dict, List, Optional, Set, TYPE_CHECKING, TypedDict
 
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
-
-from cmk.utils.i18n import _
-from cmk.utils.bi.bi_trees import BICompiledAggregation
 from cmk.utils.bi.bi_aggregation import BIAggregation
+from cmk.utils.bi.bi_data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramStart
 from cmk.utils.bi.bi_lib import SitesCallback
-
+from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_searcher import BISearcher
+from cmk.utils.bi.bi_trees import BICompiledAggregation
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
+from cmk.utils.log import logger
 from cmk.utils.redis import get_redis_client
+
+import cmk
+
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded
 

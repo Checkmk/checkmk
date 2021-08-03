@@ -7,8 +7,9 @@
 import re
 from typing import Callable, List, Optional, Tuple
 
-from cmk.utils.type_defs import SNMPDetectBaseType
 from cmk.utils.regex import regex
+from cmk.utils.type_defs import SNMPDetectBaseType
+
 from .type_defs import OID, SNMPDetectAtom
 
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]

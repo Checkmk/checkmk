@@ -6,8 +6,8 @@
 """Managing in-memory caches through the execution time of cmk"""
 
 import collections
+from functools import lru_cache, wraps
 from typing import Dict
-from functools import wraps, lru_cache
 
 import cmk.utils.misc
 

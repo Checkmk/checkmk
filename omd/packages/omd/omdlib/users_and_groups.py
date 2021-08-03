@@ -23,11 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import pwd
 import grp
 import os
+import pwd
 import subprocess
-from typing import Union, List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Union
+
 import psutil  # type: ignore[import]
 
 if TYPE_CHECKING:

@@ -28,15 +28,15 @@ import os
 import sys
 from typing import cast, Optional
 
-from cmk.utils.exceptions import MKTerminate
-
 import omdlib
 import omdlib.utils
-from omdlib.init_scripts import check_status
 from omdlib.config_hooks import call_hook, sort_hooks
-from omdlib.utils import is_dockerized
-from omdlib.type_defs import Config, Replacements
+from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
+from omdlib.type_defs import Config, Replacements
+from omdlib.utils import is_dockerized
+
+from cmk.utils.exceptions import MKTerminate
 
 
 class AbstractSiteContext(metaclass=abc.ABCMeta):

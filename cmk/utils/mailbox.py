@@ -14,29 +14,19 @@ Current responsibilities include:
 * logging
 """
 
-from typing import (
-    Optional,
-    Callable,
-    Iterable,
-    Sequence,
-    List,
-    Tuple,
-    Any,
-    Dict,
-    Union,
-)
 import argparse
+import binascii
+import email
+import email.message
+import email.utils
+import imaplib
 import logging
-from contextlib import suppress
+import poplib
+import re
 import sys
 import time
-import re
-import email
-import email.utils
-import email.message
-import imaplib
-import poplib
-import binascii
+from contextlib import suppress
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import cmk.utils.password_store
 

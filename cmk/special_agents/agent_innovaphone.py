@@ -5,16 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+import urllib.parse
 from typing import Iterable, Optional, Sequence, Tuple
 from xml.etree import ElementTree as etree
-import urllib.parse
+
 import requests
 
-from cmk.special_agents.utils.argument_parsing import (
-    Args,
-    create_default_argument_parser,
-)
 import cmk.utils.password_store
+
+from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
 class InnovaphoneConnection:

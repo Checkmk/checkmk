@@ -15,7 +15,7 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
-from typing import Any, List, Tuple, cast
+from typing import Any, cast, List, Tuple
 
 # TODO: column functions
 # TODO: more tests

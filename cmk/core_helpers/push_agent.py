@@ -9,9 +9,9 @@ import time
 from typing import Any, Final, Mapping
 
 import cmk.utils.debug
+import cmk.utils.paths
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
-import cmk.utils.paths
 
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .cache import FileCacheFactory, MaxAge

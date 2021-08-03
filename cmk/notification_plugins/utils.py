@@ -6,16 +6,16 @@
 
 import os
 import re
-import requests
 import socket
 import subprocess
 import sys
-
 from email.utils import formataddr
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Dict, List, Tuple, NamedTuple
+from typing import Dict, List, NamedTuple, Tuple
+
+import requests
 
 import cmk.utils.password_store
 import cmk.utils.paths

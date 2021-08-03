@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Dict, Any
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List
 
 LicenseUsageHistoryDumpVersion = "1.1"
 

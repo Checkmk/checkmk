@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from pathlib import Path
 import os
-
-from subprocess import (Popen, PIPE)
+from pathlib import Path
+from subprocess import PIPE, Popen
 from typing import Tuple
+
+import pytest  # type: ignore[import]
 
 
 def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:

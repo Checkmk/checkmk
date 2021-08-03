@@ -4,18 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Union, Dict, Type, Any
+from typing import Any, Dict, List, Type, Union
+
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.bi.bi_lib import (
-    BIStates,
-    bi_aggregation_function_registry,
     ABCBIAggregationFunction,
+    bi_aggregation_function_registry,
+    BIStates,
     ReqConstant,
-    ReqString,
     ReqInteger,
     ReqNested,
+    ReqString,
 )
 from cmk.utils.bi.bi_schema import Schema
 

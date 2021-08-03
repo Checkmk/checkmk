@@ -12,11 +12,14 @@ import sys
 from itertools import groupby
 from typing import Optional, Tuple, Union
 
+import snap7  # type: ignore[import]
+from snap7.common import Snap7Exception, Snap7Library  # type: ignore[import]
+
 from cmk.special_agents.utils.agent_common import SectionWriter
 
-import snap7  # type: ignore[import]
-from snap7.common import Snap7Library, Snap7Exception  # type: ignore[import]
-from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
+from snap7.snap7types import (  # type: ignore[import] # isort: skip # pylint: disable=ungrouped-imports
+    S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM,
+)
 
 # prevent snap7 logger to log errors directly to console
 snap7.common.logger.setLevel(logging.CRITICAL + 10)

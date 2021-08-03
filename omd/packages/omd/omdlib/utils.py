@@ -23,10 +23,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import sys
-import shutil
 import contextlib
+import os
+import shutil
+import sys
 from typing import Iterator
 
 import cmk.utils.tty as tty

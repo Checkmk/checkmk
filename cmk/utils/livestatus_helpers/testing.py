@@ -10,6 +10,7 @@ have any friction during testing with these helpers themselves.
 
 """
 from __future__ import annotations
+
 import collections
 import datetime as dt
 import io
@@ -18,21 +19,12 @@ import operator
 import re
 import statistics
 import time
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    Union,
-    Mapping,
-)
-# TODO: Make livestatus.py a well tested package on pypi
-# TODO: Move this code to the livestatus package
+from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
 from livestatus import LivestatusTestingError
+
+# TODO: Make livestatus.py a well tested package on pypi
+# TODO: Move this code to the livestatus package
 
 MatchType = Literal["strict", "ellipsis", "loose"]
 Operator = str

@@ -10,10 +10,11 @@ configuration.
 """
 
 import copy
-from enum import Enum
 import logging
 import os
 import pprint
+from enum import Enum
+from pathlib import Path
 from typing import (
     AbstractSet,
     Any,
@@ -29,7 +30,6 @@ from typing import (
     Tuple,
     Union,
 )
-from pathlib import Path
 
 from six import ensure_str
 
@@ -40,7 +40,8 @@ from cmk.utils.exceptions import MKException
 
 from .config import ConfigFromWATO
 from .defaults import default_config, default_rule_pack
-from .settings import Settings, settings as create_settings
+from .settings import Settings
+from .settings import settings as create_settings
 
 ECRuleSpec = Dict[str, Any]
 ECRulePackSpec = Dict[str, Any]  # TODO: improve this type

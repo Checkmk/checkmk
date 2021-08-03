@@ -10,20 +10,21 @@ does not offer stable APIs. The code may change at any time."""
 
 __version__ = "2.1.0i1"
 
-import errno
 import enum
+import errno
 import os
-from pathlib import Path
 import subprocess
 import sys
 import time
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict
 
 from six import ensure_str
 
-import cmk.utils.paths
 import livestatus
-from functools import lru_cache
+
+import cmk.utils.paths
 
 
 @lru_cache

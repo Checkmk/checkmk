@@ -7,7 +7,7 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any
+from typing import Any, Callable, Dict, Set, Tuple, Type, Union
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.

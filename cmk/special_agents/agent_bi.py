@@ -5,17 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import sys
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-import sys
 from typing import Dict, Set
 
 import requests
 import urllib3  # type: ignore[import]
 
 import cmk.utils.site
-from cmk.utils.regex import regex
 from cmk.utils.exceptions import MKException
+from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

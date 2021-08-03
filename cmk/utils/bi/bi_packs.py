@@ -5,49 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Type
+
 from marshmallow import fields, pre_dump
 
-from pathlib import Path
-
-from cmk.utils.bi.bi_schema import Schema
-from cmk.utils.i18n import _
-import cmk.utils.store as store
 import cmk.utils.paths
-
-from typing import (
-    List,
-    Dict,
-    Set,
-    Tuple,
-    Type,
-    Optional,
-    Any,
-    NamedTuple,
-)
-
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.bi.bi_lib import (
-    ReqList,
-    ReqString,
-    ReqNested,
-    ReqBoolean,
-)
-
-from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
-from cmk.utils.bi.bi_sample_configs import bi_sample_config
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.utils.bi.bi_node_generator import BINodeGenerator
+import cmk.utils.store as store
 from cmk.utils.bi.bi_actions import (
     BICallARuleAction,
     BIStateOfHostAction,
-    BIStateOfServiceAction,
     BIStateOfRemainingServicesAction,
+    BIStateOfServiceAction,
 )
-from cmk.utils.bi.bi_search import (
-    BIHostSearch,
-    BIServiceSearch,
-)
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqNested, ReqString
+from cmk.utils.bi.bi_node_generator import BINodeGenerator
+from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
+from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
+from cmk.utils.bi.bi_sample_configs import bi_sample_config
+from cmk.utils.bi.bi_schema import Schema
+from cmk.utils.bi.bi_search import BIHostSearch, BIServiceSearch
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 RuleReferencesResult = NamedTuple("RuleReferencesResult", [
     ("aggr_refs", int),

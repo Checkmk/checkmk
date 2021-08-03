@@ -23,15 +23,16 @@ Example usage with CMake:
 See iwyu_tool.py -h for more details on command-line arguments.
 """
 from __future__ import print_function
+
+import argparse
+import json
 import os
 import re
-import sys
-import json
-import time
 import shlex
-import argparse
-import tempfile
 import subprocess
+import sys
+import tempfile
+import time
 
 CORRECT_RE = re.compile(r'^\((.*?) has correct #includes/fwd-decls\)$')
 SHOULD_ADD_RE = re.compile(r'^(.*?) should add these lines:$')

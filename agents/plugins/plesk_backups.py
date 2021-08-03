@@ -15,11 +15,12 @@ __version__ = "2.1.0i1"
 import datetime
 import sys
 import time
+
 # Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
 from ftplib import FTP  # nosec
 
 try:
-    from typing import List, Any
+    from typing import Any, List
 except ImportError:
     pass
 

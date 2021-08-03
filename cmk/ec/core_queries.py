@@ -6,8 +6,16 @@
 
 from typing import Any, Iterable, List, Mapping, NamedTuple, Sequence, Set
 
-from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, TimeperiodName, Timestamp, UserId
 from livestatus import LocalConnection
+
+from cmk.utils.type_defs import (
+    ContactgroupName,
+    HostAddress,
+    HostName,
+    TimeperiodName,
+    Timestamp,
+    UserId,
+)
 
 ################################################################################
 

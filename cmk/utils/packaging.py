@@ -5,30 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-from io import BytesIO
 import json
 import logging
 import os
-from pathlib import Path
 import pprint
 import subprocess
 import tarfile
 import time
 from contextlib import suppress
-from typing import cast, Any, Callable, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
+from io import BytesIO
+from pathlib import Path
+from typing import Any, BinaryIO, Callable, cast, Dict, Final, Iterable, List, NamedTuple, Optional
 
 from six import ensure_binary, ensure_str
 
-from cmk.utils.i18n import _
-from cmk.utils.log import VERBOSE
-import cmk.utils.version as cmk_version
-import cmk.utils.paths
-import cmk.utils.tty as tty
-import cmk.utils.werks
 import cmk.utils.debug
 import cmk.utils.misc
-from cmk.utils.werks import parse_check_mk_version
+import cmk.utils.paths
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
+import cmk.utils.werks
 from cmk.utils.exceptions import MKException
+from cmk.utils.i18n import _
+from cmk.utils.log import VERBOSE
+from cmk.utils.werks import parse_check_mk_version
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, cast, Dict, List, Iterable, Optional, Tuple
+from logging import Logger
+from typing import Any, cast, Dict, Iterable, List, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.defines

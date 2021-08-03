@@ -12,21 +12,22 @@
 # attached graphs and such neat stuff. Sweet!
 
 import base64
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import json
 import os
 import socket
 import sys
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from cmk.notification_plugins import utils
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+
+from cmk.notification_plugins import utils
 
 
 def tmpl_head_html(html_section):

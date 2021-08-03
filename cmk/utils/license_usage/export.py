@@ -6,16 +6,10 @@
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
 import abc
-from typing import (
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Union,
-    Tuple,
-)
 from collections import Counter
 from datetime import datetime
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+
 from dateutil.relativedelta import relativedelta
 
 RawSubscriptionDetails = NamedTuple(

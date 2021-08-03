@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from enum import Enum
-from typing import (TYPE_CHECKING, Any, Callable, Optional, TypeVar)
+from typing import Any, Callable, Optional, TYPE_CHECKING, TypeVar
+
 from redis import Redis
 from redis.client import Pipeline
 

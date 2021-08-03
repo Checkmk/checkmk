@@ -41,11 +41,11 @@ from typing import Any, Mapping, Type, Union
 
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress
-from .push_agent import PushAgentFetcher
 from .agent import AgentFileCache
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher
+from .push_agent import PushAgentFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .tcp import TCPFetcher
 

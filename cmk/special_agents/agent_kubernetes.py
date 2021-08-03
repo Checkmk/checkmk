@@ -12,8 +12,6 @@ is supported: https://github.com/kubernetes-client/python
 
 import argparse
 import ast
-from collections import OrderedDict, defaultdict
-from collections.abc import MutableSequence
 import contextlib
 import functools
 import itertools
@@ -24,28 +22,21 @@ import os
 import re
 import sys
 import time
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    TypeVar,
-    Union,
-)
-
-import urllib3  # type: ignore[import]
+from collections import defaultdict, OrderedDict
+from collections.abc import MutableSequence
+from typing import Any, Callable, Dict, Generic, Iterator, List, Mapping, Optional, TypeVar, Union
 
 import dateutil.parser
+import urllib3  # type: ignore[import]
+
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
-from kubernetes.client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
 
-import cmk.utils.profile
 import cmk.utils.password_store
+import cmk.utils.profile
+
+from kubernetes.client.rest import (  # type: ignore[import] # pylint: disable=import-error,ungrouped-imports # isort: skip
+    ApiException,)
 
 
 @contextlib.contextmanager

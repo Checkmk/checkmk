@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import List, Literal, Optional, Type, Any, Dict
+from typing import Any, Dict, List, Literal, Optional, Type
 
 from cmk.utils.livestatus_helpers.expressions import (
     BinaryExpression,
     BoolExpression,
     ListExpression,
     Not,
+    NothingExpression,
     QueryExpression,
     ScalarExpression,
-    NothingExpression,
 )
 
 LivestatusType = Literal["string", "int", "float", "list", "dict", "time", "blob"]

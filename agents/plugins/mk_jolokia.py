@@ -23,7 +23,7 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 except ImportError:
     pass
 

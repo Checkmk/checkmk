@@ -4,17 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Tuple, Type, cast
+from typing import Any, cast, Dict, Generator, List, Optional, Tuple, Type
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.base import BaseQuery
 from cmk.utils.livestatus_helpers.expressions import (
     And,
     BinaryExpression,
+    Not,
     NothingExpression,
     Or,
     QueryExpression,
-    Not,
 )
 from cmk.utils.livestatus_helpers.types import Column, expr_to_tree, Table
 

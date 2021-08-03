@@ -11,25 +11,21 @@ import argparse
 import datetime
 import json
 import logging
-from multiprocessing import Process, Lock, Queue
-from pathlib import Path
-from queue import Empty as QueueEmpty
 import string
 import sys
 import time
+from multiprocessing import Lock, Process, Queue
+from pathlib import Path
+from queue import Empty as QueueEmpty
 from typing import Any, List, Tuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
+import cmk.utils.password_store
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import (
-    DataCache,
-    vcrtrace,
-    get_seconds_since_midnight,
-)
-import cmk.utils.password_store
+from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
 
 cmk.utils.password_store.replace_passwords()
 

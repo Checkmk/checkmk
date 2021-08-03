@@ -33,15 +33,15 @@ choices - available choices for enumeration hooks
 depends - exists with 1, if this hook misses its dependent hook settings
 """
 
+import logging
 import os
 import re
-import sys
-import logging
 import subprocess
-from typing import Tuple, Pattern, Union, Dict, TYPE_CHECKING, List, Iterable
+import sys
+from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
-from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
+from cmk.utils.log import VERBOSE
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

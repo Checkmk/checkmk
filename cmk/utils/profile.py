@@ -8,10 +8,10 @@ is to provide a contextmanager that can be added to existing code with
 minimal changes."""
 
 import cProfile
-from pathlib import Path
 import time
+from pathlib import Path
 from types import TracebackType
-from typing import Callable, Type, Union, Any, Optional
+from typing import Any, Callable, Optional, Type, Union
 
 import cmk.utils.log
 

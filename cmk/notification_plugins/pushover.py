@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+
 import requests
+
 from cmk.notification_plugins import utils
 
 api_url = "https://api.pushover.net/1/messages.json"

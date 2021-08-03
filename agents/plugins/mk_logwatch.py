@@ -23,24 +23,24 @@ from __future__ import with_statement
 __version__ = "2.1.0i1"
 
 import sys
+
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
     sys.exit(1)
 
-import io
+import ast
+import binascii
 import glob
+import io
+import locale
 import logging
 import os
-import re
-import shutil
-import time
-import socket
-import binascii
 import platform
-import locale
-import ast
-
+import re
 import shlex
+import shutil
+import socket
+import time
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import Dict, Iterator, Mapping, TypeVar, Type
+from typing import Dict, Iterator, Mapping, Type, TypeVar
 
 _VT = TypeVar('_VT')
 

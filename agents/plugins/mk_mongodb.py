@@ -20,16 +20,16 @@ __version__ = "2.1.0i1"
 
 import argparse
 import configparser
+import inspect
+import json
 import logging
 import os
 import sys
 import time
-import inspect
-import json
 from collections import defaultdict
 
 try:
-    from typing import Callable, Dict, Any
+    from typing import Any, Callable, Dict
 except ImportError:
     pass
 

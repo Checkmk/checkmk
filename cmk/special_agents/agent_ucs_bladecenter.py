@@ -12,7 +12,9 @@ from typing import Any, Dict, List, Tuple
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
+
 from cmk.utils.exceptions import MKException
+
 from cmk.special_agents.utils import vcrtrace
 
 ElementAttributes = Dict[str, str]

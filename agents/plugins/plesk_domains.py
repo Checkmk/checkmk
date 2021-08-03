@@ -12,6 +12,7 @@ __version__ = "2.1.0i1"
 # <domain>
 
 import sys
+
 try:
     import MySQLdb  # type: ignore[import] # pylint: disable=import-error
 except ImportError as e:

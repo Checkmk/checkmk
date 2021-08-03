@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
-from typing import Dict, List, Optional, Any, NamedTuple, Set, Tuple, TypedDict
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, TypedDict
 
 import cmk.utils.paths
 

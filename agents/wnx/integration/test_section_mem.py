@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore
 import re
+
+import pytest  # type: ignore
+
 from .local import local_test
 
 

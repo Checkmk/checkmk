@@ -507,13 +507,14 @@ def agent_proxmox_ve_main(args: Args) -> None:
     for node in data["nodes"]:
         # only lxc and qemu can have snapshots
         for vm in node.get("lxc", []) + node.get("qemu", []):
-            snapshot_data[vm["vmid"]] = {
+            snapshot_data[str(vm["vmid"])] = {
                 "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
             }
 
     LOGGER.info("all VMs:          %r", backup_data["vmids"])
     LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
     LOGGER.info("actual backups:   %r", sorted(list(logged_backup_data.keys())))
+    LOGGER.info("snaptimes:        %r", snapshot_data)
 
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
@@ -573,7 +574,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     "last_backup": logged_backup_data.get(vmid),
                 })
             with SectionWriter("proxmox_ve_vm_snapshot_age") as writer:
-                writer.append_json(snapshot_data.get(vmid, {}))
+                writer.append_json(snapshot_data.get(vmid))
 
 
 class ProxmoxVeSession:

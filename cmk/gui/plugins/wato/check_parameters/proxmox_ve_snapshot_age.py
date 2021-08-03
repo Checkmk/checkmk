@@ -22,12 +22,12 @@ def _parameter_valuespec_proxmox_ve_snapshot_age_requirements():
                 Age(
                     title=_("Warning at"),
                     display=["days", "hours"],
-                    default_value=int(60 * 60 * 24 * 30),
+                    default_value=int(60 * 60 * 24 * 1),
                 ),
                 Age(
                     title=_("Critical at"),
                     display=["days", "hours"],
-                    default_value=int(60 * 60 * 24 * 90),
+                    default_value=int(60 * 60 * 24 * 2),
                 ),
             ],
         ),

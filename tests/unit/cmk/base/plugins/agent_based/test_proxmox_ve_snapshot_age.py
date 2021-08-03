@@ -77,4 +77,4 @@ def test_check_proxmox_ve_snapshot_age_with_snapshot(params, section_data, expec
         result, metric = check_proxmox_ve_snapshot_age(params, section_data)
         assert isinstance(result, Result) and isinstance(metric, Metric)
         assert result.state == expected_state
-        assert metric[0] == "oldest_snapshot_age" and metric[1] == expected_metric
+        assert metric[0] == "age" and metric[1] == expected_metric

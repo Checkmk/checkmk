@@ -262,9 +262,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-weight: $font-weight-bold;
     letter-spacing: 0;
-    color: $font-color-light-bg;
   }
 
   .glass {
@@ -303,7 +301,9 @@ td.perfometer {
     width: 114px;
     margin: 0 3px;
     overflow: hidden;
+    font-weight: $font-weight-bold;
     line-height: 22px;
+    color: $font-color-light-bg;
     text-align: center;
     white-space: nowrap;
   }

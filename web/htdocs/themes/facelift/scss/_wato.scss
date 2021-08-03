@@ -646,7 +646,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 }
 
 table.data.oddeven > tbody > .matches_search > td {
-  color: $matches-search-font-color;
   background-color: $matches-search-bg-color;
 
   &.buttons {
@@ -961,7 +960,7 @@ div.varname {
 
       &.state_success,
       &.state_warning {
-        color: $dark-font-color;
+        color: $font-color-light-bg;
       }
     }
 

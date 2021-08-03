@@ -618,7 +618,7 @@ table.data.matrix {
     &,
     a,
     a:link {
-      color: $minority-font-color;
+      color: $font-color-light-bg;
     }
   }
 
@@ -1052,7 +1052,7 @@ td.if_state {
 table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
-    color: $if-state-up-font-color;
+    color: $black;
     background-color: $color-state-success-background;
   }
 

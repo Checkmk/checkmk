@@ -355,26 +355,10 @@ table.data td.perfometer {
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
-
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
-  }
 }
 
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
-
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
-  }
 }
 
 .data div.hostdown {

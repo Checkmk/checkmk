@@ -220,7 +220,7 @@ class Metadata:
 
 class Node(Metadata):
     def __init__(self, node: client.V1Node, stats: str) -> None:
-        super(Node, self).__init__(node.metadata)
+        super().__init__(node.metadata)
         self._status = node.status
         # kubelet replies statistics for the last 2 minutes with 10s
         # intervals. We only need the latest state.
@@ -284,7 +284,7 @@ class Node(Metadata):
 
 class ComponentStatus(Metadata):
     def __init__(self, status: client.V1ComponentStatus) -> None:
-        super(ComponentStatus, self).__init__(status.metadata)
+        super().__init__(status.metadata)
         self._conditions = status.conditions
 
     @property
@@ -296,7 +296,7 @@ class ComponentStatus(Metadata):
 
 class Service(Metadata):
     def __init__(self, service, use_namespace):
-        super(Service, self).__init__(service.metadata, "service", use_namespace)
+        super().__init__(service.metadata, "service", use_namespace)
 
         spec = service.spec
         if spec:
@@ -347,7 +347,7 @@ class Service(Metadata):
 class Deployment(Metadata):
     # TODO: include pods of the deployment?
     def __init__(self, deployment: client.V1Deployment, use_namespace: bool) -> None:
-        super(Deployment, self).__init__(deployment.metadata, "deployment", use_namespace)
+        super().__init__(deployment.metadata, "deployment", use_namespace)
         spec = deployment.spec
         if spec:
             self._paused = spec.paused
@@ -394,7 +394,7 @@ class Deployment(Metadata):
 
 class Ingress(Metadata):
     def __init__(self, ingress, use_namespace):
-        super(Ingress, self).__init__(ingress.metadata, "ingress", use_namespace)
+        super().__init__(ingress.metadata, "ingress", use_namespace)
         self._backends = []  # list of (path, service_name, service_port)
         self._hosts = defaultdict(list)  # secret -> list of hosts
         self._load_balancers = []
@@ -447,7 +447,7 @@ class Ingress(Metadata):
 
 class Pod(Metadata):
     def __init__(self, pod: client.V1Pod, use_namespace: bool) -> None:
-        super(Pod, self).__init__(pod.metadata, "pod", use_namespace)
+        super().__init__(pod.metadata, "pod", use_namespace)
         spec = pod.spec
         if spec:
             self.node = spec.node_name
@@ -572,7 +572,7 @@ class Endpoint(Metadata):
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
 
     def __init__(self, endpoint, use_namespace):
-        super(Endpoint, self).__init__(endpoint.metadata, "endpoint", use_namespace)
+        super().__init__(endpoint.metadata, "endpoint", use_namespace)
         # There is no spec here.
         self._subsets = [
             self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
@@ -611,7 +611,7 @@ class Endpoint(Metadata):
 
 class Job(Metadata):
     def __init__(self, job, use_namespace):
-        super(Job, self).__init__(job.metadata, "job", use_namespace)
+        super().__init__(job.metadata, "job", use_namespace)
         spec = job.spec
         if spec:
             self._pod = spec.template
@@ -683,7 +683,7 @@ class Job(Metadata):
 
 class DaemonSet(Metadata):
     def __init__(self, daemon_set, use_namespace):
-        super(DaemonSet, self).__init__(daemon_set.metadata, "daemon_set", use_namespace)
+        super().__init__(daemon_set.metadata, "daemon_set", use_namespace)
         status = daemon_set.status
         if status:
             self.collision_count = status.collision_count
@@ -740,7 +740,7 @@ class DaemonSet(Metadata):
 
 class StatefulSet(Metadata):
     def __init__(self, stateful_set, use_namespace):
-        super(StatefulSet, self).__init__(stateful_set.metadata, "stateful_set", use_namespace)
+        super().__init__(stateful_set.metadata, "stateful_set", use_namespace)
         spec = stateful_set.spec
         strategy = spec.update_strategy
         if strategy:
@@ -775,7 +775,7 @@ class Namespace(Metadata):
     # TODO: namespaces may have resource quotas and limits
     # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
     def __init__(self, namespace: client.V1Namespace) -> None:
-        super(Namespace, self).__init__(namespace.metadata)
+        super().__init__(namespace.metadata)
         self._status = namespace.status
 
     @property
@@ -787,7 +787,7 @@ class Namespace(Metadata):
 
 class PersistentVolume(Metadata):
     def __init__(self, pv: client.V1PersistentVolume) -> None:
-        super(PersistentVolume, self).__init__(pv.metadata)
+        super().__init__(pv.metadata)
         self._status = pv.status
         self._spec = pv.spec
 
@@ -815,7 +815,7 @@ class PersistentVolume(Metadata):
 
 class PersistentVolumeClaim(Metadata):
     def __init__(self, pvc: client.V1PersistentVolumeClaim) -> None:
-        super(PersistentVolumeClaim, self).__init__(pvc.metadata)
+        super().__init__(pvc.metadata)
         self._status = pvc.status
         self._spec = pvc.spec
 
@@ -834,14 +834,14 @@ class PersistentVolumeClaim(Metadata):
 
 class StorageClass(Metadata):
     def __init__(self, storage_class: client.V1StorageClass) -> None:
-        super(StorageClass, self).__init__(storage_class.metadata)
+        super().__init__(storage_class.metadata)
         self.provisioner = storage_class.provisioner
         self.reclaim_policy = storage_class.reclaim_policy
 
 
 class Role(Metadata):
     def __init__(self, role: Union[client.V1Role, client.V1ClusterRole]) -> None:
-        super(Role, self).__init__(role.metadata)
+        super().__init__(role.metadata)
 
 
 ListElem = TypeVar('ListElem', bound=Metadata)
@@ -849,7 +849,7 @@ ListElem = TypeVar('ListElem', bound=Metadata)
 
 class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-ancestors
     def __init__(self, elements: List[ListElem]) -> None:
-        super(K8sList, self).__init__()
+        super().__init__()
         self._elements = elements
 
     def __getitem__(self, index):
@@ -1077,7 +1077,7 @@ class PiggybackGroup:
     A group of elements where an element is e.g. a piggyback host.
     """
     def __init__(self) -> None:
-        super(PiggybackGroup, self).__init__()
+        super().__init__()
         self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
 
     def get(self, element_name: str) -> 'PiggybackHost':
@@ -1105,7 +1105,7 @@ class PiggybackHost:
     An element that bundles a collection of sections.
     """
     def __init__(self) -> None:
-        super(PiggybackHost, self).__init__()
+        super().__init__()
         self._sections: OrderedDict[str, Section] = OrderedDict()
 
     def get(self, section_name: str) -> 'Section':
@@ -1126,7 +1126,7 @@ class Section:
     An agent section.
     """
     def __init__(self) -> None:
-        super(Section, self).__init__()
+        super().__init__()
         self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 
     def insert(self, data: Dict[str, Any]) -> None:
@@ -1153,7 +1153,7 @@ class ApiData:
         prefix_namespace: bool,
         namespace_include_patterns: List[str],
     ) -> None:
-        super(ApiData, self).__init__()
+        super().__init__()
         self.namespace_include_patterns = namespace_include_patterns
         logging.info('Collecting API data')
 

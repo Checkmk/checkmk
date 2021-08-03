@@ -26,7 +26,7 @@ class ABCResourceObserver(abc.ABC):
     __slots__ = ['_logger', '_num_check_cycles', '_hint']
 
     def __init__(self) -> None:
-        super(ABCResourceObserver, self).__init__()
+        super().__init__()
         self._logger = logging.getLogger("cmk.base")
         self._num_check_cycles = 0
         self._hint = "<unknown>"
@@ -70,7 +70,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
 
     def __init__(self, allowed_growth: int) -> None:
         """allowed_growth is the permitted increase of the VM size measured in percents."""
-        super(AbstractMemoryObserver, self).__init__()
+        super().__init__()
         self._memory_usage = 0
         self._allowed_growth = allowed_growth
         self._steady_cycle_num: Final = 5

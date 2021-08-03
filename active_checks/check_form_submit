@@ -74,7 +74,7 @@ def debug(msg):
 
 class HostResult(Exception):
     def __init__(self, result):
-        super(HostResult, self).__init__()
+        super().__init__()
         self.result = result
 
 

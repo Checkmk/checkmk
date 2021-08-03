@@ -234,7 +234,7 @@ class BaseApiClient(metaclass=abc.ABCMeta):
 class GraphApiClient(BaseApiClient):
     def __init__(self):
         base_url = '%s/v1.0/' % self.resource
-        super(GraphApiClient, self).__init__(base_url)
+        super().__init__(base_url)
 
     @property
     def resource(self):
@@ -267,7 +267,7 @@ class GraphApiClient(BaseApiClient):
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription):
         base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
-        super(MgmtApiClient, self).__init__(base_url)
+        super().__init__(base_url)
 
     @staticmethod
     def _get_available_metrics_from_exception(desired_names, api_error):
@@ -318,7 +318,7 @@ class MgmtApiClient(BaseApiClient):
 
 class GroupConfig:
     def __init__(self, name):
-        super(GroupConfig, self).__init__()
+        super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
@@ -342,7 +342,7 @@ class GroupConfig:
 
 class ExplicitConfig:
     def __init__(self, raw_list=()):
-        super(ExplicitConfig, self).__init__()
+        super().__init__()
         self.groups = {}
         self.current_group = None
         for item in raw_list:
@@ -381,7 +381,7 @@ class ExplicitConfig:
 
 class TagBasedConfig:
     def __init__(self, required, key_values):
-        super(TagBasedConfig, self).__init__()
+        super().__init__()
         self._required = required
         self._values = key_values
 
@@ -404,7 +404,7 @@ class TagBasedConfig:
 
 class Selector:
     def __init__(self, args):
-        super(Selector, self).__init__()
+        super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
 
@@ -427,7 +427,7 @@ class Section:
     LOCK = Lock()
 
     def __init__(self, name, piggytargets, separator, options):
-        super(Section, self).__init__()
+        super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
         self._cont = []
@@ -460,30 +460,27 @@ class Section:
 
 class AzureSection(Section):
     def __init__(self, name, piggytargets=('',)):
-        super(AzureSection, self).__init__('azure_%s' % name,
-                                           piggytargets,
-                                           separator=124,
-                                           options=[])
+        super().__init__('azure_%s' % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
     def __init__(self, piggytarget):
-        super(LabelsSection, self).__init__("labels", [piggytarget], separator=0, options=[])
+        super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class UsageSection(Section):
     def __init__(self, usage_details, piggytargets, cacheinfo):
         options = ['cached(%d,%d)' % cacheinfo]
-        super(UsageSection, self).__init__('azure_%s' % usage_details.section,
-                                           piggytargets,
-                                           separator=124,
-                                           options=options)
+        super().__init__('azure_%s' % usage_details.section,
+                         piggytargets,
+                         separator=124,
+                         options=options)
         self.add(usage_details.dumpinfo())
 
 
 class IssueCollecter:
     def __init__(self):
-        super(IssueCollecter, self).__init__()
+        super().__init__()
         self._list = []
 
     def add(self, issue_type, issued_by, issue_msg):
@@ -553,7 +550,7 @@ def get_attrs_from_uri(uri):
 
 class AzureResource:
     def __init__(self, info):
-        super(AzureResource, self).__init__()
+        super().__init__()
         self.info = info
         self.info.update(get_attrs_from_uri(info["id"]))
         self.tags = self.info.get("tags", {})
@@ -591,7 +588,7 @@ class MetricCache(DataCache):
     def __init__(self, resource, metric_definition, ref_time, debug=False):
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
-        super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
+        super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
         self.remaining_reads = None
         self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
@@ -651,9 +648,7 @@ class UsageClient(DataCache):
     )
 
     def __init__(self, client, subscription, debug=False):
-        super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
-                                          "%s-usage" % subscription,
-                                          debug=debug)
+        super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
         self._client = client
 
     @property

@@ -1128,7 +1128,7 @@ class PromQLMultiResponse(PromQLResponse):
     """PromQL Response where one or more metric results are expected
     """
     def __init__(self, promql_response: List[Dict[str, Any]]) -> None:
-        super(PromQLMultiResponse, self).__init__(promql_response)
+        super().__init__(promql_response)
         self.labels_overall_frequencies: Dict[str, Dict[str, float]] = {}
         self.promql_metrics = self._process_multi_result()
 
@@ -1583,7 +1583,7 @@ class PiggybackHost:
     """
     def __init__(self) -> None:
 
-        super(PiggybackHost, self).__init__()
+        super().__init__()
         self._sections: OrderedDict[str, Section] = OrderedDict()
 
     def get(self, section_name: str) -> Section:

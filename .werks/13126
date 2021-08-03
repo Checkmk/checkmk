@@ -1,0 +1,17 @@
+Title: postgres_conn_time: Don't crash on inconsistent section data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p25
+Date: 1627991883
+Class: fix
+
+Previously, the postgres_conn_time check did crash while parsing inconsistent
+section data.
+
+Now, in the case of inparsable section data, but section data about the queried
+database is available, a warning will be displayed in the resulting service.
+Otherwise, if it is not possible to obtain information about the queried database,
+it is assumed that no actual data is available, and the inconsistent section will
+be dropped silently.

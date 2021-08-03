@@ -32,6 +32,8 @@
 # [[[foobar]]]
 # 0.063
 
+INCONSISTENT_DATA = "inconsistent_data"
+
 
 def parse_postgres_conn_time(info):
     parsed = {}
@@ -40,7 +42,11 @@ def parse_postgres_conn_time(info):
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
-        parsed.setdefault(instance_name, float(line[0]))
+        if instance_name:
+            try:
+                parsed.setdefault(instance_name, float(line[0]))
+            except (ValueError, IndexError):
+                parsed.setdefault(instance_name, INCONSISTENT_DATA)
     return parsed
 
 
@@ -52,6 +58,10 @@ def inventory_postgres_conn_time(parsed):
 def check_postgres_conn_time(item, _no_params, parsed):
     if item in parsed:
         conn_time = parsed[item]
+
+        if conn_time == INCONSISTENT_DATA:
+            return 1, "Failed to measure connection time (Inconsistent data from datasource)"
+
         return 0, "%s seconds" % conn_time, [("connection_time", conn_time)]
 
     # In case of missing information we assume that the login into

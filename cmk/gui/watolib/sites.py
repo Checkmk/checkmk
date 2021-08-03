@@ -527,7 +527,7 @@ class CEESiteManagement(SiteManagement):
 
     @classmethod
     def save_sites(cls, sites, activate=True):
-        super(CEESiteManagement, cls).save_sites(sites, activate)
+        super().save_sites(sites, activate)
 
         if activate and config.liveproxyd_enabled:
             cls._save_liveproxyd_config(sites)
@@ -560,7 +560,7 @@ class CEESiteManagement(SiteManagement):
 
     @classmethod
     def _affected_config_domains(cls):
-        domains = super(CEESiteManagement, cls)._affected_config_domains()
+        domains = super()._affected_config_domains()
         if config.liveproxyd_enabled:
             domains.append(ConfigDomainLiveproxy)
         return domains
@@ -602,7 +602,7 @@ class LivestatusViaTCP(Dictionary):
              )),
         ]
         kwargs["optional_keys"] = ["only_from", "tls"]
-        super(LivestatusViaTCP, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 def _create_nagvis_backends(sites_config):

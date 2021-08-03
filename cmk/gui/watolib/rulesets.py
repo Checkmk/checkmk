@@ -203,7 +203,7 @@ class RulesetCollection:
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
     def __init__(self) -> None:
-        super(RulesetCollection, self).__init__()
+        super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
         self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(config.tags)
@@ -370,7 +370,7 @@ class AllRulesets(RulesetCollection):
 
 class SingleRulesetRecursively(AllRulesets):
     def __init__(self, name: RulesetName) -> None:
-        super(SingleRulesetRecursively, self).__init__()
+        super().__init__()
         self._name = name
 
     # Load single ruleset from all folders
@@ -384,7 +384,7 @@ class SingleRulesetRecursively(AllRulesets):
 
 class FolderRulesets(RulesetCollection):
     def __init__(self, folder: CREFolder) -> None:
-        super(FolderRulesets, self).__init__()
+        super().__init__()
         self._folder = folder
 
     def load(self) -> None:
@@ -402,7 +402,7 @@ class FilteredRulesetCollection(AllRulesets):
 
 class StaticChecksRulesets(FilteredRulesetCollection):
     def load(self) -> None:
-        super(StaticChecksRulesets, self).load()
+        super().load()
         self._remove_non_static_checks_rulesets()
 
     def _remove_non_static_checks_rulesets(self) -> None:
@@ -413,7 +413,7 @@ class StaticChecksRulesets(FilteredRulesetCollection):
 
 class SearchedRulesets(FilteredRulesetCollection):
     def __init__(self, origin_rulesets: RulesetCollection, search_options: SearchOptions) -> None:
-        super(SearchedRulesets, self).__init__()
+        super().__init__()
         self._origin_rulesets = origin_rulesets
         self._search_options = search_options
         self._load_filtered()
@@ -431,7 +431,7 @@ class SearchedRulesets(FilteredRulesetCollection):
 
 class Ruleset:
     def __init__(self, name: RulesetName, tag_to_group_map: TagIDToTaggroupID) -> None:
-        super(Ruleset, self).__init__()
+        super().__init__()
         self.name = name
         self.tag_to_group_map = tag_to_group_map
         self.rulespec = rulespec_registry[name]
@@ -800,7 +800,7 @@ class Rule:
         return rule
 
     def __init__(self, folder: CREFolder, ruleset: Ruleset) -> None:
-        super(Rule, self).__init__()
+        super().__init__()
         self.ruleset = ruleset
         self.folder = folder
 

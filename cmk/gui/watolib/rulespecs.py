@@ -125,7 +125,7 @@ class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBaseGroup]]):
     def __init__(self):
-        super(RulespecGroupRegistry, self).__init__()
+        super().__init__()
         self._main_groups: List[Type[RulespecGroup]] = []
         self._sub_groups_by_main_group: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]] = {}
 
@@ -388,7 +388,7 @@ class Rulespec(metaclass=abc.ABCMeta):
         factory_default: Any,
         help_func: Optional[Callable[[], str]],
     ) -> None:
-        super(Rulespec, self).__init__()
+        super().__init__()
 
         arg_infos: List[_Tuple[Any, bool, bool]] = [
             # (arg, is_callable, none_allowed)
@@ -551,7 +551,7 @@ class HostRulespec(Rulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(HostRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -593,7 +593,7 @@ class ServiceRulespec(Rulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(ServiceRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -626,7 +626,7 @@ class BinaryHostRulespec(HostRulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(BinaryHostRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -668,7 +668,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(BinaryServiceRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -766,7 +766,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         ]
         _validate_function_args(arg_infos, name)
 
-        super(CheckParameterRulespecWithItem, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -833,7 +833,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         ]
         _validate_function_args(arg_infos, name)
 
-        super(CheckParameterRulespecWithoutItem, self).__init__(
+        super().__init__(
             group=group,
             title=title,
             is_optional=is_optional,
@@ -909,7 +909,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             (item_spec, True, True),
         ]
         _validate_function_args(arg_infos, name)
-        super(ManualCheckParameterRulespec, self).__init__(
+        super().__init__(
             group=group,
             name=name,
             title=title,
@@ -1041,7 +1041,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry):
-        super(RulespecRegistry, self).__init__()
+        super().__init__()
         self._group_registry = group_registry
 
     def plugin_name(self, instance: Rulespec) -> str:
@@ -1079,9 +1079,9 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
                 if subgroup_key not in rulespec_group_registry:
                     rulespec_group_registry.register(manual_instance.group)
 
-                super(RulespecRegistry, self).register(manual_instance)
+                super().register(manual_instance)
 
-        return super(RulespecRegistry, self).register(instance)
+        return super().register(instance)
 
     def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
         """Use this register method to prevent adding a manual check rulespec"""
@@ -1090,12 +1090,12 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
                 _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
                 % instance)
             return
-        super(RulespecRegistry, self).register(instance)
+        super().register(instance)
 
 
 class CheckTypeGroupSelection(ElementSelection):
     def __init__(self, checkgroup, **kwargs):
-        super(CheckTypeGroupSelection, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._checkgroup = checkgroup
 
     def get_elements(self):
@@ -1123,7 +1123,7 @@ class TimeperiodValuespec(ValueSpec):
     tp_values_key = "tp_values"  # Used in valuespec
 
     def __init__(self, valuespec):
-        super(TimeperiodValuespec, self).__init__(
+        super().__init__(
             title=valuespec.title(),
             help=valuespec.help(),
         )
@@ -1187,7 +1187,7 @@ class TimeperiodValuespec(ValueSpec):
         return self._enclosed_valuespec.canonical_value()
 
     def _validate_value(self, value, varprefix):
-        super(TimeperiodValuespec, self)._validate_value(value, varprefix)
+        super()._validate_value(value, varprefix)
         self._get_used_valuespec(value).validate_value(value, varprefix)
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:

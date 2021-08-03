@@ -41,12 +41,12 @@ class TagConfigFile(WatoSimpleConfigFile):
     """
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
-        super(TagConfigFile, self).__init__(config_file_path=file_path, config_variable="wato_tags")
+        super().__init__(config_file_path=file_path, config_variable="wato_tags")
 
     def _load_file(self, lock=False):
         if not self._config_file_path.exists():
             return self._load_pre_16_config(lock=lock)
-        return super(TagConfigFile, self)._load_file(lock=lock)
+        return super()._load_file(lock=lock)
 
     def _pre_16_hosttags_path(self):
         return Path(multisite_dir(), "hosttags.mk")
@@ -64,7 +64,7 @@ class TagConfigFile(WatoSimpleConfigFile):
                                                     legacy_cfg["wato_aux_tags"])
 
     def save(self, cfg):
-        super(TagConfigFile, self).save(cfg)
+        super().save(cfg)
         self._save_base_config(cfg)
 
         # Cleanup pre 1.6 config files (tags were just saved with new path)
@@ -264,7 +264,7 @@ class ABCOperation(metaclass=abc.ABCMeta):
 
 class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
     def __init__(self, tag_group_id: str) -> None:
-        super(ABCTagGroupOperation, self).__init__()
+        super().__init__()
         self.tag_group_id = tag_group_id
 
 
@@ -281,7 +281,7 @@ class OperationRemoveAuxTag(ABCTagGroupOperation):
 class OperationReplaceGroupedTags(ABCOperation):
     def __init__(self, tag_group_id: str, remove_tag_ids: List[Optional[str]],
                  replace_tag_ids: Dict[str, str]) -> None:
-        super(OperationReplaceGroupedTags, self).__init__()
+        super().__init__()
         self.tag_group_id = tag_group_id
         self.remove_tag_ids = remove_tag_ids
         self.replace_tag_ids = replace_tag_ids

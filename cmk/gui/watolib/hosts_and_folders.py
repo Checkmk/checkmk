@@ -122,7 +122,7 @@ class WithUniqueIdentifier(metaclass=abc.ABCMeta):
         # Furthermore, mypy is currently too dumb to understand mixins the way
         # we implement them, see e.g.
         # https://github.com/python/mypy/issues/5887 and related issues.
-        super(WithUniqueIdentifier, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
 
     def id(self) -> str:
         """The unique identifier of this particular instance.
@@ -226,7 +226,7 @@ class WithAttributes:
         # Furthermore, mypy is currently too dumb to understand mixins the way
         # we implement them, see e.g.
         # https://github.com/python/mypy/issues/5887 and related issues.
-        super(WithAttributes, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
         self._attributes: Dict[str, Any] = {'meta_data': {}}
         self._effective_attributes = None
 
@@ -481,7 +481,7 @@ class ABCHostsStorage(abc.ABC):
     __slots__ = ['_out']
 
     def __init__(self) -> None:
-        super(ABCHostsStorage, self).__init__()
+        super().__init__()
         self._out = io.StringIO()
 
     def getvalue(self) -> str:
@@ -544,7 +544,7 @@ class ABCHostsStorage(abc.ABC):
 
 class StandardHostsStorage(ABCHostsStorage):
     def __init__(self) -> None:
-        super(StandardHostsStorage, self).__init__()
+        super().__init__()
         self.save(wato_fileheader())
 
     def _save_group_rules(self, group_rules: List[GroupRuleType],
@@ -617,7 +617,7 @@ class StandardHostsStorage(ABCHostsStorage):
 
 class RawHostsStorage(ABCHostsStorage):
     def __init__(self) -> None:
-        super(RawHostsStorage, self).__init__()
+        super().__init__()
         self.save("{\n")
 
     def write(self, filename: str) -> None:
@@ -820,7 +820,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                  title=None,
                  attributes=None,
                  root_dir=None):
-        super(CREFolder, self).__init__()
+        super().__init__()
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
@@ -1279,7 +1279,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             subfolder.add_to_dictionary(dictionary)
 
     def drop_caches(self):
-        super(CREFolder, self).drop_caches()
+        super().drop_caches()
         self._choices_for_moving_host = None
 
         for subfolder in self._subfolders.values():
@@ -2331,7 +2331,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # '--------------------------------------------------------------------'
 
     def __init__(self, base_folder, criteria):
-        super(SearchFolder, self).__init__()
+        super().__init__()
         self._criteria = criteria
         self._base_folder = base_folder
         self._found_hosts = None
@@ -2504,7 +2504,7 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(self, folder, host_name, attributes, cluster_nodes):
-        super(CREHost, self).__init__()
+        super().__init__()
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
@@ -2515,7 +2515,7 @@ class CREHost(WithPermissions, WithAttributes):
         return "Host(%r)" % (self._name)
 
     def drop_caches(self):
-        super(CREHost, self).drop_caches()
+        super().drop_caches()
         self._cached_host_tags = None
 
     # .--------------------------------------------------------------------.
@@ -2916,7 +2916,7 @@ class CMEFolder(CREFolder):
                 parent._check_parent_customer_conflicts(site_id)
             self._check_childs_customer_conflicts(site_id)
 
-        super(CMEFolder, self).edit(new_title, new_attributes)
+        super().edit(new_title, new_attributes)
         self._clear_id_cache()
 
     def _check_parent_customer_conflicts(self, site_id):
@@ -2981,7 +2981,7 @@ class CMEFolder(CREFolder):
     def create_subfolder(self, name, title, attributes):
         if "site" in attributes:
             self._check_parent_customer_conflicts(attributes["site"])
-        return super(CMEFolder, self).create_subfolder(name, title, attributes)
+        return super().create_subfolder(name, title, attributes)
 
     def move_subfolder_to(self, subfolder, target_folder):
         target_folder_customer = target_folder._get_customer_id()
@@ -3002,7 +3002,7 @@ class CMEFolder(CREFolder):
                       "This violates the CME folder hierarchy.") % other_customers_text)
 
         # The site attribute is not explicitely set. The new inheritance might brake something..
-        super(CMEFolder, self).move_subfolder_to(subfolder, target_folder)
+        super().move_subfolder_to(subfolder, target_folder)
 
     def create_hosts(self, entries, bake_hosts=True):
         customer_id = self._get_customer_id()
@@ -3010,7 +3010,7 @@ class CMEFolder(CREFolder):
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super(CMEFolder, self).create_hosts(entries, bake_hosts=bake_hosts)
+        super().create_hosts(entries, bake_hosts=bake_hosts)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:
@@ -3052,7 +3052,7 @@ class CMEFolder(CREFolder):
                          managed.get_customer_of_site(host_site),
                          managed.get_customer_of_site(target_site_id)))
 
-        super(CMEFolder, self).move_hosts(host_names, target_folder)
+        super().move_hosts(host_names, target_folder)
 
     def _get_customer_id(self):
         customer_id = managed.get_customer_of_site(self.site_id())
@@ -3087,7 +3087,7 @@ class CMEHost(CREHost):
         f = self.folder()
         if isinstance(f, CMEFolder):
             f.check_modify_host(self.name(), attributes)
-        super(CMEHost, self).edit(attributes, cluster_nodes)
+        super().edit(attributes, cluster_nodes)
 
 
 # TODO: Change to factory?

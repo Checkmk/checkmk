@@ -584,7 +584,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         job_id = "%s-%s" % (self.job_prefix, host_name)
         last_job_status = WatoBackgroundJob(job_id).get_status()
 
-        super(ServiceDiscoveryBackgroundJob, self).__init__(
+        super().__init__(
             job_id,
             title=_("Service discovery"),
             stoppable=True,

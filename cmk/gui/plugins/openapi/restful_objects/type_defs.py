@@ -301,6 +301,7 @@ ResponseType = TypedDict(
         "301": PathItem,
         "302": PathItem,
         "400": PathItem,
+        "403": PathItem,
         "404": PathItem,
         "405": PathItem,
         "409": PathItem,

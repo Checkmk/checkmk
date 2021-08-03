@@ -121,17 +121,17 @@ SUMMARY_STRUCTURE: SummaryStructure = SummaryStructure(
     }
 )
 
-@pytest.mark.parametrize('params,result', [
+@pytest.mark.parametrize('summary_alerts,summary_alerts_structure', [
     (
         SUMMARY,
         SUMMARY_STRUCTURE
     )
 ])
-def test_get_summary_structure(params, result):
-    assert get_summary_structure(params) == result
+def test_get_summary_structure(summary_alerts, summary_alerts_structure):
+    assert get_summary_structure(summary_alerts) == summary_alerts_structure
 
 
-@pytest.mark.parametrize('params,result', [
+@pytest.mark.parametrize('params,system_alerts_list', [
     (
         {
             "layout": LAYOUT,
@@ -168,11 +168,11 @@ def test_get_summary_structure(params, result):
         ]
     )
 ])
-def test_get_systems_alerts(params, result):
-    assert get_systems_alerts(params["layout"], params["system_alerts"]) == result
+def test_get_systems_alerts(params, system_alerts_list):
+    assert get_systems_alerts(params["layout"], params["system_alerts"]) == system_alerts_list
 
 
-@pytest.mark.parametrize('params,result', [
+@pytest.mark.parametrize('params,env_alerts_list', [
     (
         {
             "layout": LAYOUT,
@@ -200,11 +200,11 @@ def test_get_systems_alerts(params, result):
         ]
     )
 ])
-def test_get_environment_alerts(params, result):
-    assert get_environment_alerts(params["layout"], params["env_alerts"]) == result
+def test_get_environment_alerts(params, env_alerts_list):
+    assert get_environment_alerts(params["layout"], params["env_alerts"]) == env_alerts_list
 
 
-@pytest.mark.parametrize('params,result', [
+@pytest.mark.parametrize('params,admin_alerts_list', [
     (
         {
             "layout": LAYOUT,
@@ -215,5 +215,5 @@ def test_get_environment_alerts(params, result):
         ]
     )
 ])
-def test_get_admin_alerts(params, result):
-    assert get_admin_alerts(params["layout"], params["fuse_alerts"]) == result
+def test_get_admin_alerts(params, admin_alerts_list):
+    assert get_admin_alerts(params["layout"], params["fuse_alerts"]) == admin_alerts_list

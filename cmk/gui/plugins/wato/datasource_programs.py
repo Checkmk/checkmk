@@ -5093,16 +5093,16 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_special_agents_fuse():
+def _valuespec_special_agents_fuse_management_central():
     return Dictionary(
         title=_("Fuse Management Central"),
         help=
         _("This rule set selects the special agent for Fuse Management Central "
           "instead of the normal Check_MK agent and allows monitoring via REST API."),
         elements=[
-            ("username", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            ("url", TextInput(title=_("Alerts API Endpoint"), allow_empty=False)),
+            ("user", TextAscii(title=("Username"), allow_empty=False)),
+            ("password", IndividualOrStoredPassword(title=("Password"), allow_empty=False)),
+            ("url", TextAscii(title=("Alerts API Endpoint"), allow_empty=False))
         ],
         required_keys=["user","password","url"]
     )
@@ -5112,8 +5112,13 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
         help_func=lambda: _("This rule selects the special agent for Fuse Management Central."),
-        name="special_agents:fuse",
+        name="special_agents:fuse_management_central",
         title=lambda: _("Fuse Management Central"),
+<<<<<<< HEAD
         valuespec=_valuespec_special_agents_fuse,
     )
 )
+=======
+        valuespec=_valuespec_special_agents_fuse_management_central,
+    ))
+>>>>>>> Fixed problems for pull request

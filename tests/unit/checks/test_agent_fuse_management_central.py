@@ -8,7 +8,7 @@ from testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
+@pytest.mark.parametrize('arguments,expected_args', [
     (
         {
             'user': "admin",
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.checks
         ],
     )
 ])
-def test_parse_arguments(params, expected_args):
-    agent = SpecialAgent('agent_fuse')
-    arguments = agent.argument_func(params, "host", "127.0.0.1")
-    assert arguments == expected_args
+def test_parse_arguments(arguments, expected_args):
+    agent = SpecialAgent('agent_fuse_management_central')
+    parsed_arguments = agent.argument_func(arguments, "host", "127.0.0.1")
+    assert parsed_arguments == expected_args

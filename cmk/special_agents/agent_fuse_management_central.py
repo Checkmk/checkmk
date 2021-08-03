@@ -6,6 +6,7 @@ import sys
 import argparse
 from typing import List, Dict, Tuple, Optional
 import requests
+import cmk.utils.password_store
 
 
 class SummaryStructure:
@@ -118,60 +119,66 @@ def get_summary_structure(summary: list) -> SummaryStructure:
 
 def get_systems_alerts(layout: dict, system_alerts_map: Dict[Tuple[str, str], dict]) -> List[Alert]:
     system_alerts: List[Alert] = []
-    if "systems" in layout:
-        for system in layout["systems"]:
-            for component in system["componentTypes"]:
-                system_alert: Alert = Alert(system["id"], system["name"],
-                                                system["type"], component["displayName"],
-                                                0, 0, ""
-                                            )
-                if (system["id"], component["id"]) in system_alerts_map:
-                    alert = system_alerts_map[(system["id"], component["id"])]
-                    if "errors" in alert:
-                        system_alert.errors = int(alert["errors"])
-                    if "warnings" in alert:
-                        system_alert.warnings = int(alert["warnings"])
-                    if "link" in alert:
-                        system_alert.link = alert["link"]
-                system_alerts.append(system_alert)
+    if "systems" not in layout:
+        return system_alerts
+
+    for system in layout["systems"]:
+        for component in system["componentTypes"]:
+            system_alert: Alert = Alert(system["id"], system["name"],
+                                            system["type"], component["displayName"],
+                                            0, 0, ""
+                                        )
+            if (system["id"], component["id"]) in system_alerts_map:
+                alert = system_alerts_map[(system["id"], component["id"])]
+                if "errors" in alert:
+                    system_alert.errors = int(alert["errors"])
+                if "warnings" in alert:
+                    system_alert.warnings = int(alert["warnings"])
+                if "link" in alert:
+                    system_alert.link = alert["link"]
+            system_alerts.append(system_alert)
     return system_alerts
 
 
 def get_environment_alerts(layout: dict, env_alert_map: Dict[Tuple[str, str], dict]) -> List[Alert]:
     env_alerts: List[Alert] = []
-    if "environments" in layout:
-        for environment in layout["environments"]:
-            for component in environment["componentTypes"]:
-                env_alert: Alert = Alert(environment["id"], environment["name"],
-                                            "", component["displayName"], 0, 0, ""
-                                        )
-                if (environment["id"], component["id"]) in env_alert_map:
-                    alert = env_alert_map[(environment["id"], component["id"])]
-                    if "errors" in alert:
-                        env_alert.errors = int(alert["errors"])
-                    if "warnings" in alert:
-                        env_alert.warnings = int(alert["warnings"])
-                    if "link" in alert:
-                        env_alert.link = alert["link"]
-                env_alerts.append(env_alert)
+    if "environments" not in layout:
+        return env_alerts
+
+    for environment in layout["environments"]:
+        for component in environment["componentTypes"]:
+            env_alert: Alert = Alert(environment["id"], environment["name"],
+                                        "", component["displayName"], 0, 0, ""
+                                    )
+            if (environment["id"], component["id"]) in env_alert_map:
+                alert = env_alert_map[(environment["id"], component["id"])]
+                if "errors" in alert:
+                    env_alert.errors = int(alert["errors"])
+                if "warnings" in alert:
+                    env_alert.warnings = int(alert["warnings"])
+                if "link" in alert:
+                    env_alert.link = alert["link"]
+            env_alerts.append(env_alert)
     return env_alerts
 
 
 def get_admin_alerts(layout: dict, env_admin_map: Dict[str, dict]) -> List[Alert]:
     admin_alerts: List[Alert] = []
-    if "admin" in layout:
-        admin = layout["admin"]
-        for component in admin["componentTypes"]:
-            admin_alert: Alert = Alert("", "", "", component["displayName"], 0, 0, "")
-            if component["id"] in env_admin_map:
-                alert = env_admin_map[component["id"]]
-                if "errors" in alert:
-                    admin_alert.errors = int(alert["errors"])
-                if "warnings" in alert:
-                    admin_alert.warnings = int(alert["warnings"])
-                if "link" in alert:
-                    admin_alert.link = alert["link"]
-            admin_alerts.append(admin_alert)
+    if "admin" not in layout:
+        return admin_alerts
+
+    admin = layout["admin"]
+    for component in admin["componentTypes"]:
+        admin_alert: Alert = Alert("", "", "", component["displayName"], 0, 0, "")
+        if component["id"] in env_admin_map:
+            alert = env_admin_map[component["id"]]
+            if "errors" in alert:
+                admin_alert.errors = int(alert["errors"])
+            if "warnings" in alert:
+                admin_alert.warnings = int(alert["warnings"])
+            if "link" in alert:
+                admin_alert.link = alert["link"]
+        admin_alerts.append(admin_alert)
     return admin_alerts
 
 
@@ -192,8 +199,20 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def get_state(layout_response_code: int, summary_response_code: int, data) -> str:
+    state: str = "up"
+    if layout_response_code == 401 or summary_response_code == 401:
+        state = "unauth"
+    elif layout_response_code != 200 or summary_response_code != 200:
+        state = "down"
+    elif not data:
+        state = "empty"
+    return state
+
+
 def main(args: Optional[List[str]] = None) -> int:
     if args is None:
+        cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
     opt: argparse.Namespace = parse_arguments(args)
 
@@ -205,34 +224,30 @@ def main(args: Optional[List[str]] = None) -> int:
     summary_request: FuseRequest = FuseRequest(summary_connection.base_url, opt.user, opt.password)
     summary_response: SummaryResponse = summary_request.get_summary()
 
-    state: str = "up"
-    if layout_response.code == 401 or summary_response.code == 401:
-        state = "unauth"
-    elif layout_response.code != 200 or summary_response.code != 200:
-        state = "down"
-    elif not layout_response.data:
-        state = "empty"
+    state: str = get_state(layout_response.code, summary_response.code, layout_response.data)
 
     sys.stdout.write("<<<fuse_instance:sep(0)>>>\n")
     sys.stdout.write("{}\n".format(state))
 
-    if state == "up":
-        layout: dict = layout_response.data
-        summary: list = summary_response.data
+    if state != "up":
+        return 0
 
-        summary_structure: SummaryStructure = get_summary_structure(summary)
+    layout: dict = layout_response.data
+    summary: list = summary_response.data
 
-        system_alerts: List[Alert] = get_systems_alerts(layout, summary_structure.system_alerts)
-        sys.stdout.write("<<<fuse_system_alerts:sep(0)>>>\n")
-        sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in system_alerts])))
+    summary_structure: SummaryStructure = get_summary_structure(summary)
 
-        env_alerts: List[Alert] = get_environment_alerts(layout, summary_structure.env_alerts)
-        sys.stdout.write("<<<fuse_env_alerts:sep(0)>>>\n")
-        sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in env_alerts])))
+    system_alerts: List[Alert] = get_systems_alerts(layout, summary_structure.system_alerts)
+    sys.stdout.write("<<<fuse_system_alerts:sep(0)>>>\n")
+    sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in system_alerts])))
 
-        admin_alerts: List[Alert] = get_admin_alerts(layout, summary_structure.fuse_alerts)
-        sys.stdout.write("<<<fuse_admin_alerts:sep(0)>>>\n")
-        sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in admin_alerts])))
+    env_alerts: List[Alert] = get_environment_alerts(layout, summary_structure.env_alerts)
+    sys.stdout.write("<<<fuse_env_alerts:sep(0)>>>\n")
+    sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in env_alerts])))
+
+    admin_alerts: List[Alert] = get_admin_alerts(layout, summary_structure.fuse_alerts)
+    sys.stdout.write("<<<fuse_admin_alerts:sep(0)>>>\n")
+    sys.stdout.write("{}\n".format(json.dumps([alert.__dict__ for alert in admin_alerts])))
 
     return 0
 

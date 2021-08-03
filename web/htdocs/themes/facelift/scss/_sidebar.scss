@@ -33,7 +33,7 @@ body.side {
   }
 
   b.treeangle.title {
-    color: $font-color-sidebar;
+    color: $font-color;
   }
 }
 
@@ -75,7 +75,7 @@ body.side {
       flex: 1 0 auto;
       font-size: $font-size-small;
       line-height: 1.7;
-      color: $font-color-sidebar;
+      color: $font-color;
       text-align: center;
       text-decoration: none;
 
@@ -84,7 +84,7 @@ body.side {
       }
 
       &:visited {
-        color: $font-color-sidebar;
+        color: $font-color;
       }
 
       &.min {
@@ -174,7 +174,7 @@ body.main .popup_menu #side_header > span {
 #side_fold {
   margin: $spacing 0;
   font-size: $font-size-small;
-  color: $font-color-sidebar;
+  color: $font-color;
   text-align: center;
   cursor: pointer;
 
@@ -204,7 +204,7 @@ body.main .popup_menu #side_header > span {
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color-sidebar;
+  color: $font-color;
   text-align: center;
 
   a {
@@ -216,7 +216,7 @@ body.main .popup_menu #side_header > span {
     }
 
     &:visited {
-      color: $font-color-sidebar;
+      color: $font-color;
     }
   }
 
@@ -253,7 +253,7 @@ div.snapin {
     position: relative;
     height: auto;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $font-color-sidebar;
+    color: $font-color;
     text-align: left;
     background: transparent;
 
@@ -326,7 +326,7 @@ div.snapin {
     top: 64px;
     width: 100%;
     padding: $spacing 0;
-    color: $font-color-sidebar;
+    color: $font-color;
     border-bottom: 1px solid $snapin-heading-border-color;
     box-sizing: border-box;
   }
@@ -344,7 +344,7 @@ div.snapin {
    */
 
   td {
-    color: $font-color-sidebar;
+    color: $font-color;
   }
 
   h3 {
@@ -355,7 +355,7 @@ div.snapin {
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $font-color-sidebar;
+    color: $font-color;
     text-decoration: none;
 
     &:hover {
@@ -561,7 +561,7 @@ div.add_snapin {
 
     *,
     &:hover * {
-      color: $font-color-sidebar;
+      color: $font-color;
     }
 
     &:hover {

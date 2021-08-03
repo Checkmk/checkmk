@@ -18,7 +18,7 @@ div#top_heading {
   div.titlebar {
     height: 53px;
     padding: 0.5 * $spacing $spacing 0;
-    background-color: $color-background;
+    background-color: $bg-color;
   }
 
   a.title {
@@ -145,7 +145,7 @@ div#top_heading {
     width: 100%;
     padding: 0 0 $spacing;
     white-space: nowrap;
-    background-color: $color-background;
+    background-color: $bg-color;
     border-spacing: 0;
 
     td {
@@ -416,7 +416,7 @@ div#top_heading {
   }
 
   tr#suggestions {
-    background-color: $color-background;
+    background-color: $bg-color;
 
     td {
       width: 100%;

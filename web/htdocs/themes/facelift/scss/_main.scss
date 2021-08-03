@@ -176,7 +176,7 @@ input.button:not([type="password"]) {
     &,
     &:hover,
     &:active {
-      color: $font-color-disabled;
+      color: $darkgrey;
       cursor: initial;
       background-color: $input-button-hover-bg-color;
       filter: grayscale(80%);

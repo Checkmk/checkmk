@@ -193,7 +193,7 @@ table.performance {
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
-  color: $font-color-sidebar;
+  color: $font-color;
   background-color: $server-time-div-bg-color;
   text-align: center;
   border-spacing: 4px;
@@ -326,7 +326,7 @@ body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $font-color-sidebar;
+  color: $font-color;
 }
 
 div.tacticalalert,
@@ -509,7 +509,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $font-color-sidebar;
+  color: $font-color;
 
   p {
     font-weight: normal;
@@ -543,7 +543,7 @@ div.spacertop {
   input {
     width: 100%;
     height: $input-field-height;
-    color: $font-color-sidebar;
+    color: $font-color;
     background-image: url("images/icon_quicksearch.png");
     background-position: right $spacing bottom 4px;
     background-size: 15px;
@@ -571,14 +571,14 @@ div.spacertop {
   width: 223px;
   padding: 8px;
   margin-top: 2px;
-  color: $font-color-sidebar;
+  color: $font-color;
   background-color: $inpage-highlight-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    color: $font-color-sidebar;
+    color: $font-color;
     text-align: left;
     text-decoration: none;
 

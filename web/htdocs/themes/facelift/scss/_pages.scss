@@ -82,7 +82,7 @@ body {
     font-family: $font-family-default;
     font-weight: $font-weight-default;
     color: $font-color;
-    background: $color-background;
+    background: $bg-color;
 
     /* Can be toggled with N/n display option */
     &.inline {

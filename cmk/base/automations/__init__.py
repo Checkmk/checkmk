@@ -29,7 +29,7 @@ class MKAutomationError(MKException):
 
 class Automations:
     def __init__(self) -> None:
-        super(Automations, self).__init__()
+        super().__init__()
         self._automations: Dict[str, Automation] = {}
 
     def register(self, automation: 'Automation') -> None:
